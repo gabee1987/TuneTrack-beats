@@ -40,6 +40,50 @@ If the last player leaves, the in-memory room is removed.
 
 Rooms are stored in memory only for the current foundation iteration.
 
+### Starting cards per player
+
+Each player starts with 1 revealed timeline card by default, but the host can
+override `startingTimelineCardCount` individually per player in the lobby.
+
+The room also stores `defaultStartingTimelineCardCount`, which is used for
+newly joined players.
+
+### Reveal confirmation rule
+
+Reveal confirmation is configurable by room:
+- `host_only`
+- `host_or_active_player`
+
+Current default is `host_only`.
+
+### Wrong placement penalty
+
+If a player places a card into a wrong slot, the card is discarded and the
+player gains no card from that turn.
+
+### Temporary timeline interaction model
+
+Iteration 02 uses a slot-click timeline with a separate placement confirmation
+button. Drag-and-drop and challenge/veto interactions are intentionally left
+for later iterations.
+
+### MVP test deck format
+
+Local JSON test decks live in
+`apps/server/src/decks/test-decks/`.
+
+The server loads every `.json` file from that folder and expects each card to
+contain:
+- `id`
+- `releaseYear`
+- `title`
+- `artist`
+- `albumTitle`
+- `genre` (optional)
+
+Duplicate `id` values are deduplicated by keeping the latest loaded card with
+that ID.
+
 ---
 
 ## Still Open
@@ -68,16 +112,6 @@ Current implementation allows duplicate display names.
 Still to decide:
 - Should duplicate names be blocked within one room?
 - Or should we keep allowing them and rely on internal player IDs only?
-
-### Deck source for MVP gameplay
-
-Still to decide:
-- Should Iteration 02 use a static hand-curated JSON deck first?
-- Or should we start with a Spotify playlist import pipeline immediately?
-
-Recommendation:
-- Use a static seed deck first so we can finish the game loop before external
-  playback/provider complexity.
 
 ### Challenge timing authority
 

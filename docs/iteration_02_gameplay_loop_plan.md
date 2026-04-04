@@ -4,6 +4,23 @@
 > architecture, and coding rules in `docs/tunetrack_full_architecture.md` and
 > `docs/tunetrack_technical_implementation_plan.md`.
 
+## Implementation Status
+
+Status: **in progress**
+
+Completed so far:
+- shared gameplay contracts
+- per-player lobby settings
+- pure game-engine turn/reveal rules
+- server-side test deck loading
+- server socket handlers for start/place/confirm flow
+- basic GamePage UI with slot-click placement and reveal display
+
+Still in scope:
+- frontend polish for game flow readability
+- documentation cleanup and any final Iteration 02 adjustments after manual
+  testing
+
 ---
 
 ## 1. Iteration Goal

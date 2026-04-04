@@ -124,7 +124,11 @@ npm run dev -w apps/server
 
 Primary client to server events:
 - `join_room`
+- `start_game`
+- `place_card`
+- `confirm_reveal`
 - `update_room_settings`
+- `update_player_settings`
 
 Primary server to client events:
 - `player_identity`
@@ -138,4 +142,5 @@ Shared event names and payload contracts live in `packages/shared`.
 - [Full architecture](docs/tunetrack_full_architecture.md)
 - [Technical implementation plan](docs/tunetrack_technical_implementation_plan.md)
 - [Iteration 01 foundation plan](docs/iteration_01_foundation_plan.md)
+- [Iteration 02 gameplay loop plan](docs/iteration_02_gameplay_loop_plan.md)
 - [Decision log](docs/decision_log.md)
