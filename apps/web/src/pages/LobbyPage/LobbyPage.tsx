@@ -1,11 +1,17 @@
 import {
+  DEFAULT_STARTING_TIMELINE_CARD_COUNT,
   ClientToServerEvent,
+  MAX_STARTING_TIMELINE_CARD_COUNT,
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
+  MIN_STARTING_TIMELINE_CARD_COUNT,
   MAX_TARGET_TIMELINE_CARD_COUNT,
   MIN_TARGET_TIMELINE_CARD_COUNT,
   type PlayerIdentityPayload,
+  type PublicPlayerState,
+  type PublicRoomSettings,
   ServerToClientEvent,
   type PublicRoomState,
+  type RevealConfirmMode,
   type ServerErrorPayload,
   type StateUpdatePayload,
 } from "@tunetrack/shared";
@@ -83,14 +89,35 @@ export function LobbyPage() {
     };
   }, [displayName, navigate, roomId]);
 
-  function handleTargetCardCountChange(nextValue: number) {
+  function handleRoomSettingsChange(nextSettings: PublicRoomSettings) {
     if (!roomState || !isHost) {
       return;
     }
 
     socketClient.emit(ClientToServerEvent.UpdateRoomSettings, {
       roomId: roomState.roomId,
-      targetTimelineCardCount: nextValue,
+      ...nextSettings,
+    });
+  }
+
+  const currentSettings = roomState?.settings ?? {
+    targetTimelineCardCount: DEFAULT_TARGET_TIMELINE_CARD_COUNT,
+    defaultStartingTimelineCardCount: DEFAULT_STARTING_TIMELINE_CARD_COUNT,
+    revealConfirmMode: "host_only" as RevealConfirmMode,
+  };
+
+  function handlePlayerStartingCardCountChange(
+    player: PublicPlayerState,
+    nextValue: number,
+  ) {
+    if (!roomState || !isHost) {
+      return;
+    }
+
+    socketClient.emit(ClientToServerEvent.UpdatePlayerSettings, {
+      roomId: roomState.roomId,
+      playerId: player.id,
+      startingTimelineCardCount: nextValue,
     });
   }
 
@@ -113,28 +140,75 @@ export function LobbyPage() {
             <div className={styles.settingsHeader}>
               <div>
                 <h2 className={styles.settingsTitle}>Game settings</h2>
-                <p className={styles.settingsDescription}>
-                  Number of cards needed to win
-                </p>
+                <p className={styles.settingsDescription}>Host-only room setup</p>
               </div>
-              <strong className={styles.targetValue}>
-                {roomState?.targetTimelineCardCount ??
-                  DEFAULT_TARGET_TIMELINE_CARD_COUNT}
-              </strong>
             </div>
 
-            <input
-              className={styles.rangeInput}
-              max={MAX_TARGET_TIMELINE_CARD_COUNT}
-              min={MIN_TARGET_TIMELINE_CARD_COUNT}
-              onChange={(event) =>
-                handleTargetCardCountChange(Number(event.target.value))
-              }
-              type="range"
-              value={
-                roomState?.targetTimelineCardCount ??
-                DEFAULT_TARGET_TIMELINE_CARD_COUNT}
-            />
+            <label className={styles.settingField}>
+              <div className={styles.settingLabelRow}>
+                <span>Cards needed to win</span>
+                <strong className={styles.settingValue}>
+                  {currentSettings.targetTimelineCardCount}
+                </strong>
+              </div>
+              <input
+                className={styles.rangeInput}
+                max={MAX_TARGET_TIMELINE_CARD_COUNT}
+                min={MIN_TARGET_TIMELINE_CARD_COUNT}
+                onChange={(event) =>
+                  handleRoomSettingsChange({
+                    ...currentSettings,
+                    targetTimelineCardCount: Number(event.target.value),
+                  })
+                }
+                type="range"
+                value={currentSettings.targetTimelineCardCount}
+              />
+            </label>
+
+            <label className={styles.settingField}>
+              <div className={styles.settingLabelRow}>
+                <span>Default starting cards for new players</span>
+                <strong className={styles.settingValue}>
+                  {currentSettings.defaultStartingTimelineCardCount}
+                </strong>
+              </div>
+              <input
+                className={styles.rangeInput}
+                max={MAX_STARTING_TIMELINE_CARD_COUNT}
+                min={MIN_STARTING_TIMELINE_CARD_COUNT}
+                onChange={(event) =>
+                  handleRoomSettingsChange({
+                    ...currentSettings,
+                    defaultStartingTimelineCardCount: Number(event.target.value),
+                  })
+                }
+                type="range"
+                value={currentSettings.defaultStartingTimelineCardCount}
+              />
+            </label>
+
+            <label className={styles.settingField}>
+              <div className={styles.settingLabelRow}>
+                <span>Who can confirm reveal</span>
+              </div>
+              <select
+                className={styles.selectInput}
+                onChange={(event) =>
+                  handleRoomSettingsChange({
+                    ...currentSettings,
+                    revealConfirmMode: event.target
+                      .value as RevealConfirmMode,
+                  })
+                }
+                value={currentSettings.revealConfirmMode}
+              >
+                <option value="host_only">Host only</option>
+                <option value="host_or_active_player">
+                  Host or active player
+                </option>
+              </select>
+            </label>
 
             <p className={styles.settingsHint}>
               You are the host, so you can change this setting.
@@ -145,8 +219,41 @@ export function LobbyPage() {
         <ul className={styles.playerList}>
           {(roomState?.players ?? []).map((player) => (
             <li className={styles.playerItem} key={player.id}>
-              <span>{player.displayName}</span>
-              <span>{player.isHost ? "Host" : `${player.tokenCount} tokens`}</span>
+              <div className={styles.playerInfoRow}>
+                <span>{player.displayName}</span>
+                <div className={styles.playerBadges}>
+                  <span className={styles.startingCardsBadge}>
+                    {player.startingTimelineCardCount} starting cards
+                  </span>
+                  <span>
+                    {player.isHost ? "Host" : `${player.tokenCount} tokens`}
+                  </span>
+                </div>
+              </div>
+
+              {isHost ? (
+                <label className={styles.playerSettingField}>
+                  <div className={styles.settingLabelRow}>
+                    <span>Starting cards</span>
+                    <strong className={styles.settingValue}>
+                      {player.startingTimelineCardCount}
+                    </strong>
+                  </div>
+                  <input
+                    className={styles.rangeInput}
+                    max={MAX_STARTING_TIMELINE_CARD_COUNT}
+                    min={MIN_STARTING_TIMELINE_CARD_COUNT}
+                    onChange={(event) =>
+                      handlePlayerStartingCardCountChange(
+                        player,
+                        Number(event.target.value),
+                      )
+                    }
+                    type="range"
+                    value={player.startingTimelineCardCount}
+                  />
+                </label>
+              ) : null}
             </li>
           ))}
         </ul>

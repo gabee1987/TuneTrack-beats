@@ -49,8 +49,33 @@
   padding: 16px 18px;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.06);
+}
+
+.playerInfoRow {
   display: flex;
   justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.playerBadges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.startingCardsBadge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(139, 123, 255, 0.18);
+  color: rgba(247, 247, 251, 0.9);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.playerSettingField {
+  display: block;
+  margin-top: 14px;
 }
 
 .error {
@@ -84,12 +109,36 @@
   color: rgba(247, 247, 251, 0.7);
 }
 
-.targetValue {
-  font-size: 32px;
+.settingField {
+  display: block;
+  margin-top: 20px;
+}
+
+.settingLabelRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: rgba(247, 247, 251, 0.88);
+  font-size: 14px;
+}
+
+.settingValue {
+  font-size: 18px;
 }
 
 .rangeInput {
   width: 100%;
-  margin-top: 20px;
+  margin-top: 14px;
   accent-color: #8b7bff;
+}
+
+.selectInput {
+  width: 100%;
+  margin-top: 12px;
+  border: 0;
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f7f7fb;
+  outline: 1px solid rgba(255, 255, 255, 0.1);
 }
