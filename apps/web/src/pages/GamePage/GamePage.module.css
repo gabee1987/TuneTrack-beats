@@ -1,0 +1,138 @@
+.screen {
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.panel {
+  width: min(100%, 960px);
+  margin: 0 auto;
+  padding: 28px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
+  background: rgba(12, 12, 22, 0.72);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.title {
+  margin: 0;
+  font-size: 40px;
+  letter-spacing: -0.05em;
+}
+
+.meta,
+.cardMeta,
+.genre {
+  margin: 8px 0 0;
+  color: rgba(247, 247, 251, 0.7);
+}
+
+.statusBadge {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(139, 123, 255, 0.18);
+  font-size: 14px;
+}
+
+.error {
+  margin-top: 24px;
+  color: #ff8fb3;
+}
+
+.currentCardPanel,
+.timelinePanel,
+.revealPanel {
+  margin-top: 28px;
+  padding: 20px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sectionLabel {
+  margin: 0 0 10px;
+  color: rgba(247, 247, 251, 0.65);
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: -0.04em;
+}
+
+.timelineRow {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.slotGroup {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.slotButton {
+  min-width: 88px;
+  border: 0;
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.slotButtonSelected {
+  background: linear-gradient(135deg, #7c6cff 0%, #ff4f9a 100%);
+}
+
+.timelineCard {
+  min-width: 180px;
+  padding: 18px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.timelineTitle {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.04em;
+}
+
+.yearText {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 24px;
+}
+
+.primaryButton {
+  width: 100%;
+  margin-top: 24px;
+  border: 0;
+  border-radius: 18px;
+  padding: 18px 22px;
+  background: linear-gradient(135deg, #7c6cff 0%, #ff4f9a 100%);
+  color: #ffffff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.primaryButton:disabled,
+.slotButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.revealResult {
+  margin: 14px 0 0;
+  color: rgba(247, 247, 251, 0.9);
+  font-weight: 700;
+}

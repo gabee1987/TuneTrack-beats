@@ -15,7 +15,7 @@ import {
   type ServerErrorPayload,
   type StateUpdatePayload,
 } from "@tunetrack/shared";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { socketClient } from "../../services/socket/socketClient";
 import styles from "./LobbyPage.module.css";
@@ -31,6 +31,7 @@ export function LobbyPage() {
 
   const [connectionStatus, setConnectionStatus] = useState("Connecting");
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
+  const currentPlayerIdRef = useRef<string | null>(null);
   const [roomState, setRoomState] = useState<PublicRoomState | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -57,9 +58,19 @@ export function LobbyPage() {
 
     function handleStateUpdate(payload: StateUpdatePayload) {
       setRoomState(payload.roomState);
+
+      if (payload.roomState.status !== "lobby") {
+        navigate(`/game/${encodeURIComponent(payload.roomState.roomId)}`, {
+          state: {
+            currentPlayerId: currentPlayerIdRef.current,
+            roomState: payload.roomState,
+          },
+        });
+      }
     }
 
     function handlePlayerIdentity(payload: PlayerIdentityPayload) {
+      currentPlayerIdRef.current = payload.playerId;
       setCurrentPlayerId(payload.playerId);
     }
 
@@ -85,7 +96,6 @@ export function LobbyPage() {
       socketClient.off(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
       socketClient.off(ServerToClientEvent.StateUpdate, handleStateUpdate);
       socketClient.off(ServerToClientEvent.Error, handleError);
-      socketClient.disconnect();
     };
   }, [displayName, navigate, roomId]);
 
@@ -118,6 +128,16 @@ export function LobbyPage() {
       roomId: roomState.roomId,
       playerId: player.id,
       startingTimelineCardCount: nextValue,
+    });
+  }
+
+  function handleStartGame() {
+    if (!roomState || !isHost) {
+      return;
+    }
+
+    socketClient.emit(ClientToServerEvent.StartGame, {
+      roomId: roomState.roomId,
     });
   }
 
@@ -213,6 +233,14 @@ export function LobbyPage() {
             <p className={styles.settingsHint}>
               You are the host, so you can change this setting.
             </p>
+
+            <button
+              className={styles.startGameButton}
+              onClick={handleStartGame}
+              type="button"
+            >
+              Start Game
+            </button>
           </section>
         ) : null}
 
