@@ -108,41 +108,39 @@ export function LobbyPage() {
 
         {errorMessage ? <p className={styles.error}>{errorMessage}</p> : null}
 
-        <section className={styles.settingsCard}>
-          <div className={styles.settingsHeader}>
-            <div>
-              <h2 className={styles.settingsTitle}>Game settings</h2>
-              <p className={styles.settingsDescription}>
-                Number of cards needed to win
-              </p>
+        {isHost ? (
+          <section className={styles.settingsCard}>
+            <div className={styles.settingsHeader}>
+              <div>
+                <h2 className={styles.settingsTitle}>Game settings</h2>
+                <p className={styles.settingsDescription}>
+                  Number of cards needed to win
+                </p>
+              </div>
+              <strong className={styles.targetValue}>
+                {roomState?.targetTimelineCardCount ??
+                  DEFAULT_TARGET_TIMELINE_CARD_COUNT}
+              </strong>
             </div>
-            <strong className={styles.targetValue}>
-              {roomState?.targetTimelineCardCount ??
+
+            <input
+              className={styles.rangeInput}
+              max={MAX_TARGET_TIMELINE_CARD_COUNT}
+              min={MIN_TARGET_TIMELINE_CARD_COUNT}
+              onChange={(event) =>
+                handleTargetCardCountChange(Number(event.target.value))
+              }
+              type="range"
+              value={
+                roomState?.targetTimelineCardCount ??
                 DEFAULT_TARGET_TIMELINE_CARD_COUNT}
-            </strong>
-          </div>
+            />
 
-          <input
-            className={styles.rangeInput}
-            disabled={!isHost}
-            max={MAX_TARGET_TIMELINE_CARD_COUNT}
-            min={MIN_TARGET_TIMELINE_CARD_COUNT}
-            onChange={(event) =>
-              handleTargetCardCountChange(Number(event.target.value))
-            }
-            type="range"
-            value={
-              roomState?.targetTimelineCardCount ??
-              DEFAULT_TARGET_TIMELINE_CARD_COUNT
-            }
-          />
-
-          <p className={styles.settingsHint}>
-            {isHost
-              ? "You are the host, so you can change this setting."
-              : "Only the host can change this setting."}
-          </p>
-        </section>
+            <p className={styles.settingsHint}>
+              You are the host, so you can change this setting.
+            </p>
+          </section>
+        ) : null}
 
         <ul className={styles.playerList}>
           {(roomState?.players ?? []).map((player) => (

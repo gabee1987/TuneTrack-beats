@@ -54,7 +54,7 @@ export function HomePage() {
           </label>
 
           <button className={styles.button} type="submit">
-            Join Room
+            Join Game Room
           </button>
         </form>
       </section>
