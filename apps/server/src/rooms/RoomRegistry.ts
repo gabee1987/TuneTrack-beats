@@ -1,11 +1,23 @@
+import {
+  GameFlowService,
+  type GameState,
+  type GameTrackCard,
+  type TimelineCard,
+} from "@tunetrack/game-engine";
 import { randomUUID } from "node:crypto";
 import {
   DEFAULT_STARTING_TIMELINE_CARD_COUNT,
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
+  type ConfirmRevealPayloadParsed,
+  type PlaceCardPayloadParsed,
   type PublicPlayerState,
   type PublicRoomSettings,
   type PublicRoomState,
+  type PublicRevealState,
   type RoomId,
+  type StartGamePayloadParsed,
+  type TimelineCardPublic,
+  type TrackCardPublic,
   type UpdatePlayerSettingsPayloadParsed,
   type UpdateRoomSettingsPayloadParsed,
 } from "@tunetrack/shared";
@@ -15,24 +27,34 @@ interface SocketRoomMembership {
   roomId: RoomId;
 }
 
+interface RoomRecord {
+  gameState: GameState | null;
+  roomState: PublicRoomState;
+  trackCardsById: Map<string, GameTrackCard>;
+}
+
 export interface JoinRoomResult {
   playerId: string;
   roomState: PublicRoomState;
 }
 
 export class RoomRegistry {
-  private readonly roomsById = new Map<RoomId, PublicRoomState>();
+  private readonly roomsById = new Map<RoomId, RoomRecord>();
   private readonly socketMemberships = new Map<string, SocketRoomMembership>();
+
+  public constructor(
+    private readonly gameFlowService = new GameFlowService(),
+  ) {}
 
   public addPlayerToRoom(
     roomId: RoomId,
     displayName: string,
     socketId: string,
   ): JoinRoomResult {
-    const existingRoom = this.roomsById.get(roomId);
+    const existingRoomRecord = this.roomsById.get(roomId);
     const playerId = randomUUID();
 
-    if (!existingRoom) {
+    if (!existingRoomRecord) {
       const playerState: PublicPlayerState = {
         id: playerId,
         displayName,
@@ -63,7 +85,11 @@ export class RoomRegistry {
         winnerPlayerId: null,
       };
 
-      this.roomsById.set(roomId, roomState);
+      this.roomsById.set(roomId, {
+        gameState: null,
+        roomState,
+        trackCardsById: new Map<string, GameTrackCard>(),
+      });
       this.socketMemberships.set(socketId, { playerId, roomId });
 
       return {
@@ -72,25 +98,32 @@ export class RoomRegistry {
       };
     }
 
+    if (existingRoomRecord.roomState.status !== "lobby") {
+      throw new Error("GAME_ALREADY_STARTED");
+    }
+
     const playerState: PublicPlayerState = {
       id: playerId,
       displayName,
       isHost: false,
       tokenCount: 0,
       startingTimelineCardCount:
-        existingRoom.settings.defaultStartingTimelineCardCount,
+        existingRoomRecord.roomState.settings.defaultStartingTimelineCardCount,
     };
 
     const nextRoomState: PublicRoomState = {
-      ...existingRoom,
-      players: [...existingRoom.players, playerState],
+      ...existingRoomRecord.roomState,
+      players: [...existingRoomRecord.roomState.players, playerState],
       timelines: {
-        ...existingRoom.timelines,
+        ...existingRoomRecord.roomState.timelines,
         [playerId]: [],
       },
     };
 
-    this.roomsById.set(roomId, nextRoomState);
+    this.roomsById.set(roomId, {
+      ...existingRoomRecord,
+      roomState: nextRoomState,
+    });
     this.socketMemberships.set(socketId, { playerId, roomId });
 
     return {
@@ -105,18 +138,18 @@ export class RoomRegistry {
     roomSettingsPayload: UpdateRoomSettingsPayloadParsed,
   ): PublicRoomState {
     const membership = this.socketMemberships.get(socketId);
-    const roomState = this.roomsById.get(roomId);
+    const roomRecord = this.roomsById.get(roomId);
 
-    if (!membership || membership.roomId !== roomId || !roomState) {
+    if (!membership || membership.roomId !== roomId || !roomRecord) {
       throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
     }
 
-    if (roomState.hostId !== membership.playerId) {
+    if (roomRecord.roomState.hostId !== membership.playerId) {
       throw new Error("ONLY_HOST_CAN_UPDATE_ROOM_SETTINGS");
     }
 
     const nextRoomState: PublicRoomState = {
-      ...roomState,
+      ...roomRecord.roomState,
       targetTimelineCardCount: roomSettingsPayload.targetTimelineCardCount,
       settings: {
         targetTimelineCardCount: roomSettingsPayload.targetTimelineCardCount,
@@ -126,7 +159,10 @@ export class RoomRegistry {
       },
     };
 
-    this.roomsById.set(roomId, nextRoomState);
+    this.roomsById.set(roomId, {
+      ...roomRecord,
+      roomState: nextRoomState,
+    });
 
     return nextRoomState;
   }
@@ -136,21 +172,21 @@ export class RoomRegistry {
     updatePlayerSettingsPayload: UpdatePlayerSettingsPayloadParsed,
   ): PublicRoomState {
     const membership = this.socketMemberships.get(socketId);
-    const roomState = this.roomsById.get(updatePlayerSettingsPayload.roomId);
+    const roomRecord = this.roomsById.get(updatePlayerSettingsPayload.roomId);
 
     if (
       !membership ||
       membership.roomId !== updatePlayerSettingsPayload.roomId ||
-      !roomState
+      !roomRecord
     ) {
       throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
     }
 
-    if (roomState.hostId !== membership.playerId) {
+    if (roomRecord.roomState.hostId !== membership.playerId) {
       throw new Error("ONLY_HOST_CAN_UPDATE_PLAYER_SETTINGS");
     }
 
-    const nextPlayers = roomState.players.map((player) =>
+    const nextPlayers = roomRecord.roomState.players.map((player) =>
       player.id === updatePlayerSettingsPayload.playerId
         ? {
             ...player,
@@ -169,13 +205,135 @@ export class RoomRegistry {
     }
 
     const nextRoomState: PublicRoomState = {
-      ...roomState,
+      ...roomRecord.roomState,
       players: nextPlayers,
     };
 
-    this.roomsById.set(updatePlayerSettingsPayload.roomId, nextRoomState);
+    this.roomsById.set(updatePlayerSettingsPayload.roomId, {
+      ...roomRecord,
+      roomState: nextRoomState,
+    });
 
     return nextRoomState;
+  }
+
+  public startGame(
+    socketId: string,
+    startGamePayload: StartGamePayloadParsed,
+    deckCards: GameTrackCard[],
+  ): PublicRoomState {
+    const roomRecord = this.getRoomRecordForMember(socketId, startGamePayload.roomId);
+    const membership = this.getMembership(socketId);
+
+    if (roomRecord.roomState.hostId !== membership.playerId) {
+      throw new Error("ONLY_HOST_CAN_START_GAME");
+    }
+
+    if (roomRecord.roomState.status !== "lobby") {
+      throw new Error("GAME_ALREADY_STARTED");
+    }
+
+    const gameState = this.gameFlowService.startGame({
+      players: roomRecord.roomState.players.map((player) => ({
+        id: player.id,
+        displayName: player.displayName,
+        startingTimelineCardCount: player.startingTimelineCardCount,
+      })),
+      deck: deckCards,
+      targetTimelineCardCount:
+        roomRecord.roomState.settings.targetTimelineCardCount,
+    });
+    const trackCardsById = createTrackCardMap(deckCards);
+    const roomState = mapGameStateToPublicRoomState(
+      roomRecord.roomState,
+      gameState,
+      trackCardsById,
+    );
+
+    this.roomsById.set(startGamePayload.roomId, {
+      gameState,
+      roomState,
+      trackCardsById,
+    });
+
+    return roomState;
+  }
+
+  public placeCard(
+    socketId: string,
+    placeCardPayload: PlaceCardPayloadParsed,
+  ): PublicRoomState {
+    const roomRecord = this.getRoomRecordForMember(socketId, placeCardPayload.roomId);
+    const membership = this.getMembership(socketId);
+
+    if (!roomRecord.gameState) {
+      throw new Error("GAME_NOT_STARTED");
+    }
+
+    const gameState = this.gameFlowService.placeCard(
+      roomRecord.gameState,
+      membership.playerId,
+      placeCardPayload.selectedSlotIndex,
+    );
+    const roomState = mapGameStateToPublicRoomState(
+      roomRecord.roomState,
+      gameState,
+      roomRecord.trackCardsById,
+    );
+
+    this.roomsById.set(placeCardPayload.roomId, {
+      ...roomRecord,
+      gameState,
+      roomState,
+    });
+
+    return roomState;
+  }
+
+  public confirmReveal(
+    socketId: string,
+    confirmRevealPayload: ConfirmRevealPayloadParsed,
+  ): PublicRoomState {
+    const roomRecord = this.getRoomRecordForMember(
+      socketId,
+      confirmRevealPayload.roomId,
+    );
+    const membership = this.getMembership(socketId);
+
+    if (!roomRecord.gameState || !roomRecord.gameState.turn) {
+      throw new Error("GAME_NOT_STARTED");
+    }
+
+    if (
+      roomRecord.roomState.settings.revealConfirmMode === "host_only" &&
+      roomRecord.roomState.hostId !== membership.playerId
+    ) {
+      throw new Error("ONLY_HOST_CAN_CONFIRM_REVEAL");
+    }
+
+    if (
+      roomRecord.roomState.settings.revealConfirmMode ===
+        "host_or_active_player" &&
+      roomRecord.roomState.hostId !== membership.playerId &&
+      roomRecord.gameState.turn.activePlayerId !== membership.playerId
+    ) {
+      throw new Error("ONLY_HOST_OR_ACTIVE_PLAYER_CAN_CONFIRM_REVEAL");
+    }
+
+    const gameState = this.gameFlowService.confirmReveal(roomRecord.gameState);
+    const roomState = mapGameStateToPublicRoomState(
+      roomRecord.roomState,
+      gameState,
+      roomRecord.trackCardsById,
+    );
+
+    this.roomsById.set(confirmRevealPayload.roomId, {
+      ...roomRecord,
+      gameState,
+      roomState,
+    });
+
+    return roomState;
   }
 
   public removePlayerBySocketId(socketId: string): PublicRoomState | null {
@@ -187,16 +345,16 @@ export class RoomRegistry {
 
     this.socketMemberships.delete(socketId);
 
-    const roomState = this.roomsById.get(membership.roomId);
+    const roomRecord = this.roomsById.get(membership.roomId);
 
-    if (!roomState) {
+    if (!roomRecord) {
       return null;
     }
 
-    const players = roomState.players.filter(
+    const players = roomRecord.roomState.players.filter(
       (player) => player.id !== membership.playerId,
     );
-    const timelines = { ...roomState.timelines };
+    const timelines = { ...roomRecord.roomState.timelines };
     delete timelines[membership.playerId];
 
     if (players.length === 0) {
@@ -205,23 +363,141 @@ export class RoomRegistry {
     }
 
     const hostId =
-      roomState.hostId === membership.playerId
-        ? (players[0]?.id ?? roomState.hostId)
-        : roomState.hostId;
+      roomRecord.roomState.hostId === membership.playerId
+        ? (players[0]?.id ?? roomRecord.roomState.hostId)
+        : roomRecord.roomState.hostId;
     const normalizedPlayers = players.map((player) => ({
       ...player,
       isHost: player.id === hostId,
     }));
 
     const nextRoomState: PublicRoomState = {
-      ...roomState,
+      ...roomRecord.roomState,
       hostId,
       players: normalizedPlayers,
       timelines,
     };
 
-    this.roomsById.set(membership.roomId, nextRoomState);
+    this.roomsById.set(membership.roomId, {
+      ...roomRecord,
+      roomState: nextRoomState,
+    });
 
     return nextRoomState;
   }
+
+  private getMembership(socketId: string): SocketRoomMembership {
+    const membership = this.socketMemberships.get(socketId);
+
+    if (!membership) {
+      throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
+    }
+
+    return membership;
+  }
+
+  private getRoomRecordForMember(socketId: string, roomId: RoomId): RoomRecord {
+    const membership = this.getMembership(socketId);
+    const roomRecord = this.roomsById.get(roomId);
+
+    if (membership.roomId !== roomId || !roomRecord) {
+      throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
+    }
+
+    return roomRecord;
+  }
+}
+
+function mapGameStateToPublicRoomState(
+  currentRoomState: PublicRoomState,
+  gameState: GameState,
+  trackCardsById: Map<string, GameTrackCard>,
+): PublicRoomState {
+  return {
+    ...currentRoomState,
+    status: gameState.phase,
+    timelines: Object.fromEntries(
+      Object.entries(gameState.timelines).map(([playerId, timelineCards]) => [
+        playerId,
+        timelineCards.map((timelineCard) =>
+          mapTimelineCardToPublicTimelineCard(timelineCard, trackCardsById),
+        ),
+      ]),
+    ),
+    currentTrackCard: gameState.currentTrackCard
+      ? mapTrackCardToPublicTrackCard(gameState.currentTrackCard)
+      : null,
+    turn: gameState.turn
+      ? {
+          activePlayerId: gameState.turn.activePlayerId,
+          turnNumber: gameState.turn.turnNumber,
+        }
+      : null,
+    revealState: gameState.revealState
+      ? mapRevealStateToPublicRevealState(gameState.revealState, trackCardsById)
+      : null,
+    winnerPlayerId: gameState.winnerPlayerId,
+  };
+}
+
+function mapRevealStateToPublicRevealState(
+  revealState: GameState["revealState"],
+  trackCardsById: Map<string, GameTrackCard>,
+): PublicRevealState | null {
+  if (!revealState) {
+    return null;
+  }
+
+  return {
+    playerId: revealState.playerId,
+    placedCard: mapTimelineCardToPublicTimelineCard(
+      revealState.placedCard,
+      trackCardsById,
+    ),
+    selectedSlotIndex: revealState.selectedSlotIndex,
+    wasCorrect: revealState.wasCorrect,
+    validSlotIndexes: revealState.validSlotIndexes,
+  };
+}
+
+function mapTimelineCardToPublicTimelineCard(
+  timelineCard: TimelineCard,
+  trackCardsById: Map<string, GameTrackCard>,
+): TimelineCardPublic {
+  const trackCard = trackCardsById.get(timelineCard.id);
+
+  if (!trackCard) {
+    throw new Error("TRACK_CARD_NOT_FOUND");
+  }
+
+  return {
+    ...mapTrackCardToPublicTrackCard(trackCard),
+    revealedYear: timelineCard.releaseYear,
+  };
+}
+
+function mapTrackCardToPublicTrackCard(
+  trackCard: GameTrackCard,
+): TrackCardPublic {
+  return {
+    id: trackCard.id,
+    title: trackCard.title,
+    artist: trackCard.artist,
+    albumTitle: trackCard.albumTitle,
+    ...(trackCard.genre ? { genre: trackCard.genre } : {}),
+    ...(trackCard.artworkUrl ? { artworkUrl: trackCard.artworkUrl } : {}),
+  };
+}
+
+function createTrackCardMap(
+  deckCards: GameTrackCard[],
+): Map<string, GameTrackCard> {
+  return new Map(
+    deckCards.map((deckCard) => [
+      deckCard.id,
+      {
+        ...deckCard,
+      },
+    ]),
+  );
 }
