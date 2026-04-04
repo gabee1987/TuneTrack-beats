@@ -1,0 +1,82 @@
+[
+  {
+    "id": "track-001",
+    "releaseYear": 1975,
+    "title": "Bohemian Rhapsody",
+    "artist": "Queen",
+    "albumTitle": "A Night at the Opera",
+    "genre": "Rock"
+  },
+  {
+    "id": "track-002",
+    "releaseYear": 1982,
+    "title": "Billie Jean",
+    "artist": "Michael Jackson",
+    "albumTitle": "Thriller",
+    "genre": "Pop"
+  },
+  {
+    "id": "track-003",
+    "releaseYear": 1991,
+    "title": "Smells Like Teen Spirit",
+    "artist": "Nirvana",
+    "albumTitle": "Nevermind",
+    "genre": "Grunge"
+  },
+  {
+    "id": "track-004",
+    "releaseYear": 1995,
+    "title": "Wonderwall",
+    "artist": "Oasis",
+    "albumTitle": "(What's the Story) Morning Glory?",
+    "genre": "Britpop"
+  },
+  {
+    "id": "track-005",
+    "releaseYear": 2000,
+    "title": "Yellow",
+    "artist": "Coldplay",
+    "albumTitle": "Parachutes",
+    "genre": "Alternative Rock"
+  },
+  {
+    "id": "track-006",
+    "releaseYear": 2003,
+    "title": "Hey Ya!",
+    "artist": "Outkast",
+    "albumTitle": "Speakerboxxx/The Love Below",
+    "genre": "Hip Hop"
+  },
+  {
+    "id": "track-007",
+    "releaseYear": 2008,
+    "title": "Viva la Vida",
+    "artist": "Coldplay",
+    "albumTitle": "Viva la Vida or Death and All His Friends",
+    "genre": "Pop Rock"
+  },
+  {
+    "id": "track-008",
+    "releaseYear": 2011,
+    "title": "Rolling in the Deep",
+    "artist": "Adele",
+    "albumTitle": "21",
+    "genre": "Soul"
+  },
+  {
+    "id": "track-009",
+    "releaseYear": 2013,
+    "title": "Get Lucky",
+    "artist": "Daft Punk",
+    "albumTitle": "Random Access Memories",
+    "genre": "Disco"
+  },
+  {
+    "id": "track-010",
+    "releaseYear": 2019,
+    "title": "Blinding Lights",
+    "artist": "The Weeknd",
+    "albumTitle": "After Hours",
+    "genre": "Synth-pop"
+  }
+]

@@ -11,6 +11,7 @@
     "test": "vitest run --pool=threads --passWithNoTests"
   },
   "dependencies": {
+    "@tunetrack/game-engine": "0.1.0",
     "@tunetrack/shared": "0.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
