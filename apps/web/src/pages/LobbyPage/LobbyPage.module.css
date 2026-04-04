@@ -1,0 +1,59 @@
+.screen {
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.panel {
+  width: min(100%, 720px);
+  margin: 0 auto;
+  padding: 28px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
+  background: rgba(12, 12, 22, 0.72);
+}
+
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.title {
+  margin: 0;
+  font-size: 40px;
+  letter-spacing: -0.05em;
+}
+
+.meta {
+  margin: 8px 0 0;
+  color: rgba(247, 247, 251, 0.7);
+}
+
+.status {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 14px;
+}
+
+.playerList {
+  list-style: none;
+  margin: 32px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.playerItem {
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  justify-content: space-between;
+}
+
+.error {
+  margin-top: 24px;
+  color: #ff8fb3;
+}
