@@ -1,3 +1,4 @@
+import type { GameTrackCard } from "@tunetrack/game-engine";
 import {
   ClientToServerEvent,
   ServerToClientEvent,
@@ -10,6 +11,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { io as createSocketClient, type Socket } from "socket.io-client";
 import { createHttpServer } from "../src/app/createHttpServer.js";
 import { createSocketServer } from "../src/app/createSocketServer.js";
+import { DeckService } from "../src/decks/DeckService.js";
 import { registerSocketHandlers } from "../src/realtime/registerSocketHandlers.js";
 import { RoomService } from "../src/rooms/RoomService.js";
 
@@ -50,9 +52,15 @@ describe("room flow", () => {
       guestSocket,
       (roomState) => roomState.players.length === 2,
     );
+    const connectionPromises = [
+      waitForEvent(hostSocket, "connect"),
+      waitForEvent(guestSocket, "connect"),
+    ];
 
     hostSocket.connect();
     guestSocket.connect();
+
+    await Promise.all(connectionPromises);
 
     hostSocket.emit(ClientToServerEvent.JoinRoom, {
       roomId: "party-room",
@@ -127,13 +135,166 @@ describe("room flow", () => {
       }),
     );
   });
+
+  it("starts a game, rejects inactive placement, resolves reveal, and advances turn", async () => {
+    const serverContext = await startTestServer();
+    const hostSocket = createClient(serverContext.baseUrl);
+    const guestSocket = createClient(serverContext.baseUrl);
+
+    const hostIdentityPromise = waitForEvent<PlayerIdentityPayload>(
+      hostSocket,
+      ServerToClientEvent.PlayerIdentity,
+    );
+    const guestIdentityPromise = waitForEvent<PlayerIdentityPayload>(
+      guestSocket,
+      ServerToClientEvent.PlayerIdentity,
+    );
+    const twoPlayerLobbyPromise = waitForStateUpdate(
+      guestSocket,
+      (roomState) => roomState.status === "lobby" && roomState.players.length === 2,
+    );
+    const connectionPromises = [
+      waitForEvent(hostSocket, "connect"),
+      waitForEvent(guestSocket, "connect"),
+    ];
+
+    hostSocket.connect();
+    guestSocket.connect();
+
+    await Promise.all(connectionPromises);
+
+    hostSocket.emit(ClientToServerEvent.JoinRoom, {
+      roomId: "game-room",
+      displayName: "Host Player",
+    });
+    guestSocket.emit(ClientToServerEvent.JoinRoom, {
+      roomId: "game-room",
+      displayName: "Guest Player",
+    });
+
+    const [hostIdentity, guestIdentity] = await Promise.all([
+      hostIdentityPromise,
+      guestIdentityPromise,
+      twoPlayerLobbyPromise,
+    ]);
+
+    const gameTurnPromise = waitForStateUpdate(
+      hostSocket,
+      (roomState) => roomState.status === "turn" && roomState.turn?.turnNumber === 1,
+    );
+
+    hostSocket.emit(ClientToServerEvent.StartGame, {
+      roomId: "game-room",
+    });
+
+    const firstTurnState = await gameTurnPromise;
+
+    expect(firstTurnState.turn).toEqual({
+      activePlayerId: hostIdentity.playerId,
+      turnNumber: 1,
+    });
+    expect(firstTurnState.currentTrackCard).toEqual({
+      id: "test-track-3",
+      title: "Middle Song",
+      artist: "Test Artist 3",
+      albumTitle: "Test Album 3",
+      genre: "Pop",
+    });
+    expect(firstTurnState.timelines[hostIdentity.playerId]).toEqual([
+      {
+        id: "test-track-1",
+        title: "Older Song",
+        artist: "Test Artist 1",
+        albumTitle: "Test Album 1",
+        genre: "Rock",
+        revealedYear: 1980,
+      },
+    ]);
+
+    const inactivePlayerErrorPromise = waitForEvent<ServerErrorPayload>(
+      guestSocket,
+      ServerToClientEvent.Error,
+    );
+
+    guestSocket.emit(ClientToServerEvent.PlaceCard, {
+      roomId: "game-room",
+      selectedSlotIndex: 0,
+    });
+
+    await expect(inactivePlayerErrorPromise).resolves.toEqual({
+      code: "NOT_ACTIVE_PLAYER",
+      message: "It is not your turn.",
+    });
+
+    const revealStatePromise = waitForStateUpdate(
+      guestSocket,
+      (roomState) => roomState.status === "reveal",
+    );
+
+    hostSocket.emit(ClientToServerEvent.PlaceCard, {
+      roomId: "game-room",
+      selectedSlotIndex: 1,
+    });
+
+    const revealState = await revealStatePromise;
+
+    expect(revealState.revealState).toEqual({
+      playerId: hostIdentity.playerId,
+      placedCard: {
+        id: "test-track-3",
+        title: "Middle Song",
+        artist: "Test Artist 3",
+        albumTitle: "Test Album 3",
+        genre: "Pop",
+        revealedYear: 1990,
+      },
+      selectedSlotIndex: 1,
+      wasCorrect: true,
+      validSlotIndexes: [1],
+    });
+
+    const revealConfirmErrorPromise = waitForEvent<ServerErrorPayload>(
+      guestSocket,
+      ServerToClientEvent.Error,
+    );
+
+    guestSocket.emit(ClientToServerEvent.ConfirmReveal, {
+      roomId: "game-room",
+    });
+
+    await expect(revealConfirmErrorPromise).resolves.toEqual({
+      code: "ONLY_HOST_CAN_CONFIRM_REVEAL",
+      message: "Only the host can confirm the reveal.",
+    });
+
+    const secondTurnPromise = waitForStateUpdate(
+      guestSocket,
+      (roomState) => roomState.status === "turn" && roomState.turn?.turnNumber === 2,
+    );
+
+    hostSocket.emit(ClientToServerEvent.ConfirmReveal, {
+      roomId: "game-room",
+    });
+
+    const secondTurnState = await secondTurnPromise;
+
+    expect(secondTurnState.turn).toEqual({
+      activePlayerId: guestIdentity.playerId,
+      turnNumber: 2,
+    });
+    expect(secondTurnState.currentTrackCard?.id).toBe("test-track-4");
+    expect(secondTurnState.revealState).toBeNull();
+  });
 });
 
 async function startTestServer(): Promise<TestServerContext> {
   const { httpServer } = createHttpServer();
   const io = createSocketServer(httpServer);
 
-  registerSocketHandlers(io, new RoomService());
+  registerSocketHandlers(
+    io,
+    new RoomService(undefined, new TestDeckService()),
+  );
 
   await new Promise<void>((resolve) => {
     httpServer.listen(0, resolve);
@@ -159,6 +320,45 @@ async function startTestServer(): Promise<TestServerContext> {
     baseUrl: `http://localhost:${address.port}`,
     close,
   };
+}
+
+class TestDeckService extends DeckService {
+  public override createShuffledDeck(): GameTrackCard[] {
+    return [
+      {
+        id: "test-track-1",
+        title: "Older Song",
+        artist: "Test Artist 1",
+        albumTitle: "Test Album 1",
+        genre: "Rock",
+        releaseYear: 1980,
+      },
+      {
+        id: "test-track-2",
+        title: "Newer Song",
+        artist: "Test Artist 2",
+        albumTitle: "Test Album 2",
+        genre: "Soul",
+        releaseYear: 2000,
+      },
+      {
+        id: "test-track-3",
+        title: "Middle Song",
+        artist: "Test Artist 3",
+        albumTitle: "Test Album 3",
+        genre: "Pop",
+        releaseYear: 1990,
+      },
+      {
+        id: "test-track-4",
+        title: "Newest Song",
+        artist: "Test Artist 4",
+        albumTitle: "Test Album 4",
+        genre: "Disco",
+        releaseYear: 2010,
+      },
+    ];
+  }
 }
 
 function createClient(baseUrl: string): Socket {
