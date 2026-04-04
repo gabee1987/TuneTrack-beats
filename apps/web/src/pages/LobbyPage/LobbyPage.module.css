@@ -39,7 +39,7 @@
 
 .playerList {
   list-style: none;
-  margin: 32px 0 0;
+  margin: 24px 0 0;
   padding: 0;
   display: grid;
   gap: 12px;
@@ -56,4 +56,40 @@
 .error {
   margin-top: 24px;
   color: #ff8fb3;
+}
+
+.settingsCard {
+  margin-top: 28px;
+  padding: 20px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.settingsHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+}
+
+.settingsTitle {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.04em;
+}
+
+.settingsDescription,
+.settingsHint {
+  margin: 6px 0 0;
+  color: rgba(247, 247, 251, 0.7);
+}
+
+.targetValue {
+  font-size: 32px;
+}
+
+.rangeInput {
+  width: 100%;
+  margin-top: 20px;
+  accent-color: #8b7bff;
 }

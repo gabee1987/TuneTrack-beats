@@ -1,5 +1,9 @@
 import {
   ClientToServerEvent,
+  DEFAULT_TARGET_TIMELINE_CARD_COUNT,
+  MAX_TARGET_TIMELINE_CARD_COUNT,
+  MIN_TARGET_TIMELINE_CARD_COUNT,
+  type PlayerIdentityPayload,
   ServerToClientEvent,
   type PublicRoomState,
   type ServerErrorPayload,
@@ -20,8 +24,11 @@ export function LobbyPage() {
   );
 
   const [connectionStatus, setConnectionStatus] = useState("Connecting");
+  const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
   const [roomState, setRoomState] = useState<PublicRoomState | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const isHost = roomState?.hostId === currentPlayerId;
 
   useEffect(() => {
     if (!roomId || !displayName) {
@@ -46,12 +53,17 @@ export function LobbyPage() {
       setRoomState(payload.roomState);
     }
 
+    function handlePlayerIdentity(payload: PlayerIdentityPayload) {
+      setCurrentPlayerId(payload.playerId);
+    }
+
     function handleError(payload: ServerErrorPayload) {
       setErrorMessage(payload.message);
     }
 
     socketClient.on("connect", handleConnect);
     socketClient.on("disconnect", handleDisconnect);
+    socketClient.on(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
     socketClient.on(ServerToClientEvent.StateUpdate, handleStateUpdate);
     socketClient.on(ServerToClientEvent.Error, handleError);
 
@@ -64,11 +76,23 @@ export function LobbyPage() {
     return () => {
       socketClient.off("connect", handleConnect);
       socketClient.off("disconnect", handleDisconnect);
+      socketClient.off(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
       socketClient.off(ServerToClientEvent.StateUpdate, handleStateUpdate);
       socketClient.off(ServerToClientEvent.Error, handleError);
       socketClient.disconnect();
     };
   }, [displayName, navigate, roomId]);
+
+  function handleTargetCardCountChange(nextValue: number) {
+    if (!roomState || !isHost) {
+      return;
+    }
+
+    socketClient.emit(ClientToServerEvent.UpdateRoomSettings, {
+      roomId: roomState.roomId,
+      targetTimelineCardCount: nextValue,
+    });
+  }
 
   return (
     <main className={styles.screen}>
@@ -77,15 +101,48 @@ export function LobbyPage() {
           <div>
             <h1 className={styles.title}>Lobby</h1>
             <p className={styles.meta}>Room: {roomState?.roomId ?? roomId}</p>
-            <p className={styles.meta}>
-              Target cards: {roomState?.targetTimelineCardCount ?? 10}
-            </p>
           </div>
 
           <div className={styles.status}>{connectionStatus}</div>
         </div>
 
         {errorMessage ? <p className={styles.error}>{errorMessage}</p> : null}
+
+        <section className={styles.settingsCard}>
+          <div className={styles.settingsHeader}>
+            <div>
+              <h2 className={styles.settingsTitle}>Game settings</h2>
+              <p className={styles.settingsDescription}>
+                Number of cards needed to win
+              </p>
+            </div>
+            <strong className={styles.targetValue}>
+              {roomState?.targetTimelineCardCount ??
+                DEFAULT_TARGET_TIMELINE_CARD_COUNT}
+            </strong>
+          </div>
+
+          <input
+            className={styles.rangeInput}
+            disabled={!isHost}
+            max={MAX_TARGET_TIMELINE_CARD_COUNT}
+            min={MIN_TARGET_TIMELINE_CARD_COUNT}
+            onChange={(event) =>
+              handleTargetCardCountChange(Number(event.target.value))
+            }
+            type="range"
+            value={
+              roomState?.targetTimelineCardCount ??
+              DEFAULT_TARGET_TIMELINE_CARD_COUNT
+            }
+          />
+
+          <p className={styles.settingsHint}>
+            {isHost
+              ? "You are the host, so you can change this setting."
+              : "Only the host can change this setting."}
+          </p>
+        </section>
 
         <ul className={styles.playerList}>
           {(roomState?.players ?? []).map((player) => (

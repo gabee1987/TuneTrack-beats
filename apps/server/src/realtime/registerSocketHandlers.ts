@@ -2,6 +2,7 @@ import {
   ClientToServerEvent,
   ServerToClientEvent,
   joinRoomPayloadSchema,
+  updateRoomSettingsPayloadSchema,
 } from "@tunetrack/shared";
 import type { Server, Socket } from "socket.io";
 import { logger } from "../app/logger.js";
@@ -11,6 +12,7 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
   io.on("connection", (socket) => {
     logger.info({ socketId: socket.id }, "socket connected");
     registerJoinRoomHandler(io, socket, roomService);
+    registerUpdateRoomSettingsHandler(io, socket, roomService);
     registerDisconnectHandler(io, socket, roomService);
   });
 }
@@ -31,12 +33,54 @@ function registerJoinRoomHandler(
       return;
     }
 
-    const roomState = roomService.joinRoom(parseResult.data, socket.id);
+    const { playerId, roomState } = roomService.joinRoom(
+      parseResult.data,
+      socket.id,
+    );
     socket.join(roomState.roomId);
+    socket.emit(ServerToClientEvent.PlayerIdentity, { playerId });
 
     io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
       roomState,
     });
+  });
+}
+
+function registerUpdateRoomSettingsHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.UpdateRoomSettings, (payload: unknown) => {
+    const parseResult = updateRoomSettingsPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_ROOM_SETTINGS_PAYLOAD",
+        message: "Target card count must stay within the allowed range.",
+      });
+      return;
+    }
+
+    try {
+      const roomState = roomService.updateRoomSettings(parseResult.data, socket.id);
+
+      io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
+        roomState,
+      });
+    } catch (error) {
+      socket.emit(ServerToClientEvent.Error, {
+        code:
+          error instanceof Error
+            ? error.message
+            : "ROOM_SETTINGS_UPDATE_FAILED",
+        message:
+          error instanceof Error &&
+          error.message === "ONLY_HOST_CAN_UPDATE_ROOM_SETTINGS"
+            ? "Only the host can change room settings."
+            : "Room settings could not be updated.",
+      });
+    }
   });
 }
 

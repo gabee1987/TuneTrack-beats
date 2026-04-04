@@ -11,6 +11,11 @@ interface SocketRoomMembership {
   roomId: RoomId;
 }
 
+export interface JoinRoomResult {
+  playerId: string;
+  roomState: PublicRoomState;
+}
+
 export class RoomRegistry {
   private readonly roomsById = new Map<RoomId, PublicRoomState>();
   private readonly socketMemberships = new Map<string, SocketRoomMembership>();
@@ -19,7 +24,7 @@ export class RoomRegistry {
     roomId: RoomId,
     displayName: string,
     socketId: string,
-  ): PublicRoomState {
+  ): JoinRoomResult {
     const existingRoom = this.roomsById.get(roomId);
     const playerId = randomUUID();
 
@@ -46,7 +51,10 @@ export class RoomRegistry {
       this.roomsById.set(roomId, roomState);
       this.socketMemberships.set(socketId, { playerId, roomId });
 
-      return roomState;
+      return {
+        playerId,
+        roomState,
+      };
     }
 
     const playerState: PublicPlayerState = {
@@ -67,6 +75,35 @@ export class RoomRegistry {
 
     this.roomsById.set(roomId, nextRoomState);
     this.socketMemberships.set(socketId, { playerId, roomId });
+
+    return {
+      playerId,
+      roomState: nextRoomState,
+    };
+  }
+
+  public updateTargetTimelineCardCount(
+    socketId: string,
+    roomId: RoomId,
+    targetTimelineCardCount: number,
+  ): PublicRoomState {
+    const membership = this.socketMemberships.get(socketId);
+    const roomState = this.roomsById.get(roomId);
+
+    if (!membership || membership.roomId !== roomId || !roomState) {
+      throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
+    }
+
+    if (roomState.hostId !== membership.playerId) {
+      throw new Error("ONLY_HOST_CAN_UPDATE_ROOM_SETTINGS");
+    }
+
+    const nextRoomState: PublicRoomState = {
+      ...roomState,
+      targetTimelineCardCount,
+    };
+
+    this.roomsById.set(roomId, nextRoomState);
 
     return nextRoomState;
   }

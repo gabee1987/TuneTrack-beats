@@ -27,7 +27,7 @@ export function HomePage() {
   return (
     <main className={styles.screen}>
       <section className={styles.panel}>
-        <h1 className={styles.title}>TuneTrack</h1>
+        <h1 className={styles.title}>TuneTrack beats</h1>
         <p className={styles.subtitle}>
           Join a room, listen together, and build your music timeline.
         </p>
