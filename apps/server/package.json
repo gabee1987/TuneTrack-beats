@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint src --ext .ts",
+    "lint": "eslint src tests --ext .ts",
     "test": "vitest run --pool=threads --passWithNoTests"
   },
   "dependencies": {

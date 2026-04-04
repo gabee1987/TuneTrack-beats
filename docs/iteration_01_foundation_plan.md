@@ -2,6 +2,18 @@
 
 > Goal: create a stable, testable technical foundation for TuneTrack without changing the gameplay vision or architecture rules defined in `tunetrack_full_architecture.md` and `tunetrack_technical_implementation_plan.md`.
 
+## Implementation Status
+
+Status: **completed**
+
+Notes:
+- The foundation workspace, shared contracts, game-engine package, server lobby
+  flow, and web lobby shell are implemented.
+- The manual two-tab room check is covered by a server-side socket integration
+  test in `apps/server/tests/roomFlow.test.ts`.
+- Gameplay features such as deck handling, turn flow, timeline UI, challenges,
+  and playback remain intentionally deferred to the next iteration.
+
 ---
 
 ## 1. Iteration Outcome
