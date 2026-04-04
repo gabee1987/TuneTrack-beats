@@ -3,6 +3,7 @@ export * from "./events/clientEvents.js";
 export * from "./events/schemas.js";
 export * from "./events/serverEvents.js";
 export * from "./game/player.js";
+export * from "./game/roomSettings.js";
 export * from "./game/roomState.js";
 export * from "./game/timeline.js";
 export * from "./game/track.js";

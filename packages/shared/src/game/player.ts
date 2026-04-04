@@ -5,4 +5,5 @@ export interface PublicPlayerState {
   displayName: string;
   isHost: boolean;
   tokenCount: number;
+  startingTimelineCardCount: number;
 }

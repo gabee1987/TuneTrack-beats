@@ -1,6 +1,7 @@
 import type {
   JoinRoomPayloadParsed,
   PublicRoomState,
+  UpdatePlayerSettingsPayloadParsed,
   UpdateRoomSettingsPayloadParsed,
 } from "@tunetrack/shared";
 import { type JoinRoomResult, RoomRegistry } from "./RoomRegistry.js";
@@ -23,10 +24,20 @@ export class RoomService {
     updateRoomSettingsPayload: UpdateRoomSettingsPayloadParsed,
     socketId: string,
   ): PublicRoomState {
-    return this.roomRegistry.updateTargetTimelineCardCount(
+    return this.roomRegistry.updateRoomSettings(
       socketId,
       updateRoomSettingsPayload.roomId,
-      updateRoomSettingsPayload.targetTimelineCardCount,
+      updateRoomSettingsPayload,
+    );
+  }
+
+  public updatePlayerSettings(
+    updatePlayerSettingsPayload: UpdatePlayerSettingsPayloadParsed,
+    socketId: string,
+  ): PublicRoomState {
+    return this.roomRegistry.updatePlayerSettings(
+      socketId,
+      updatePlayerSettingsPayload,
     );
   }
 

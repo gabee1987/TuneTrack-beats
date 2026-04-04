@@ -2,6 +2,7 @@ import {
   ClientToServerEvent,
   ServerToClientEvent,
   joinRoomPayloadSchema,
+  updatePlayerSettingsPayloadSchema,
   updateRoomSettingsPayloadSchema,
 } from "@tunetrack/shared";
 import type { Server, Socket } from "socket.io";
@@ -13,6 +14,7 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
     logger.info({ socketId: socket.id }, "socket connected");
     registerJoinRoomHandler(io, socket, roomService);
     registerUpdateRoomSettingsHandler(io, socket, roomService);
+    registerUpdatePlayerSettingsHandler(io, socket, roomService);
     registerDisconnectHandler(io, socket, roomService);
   });
 }
@@ -43,6 +45,47 @@ function registerJoinRoomHandler(
     io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
       roomState,
     });
+  });
+}
+
+function registerUpdatePlayerSettingsHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.UpdatePlayerSettings, (payload: unknown) => {
+    const parseResult = updatePlayerSettingsPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_PLAYER_SETTINGS_PAYLOAD",
+        message: "Player starting-card count is invalid.",
+      });
+      return;
+    }
+
+    try {
+      const roomState = roomService.updatePlayerSettings(
+        parseResult.data,
+        socket.id,
+      );
+
+      io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
+        roomState,
+      });
+    } catch (error) {
+      socket.emit(ServerToClientEvent.Error, {
+        code:
+          error instanceof Error
+            ? error.message
+            : "PLAYER_SETTINGS_UPDATE_FAILED",
+        message:
+          error instanceof Error &&
+          error.message === "ONLY_HOST_CAN_UPDATE_PLAYER_SETTINGS"
+            ? "Only the host can change player settings."
+            : "Player settings could not be updated.",
+      });
+    }
   });
 }
 
