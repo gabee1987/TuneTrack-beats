@@ -6,20 +6,23 @@
 
 ## Implementation Status
 
-Status: **in progress**
+Status: **completed**
 
-Completed so far:
+Completed:
 - shared gameplay contracts
 - per-player lobby settings
 - pure game-engine turn/reveal rules
 - server-side test deck loading
 - server socket handlers for start/place/confirm flow
 - basic GamePage UI with slot-click placement and reveal display
+- frontend readability polish for turn flow
+- docs and decision-log cleanup
 
-Still in scope:
-- frontend polish for game flow readability
-- documentation cleanup and any final Iteration 02 adjustments after manual
-  testing
+Deferred to later iterations:
+- drag-and-drop timeline interactions
+- challenge/veto and TT token mechanics
+- reconnect/session restoration
+- playback integration
 
 ---
 
@@ -608,8 +611,8 @@ Please decide these before implementation starts:
 
 3. During reveal phase, should only the active player confirm reveal, or can any
    room member confirm?
-   Recommendation: only host or active player, but pick one rule and keep it
-   consistent.
+   Decision: configurable by room. Default is host-only, with an optional
+   `host_or_active_player` mode.
 
 4. Is a simple slot-click timeline acceptable for Iteration 02 before we add
    drag-and-drop polish?

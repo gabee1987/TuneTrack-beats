@@ -67,6 +67,9 @@ Iteration 02 uses a slot-click timeline with a separate placement confirmation
 button. Drag-and-drop and challenge/veto interactions are intentionally left
 for later iterations.
 
+All clients can see the active player's timeline during a turn, but only the
+active player can interact with slot selection and placement confirmation.
+
 ### MVP test deck format
 
 Local JSON test decks live in
