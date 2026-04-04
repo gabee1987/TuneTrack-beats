@@ -48,6 +48,7 @@ export function GamePage() {
   const isCurrentPlayerTurn =
     Boolean(currentPlayerId) &&
     roomState?.turn?.activePlayerId === currentPlayerId;
+  const canSelectSlot = roomState?.status === "turn" && isCurrentPlayerTurn;
   const canConfirmReveal =
     roomState?.status === "reveal" &&
     (roomState.settings.revealConfirmMode === "host_or_active_player"
@@ -157,6 +158,11 @@ export function GamePage() {
           <p className={styles.sectionLabel}>
             {activePlayer?.displayName ?? "Active player"}'s timeline
           </p>
+          <p className={styles.timelineHint}>
+            {canSelectSlot
+              ? "Tap any slot to preview your placement, then confirm when you are sure."
+              : "Watching the active player's timeline. Placement controls are locked for this turn."}
+          </p>
           <div className={styles.timelineRow}>
             {Array.from({ length: activePlayerTimeline.length + 1 }).map(
               (_, slotIndex) => (
@@ -166,13 +172,11 @@ export function GamePage() {
                 >
                   <button
                     className={`${styles.slotButton} ${
-                      selectedSlotIndex === slotIndex
+                      canSelectSlot && selectedSlotIndex === slotIndex
                         ? styles.slotButtonSelected
                         : ""
                     }`}
-                    disabled={
-                      roomState.status !== "turn" || !isCurrentPlayerTurn
-                    }
+                    disabled={!canSelectSlot}
                     onClick={() => setSelectedSlotIndex(slotIndex)}
                     type="button"
                   >
@@ -206,7 +210,7 @@ export function GamePage() {
             type="button"
           >
             {isCurrentPlayerTurn
-              ? `Place in slot ${selectedSlotIndex}`
+              ? `Confirm Placement: Slot ${selectedSlotIndex}`
               : "Waiting for active player"}
           </button>
         ) : null}

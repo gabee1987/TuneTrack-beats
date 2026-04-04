@@ -61,6 +61,12 @@
   letter-spacing: 0.08em;
 }
 
+.timelineHint {
+  margin: 0 0 16px;
+  color: rgba(247, 247, 251, 0.72);
+  line-height: 1.5;
+}
+
 .cardTitle {
   margin: 0;
   font-size: 28px;
