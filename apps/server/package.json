@@ -1,0 +1,31 @@
+{
+  "name": "@tunetrack/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src --ext .ts",
+    "test": "vitest run --pool=threads --passWithNoTests"
+  },
+  "dependencies": {
+    "@tunetrack/shared": "0.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "pino": "^9.0.0",
+    "socket.io": "^4.7.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.0.0",
+    "@types/supertest": "^6.0.2",
+    "pino-pretty": "^11.0.0",
+    "supertest": "^7.0.0",
+    "tsx": "^4.16.0"
+  }
+}
