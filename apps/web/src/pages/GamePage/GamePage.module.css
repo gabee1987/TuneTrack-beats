@@ -160,6 +160,37 @@
   color: #ff8fb3;
 }
 
+.miniStandingsStrip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.miniStandingCard {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--color-surface-elevated);
+}
+
+.miniStandingRank {
+  margin: 0 0 8px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.miniStandingName {
+  display: block;
+}
+
+.miniStandingMeta {
+  margin: 8px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
 .currentCardPanel,
 .playersPanel,
 .challengePanel,
@@ -549,6 +580,10 @@
   .timelineSwitcherPanel {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .miniStandingsStrip {
+    grid-template-columns: 1fr;
   }
 
   .timelineViewSwitcher {

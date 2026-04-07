@@ -22,6 +22,7 @@ import {
   getRememberedPlayerDisplayName,
 } from "../../services/session/playerSession";
 import { AppShellMenu } from "../../features/app-shell/AppShellMenu";
+import { useUiPreferencesStore } from "../../features/preferences/uiPreferences";
 import { socketClient } from "../../services/socket/socketClient";
 import styles from "./GamePage.module.css";
 
@@ -30,14 +31,13 @@ interface GameRouteState {
   roomState: PublicRoomState | null;
 }
 
-// DEV ONLY: remove these helper panels from the final MVP shell.
-const SHOW_DEVELOPER_CONTEXT_PANELS = true;
-
 interface TimelinePanelProps {
   eyebrow: string;
   title: string;
   subtitle: string;
   hint: string;
+  showEyebrow: boolean;
+  showHint: boolean;
   cardCount: number;
   timelineCards: TimelineCardPublic[];
   previewCard: TrackCardPublic | TimelineCardPublic | null;
@@ -91,6 +91,24 @@ export function GamePage() {
   const [timelineView, setTimelineView] = useState<"active" | "mine">("active");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [nowEpochMs, setNowEpochMs] = useState(() => Date.now());
+  const showMiniStandings = useUiPreferencesStore(
+    (state) => state.view.showMiniStandings,
+  );
+  const showHelperLabels = useUiPreferencesStore(
+    (state) => state.view.showHelperLabels,
+  );
+  const showTimelineHints = useUiPreferencesStore(
+    (state) => state.view.showTimelineHints,
+  );
+  const showDevCardInfo = useUiPreferencesStore(
+    (state) => state.showDevCardInfo,
+  );
+  const showDevAlbumInfo = useUiPreferencesStore(
+    (state) => state.showDevAlbumInfo,
+  );
+  const showDevGenreInfo = useUiPreferencesStore(
+    (state) => state.showDevGenreInfo,
+  );
 
   const activePlayer = roomState?.players.find(
     (player) => player.id === roomState.turn?.activePlayerId,
@@ -557,6 +575,15 @@ export function GamePage() {
       ? [roomState.challengeState?.originalSelectedSlotIndex ?? -1]
       : [];
   const visibleTimelineCardCount = visibleTimelineCards.length;
+  const leadingPlayers = roomState?.players
+    .slice()
+    .sort((leftPlayer, rightPlayer) => {
+      const rightScore = roomState.timelines[rightPlayer.id]?.length ?? 0;
+      const leftScore = roomState.timelines[leftPlayer.id]?.length ?? 0;
+
+      return rightScore - leftScore;
+    })
+    .slice(0, 3) ?? [];
 
   if (!roomState) {
     return (
@@ -687,10 +714,32 @@ export function GamePage() {
           </div>
         </header>
 
+        {showMiniStandings ? (
+          <section className={styles.miniStandingsStrip}>
+            {leadingPlayers.map((player, index) => (
+              <article className={styles.miniStandingCard} key={player.id}>
+                <p className={styles.miniStandingRank}>#{index + 1}</p>
+                <strong className={styles.miniStandingName}>
+                  {player.id === currentPlayerId ? "You" : player.displayName}
+                </strong>
+                <p className={styles.miniStandingMeta}>
+                  {roomState.timelines[player.id]?.length ?? 0} cards
+                  {roomState.settings.ttModeEnabled
+                    ? ` · ${player.ttTokenCount} TT`
+                    : ""}
+                  {player.id === roomState.turn?.activePlayerId ? " · Turn" : ""}
+                </p>
+              </article>
+            ))}
+          </section>
+        ) : null}
+
         {errorMessage ? <p className={styles.error}>{errorMessage}</p> : null}
 
         <section className={styles.playersPanel}>
-          <p className={styles.sectionLabel}>Players</p>
+          {showHelperLabels ? (
+            <p className={styles.sectionLabel}>Players</p>
+          ) : null}
           <div className={styles.playerRow}>
             {roomState.players.map((player) => (
               <article
@@ -726,19 +775,23 @@ export function GamePage() {
           </div>
         </section>
 
-        {SHOW_DEVELOPER_CONTEXT_PANELS ? (
+        {showDevCardInfo ? (
           <section className={styles.currentCardPanel}>
-            <p className={styles.sectionLabel}>Current card</p>
+            {showHelperLabels ? (
+              <p className={styles.sectionLabel}>Current card</p>
+            ) : null}
             {roomState.currentTrackCard ? (
               <>
                 <h2 className={styles.cardTitle}>
                   {roomState.currentTrackCard.title}
                 </h2>
                 <p className={styles.cardMeta}>
-                  {roomState.currentTrackCard.artist} ·{" "}
-                  {roomState.currentTrackCard.albumTitle}
+                  {roomState.currentTrackCard.artist}
+                  {showDevAlbumInfo
+                    ? ` · ${roomState.currentTrackCard.albumTitle}`
+                    : ""}
                 </p>
-                {roomState.currentTrackCard.genre ? (
+                {showDevGenreInfo && roomState.currentTrackCard.genre ? (
                   <p className={styles.genre}>
                     {roomState.currentTrackCard.genre}
                   </p>
@@ -750,9 +803,11 @@ export function GamePage() {
           </section>
         ) : null}
 
-        {SHOW_DEVELOPER_CONTEXT_PANELS ? (
+        {showDevCardInfo ? (
           <section className={styles.summaryPanel}>
-            <p className={styles.sectionLabel}>What Is Happening</p>
+            {showHelperLabels ? (
+              <p className={styles.sectionLabel}>What Is Happening</p>
+            ) : null}
             {roomState.status === "turn" ? (
               <p className={styles.summaryText}>
                 {isCurrentPlayerTurn
@@ -802,11 +857,15 @@ export function GamePage() {
         {canToggleTimelineView ? (
           <section className={styles.timelineSwitcherPanel}>
             <div className={styles.timelineSwitcherCopy}>
-              <p className={styles.sectionLabel}>Timeline focus</p>
-              <p className={styles.timelineSwitcherText}>
-                Keep the active timeline in view to judge the current song, or
-                switch to your own timeline for a quick progress check.
-              </p>
+              {showHelperLabels ? (
+                <p className={styles.sectionLabel}>Timeline focus</p>
+              ) : null}
+              {showTimelineHints ? (
+                <p className={styles.timelineSwitcherText}>
+                  Keep the active timeline in view to judge the current song, or
+                  switch to your own timeline for a quick progress check.
+                </p>
+              ) : null}
             </div>
             <div className={styles.timelineViewSwitcher}>
               <button
@@ -846,6 +905,8 @@ export function GamePage() {
           previewSlotIndex={visiblePreviewSlot}
           selectable={!isViewingOwnTimeline && canSelectSlot}
           selectedSlotIndex={selectedSlotIndex}
+          showEyebrow={showHelperLabels}
+          showHint={showTimelineHints}
           subtitle={visibleTimelineSubtitle}
           timelineCards={visibleTimelineCards}
           title={visibleTimelineTitle}
@@ -855,7 +916,9 @@ export function GamePage() {
           <>
             {roomState.settings.ttModeEnabled ? (
               <section className={styles.turnActionsPanel}>
-                <p className={styles.sectionLabel}>Turn Actions</p>
+                {showHelperLabels ? (
+                  <p className={styles.sectionLabel}>Turn Actions</p>
+                ) : null}
                 <div className={styles.turnActionButtons}>
                   <button
                     className={styles.secondaryButton}
@@ -901,7 +964,9 @@ export function GamePage() {
 
         {roomState.status === "challenge" && roomState.challengeState ? (
           <section className={styles.challengePanel}>
-            <p className={styles.sectionLabel}>Beat! Window</p>
+            {showHelperLabels ? (
+              <p className={styles.sectionLabel}>Beat! Window</p>
+            ) : null}
             <h2 className={styles.cardTitle}>
               {roomState.challengeState.phase === "open"
                 ? isCurrentPlayerTurn
@@ -987,7 +1052,9 @@ export function GamePage() {
 
         {roomState.status === "reveal" && roomState.revealState ? (
           <section className={styles.revealPanel}>
-            <p className={styles.sectionLabel}>Reveal</p>
+            {showHelperLabels ? (
+              <p className={styles.sectionLabel}>Reveal</p>
+            ) : null}
             <h2 className={styles.cardTitle}>
               {roomState.revealState.placedCard.title}
             </h2>
@@ -1040,7 +1107,9 @@ export function GamePage() {
 
         {roomState.status === "finished" ? (
           <section className={styles.revealPanel}>
-            <p className={styles.sectionLabel}>Game Over</p>
+            {showHelperLabels ? (
+              <p className={styles.sectionLabel}>Game Over</p>
+            ) : null}
             <h2 className={styles.cardTitle}>
               {getPlayerName(roomState.winnerPlayerId)} wins!
             </h2>
@@ -1056,6 +1125,8 @@ function TimelinePanel({
   title,
   subtitle,
   hint,
+  showEyebrow,
+  showHint,
   cardCount,
   timelineCards,
   previewCard,
@@ -1074,7 +1145,9 @@ function TimelinePanel({
     <section className={styles.timelinePanel}>
       <div className={styles.timelineHeader}>
         <div className={styles.timelineHeaderCopy}>
-          <p className={styles.sectionLabel}>{eyebrow}</p>
+          {showEyebrow ? (
+            <p className={styles.sectionLabel}>{eyebrow}</p>
+          ) : null}
           <h2 className={styles.timelineHeading}>{title}</h2>
           <p className={styles.timelineSubtitle}>{subtitle}</p>
         </div>
@@ -1082,7 +1155,7 @@ function TimelinePanel({
           {cardCount} card{cardCount === 1 ? "" : "s"}
         </span>
       </div>
-      <p className={styles.timelineHint}>{hint}</p>
+      {showHint ? <p className={styles.timelineHint}>{hint}</p> : null}
       <div className={styles.timelineRow}>
         {Array.from({ length: timelineCards.length + 1 }).map((_, slotIndex) => {
           const isSelected = selectable && selectedSlotIndex === slotIndex;

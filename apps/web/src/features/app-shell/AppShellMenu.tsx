@@ -229,6 +229,19 @@ export function AppShellMenu({ title, subtitle, tabs }: AppShellMenuProps) {
                           onClick={setHiddenCardMode}
                         />
                       </div>
+                      <div className={styles.hiddenCardPreview}>
+                        <div
+                          className={`${styles.hiddenCardPreviewFace} ${
+                            hiddenCardMode === "gradient"
+                              ? styles.hiddenCardPreviewGradient
+                              : styles.hiddenCardPreviewArtwork
+                          }`}
+                        >
+                          <span className={styles.hiddenCardPreviewLabel}>
+                            Hidden card preview
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </>
                 ) : activeTab?.id === "dev" ? (
