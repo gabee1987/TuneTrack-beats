@@ -25,33 +25,54 @@
   min-width: 220px;
 }
 
+.headerChipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.headerChip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-chip);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .headerAside {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 12px;
-  min-width: 240px;
+  gap: 8px;
+  min-width: 220px;
 }
 
-.roomEyebrow {
-  margin: 0 0 10px;
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  font-size: 12px;
-  letter-spacing: 0.12em;
-}
-
-.headerMetaRow {
+.headerActionRow {
   display: flex;
-  flex-wrap: wrap;
   gap: 12px;
-  margin-top: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.headerUtilityButton {
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 12px 16px;
+  background: var(--color-chip);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  outline: 1px solid var(--color-border-subtle);
 }
 
 .title {
   margin: 0;
-  font-size: 40px;
-  letter-spacing: -0.05em;
+  font-size: 32px;
+  letter-spacing: -0.04em;
 }
 
 .meta,
@@ -62,38 +83,20 @@
 }
 
 .statusBadge {
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: var(--radius-pill);
   background: var(--color-chip);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-  align-self: flex-end;
-}
-
-.statusBadgeBlock {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
 }
 
 .statusCaption {
-  max-width: 320px;
+  max-width: 280px;
   margin: 0;
   color: var(--color-text-secondary);
   text-align: right;
-  line-height: 1.45;
-}
-
-.hostUtilityButton {
-  border: 0;
-  border-radius: 14px;
-  padding: 12px 16px;
-  background: var(--color-accent-danger);
-  color: #ffffff;
-  font-weight: 700;
-  cursor: pointer;
-  outline: 1px solid var(--color-border-subtle);
+  line-height: 1.35;
+  font-size: 13px;
 }
 
 .menuInfoSection {
@@ -161,46 +164,54 @@
 }
 
 .miniStandingsStrip {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  overflow-x: auto;
+  padding-bottom: 4px;
 }
 
 .miniStandingCard {
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: var(--color-surface-elevated);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-chip);
+  white-space: nowrap;
 }
 
 .miniStandingRank {
-  margin: 0 0 8px;
+  margin: 0;
   color: var(--color-text-secondary);
   font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
 }
 
 .miniStandingName {
-  display: block;
+  display: inline;
+  font-size: 13px;
 }
 
 .miniStandingMeta {
-  margin: 8px 0 0;
+  margin: 0;
   color: var(--color-text-secondary);
-  font-size: 14px;
+  font-size: 12px;
 }
 
-.currentCardPanel,
-.playersPanel,
 .challengePanel,
-.summaryPanel,
 .timelinePanel,
 .revealPanel {
   margin-top: 28px;
   padding: 20px;
   border-radius: var(--radius-panel);
   background: var(--color-surface-elevated);
+}
+
+.timelinePanel {
+  padding: 24px;
+  background:
+    radial-gradient(circle at top, rgba(124, 108, 255, 0.12), transparent 40%),
+    var(--color-surface-elevated);
 }
 
 .sectionLabel {
@@ -221,19 +232,13 @@
 .timelineHeaderCopy {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .timelineHeading {
   margin: 0;
-  font-size: 24px;
+  font-size: 22px;
   letter-spacing: -0.04em;
-}
-
-.timelineSubtitle {
-  margin: 0;
-  color: var(--color-text-secondary);
-  line-height: 1.45;
 }
 
 .timelineCount {
@@ -255,45 +260,6 @@
   margin: 0;
   font-size: 28px;
   letter-spacing: -0.04em;
-}
-
-.playerRow {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-}
-
-.playerBadge {
-  min-width: 160px;
-  padding: 16px 18px;
-  border-radius: 18px;
-  background: var(--color-card);
-}
-
-.playerBadgeActive {
-  outline: 1px solid var(--color-border-subtle);
-  background: var(--color-surface-elevated);
-}
-
-.playerName {
-  margin: 0;
-  font-size: 16px;
-}
-
-.playerMeta {
-  margin: 10px 0 0;
-  color: var(--color-text-secondary);
-}
-
-.playerActionButton {
-  margin-top: 12px;
-  border: 0;
-  border-radius: 12px;
-  padding: 10px 12px;
-  background: var(--color-accent-success);
-  color: #ffffff;
-  cursor: pointer;
 }
 
 .timelineSwitcherPanel {
@@ -334,6 +300,34 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
+.actionRail {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--color-surface-elevated);
+}
+
+.actionRailHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.actionRailTitle {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: -0.03em;
+}
+
+.actionRailText {
+  margin: 6px 0 0;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  font-size: 14px;
+}
+
 .turnActionButtons {
   display: grid;
   grid-template-columns: 1fr;
@@ -365,9 +359,16 @@
   display: flex;
   gap: 12px;
   overflow-x: auto;
-  padding-bottom: 8px;
+  padding: 8px 8px 16px;
   scroll-snap-type: x proximity;
   scroll-padding-left: 4px;
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 1) 6%,
+    rgba(0, 0, 0, 1) 94%,
+    transparent 100%
+  );
 }
 
 .slotGroup {
@@ -380,19 +381,21 @@
 .slotArea {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  min-width: 180px;
+  gap: 8px;
+  min-width: 220px;
 }
 
 .slotButton {
-  min-width: 104px;
+  min-width: 112px;
   border: 0;
-  border-radius: 12px;
-  padding: 10px 16px;
-  background: var(--color-card);
+  border-radius: var(--radius-pill);
+  padding: 10px 14px;
+  background: var(--color-chip);
   color: var(--color-text-primary);
   cursor: pointer;
+  font-size: 13px;
   font-weight: 700;
+  align-self: center;
 }
 
 .slotButtonSelected {
@@ -411,66 +414,96 @@
   outline: 1px solid var(--color-border-subtle);
 }
 
-.originalMarkerCard,
-.challengeMarkerCard {
-  position: absolute;
-  top: 0px;
-  left: 20px;
-  padding: 6px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  white-space: nowrap;
-  align-self: flex-start;
-}
-
-.originalMarkerCard {
-  background: var(--color-chip);
-  color: var(--color-text-primary);
-}
-
-.challengeMarkerCard {
-  background: var(--color-accent-success);
-  color: #ffffff;
-}
-
-.challengeMarkerSuccess {
-  background: var(--color-accent-success);
-  color: #ffffff;
-}
-
-.challengeMarkerFailure {
-  background: var(--color-accent-danger);
-  color: #ffffff;
-}
-
 .timelineCard {
   position: relative;
-  min-width: 180px;
-  padding: 18px;
-  border-radius: 20px;
+  min-width: 220px;
+  padding: 22px 20px;
+  border-radius: 24px;
   background: var(--color-card);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.timelineCardCurrentPick,
+.previewCardCurrentPick {
+  outline: 2px solid rgba(124, 108, 255, 0.64);
+}
+
+.timelineCardChallenge,
+.previewCardChallenge {
+  outline: 2px solid rgba(82, 227, 173, 0.72);
+}
+
+.timelineCardChallengeFailure,
+.previewCardChallengeFailure {
+  outline: 2px solid rgba(255, 94, 129, 0.72);
 }
 
 .previewCard {
   position: relative;
-  min-width: 180px;
-  padding: 32px 16px;
-  border-radius: 20px;
-  background: var(--color-surface-elevated);
+  min-width: 220px;
+  min-height: 180px;
+  padding: 22px 20px;
+  border-radius: 24px;
   outline: 1px dashed var(--color-border-subtle);
+  overflow: hidden;
+}
+
+.previewCardArtwork {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.14), transparent 24%),
+    radial-gradient(circle at 80% 0%, rgba(124, 108, 255, 0.48), transparent 32%),
+    linear-gradient(140deg, rgba(124, 108, 255, 0.78) 0%, rgba(255, 79, 154, 0.72) 100%);
+}
+
+.previewCardGradient {
+  background:
+    linear-gradient(140deg, rgba(124, 108, 255, 0.72) 0%, rgba(23, 23, 40, 0.56) 100%);
+}
+
+.previewCardFace {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
 }
 
 .previewLabel {
   margin: 0 0 8px;
-  color: var(--color-text-secondary);
+  color: rgba(255, 255, 255, 0.78);
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
+.previewCardTitle {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: -0.05em;
+  color: #ffffff;
+}
+
+.previewCardSubtitle {
+  margin: 8px 0 0;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.4;
+}
+
+.previewCardMetaPill {
+  display: inline-flex;
+  width: fit-content;
+  margin: 6px 0 0;
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .timelineTitle {
   margin: 0;
-  font-size: 18px;
+  font-size: 20px;
   letter-spacing: -0.04em;
 }
 
@@ -482,10 +515,10 @@
 
 .primaryButton {
   width: 100%;
-  margin-top: 24px;
+  margin-top: 16px;
   border: 0;
   border-radius: 18px;
-  padding: 18px 22px;
+  padding: 16px 20px;
   background: linear-gradient(135deg, #7c6cff 0%, #ff4f9a 100%);
   color: #ffffff;
   font-weight: 800;
@@ -494,10 +527,10 @@
 
 .secondaryButton {
   width: 100%;
-  margin-top: 24px;
+  margin-top: 0;
   border: 0;
   border-radius: 18px;
-  padding: 16px 20px;
+  padding: 14px 18px;
   background: var(--color-accent-danger);
   color: #ffffff;
   font-weight: 700;
@@ -540,6 +573,30 @@
   font-size: 14px;
 }
 
+.revealHeaderCompact {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.revealBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-chip);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.revealInfoGrid {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
 @media (max-width: 720px) {
   .screen {
     padding: 16px;
@@ -550,31 +607,25 @@
     border-radius: 24px;
   }
 
-  .title {
-    font-size: 34px;
-  }
-
   .headerAside {
     width: 100%;
     min-width: 0;
     align-items: stretch;
   }
 
-  .statusBadgeBlock {
-    align-items: flex-start;
+  .headerActionRow {
+    width: 100%;
+    justify-content: stretch;
   }
 
-  .statusBadge {
-    align-self: flex-start;
+  .statusBadge,
+  .headerUtilityButton {
+    flex: 1;
   }
 
   .statusCaption {
     max-width: none;
     text-align: left;
-  }
-
-  .hostUtilityButton {
-    width: 100%;
   }
 
   .timelineSwitcherPanel {
@@ -583,12 +634,18 @@
   }
 
   .miniStandingsStrip {
-    grid-template-columns: 1fr;
+    display: flex;
   }
 
   .timelineViewSwitcher {
     width: 100%;
     justify-content: stretch;
+  }
+
+  .timelineRow {
+    mask-image: none;
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .viewToggleButton {
@@ -602,6 +659,11 @@
 
   .timelineCount {
     align-self: flex-start;
+  }
+
+  .revealHeaderCompact {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 

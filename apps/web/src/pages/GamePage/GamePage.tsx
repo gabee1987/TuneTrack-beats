@@ -23,6 +23,7 @@ import {
 } from "../../services/session/playerSession";
 import { AppShellMenu } from "../../features/app-shell/AppShellMenu";
 import { useUiPreferencesStore } from "../../features/preferences/uiPreferences";
+import type { HiddenCardMode } from "../../features/preferences/uiPreferences";
 import { socketClient } from "../../services/socket/socketClient";
 import styles from "./GamePage.module.css";
 
@@ -32,11 +33,8 @@ interface GameRouteState {
 }
 
 interface TimelinePanelProps {
-  eyebrow: string;
   title: string;
-  subtitle: string;
   hint: string;
-  showEyebrow: boolean;
   showHint: boolean;
   cardCount: number;
   timelineCards: TimelineCardPublic[];
@@ -47,18 +45,20 @@ interface TimelinePanelProps {
   onSelectSlot: (slotIndex: number) => void;
   originalChosenSlotIndex: number | null;
   challengerChosenSlotIndex: number | null;
-  originalChosenLabel: string | null;
-  challengerChosenLabel: string | null;
   challengeMarkerTone?: "pending" | "success" | "failure";
   disabledSlotIndexes?: number[];
+  hiddenCardMode: HiddenCardMode;
+  showDevCardInfo: boolean;
+  showDevAlbumInfo: boolean;
+  showDevGenreInfo: boolean;
 }
 
 function formatPhaseLabel(status: PublicRoomState["status"]): string {
   switch (status) {
     case "turn":
-      return "Turn";
+      return "Play";
     case "challenge":
-      return "Beat!";
+      return "Challenge";
     case "reveal":
       return "Reveal";
     case "finished":
@@ -94,6 +94,18 @@ export function GamePage() {
   const showMiniStandings = useUiPreferencesStore(
     (state) => state.view.showMiniStandings,
   );
+  const updateViewPreferences = useUiPreferencesStore(
+    (state) => state.updateViewPreferences,
+  );
+  const showRoomCodeChip = useUiPreferencesStore(
+    (state) => state.view.showRoomCodeChip,
+  );
+  const showPhaseChip = useUiPreferencesStore(
+    (state) => state.view.showPhaseChip,
+  );
+  const showTurnNumberChip = useUiPreferencesStore(
+    (state) => state.view.showTurnNumberChip,
+  );
   const showHelperLabels = useUiPreferencesStore(
     (state) => state.view.showHelperLabels,
   );
@@ -109,6 +121,9 @@ export function GamePage() {
   const showDevGenreInfo = useUiPreferencesStore(
     (state) => state.showDevGenreInfo,
   );
+  const hiddenCardMode = useUiPreferencesStore(
+    (state) => state.hiddenCardMode,
+  );
 
   const activePlayer = roomState?.players.find(
     (player) => player.id === roomState.turn?.activePlayerId,
@@ -116,6 +131,7 @@ export function GamePage() {
   const currentPlayer = roomState?.players.find(
     (player) => player.id === currentPlayerId,
   );
+  const isHost = roomState?.hostId === currentPlayerId;
   const challengeOwner = roomState?.players.find(
     (player) => player.id === roomState.challengeState?.challengerPlayerId,
   );
@@ -446,33 +462,12 @@ export function GamePage() {
     roomState?.status === "challenge" || canSelectTurnSlot
       ? roomState?.currentTrackCard ?? null
       : null;
-  const originalChosenLabel =
-    roomState?.status === "challenge"
-      ? roomState.challengeState?.originalPlayerId === currentPlayerId
-        ? "Your pick"
-        : `${getPlayerName(roomState.challengeState?.originalPlayerId)}'s pick`
-      : roomState?.status === "reveal"
-        ? roomState.revealState?.playerId === currentPlayerId
-          ? "Your pick"
-          : `${getPlayerName(roomState.revealState?.playerId)}'s pick`
-        : canSelectTurnSlot
-          ? "Your pick"
-          : null;
-  const challengerChosenLabel =
-    roomState?.status === "challenge" && canSelectChallengeSlot
-      ? "Your Beat! pick"
-      : roomState?.status === "reveal" &&
-          roomState.revealState?.challengerPlayerId
-        ? roomState.revealState.challengerPlayerId === currentPlayerId
-          ? "Your Beat! pick"
-          : `${getPlayerName(roomState.revealState.challengerPlayerId)}'s Beat! pick`
-        : null;
   const statusBadgeText = roomState?.winnerPlayerId
     ? "Game finished"
     : roomState?.status === "turn"
       ? isCurrentPlayerTurn
         ? "Your turn"
-        : `${getPlayerName(activePlayer?.id)} is playing`
+        : `${getPlayerName(activePlayer?.id)}'s turn`
       : roomState?.status === "challenge"
         ? roomState.challengeState?.originalPlayerId === currentPlayerId
           ? "Your placement is under Beat!"
@@ -501,18 +496,54 @@ export function GamePage() {
         : roomState?.status === "reveal"
           ? "Check the result, then wait for the allowed player to confirm reveal."
           : "The room is in sync and ready.";
+  const challengeActionTitle =
+    roomState?.status === "challenge" && roomState.challengeState
+      ? roomState.challengeState.phase === "open"
+        ? isCurrentPlayerTurn
+          ? "Challenge window open"
+          : "Beat available"
+        : challengeOwner?.id === currentPlayerId
+          ? "Place your Beat"
+          : `${getPlayerName(challengeOwner?.id)} is placing Beat`
+      : null;
+  const challengeActionBody =
+    roomState?.status === "challenge" && roomState.challengeState
+      ? roomState.challengeState.phase === "open"
+        ? isCurrentPlayerTurn
+          ? "Other players can still challenge this placement."
+          : `Chosen slot: ${roomState.challengeState.originalSelectedSlotIndex}`
+        : canSelectChallengeSlot
+          ? "Choose the slot you believe is right, then confirm."
+          : "Waiting for the challenge placement."
+      : null;
+  const revealPrimaryText =
+    roomState?.status === "reveal" && roomState.revealState
+      ? roomState.revealState.wasCorrect
+        ? roomState.revealState.revealType === "tt_buy"
+          ? `${getPlayerName(roomState.revealState.playerId)} bought this card with TT.`
+          : `${getPlayerName(roomState.revealState.playerId)} was correct.`
+        : `${getPlayerName(roomState.revealState.playerId)} was wrong. Correct slot${roomState.revealState.validSlotIndexes.length > 1 ? "s were" : " was"} ${roomState.revealState.validSlotIndexes.join(
+            ", ",
+          )}.`
+      : null;
+  const revealSecondaryText =
+    roomState?.status === "reveal" && roomState.revealState
+      ? roomState.revealState.challengerPlayerId
+        ? roomState.revealState.challengeWasSuccessful
+          ? `${getPlayerName(revealChallenger?.id)} won Beat! and gained +${roomState.revealState.challengerTtChange} TT.`
+          : `${getPlayerName(revealChallenger?.id)} lost Beat! and lost ${Math.abs(roomState.revealState.challengerTtChange)} TT.`
+        : roomState.revealState.revealType === "tt_buy"
+          ? "Beat was skipped for this TT buy."
+          : "No Beat was used."
+      : null;
+  const revealOwnerText =
+    roomState?.status === "reveal" && roomState.revealState
+      ? roomState.revealState.awardedPlayerId
+        ? `Card owner: ${getPlayerName(awardedPlayer?.id)}`
+        : "Card owner: nobody"
+      : null;
   const showOwnTimeline =
     Boolean(currentPlayerId) && currentPlayerId !== activePlayer?.id;
-  const revealSummaryTitle =
-    roomState?.status === "reveal" && roomState.revealState?.challengerPlayerId
-      ? roomState.revealState.challengeWasSuccessful
-        ? `${getPlayerName(roomState.revealState.challengerPlayerId)} won Beat!`
-        : `${getPlayerName(roomState.revealState.playerId)} survived Beat!`
-      : roomState?.status === "reveal"
-        ? roomState.revealState?.wasCorrect
-          ? `${getPlayerName(roomState.revealState.playerId)} placed it correctly`
-          : "Placement was wrong"
-        : null;
   const challengeMarkerTone =
     roomState?.status === "reveal" && roomState.revealState?.challengerPlayerId
       ? roomState.revealState.challengeWasSuccessful
@@ -524,19 +555,9 @@ export function GamePage() {
   const visibleTimelineCards = isViewingOwnTimeline
     ? currentPlayerTimeline
     : activePlayerTimeline;
-  const visibleTimelineEyebrow = isViewingOwnTimeline
-    ? "Your timeline"
-    : "Active timeline";
   const visibleTimelineTitle = isViewingOwnTimeline
-    ? "Your collected cards"
-    : `${getPossessivePlayerName(activePlayer?.id)} current timeline`;
-  const visibleTimelineSubtitle = isViewingOwnTimeline
-    ? "Check your own progress, then switch back when you want to judge the active turn."
-    : roomState?.status === "challenge"
-      ? "This is the timeline everyone is judging right now."
-      : isCurrentPlayerTurn
-        ? "This is the timeline where your current song decision will be placed."
-        : "This is the timeline you should watch before deciding whether to use Beat!.";
+    ? "Your timeline"
+    : `${getPossessivePlayerName(activePlayer?.id)} timeline`;
   const visibleTimelineHint = isViewingOwnTimeline
     ? "This is your personal timeline. Switch back to the active timeline any time."
     : activeTimelineHint;
@@ -549,13 +570,6 @@ export function GamePage() {
       ? roomState.revealState.awardedSlotIndex
       : null
     : activeTimelineOriginalSlot;
-  const visibleOriginalChosenLabel = isViewingOwnTimeline
-    ? roomState?.status === "reveal" &&
-      roomState.revealState?.awardedPlayerId === currentPlayerId &&
-      !roomState.revealState.challengerPlayerId
-      ? "Won card"
-      : null
-    : originalChosenLabel;
   const visibleChallengeChosenSlot = isViewingOwnTimeline
     ? roomState?.status === "reveal" &&
       roomState.revealState?.awardedPlayerId === currentPlayerId &&
@@ -563,13 +577,6 @@ export function GamePage() {
       ? roomState.revealState.awardedSlotIndex
       : null
     : activeTimelineChallengeSlot;
-  const visibleChallengeChosenLabel = isViewingOwnTimeline
-    ? roomState?.status === "reveal" &&
-      roomState.revealState?.awardedPlayerId === currentPlayerId &&
-      roomState.revealState.challengerPlayerId === currentPlayerId
-      ? "Stolen card"
-      : null
-    : challengerChosenLabel;
   const disabledTimelineSlots =
     !isViewingOwnTimeline && roomState?.status === "challenge" && canSelectChallengeSlot
       ? [roomState.challengeState?.originalSelectedSlotIndex ?? -1]
@@ -694,23 +701,45 @@ export function GamePage() {
       <section className={styles.panel}>
         <header className={styles.header}>
           <div className={styles.headerMain}>
-            <p className={styles.roomEyebrow}>TuneTrack</p>
-            <h1 className={styles.title}>Room {roomState.roomId}</h1>
-            <div className={styles.headerMetaRow}>
-              <p className={styles.meta}>Phase: {formatPhaseLabel(roomState.status)}</p>
-              <p className={styles.meta}>Turn: {roomState.turn?.turnNumber ?? "-"}</p>
+            <div className={styles.headerChipRow}>
+              {showRoomCodeChip ? (
+                <span className={styles.headerChip}>Room {roomState.roomId}</span>
+              ) : null}
+              {showPhaseChip ? (
+                <span className={styles.headerChip}>
+                  {formatPhaseLabel(roomState.status)}
+                </span>
+              ) : null}
+              {showTurnNumberChip ? (
+                <span className={styles.headerChip}>
+                  Turn {roomState.turn?.turnNumber ?? "-"}
+                </span>
+              ) : null}
             </div>
           </div>
           <div className={styles.headerAside}>
-            <div className={styles.statusBadgeBlock}>
+            <div className={styles.headerActionRow}>
               <div className={styles.statusBadge}>{statusBadgeText}</div>
-              <p className={styles.statusCaption}>{statusDetailText}</p>
+              <button
+                className={styles.headerUtilityButton}
+                onClick={() =>
+                  updateViewPreferences({
+                    showMiniStandings: !showMiniStandings,
+                  })
+                }
+                type="button"
+              >
+                {showMiniStandings ? "Hide leaders" : "Show leaders"}
+              </button>
+              <AppShellMenu
+                subtitle="Grouped player, host, and developer controls now share one consistent menu shell."
+                tabs={menuTabs}
+                title="Game menu"
+              />
             </div>
-            <AppShellMenu
-              subtitle="Grouped player, host, and developer controls now share one consistent menu shell."
-              tabs={menuTabs}
-              title="Game menu"
-            />
+            {showTimelineHints ? (
+              <p className={styles.statusCaption}>{statusDetailText}</p>
+            ) : null}
           </div>
         </header>
 
@@ -718,17 +747,17 @@ export function GamePage() {
           <section className={styles.miniStandingsStrip}>
             {leadingPlayers.map((player, index) => (
               <article className={styles.miniStandingCard} key={player.id}>
-                <p className={styles.miniStandingRank}>#{index + 1}</p>
+                <span className={styles.miniStandingRank}>#{index + 1}</span>
                 <strong className={styles.miniStandingName}>
                   {player.id === currentPlayerId ? "You" : player.displayName}
                 </strong>
-                <p className={styles.miniStandingMeta}>
+                <span className={styles.miniStandingMeta}>
                   {roomState.timelines[player.id]?.length ?? 0} cards
                   {roomState.settings.ttModeEnabled
                     ? ` · ${player.ttTokenCount} TT`
                     : ""}
                   {player.id === roomState.turn?.activePlayerId ? " · Turn" : ""}
-                </p>
+                </span>
               </article>
             ))}
           </section>
@@ -736,130 +765,9 @@ export function GamePage() {
 
         {errorMessage ? <p className={styles.error}>{errorMessage}</p> : null}
 
-        <section className={styles.playersPanel}>
-          {showHelperLabels ? (
-            <p className={styles.sectionLabel}>Players</p>
-          ) : null}
-          <div className={styles.playerRow}>
-            {roomState.players.map((player) => (
-              <article
-                className={`${styles.playerBadge} ${
-                  player.id === roomState.turn?.activePlayerId
-                    ? styles.playerBadgeActive
-                    : ""
-                }`}
-                key={player.id}
-              >
-                <h2 className={styles.playerName}>
-                  {player.id === currentPlayerId ? "You" : player.displayName}
-                </h2>
-                <p className={styles.playerMeta}>
-                  {player.id === currentPlayerId ? "This screen" : "Opponent"}
-                  {player.isHost ? " · Host" : ""}
-                  {roomState.settings.ttModeEnabled
-                    ? ` · ${player.ttTokenCount} TT`
-                    : ""}
-                </p>
-                {roomState.settings.ttModeEnabled &&
-                roomState.hostId === currentPlayerId ? (
-                  <button
-                    className={styles.playerActionButton}
-                    onClick={() => handleAwardTt(player.id)}
-                    type="button"
-                  >
-                    +1 TT
-                  </button>
-                ) : null}
-              </article>
-            ))}
-          </div>
-        </section>
-
-        {showDevCardInfo ? (
-          <section className={styles.currentCardPanel}>
-            {showHelperLabels ? (
-              <p className={styles.sectionLabel}>Current card</p>
-            ) : null}
-            {roomState.currentTrackCard ? (
-              <>
-                <h2 className={styles.cardTitle}>
-                  {roomState.currentTrackCard.title}
-                </h2>
-                <p className={styles.cardMeta}>
-                  {roomState.currentTrackCard.artist}
-                  {showDevAlbumInfo
-                    ? ` · ${roomState.currentTrackCard.albumTitle}`
-                    : ""}
-                </p>
-                {showDevGenreInfo && roomState.currentTrackCard.genre ? (
-                  <p className={styles.genre}>
-                    {roomState.currentTrackCard.genre}
-                  </p>
-                ) : null}
-              </>
-            ) : (
-              <p className={styles.cardMeta}>No current card.</p>
-            )}
-          </section>
-        ) : null}
-
-        {showDevCardInfo ? (
-          <section className={styles.summaryPanel}>
-            {showHelperLabels ? (
-              <p className={styles.sectionLabel}>What Is Happening</p>
-            ) : null}
-            {roomState.status === "turn" ? (
-              <p className={styles.summaryText}>
-                {isCurrentPlayerTurn
-                  ? `You are deciding where to place ${roomState.currentTrackCard?.title ?? "this card"}.`
-                  : `${getPlayerName(activePlayer?.id)} is deciding where to place ${roomState.currentTrackCard?.title ?? "this card"}.`}
-              </p>
-            ) : null}
-            {roomState.status === "challenge" && roomState.challengeState ? (
-              <>
-                <p className={styles.summaryText}>
-                  {getPlayerName(roomState.challengeState.originalPlayerId)} chose slot{" "}
-                  {roomState.challengeState.originalSelectedSlotIndex}.
-                </p>
-                <p className={styles.summaryText}>
-                  {roomState.challengeState.phase === "open"
-                    ? "Beat! is open. The first eligible opponent can challenge this choice."
-                    : `${getPlayerName(challengeOwner?.id)} is now choosing the Beat! slot.`}
-                </p>
-              </>
-            ) : null}
-            {roomState.status === "reveal" && roomState.revealState ? (
-              <>
-                <h2 className={styles.cardTitle}>{revealSummaryTitle}</h2>
-                <p className={styles.summaryText}>
-                  {getPlayerName(roomState.revealState.playerId)} chose slot{" "}
-                  {roomState.revealState.selectedSlotIndex}.
-                  {roomState.revealState.challengerPlayerId
-                    ? ` ${getPlayerName(roomState.revealState.challengerPlayerId)} answered with slot ${roomState.revealState.challengerSelectedSlotIndex}.`
-                    : ""}
-                </p>
-                <p className={styles.summaryText}>
-                  {roomState.revealState.challengerPlayerId
-                    ? roomState.revealState.challengeWasSuccessful
-                      ? `${getPlayerName(roomState.revealState.challengerPlayerId)} stole the card and it was added to ${getPossessivePlayerName(roomState.revealState.challengerPlayerId)} timeline automatically at slot ${roomState.revealState.awardedSlotIndex}.`
-                      : roomState.revealState.awardedPlayerId
-                        ? `The original placement stood, so the card stayed with ${getPlayerName(roomState.revealState.awardedPlayerId)} at slot ${roomState.revealState.awardedSlotIndex}.`
-                        : "Both placements were wrong, so the card was discarded."
-                    : roomState.revealState.awardedPlayerId
-                      ? `The card was added to ${getPossessivePlayerName(roomState.revealState.awardedPlayerId)} timeline at slot ${roomState.revealState.awardedSlotIndex}.`
-                      : "The card was discarded."}
-                </p>
-              </>
-            ) : null}
-          </section>
-        ) : null}
-
         {canToggleTimelineView ? (
           <section className={styles.timelineSwitcherPanel}>
             <div className={styles.timelineSwitcherCopy}>
-              {showHelperLabels ? (
-                <p className={styles.sectionLabel}>Timeline focus</p>
-              ) : null}
               {showTimelineHints ? (
                 <p className={styles.timelineSwitcherText}>
                   Keep the active timeline in view to judge the current song, or
@@ -893,21 +801,20 @@ export function GamePage() {
         <TimelinePanel
           cardCount={visibleTimelineCardCount}
           challengeMarkerTone={challengeMarkerTone}
-          challengerChosenLabel={visibleChallengeChosenLabel}
           challengerChosenSlotIndex={visibleChallengeChosenSlot}
           disabledSlotIndexes={disabledTimelineSlots}
-          eyebrow={visibleTimelineEyebrow}
+          hiddenCardMode={hiddenCardMode}
           hint={visibleTimelineHint}
           onSelectSlot={setSelectedSlotIndex}
-          originalChosenLabel={visibleOriginalChosenLabel}
           originalChosenSlotIndex={visibleOriginalChosenSlot}
           previewCard={visiblePreviewCard}
           previewSlotIndex={visiblePreviewSlot}
           selectable={!isViewingOwnTimeline && canSelectSlot}
           selectedSlotIndex={selectedSlotIndex}
-          showEyebrow={showHelperLabels}
+          showDevAlbumInfo={isHost && showDevAlbumInfo}
+          showDevCardInfo={isHost && showDevCardInfo}
+          showDevGenreInfo={isHost && showDevGenreInfo}
           showHint={showTimelineHints}
-          subtitle={visibleTimelineSubtitle}
           timelineCards={visibleTimelineCards}
           title={visibleTimelineTitle}
         />
@@ -915,10 +822,17 @@ export function GamePage() {
         {roomState.status === "turn" ? (
           <>
             {roomState.settings.ttModeEnabled ? (
-              <section className={styles.turnActionsPanel}>
-                {showHelperLabels ? (
-                  <p className={styles.sectionLabel}>Turn Actions</p>
-                ) : null}
+              <section className={styles.actionRail}>
+                <div className={styles.actionRailHeader}>
+                  <div>
+                    <h3 className={styles.actionRailTitle}>Turn actions</h3>
+                    {showTimelineHints ? (
+                      <p className={styles.actionRailText}>
+                        Optional TT actions for the active player.
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
                 <div className={styles.turnActionButtons}>
                   <button
                     className={styles.secondaryButton}
@@ -931,7 +845,7 @@ export function GamePage() {
                     type="button"
                   >
                     {hasUsedSkipTrackWithTt
-                      ? "Skip Already Used This Turn"
+                      ? "Skip used"
                       : `Skip Track (${SKIP_TRACK_TT_COST} TT)`}
                   </button>
                   <button
@@ -963,27 +877,15 @@ export function GamePage() {
         ) : null}
 
         {roomState.status === "challenge" && roomState.challengeState ? (
-          <section className={styles.challengePanel}>
-            {showHelperLabels ? (
-              <p className={styles.sectionLabel}>Beat! Window</p>
-            ) : null}
-            <h2 className={styles.cardTitle}>
-              {roomState.challengeState.phase === "open"
-                ? isCurrentPlayerTurn
-                  ? "Challenge window is open"
-                  : "Challenge the current choice"
-                : challengeOwner?.id === currentPlayerId
-                  ? "You are placing the Beat! answer"
-                  : `${getPlayerName(challengeOwner?.id)} is placing the Beat! answer`}
-            </h2>
-            <p className={styles.challengeMessage}>
-              {roomState.challengeState.phase === "open"
-                ? isCurrentPlayerTurn
-                  ? "You cannot use Beat! on your own turn. Wait to see whether another player challenges your placement."
-                  : `If ${getPlayerName(roomState.challengeState.originalPlayerId)} is wrong, the first challenger with at least 1 TT can press Beat!.`
-                : `If ${getPlayerName(challengeOwner?.id)} is right, the card will be stolen into ${getPossessivePlayerName(challengeOwner?.id)} timeline automatically.`}
-            </p>
-
+          <section className={styles.actionRail}>
+            <div className={styles.actionRailHeader}>
+              <div>
+                <h3 className={styles.actionRailTitle}>{challengeActionTitle}</h3>
+                {challengeActionBody ? (
+                  <p className={styles.actionRailText}>{challengeActionBody}</p>
+                ) : null}
+              </div>
+            </div>
             <div className={styles.challengeMetaRow}>
               <span className={styles.challengeChip}>
                 Chosen slot: {roomState.challengeState.originalSelectedSlotIndex}
@@ -1036,61 +938,46 @@ export function GamePage() {
                 ) : null}
               </>
             ) : (
-              <button
-                className={styles.primaryButton}
-                disabled={!canSelectChallengeSlot}
-                onClick={handlePlaceChallenge}
-                type="button"
-              >
-                {canSelectChallengeSlot
-                  ? `Confirm Beat! Slot ${selectedSlotIndex}`
-                  : `${getPlayerName(challengeOwner?.id)} is choosing the Beat! slot`}
-              </button>
-            )}
+                <button
+                  className={styles.primaryButton}
+                  disabled={!canSelectChallengeSlot}
+                  onClick={handlePlaceChallenge}
+                  type="button"
+                >
+                  {canSelectChallengeSlot
+                    ? `Confirm Beat ${selectedSlotIndex}`
+                    : `${getPlayerName(challengeOwner?.id)} is choosing`}
+                </button>
+              )}
           </section>
         ) : null}
 
         {roomState.status === "reveal" && roomState.revealState ? (
           <section className={styles.revealPanel}>
-            {showHelperLabels ? (
-              <p className={styles.sectionLabel}>Reveal</p>
-            ) : null}
-            <h2 className={styles.cardTitle}>
-              {roomState.revealState.placedCard.title}
-            </h2>
-            <p className={styles.cardMeta}>
-              {roomState.revealState.placedCard.artist} ·{" "}
-              {roomState.revealState.placedCard.revealedYear}
-            </p>
-            <p className={styles.revealResult}>
-              {roomState.revealState.wasCorrect
-                ? roomState.revealState.revealType === "tt_buy"
-                  ? `${getPlayerName(roomState.revealState.playerId)} bought this card with TT.`
-                  : `${getPlayerName(roomState.revealState.playerId)} was correct.`
-                : `${getPlayerName(roomState.revealState.playerId)} was wrong. Correct slot${roomState.revealState.validSlotIndexes.length > 1 ? "s were" : " was"} ${roomState.revealState.validSlotIndexes.join(
-                    ", ",
-                  )}.`}
-            </p>
-            {roomState.revealState.challengerPlayerId ? (
-              <p className={styles.challengeOutcome}>
-                {roomState.revealState.challengeWasSuccessful
-                  ? `${getPlayerName(revealChallenger?.id)} won Beat!, stole the card, and gained +${roomState.revealState.challengerTtChange} TT.`
-                  : `${getPlayerName(revealChallenger?.id)} lost Beat! and lost ${Math.abs(roomState.revealState.challengerTtChange)} TT.`}
-              </p>
-            ) : (
-              <p className={styles.challengeOutcome}>
-                {roomState.revealState.revealType === "tt_buy"
-                  ? "This turn used a TT buy, so Beat! was not available."
-                  : "No one used Beat! on this placement."}
-              </p>
-            )}
-            {roomState.revealState.awardedPlayerId ? (
-              <p className={styles.challengeOutcome}>
-                Card owner now: {getPlayerName(awardedPlayer?.id)}.
-              </p>
-            ) : (
-              <p className={styles.challengeOutcome}>Card owner now: nobody.</p>
-            )}
+            <div className={styles.revealHeaderCompact}>
+              <div>
+                <h2 className={styles.cardTitle}>
+                  {roomState.revealState.placedCard.title}
+                </h2>
+                <p className={styles.cardMeta}>
+                  {roomState.revealState.placedCard.artist} ·{" "}
+                  {roomState.revealState.placedCard.revealedYear}
+                </p>
+              </div>
+              <span className={styles.revealBadge}>Reveal</span>
+            </div>
+
+            <div className={styles.revealInfoGrid}>
+              {revealPrimaryText ? (
+                <p className={styles.revealResult}>{revealPrimaryText}</p>
+              ) : null}
+              {revealSecondaryText ? (
+                <p className={styles.challengeOutcome}>{revealSecondaryText}</p>
+              ) : null}
+              {revealOwnerText ? (
+                <p className={styles.challengeOutcome}>{revealOwnerText}</p>
+              ) : null}
+            </div>
 
             <button
               className={styles.primaryButton}
@@ -1121,11 +1008,8 @@ export function GamePage() {
 }
 
 function TimelinePanel({
-  eyebrow,
   title,
-  subtitle,
   hint,
-  showEyebrow,
   showHint,
   cardCount,
   timelineCards,
@@ -1136,20 +1020,18 @@ function TimelinePanel({
   onSelectSlot,
   originalChosenSlotIndex,
   challengerChosenSlotIndex,
-  originalChosenLabel,
-  challengerChosenLabel,
   challengeMarkerTone = "pending",
   disabledSlotIndexes = [],
+  hiddenCardMode,
+  showDevCardInfo,
+  showDevAlbumInfo,
+  showDevGenreInfo,
 }: TimelinePanelProps) {
   return (
     <section className={styles.timelinePanel}>
       <div className={styles.timelineHeader}>
         <div className={styles.timelineHeaderCopy}>
-          {showEyebrow ? (
-            <p className={styles.sectionLabel}>{eyebrow}</p>
-          ) : null}
           <h2 className={styles.timelineHeading}>{title}</h2>
-          <p className={styles.timelineSubtitle}>{subtitle}</p>
         </div>
         <span className={styles.timelineCount}>
           {cardCount} card{cardCount === 1 ? "" : "s"}
@@ -1185,52 +1067,66 @@ function TimelinePanel({
                 </button>
 
                 {showPreviewCard ? (
-                  <article className={styles.previewCard}>
-                    {isOriginalSlot && originalChosenLabel ? (
-                      <span className={styles.originalMarkerCard}>
-                        {originalChosenLabel}
-                      </span>
-                    ) : null}
-                    {isChallengeSlot && challengerChosenLabel ? (
-                      <span
-                        className={`${styles.challengeMarkerCard} ${
-                          challengeMarkerTone === "failure"
-                            ? styles.challengeMarkerFailure
-                            : challengeMarkerTone === "success"
-                              ? styles.challengeMarkerSuccess
-                              : ""
-                        }`}
-                      >
-                        {challengerChosenLabel}
-                      </span>
-                    ) : null}
-                    <p className={styles.previewLabel}>Pending card</p>
-                    <h3 className={styles.timelineTitle}>{previewCard.title}</h3>
-                    <p className={styles.cardMeta}>{previewCard.artist}</p>
+                  <article
+                    className={`${styles.previewCard} ${
+                      hiddenCardMode === "gradient"
+                        ? styles.previewCardGradient
+                        : styles.previewCardArtwork
+                    } ${isOriginalSlot ? styles.previewCardCurrentPick : ""} ${
+                      isChallengeSlot
+                        ? challengeMarkerTone === "failure"
+                          ? styles.previewCardChallengeFailure
+                          : styles.previewCardChallenge
+                        : ""
+                    }`}
+                  >
+                    <div className={styles.previewCardFace}>
+                      {showDevCardInfo ? (
+                        <>
+                          <p className={styles.previewLabel}>Developer preview</p>
+                          <h3 className={styles.previewCardTitle}>
+                            {previewCard.title}
+                          </h3>
+                          <p className={styles.previewCardSubtitle}>
+                            {previewCard.artist}
+                            {showDevAlbumInfo && "albumTitle" in previewCard
+                              ? ` · ${previewCard.albumTitle}`
+                              : ""}
+                          </p>
+                          {showDevGenreInfo &&
+                          "genre" in previewCard &&
+                          previewCard.genre ? (
+                            <p className={styles.previewCardMetaPill}>
+                              {previewCard.genre}
+                            </p>
+                          ) : null}
+                        </>
+                      ) : (
+                        <>
+                          <p className={styles.previewLabel}>Current card</p>
+                          <h3 className={styles.previewCardTitle}>TuneTrack</h3>
+                          <p className={styles.previewCardSubtitle}>
+                            Hidden until reveal
+                          </p>
+                        </>
+                      )}
+                    </div>
                   </article>
                 ) : null}
               </div>
 
               {slotIndex < timelineCards.length ? (
-                <article className={styles.timelineCard}>
-                  {isOriginalSlot && originalChosenLabel ? (
-                    <span className={styles.originalMarkerCard}>
-                      {originalChosenLabel}
-                    </span>
-                  ) : null}
-                  {isChallengeSlot && challengerChosenLabel ? (
-                    <span
-                      className={`${styles.challengeMarkerCard} ${
-                        challengeMarkerTone === "failure"
-                          ? styles.challengeMarkerFailure
-                          : challengeMarkerTone === "success"
-                            ? styles.challengeMarkerSuccess
-                            : ""
-                      }`}
-                    >
-                      {challengerChosenLabel}
-                    </span>
-                  ) : null}
+                <article
+                  className={`${styles.timelineCard} ${
+                    isOriginalSlot ? styles.timelineCardCurrentPick : ""
+                  } ${
+                    isChallengeSlot
+                      ? challengeMarkerTone === "failure"
+                        ? styles.timelineCardChallengeFailure
+                        : styles.timelineCardChallenge
+                      : ""
+                  }`}
+                >
                   <h3 className={styles.timelineTitle}>
                     {timelineCards[slotIndex]?.title}
                   </h3>

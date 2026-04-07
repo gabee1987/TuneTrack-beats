@@ -189,6 +189,69 @@ export function AppShellMenu({ title, subtitle, tabs }: AppShellMenuProps) {
                           type="checkbox"
                         />
                       </label>
+
+                      <label className={styles.toggleField}>
+                        <div className={styles.toggleCopy}>
+                          <span className={styles.toggleLabel}>
+                            Show room code
+                          </span>
+                          <span className={styles.toggleHint}>
+                            Keep the room chip visible in the top bar when you need it.
+                          </span>
+                        </div>
+                        <input
+                          checked={view.showRoomCodeChip}
+                          className={styles.checkbox}
+                          onChange={(event) =>
+                            updateViewPreferences({
+                              showRoomCodeChip: event.target.checked,
+                            })
+                          }
+                          type="checkbox"
+                        />
+                      </label>
+
+                      <label className={styles.toggleField}>
+                        <div className={styles.toggleCopy}>
+                          <span className={styles.toggleLabel}>
+                            Show phase
+                          </span>
+                          <span className={styles.toggleHint}>
+                            Show the current game phase as a compact top-bar chip.
+                          </span>
+                        </div>
+                        <input
+                          checked={view.showPhaseChip}
+                          className={styles.checkbox}
+                          onChange={(event) =>
+                            updateViewPreferences({
+                              showPhaseChip: event.target.checked,
+                            })
+                          }
+                          type="checkbox"
+                        />
+                      </label>
+
+                      <label className={styles.toggleField}>
+                        <div className={styles.toggleCopy}>
+                          <span className={styles.toggleLabel}>
+                            Show turn number
+                          </span>
+                          <span className={styles.toggleHint}>
+                            Keep the current round number visible in the top bar.
+                          </span>
+                        </div>
+                        <input
+                          checked={view.showTurnNumberChip}
+                          className={styles.checkbox}
+                          onChange={(event) =>
+                            updateViewPreferences({
+                              showTurnNumberChip: event.target.checked,
+                            })
+                          }
+                          type="checkbox"
+                        />
+                      </label>
                     </div>
                   </div>
                 ) : activeTab?.id === "settings" ? (

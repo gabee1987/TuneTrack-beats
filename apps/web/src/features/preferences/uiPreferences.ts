@@ -9,6 +9,9 @@ export interface ViewPreferences {
   showMiniStandings: boolean;
   showHelperLabels: boolean;
   showTimelineHints: boolean;
+  showRoomCodeChip: boolean;
+  showPhaseChip: boolean;
+  showTurnNumberChip: boolean;
 }
 
 export interface UiPreferences {
@@ -41,6 +44,9 @@ export const defaultUiPreferences: UiPreferences = {
     showMiniStandings: false,
     showHelperLabels: true,
     showTimelineHints: true,
+    showRoomCodeChip: false,
+    showPhaseChip: false,
+    showTurnNumberChip: true,
   },
   showDevCardInfo: false,
   showDevAlbumInfo: false,
