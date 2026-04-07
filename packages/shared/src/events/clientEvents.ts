@@ -3,9 +3,14 @@ import type { RoomId } from "../game/roomState.js";
 import type { PlayerId } from "../game/player.js";
 
 export const ClientToServerEvent = {
+  BuyTimelineCardWithTt: "buy_timeline_card_with_tt",
+  ClaimChallenge: "claim_challenge",
   ConfirmReveal: "confirm_reveal",
   JoinRoom: "join_room",
   PlaceCard: "place_card",
+  PlaceChallenge: "place_challenge",
+  ResolveChallengeWindow: "resolve_challenge_window",
+  SkipTrackWithTt: "skip_track_with_tt",
   StartGame: "start_game",
   UpdatePlayerSettings: "update_player_settings",
   UpdateRoomSettings: "update_room_settings",
@@ -17,6 +22,7 @@ export type ClientToServerEventName =
 export interface JoinRoomPayload {
   roomId: RoomId;
   displayName: string;
+  sessionId: string;
 }
 
 export interface UpdateRoomSettingsPayload {
@@ -24,6 +30,8 @@ export interface UpdateRoomSettingsPayload {
   targetTimelineCardCount: number;
   defaultStartingTimelineCardCount: number;
   revealConfirmMode: RevealConfirmMode;
+  ttModeEnabled: boolean;
+  challengeWindowDurationSeconds: number | null;
 }
 
 export interface UpdatePlayerSettingsPayload {
@@ -42,5 +50,26 @@ export interface PlaceCardPayload {
 }
 
 export interface ConfirmRevealPayload {
+  roomId: RoomId;
+}
+
+export interface ClaimChallengePayload {
+  roomId: RoomId;
+}
+
+export interface PlaceChallengePayload {
+  roomId: RoomId;
+  selectedSlotIndex: number;
+}
+
+export interface ResolveChallengeWindowPayload {
+  roomId: RoomId;
+}
+
+export interface SkipTrackWithTtPayload {
+  roomId: RoomId;
+}
+
+export interface BuyTimelineCardWithTtPayload {
   roomId: RoomId;
 }

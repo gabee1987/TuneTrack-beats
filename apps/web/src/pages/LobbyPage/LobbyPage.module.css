@@ -114,6 +114,20 @@
   margin-top: 20px;
 }
 
+.checkboxField {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  color: rgba(247, 247, 251, 0.88);
+}
+
+.checkboxField input {
+  width: 18px;
+  height: 18px;
+  accent-color: #8b7bff;
+}
+
 .settingLabelRow {
   display: flex;
   justify-content: space-between;

@@ -2,8 +2,11 @@ import { z } from "zod";
 import {
   DEFAULT_STARTING_TIMELINE_CARD_COUNT,
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
+  DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
+  MAX_CHALLENGE_WINDOW_DURATION_SECONDS,
   MAX_STARTING_TIMELINE_CARD_COUNT,
   MAX_TARGET_TIMELINE_CARD_COUNT,
+  MIN_CHALLENGE_WINDOW_DURATION_SECONDS,
   MIN_STARTING_TIMELINE_CARD_COUNT,
   MIN_TARGET_TIMELINE_CARD_COUNT,
   PLAYER_NAME_MAX_LENGTH,
@@ -28,6 +31,7 @@ const revealConfirmModeSchema = z.enum([
 export const joinRoomPayloadSchema = z.object({
   roomId: roomIdSchema,
   displayName: z.string().trim().min(PLAYER_NAME_MIN_LENGTH).max(PLAYER_NAME_MAX_LENGTH),
+  sessionId: z.string().trim().min(1),
 });
 
 export const updateRoomSettingsPayloadSchema = z.object({
@@ -45,6 +49,14 @@ export const updateRoomSettingsPayloadSchema = z.object({
     .max(MAX_STARTING_TIMELINE_CARD_COUNT)
     .default(DEFAULT_STARTING_TIMELINE_CARD_COUNT),
   revealConfirmMode: revealConfirmModeSchema.default("host_only"),
+  ttModeEnabled: z.boolean().default(false),
+  challengeWindowDurationSeconds: z
+    .number()
+    .int()
+    .min(MIN_CHALLENGE_WINDOW_DURATION_SECONDS)
+    .max(MAX_CHALLENGE_WINDOW_DURATION_SECONDS)
+    .nullable()
+    .default(DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS),
 });
 
 export const updatePlayerSettingsPayloadSchema = z.object({
@@ -70,6 +82,27 @@ export const confirmRevealPayloadSchema = z.object({
   roomId: roomIdSchema,
 });
 
+export const claimChallengePayloadSchema = z.object({
+  roomId: roomIdSchema,
+});
+
+export const placeChallengePayloadSchema = z.object({
+  roomId: roomIdSchema,
+  selectedSlotIndex: z.number().int().nonnegative(),
+});
+
+export const resolveChallengeWindowPayloadSchema = z.object({
+  roomId: roomIdSchema,
+});
+
+export const skipTrackWithTtPayloadSchema = z.object({
+  roomId: roomIdSchema,
+});
+
+export const buyTimelineCardWithTtPayloadSchema = z.object({
+  roomId: roomIdSchema,
+});
+
 export type JoinRoomPayloadInput = z.input<typeof joinRoomPayloadSchema>;
 export type JoinRoomPayloadParsed = z.output<typeof joinRoomPayloadSchema>;
 export type UpdateRoomSettingsPayloadInput = z.input<
@@ -91,4 +124,34 @@ export type PlaceCardPayloadParsed = z.output<typeof placeCardPayloadSchema>;
 export type ConfirmRevealPayloadInput = z.input<typeof confirmRevealPayloadSchema>;
 export type ConfirmRevealPayloadParsed = z.output<
   typeof confirmRevealPayloadSchema
+>;
+export type ClaimChallengePayloadInput = z.input<
+  typeof claimChallengePayloadSchema
+>;
+export type ClaimChallengePayloadParsed = z.output<
+  typeof claimChallengePayloadSchema
+>;
+export type PlaceChallengePayloadInput = z.input<
+  typeof placeChallengePayloadSchema
+>;
+export type PlaceChallengePayloadParsed = z.output<
+  typeof placeChallengePayloadSchema
+>;
+export type ResolveChallengeWindowPayloadInput = z.input<
+  typeof resolveChallengeWindowPayloadSchema
+>;
+export type ResolveChallengeWindowPayloadParsed = z.output<
+  typeof resolveChallengeWindowPayloadSchema
+>;
+export type SkipTrackWithTtPayloadInput = z.input<
+  typeof skipTrackWithTtPayloadSchema
+>;
+export type SkipTrackWithTtPayloadParsed = z.output<
+  typeof skipTrackWithTtPayloadSchema
+>;
+export type BuyTimelineCardWithTtPayloadInput = z.input<
+  typeof buyTimelineCardWithTtPayloadSchema
+>;
+export type BuyTimelineCardWithTtPayloadParsed = z.output<
+  typeof buyTimelineCardWithTtPayloadSchema
 >;

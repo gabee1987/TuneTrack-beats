@@ -13,6 +13,12 @@ import { logger } from "../app/logger.js";
 import type { RoomService } from "../rooms/RoomService.js";
 
 export function registerSocketHandlers(io: Server, roomService: RoomService): void {
+  roomService.setRoomStateChangedListener((roomState) => {
+    io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
+      roomState,
+    });
+  });
+
   io.on("connection", (socket) => {
     logger.info({ socketId: socket.id }, "socket connected");
     registerJoinRoomHandler(io, socket, roomService);

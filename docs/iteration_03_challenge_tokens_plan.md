@@ -138,7 +138,6 @@ Implementation note:
 - Advanced challenge countdown animations
 - Drag-and-drop placement
 - External playback integration
-- Reconnect/session restoration
 - Persistent storage
 
 ---
@@ -287,7 +286,7 @@ Important rule:
 
 Recommended initial rule:
 - successful challenger gets +1 TT
-- no one loses TT in Iteration 03
+- failed challenger loses 1 TT
 
 Potential implementation options:
 - store `ttTokenCount` on each `GamePlayer`
@@ -495,6 +494,7 @@ Test with 3 tabs if possible:
 Update:
 - `README.md` if local usage or gameplay behavior changes
 - `docs/decision_log.md` with final challenge and TT decisions
+- reconnect/session restoration notes if testing flow changes
 - this iteration plan's status and any deferred items
 
 ---

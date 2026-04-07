@@ -1,5 +1,6 @@
 import {
   ClientToServerEvent,
+  type PlayerIdentityPayload,
   ServerToClientEvent,
   type PublicRoomState,
   type ServerErrorPayload,
@@ -11,6 +12,10 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
+import {
+  getOrCreatePlayerSessionId,
+  getRememberedPlayerDisplayName,
+} from "../../services/session/playerSession";
 import { socketClient } from "../../services/socket/socketClient";
 import styles from "./GamePage.module.css";
 
@@ -24,8 +29,13 @@ export function GamePage() {
   const { roomId } = useParams<{ roomId: string }>();
   const location = useLocation();
   const routeState = (location.state ?? {}) as Partial<GameRouteState>;
+  const playerSessionId = useMemo(() => getOrCreatePlayerSessionId(), []);
+  const rememberedDisplayName = useMemo(
+    () => getRememberedPlayerDisplayName(),
+    [],
+  );
 
-  const [currentPlayerId] = useState<string | null>(
+  const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(
     routeState.currentPlayerId ?? null,
   );
   const [roomState, setRoomState] = useState<PublicRoomState | null>(
@@ -61,24 +71,51 @@ export function GamePage() {
       return;
     }
 
+    if (!rememberedDisplayName) {
+      navigate("/");
+      return;
+    }
+
+    function handleConnect() {
+      socketClient.emit(ClientToServerEvent.JoinRoom, {
+        roomId,
+        displayName: rememberedDisplayName,
+        sessionId: playerSessionId,
+      });
+    }
+
     function handleStateUpdate(payload: StateUpdatePayload) {
       setRoomState(payload.roomState);
       setSelectedSlotIndex(0);
       setErrorMessage(null);
     }
 
+    function handlePlayerIdentity(payload: PlayerIdentityPayload) {
+      setCurrentPlayerId(payload.playerId);
+    }
+
     function handleError(payload: ServerErrorPayload) {
       setErrorMessage(payload.message);
     }
 
+    socketClient.on("connect", handleConnect);
+    socketClient.on(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
     socketClient.on(ServerToClientEvent.StateUpdate, handleStateUpdate);
     socketClient.on(ServerToClientEvent.Error, handleError);
 
+    if (!socketClient.connected) {
+      socketClient.connect();
+    } else {
+      handleConnect();
+    }
+
     return () => {
+      socketClient.off("connect", handleConnect);
+      socketClient.off(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
       socketClient.off(ServerToClientEvent.StateUpdate, handleStateUpdate);
       socketClient.off(ServerToClientEvent.Error, handleError);
     };
-  }, [navigate, roomId]);
+  }, [navigate, playerSessionId, rememberedDisplayName, roomId]);
 
   function handlePlaceCard() {
     if (!roomState || roomState.status !== "turn" || !isCurrentPlayerTurn) {

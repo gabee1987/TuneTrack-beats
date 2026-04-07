@@ -5,7 +5,7 @@ import type { TrackCardPublic } from "./track.js";
 
 export type RoomId = string;
 
-export type GamePhase = "lobby" | "turn" | "reveal" | "finished";
+export type GamePhase = "lobby" | "turn" | "challenge" | "reveal" | "finished";
 export type RoomStatus = GamePhase;
 
 export interface PublicTurnState {
@@ -21,6 +21,17 @@ export interface PublicRevealState {
   validSlotIndexes: number[];
 }
 
+export type ChallengePhase = "open" | "claimed";
+
+export interface PublicChallengeState {
+  phase: ChallengePhase;
+  originalPlayerId: string;
+  originalSelectedSlotIndex: number;
+  challengerPlayerId: string | null;
+  challengeDeadlineEpochMs: number | null;
+  challengerSelectedSlotIndex: number | null;
+}
+
 export interface PublicRoomState {
   roomId: RoomId;
   status: RoomStatus;
@@ -31,6 +42,7 @@ export interface PublicRoomState {
   targetTimelineCardCount: number;
   settings: PublicRoomSettings;
   turn: PublicTurnState | null;
+  challengeState: PublicChallengeState | null;
   revealState: PublicRevealState | null;
   winnerPlayerId: string | null;
 }

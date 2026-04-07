@@ -16,6 +16,12 @@ export class RoomService {
     private readonly deckService = new DeckService(),
   ) {}
 
+  public setRoomStateChangedListener(
+    listener: (roomState: PublicRoomState) => void,
+  ): void {
+    this.roomRegistry.setRoomStateChangedListener(listener);
+  }
+
   public joinRoom(
     joinRoomPayload: JoinRoomPayloadParsed,
     socketId: string,
@@ -24,6 +30,7 @@ export class RoomService {
       joinRoomPayload.roomId,
       joinRoomPayload.displayName,
       socketId,
+      joinRoomPayload.sessionId,
     );
   }
 

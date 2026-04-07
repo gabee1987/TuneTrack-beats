@@ -89,15 +89,24 @@ that ID.
 
 ---
 
-## Still Open
-
 ### Reconnect/session identity strategy
 
-Current behavior treats a reconnect as a fresh socket/player join.
+The browser now stores a stable per-tab player session in `sessionStorage`.
 
-Still to decide:
-- Should we support reconnecting into the same player identity after refresh?
-- If yes, should identity be restored from a short-lived token in local storage?
+Current behavior:
+- refreshing the same tab keeps the same player identity
+- lobby and in-progress games can be rejoined during a short reconnect grace
+  period
+- different browser tabs get different player sessions, so multi-tab local
+  testing still works
+
+Current server rule:
+- disconnected players stay reserved for a short grace period before they are
+  removed from the room
+- if they reconnect in time with the same session, they regain the same player
+  identity and host role if applicable
+
+## Still Open
 
 ### Room code generation rules
 

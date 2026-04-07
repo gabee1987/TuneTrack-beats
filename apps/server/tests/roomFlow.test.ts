@@ -13,6 +13,7 @@ import { createHttpServer } from "../src/app/createHttpServer.js";
 import { createSocketServer } from "../src/app/createSocketServer.js";
 import { DeckService } from "../src/decks/DeckService.js";
 import { registerSocketHandlers } from "../src/realtime/registerSocketHandlers.js";
+import { RoomRegistry } from "../src/rooms/RoomRegistry.js";
 import { RoomService } from "../src/rooms/RoomService.js";
 
 interface TestServerContext {
@@ -65,10 +66,12 @@ describe("room flow", () => {
     hostSocket.emit(ClientToServerEvent.JoinRoom, {
       roomId: "party-room",
       displayName: "Host Player",
+      sessionId: "host-session",
     });
     guestSocket.emit(ClientToServerEvent.JoinRoom, {
       roomId: "party-room",
       displayName: "Guest Player",
+      sessionId: "guest-session",
     });
 
     const [hostIdentity, guestIdentity] = await Promise.all([
@@ -166,10 +169,12 @@ describe("room flow", () => {
     hostSocket.emit(ClientToServerEvent.JoinRoom, {
       roomId: "game-room",
       displayName: "Host Player",
+      sessionId: "host-session",
     });
     guestSocket.emit(ClientToServerEvent.JoinRoom, {
       roomId: "game-room",
       displayName: "Guest Player",
+      sessionId: "guest-session",
     });
 
     const [hostIdentity, guestIdentity] = await Promise.all([
@@ -285,6 +290,92 @@ describe("room flow", () => {
     expect(secondTurnState.currentTrackCard?.id).toBe("test-track-4");
     expect(secondTurnState.revealState).toBeNull();
   });
+
+  it("restores the same player identity after a refresh during an active game", async () => {
+    const serverContext = await startTestServer();
+    const hostSocket = createClient(serverContext.baseUrl);
+    const guestSocket = createClient(serverContext.baseUrl);
+
+    const hostIdentityPromise = waitForEvent<PlayerIdentityPayload>(
+      hostSocket,
+      ServerToClientEvent.PlayerIdentity,
+    );
+    const guestIdentityPromise = waitForEvent<PlayerIdentityPayload>(
+      guestSocket,
+      ServerToClientEvent.PlayerIdentity,
+    );
+    const connectionPromises = [
+      waitForEvent(hostSocket, "connect"),
+      waitForEvent(guestSocket, "connect"),
+    ];
+
+    hostSocket.connect();
+    guestSocket.connect();
+
+    await Promise.all(connectionPromises);
+
+    hostSocket.emit(ClientToServerEvent.JoinRoom, {
+      roomId: "rejoin-room",
+      displayName: "Host Player",
+      sessionId: "host-session",
+    });
+    guestSocket.emit(ClientToServerEvent.JoinRoom, {
+      roomId: "rejoin-room",
+      displayName: "Guest Player",
+      sessionId: "guest-session",
+    });
+
+    const [hostIdentity] = await Promise.all([
+      hostIdentityPromise,
+      guestIdentityPromise,
+      waitForStateUpdate(
+        guestSocket,
+        (roomState) =>
+          roomState.status === "lobby" && roomState.players.length === 2,
+      ),
+    ]);
+
+    const firstTurnPromise = waitForStateUpdate(
+      hostSocket,
+      (roomState) => roomState.status === "turn" && roomState.turn?.turnNumber === 1,
+    );
+
+    hostSocket.emit(ClientToServerEvent.StartGame, {
+      roomId: "rejoin-room",
+    });
+
+    await firstTurnPromise;
+
+    hostSocket.disconnect();
+
+    const refreshedHostSocket = createClient(serverContext.baseUrl);
+    const refreshedHostConnectPromise = waitForEvent(refreshedHostSocket, "connect");
+    const refreshedIdentityPromise = waitForEvent<PlayerIdentityPayload>(
+      refreshedHostSocket,
+      ServerToClientEvent.PlayerIdentity,
+    );
+    const refreshedStatePromise = waitForStateUpdate(
+      refreshedHostSocket,
+      (roomState) => roomState.status === "turn" && roomState.roomId === "rejoin-room",
+    );
+
+    refreshedHostSocket.connect();
+    await refreshedHostConnectPromise;
+
+    refreshedHostSocket.emit(ClientToServerEvent.JoinRoom, {
+      roomId: "rejoin-room",
+      displayName: "Host Player",
+      sessionId: "host-session",
+    });
+
+    const refreshedIdentity = await refreshedIdentityPromise;
+    const refreshedState = await refreshedStatePromise;
+
+    expect(refreshedIdentity.playerId).toBe(hostIdentity.playerId);
+    expect(refreshedState.players).toHaveLength(2);
+    expect(refreshedState.hostId).toBe(hostIdentity.playerId);
+    expect(refreshedState.status).toBe("turn");
+  });
 });
 
 async function startTestServer(): Promise<TestServerContext> {
@@ -293,7 +384,7 @@ async function startTestServer(): Promise<TestServerContext> {
 
   registerSocketHandlers(
     io,
-    new RoomService(undefined, new TestDeckService()),
+    new RoomService(new RoomRegistry(undefined, 25), new TestDeckService()),
   );
 
   await new Promise<void>((resolve) => {

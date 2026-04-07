@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { rememberPlayerDisplayName } from "../../services/session/playerSession";
 import styles from "./HomePage.module.css";
 
 export function HomePage() {
@@ -16,6 +17,8 @@ export function HomePage() {
     if (!trimmedRoomId || !trimmedDisplayName) {
       return;
     }
+
+    rememberPlayerDisplayName(trimmedDisplayName);
 
     navigate(
       `/lobby/${encodeURIComponent(trimmedRoomId)}?playerName=${encodeURIComponent(

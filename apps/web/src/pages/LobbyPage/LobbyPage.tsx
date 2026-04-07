@@ -1,8 +1,11 @@
 import {
+  DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
   DEFAULT_STARTING_TIMELINE_CARD_COUNT,
   ClientToServerEvent,
   MAX_STARTING_TIMELINE_CARD_COUNT,
+  MAX_CHALLENGE_WINDOW_DURATION_SECONDS,
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
+  MIN_CHALLENGE_WINDOW_DURATION_SECONDS,
   MIN_STARTING_TIMELINE_CARD_COUNT,
   MAX_TARGET_TIMELINE_CARD_COUNT,
   MIN_TARGET_TIMELINE_CARD_COUNT,
@@ -17,6 +20,11 @@ import {
 } from "@tunetrack/shared";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+  getOrCreatePlayerSessionId,
+  getRememberedPlayerDisplayName,
+  rememberPlayerDisplayName,
+} from "../../services/session/playerSession";
 import { socketClient } from "../../services/socket/socketClient";
 import styles from "./LobbyPage.module.css";
 
@@ -25,9 +33,10 @@ export function LobbyPage() {
   const { roomId } = useParams<{ roomId: string }>();
   const [searchParams] = useSearchParams();
   const displayName = useMemo(
-    () => searchParams.get("playerName")?.trim() ?? "",
+    () => searchParams.get("playerName")?.trim() ?? getRememberedPlayerDisplayName(),
     [searchParams],
   );
+  const playerSessionId = useMemo(() => getOrCreatePlayerSessionId(), []);
 
   const [connectionStatus, setConnectionStatus] = useState("Connecting");
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
@@ -43,12 +52,15 @@ export function LobbyPage() {
       return;
     }
 
+    rememberPlayerDisplayName(displayName);
+
     function handleConnect() {
       setConnectionStatus("Connected");
       setErrorMessage(null);
       socketClient.emit(ClientToServerEvent.JoinRoom, {
         roomId,
         displayName,
+        sessionId: playerSessionId,
       });
     }
 
@@ -97,7 +109,7 @@ export function LobbyPage() {
       socketClient.off(ServerToClientEvent.StateUpdate, handleStateUpdate);
       socketClient.off(ServerToClientEvent.Error, handleError);
     };
-  }, [displayName, navigate, roomId]);
+  }, [displayName, navigate, playerSessionId, roomId]);
 
   function handleRoomSettingsChange(nextSettings: PublicRoomSettings) {
     if (!roomState || !isHost) {
@@ -114,6 +126,8 @@ export function LobbyPage() {
     targetTimelineCardCount: DEFAULT_TARGET_TIMELINE_CARD_COUNT,
     defaultStartingTimelineCardCount: DEFAULT_STARTING_TIMELINE_CARD_COUNT,
     revealConfirmMode: "host_only" as RevealConfirmMode,
+    ttModeEnabled: false,
+    challengeWindowDurationSeconds: DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
   };
 
   function handlePlayerStartingCardCountChange(
@@ -230,6 +244,59 @@ export function LobbyPage() {
               </select>
             </label>
 
+            <label className={styles.checkboxField}>
+              <input
+                checked={currentSettings.ttModeEnabled}
+                onChange={(event) =>
+                  handleRoomSettingsChange({
+                    ...currentSettings,
+                    ttModeEnabled: event.target.checked,
+                  })
+                }
+                type="checkbox"
+              />
+              <span>Enable TT mode</span>
+            </label>
+
+            <label className={styles.settingField}>
+              <div className={styles.settingLabelRow}>
+                <span>Challenge window</span>
+                <strong className={styles.settingValue}>
+                  {currentSettings.challengeWindowDurationSeconds === null
+                    ? "Host manual"
+                    : `${currentSettings.challengeWindowDurationSeconds}s`}
+                </strong>
+              </div>
+              <select
+                className={styles.selectInput}
+                onChange={(event) =>
+                  handleRoomSettingsChange({
+                    ...currentSettings,
+                    challengeWindowDurationSeconds:
+                      event.target.value === "manual"
+                        ? null
+                        : Number(event.target.value),
+                  })
+                }
+                value={
+                  currentSettings.challengeWindowDurationSeconds === null
+                    ? "manual"
+                    : currentSettings.challengeWindowDurationSeconds.toString()
+                }
+              >
+                <option value="manual">Host manual</option>
+                <option value={DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS.toString()}>
+                  {DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS} seconds
+                </option>
+                <option value={MIN_CHALLENGE_WINDOW_DURATION_SECONDS.toString()}>
+                  {MIN_CHALLENGE_WINDOW_DURATION_SECONDS} seconds
+                </option>
+                <option value={MAX_CHALLENGE_WINDOW_DURATION_SECONDS.toString()}>
+                  {MAX_CHALLENGE_WINDOW_DURATION_SECONDS} seconds
+                </option>
+              </select>
+            </label>
+
             <p className={styles.settingsHint}>
               You are the host, so you can change this setting.
             </p>
@@ -241,6 +308,7 @@ export function LobbyPage() {
             >
               Start Game
             </button>
+
           </section>
         ) : null}
 
@@ -253,9 +321,8 @@ export function LobbyPage() {
                   <span className={styles.startingCardsBadge}>
                     {player.startingTimelineCardCount} starting cards
                   </span>
-                  <span>
-                    {player.isHost ? "Host" : `${player.tokenCount} tokens`}
-                  </span>
+                  <span>{player.ttTokenCount} TT</span>
+                  {player.isHost ? <span>Host</span> : null}
                 </div>
               </div>
 

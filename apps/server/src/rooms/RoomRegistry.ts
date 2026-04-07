@@ -6,6 +6,7 @@ import {
 } from "@tunetrack/game-engine";
 import { randomUUID } from "node:crypto";
 import {
+  DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
   DEFAULT_STARTING_TIMELINE_CARD_COUNT,
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
   type ConfirmRevealPayloadParsed,
@@ -25,6 +26,12 @@ import {
 interface SocketRoomMembership {
   playerId: string;
   roomId: RoomId;
+  sessionId: string;
+}
+
+interface SessionRoomMembership {
+  playerId: string;
+  roomId: RoomId;
 }
 
 interface RoomRecord {
@@ -39,19 +46,48 @@ export interface JoinRoomResult {
 }
 
 export class RoomRegistry {
+  private static readonly DEFAULT_RECONNECT_GRACE_PERIOD_MS = 30_000;
+
   private readonly roomsById = new Map<RoomId, RoomRecord>();
   private readonly socketMemberships = new Map<string, SocketRoomMembership>();
+  private readonly sessionMemberships = new Map<string, SessionRoomMembership>();
+  private readonly disconnectTimersBySessionId = new Map<
+    string,
+    NodeJS.Timeout
+  >();
+  private roomStateChangedListener: ((roomState: PublicRoomState) => void) | null =
+    null;
 
   public constructor(
     private readonly gameFlowService = new GameFlowService(),
+    private readonly reconnectGracePeriodMs =
+      RoomRegistry.DEFAULT_RECONNECT_GRACE_PERIOD_MS,
   ) {}
+
+  public setRoomStateChangedListener(
+    listener: (roomState: PublicRoomState) => void,
+  ): void {
+    this.roomStateChangedListener = listener;
+  }
 
   public addPlayerToRoom(
     roomId: RoomId,
     displayName: string,
     socketId: string,
+    sessionId: string,
   ): JoinRoomResult {
     const existingRoomRecord = this.roomsById.get(roomId);
+    const existingSessionMembership = this.sessionMemberships.get(sessionId);
+
+    if (existingSessionMembership?.roomId === roomId) {
+      return this.restorePlayerSession(
+        roomId,
+        existingSessionMembership.playerId,
+        socketId,
+        sessionId,
+      );
+    }
+
     const playerId = randomUUID();
 
     if (!existingRoomRecord) {
@@ -59,7 +95,7 @@ export class RoomRegistry {
         id: playerId,
         displayName,
         isHost: true,
-        tokenCount: 0,
+        ttTokenCount: 0,
         startingTimelineCardCount: DEFAULT_STARTING_TIMELINE_CARD_COUNT,
       };
 
@@ -67,6 +103,9 @@ export class RoomRegistry {
         targetTimelineCardCount: DEFAULT_TARGET_TIMELINE_CARD_COUNT,
         defaultStartingTimelineCardCount: DEFAULT_STARTING_TIMELINE_CARD_COUNT,
         revealConfirmMode: "host_only",
+        ttModeEnabled: false,
+        challengeWindowDurationSeconds:
+          DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
       };
 
       const roomState: PublicRoomState = {
@@ -81,6 +120,7 @@ export class RoomRegistry {
         targetTimelineCardCount: DEFAULT_TARGET_TIMELINE_CARD_COUNT,
         settings,
         turn: null,
+        challengeState: null,
         revealState: null,
         winnerPlayerId: null,
       };
@@ -90,7 +130,8 @@ export class RoomRegistry {
         roomState,
         trackCardsById: new Map<string, GameTrackCard>(),
       });
-      this.socketMemberships.set(socketId, { playerId, roomId });
+      this.socketMemberships.set(socketId, { playerId, roomId, sessionId });
+      this.sessionMemberships.set(sessionId, { playerId, roomId });
 
       return {
         playerId,
@@ -106,7 +147,7 @@ export class RoomRegistry {
       id: playerId,
       displayName,
       isHost: false,
-      tokenCount: 0,
+      ttTokenCount: 0,
       startingTimelineCardCount:
         existingRoomRecord.roomState.settings.defaultStartingTimelineCardCount,
     };
@@ -124,7 +165,8 @@ export class RoomRegistry {
       ...existingRoomRecord,
       roomState: nextRoomState,
     });
-    this.socketMemberships.set(socketId, { playerId, roomId });
+    this.socketMemberships.set(socketId, { playerId, roomId, sessionId });
+    this.sessionMemberships.set(sessionId, { playerId, roomId });
 
     return {
       playerId,
@@ -156,6 +198,9 @@ export class RoomRegistry {
         defaultStartingTimelineCardCount:
           roomSettingsPayload.defaultStartingTimelineCardCount,
         revealConfirmMode: roomSettingsPayload.revealConfirmMode,
+        ttModeEnabled: roomSettingsPayload.ttModeEnabled,
+        challengeWindowDurationSeconds:
+          roomSettingsPayload.challengeWindowDurationSeconds,
       },
     };
 
@@ -336,6 +381,7 @@ export class RoomRegistry {
     return roomState;
   }
 
+
   public removePlayerBySocketId(socketId: string): PublicRoomState | null {
     const membership = this.socketMemberships.get(socketId);
 
@@ -344,6 +390,78 @@ export class RoomRegistry {
     }
 
     this.socketMemberships.delete(socketId);
+    this.scheduleDeferredPlayerRemoval(membership.sessionId);
+
+    return null;
+  }
+
+  private restorePlayerSession(
+    roomId: RoomId,
+    playerId: string,
+    socketId: string,
+    sessionId: string,
+  ): JoinRoomResult {
+    this.clearDisconnectTimer(sessionId);
+
+    const roomRecord = this.roomsById.get(roomId);
+
+    if (!roomRecord) {
+      this.sessionMemberships.delete(sessionId);
+      throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
+    }
+
+    const existingPlayer = roomRecord.roomState.players.find(
+      (player) => player.id === playerId,
+    );
+
+    if (!existingPlayer) {
+      this.sessionMemberships.delete(sessionId);
+      throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
+    }
+
+    this.socketMemberships.set(socketId, { playerId, roomId, sessionId });
+
+    return {
+      playerId,
+      roomState: roomRecord.roomState,
+    };
+  }
+
+  private scheduleDeferredPlayerRemoval(sessionId: string): void {
+    this.clearDisconnectTimer(sessionId);
+
+    const timeoutHandle = setTimeout(() => {
+      this.disconnectTimersBySessionId.delete(sessionId);
+      const roomState = this.removePlayerBySessionId(sessionId);
+
+      if (roomState) {
+        this.roomStateChangedListener?.(roomState);
+      }
+    }, this.reconnectGracePeriodMs);
+    timeoutHandle.unref();
+
+    this.disconnectTimersBySessionId.set(sessionId, timeoutHandle);
+  }
+
+  private clearDisconnectTimer(sessionId: string): void {
+    const timeoutHandle = this.disconnectTimersBySessionId.get(sessionId);
+
+    if (!timeoutHandle) {
+      return;
+    }
+
+    clearTimeout(timeoutHandle);
+    this.disconnectTimersBySessionId.delete(sessionId);
+  }
+
+  private removePlayerBySessionId(sessionId: string): PublicRoomState | null {
+    const membership = this.sessionMemberships.get(sessionId);
+
+    if (!membership) {
+      return null;
+    }
+
+    this.sessionMemberships.delete(sessionId);
 
     const roomRecord = this.roomsById.get(membership.roomId);
 
@@ -436,6 +554,7 @@ function mapGameStateToPublicRoomState(
     revealState: gameState.revealState
       ? mapRevealStateToPublicRevealState(gameState.revealState, trackCardsById)
       : null,
+    challengeState: currentRoomState.challengeState,
     winnerPlayerId: gameState.winnerPlayerId,
   };
 }
