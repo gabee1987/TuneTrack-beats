@@ -6,7 +6,7 @@
 
 ## Implementation Status
 
-Status: **in progress**
+Status: **completed**
 
 ---
 
@@ -26,7 +26,8 @@ By the end of this iteration, players should be able to:
 - let the host decide whether TT-based gameplay is enabled for the room
 - let the host manually award TT during the game for MVP testing
 - spend 1 TT to skip the current track on your own turn
-- spend 3 TT to buy a card directly from the deck into your own timeline
+- spend 3 TT to claim the current song, auto-place it correctly into your own
+  timeline, skip Beat for that turn, and go to manual reveal
 - keep the existing normal placement flow working when no challenge happens
 
 This iteration should prioritize **fair server-side challenge ownership and
@@ -533,7 +534,6 @@ Iteration 03 is complete when all of these are true:
 ## 12. Explicit Non-Goals
 
 Do not expand scope into these until the first challenge/token loop is stable:
-- skip/buy-card TT spending actions
 - drag-and-drop interaction overhaul
 - playback provider integration
 - reconnect/session persistence
