@@ -118,10 +118,33 @@
   color: rgba(247, 247, 251, 0.72);
 }
 
+.playerActionButton {
+  margin-top: 12px;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(82, 227, 173, 0.18);
+  color: #ffffff;
+  cursor: pointer;
+}
+
 .timelineViewSwitcher {
   display: flex;
   gap: 12px;
   margin-top: 28px;
+}
+
+.turnActionsPanel {
+  margin-top: 24px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.turnActionButtons {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
 }
 
 .viewToggleButton {

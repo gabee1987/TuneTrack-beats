@@ -1,5 +1,7 @@
 import {
+  BUY_TIMELINE_CARD_TT_COST,
   ClientToServerEvent,
+  SKIP_TRACK_TT_COST,
   type PlayerIdentityPayload,
   type RoomClosedPayload,
   ServerToClientEvent,
@@ -136,6 +138,9 @@ export function GamePage() {
     (roomState.settings.revealConfirmMode === "host_or_active_player"
       ? isCurrentPlayerTurn || roomState.hostId === currentPlayerId
       : roomState.hostId === currentPlayerId);
+  const hasUsedSkipTrackWithTt = Boolean(
+    roomState?.turn?.hasUsedSkipTrackWithTt,
+  );
   const challengeCountdownLabel = useMemo(() => {
     const deadlineEpochMs = roomState?.challengeState?.challengeDeadlineEpochMs;
 
@@ -316,6 +321,52 @@ export function GamePage() {
     }
 
     socketClient.emit(ClientToServerEvent.CloseRoom, {
+      roomId: roomState.roomId,
+    });
+  }
+
+  function handleAwardTt(playerId: string) {
+    if (
+      !roomState ||
+      roomState.hostId !== currentPlayerId ||
+      !roomState.settings.ttModeEnabled
+    ) {
+      return;
+    }
+
+    socketClient.emit(ClientToServerEvent.AwardTt, {
+      roomId: roomState.roomId,
+      playerId,
+      amount: 1,
+    });
+  }
+
+  function handleSkipTrackWithTt() {
+    if (
+      !roomState ||
+      !roomState.settings.ttModeEnabled ||
+      roomState.status !== "turn" ||
+      !isCurrentPlayerTurn
+    ) {
+      return;
+    }
+
+    socketClient.emit(ClientToServerEvent.SkipTrackWithTt, {
+      roomId: roomState.roomId,
+    });
+  }
+
+  function handleBuyTimelineCardWithTt() {
+    if (
+      !roomState ||
+      !roomState.settings.ttModeEnabled ||
+      roomState.status !== "turn" ||
+      !isCurrentPlayerTurn
+    ) {
+      return;
+    }
+
+    socketClient.emit(ClientToServerEvent.BuyTimelineCardWithTt, {
       roomId: roomState.roomId,
     });
   }
@@ -517,6 +568,16 @@ export function GamePage() {
                     ? ` · ${player.ttTokenCount} TT`
                     : ""}
                 </p>
+                {roomState.settings.ttModeEnabled &&
+                roomState.hostId === currentPlayerId ? (
+                  <button
+                    className={styles.playerActionButton}
+                    onClick={() => handleAwardTt(player.id)}
+                    type="button"
+                  >
+                    +1 TT
+                  </button>
+                ) : null}
               </article>
             ))}
           </div>
@@ -637,16 +698,51 @@ export function GamePage() {
         />
 
         {roomState.status === "turn" ? (
-          <button
-            className={styles.primaryButton}
-            disabled={!isCurrentPlayerTurn || !roomState.currentTrackCard}
-            onClick={handlePlaceCard}
-            type="button"
-          >
-            {isCurrentPlayerTurn
-              ? `Confirm Placement In Slot ${selectedSlotIndex}`
-              : "Waiting for the active player"}
-          </button>
+          <>
+            {roomState.settings.ttModeEnabled ? (
+              <section className={styles.turnActionsPanel}>
+                <p className={styles.sectionLabel}>Turn Actions</p>
+                <div className={styles.turnActionButtons}>
+                  <button
+                    className={styles.secondaryButton}
+                    disabled={
+                      !isCurrentPlayerTurn ||
+                      hasUsedSkipTrackWithTt ||
+                      (currentPlayer?.ttTokenCount ?? 0) < SKIP_TRACK_TT_COST
+                    }
+                    onClick={handleSkipTrackWithTt}
+                    type="button"
+                  >
+                    {hasUsedSkipTrackWithTt
+                      ? "Skip Already Used This Turn"
+                      : `Skip Track (${SKIP_TRACK_TT_COST} TT)`}
+                  </button>
+                  <button
+                    className={styles.secondaryButton}
+                    disabled={
+                      !isCurrentPlayerTurn ||
+                      (currentPlayer?.ttTokenCount ?? 0) < BUY_TIMELINE_CARD_TT_COST
+                    }
+                    onClick={handleBuyTimelineCardWithTt}
+                    type="button"
+                  >
+                    Buy Card ({BUY_TIMELINE_CARD_TT_COST} TT)
+                  </button>
+                </div>
+              </section>
+            ) : null}
+
+            <button
+              className={styles.primaryButton}
+              disabled={!isCurrentPlayerTurn || !roomState.currentTrackCard}
+              onClick={handlePlaceCard}
+              type="button"
+            >
+              {isCurrentPlayerTurn
+                ? `Confirm Placement In Slot ${selectedSlotIndex}`
+                : "Waiting for the active player"}
+            </button>
+          </>
         ) : null}
 
         {roomState.status === "challenge" && roomState.challengeState ? (
@@ -747,7 +843,9 @@ export function GamePage() {
             </p>
             <p className={styles.revealResult}>
               {roomState.revealState.wasCorrect
-                ? `${getPlayerName(roomState.revealState.playerId)} was correct.`
+                ? roomState.revealState.revealType === "tt_buy"
+                  ? `${getPlayerName(roomState.revealState.playerId)} bought this card with TT.`
+                  : `${getPlayerName(roomState.revealState.playerId)} was correct.`
                 : `${getPlayerName(roomState.revealState.playerId)} was wrong. Correct slot${roomState.revealState.validSlotIndexes.length > 1 ? "s were" : " was"} ${roomState.revealState.validSlotIndexes.join(
                     ", ",
                   )}.`}
@@ -760,7 +858,9 @@ export function GamePage() {
               </p>
             ) : (
               <p className={styles.challengeOutcome}>
-                No one used Beat! on this placement.
+                {roomState.revealState.revealType === "tt_buy"
+                  ? "This turn used a TT buy, so Beat! was not available."
+                  : "No one used Beat! on this placement."}
               </p>
             )}
             {roomState.revealState.awardedPlayerId ? (

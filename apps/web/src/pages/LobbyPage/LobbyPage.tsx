@@ -32,6 +32,8 @@ import {
 import { socketClient } from "../../services/socket/socketClient";
 import styles from "./LobbyPage.module.css";
 
+const DEFAULT_ENABLED_STARTING_TT_TOKEN_COUNT = 1;
+
 export function LobbyPage() {
   const navigate = useNavigate();
   const { roomId } = useParams<{ roomId: string }>();
@@ -269,10 +271,21 @@ export function LobbyPage() {
               <input
                 checked={currentSettings.ttModeEnabled}
                 onChange={(event) =>
-                  handleRoomSettingsChange({
-                    ...currentSettings,
-                    ttModeEnabled: event.target.checked,
-                  })
+                  handleRoomSettingsChange(
+                    event.target.checked
+                      ? {
+                          ...currentSettings,
+                          ttModeEnabled: true,
+                          startingTtTokenCount:
+                            currentSettings.ttModeEnabled
+                              ? currentSettings.startingTtTokenCount
+                              : DEFAULT_ENABLED_STARTING_TT_TOKEN_COUNT,
+                        }
+                      : {
+                          ...currentSettings,
+                          ttModeEnabled: false,
+                        },
+                  )
                 }
                 type="checkbox"
               />
