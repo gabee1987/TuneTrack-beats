@@ -6,7 +6,7 @@
 
 ## Implementation Status
 
-Status: **planned**
+Status: **in progress**
 
 ---
 
@@ -22,7 +22,11 @@ By the end of this iteration, players should be able to:
 - let the challenger choose an alternative slot in the active player's timeline
 - resolve whether the original player or the challenger was right
 - award TT to the challenger on a successful challenge
+- steal the challenged card into the challenger's timeline when Beat! is correct
 - let the host decide whether TT-based gameplay is enabled for the room
+- let the host manually award TT during the game for MVP testing
+- spend 1 TT to skip the current track on your own turn
+- spend 3 TT to buy a card directly from the deck into your own timeline
 - keep the existing normal placement flow working when no challenge happens
 
 This iteration should prioritize **fair server-side challenge ownership and
@@ -57,7 +61,7 @@ Recommended turn flow:
 6. If one player challenges first, that challenger chooses a replacement slot
    in the active player's timeline
 7. Server resolves original placement vs challenger placement
-8. Server awards TT if the challenger was right
+8. Server awards TT and awards the card if the challenger was right
 9. Server advances to the next turn or finishes the game
 
 ## 3.2 Challenge race rule
@@ -74,18 +78,18 @@ Server must reject:
 ## 3.3 Recommended challenge outcome policy
 
 For Iteration 03, use this simple resolution model:
-- if the original placement was correct, the active player gets the card and the
-  challenger loses 1 TT
+- if the original placement was correct, the active player keeps the card and
+  the challenger loses 1 TT
 - if the original placement was wrong and the challenger chooses a valid slot,
-  the card is inserted into the active player's timeline at the challenger's
-  chosen slot and the challenger gains 1 TT
+  the challenger steals the card into their own timeline automatically and
+  gains 1 TT
 - if both original placement and challenger placement are wrong, the card is
   discarded and the challenger loses 1 TT
 
 Reasoning:
-- This keeps the active player's timeline as the single placement target
-- This makes challenges meaningful without adding card stealing yet
-- This keeps Iteration 03 compatible with the current reveal/winner flow
+- This matches the agreed Hitster-style Beat reward rule
+- This keeps challenge outcomes meaningful and easy to understand in reveal
+- Winner detection must consider the challenger timeline when a steal succeeds
 
 ## 3.4 TT token rules for first version
 
@@ -93,9 +97,11 @@ Recommended MVP TT rules when TT mode is enabled:
 - each player starts with 0 TT by default
 - successful challenge grants +1 TT to the challenger
 - TT is displayed in lobby and game views
-- spending 1 TT can skip the current song on your own turn
-- spending 3 TT can buy a card directly from the deck and place it on your own
-  timeline without guessing
+- spending 1 TT can skip the current song on your own turn, but only once per
+  turn
+- spending 3 TT can claim the current song immediately, place it into the
+  correct slot on your own timeline automatically, and go straight to reveal
+- a TT-buy turn does not open a Beat window
 
 Recommended host setting:
 - `TT mode enabled`
@@ -123,9 +129,12 @@ Implementation note:
 - Challenger slot selection UI
 - Challenge reveal/result display
 - TT reward on successful challenge
+- Host-only manual TT awarding during a game for MVP testing and song/artist
+  callouts
 - Spend 1 TT to skip the current song on your own turn when TT mode is enabled
-- Spend 3 TT to buy a deck card directly into your own timeline when TT mode is
-  enabled
+- Limit skip usage to once per turn
+- Spend 3 TT to claim the current song directly into your own timeline when TT
+  mode is enabled
 - Shared challenge/token contracts
 - Game-engine challenge/token state transitions
 - Server socket handlers for challenge flow
@@ -134,7 +143,6 @@ Implementation note:
 
 ### Out of scope
 
-- Card stealing or timeline ownership transfer
 - Advanced challenge countdown animations
 - Drag-and-drop placement
 - External playback integration
@@ -202,7 +210,7 @@ Suggested phase model:
 Recommended client-to-server events:
 - `claim_challenge`
 - `place_challenge`
-- `pass_challenge`
+- `award_tt`
 - `skip_track_with_tt`
 - `buy_timeline_card_with_tt`
 
@@ -222,16 +230,17 @@ interface PlaceChallengePayload {
   selectedSlotIndex: number;
 }
 
-interface PassChallengePayload {
+interface AwardTtPayload {
   roomId: string;
+  playerId: string;
+  amount: number;
 }
 ```
 
 Notes:
 - `claim_challenge` is the first-click race event
 - `place_challenge` submits the challenger's alternative slot
-- `pass_challenge` lets host or challenger continue if no one wants to adjust
-  after a challenge is claimed, if we decide we need this escape hatch
+- `award_tt` is a host-only MVP helper for manual token registration
 
 ## 6.4 Add Zod schemas
 
@@ -303,6 +312,7 @@ Add tests for:
 - active player cannot challenge their own placement
 - no claim is accepted outside challenge phase
 - successful challenge inserts the card at challenger slot and awards 1 TT
+- successful challenge steals the card into the challenger timeline
 - failed challenge does not award TT
 - if nobody challenges, original placement resolves as before
 - same-year slot rules still work during challenger placement
@@ -360,6 +370,8 @@ Recommended MVP timeout model:
   challenge window
 - if no challenger claims before deadline, auto-resolve the original placement
 - host can manually close/resolve the challenge window before timeout
+- once a challenger has successfully claimed Beat, the countdown no longer
+  blocks the challenger from choosing their slot
 
 Implementation options:
 - use an in-memory `setTimeout` per room
@@ -487,7 +499,8 @@ Test with 3 tabs if possible:
 8. Reveal resolves and TT reward is shown correctly
 9. Next turn starts cleanly
 10. Repeat a no-challenge turn and verify timeout auto-resolution
-11. Continue until a player reaches the win condition
+11. As host, manually award `+1 TT` to a player and verify all clients update
+12. Continue until a player reaches the win condition
 
 ## 10.3 Update docs
 
@@ -508,6 +521,8 @@ Iteration 03 is complete when all of these are true:
 - Challenger can select an alternative slot in the active player's timeline
 - Reveal resolves challenge outcomes server-side
 - Successful challenges award TT
+- Successful Beat challenges steal the card into the challenger timeline
+- Host can manually award TT during the game for MVP testing
 - Existing no-challenge placement turns still work
 - Game-over flow still works
 - Automated checks pass
@@ -519,7 +534,6 @@ Iteration 03 is complete when all of these are true:
 
 Do not expand scope into these until the first challenge/token loop is stable:
 - skip/buy-card TT spending actions
-- challenge card stealing
 - drag-and-drop interaction overhaul
 - playback provider integration
 - reconnect/session persistence
@@ -553,6 +567,9 @@ Please decide these before implementation starts:
 
 6. Should a failed challenge cost TT already in this iteration?
    Decision: yes, a failed `Beat!` challenge costs 1 TT
+
+7. Does the Beat timer also limit the challenger after they already claimed it?
+   Decision: no, the timer only gates the initial Beat claim
 
 ---
 

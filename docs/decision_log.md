@@ -106,6 +106,51 @@ Current server rule:
 - if they reconnect in time with the same session, they regain the same player
   identity and host role if applicable
 
+### Beat challenge reward rule
+
+If a `Beat!` challenge succeeds:
+- the challenger gains `+1 TT`
+- the challenged card is stolen into the challenger's own timeline
+- the challenger does not need to guess a second time on their own timeline
+
+If a `Beat!` challenge fails:
+- the challenger loses `1 TT`
+- TT can never go below `0`
+
+### Beat timing rule
+
+The challenge timer only gates the initial `Beat!` claim.
+
+Current behavior:
+- if nobody claims before the deadline, the server auto-resolves the original
+  placement
+- if a player claims `Beat!` in time, the timer stops immediately
+- after claim, there is currently no extra timer for the challenger's slot
+  placement
+
+### MVP TT awarding
+
+For MVP testing, the host can manually award TT during a game.
+
+Reason:
+- this supports party-style manual judging for song/artist callouts before
+  automated token earning exists
+
+### TT spending actions in MVP
+
+When TT mode is enabled, players can spend TT during their own turn:
+- spend `1 TT` to skip the current track and draw the next one
+- a player can only skip once per turn
+- spend `3 TT` to claim the current song immediately, place it into the
+  correct slot on their own timeline automatically, and continue to manual
+  reveal
+- a TT-buy turn does not open a Beat window
+
+Current enforcement:
+- both actions are server-authoritative
+- both actions require the acting player to be the active player
+- both actions are blocked when TT mode is disabled
+
 ## Still Open
 
 ### Room code generation rules
