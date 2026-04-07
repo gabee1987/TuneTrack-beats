@@ -1,12 +1,15 @@
 import {
   DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
   DEFAULT_STARTING_TIMELINE_CARD_COUNT,
+  DEFAULT_STARTING_TT_TOKEN_COUNT,
   ClientToServerEvent,
   MAX_STARTING_TIMELINE_CARD_COUNT,
   MAX_CHALLENGE_WINDOW_DURATION_SECONDS,
+  MAX_STARTING_TT_TOKEN_COUNT,
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
   MIN_CHALLENGE_WINDOW_DURATION_SECONDS,
   MIN_STARTING_TIMELINE_CARD_COUNT,
+  MIN_STARTING_TT_TOKEN_COUNT,
   MAX_TARGET_TIMELINE_CARD_COUNT,
   MIN_TARGET_TIMELINE_CARD_COUNT,
   type PlayerIdentityPayload,
@@ -132,6 +135,7 @@ export function LobbyPage() {
   const currentSettings = roomState?.settings ?? {
     targetTimelineCardCount: DEFAULT_TARGET_TIMELINE_CARD_COUNT,
     defaultStartingTimelineCardCount: DEFAULT_STARTING_TIMELINE_CARD_COUNT,
+    startingTtTokenCount: DEFAULT_STARTING_TT_TOKEN_COUNT,
     revealConfirmMode: "host_only" as RevealConfirmMode,
     ttModeEnabled: false,
     challengeWindowDurationSeconds: DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
@@ -275,44 +279,70 @@ export function LobbyPage() {
               <span>Enable TT mode</span>
             </label>
 
-            <label className={styles.settingField}>
-              <div className={styles.settingLabelRow}>
-                <span>Challenge window</span>
-                <strong className={styles.settingValue}>
-                  {currentSettings.challengeWindowDurationSeconds === null
-                    ? "Host manual"
-                    : `${currentSettings.challengeWindowDurationSeconds}s`}
-                </strong>
-              </div>
-              <select
-                className={styles.selectInput}
-                onChange={(event) =>
-                  handleRoomSettingsChange({
-                    ...currentSettings,
-                    challengeWindowDurationSeconds:
-                      event.target.value === "manual"
-                        ? null
-                        : Number(event.target.value),
-                  })
-                }
-                value={
-                  currentSettings.challengeWindowDurationSeconds === null
-                    ? "manual"
-                    : currentSettings.challengeWindowDurationSeconds.toString()
-                }
-              >
-                <option value="manual">Host manual</option>
-                <option value={DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS.toString()}>
-                  {DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS} seconds
-                </option>
-                <option value={MIN_CHALLENGE_WINDOW_DURATION_SECONDS.toString()}>
-                  {MIN_CHALLENGE_WINDOW_DURATION_SECONDS} seconds
-                </option>
-                <option value={MAX_CHALLENGE_WINDOW_DURATION_SECONDS.toString()}>
-                  {MAX_CHALLENGE_WINDOW_DURATION_SECONDS} seconds
-                </option>
-              </select>
-            </label>
+            {currentSettings.ttModeEnabled ? (
+              <>
+                <label className={styles.settingField}>
+                  <div className={styles.settingLabelRow}>
+                    <span>Starting TT for every player</span>
+                    <strong className={styles.settingValue}>
+                      {currentSettings.startingTtTokenCount}
+                    </strong>
+                  </div>
+                  <input
+                    className={styles.rangeInput}
+                    max={MAX_STARTING_TT_TOKEN_COUNT}
+                    min={MIN_STARTING_TT_TOKEN_COUNT}
+                    onChange={(event) =>
+                      handleRoomSettingsChange({
+                        ...currentSettings,
+                        startingTtTokenCount: Number(event.target.value),
+                      })
+                    }
+                    type="range"
+                    value={currentSettings.startingTtTokenCount}
+                  />
+                </label>
+
+                <label className={styles.settingField}>
+                  <div className={styles.settingLabelRow}>
+                    <span>Challenge window</span>
+                    <strong className={styles.settingValue}>
+                      {currentSettings.challengeWindowDurationSeconds === null
+                        ? "Host manual"
+                        : `${currentSettings.challengeWindowDurationSeconds}s`}
+                    </strong>
+                  </div>
+                  <select
+                    className={styles.selectInput}
+                    onChange={(event) =>
+                      handleRoomSettingsChange({
+                        ...currentSettings,
+                        challengeWindowDurationSeconds:
+                          event.target.value === "manual"
+                            ? null
+                            : Number(event.target.value),
+                      })
+                    }
+                    value={
+                      currentSettings.challengeWindowDurationSeconds === null
+                        ? "manual"
+                        : currentSettings.challengeWindowDurationSeconds.toString()
+                    }
+                  >
+                    <option value="manual">Host manual</option>
+                    <option value={DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS.toString()}>
+                      {DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS} seconds
+                    </option>
+                    <option value={MIN_CHALLENGE_WINDOW_DURATION_SECONDS.toString()}>
+                      {MIN_CHALLENGE_WINDOW_DURATION_SECONDS} seconds
+                    </option>
+                    <option value={MAX_CHALLENGE_WINDOW_DURATION_SECONDS.toString()}>
+                      {MAX_CHALLENGE_WINDOW_DURATION_SECONDS} seconds
+                    </option>
+                  </select>
+                </label>
+              </>
+            ) : null}
 
             <p className={styles.settingsHint}>
               You are the host, so you can change this setting.
@@ -346,7 +376,9 @@ export function LobbyPage() {
                   <span className={styles.startingCardsBadge}>
                     {player.startingTimelineCardCount} starting cards
                   </span>
-                  <span>{player.ttTokenCount} TT</span>
+                  {currentSettings.ttModeEnabled ? (
+                    <span>{player.ttTokenCount} TT</span>
+                  ) : null}
                   {player.isHost ? <span>Host</span> : null}
                 </div>
               </div>
