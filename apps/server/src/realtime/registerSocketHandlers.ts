@@ -1,10 +1,13 @@
 import {
   ClientToServerEvent,
   ServerToClientEvent,
+  claimChallengePayloadSchema,
   closeRoomPayloadSchema,
   confirmRevealPayloadSchema,
   joinRoomPayloadSchema,
+  placeChallengePayloadSchema,
   placeCardPayloadSchema,
+  resolveChallengeWindowPayloadSchema,
   startGamePayloadSchema,
   updatePlayerSettingsPayloadSchema,
   updateRoomSettingsPayloadSchema,
@@ -25,6 +28,9 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
     registerJoinRoomHandler(io, socket, roomService);
     registerStartGameHandler(io, socket, roomService);
     registerPlaceCardHandler(io, socket, roomService);
+    registerClaimChallengeHandler(io, socket, roomService);
+    registerPlaceChallengeHandler(io, socket, roomService);
+    registerResolveChallengeWindowHandler(io, socket, roomService);
     registerConfirmRevealHandler(io, socket, roomService);
     registerCloseRoomHandler(io, socket, roomService);
     registerUpdateRoomSettingsHandler(io, socket, roomService);
@@ -162,6 +168,114 @@ function registerConfirmRevealHandler(
         ONLY_HOST_CAN_CONFIRM_REVEAL: "Only the host can confirm the reveal.",
         ONLY_HOST_OR_ACTIVE_PLAYER_CAN_CONFIRM_REVEAL:
           "Only the host or active player can confirm the reveal.",
+      });
+    }
+  });
+}
+
+function registerClaimChallengeHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.ClaimChallenge, (payload: unknown) => {
+    const parseResult = claimChallengePayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_CLAIM_CHALLENGE_PAYLOAD",
+        message: "Room code is invalid.",
+      });
+      return;
+    }
+
+    try {
+      const roomState = roomService.claimChallenge(parseResult.data, socket.id);
+
+      io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
+        roomState,
+      });
+    } catch (error) {
+      emitServerError(socket, error, "CLAIM_CHALLENGE_FAILED", {
+        ACTIVE_PLAYER_CANNOT_CHALLENGE: "The active player cannot use Beat! on their own turn.",
+        CHALLENGE_ALREADY_CLAIMED: "Another player already claimed Beat! first.",
+        CHALLENGE_WINDOW_EXPIRED: "The Beat! window already expired.",
+        GAME_NOT_IN_CHALLENGE_PHASE: "Beat! is only available during the challenge window.",
+        INSUFFICIENT_TT: "You need at least 1 TT to use Beat!.",
+      });
+    }
+  });
+}
+
+function registerPlaceChallengeHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.PlaceChallenge, (payload: unknown) => {
+    const parseResult = placeChallengePayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_PLACE_CHALLENGE_PAYLOAD",
+        message: "Selected timeline slot is invalid.",
+      });
+      return;
+    }
+
+    try {
+      const roomState = roomService.placeChallenge(parseResult.data, socket.id);
+
+      io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
+        roomState,
+      });
+    } catch (error) {
+      emitServerError(socket, error, "PLACE_CHALLENGE_FAILED", {
+        CHALLENGE_WINDOW_EXPIRED:
+          "The Beat! window already expired.",
+        GAME_NOT_IN_CHALLENGE_PHASE: "Challenge placement is only available during the challenge window.",
+        INVALID_SLOT_INDEX: "Selected timeline slot is invalid.",
+        CHALLENGE_SLOT_MUST_DIFFER:
+          "Beat! must point to a different slot than the original choice.",
+        ONLY_CHALLENGE_OWNER_CAN_PLACE:
+          "Only the player who claimed Beat! can place the challenge slot.",
+      });
+    }
+  });
+}
+
+function registerResolveChallengeWindowHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.ResolveChallengeWindow, (payload: unknown) => {
+    const parseResult = resolveChallengeWindowPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_RESOLVE_CHALLENGE_WINDOW_PAYLOAD",
+        message: "Room code is invalid.",
+      });
+      return;
+    }
+
+    try {
+      const roomState = roomService.resolveChallengeWindow(
+        parseResult.data,
+        socket.id,
+      );
+
+      io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
+        roomState,
+      });
+    } catch (error) {
+      emitServerError(socket, error, "RESOLVE_CHALLENGE_WINDOW_FAILED", {
+        CHALLENGE_ALREADY_CLAIMED:
+          "The challenge window is already claimed and cannot be resolved yet.",
+        GAME_NOT_IN_CHALLENGE_PHASE: "Challenge resolution is only available during the challenge window.",
+        ONLY_HOST_CAN_RESOLVE_CHALLENGE_WINDOW:
+          "Only the host can manually resolve the challenge window.",
       });
     }
   });

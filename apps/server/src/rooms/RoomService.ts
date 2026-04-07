@@ -1,10 +1,13 @@
 import { DeckService } from "../decks/DeckService.js";
 import type {
   CloseRoomPayloadParsed,
+  ClaimChallengePayloadParsed,
   ConfirmRevealPayloadParsed,
   JoinRoomPayloadParsed,
+  PlaceChallengePayloadParsed,
   PlaceCardPayloadParsed,
   PublicRoomState,
+  ResolveChallengeWindowPayloadParsed,
   StartGamePayloadParsed,
   UpdatePlayerSettingsPayloadParsed,
   UpdateRoomSettingsPayloadParsed,
@@ -76,6 +79,30 @@ export class RoomService {
     socketId: string,
   ): PublicRoomState {
     return this.roomRegistry.placeCard(socketId, placeCardPayload);
+  }
+
+  public claimChallenge(
+    claimChallengePayload: ClaimChallengePayloadParsed,
+    socketId: string,
+  ): PublicRoomState {
+    return this.roomRegistry.claimChallenge(socketId, claimChallengePayload);
+  }
+
+  public placeChallenge(
+    placeChallengePayload: PlaceChallengePayloadParsed,
+    socketId: string,
+  ): PublicRoomState {
+    return this.roomRegistry.placeChallenge(socketId, placeChallengePayload);
+  }
+
+  public resolveChallengeWindow(
+    resolveChallengeWindowPayload: ResolveChallengeWindowPayloadParsed,
+    socketId: string,
+  ): PublicRoomState {
+    return this.roomRegistry.resolveChallengeWindow(
+      socketId,
+      resolveChallengeWindowPayload,
+    );
   }
 
   public confirmReveal(

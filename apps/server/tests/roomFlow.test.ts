@@ -256,6 +256,12 @@ describe("room flow", () => {
       selectedSlotIndex: 1,
       wasCorrect: true,
       validSlotIndexes: [1],
+      challengerPlayerId: null,
+      challengerSelectedSlotIndex: null,
+      challengeWasSuccessful: null,
+      challengerTtChange: 0,
+      awardedPlayerId: hostIdentity.playerId,
+      awardedSlotIndex: 1,
     });
 
     const revealConfirmErrorPromise = waitForEvent<ServerErrorPayload>(
@@ -420,16 +426,19 @@ describe("room flow", () => {
       message: "The host closed this room.",
     });
   });
+
 });
 
-async function startTestServer(): Promise<TestServerContext> {
+async function startTestServer(
+  roomService = new RoomService(
+    new RoomRegistry(undefined, 25),
+    new TestDeckService(),
+  ),
+): Promise<TestServerContext> {
   const { httpServer } = createHttpServer();
   const io = createSocketServer(httpServer);
 
-  registerSocketHandlers(
-    io,
-    new RoomService(new RoomRegistry(undefined, 25), new TestDeckService()),
-  );
+  registerSocketHandlers(io, roomService);
 
   await new Promise<void>((resolve) => {
     httpServer.listen(0, resolve);
@@ -456,6 +465,7 @@ async function startTestServer(): Promise<TestServerContext> {
     close,
   };
 }
+
 
 class TestDeckService extends DeckService {
   public override createShuffledDeck(): GameTrackCard[] {

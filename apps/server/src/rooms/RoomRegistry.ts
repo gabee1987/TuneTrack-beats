@@ -7,15 +7,20 @@ import {
 import { randomUUID } from "node:crypto";
 import {
   type CloseRoomPayloadParsed,
+  type ClaimChallengePayloadParsed,
   DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
   DEFAULT_STARTING_TIMELINE_CARD_COUNT,
+  DEFAULT_STARTING_TT_TOKEN_COUNT,
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
   type ConfirmRevealPayloadParsed,
+  type PlaceChallengePayloadParsed,
   type PlaceCardPayloadParsed,
   type PublicPlayerState,
+  type PublicChallengeState,
   type PublicRoomSettings,
   type PublicRoomState,
   type PublicRevealState,
+  type ResolveChallengeWindowPayloadParsed,
   type RoomId,
   type StartGamePayloadParsed,
   type TimelineCardPublic,
@@ -56,6 +61,7 @@ export class RoomRegistry {
     string,
     NodeJS.Timeout
   >();
+  private readonly challengeTimersByRoomId = new Map<RoomId, NodeJS.Timeout>();
   private roomStateChangedListener: ((roomState: PublicRoomState) => void) | null =
     null;
 
@@ -103,6 +109,7 @@ export class RoomRegistry {
       const settings: PublicRoomSettings = {
         targetTimelineCardCount: DEFAULT_TARGET_TIMELINE_CARD_COUNT,
         defaultStartingTimelineCardCount: DEFAULT_STARTING_TIMELINE_CARD_COUNT,
+        startingTtTokenCount: DEFAULT_STARTING_TT_TOKEN_COUNT,
         revealConfirmMode: "host_only",
         ttModeEnabled: false,
         challengeWindowDurationSeconds:
@@ -198,6 +205,7 @@ export class RoomRegistry {
         targetTimelineCardCount: roomSettingsPayload.targetTimelineCardCount,
         defaultStartingTimelineCardCount:
           roomSettingsPayload.defaultStartingTimelineCardCount,
+        startingTtTokenCount: roomSettingsPayload.startingTtTokenCount,
         revealConfirmMode: roomSettingsPayload.revealConfirmMode,
         ttModeEnabled: roomSettingsPayload.ttModeEnabled,
         challengeWindowDurationSeconds:
@@ -284,6 +292,7 @@ export class RoomRegistry {
         id: player.id,
         displayName: player.displayName,
         startingTimelineCardCount: player.startingTimelineCardCount,
+        startingTtTokenCount: roomRecord.roomState.settings.startingTtTokenCount,
       })),
       deck: deckCards,
       targetTimelineCardCount:
@@ -320,6 +329,15 @@ export class RoomRegistry {
       roomRecord.gameState,
       membership.playerId,
       placeCardPayload.selectedSlotIndex,
+      {
+        challengeEnabled: roomRecord.roomState.settings.ttModeEnabled,
+        challengeDeadlineEpochMs:
+          roomRecord.roomState.settings.ttModeEnabled &&
+          roomRecord.roomState.settings.challengeWindowDurationSeconds !== null
+            ? Date.now() +
+              roomRecord.roomState.settings.challengeWindowDurationSeconds * 1000
+            : null,
+      },
     );
     const roomState = mapGameStateToPublicRoomState(
       roomRecord.roomState,
@@ -332,6 +350,108 @@ export class RoomRegistry {
       gameState,
       roomState,
     });
+    this.scheduleChallengeAutoResolve(placeCardPayload.roomId, gameState);
+
+    return roomState;
+  }
+
+  public claimChallenge(
+    socketId: string,
+    claimChallengePayload: ClaimChallengePayloadParsed,
+  ): PublicRoomState {
+    const roomRecord = this.getRoomRecordForMember(socketId, claimChallengePayload.roomId);
+    const membership = this.getMembership(socketId);
+
+    if (!roomRecord.gameState) {
+      throw new Error("GAME_NOT_STARTED");
+    }
+
+    this.assertChallengeWindowStillOpen(roomRecord.gameState);
+
+    const gameState = this.gameFlowService.claimChallenge(
+      roomRecord.gameState,
+      membership.playerId,
+    );
+    const roomState = mapGameStateToPublicRoomState(
+      roomRecord.roomState,
+      gameState,
+      roomRecord.trackCardsById,
+    );
+
+    this.roomsById.set(claimChallengePayload.roomId, {
+      ...roomRecord,
+      gameState,
+      roomState,
+    });
+    this.clearChallengeTimer(claimChallengePayload.roomId);
+
+    return roomState;
+  }
+
+  public placeChallenge(
+    socketId: string,
+    placeChallengePayload: PlaceChallengePayloadParsed,
+  ): PublicRoomState {
+    const roomRecord = this.getRoomRecordForMember(socketId, placeChallengePayload.roomId);
+    const membership = this.getMembership(socketId);
+
+    if (!roomRecord.gameState) {
+      throw new Error("GAME_NOT_STARTED");
+    }
+
+    const gameState = this.gameFlowService.placeChallengeCard(
+      roomRecord.gameState,
+      membership.playerId,
+      placeChallengePayload.selectedSlotIndex,
+    );
+    const roomState = mapGameStateToPublicRoomState(
+      roomRecord.roomState,
+      gameState,
+      roomRecord.trackCardsById,
+    );
+
+    this.roomsById.set(placeChallengePayload.roomId, {
+      ...roomRecord,
+      gameState,
+      roomState,
+    });
+    this.clearChallengeTimer(placeChallengePayload.roomId);
+
+    return roomState;
+  }
+
+  public resolveChallengeWindow(
+    socketId: string,
+    resolveChallengeWindowPayload: ResolveChallengeWindowPayloadParsed,
+  ): PublicRoomState {
+    const roomRecord = this.getRoomRecordForMember(
+      socketId,
+      resolveChallengeWindowPayload.roomId,
+    );
+    const membership = this.getMembership(socketId);
+
+    if (!roomRecord.gameState) {
+      throw new Error("GAME_NOT_STARTED");
+    }
+
+    if (roomRecord.roomState.hostId !== membership.playerId) {
+      throw new Error("ONLY_HOST_CAN_RESOLVE_CHALLENGE_WINDOW");
+    }
+
+    const gameState =
+      this.gameFlowService.resolveChallengeWindow(roomRecord.gameState);
+    const roomState = mapGameStateToPublicRoomState(
+      roomRecord.roomState,
+      gameState,
+      roomRecord.trackCardsById,
+    );
+
+    this.roomsById.set(resolveChallengeWindowPayload.roomId, {
+      ...roomRecord,
+      gameState,
+      roomState,
+    });
+    this.clearChallengeTimer(resolveChallengeWindowPayload.roomId);
 
     return roomState;
   }
@@ -378,6 +498,7 @@ export class RoomRegistry {
       gameState,
       roomState,
     });
+    this.clearChallengeTimer(confirmRevealPayload.roomId);
 
     return roomState;
   }
@@ -406,6 +527,7 @@ export class RoomRegistry {
       }
     }
 
+    this.clearChallengeTimer(closeRoomPayload.roomId);
     this.roomsById.delete(closeRoomPayload.roomId);
 
     return closeRoomPayload.roomId;
@@ -484,6 +606,90 @@ export class RoomRegistry {
     this.disconnectTimersBySessionId.delete(sessionId);
   }
 
+  private scheduleChallengeAutoResolve(roomId: RoomId, gameState: GameState): void {
+    this.clearChallengeTimer(roomId);
+
+    if (
+      gameState.phase !== "challenge" ||
+      !gameState.challengeState?.challengeDeadlineEpochMs
+    ) {
+      return;
+    }
+
+    const delayMs = Math.max(
+      0,
+      gameState.challengeState.challengeDeadlineEpochMs - Date.now(),
+    );
+    const timeoutHandle = setTimeout(() => {
+      this.challengeTimersByRoomId.delete(roomId);
+
+      const roomRecord = this.roomsById.get(roomId);
+
+      if (!roomRecord?.gameState) {
+        return;
+      }
+
+      if (
+        roomRecord.gameState.phase !== "challenge" ||
+        !roomRecord.gameState.challengeState ||
+        roomRecord.gameState.challengeState.challengerPlayerId ||
+        !this.isChallengeDeadlineExpired(roomRecord.gameState)
+      ) {
+        return;
+      }
+
+      const nextGameState = this.gameFlowService.resolveChallengeWindow(
+        roomRecord.gameState,
+      );
+      const nextRoomState = mapGameStateToPublicRoomState(
+        roomRecord.roomState,
+        nextGameState,
+        roomRecord.trackCardsById,
+      );
+
+      this.roomsById.set(roomId, {
+        ...roomRecord,
+        gameState: nextGameState,
+        roomState: nextRoomState,
+      });
+
+      this.roomStateChangedListener?.(nextRoomState);
+    }, delayMs);
+    timeoutHandle.unref();
+
+    this.challengeTimersByRoomId.set(roomId, timeoutHandle);
+  }
+
+  private clearChallengeTimer(roomId: RoomId): void {
+    const timeoutHandle = this.challengeTimersByRoomId.get(roomId);
+
+    if (!timeoutHandle) {
+      return;
+    }
+
+    clearTimeout(timeoutHandle);
+    this.challengeTimersByRoomId.delete(roomId);
+  }
+
+  private assertChallengeWindowStillOpen(gameState: GameState): void {
+    if (!this.isChallengeDeadlineExpired(gameState)) {
+      return;
+    }
+
+    throw new Error("CHALLENGE_WINDOW_EXPIRED");
+  }
+
+  private isChallengeDeadlineExpired(gameState: GameState): boolean {
+    if (
+      gameState.phase !== "challenge" ||
+      !gameState.challengeState?.challengeDeadlineEpochMs
+    ) {
+      return false;
+    }
+
+    return Date.now() >= gameState.challengeState.challengeDeadlineEpochMs;
+  }
+
   private removePlayerBySessionId(sessionId: string): PublicRoomState | null {
     const membership = this.sessionMemberships.get(sessionId);
 
@@ -506,6 +712,7 @@ export class RoomRegistry {
     delete timelines[membership.playerId];
 
     if (players.length === 0) {
+      this.clearChallengeTimer(membership.roomId);
       this.roomsById.delete(membership.roomId);
       return null;
     }
@@ -564,6 +771,18 @@ function mapGameStateToPublicRoomState(
   return {
     ...currentRoomState,
     status: gameState.phase,
+    players: currentRoomState.players.map((player) => {
+      const nextPlayer = gameState.players.find(
+        (gamePlayer) => gamePlayer.id === player.id,
+      );
+
+      return nextPlayer
+        ? {
+            ...player,
+            ttTokenCount: nextPlayer.ttTokenCount,
+          }
+        : player;
+    }),
     timelines: Object.fromEntries(
       Object.entries(gameState.timelines).map(([playerId, timelineCards]) => [
         playerId,
@@ -581,11 +800,30 @@ function mapGameStateToPublicRoomState(
           turnNumber: gameState.turn.turnNumber,
         }
       : null,
+    challengeState: gameState.challengeState
+      ? mapChallengeStateToPublicChallengeState(gameState.challengeState)
+      : null,
     revealState: gameState.revealState
       ? mapRevealStateToPublicRevealState(gameState.revealState, trackCardsById)
       : null,
-    challengeState: currentRoomState.challengeState,
     winnerPlayerId: gameState.winnerPlayerId,
+  };
+}
+
+function mapChallengeStateToPublicChallengeState(
+  challengeState: GameState["challengeState"],
+): PublicChallengeState | null {
+  if (!challengeState) {
+    return null;
+  }
+
+  return {
+    phase: challengeState.phase,
+    originalPlayerId: challengeState.originalPlayerId,
+    originalSelectedSlotIndex: challengeState.originalSelectedSlotIndex,
+    challengerPlayerId: challengeState.challengerPlayerId,
+    challengeDeadlineEpochMs: challengeState.challengeDeadlineEpochMs,
+    challengerSelectedSlotIndex: challengeState.challengerSelectedSlotIndex,
   };
 }
 
@@ -606,6 +844,12 @@ function mapRevealStateToPublicRevealState(
     selectedSlotIndex: revealState.selectedSlotIndex,
     wasCorrect: revealState.wasCorrect,
     validSlotIndexes: revealState.validSlotIndexes,
+    challengerPlayerId: revealState.challengerPlayerId,
+    challengerSelectedSlotIndex: revealState.challengerSelectedSlotIndex,
+    challengeWasSuccessful: revealState.challengeWasSuccessful,
+    challengerTtChange: revealState.challengerTtChange,
+    awardedPlayerId: revealState.awardedPlayerId,
+    awardedSlotIndex: revealState.awardedSlotIndex,
   };
 }
 
