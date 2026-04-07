@@ -1,0 +1,6 @@
+export const DRAG_ACTIVATION_DISTANCE_PX = 4;
+export const DRAG_EDGE_SCROLL_ZONE_PX = 120;
+export const DRAG_EDGE_SCROLL_MAX_STEP_PX = 20;
+export const TIMELINE_REORDER_DURATION_MS = 860;
+export const TIMELINE_REORDER_EASING = "cubic-bezier(0.16, 1, 0.3, 1)";
+export const TIMELINE_REORDER_THROTTLE_MS = 180;
