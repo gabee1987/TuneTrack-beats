@@ -8,11 +8,11 @@
 .panel {
   width: min(100%, 480px);
   padding: 32px 24px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 28px;
-  background: rgba(12, 12, 22, 0.72);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
   backdrop-filter: blur(16px);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-surface);
 }
 
 .title {
@@ -24,7 +24,7 @@
 
 .subtitle {
   margin: 16px 0 0;
-  color: rgba(247, 247, 251, 0.75);
+  color: var(--color-text-secondary);
   line-height: 1.5;
 }
 
@@ -37,25 +37,25 @@
 .field {
   display: grid;
   gap: 8px;
-  color: rgba(247, 247, 251, 0.8);
+  color: var(--color-text-secondary);
   font-size: 14px;
 }
 
 .input {
   width: 100%;
   border: 0;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #f7f7fb;
+  border-radius: var(--radius-input);
+  background: var(--color-surface-elevated);
+  color: var(--color-text-primary);
   padding: 18px 20px;
-  outline: 1px solid rgba(255, 255, 255, 0.1);
+  outline: 1px solid var(--color-border-subtle);
 }
 
 .button {
   margin-top: 8px;
   border: 0;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #7c6cff 0%, #ff4f9a 100%);
+  border-radius: var(--radius-button);
+  background: var(--color-accent-primary);
   color: #ffffff;
   padding: 18px 22px;
   font-weight: 800;

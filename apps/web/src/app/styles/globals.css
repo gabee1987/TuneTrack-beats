@@ -1,8 +1,28 @@
 :root {
-  color: #f7f7fb;
+  --color-bg-app: linear-gradient(180deg, #141423 0%, #090911 100%);
+  --color-bg-app-accent:
+    radial-gradient(circle at top, rgba(107, 92, 255, 0.35), transparent 35%);
+  --color-surface: rgba(12, 12, 22, 0.72);
+  --color-surface-elevated: rgba(255, 255, 255, 0.08);
+  --color-card: rgba(255, 255, 255, 0.08);
+  --color-chip: rgba(255, 255, 255, 0.08);
+  --color-overlay: rgba(9, 9, 17, 0.72);
+  --color-border-subtle: rgba(255, 255, 255, 0.12);
+  --color-text-primary: #f7f7fb;
+  --color-text-secondary: rgba(247, 247, 251, 0.72);
+  --color-accent-primary: linear-gradient(135deg, #7c6cff 0%, #ff4f9a 100%);
+  --color-accent-danger: rgba(255, 94, 129, 0.18);
+  --color-accent-success: rgba(82, 227, 173, 0.18);
+  --shadow-surface: 0 24px 80px rgba(0, 0, 0, 0.4);
+  --radius-card: 28px;
+  --radius-panel: 22px;
+  --radius-pill: 999px;
+  --radius-input: 18px;
+  --radius-button: 18px;
+  color: var(--color-text-primary);
   background:
-    radial-gradient(circle at top, rgba(107, 92, 255, 0.35), transparent 35%),
-    linear-gradient(180deg, #141423 0%, #090911 100%);
+    var(--color-bg-app-accent),
+    var(--color-bg-app);
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
@@ -24,7 +44,36 @@ body,
   margin: 0;
 }
 
+body {
+  color: var(--color-text-primary);
+  background:
+    var(--color-bg-app-accent),
+    var(--color-bg-app);
+}
+
 button,
 input {
   font: inherit;
+}
+
+button,
+select,
+textarea {
+  font: inherit;
+}
+
+.theme-debug-toggle {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1000;
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 12px 16px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-surface);
+  outline: 1px solid var(--color-border-subtle);
+  cursor: pointer;
 }

@@ -33,7 +33,9 @@ interface GameRouteState {
 const SHOW_DEVELOPER_CONTEXT_PANELS = true;
 
 interface TimelinePanelProps {
+  eyebrow: string;
   title: string;
+  subtitle: string;
   hint: string;
   cardCount: number;
   timelineCards: TimelineCardPublic[];
@@ -48,6 +50,23 @@ interface TimelinePanelProps {
   challengerChosenLabel: string | null;
   challengeMarkerTone?: "pending" | "success" | "failure";
   disabledSlotIndexes?: number[];
+}
+
+function formatPhaseLabel(status: PublicRoomState["status"]): string {
+  switch (status) {
+    case "turn":
+      return "Turn";
+    case "challenge":
+      return "Beat!";
+    case "reveal":
+      return "Reveal";
+    case "finished":
+      return "Finished";
+    case "lobby":
+      return "Lobby";
+    default:
+      return "Game";
+  }
 }
 
 export function GamePage() {
@@ -444,6 +463,25 @@ export function GamePage() {
         : roomState?.status === "reveal"
           ? "Reveal"
           : "Game room";
+  const statusDetailText = roomState?.winnerPlayerId
+    ? `${getPlayerName(roomState.winnerPlayerId)} reached the win target first.`
+    : roomState?.status === "turn"
+      ? isCurrentPlayerTurn
+        ? "Choose a slot in your timeline, then confirm your placement."
+        : `${getPlayerName(activePlayer?.id)} is deciding where the current song belongs.`
+      : roomState?.status === "challenge"
+        ? roomState.challengeState?.phase === "claimed"
+          ? roomState.challengeState.challengerPlayerId === currentPlayerId
+            ? "You claimed Beat! Choose the slot you believe is correct."
+            : `${getPlayerName(challengeOwner?.id)} claimed Beat! and is placing the answer now.`
+          : isCurrentPlayerTurn
+            ? "Your placement is locked while other players decide whether to challenge it."
+            : `Beat! is open against ${getPossessivePlayerName(
+                roomState.challengeState?.originalPlayerId,
+              )} placement.`
+        : roomState?.status === "reveal"
+          ? "Check the result, then wait for the allowed player to confirm reveal."
+          : "The room is in sync and ready.";
   const showOwnTimeline =
     Boolean(currentPlayerId) && currentPlayerId !== activePlayer?.id;
   const revealSummaryTitle =
@@ -467,9 +505,19 @@ export function GamePage() {
   const visibleTimelineCards = isViewingOwnTimeline
     ? currentPlayerTimeline
     : activePlayerTimeline;
-  const visibleTimelineTitle = isViewingOwnTimeline
+  const visibleTimelineEyebrow = isViewingOwnTimeline
     ? "Your timeline"
-    : `${getPossessivePlayerName(activePlayer?.id)} timeline`;
+    : "Active timeline";
+  const visibleTimelineTitle = isViewingOwnTimeline
+    ? "Your collected cards"
+    : `${getPossessivePlayerName(activePlayer?.id)} current timeline`;
+  const visibleTimelineSubtitle = isViewingOwnTimeline
+    ? "Check your own progress, then switch back when you want to judge the active turn."
+    : roomState?.status === "challenge"
+      ? "This is the timeline everyone is judging right now."
+      : isCurrentPlayerTurn
+        ? "This is the timeline where your current song decision will be placed."
+        : "This is the timeline you should watch before deciding whether to use Beat!.";
   const visibleTimelineHint = isViewingOwnTimeline
     ? "This is your personal timeline. Switch back to the active timeline any time."
     : activeTimelineHint;
@@ -523,26 +571,30 @@ export function GamePage() {
     <main className={styles.screen}>
       <section className={styles.panel}>
         <header className={styles.header}>
-          <div>
-            <h1 className={styles.title}>Game Room</h1>
-            <p className={styles.meta}>Room: {roomState.roomId}</p>
-            <p className={styles.meta}>
-              Phase: {roomState.status} | Turn:{" "}
-              {roomState.turn?.turnNumber ?? "-"}
-            </p>
+          <div className={styles.headerMain}>
+            <p className={styles.roomEyebrow}>TuneTrack</p>
+            <h1 className={styles.title}>Room {roomState.roomId}</h1>
+            <div className={styles.headerMetaRow}>
+              <p className={styles.meta}>Phase: {formatPhaseLabel(roomState.status)}</p>
+              <p className={styles.meta}>Turn: {roomState.turn?.turnNumber ?? "-"}</p>
+            </div>
           </div>
-          <div className={styles.statusBadge}>{statusBadgeText}</div>
+          <div className={styles.headerAside}>
+            <div className={styles.statusBadgeBlock}>
+              <div className={styles.statusBadge}>{statusBadgeText}</div>
+              <p className={styles.statusCaption}>{statusDetailText}</p>
+            </div>
+            {roomState.hostId === currentPlayerId ? (
+              <button
+                className={styles.hostUtilityButton}
+                onClick={handleCloseRoom}
+                type="button"
+              >
+                End room
+              </button>
+            ) : null}
+          </div>
         </header>
-
-        {roomState.hostId === currentPlayerId ? (
-          <button
-            className={styles.secondaryButton}
-            onClick={handleCloseRoom}
-            type="button"
-          >
-            End Game Room
-          </button>
-        ) : null}
 
         {errorMessage ? <p className={styles.error}>{errorMessage}</p> : null}
 
@@ -657,25 +709,34 @@ export function GamePage() {
         ) : null}
 
         {canToggleTimelineView ? (
-          <section className={styles.timelineViewSwitcher}>
-            <button
-              className={`${styles.viewToggleButton} ${
-                timelineView === "active" ? styles.viewToggleButtonActive : ""
-              }`}
-              onClick={() => setTimelineView("active")}
-              type="button"
-            >
-              {getPossessivePlayerName(activePlayer?.id)} timeline
-            </button>
-            <button
-              className={`${styles.viewToggleButton} ${
-                timelineView === "mine" ? styles.viewToggleButtonActive : ""
-              }`}
-              onClick={() => setTimelineView("mine")}
-              type="button"
-            >
-              Your timeline
-            </button>
+          <section className={styles.timelineSwitcherPanel}>
+            <div className={styles.timelineSwitcherCopy}>
+              <p className={styles.sectionLabel}>Timeline focus</p>
+              <p className={styles.timelineSwitcherText}>
+                Keep the active timeline in view to judge the current song, or
+                switch to your own timeline for a quick progress check.
+              </p>
+            </div>
+            <div className={styles.timelineViewSwitcher}>
+              <button
+                className={`${styles.viewToggleButton} ${
+                  timelineView === "active" ? styles.viewToggleButtonActive : ""
+                }`}
+                onClick={() => setTimelineView("active")}
+                type="button"
+              >
+                Active timeline
+              </button>
+              <button
+                className={`${styles.viewToggleButton} ${
+                  timelineView === "mine" ? styles.viewToggleButtonActive : ""
+                }`}
+                onClick={() => setTimelineView("mine")}
+                type="button"
+              >
+                Your timeline
+              </button>
+            </div>
           </section>
         ) : null}
 
@@ -685,6 +746,7 @@ export function GamePage() {
           challengerChosenLabel={visibleChallengeChosenLabel}
           challengerChosenSlotIndex={visibleChallengeChosenSlot}
           disabledSlotIndexes={disabledTimelineSlots}
+          eyebrow={visibleTimelineEyebrow}
           hint={visibleTimelineHint}
           onSelectSlot={setSelectedSlotIndex}
           originalChosenLabel={visibleOriginalChosenLabel}
@@ -693,6 +755,7 @@ export function GamePage() {
           previewSlotIndex={visiblePreviewSlot}
           selectable={!isViewingOwnTimeline && canSelectSlot}
           selectedSlotIndex={selectedSlotIndex}
+          subtitle={visibleTimelineSubtitle}
           timelineCards={visibleTimelineCards}
           title={visibleTimelineTitle}
         />
@@ -898,7 +961,9 @@ export function GamePage() {
 }
 
 function TimelinePanel({
+  eyebrow,
   title,
+  subtitle,
   hint,
   cardCount,
   timelineCards,
@@ -917,7 +982,11 @@ function TimelinePanel({
   return (
     <section className={styles.timelinePanel}>
       <div className={styles.timelineHeader}>
-        <p className={styles.sectionLabel}>{title}</p>
+        <div className={styles.timelineHeaderCopy}>
+          <p className={styles.sectionLabel}>{eyebrow}</p>
+          <h2 className={styles.timelineHeading}>{title}</h2>
+          <p className={styles.timelineSubtitle}>{subtitle}</p>
+        </div>
         <span className={styles.timelineCount}>
           {cardCount} card{cardCount === 1 ? "" : "s"}
         </span>
