@@ -1,3 +1,4 @@
+import type { ChallengeState } from "../domain/ChallengeState.js";
 import type { GamePlayer } from "../domain/GamePlayer.js";
 import type { GameState } from "../domain/GameState.js";
 import type { GameTrackCard } from "../domain/GameTrackCard.js";
@@ -5,10 +6,21 @@ import type { RevealState } from "../domain/RevealState.js";
 import type { TimelineCard } from "../domain/TimelineCard.js";
 import { evaluateTimelinePlacement } from "../rules/placementRules.js";
 
+export interface StartGamePlayerInput {
+  id: string;
+  displayName: string;
+  startingTimelineCardCount: number;
+}
+
 export interface StartGameInput {
-  players: GamePlayer[];
+  players: StartGamePlayerInput[];
   deck: GameTrackCard[];
   targetTimelineCardCount: number;
+}
+
+export interface PlaceCardOptions {
+  challengeEnabled?: boolean;
+  challengeDeadlineEpochMs?: number | null;
 }
 
 export class GameFlowService {
@@ -33,7 +45,10 @@ export class GameFlowService {
 
     return {
       phase: "turn",
-      players: startGameInput.players.map((player) => ({ ...player })),
+      players: startGameInput.players.map((player) => ({
+        ...player,
+        ttTokenCount: 0,
+      })),
       timelines,
       deck,
       currentTrackCard: drawNextCard(deck),
@@ -41,6 +56,7 @@ export class GameFlowService {
         activePlayerId: firstPlayer.id,
         turnNumber: 1,
       },
+      challengeState: null,
       revealState: null,
       winnerPlayerId: null,
       targetTimelineCardCount: startGameInput.targetTimelineCardCount,
@@ -51,6 +67,7 @@ export class GameFlowService {
     gameState: GameState,
     playerId: string,
     selectedSlotIndex: number,
+    placeCardOptions: PlaceCardOptions = {},
   ): GameState {
     if (gameState.phase !== "turn" || !gameState.turn) {
       throw new Error("GAME_NOT_IN_TURN_PHASE");
@@ -87,6 +104,29 @@ export class GameFlowService {
       id: gameState.currentTrackCard.id,
       releaseYear: gameState.currentTrackCard.releaseYear,
     };
+
+    if (placeCardOptions.challengeEnabled) {
+      const challengeState: ChallengeState = {
+        phase: "open",
+        originalPlayerId: playerId,
+        originalSelectedSlotIndex: selectedSlotIndex,
+        placedCard,
+        originalWasCorrect: placementResult.isCorrect,
+        originalValidSlotIndexes: placementResult.validSlotIndexes,
+        challengerPlayerId: null,
+        challengerSelectedSlotIndex: null,
+        challengeDeadlineEpochMs:
+          placeCardOptions.challengeDeadlineEpochMs ?? null,
+      };
+
+      return {
+        ...gameState,
+        phase: "challenge",
+        challengeState,
+        revealState: null,
+      };
+    }
+
     const nextTimeline = placementResult.isCorrect
       ? insertTimelineCard(playerTimeline, selectedSlotIndex, placedCard)
       : [...playerTimeline];
@@ -100,17 +140,189 @@ export class GameFlowService {
       selectedSlotIndex,
       wasCorrect: placementResult.isCorrect,
       validSlotIndexes: placementResult.validSlotIndexes,
+      challengerPlayerId: null,
+      challengerSelectedSlotIndex: null,
+      challengeWasSuccessful: null,
+      challengerTtChange: 0,
     };
 
     return {
       ...gameState,
       phase: "reveal",
       timelines: nextTimelines,
+      challengeState: null,
       revealState,
       winnerPlayerId:
         placementResult.isCorrect &&
         nextTimeline.length >= gameState.targetTimelineCardCount
           ? playerId
+          : null,
+    };
+  }
+
+  public claimChallenge(gameState: GameState, challengerPlayerId: string): GameState {
+    if (gameState.phase !== "challenge" || !gameState.challengeState || !gameState.turn) {
+      throw new Error("GAME_NOT_IN_CHALLENGE_PHASE");
+    }
+
+    if (gameState.turn.activePlayerId === challengerPlayerId) {
+      throw new Error("ACTIVE_PLAYER_CANNOT_CHALLENGE");
+    }
+
+    if (gameState.challengeState.challengerPlayerId) {
+      throw new Error("CHALLENGE_ALREADY_CLAIMED");
+    }
+
+    const challenger = gameState.players.find(
+      (player) => player.id === challengerPlayerId,
+    );
+
+    if (!challenger) {
+      throw new Error("PLAYER_NOT_FOUND");
+    }
+
+    if (challenger.ttTokenCount < 1) {
+      throw new Error("INSUFFICIENT_TT");
+    }
+
+    return {
+      ...gameState,
+      challengeState: {
+        ...gameState.challengeState,
+        phase: "claimed",
+        challengerPlayerId,
+      },
+    };
+  }
+
+  public placeChallengeCard(
+    gameState: GameState,
+    challengerPlayerId: string,
+    selectedSlotIndex: number,
+  ): GameState {
+    if (gameState.phase !== "challenge" || !gameState.challengeState || !gameState.turn) {
+      throw new Error("GAME_NOT_IN_CHALLENGE_PHASE");
+    }
+
+    if (gameState.challengeState.challengerPlayerId !== challengerPlayerId) {
+      throw new Error("ONLY_CHALLENGE_OWNER_CAN_PLACE");
+    }
+
+    const originalPlayerId = gameState.challengeState.originalPlayerId;
+    const originalTimeline = gameState.timelines[originalPlayerId];
+
+    if (!originalTimeline) {
+      throw new Error("PLAYER_TIMELINE_NOT_FOUND");
+    }
+
+    if (!Number.isInteger(selectedSlotIndex) || selectedSlotIndex < 0) {
+      throw new Error("INVALID_SLOT_INDEX");
+    }
+
+    if (selectedSlotIndex > originalTimeline.length) {
+      throw new Error("INVALID_SLOT_INDEX");
+    }
+
+    const challengerPlacement = evaluateTimelinePlacement(
+      originalTimeline,
+      gameState.challengeState.placedCard.releaseYear,
+      selectedSlotIndex,
+    );
+    const challengeWasSuccessful =
+      !gameState.challengeState.originalWasCorrect && challengerPlacement.isCorrect;
+    const challengerTtChange = challengeWasSuccessful ? 1 : -1;
+    const nextPlayers = updatePlayerTokenCount(
+      gameState.players,
+      challengerPlayerId,
+      challengerTtChange,
+    );
+    const nextTimeline = challengeWasSuccessful
+      ? insertTimelineCard(
+          originalTimeline,
+          selectedSlotIndex,
+          gameState.challengeState.placedCard,
+        )
+      : [...originalTimeline];
+    const nextTimelines = {
+      ...gameState.timelines,
+      [originalPlayerId]: nextTimeline,
+    };
+    const revealState: RevealState = {
+      playerId: originalPlayerId,
+      placedCard: gameState.challengeState.placedCard,
+      selectedSlotIndex: gameState.challengeState.originalSelectedSlotIndex,
+      wasCorrect: gameState.challengeState.originalWasCorrect,
+      validSlotIndexes: gameState.challengeState.originalValidSlotIndexes,
+      challengerPlayerId,
+      challengerSelectedSlotIndex: selectedSlotIndex,
+      challengeWasSuccessful,
+      challengerTtChange,
+    };
+
+    return {
+      ...gameState,
+      phase: "reveal",
+      players: nextPlayers,
+      timelines: nextTimelines,
+      challengeState: null,
+      revealState,
+      winnerPlayerId:
+        challengeWasSuccessful &&
+        nextTimeline.length >= gameState.targetTimelineCardCount
+          ? originalPlayerId
+          : null,
+    };
+  }
+
+  public resolveChallengeWindow(gameState: GameState): GameState {
+    if (gameState.phase !== "challenge" || !gameState.challengeState) {
+      throw new Error("GAME_NOT_IN_CHALLENGE_PHASE");
+    }
+
+    if (gameState.challengeState.challengerPlayerId) {
+      throw new Error("CHALLENGE_ALREADY_CLAIMED");
+    }
+
+    const originalPlayerId = gameState.challengeState.originalPlayerId;
+    const originalTimeline = gameState.timelines[originalPlayerId];
+
+    if (!originalTimeline) {
+      throw new Error("PLAYER_TIMELINE_NOT_FOUND");
+    }
+
+    const nextTimeline = gameState.challengeState.originalWasCorrect
+      ? insertTimelineCard(
+          originalTimeline,
+          gameState.challengeState.originalSelectedSlotIndex,
+          gameState.challengeState.placedCard,
+        )
+      : [...originalTimeline];
+    const nextTimelines = {
+      ...gameState.timelines,
+      [originalPlayerId]: nextTimeline,
+    };
+    const revealState: RevealState = {
+      playerId: originalPlayerId,
+      placedCard: gameState.challengeState.placedCard,
+      selectedSlotIndex: gameState.challengeState.originalSelectedSlotIndex,
+      wasCorrect: gameState.challengeState.originalWasCorrect,
+      validSlotIndexes: gameState.challengeState.originalValidSlotIndexes,
+      challengerPlayerId: null,
+      challengerSelectedSlotIndex: null,
+      challengeWasSuccessful: null,
+      challengerTtChange: 0,
+    };
+
+    return {
+      ...gameState,
+      phase: "reveal",
+      timelines: nextTimelines,
+      challengeState: null,
+      revealState,
+      winnerPlayerId:
+        gameState.challengeState.originalWasCorrect &&
+        nextTimeline.length >= gameState.targetTimelineCardCount
+          ? originalPlayerId
           : null,
     };
   }
@@ -141,6 +353,7 @@ export class GameFlowService {
         ),
         turnNumber: gameState.turn.turnNumber + 1,
       },
+      challengeState: null,
       revealState: null,
     };
   }
@@ -229,4 +442,31 @@ function findNextActivePlayerId(
   }
 
   return nextPlayer.id;
+}
+
+function updatePlayerTokenCount(
+  players: GamePlayer[],
+  playerId: string,
+  tokenDelta: number,
+): GamePlayer[] {
+  let hasMatchingPlayer = false;
+
+  const nextPlayers = players.map((player) => {
+    if (player.id !== playerId) {
+      return player;
+    }
+
+    hasMatchingPlayer = true;
+
+    return {
+      ...player,
+      ttTokenCount: Math.max(0, player.ttTokenCount + tokenDelta),
+    };
+  });
+
+  if (!hasMatchingPlayer) {
+    throw new Error("PLAYER_NOT_FOUND");
+  }
+
+  return nextPlayers;
 }

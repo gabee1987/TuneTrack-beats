@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { GameFlowService, type GamePlayer, type GameTrackCard } from "../src/index.js";
+import {
+  GameFlowService,
+  type GameTrackCard,
+  type StartGamePlayerInput,
+} from "../src/index.js";
 
-const players: GamePlayer[] = [
+const players: StartGamePlayerInput[] = [
   {
     id: "player-1",
     displayName: "Player 1",
@@ -62,6 +66,15 @@ const deck: GameTrackCard[] = [
 describe("GameFlowService", () => {
   const gameFlowService = new GameFlowService();
 
+  function seedPlayerTokens(
+    tokenOverrides: Record<string, number>,
+  ): ReturnType<GameFlowService["startGame"]>["players"] {
+    return players.map((player) => ({
+      ...player,
+      ttTokenCount: tokenOverrides[player.id] ?? 0,
+    }));
+  }
+
   it("starts a game with per-player starting timelines and a current turn card", () => {
     const gameState = gameFlowService.startGame({
       players,
@@ -70,6 +83,16 @@ describe("GameFlowService", () => {
     });
 
     expect(gameState.phase).toBe("turn");
+    expect(gameState.players).toEqual([
+      expect.objectContaining({
+        id: "player-1",
+        ttTokenCount: 0,
+      }),
+      expect.objectContaining({
+        id: "player-2",
+        ttTokenCount: 0,
+      }),
+    ]);
     expect(gameState.turn).toEqual({
       activePlayerId: "player-1",
       turnNumber: 1,
@@ -125,6 +148,10 @@ describe("GameFlowService", () => {
       selectedSlotIndex: 1,
       wasCorrect: true,
       validSlotIndexes: [1],
+      challengerPlayerId: null,
+      challengerSelectedSlotIndex: null,
+      challengeWasSuccessful: null,
+      challengerTtChange: 0,
     });
     expect(revealGameState.timelines["player-1"]).toEqual([
       {
@@ -188,5 +215,271 @@ describe("GameFlowService", () => {
     expect(() => gameFlowService.confirmReveal(gameState)).toThrow(
       "GAME_NOT_IN_REVEAL_PHASE",
     );
+  });
+
+  it("opens a challenge window instead of reveal when challenge mode is enabled", () => {
+    const gameState = gameFlowService.startGame({
+      players,
+      deck,
+      targetTimelineCardCount: 3,
+    });
+
+    const challengeState = gameFlowService.placeCard(gameState, "player-1", 1, {
+      challengeEnabled: true,
+      challengeDeadlineEpochMs: 123_456,
+    });
+
+    expect(challengeState.phase).toBe("challenge");
+    expect(challengeState.revealState).toBeNull();
+    expect(challengeState.challengeState).toEqual({
+      phase: "open",
+      originalPlayerId: "player-1",
+      originalSelectedSlotIndex: 1,
+      placedCard: {
+        id: "track-4",
+        releaseYear: 2000,
+      },
+      originalWasCorrect: true,
+      originalValidSlotIndexes: [1],
+      challengerPlayerId: null,
+      challengerSelectedSlotIndex: null,
+      challengeDeadlineEpochMs: 123_456,
+    });
+    expect(challengeState.timelines["player-1"]).toEqual([
+      {
+        id: "track-1",
+        releaseYear: 1990,
+      },
+    ]);
+  });
+
+  it("lets the first challenger claim the challenge and rejects a second claim", () => {
+    const gameState = gameFlowService.startGame({
+      players,
+      deck,
+      targetTimelineCardCount: 3,
+    });
+    const openChallengeState = {
+      ...gameFlowService.placeCard(gameState, "player-1", 1, {
+        challengeEnabled: true,
+      }),
+      players: seedPlayerTokens({
+        "player-2": 1,
+      }),
+    };
+    const claimedChallengeState = gameFlowService.claimChallenge(
+      openChallengeState,
+      "player-2",
+    );
+
+    expect(claimedChallengeState.challengeState).toEqual(
+      expect.objectContaining({
+        phase: "claimed",
+        challengerPlayerId: "player-2",
+      }),
+    );
+    expect(() =>
+      gameFlowService.claimChallenge(claimedChallengeState, "player-1"),
+    ).toThrow("ACTIVE_PLAYER_CANNOT_CHALLENGE");
+    expect(() =>
+      gameFlowService.claimChallenge(claimedChallengeState, "player-2"),
+    ).toThrow("CHALLENGE_ALREADY_CLAIMED");
+  });
+
+  it("rejects challenge claims when the challenger has no TT left", () => {
+    const gameState = gameFlowService.startGame({
+      players,
+      deck,
+      targetTimelineCardCount: 3,
+    });
+    const openChallengeState = gameFlowService.placeCard(gameState, "player-1", 1, {
+      challengeEnabled: true,
+    });
+
+    expect(() =>
+      gameFlowService.claimChallenge(openChallengeState, "player-2"),
+    ).toThrow("INSUFFICIENT_TT");
+  });
+
+  it("resolves a successful challenge, inserts the challenger slot, and awards TT", () => {
+    const gameState = gameFlowService.startGame({
+      players,
+      deck,
+      targetTimelineCardCount: 3,
+    });
+    const openChallengeState = {
+      ...gameFlowService.placeCard(gameState, "player-1", 0, {
+        challengeEnabled: true,
+      }),
+      players: seedPlayerTokens({
+        "player-2": 1,
+      }),
+    };
+    const claimedChallengeState = gameFlowService.claimChallenge(
+      openChallengeState,
+      "player-2",
+    );
+    const revealGameState = gameFlowService.placeChallengeCard(
+      claimedChallengeState,
+      "player-2",
+      1,
+    );
+
+    expect(revealGameState.phase).toBe("reveal");
+    expect(revealGameState.challengeState).toBeNull();
+    expect(revealGameState.revealState).toEqual({
+      playerId: "player-1",
+      placedCard: {
+        id: "track-4",
+        releaseYear: 2000,
+      },
+      selectedSlotIndex: 0,
+      wasCorrect: false,
+      validSlotIndexes: [1],
+      challengerPlayerId: "player-2",
+      challengerSelectedSlotIndex: 1,
+      challengeWasSuccessful: true,
+      challengerTtChange: 1,
+    });
+    expect(revealGameState.timelines["player-1"]).toEqual([
+      {
+        id: "track-1",
+        releaseYear: 1990,
+      },
+      {
+        id: "track-4",
+        releaseYear: 2000,
+      },
+    ]);
+    expect(
+      revealGameState.players.find((player) => player.id === "player-2")
+        ?.ttTokenCount,
+    ).toBe(2);
+  });
+
+  it("resolves a failed challenge and deducts TT from the challenger", () => {
+    const preparedGameState = gameFlowService.startGame({
+      players,
+      deck,
+      targetTimelineCardCount: 4,
+    });
+    const seededTokenState = {
+      ...preparedGameState,
+      players: preparedGameState.players.map((player) =>
+        player.id === "player-2"
+          ? { ...player, ttTokenCount: 2 }
+          : player,
+      ),
+    };
+    const openChallengeState = gameFlowService.placeCard(
+      seededTokenState,
+      "player-1",
+      1,
+      {
+        challengeEnabled: true,
+      },
+    );
+    const claimedChallengeState = gameFlowService.claimChallenge(
+      openChallengeState,
+      "player-2",
+    );
+    const revealGameState = gameFlowService.placeChallengeCard(
+      claimedChallengeState,
+      "player-2",
+      0,
+    );
+
+    expect(revealGameState.revealState).toEqual(
+      expect.objectContaining({
+        wasCorrect: true,
+        challengeWasSuccessful: false,
+        challengerTtChange: -1,
+      }),
+    );
+    expect(revealGameState.timelines["player-1"]).toEqual([
+      {
+        id: "track-1",
+        releaseYear: 1990,
+      },
+    ]);
+    expect(
+      revealGameState.players.find((player) => player.id === "player-2")
+        ?.ttTokenCount,
+    ).toBe(1);
+  });
+
+  it("never lets TT drop below zero on a failed challenge", () => {
+    const preparedGameState = gameFlowService.startGame({
+      players,
+      deck,
+      targetTimelineCardCount: 4,
+    });
+    const seededTokenState = {
+      ...preparedGameState,
+      players: seedPlayerTokens({
+        "player-2": 1,
+      }),
+    };
+    const openChallengeState = gameFlowService.placeCard(
+      seededTokenState,
+      "player-1",
+      1,
+      {
+        challengeEnabled: true,
+      },
+    );
+    const claimedChallengeState = gameFlowService.claimChallenge(
+      openChallengeState,
+      "player-2",
+    );
+    const revealGameState = gameFlowService.placeChallengeCard(
+      claimedChallengeState,
+      "player-2",
+      0,
+    );
+
+    expect(
+      revealGameState.players.find((player) => player.id === "player-2")
+        ?.ttTokenCount,
+    ).toBe(0);
+  });
+
+  it("resolves the original placement when nobody claims the challenge", () => {
+    const gameState = gameFlowService.startGame({
+      players,
+      deck,
+      targetTimelineCardCount: 3,
+    });
+    const openChallengeState = gameFlowService.placeCard(gameState, "player-1", 1, {
+      challengeEnabled: true,
+    });
+    const revealGameState =
+      gameFlowService.resolveChallengeWindow(openChallengeState);
+
+    expect(revealGameState.phase).toBe("reveal");
+    expect(revealGameState.revealState).toEqual({
+      playerId: "player-1",
+      placedCard: {
+        id: "track-4",
+        releaseYear: 2000,
+      },
+      selectedSlotIndex: 1,
+      wasCorrect: true,
+      validSlotIndexes: [1],
+      challengerPlayerId: null,
+      challengerSelectedSlotIndex: null,
+      challengeWasSuccessful: null,
+      challengerTtChange: 0,
+    });
+    expect(revealGameState.timelines["player-1"]).toEqual([
+      {
+        id: "track-1",
+        releaseYear: 1990,
+      },
+      {
+        id: "track-4",
+        releaseYear: 2000,
+      },
+    ]);
   });
 });
