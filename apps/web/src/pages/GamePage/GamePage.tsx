@@ -1063,7 +1063,9 @@ function TimelinePanel({
                   onClick={() => onSelectSlot(slotIndex)}
                   type="button"
                 >
-                  Slot {slotIndex}
+                  <span className={styles.slotButtonInner}>
+                    <span className={styles.slotHandle} />
+                  </span>
                 </button>
 
                 {showPreviewCard ? (

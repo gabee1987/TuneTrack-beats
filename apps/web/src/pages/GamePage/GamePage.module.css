@@ -381,37 +381,66 @@
 .slotArea {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   min-width: 220px;
 }
 
 .slotButton {
-  min-width: 112px;
+  width: 100%;
+  min-height: 28px;
   border: 0;
-  border-radius: var(--radius-pill);
-  padding: 10px 14px;
-  background: var(--color-chip);
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: transparent;
   color: var(--color-text-primary);
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 700;
-  align-self: center;
+  display: flex;
+  justify-content: center;
 }
 
 .slotButtonSelected {
-  background: linear-gradient(135deg, #7c6cff 0%, #ff4f9a 100%);
+  background: rgba(124, 108, 255, 0.14);
 }
 
 .slotButtonOriginal {
-  outline: 1px solid var(--color-border-subtle);
+  background: rgba(124, 108, 255, 0.12);
 }
 
 .slotButtonChallenge {
-  outline: 1px solid var(--color-border-subtle);
+  background: rgba(82, 227, 173, 0.14);
 }
 
 .slotButtonChallengeFailure {
-  outline: 1px solid var(--color-border-subtle);
+  background: rgba(255, 94, 129, 0.14);
+}
+
+.slotButtonInner {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.slotHandle {
+  width: 44px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.slotButtonSelected .slotHandle {
+  background: #ffffff;
+}
+
+.slotButtonOriginal .slotHandle {
+  background: rgba(124, 108, 255, 0.92);
+}
+
+.slotButtonChallenge .slotHandle {
+  background: rgba(82, 227, 173, 0.96);
+}
+
+.slotButtonChallengeFailure .slotHandle {
+  background: rgba(255, 94, 129, 0.96);
 }
 
 .timelineCard {
