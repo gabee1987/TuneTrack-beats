@@ -376,6 +376,50 @@ describe("room flow", () => {
     expect(refreshedState.hostId).toBe(hostIdentity.playerId);
     expect(refreshedState.status).toBe("turn");
   });
+
+  it("lets the host close the room for everyone", async () => {
+    const serverContext = await startTestServer();
+    const hostSocket = createClient(serverContext.baseUrl);
+    const guestSocket = createClient(serverContext.baseUrl);
+
+    hostSocket.connect();
+    guestSocket.connect();
+
+    await Promise.all([
+      waitForEvent(hostSocket, "connect"),
+      waitForEvent(guestSocket, "connect"),
+    ]);
+
+    hostSocket.emit(ClientToServerEvent.JoinRoom, {
+      roomId: "close-room",
+      displayName: "Host Player",
+      sessionId: "host-session",
+    });
+    guestSocket.emit(ClientToServerEvent.JoinRoom, {
+      roomId: "close-room",
+      displayName: "Guest Player",
+      sessionId: "guest-session",
+    });
+
+    await waitForStateUpdate(
+      guestSocket,
+      (roomState) => roomState.status === "lobby" && roomState.players.length === 2,
+    );
+
+    const roomClosedPromise = waitForEvent<{ roomId: string; message: string }>(
+      guestSocket,
+      ServerToClientEvent.RoomClosed,
+    );
+
+    hostSocket.emit(ClientToServerEvent.CloseRoom, {
+      roomId: "close-room",
+    });
+
+    await expect(roomClosedPromise).resolves.toEqual({
+      roomId: "close-room",
+      message: "The host closed this room.",
+    });
+  });
 });
 
 async function startTestServer(): Promise<TestServerContext> {

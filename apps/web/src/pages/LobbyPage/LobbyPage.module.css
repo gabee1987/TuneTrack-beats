@@ -168,3 +168,16 @@
   font-weight: 800;
   cursor: pointer;
 }
+
+.cancelRoomButton {
+  width: 100%;
+  margin-top: 12px;
+  border: 0;
+  border-radius: 18px;
+  padding: 18px 22px;
+  background: rgba(255, 94, 129, 0.18);
+  color: #ffffff;
+  font-weight: 800;
+  cursor: pointer;
+  outline: 1px solid rgba(255, 94, 129, 0.32);
+}

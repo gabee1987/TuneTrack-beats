@@ -1,6 +1,7 @@
 import {
   ClientToServerEvent,
   type PlayerIdentityPayload,
+  type RoomClosedPayload,
   ServerToClientEvent,
   type PublicRoomState,
   type ServerErrorPayload,
@@ -98,8 +99,13 @@ export function GamePage() {
       setErrorMessage(payload.message);
     }
 
+    function handleRoomClosed(_: RoomClosedPayload) {
+      navigate("/");
+    }
+
     socketClient.on("connect", handleConnect);
     socketClient.on(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
+    socketClient.on(ServerToClientEvent.RoomClosed, handleRoomClosed);
     socketClient.on(ServerToClientEvent.StateUpdate, handleStateUpdate);
     socketClient.on(ServerToClientEvent.Error, handleError);
 
@@ -112,6 +118,7 @@ export function GamePage() {
     return () => {
       socketClient.off("connect", handleConnect);
       socketClient.off(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
+      socketClient.off(ServerToClientEvent.RoomClosed, handleRoomClosed);
       socketClient.off(ServerToClientEvent.StateUpdate, handleStateUpdate);
       socketClient.off(ServerToClientEvent.Error, handleError);
     };
@@ -134,6 +141,16 @@ export function GamePage() {
     }
 
     socketClient.emit(ClientToServerEvent.ConfirmReveal, {
+      roomId: roomState.roomId,
+    });
+  }
+
+  function handleCloseRoom() {
+    if (!roomState || roomState.hostId !== currentPlayerId) {
+      return;
+    }
+
+    socketClient.emit(ClientToServerEvent.CloseRoom, {
       roomId: roomState.roomId,
     });
   }
@@ -166,6 +183,16 @@ export function GamePage() {
               : `${activePlayer?.displayName ?? "Unknown"}'s turn`}
           </div>
         </header>
+
+        {roomState.hostId === currentPlayerId ? (
+          <button
+            className={styles.secondaryButton}
+            onClick={handleCloseRoom}
+            type="button"
+          >
+            End Game Room
+          </button>
+        ) : null}
 
         {errorMessage ? <p className={styles.error}>{errorMessage}</p> : null}
 

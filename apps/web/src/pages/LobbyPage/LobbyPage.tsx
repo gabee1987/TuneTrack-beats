@@ -11,6 +11,7 @@ import {
   MIN_TARGET_TIMELINE_CARD_COUNT,
   type PlayerIdentityPayload,
   type PublicPlayerState,
+  type RoomClosedPayload,
   type PublicRoomSettings,
   ServerToClientEvent,
   type PublicRoomState,
@@ -90,9 +91,14 @@ export function LobbyPage() {
       setErrorMessage(payload.message);
     }
 
+    function handleRoomClosed(_: RoomClosedPayload) {
+      navigate("/");
+    }
+
     socketClient.on("connect", handleConnect);
     socketClient.on("disconnect", handleDisconnect);
     socketClient.on(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
+    socketClient.on(ServerToClientEvent.RoomClosed, handleRoomClosed);
     socketClient.on(ServerToClientEvent.StateUpdate, handleStateUpdate);
     socketClient.on(ServerToClientEvent.Error, handleError);
 
@@ -106,6 +112,7 @@ export function LobbyPage() {
       socketClient.off("connect", handleConnect);
       socketClient.off("disconnect", handleDisconnect);
       socketClient.off(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
+      socketClient.off(ServerToClientEvent.RoomClosed, handleRoomClosed);
       socketClient.off(ServerToClientEvent.StateUpdate, handleStateUpdate);
       socketClient.off(ServerToClientEvent.Error, handleError);
     };
@@ -151,6 +158,16 @@ export function LobbyPage() {
     }
 
     socketClient.emit(ClientToServerEvent.StartGame, {
+      roomId: roomState.roomId,
+    });
+  }
+
+  function handleCloseRoom() {
+    if (!roomState || !isHost) {
+      return;
+    }
+
+    socketClient.emit(ClientToServerEvent.CloseRoom, {
       roomId: roomState.roomId,
     });
   }
@@ -307,6 +324,14 @@ export function LobbyPage() {
               type="button"
             >
               Start Game
+            </button>
+
+            <button
+              className={styles.cancelRoomButton}
+              onClick={handleCloseRoom}
+              type="button"
+            >
+              Cancel Room
             </button>
 
           </section>

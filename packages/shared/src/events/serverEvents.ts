@@ -3,6 +3,7 @@ import type { PublicRoomState } from "../game/roomState.js";
 
 export const ServerToClientEvent = {
   PlayerIdentity: "player_identity",
+  RoomClosed: "room_closed",
   StateUpdate: "state_update",
   Error: "error",
 } as const;
@@ -20,5 +21,10 @@ export interface StateUpdatePayload {
 
 export interface ServerErrorPayload {
   code: string;
+  message: string;
+}
+
+export interface RoomClosedPayload {
+  roomId: string;
   message: string;
 }

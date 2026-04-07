@@ -1,6 +1,7 @@
 import {
   ClientToServerEvent,
   ServerToClientEvent,
+  closeRoomPayloadSchema,
   confirmRevealPayloadSchema,
   joinRoomPayloadSchema,
   placeCardPayloadSchema,
@@ -25,6 +26,7 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
     registerStartGameHandler(io, socket, roomService);
     registerPlaceCardHandler(io, socket, roomService);
     registerConfirmRevealHandler(io, socket, roomService);
+    registerCloseRoomHandler(io, socket, roomService);
     registerUpdateRoomSettingsHandler(io, socket, roomService);
     registerUpdatePlayerSettingsHandler(io, socket, roomService);
     registerDisconnectHandler(io, socket, roomService);
@@ -225,6 +227,38 @@ function registerUpdateRoomSettingsHandler(
       emitServerError(socket, error, "ROOM_SETTINGS_UPDATE_FAILED", {
         ONLY_HOST_CAN_UPDATE_ROOM_SETTINGS:
           "Only the host can change room settings.",
+      });
+    }
+  });
+}
+
+function registerCloseRoomHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.CloseRoom, (payload: unknown) => {
+    const parseResult = closeRoomPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_CLOSE_ROOM_PAYLOAD",
+        message: "Room code is invalid.",
+      });
+      return;
+    }
+
+    try {
+      const roomId = roomService.closeRoom(parseResult.data, socket.id);
+
+      io.to(roomId).emit(ServerToClientEvent.RoomClosed, {
+        roomId,
+        message: "The host closed this room.",
+      });
+      io.in(roomId).socketsLeave(roomId);
+    } catch (error) {
+      emitServerError(socket, error, "CLOSE_ROOM_FAILED", {
+        ONLY_HOST_CAN_CLOSE_ROOM: "Only the host can close the room.",
       });
     }
   });

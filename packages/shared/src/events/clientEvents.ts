@@ -5,6 +5,7 @@ import type { PlayerId } from "../game/player.js";
 export const ClientToServerEvent = {
   BuyTimelineCardWithTt: "buy_timeline_card_with_tt",
   ClaimChallenge: "claim_challenge",
+  CloseRoom: "close_room",
   ConfirmReveal: "confirm_reveal",
   JoinRoom: "join_room",
   PlaceCard: "place_card",
@@ -50,6 +51,10 @@ export interface PlaceCardPayload {
 }
 
 export interface ConfirmRevealPayload {
+  roomId: RoomId;
+}
+
+export interface CloseRoomPayload {
   roomId: RoomId;
 }
 

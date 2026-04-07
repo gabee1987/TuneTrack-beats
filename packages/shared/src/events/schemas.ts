@@ -82,6 +82,10 @@ export const confirmRevealPayloadSchema = z.object({
   roomId: roomIdSchema,
 });
 
+export const closeRoomPayloadSchema = z.object({
+  roomId: roomIdSchema,
+});
+
 export const claimChallengePayloadSchema = z.object({
   roomId: roomIdSchema,
 });
@@ -125,6 +129,8 @@ export type ConfirmRevealPayloadInput = z.input<typeof confirmRevealPayloadSchem
 export type ConfirmRevealPayloadParsed = z.output<
   typeof confirmRevealPayloadSchema
 >;
+export type CloseRoomPayloadInput = z.input<typeof closeRoomPayloadSchema>;
+export type CloseRoomPayloadParsed = z.output<typeof closeRoomPayloadSchema>;
 export type ClaimChallengePayloadInput = z.input<
   typeof claimChallengePayloadSchema
 >;

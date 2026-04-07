@@ -6,6 +6,7 @@ import {
 } from "@tunetrack/game-engine";
 import { randomUUID } from "node:crypto";
 import {
+  type CloseRoomPayloadParsed,
   DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
   DEFAULT_STARTING_TIMELINE_CARD_COUNT,
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
@@ -379,6 +380,35 @@ export class RoomRegistry {
     });
 
     return roomState;
+  }
+
+  public closeRoom(
+    socketId: string,
+    closeRoomPayload: CloseRoomPayloadParsed,
+  ): RoomId {
+    const roomRecord = this.getRoomRecordForMember(socketId, closeRoomPayload.roomId);
+    const membership = this.getMembership(socketId);
+
+    if (roomRecord.roomState.hostId !== membership.playerId) {
+      throw new Error("ONLY_HOST_CAN_CLOSE_ROOM");
+    }
+
+    for (const [sessionId, sessionMembership] of this.sessionMemberships.entries()) {
+      if (sessionMembership.roomId === closeRoomPayload.roomId) {
+        this.clearDisconnectTimer(sessionId);
+        this.sessionMemberships.delete(sessionId);
+      }
+    }
+
+    for (const [memberSocketId, socketMembership] of this.socketMemberships.entries()) {
+      if (socketMembership.roomId === closeRoomPayload.roomId) {
+        this.socketMemberships.delete(memberSocketId);
+      }
+    }
+
+    this.roomsById.delete(closeRoomPayload.roomId);
+
+    return closeRoomPayload.roomId;
   }
 
 

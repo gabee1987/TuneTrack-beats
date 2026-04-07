@@ -1,5 +1,6 @@
 import { DeckService } from "../decks/DeckService.js";
 import type {
+  CloseRoomPayloadParsed,
   ConfirmRevealPayloadParsed,
   JoinRoomPayloadParsed,
   PlaceCardPayloadParsed,
@@ -82,5 +83,12 @@ export class RoomService {
     socketId: string,
   ): PublicRoomState {
     return this.roomRegistry.confirmReveal(socketId, confirmRevealPayload);
+  }
+
+  public closeRoom(
+    closeRoomPayload: CloseRoomPayloadParsed,
+    socketId: string,
+  ): string {
+    return this.roomRegistry.closeRoom(socketId, closeRoomPayload);
   }
 }

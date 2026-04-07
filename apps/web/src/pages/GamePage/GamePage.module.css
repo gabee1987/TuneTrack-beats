@@ -131,7 +131,21 @@
   cursor: pointer;
 }
 
+.secondaryButton {
+  width: 100%;
+  margin-top: 24px;
+  border: 0;
+  border-radius: 18px;
+  padding: 16px 20px;
+  background: rgba(255, 94, 129, 0.18);
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+  outline: 1px solid rgba(255, 94, 129, 0.32);
+}
+
 .primaryButton:disabled,
+.secondaryButton:disabled,
 .slotButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
