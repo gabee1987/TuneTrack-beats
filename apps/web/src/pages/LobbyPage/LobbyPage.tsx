@@ -24,6 +24,7 @@ import {
 } from "@tunetrack/shared";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { AppShellMenu } from "../../features/app-shell/AppShellMenu";
 import {
   getOrCreatePlayerSessionId,
   getRememberedPlayerDisplayName,
@@ -186,8 +187,65 @@ export function LobbyPage() {
             <h1 className={styles.title}>Lobby</h1>
             <p className={styles.meta}>Room: {roomState?.roomId ?? roomId}</p>
           </div>
-
-          <div className={styles.status}>{connectionStatus}</div>
+          <div className={styles.topRowActions}>
+            <div className={styles.status}>{connectionStatus}</div>
+            <AppShellMenu
+              subtitle="Grouped room, view, and developer controls live here."
+              tabs={[
+                {
+                  id: "players",
+                  label: "Players",
+                  content: (
+                    <p className={styles.menuPlaceholder}>
+                      The final player management panel will live here. The
+                      current player list remains below during this transition.
+                    </p>
+                  ),
+                },
+                {
+                  id: "view",
+                  label: "View",
+                  content: (
+                    <p className={styles.menuPlaceholder}>
+                      Local visibility toggles are now centralized in one place.
+                    </p>
+                  ),
+                },
+                {
+                  id: "settings",
+                  label: "Settings",
+                  content: (
+                    <p className={styles.menuPlaceholder}>
+                      Theme and hidden-card preferences are ready for testing.
+                    </p>
+                  ),
+                },
+                ...(isHost
+                  ? [
+                      {
+                        id: "host" as const,
+                        label: "Host",
+                        content: (
+                          <p className={styles.menuPlaceholder}>
+                            Host room controls will move here in later batches.
+                          </p>
+                        ),
+                      },
+                      {
+                        id: "dev" as const,
+                        label: "Dev",
+                        content: (
+                          <p className={styles.menuPlaceholder}>
+                            Developer-only host tools now share the same menu model.
+                          </p>
+                        ),
+                      },
+                    ]
+                  : []),
+              ]}
+              title="Lobby menu"
+            />
+          </div>
         </div>
 
         {errorMessage ? <p className={styles.error}>{errorMessage}</p> : null}

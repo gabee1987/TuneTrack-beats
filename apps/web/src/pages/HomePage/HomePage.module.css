@@ -15,6 +15,18 @@
   box-shadow: var(--shadow-surface);
 }
 
+.menuRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.menuPlaceholder {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
 .title {
   margin: 0;
   font-size: clamp(48px, 12vw, 72px);

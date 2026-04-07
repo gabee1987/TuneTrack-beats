@@ -96,6 +96,65 @@
   outline: 1px solid var(--color-border-subtle);
 }
 
+.menuInfoSection {
+  display: grid;
+  gap: 14px;
+}
+
+.menuInfoTitle {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: -0.03em;
+}
+
+.menuPlaceholder {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.menuPlayerList {
+  display: grid;
+  gap: 10px;
+}
+
+.menuPlayerRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--color-card);
+}
+
+.menuPlayerName {
+  display: block;
+}
+
+.menuPlayerMeta {
+  margin: 6px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.menuActionButton,
+.menuDangerButton {
+  border: 0;
+  border-radius: 14px;
+  padding: 10px 14px;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.menuActionButton {
+  background: var(--color-accent-success);
+}
+
+.menuDangerButton {
+  background: var(--color-accent-danger);
+}
+
 .error {
   margin-top: 24px;
   color: #ff8fb3;

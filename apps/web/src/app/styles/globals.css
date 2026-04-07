@@ -61,19 +61,3 @@ select,
 textarea {
   font: inherit;
 }
-
-.theme-debug-toggle {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 1000;
-  border: 0;
-  border-radius: var(--radius-pill);
-  padding: 12px 16px;
-  background: var(--color-surface);
-  color: var(--color-text-primary);
-  backdrop-filter: blur(16px);
-  box-shadow: var(--shadow-surface);
-  outline: 1px solid var(--color-border-subtle);
-  cursor: pointer;
-}

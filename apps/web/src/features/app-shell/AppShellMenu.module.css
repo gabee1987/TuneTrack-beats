@@ -1,0 +1,190 @@
+.menuTrigger {
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 12px 16px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-surface);
+  outline: 1px solid var(--color-border-subtle);
+  cursor: pointer;
+}
+
+.menuOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: var(--color-overlay);
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+}
+
+.menuSheet {
+  width: min(100%, 720px);
+  height: 100%;
+  padding: 24px 24px;
+  background: var(--color-surface);
+  border-left: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.menuHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.menuTitle {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -0.04em;
+}
+
+.menuSubtitle {
+  margin: 6px 0 0;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+
+.menuCloseButton {
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 10px 12px;
+  background: var(--color-surface-elevated);
+  color: var(--color-text-primary);
+  outline: 1px solid var(--color-border-subtle);
+  cursor: pointer;
+}
+
+.tabRow {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.tabButton {
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 10px 14px;
+  background: var(--color-chip);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tabButtonActive {
+  background: var(--color-accent-primary);
+  color: #ffffff;
+}
+
+.panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 6px 8px 2px;
+}
+
+.section {
+  padding: 18px;
+  border-radius: var(--radius-panel);
+  background: var(--color-surface-elevated);
+}
+
+.section + .section {
+  margin-top: 12px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: -0.03em;
+}
+
+.sectionDescription {
+  margin: 8px 0 0;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+
+.fieldGroup {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.toggleField {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  color: var(--color-text-primary);
+}
+
+.toggleCopy {
+  display: grid;
+  gap: 4px;
+}
+
+.toggleLabel {
+  font-weight: 600;
+}
+
+.toggleHint {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #8b7bff;
+}
+
+.segmentedRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.segmentedButton {
+  border: 0;
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: var(--color-chip);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.segmentedButtonActive {
+  background: var(--color-accent-primary);
+  color: #ffffff;
+}
+
+.placeholderText {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+@media (max-width: 720px) {
+  .menuOverlay {
+    justify-content: stretch;
+    align-items: flex-end;
+  }
+
+  .menuSheet {
+    width: 100%;
+    height: min(82vh, 720px);
+    border-left: 0;
+    border-top: 1px solid var(--color-border-subtle);
+    border-top-left-radius: 28px;
+    border-top-right-radius: 28px;
+  }
+}
