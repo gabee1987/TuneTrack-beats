@@ -19,6 +19,12 @@ export interface PublicRevealState {
   selectedSlotIndex: number;
   wasCorrect: boolean;
   validSlotIndexes: number[];
+  challengerPlayerId: string | null;
+  challengerSelectedSlotIndex: number | null;
+  challengeWasSuccessful: boolean | null;
+  challengerTtChange: number;
+  awardedPlayerId: string | null;
+  awardedSlotIndex: number | null;
 }
 
 export type ChallengePhase = "open" | "claimed";

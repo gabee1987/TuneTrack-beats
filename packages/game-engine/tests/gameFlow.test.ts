@@ -10,11 +10,13 @@ const players: StartGamePlayerInput[] = [
     id: "player-1",
     displayName: "Player 1",
     startingTimelineCardCount: 1,
+    startingTtTokenCount: 0,
   },
   {
     id: "player-2",
     displayName: "Player 2",
     startingTimelineCardCount: 2,
+    startingTtTokenCount: 0,
   },
 ];
 
@@ -117,6 +119,38 @@ describe("GameFlowService", () => {
     expect(gameState.deck.map((card) => card.id)).toEqual(["track-5", "track-6"]);
   });
 
+  it("starts players with their configured TT balance", () => {
+    const gameState = gameFlowService.startGame({
+      players: [
+        {
+          id: "player-1",
+          displayName: "Player 1",
+          startingTimelineCardCount: 1,
+          startingTtTokenCount: 2,
+        },
+        {
+          id: "player-2",
+          displayName: "Player 2",
+          startingTimelineCardCount: 2,
+          startingTtTokenCount: 4,
+        },
+      ],
+      deck,
+      targetTimelineCardCount: 3,
+    });
+
+    expect(gameState.players).toEqual([
+      expect.objectContaining({
+        id: "player-1",
+        ttTokenCount: 2,
+      }),
+      expect.objectContaining({
+        id: "player-2",
+        ttTokenCount: 4,
+      }),
+    ]);
+  });
+
   it("rejects placement from a non-active player", () => {
     const gameState = gameFlowService.startGame({
       players,
@@ -152,6 +186,8 @@ describe("GameFlowService", () => {
       challengerSelectedSlotIndex: null,
       challengeWasSuccessful: null,
       challengerTtChange: 0,
+      awardedPlayerId: "player-1",
+      awardedSlotIndex: 1,
     });
     expect(revealGameState.timelines["player-1"]).toEqual([
       {
@@ -340,15 +376,27 @@ describe("GameFlowService", () => {
       challengerSelectedSlotIndex: 1,
       challengeWasSuccessful: true,
       challengerTtChange: 1,
+      awardedPlayerId: "player-2",
+      awardedSlotIndex: 1,
     });
     expect(revealGameState.timelines["player-1"]).toEqual([
       {
         id: "track-1",
         releaseYear: 1990,
       },
+    ]);
+    expect(revealGameState.timelines["player-2"]).toEqual([
+      {
+        id: "track-3",
+        releaseYear: 1985,
+      },
       {
         id: "track-4",
         releaseYear: 2000,
+      },
+      {
+        id: "track-2",
+        releaseYear: 2005,
       },
     ]);
     expect(
@@ -394,12 +442,18 @@ describe("GameFlowService", () => {
         wasCorrect: true,
         challengeWasSuccessful: false,
         challengerTtChange: -1,
+        awardedPlayerId: "player-1",
+        awardedSlotIndex: 1,
       }),
     );
     expect(revealGameState.timelines["player-1"]).toEqual([
       {
         id: "track-1",
         releaseYear: 1990,
+      },
+      {
+        id: "track-4",
+        releaseYear: 2000,
       },
     ]);
     expect(
@@ -444,6 +498,40 @@ describe("GameFlowService", () => {
     ).toBe(0);
   });
 
+  it("rejects a Beat! slot that matches the original player's chosen slot", () => {
+    const preparedGameState = gameFlowService.startGame({
+      players,
+      deck,
+      targetTimelineCardCount: 4,
+    });
+    const seededTokenState = {
+      ...preparedGameState,
+      players: seedPlayerTokens({
+        "player-2": 1,
+      }),
+    };
+    const openChallengeState = gameFlowService.placeCard(
+      seededTokenState,
+      "player-1",
+      0,
+      {
+        challengeEnabled: true,
+      },
+    );
+    const claimedChallengeState = gameFlowService.claimChallenge(
+      openChallengeState,
+      "player-2",
+    );
+
+    expect(() =>
+      gameFlowService.placeChallengeCard(
+        claimedChallengeState,
+        "player-2",
+        0,
+      ),
+    ).toThrow("CHALLENGE_SLOT_MUST_DIFFER");
+  });
+
   it("resolves the original placement when nobody claims the challenge", () => {
     const gameState = gameFlowService.startGame({
       players,
@@ -470,6 +558,8 @@ describe("GameFlowService", () => {
       challengerSelectedSlotIndex: null,
       challengeWasSuccessful: null,
       challengerTtChange: 0,
+      awardedPlayerId: "player-1",
+      awardedSlotIndex: 1,
     });
     expect(revealGameState.timelines["player-1"]).toEqual([
       {

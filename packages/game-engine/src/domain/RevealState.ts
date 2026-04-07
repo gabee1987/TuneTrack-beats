@@ -10,4 +10,6 @@ export interface RevealState {
   challengerSelectedSlotIndex: number | null;
   challengeWasSuccessful: boolean | null;
   challengerTtChange: number;
+  awardedPlayerId: string | null;
+  awardedSlotIndex: number | null;
 }

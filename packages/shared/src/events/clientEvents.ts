@@ -30,6 +30,7 @@ export interface UpdateRoomSettingsPayload {
   roomId: RoomId;
   targetTimelineCardCount: number;
   defaultStartingTimelineCardCount: number;
+  startingTtTokenCount: number;
   revealConfirmMode: RevealConfirmMode;
   ttModeEnabled: boolean;
   challengeWindowDurationSeconds: number | null;

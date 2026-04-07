@@ -10,6 +10,7 @@ export interface StartGamePlayerInput {
   id: string;
   displayName: string;
   startingTimelineCardCount: number;
+  startingTtTokenCount: number;
 }
 
 export interface StartGameInput {
@@ -47,7 +48,7 @@ export class GameFlowService {
       phase: "turn",
       players: startGameInput.players.map((player) => ({
         ...player,
-        ttTokenCount: 0,
+        ttTokenCount: player.startingTtTokenCount,
       })),
       timelines,
       deck,
@@ -144,6 +145,8 @@ export class GameFlowService {
       challengerSelectedSlotIndex: null,
       challengeWasSuccessful: null,
       challengerTtChange: 0,
+      awardedPlayerId: placementResult.isCorrect ? playerId : null,
+      awardedSlotIndex: placementResult.isCorrect ? selectedSlotIndex : null,
     };
 
     return {
@@ -223,6 +226,12 @@ export class GameFlowService {
       throw new Error("INVALID_SLOT_INDEX");
     }
 
+    if (
+      selectedSlotIndex === gameState.challengeState.originalSelectedSlotIndex
+    ) {
+      throw new Error("CHALLENGE_SLOT_MUST_DIFFER");
+    }
+
     const challengerPlacement = evaluateTimelinePlacement(
       originalTimeline,
       gameState.challengeState.placedCard.releaseYear,
@@ -236,16 +245,38 @@ export class GameFlowService {
       challengerPlayerId,
       challengerTtChange,
     );
-    const nextTimeline = challengeWasSuccessful
-      ? insertTimelineCard(
-          originalTimeline,
-          selectedSlotIndex,
-          gameState.challengeState.placedCard,
+    const challengerTimeline = gameState.timelines[challengerPlayerId];
+
+    if (!challengerTimeline) {
+      throw new Error("PLAYER_TIMELINE_NOT_FOUND");
+    }
+
+    const challengerAwardSlotIndex = challengeWasSuccessful
+      ? findFirstValidSlotIndex(
+          challengerTimeline,
+          gameState.challengeState.placedCard.releaseYear,
         )
-      : [...originalTimeline];
+      : null;
+    const nextOriginalTimeline =
+      gameState.challengeState.originalWasCorrect
+        ? insertTimelineCard(
+            originalTimeline,
+            gameState.challengeState.originalSelectedSlotIndex,
+            gameState.challengeState.placedCard,
+          )
+        : [...originalTimeline];
+    const nextChallengerTimeline =
+      challengeWasSuccessful && challengerAwardSlotIndex !== null
+        ? insertTimelineCard(
+            challengerTimeline,
+            challengerAwardSlotIndex,
+            gameState.challengeState.placedCard,
+          )
+        : [...challengerTimeline];
     const nextTimelines = {
       ...gameState.timelines,
-      [originalPlayerId]: nextTimeline,
+      [originalPlayerId]: nextOriginalTimeline,
+      [challengerPlayerId]: nextChallengerTimeline,
     };
     const revealState: RevealState = {
       playerId: originalPlayerId,
@@ -257,6 +288,16 @@ export class GameFlowService {
       challengerSelectedSlotIndex: selectedSlotIndex,
       challengeWasSuccessful,
       challengerTtChange,
+      awardedPlayerId: challengeWasSuccessful
+        ? challengerPlayerId
+        : gameState.challengeState.originalWasCorrect
+          ? originalPlayerId
+          : null,
+      awardedSlotIndex: challengeWasSuccessful
+        ? challengerAwardSlotIndex
+        : gameState.challengeState.originalWasCorrect
+          ? gameState.challengeState.originalSelectedSlotIndex
+          : null,
     };
 
     return {
@@ -268,9 +309,12 @@ export class GameFlowService {
       revealState,
       winnerPlayerId:
         challengeWasSuccessful &&
-        nextTimeline.length >= gameState.targetTimelineCardCount
-          ? originalPlayerId
-          : null,
+        nextChallengerTimeline.length >= gameState.targetTimelineCardCount
+          ? challengerPlayerId
+          : gameState.challengeState.originalWasCorrect &&
+              nextOriginalTimeline.length >= gameState.targetTimelineCardCount
+            ? originalPlayerId
+            : null,
     };
   }
 
@@ -311,6 +355,12 @@ export class GameFlowService {
       challengerSelectedSlotIndex: null,
       challengeWasSuccessful: null,
       challengerTtChange: 0,
+      awardedPlayerId: gameState.challengeState.originalWasCorrect
+        ? originalPlayerId
+        : null,
+      awardedSlotIndex: gameState.challengeState.originalWasCorrect
+        ? gameState.challengeState.originalSelectedSlotIndex
+        : null,
     };
 
     return {
@@ -357,6 +407,25 @@ export class GameFlowService {
       revealState: null,
     };
   }
+}
+
+function findFirstValidSlotIndex(
+  timelineCards: TimelineCard[],
+  releaseYear: number,
+): number {
+  for (let selectedSlotIndex = 0; selectedSlotIndex <= timelineCards.length; selectedSlotIndex += 1) {
+    const placementResult = evaluateTimelinePlacement(
+      timelineCards,
+      releaseYear,
+      selectedSlotIndex,
+    );
+
+    if (placementResult.isCorrect) {
+      return selectedSlotIndex;
+    }
+  }
+
+  throw new Error("VALID_SLOT_NOT_FOUND");
 }
 
 function validateStartGameInput(startGameInput: StartGameInput): void {
