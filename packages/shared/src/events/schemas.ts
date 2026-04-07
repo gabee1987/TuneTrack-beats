@@ -78,6 +78,12 @@ export const updatePlayerSettingsPayloadSchema = z.object({
     .max(MAX_STARTING_TIMELINE_CARD_COUNT),
 });
 
+export const awardTtPayloadSchema = z.object({
+  roomId: roomIdSchema,
+  playerId: z.string().trim().min(1),
+  amount: z.number().int().positive().max(5),
+});
+
 export const startGamePayloadSchema = z.object({
   roomId: roomIdSchema,
 });
@@ -130,6 +136,8 @@ export type UpdatePlayerSettingsPayloadInput = z.input<
 export type UpdatePlayerSettingsPayloadParsed = z.output<
   typeof updatePlayerSettingsPayloadSchema
 >;
+export type AwardTtPayloadInput = z.input<typeof awardTtPayloadSchema>;
+export type AwardTtPayloadParsed = z.output<typeof awardTtPayloadSchema>;
 export type StartGamePayloadInput = z.input<typeof startGamePayloadSchema>;
 export type StartGamePayloadParsed = z.output<typeof startGamePayloadSchema>;
 export type PlaceCardPayloadInput = z.input<typeof placeCardPayloadSchema>;

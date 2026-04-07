@@ -1,5 +1,7 @@
 import { DeckService } from "../decks/DeckService.js";
 import type {
+  AwardTtPayloadParsed,
+  BuyTimelineCardWithTtPayloadParsed,
   CloseRoomPayloadParsed,
   ClaimChallengePayloadParsed,
   ConfirmRevealPayloadParsed,
@@ -8,6 +10,7 @@ import type {
   PlaceCardPayloadParsed,
   PublicRoomState,
   ResolveChallengeWindowPayloadParsed,
+  SkipTrackWithTtPayloadParsed,
   StartGamePayloadParsed,
   UpdatePlayerSettingsPayloadParsed,
   UpdateRoomSettingsPayloadParsed,
@@ -56,6 +59,30 @@ export class RoomService {
     return this.roomRegistry.updatePlayerSettings(
       socketId,
       updatePlayerSettingsPayload,
+    );
+  }
+
+  public awardTt(
+    awardTtPayload: AwardTtPayloadParsed,
+    socketId: string,
+  ): PublicRoomState {
+    return this.roomRegistry.awardTt(socketId, awardTtPayload);
+  }
+
+  public skipTrackWithTt(
+    skipTrackWithTtPayload: SkipTrackWithTtPayloadParsed,
+    socketId: string,
+  ): PublicRoomState {
+    return this.roomRegistry.skipTrackWithTt(socketId, skipTrackWithTtPayload);
+  }
+
+  public buyTimelineCardWithTt(
+    buyTimelineCardWithTtPayload: BuyTimelineCardWithTtPayloadParsed,
+    socketId: string,
+  ): PublicRoomState {
+    return this.roomRegistry.buyTimelineCardWithTt(
+      socketId,
+      buyTimelineCardWithTtPayload,
     );
   }
 

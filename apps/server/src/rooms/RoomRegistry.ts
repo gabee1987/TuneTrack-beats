@@ -6,12 +6,15 @@ import {
 } from "@tunetrack/game-engine";
 import { randomUUID } from "node:crypto";
 import {
+  type AwardTtPayloadParsed,
+  type BuyTimelineCardWithTtPayloadParsed,
   type CloseRoomPayloadParsed,
   type ClaimChallengePayloadParsed,
   DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
   DEFAULT_STARTING_TIMELINE_CARD_COUNT,
   DEFAULT_STARTING_TT_TOKEN_COUNT,
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
+  MAX_STARTING_TT_TOKEN_COUNT,
   type ConfirmRevealPayloadParsed,
   type PlaceChallengePayloadParsed,
   type PlaceCardPayloadParsed,
@@ -22,6 +25,7 @@ import {
   type PublicRevealState,
   type ResolveChallengeWindowPayloadParsed,
   type RoomId,
+  type SkipTrackWithTtPayloadParsed,
   type StartGamePayloadParsed,
   type TimelineCardPublic,
   type TrackCardPublic,
@@ -265,6 +269,136 @@ export class RoomRegistry {
 
     this.roomsById.set(updatePlayerSettingsPayload.roomId, {
       ...roomRecord,
+      roomState: nextRoomState,
+    });
+
+    return nextRoomState;
+  }
+
+  public awardTt(
+    socketId: string,
+    awardTtPayload: AwardTtPayloadParsed,
+  ): PublicRoomState {
+    const roomRecord = this.getRoomRecordForMember(socketId, awardTtPayload.roomId);
+    const membership = this.getMembership(socketId);
+
+    if (roomRecord.roomState.hostId !== membership.playerId) {
+      throw new Error("ONLY_HOST_CAN_AWARD_TT");
+    }
+
+    const hasPlayer = roomRecord.roomState.players.some(
+      (player) => player.id === awardTtPayload.playerId,
+    );
+
+    if (!hasPlayer) {
+      throw new Error("PLAYER_NOT_FOUND");
+    }
+
+    const nextGameState = roomRecord.gameState
+      ? this.gameFlowService.awardTtTokens(
+          roomRecord.gameState,
+          awardTtPayload.playerId,
+          awardTtPayload.amount,
+        )
+      : null;
+    const nextRoomState = nextGameState
+      ? mapGameStateToPublicRoomState(
+          roomRecord.roomState,
+          nextGameState,
+          roomRecord.trackCardsById,
+        )
+      : {
+          ...roomRecord.roomState,
+          players: roomRecord.roomState.players.map((player) =>
+            player.id === awardTtPayload.playerId
+              ? {
+                  ...player,
+                  ttTokenCount: Math.min(
+                    MAX_STARTING_TT_TOKEN_COUNT,
+                    player.ttTokenCount + awardTtPayload.amount,
+                  ),
+                }
+              : player,
+          ),
+        };
+
+    this.roomsById.set(awardTtPayload.roomId, {
+      ...roomRecord,
+      gameState: nextGameState,
+      roomState: nextRoomState,
+    });
+
+    return nextRoomState;
+  }
+
+  public skipTrackWithTt(
+    socketId: string,
+    skipTrackWithTtPayload: SkipTrackWithTtPayloadParsed,
+  ): PublicRoomState {
+    const roomRecord = this.getRoomRecordForMember(
+      socketId,
+      skipTrackWithTtPayload.roomId,
+    );
+    const membership = this.getMembership(socketId);
+
+    if (!roomRecord.roomState.settings.ttModeEnabled) {
+      throw new Error("TT_MODE_DISABLED");
+    }
+
+    if (!roomRecord.gameState) {
+      throw new Error("GAME_NOT_STARTED");
+    }
+
+    const nextGameState = this.gameFlowService.skipCurrentTrackWithTt(
+      roomRecord.gameState,
+      membership.playerId,
+    );
+    const nextRoomState = mapGameStateToPublicRoomState(
+      roomRecord.roomState,
+      nextGameState,
+      roomRecord.trackCardsById,
+    );
+
+    this.roomsById.set(skipTrackWithTtPayload.roomId, {
+      ...roomRecord,
+      gameState: nextGameState,
+      roomState: nextRoomState,
+    });
+
+    return nextRoomState;
+  }
+
+  public buyTimelineCardWithTt(
+    socketId: string,
+    buyTimelineCardWithTtPayload: BuyTimelineCardWithTtPayloadParsed,
+  ): PublicRoomState {
+    const roomRecord = this.getRoomRecordForMember(
+      socketId,
+      buyTimelineCardWithTtPayload.roomId,
+    );
+    const membership = this.getMembership(socketId);
+
+    if (!roomRecord.roomState.settings.ttModeEnabled) {
+      throw new Error("TT_MODE_DISABLED");
+    }
+
+    if (!roomRecord.gameState) {
+      throw new Error("GAME_NOT_STARTED");
+    }
+
+    const nextGameState = this.gameFlowService.buyTimelineCardWithTt(
+      roomRecord.gameState,
+      membership.playerId,
+    );
+    const nextRoomState = mapGameStateToPublicRoomState(
+      roomRecord.roomState,
+      nextGameState,
+      roomRecord.trackCardsById,
+    );
+
+    this.roomsById.set(buyTimelineCardWithTtPayload.roomId, {
+      ...roomRecord,
+      gameState: nextGameState,
       roomState: nextRoomState,
     });
 
@@ -798,6 +932,7 @@ function mapGameStateToPublicRoomState(
       ? {
           activePlayerId: gameState.turn.activePlayerId,
           turnNumber: gameState.turn.turnNumber,
+          hasUsedSkipTrackWithTt: gameState.turn.hasUsedSkipTrackWithTt,
         }
       : null,
     challengeState: gameState.challengeState
@@ -843,6 +978,7 @@ function mapRevealStateToPublicRevealState(
     ),
     selectedSlotIndex: revealState.selectedSlotIndex,
     wasCorrect: revealState.wasCorrect,
+    revealType: revealState.revealType,
     validSlotIndexes: revealState.validSlotIndexes,
     challengerPlayerId: revealState.challengerPlayerId,
     challengerSelectedSlotIndex: revealState.challengerSelectedSlotIndex,

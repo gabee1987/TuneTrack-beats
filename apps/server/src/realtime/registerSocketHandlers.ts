@@ -1,6 +1,8 @@
 import {
   ClientToServerEvent,
   ServerToClientEvent,
+  awardTtPayloadSchema,
+  buyTimelineCardWithTtPayloadSchema,
   claimChallengePayloadSchema,
   closeRoomPayloadSchema,
   confirmRevealPayloadSchema,
@@ -8,6 +10,7 @@ import {
   placeChallengePayloadSchema,
   placeCardPayloadSchema,
   resolveChallengeWindowPayloadSchema,
+  skipTrackWithTtPayloadSchema,
   startGamePayloadSchema,
   updatePlayerSettingsPayloadSchema,
   updateRoomSettingsPayloadSchema,
@@ -31,6 +34,9 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
     registerClaimChallengeHandler(io, socket, roomService);
     registerPlaceChallengeHandler(io, socket, roomService);
     registerResolveChallengeWindowHandler(io, socket, roomService);
+    registerAwardTtHandler(io, socket, roomService);
+    registerSkipTrackWithTtHandler(io, socket, roomService);
+    registerBuyTimelineCardWithTtHandler(io, socket, roomService);
     registerConfirmRevealHandler(io, socket, roomService);
     registerCloseRoomHandler(io, socket, roomService);
     registerUpdateRoomSettingsHandler(io, socket, roomService);
@@ -310,6 +316,113 @@ function registerUpdatePlayerSettingsHandler(
       emitServerError(socket, error, "PLAYER_SETTINGS_UPDATE_FAILED", {
         ONLY_HOST_CAN_UPDATE_PLAYER_SETTINGS:
           "Only the host can change player settings.",
+      });
+    }
+  });
+}
+
+function registerAwardTtHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.AwardTt, (payload: unknown) => {
+    const parseResult = awardTtPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_AWARD_TT_PAYLOAD",
+        message: "TT award payload is invalid.",
+      });
+      return;
+    }
+
+    try {
+      const roomState = roomService.awardTt(parseResult.data, socket.id);
+
+      io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
+        roomState,
+      });
+    } catch (error) {
+      emitServerError(socket, error, "AWARD_TT_FAILED", {
+        ONLY_HOST_CAN_AWARD_TT: "Only the host can award TT.",
+        PLAYER_NOT_FOUND: "That player is no longer in the room.",
+        INVALID_TT_AMOUNT: "TT award amount is invalid.",
+      });
+    }
+  });
+}
+
+function registerSkipTrackWithTtHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.SkipTrackWithTt, (payload: unknown) => {
+    const parseResult = skipTrackWithTtPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_SKIP_TRACK_WITH_TT_PAYLOAD",
+        message: "Skip request payload is invalid.",
+      });
+      return;
+    }
+
+    try {
+      const roomState = roomService.skipTrackWithTt(parseResult.data, socket.id);
+
+      io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
+        roomState,
+      });
+    } catch (error) {
+      emitServerError(socket, error, "SKIP_TRACK_WITH_TT_FAILED", {
+        GAME_NOT_IN_TURN_PHASE: "You can only skip on your own turn.",
+        GAME_NOT_STARTED: "The game has not started yet.",
+        INSUFFICIENT_TT: "You need at least 1 TT to skip.",
+        NOT_ENOUGH_CARDS: "The deck is empty, so this track cannot be skipped.",
+        NOT_ACTIVE_PLAYER: "Only the active player can skip the current track.",
+        SKIP_ALREADY_USED_THIS_TURN:
+          "You already used your one allowed skip on this turn.",
+        TT_MODE_DISABLED: "TT mode is disabled in this room.",
+      });
+    }
+  });
+}
+
+function registerBuyTimelineCardWithTtHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.BuyTimelineCardWithTt, (payload: unknown) => {
+    const parseResult = buyTimelineCardWithTtPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_BUY_TIMELINE_CARD_WITH_TT_PAYLOAD",
+        message: "Buy-card request payload is invalid.",
+      });
+      return;
+    }
+
+    try {
+      const roomState = roomService.buyTimelineCardWithTt(
+        parseResult.data,
+        socket.id,
+      );
+
+      io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
+        roomState,
+      });
+    } catch (error) {
+      emitServerError(socket, error, "BUY_TIMELINE_CARD_WITH_TT_FAILED", {
+        GAME_NOT_IN_TURN_PHASE: "You can only buy a card on your own turn.",
+        GAME_NOT_STARTED: "The game has not started yet.",
+        INSUFFICIENT_TT: "You need at least 3 TT to buy a card.",
+        NOT_ENOUGH_CARDS: "The deck is empty, so no card can be bought.",
+        NOT_ACTIVE_PLAYER: "Only the active player can buy a timeline card.",
+        TT_MODE_DISABLED: "TT mode is disabled in this room.",
       });
     }
   });

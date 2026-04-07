@@ -197,6 +197,7 @@ describe("room flow", () => {
     expect(firstTurnState.turn).toEqual({
       activePlayerId: hostIdentity.playerId,
       turnNumber: 1,
+      hasUsedSkipTrackWithTt: false,
     });
     expect(firstTurnState.currentTrackCard).toEqual({
       id: "test-track-3",
@@ -255,6 +256,7 @@ describe("room flow", () => {
       },
       selectedSlotIndex: 1,
       wasCorrect: true,
+      revealType: "placement",
       validSlotIndexes: [1],
       challengerPlayerId: null,
       challengerSelectedSlotIndex: null,
@@ -292,6 +294,7 @@ describe("room flow", () => {
     expect(secondTurnState.turn).toEqual({
       activePlayerId: guestIdentity.playerId,
       turnNumber: 2,
+      hasUsedSkipTrackWithTt: false,
     });
     expect(secondTurnState.currentTrackCard?.id).toBe("test-track-4");
     expect(secondTurnState.revealState).toBeNull();
@@ -425,6 +428,74 @@ describe("room flow", () => {
       roomId: "close-room",
       message: "The host closed this room.",
     });
+  });
+
+  it("lets the host award TT during a game", async () => {
+    const serverContext = await startTestServer();
+    const hostSocket = createClient(serverContext.baseUrl);
+    const guestSocket = createClient(serverContext.baseUrl);
+
+    hostSocket.connect();
+    guestSocket.connect();
+
+    await Promise.all([
+      waitForEvent(hostSocket, "connect"),
+      waitForEvent(guestSocket, "connect"),
+    ]);
+
+    hostSocket.emit(ClientToServerEvent.JoinRoom, {
+      roomId: "award-room",
+      displayName: "Host Player",
+      sessionId: "host-session",
+    });
+    guestSocket.emit(ClientToServerEvent.JoinRoom, {
+      roomId: "award-room",
+      displayName: "Guest Player",
+      sessionId: "guest-session",
+    });
+
+    const guestIdentityPromise = waitForEvent<PlayerIdentityPayload>(
+      guestSocket,
+      ServerToClientEvent.PlayerIdentity,
+    );
+
+    await waitForStateUpdate(
+      guestSocket,
+      (roomState) => roomState.status === "lobby" && roomState.players.length === 2,
+    );
+
+    const guestIdentity = await guestIdentityPromise;
+
+    const firstTurnPromise = waitForStateUpdate(
+      guestSocket,
+      (roomState) => roomState.status === "turn" && roomState.turn?.turnNumber === 1,
+    );
+
+    hostSocket.emit(ClientToServerEvent.StartGame, {
+      roomId: "award-room",
+    });
+
+    await firstTurnPromise;
+
+    const awardStatePromise = waitForStateUpdate(
+      guestSocket,
+      (roomState) =>
+        roomState.players.find((player) => player.id === guestIdentity.playerId)
+          ?.ttTokenCount === 1,
+    );
+
+    hostSocket.emit(ClientToServerEvent.AwardTt, {
+      roomId: "award-room",
+      playerId: guestIdentity.playerId,
+      amount: 1,
+    });
+
+    const awardState = await awardStatePromise;
+
+    expect(
+      awardState.players.find((player) => player.id === guestIdentity.playerId)
+        ?.ttTokenCount,
+    ).toBe(1);
   });
 
 });

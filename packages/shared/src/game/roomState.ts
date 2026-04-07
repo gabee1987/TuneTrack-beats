@@ -11,6 +11,7 @@ export type RoomStatus = GamePhase;
 export interface PublicTurnState {
   activePlayerId: string;
   turnNumber: number;
+  hasUsedSkipTrackWithTt: boolean;
 }
 
 export interface PublicRevealState {
@@ -18,6 +19,7 @@ export interface PublicRevealState {
   placedCard: TimelineCardPublic;
   selectedSlotIndex: number;
   wasCorrect: boolean;
+  revealType: "placement" | "tt_buy";
   validSlotIndexes: number[];
   challengerPlayerId: string | null;
   challengerSelectedSlotIndex: number | null;

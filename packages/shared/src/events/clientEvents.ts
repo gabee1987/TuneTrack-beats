@@ -3,6 +3,7 @@ import type { RoomId } from "../game/roomState.js";
 import type { PlayerId } from "../game/player.js";
 
 export const ClientToServerEvent = {
+  AwardTt: "award_tt",
   BuyTimelineCardWithTt: "buy_timeline_card_with_tt",
   ClaimChallenge: "claim_challenge",
   CloseRoom: "close_room",
@@ -40,6 +41,12 @@ export interface UpdatePlayerSettingsPayload {
   roomId: RoomId;
   playerId: PlayerId;
   startingTimelineCardCount: number;
+}
+
+export interface AwardTtPayload {
+  roomId: RoomId;
+  playerId: PlayerId;
+  amount: number;
 }
 
 export interface StartGamePayload {

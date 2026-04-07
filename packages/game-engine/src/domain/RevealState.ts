@@ -5,6 +5,7 @@ export interface RevealState {
   placedCard: TimelineCard;
   selectedSlotIndex: number;
   wasCorrect: boolean;
+  revealType: "placement" | "tt_buy";
   validSlotIndexes: number[];
   challengerPlayerId: string | null;
   challengerSelectedSlotIndex: number | null;
