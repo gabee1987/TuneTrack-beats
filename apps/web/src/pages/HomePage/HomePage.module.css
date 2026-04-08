@@ -12,10 +12,7 @@
   padding: clamp(18px, 3vw, 28px);
   border: 1px solid var(--color-border-subtle);
   border-radius: clamp(24px, 4vw, 36px);
-  background:
-    radial-gradient(circle at top right, rgba(240, 91, 145, 0.18), transparent 28%),
-    radial-gradient(circle at left center, rgba(114, 122, 255, 0.16), transparent 34%),
-    var(--color-surface);
+  background: var(--gradient-home-shell-background);
   box-shadow: var(--shadow-surface);
 }
 
@@ -23,9 +20,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 45%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 65%);
+  background: var(--gradient-surface-sheen);
   pointer-events: none;
   border-radius: clamp(24px, 4vw, 36px);
 }
@@ -110,7 +105,7 @@
     color-mix(in srgb, var(--color-surface-strong) 92%, transparent),
     color-mix(in srgb, var(--color-surface) 88%, transparent)
   );
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.24);
+  box-shadow: var(--shadow-form-card);
   outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 88%, transparent);
   backdrop-filter: blur(18px);
 }
@@ -185,7 +180,7 @@
   border: 0;
   border-radius: var(--radius-button);
   background: var(--color-accent-primary);
-  color: #ffffff;
+  color: var(--color-text-on-accent);
   padding: 18px 22px;
   font-weight: 800;
   letter-spacing: 0.01em;
@@ -255,10 +250,7 @@
     padding: 10px 12px 14px;
     border: 0;
     border-radius: 0;
-    background:
-      radial-gradient(circle at top right, rgba(240, 91, 145, 0.12), transparent 26%),
-      radial-gradient(circle at left center, rgba(114, 122, 255, 0.11), transparent 32%),
-      transparent;
+    background: var(--gradient-home-shell-background-mobile);
     box-shadow: none;
   }
 
@@ -337,10 +329,7 @@
     padding: 10px 12px 12px;
     border: 0;
     border-radius: 0;
-    background:
-      radial-gradient(circle at top right, rgba(240, 91, 145, 0.12), transparent 26%),
-      radial-gradient(circle at left center, rgba(114, 122, 255, 0.11), transparent 32%),
-      transparent;
+    background: var(--gradient-home-shell-background-mobile);
     box-shadow: none;
   }
 

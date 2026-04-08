@@ -84,7 +84,7 @@
 
 .tabButtonActive {
   background: var(--color-accent-primary);
-  color: #ffffff;
+  color: var(--color-text-on-accent);
 }
 
 .panel {
@@ -147,7 +147,7 @@
 .checkbox {
   width: 18px;
   height: 18px;
-  accent-color: #8b7bff;
+  accent-color: var(--color-accent-control);
 }
 
 .segmentedRow {
@@ -168,7 +168,7 @@
 
 .segmentedButtonActive {
   background: var(--color-accent-primary);
-  color: #ffffff;
+  color: var(--color-text-on-accent);
 }
 
 .hiddenCardPreview {
@@ -185,18 +185,15 @@
 }
 
 .hiddenCardPreviewArtwork {
-  background:
-    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.14), transparent 30%),
-    radial-gradient(circle at 80% 0%, rgba(124, 108, 255, 0.38), transparent 34%),
-    linear-gradient(135deg, rgba(124, 108, 255, 0.8) 0%, rgba(255, 79, 154, 0.72) 100%);
+  background: var(--gradient-hidden-card-preview-artwork);
 }
 
 .hiddenCardPreviewGradient {
-  background: linear-gradient(135deg, rgba(124, 108, 255, 0.7) 0%, rgba(23, 23, 40, 0.48) 100%);
+  background: var(--gradient-hidden-card-preview-surface);
 }
 
 .hiddenCardPreviewLabel {
-  color: #ffffff;
+  color: var(--color-text-on-dark-surface);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.04em;

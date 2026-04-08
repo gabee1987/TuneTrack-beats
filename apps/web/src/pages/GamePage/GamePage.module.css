@@ -197,7 +197,7 @@
   border: 0;
   border-radius: 14px;
   padding: 10px 14px;
-  color: #ffffff;
+  color: var(--color-text-on-accent);
   cursor: pointer;
 }
 
@@ -211,7 +211,7 @@
 
 .error {
   margin-top: 24px;
-  color: #ff8fb3;
+  color: var(--color-game-error-text);
 }
 
 .timelinePanel {
@@ -292,9 +292,7 @@
   border-radius: 999px;
   background: var(--color-chip);
   outline: 1px solid var(--color-border-subtle);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 10px 18px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-game-drop-slot);
   overflow: hidden;
 }
 
@@ -317,9 +315,7 @@
 
 .timelineViewCompactButtonActive {
   background: var(--color-surface);
-  box-shadow:
-    0 8px 18px rgba(0, 0, 0, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-game-drop-slot-hover);
   transform: translateY(-1px);
 }
 
@@ -381,8 +377,8 @@
   mask-image: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(0, 0, 0, 1) 6%,
-    rgba(0, 0, 0, 1) 94%,
+    var(--color-mask-solid) 6%,
+    var(--color-mask-solid) 94%,
     transparent 100%
   );
 }
@@ -422,7 +418,7 @@
   padding: 16px 14px;
   border-radius: 24px;
   background: var(--card-gradient);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: var(--shadow-game-card-base);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -432,25 +428,23 @@
 
 .timelineCardCurrentPick,
 .previewCardCurrentPick {
-  outline: 2px solid rgba(124, 108, 255, 0.64);
+  outline: 2px solid var(--color-game-card-current-outline);
 }
 
 .timelineCardChallenge,
 .previewCardChallenge {
-  outline: 2px solid rgba(82, 227, 173, 0.72);
+  outline: 2px solid var(--color-game-card-challenge-outline);
 }
 
 .timelineCardChallengeFailure,
 .previewCardChallengeFailure {
-  outline: 2px solid rgba(255, 94, 129, 0.72);
+  outline: 2px solid var(--color-game-card-failure-outline);
 }
 
 .timelineCardResolvedCorrect,
 .previewCardResolvedCorrect {
-  outline: 2px solid rgba(104, 214, 156, 0.92);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
-    0 0 0 3px rgba(104, 214, 156, 0.12);
+  outline: 2px solid var(--color-game-card-correct-outline);
+  box-shadow: var(--shadow-game-card-correct);
 }
 
 .previewCard {
@@ -488,10 +482,7 @@
   transform: translateY(-6px);
   /* tweak later: live dragged card transparency */
   opacity: 0.78;
-  box-shadow:
-    0 26px 60px rgba(0, 0, 0, 0.34),
-    0 10px 24px rgba(0, 0, 0, 0.18),
-    0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+  box-shadow: var(--shadow-game-preview-card);
 }
 
 .previewCardOverlay::before {
@@ -499,26 +490,22 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: rgba(24, 28, 40, 0.32);
+  background: var(--color-game-preview-scrim);
   backdrop-filter: blur(24px) saturate(1.08);
   -webkit-backdrop-filter: blur(24px) saturate(1.08);
   z-index: 0;
 }
 
 .previewCardArtwork {
-  background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%),
-    rgba(26, 30, 44, 0.88);
+  background: var(--gradient-game-preview-surface);
 }
 
 .previewCardGradient {
-  background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%),
-    rgba(26, 30, 44, 0.88);
+  background: var(--gradient-game-preview-surface);
 }
 
 .previewCardDraggable {
-  outline: 2px solid rgba(129, 112, 255, 1);
+  outline: 2px solid var(--color-game-card-draggable-outline);
 }
 
 .previewCardRevealed {
@@ -527,12 +514,12 @@
 
 .previewCardCorrection,
 .previewCardCorrectionSurface {
-  outline: 2px solid rgba(255, 168, 76, 0.78);
+  outline: 2px solid var(--color-game-card-correction-outline);
 }
 
 .previewCardCorrectionSurface {
   background:
-    linear-gradient(135deg, rgba(255, 129, 129, 0.18) 0%, rgba(255, 196, 76, 0.14) 100%),
+    var(--gradient-game-preview-correction-surface),
     var(--card-gradient);
 }
 
@@ -553,8 +540,8 @@
   margin: 8px auto 0;
   padding: 6px 10px;
   border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.16);
-  color: #ffffff;
+  background: var(--color-game-meta-pill-background);
+  color: var(--color-game-meta-pill-text);
   font-size: 12px;
   font-weight: 700;
 }
@@ -562,7 +549,7 @@
 .previewCardArtist,
 .timelineArtist {
   margin: 0;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--color-game-artist-text);
   font-size: 12px;
   font-weight: 600;
   line-height: 1.3;
@@ -570,29 +557,6 @@
 
 .timelineArtist {
   color: var(--color-text-secondary);
-}
-
-[data-theme="light"] .previewCardArtist,
-[data-theme="light"] .previewCardTitle,
-[data-theme="light"] .previewCardYear,
-[data-theme="light"] .previewCardAlbum,
-[data-theme="light"] .previewCardMetaPill {
-  color: var(--color-text-primary);
-}
-
-[data-theme="light"] .previewCardArtwork,
-[data-theme="light"] .previewCardGradient {
-  background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.08) 100%),
-    rgba(244, 247, 253, 0.88);
-}
-
-[data-theme="light"] .previewCardOverlay::before {
-  background: rgba(244, 247, 253, 0.34);
-}
-
-[data-theme="light"] .previewCardMetaPill {
-  background: rgba(28, 36, 54, 0.08);
 }
 
 .previewCardCenter,
@@ -613,7 +577,7 @@
 
 .previewCardAlbum {
   margin: 0;
-  color: rgba(255, 255, 255, 0.72);
+  color: var(--color-game-album-text);
   font-size: 11px;
   line-height: 1.3;
 }
@@ -627,7 +591,7 @@
 }
 
 .previewCardTitle {
-  color: #ffffff;
+  color: var(--color-game-meta-pill-text);
 }
 
 .timelineTitle {
@@ -644,7 +608,7 @@
 }
 
 .previewCardYear {
-  color: #ffffff;
+  color: var(--color-game-meta-pill-text);
 }
 
 .floatingActionDock {
@@ -663,18 +627,18 @@
   border: 0;
   border-radius: 999px;
   padding: 12px 18px;
-  color: #ffffff;
+  color: var(--color-text-on-accent);
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+  box-shadow: var(--shadow-floating-action);
 }
 
 .floatingPrimaryButton {
-  background: linear-gradient(135deg, #7c6cff 0%, #ff4f9a 100%);
+  background: var(--gradient-floating-primary-action);
 }
 
 .floatingSecondaryButton {
-  background: rgba(31, 31, 49, 0.94);
+  background: var(--color-floating-secondary-action-background);
   outline: 1px solid var(--color-border-subtle);
 }
 

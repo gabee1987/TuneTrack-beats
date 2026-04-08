@@ -1,6 +1,9 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
+import { darkThemeDefinition } from "./src/features/theme/darkThemeTokens";
+
+const defaultThemeColor = darkThemeDefinition.cssVariables["color-bg-app"] as string;
 
 export default defineConfig({
   plugins: [
@@ -9,7 +12,7 @@ export default defineConfig({
       injectRegister: "auto",
       registerType: "autoUpdate",
       manifest: {
-        background_color: "#071018",
+        background_color: defaultThemeColor,
         description:
           "TuneTrack is a mobile-friendly party game room for building music timelines together.",
         display: "standalone",
@@ -32,7 +35,7 @@ export default defineConfig({
         orientation: "any",
         short_name: "TuneTrack",
         start_url: "/",
-        theme_color: "#071018",
+        theme_color: defaultThemeColor,
       },
     }),
   ],
