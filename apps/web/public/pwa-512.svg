@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="120" fill="#071018" />
+  <rect x="56" y="56" width="400" height="400" rx="108" fill="url(#bg)" />
+  <path
+    d="M146.667 344.667V168.667c0-11.046 8.954-20 20-20h94.992c5.515 0 10.8 2.275 14.58 6.3l89.008 94.666A20 20 0 0 1 370.667 264v80.667c0 11.046-8.954 20-20 20h-184c-11.046 0-20-8.954-20-20Z"
+    fill="rgba(255,255,255,0.1)"
+    stroke="rgba(255,255,255,0.22)"
+    stroke-width="10"
+  />
+  <path
+    d="M221.333 204c0-19.145 15.522-34.667 34.667-34.667 19.144 0 34.666 15.522 34.666 34.667v49.333C290.666 272.478 275.144 288 256 288c-19.145 0-34.667-15.522-34.667-34.667V204Z"
+    fill="url(#accent)"
+  />
+  <path
+    d="M181.333 304.667C200.667 326.889 225.556 338 256 338c30.444 0 55.333-11.111 74.667-33.333"
+    stroke="#FFF6F2"
+    stroke-width="20"
+    stroke-linecap="round"
+  />
+  <circle cx="338.667" cy="169.333" r="30" fill="#FF8A5B" />
+  <defs>
+    <linearGradient id="bg" x1="66.526" y1="66.526" x2="470.316" y2="470.316" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111C29" />
+      <stop offset="1" stop-color="#1E1524" />
+    </linearGradient>
+    <linearGradient id="accent" x1="229.333" y1="174.667" x2="325.333" y2="310.667" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF6A3D" />
+      <stop offset="1" stop-color="#FF4F9A" />
+    </linearGradient>
+  </defs>
+</svg>

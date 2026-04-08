@@ -5,12 +5,15 @@ export interface ThemeTokens {
   "color-bg-app-accent": string;
   "color-surface": string;
   "color-surface-elevated": string;
+  "color-surface-soft": string;
+  "color-surface-strong": string;
   "color-card": string;
   "color-chip": string;
   "color-overlay": string;
   "color-border-subtle": string;
   "color-text-primary": string;
   "color-text-secondary": string;
+  "color-text-muted": string;
   "color-accent-primary": string;
   "color-accent-danger": string;
   "color-accent-success": string;
@@ -23,32 +26,38 @@ export const themeRegistry: Record<ThemeId, ThemeTokens> = {
     "color-bg-app-accent": "#1a1d28",
     "color-surface": "rgba(18, 20, 27, 0.92)",
     "color-surface-elevated": "rgba(255, 255, 255, 0.06)",
+    "color-surface-soft": "rgba(255, 255, 255, 0.05)",
+    "color-surface-strong": "rgba(7, 10, 18, 0.72)",
     "color-card": "rgba(255, 255, 255, 0.07)",
     "color-chip": "rgba(255, 255, 255, 0.07)",
     "color-overlay": "rgba(7, 8, 12, 0.56)",
     "color-border-subtle": "rgba(255, 255, 255, 0.12)",
     "color-text-primary": "#f4f5f8",
     "color-text-secondary": "rgba(244, 245, 248, 0.68)",
+    "color-text-muted": "rgba(244, 245, 248, 0.52)",
     "color-accent-primary": "linear-gradient(135deg, #7d6bff 0%, #ff6fa9 100%)",
     "color-accent-danger": "rgba(255, 94, 129, 0.18)",
     "color-accent-success": "rgba(82, 227, 173, 0.18)",
     "shadow-surface": "0 24px 80px rgba(0, 0, 0, 0.4)",
   },
   light: {
-    "color-bg-app": "#edf0f5",
-    "color-bg-app-accent": "#f4eef8",
-    "color-surface": "rgba(250, 251, 255, 0.86)",
-    "color-surface-elevated": "rgba(90, 103, 140, 0.07)",
-    "color-card": "rgba(255, 255, 255, 0.82)",
-    "color-chip": "rgba(90, 103, 140, 0.08)",
-    "color-overlay": "rgba(234, 239, 246, 0.58)",
-    "color-border-subtle": "rgba(61, 73, 104, 0.12)",
-    "color-text-primary": "#1c2436",
-    "color-text-secondary": "rgba(28, 36, 54, 0.62)",
-    "color-accent-primary": "linear-gradient(135deg, #6a77ef 0%, #ef7ca6 100%)",
+    "color-bg-app": "#f5f2ee",
+    "color-bg-app-accent": "#eef5fb",
+    "color-surface": "rgba(255, 252, 248, 0.88)",
+    "color-surface-elevated": "rgba(136, 112, 95, 0.08)",
+    "color-surface-soft": "rgba(126, 111, 98, 0.08)",
+    "color-surface-strong": "rgba(255, 249, 242, 0.92)",
+    "color-card": "rgba(255, 251, 247, 0.94)",
+    "color-chip": "rgba(122, 110, 128, 0.10)",
+    "color-overlay": "rgba(244, 238, 232, 0.72)",
+    "color-border-subtle": "rgba(113, 92, 102, 0.14)",
+    "color-text-primary": "#1f2430",
+    "color-text-secondary": "rgba(31, 36, 48, 0.68)",
+    "color-text-muted": "rgba(31, 36, 48, 0.5)",
+    "color-accent-primary": "linear-gradient(135deg, #ff8b5d 0%, #f06fb0 52%, #7b8cff 100%)",
     "color-accent-danger": "rgba(255, 94, 129, 0.14)",
     "color-accent-success": "rgba(82, 227, 173, 0.16)",
-    "shadow-surface": "0 24px 80px rgba(46, 59, 95, 0.12)",
+    "shadow-surface": "0 24px 70px rgba(90, 79, 74, 0.12)",
   },
 };
 

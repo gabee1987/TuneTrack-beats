@@ -1,485 +1,85 @@
-import {
-  DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
-  DEFAULT_STARTING_TIMELINE_CARD_COUNT,
-  DEFAULT_STARTING_TT_TOKEN_COUNT,
-  ClientToServerEvent,
-  MAX_STARTING_TIMELINE_CARD_COUNT,
-  MAX_CHALLENGE_WINDOW_DURATION_SECONDS,
-  MAX_STARTING_TT_TOKEN_COUNT,
-  DEFAULT_TARGET_TIMELINE_CARD_COUNT,
-  MIN_CHALLENGE_WINDOW_DURATION_SECONDS,
-  MIN_STARTING_TIMELINE_CARD_COUNT,
-  MIN_STARTING_TT_TOKEN_COUNT,
-  MAX_TARGET_TIMELINE_CARD_COUNT,
-  MIN_TARGET_TIMELINE_CARD_COUNT,
-  type PlayerIdentityPayload,
-  type PublicPlayerState,
-  type RoomClosedPayload,
-  type PublicRoomSettings,
-  ServerToClientEvent,
-  type PublicRoomState,
-  type RevealConfirmMode,
-  type ServerErrorPayload,
-  type StateUpdatePayload,
-} from "@tunetrack/shared";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { AppShellMenu } from "../../features/app-shell/AppShellMenu";
-import {
-  getOrCreatePlayerSessionId,
-  getRememberedPlayerDisplayName,
-  rememberPlayerDisplayName,
-} from "../../services/session/playerSession";
-import { socketClient } from "../../services/socket/socketClient";
+import { LobbyHeader } from "./components/LobbyHeader";
+import { LobbyHostSettingsPanel } from "./components/LobbyHostSettingsPanel";
+import { LobbyPlayerList } from "./components/LobbyPlayerList";
+import { LobbyRoomActions } from "./components/LobbyRoomActions";
+import { LobbySummaryCard } from "./components/LobbySummaryCard";
+import { useLobbyPageController } from "./hooks/useLobbyPageController";
 import styles from "./LobbyPage.module.css";
 
-const DEFAULT_ENABLED_STARTING_TT_TOKEN_COUNT = 1;
-
 export function LobbyPage() {
-  const navigate = useNavigate();
-  const { roomId } = useParams<{ roomId: string }>();
-  const [searchParams] = useSearchParams();
-  const displayName = useMemo(
-    () => searchParams.get("playerName")?.trim() ?? getRememberedPlayerDisplayName(),
-    [searchParams],
-  );
-  const playerSessionId = useMemo(() => getOrCreatePlayerSessionId(), []);
+  const {
+    connectionStatus,
+    currentPlayerId,
+    currentSettings,
+    displayName,
+    errorMessage,
+    handleCloseRoom,
+    handlePlayerStartingCardCountChange,
+    handleRoomSettingsChange,
+    handleStartGame,
+    isHost,
+    roomId,
+    roomState,
+    toggleTtMode,
+  } = useLobbyPageController();
 
-  const [connectionStatus, setConnectionStatus] = useState("Connecting");
-  const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
-  const currentPlayerIdRef = useRef<string | null>(null);
-  const [roomState, setRoomState] = useState<PublicRoomState | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const isHost = roomState?.hostId === currentPlayerId;
-
-  useEffect(() => {
-    if (!roomId || !displayName) {
-      navigate("/");
-      return;
-    }
-
-    rememberPlayerDisplayName(displayName);
-
-    function handleConnect() {
-      setConnectionStatus("Connected");
-      setErrorMessage(null);
-      socketClient.emit(ClientToServerEvent.JoinRoom, {
-        roomId,
-        displayName,
-        sessionId: playerSessionId,
-      });
-    }
-
-    function handleDisconnect() {
-      setConnectionStatus("Disconnected");
-    }
-
-    function handleStateUpdate(payload: StateUpdatePayload) {
-      setRoomState(payload.roomState);
-
-      if (payload.roomState.status !== "lobby") {
-        navigate(`/game/${encodeURIComponent(payload.roomState.roomId)}`, {
-          state: {
-            currentPlayerId: currentPlayerIdRef.current,
-            roomState: payload.roomState,
-          },
-        });
-      }
-    }
-
-    function handlePlayerIdentity(payload: PlayerIdentityPayload) {
-      currentPlayerIdRef.current = payload.playerId;
-      setCurrentPlayerId(payload.playerId);
-    }
-
-    function handleError(payload: ServerErrorPayload) {
-      setErrorMessage(payload.message);
-    }
-
-    function handleRoomClosed(_: RoomClosedPayload) {
-      navigate("/");
-    }
-
-    socketClient.on("connect", handleConnect);
-    socketClient.on("disconnect", handleDisconnect);
-    socketClient.on(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
-    socketClient.on(ServerToClientEvent.RoomClosed, handleRoomClosed);
-    socketClient.on(ServerToClientEvent.StateUpdate, handleStateUpdate);
-    socketClient.on(ServerToClientEvent.Error, handleError);
-
-    if (!socketClient.connected) {
-      socketClient.connect();
-    } else {
-      handleConnect();
-    }
-
-    return () => {
-      socketClient.off("connect", handleConnect);
-      socketClient.off("disconnect", handleDisconnect);
-      socketClient.off(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
-      socketClient.off(ServerToClientEvent.RoomClosed, handleRoomClosed);
-      socketClient.off(ServerToClientEvent.StateUpdate, handleStateUpdate);
-      socketClient.off(ServerToClientEvent.Error, handleError);
-    };
-  }, [displayName, navigate, playerSessionId, roomId]);
-
-  function handleRoomSettingsChange(nextSettings: PublicRoomSettings) {
-    if (!roomState || !isHost) {
-      return;
-    }
-
-    socketClient.emit(ClientToServerEvent.UpdateRoomSettings, {
-      roomId: roomState.roomId,
-      ...nextSettings,
-    });
-  }
-
-  const currentSettings = roomState?.settings ?? {
-    targetTimelineCardCount: DEFAULT_TARGET_TIMELINE_CARD_COUNT,
-    defaultStartingTimelineCardCount: DEFAULT_STARTING_TIMELINE_CARD_COUNT,
-    startingTtTokenCount: DEFAULT_STARTING_TT_TOKEN_COUNT,
-    revealConfirmMode: "host_only" as RevealConfirmMode,
-    ttModeEnabled: false,
-    challengeWindowDurationSeconds: DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
-  };
-
-  function handlePlayerStartingCardCountChange(
-    player: PublicPlayerState,
-    nextValue: number,
-  ) {
-    if (!roomState || !isHost) {
-      return;
-    }
-
-    socketClient.emit(ClientToServerEvent.UpdatePlayerSettings, {
-      roomId: roomState.roomId,
-      playerId: player.id,
-      startingTimelineCardCount: nextValue,
-    });
-  }
-
-  function handleStartGame() {
-    if (!roomState || !isHost) {
-      return;
-    }
-
-    socketClient.emit(ClientToServerEvent.StartGame, {
-      roomId: roomState.roomId,
-    });
-  }
-
-  function handleCloseRoom() {
-    if (!roomState || !isHost) {
-      return;
-    }
-
-    socketClient.emit(ClientToServerEvent.CloseRoom, {
-      roomId: roomState.roomId,
-    });
-  }
+  const resolvedRoomId = roomState?.roomId ?? roomId ?? "lobby";
+  const players = roomState?.players ?? [];
 
   return (
     <main className={styles.screen}>
       <section className={styles.panel}>
-        <div className={styles.topRow}>
-          <div>
-            <h1 className={styles.title}>Lobby</h1>
-            <p className={styles.meta}>Room: {roomState?.roomId ?? roomId}</p>
-          </div>
-          <div className={styles.topRowActions}>
-            <div className={styles.status}>{connectionStatus}</div>
-            <AppShellMenu
-              subtitle="Grouped room, view, and developer controls live here."
-              tabs={[
-                {
-                  id: "players",
-                  label: "Players",
-                  content: (
-                    <p className={styles.menuPlaceholder}>
-                      The final player management panel will live here. The
-                      current player list remains below during this transition.
-                    </p>
-                  ),
-                },
-                {
-                  id: "view",
-                  label: "View",
-                  content: (
-                    <p className={styles.menuPlaceholder}>
-                      Local visibility toggles are now centralized in one place.
-                    </p>
-                  ),
-                },
-                {
-                  id: "settings",
-                  label: "Settings",
-                  content: (
-                    <p className={styles.menuPlaceholder}>
-                      Theme and hidden-card preferences are ready for testing.
-                    </p>
-                  ),
-                },
-                ...(isHost
-                  ? [
-                      {
-                        id: "host" as const,
-                        label: "Host",
-                        content: (
-                          <p className={styles.menuPlaceholder}>
-                            Host room controls will move here in later batches.
-                          </p>
-                        ),
-                      },
-                      {
-                        id: "dev" as const,
-                        label: "Dev",
-                        content: (
-                          <p className={styles.menuPlaceholder}>
-                            Developer-only host tools now share the same menu model.
-                          </p>
-                        ),
-                      },
-                    ]
-                  : []),
-              ]}
-              title="Lobby menu"
-            />
-          </div>
-        </div>
+        <LobbyHeader
+          connectionStatus={connectionStatus}
+          isHost={isHost}
+          roomId={resolvedRoomId}
+        />
 
         {errorMessage ? <p className={styles.error}>{errorMessage}</p> : null}
 
-        {isHost ? (
-          <section className={styles.settingsCard}>
-            <div className={styles.settingsHeader}>
-              <div>
-                <h2 className={styles.settingsTitle}>Game settings</h2>
-                <p className={styles.settingsDescription}>Host-only room setup</p>
-              </div>
-            </div>
+        <div className={styles.layoutGrid}>
+          <div className={styles.primaryColumn}>
+            <LobbySummaryCard
+              displayName={displayName}
+              isHost={isHost}
+              playerCount={players.length}
+              roomId={resolvedRoomId}
+            />
 
-            <label className={styles.settingField}>
-              <div className={styles.settingLabelRow}>
-                <span>Cards needed to win</span>
-                <strong className={styles.settingValue}>
-                  {currentSettings.targetTimelineCardCount}
-                </strong>
-              </div>
-              <input
-                className={styles.rangeInput}
-                max={MAX_TARGET_TIMELINE_CARD_COUNT}
-                min={MIN_TARGET_TIMELINE_CARD_COUNT}
-                onChange={(event) =>
-                  handleRoomSettingsChange({
-                    ...currentSettings,
-                    targetTimelineCardCount: Number(event.target.value),
-                  })
-                }
-                type="range"
-                value={currentSettings.targetTimelineCardCount}
+            {isHost ? (
+              <LobbyHostSettingsPanel
+                currentSettings={currentSettings}
+                onRoomSettingsChange={handleRoomSettingsChange}
+                onStartGame={handleStartGame}
+                onToggleTtMode={toggleTtMode}
               />
-            </label>
-
-            <label className={styles.settingField}>
-              <div className={styles.settingLabelRow}>
-                <span>Default starting cards for new players</span>
-                <strong className={styles.settingValue}>
-                  {currentSettings.defaultStartingTimelineCardCount}
-                </strong>
-              </div>
-              <input
-                className={styles.rangeInput}
-                max={MAX_STARTING_TIMELINE_CARD_COUNT}
-                min={MIN_STARTING_TIMELINE_CARD_COUNT}
-                onChange={(event) =>
-                  handleRoomSettingsChange({
-                    ...currentSettings,
-                    defaultStartingTimelineCardCount: Number(event.target.value),
-                  })
-                }
-                type="range"
-                value={currentSettings.defaultStartingTimelineCardCount}
-              />
-            </label>
-
-            <label className={styles.settingField}>
-              <div className={styles.settingLabelRow}>
-                <span>Who can confirm reveal</span>
-              </div>
-              <select
-                className={styles.selectInput}
-                onChange={(event) =>
-                  handleRoomSettingsChange({
-                    ...currentSettings,
-                    revealConfirmMode: event.target
-                      .value as RevealConfirmMode,
-                  })
-                }
-                value={currentSettings.revealConfirmMode}
-              >
-                <option value="host_only">Host only</option>
-                <option value="host_or_active_player">
-                  Host or active player
-                </option>
-              </select>
-            </label>
-
-            <label className={styles.checkboxField}>
-              <input
-                checked={currentSettings.ttModeEnabled}
-                onChange={(event) =>
-                  handleRoomSettingsChange(
-                    event.target.checked
-                      ? {
-                          ...currentSettings,
-                          ttModeEnabled: true,
-                          startingTtTokenCount:
-                            currentSettings.ttModeEnabled
-                              ? currentSettings.startingTtTokenCount
-                              : DEFAULT_ENABLED_STARTING_TT_TOKEN_COUNT,
-                        }
-                      : {
-                          ...currentSettings,
-                          ttModeEnabled: false,
-                        },
-                  )
-                }
-                type="checkbox"
-              />
-              <span>Enable TT mode</span>
-            </label>
-
-            {currentSettings.ttModeEnabled ? (
-              <>
-                <label className={styles.settingField}>
-                  <div className={styles.settingLabelRow}>
-                    <span>Starting TT for every player</span>
-                    <strong className={styles.settingValue}>
-                      {currentSettings.startingTtTokenCount}
-                    </strong>
+            ) : (
+              <section className={styles.waitingCard}>
+                <div className={styles.sectionHeading}>
+                  <div>
+                    <h2 className={styles.sectionTitle}>Waiting for host</h2>
+                    <p className={styles.sectionDescription}>
+                      The host is setting the room up. You will move into the game
+                      automatically when it starts.
+                    </p>
                   </div>
-                  <input
-                    className={styles.rangeInput}
-                    max={MAX_STARTING_TT_TOKEN_COUNT}
-                    min={MIN_STARTING_TT_TOKEN_COUNT}
-                    onChange={(event) =>
-                      handleRoomSettingsChange({
-                        ...currentSettings,
-                        startingTtTokenCount: Number(event.target.value),
-                      })
-                    }
-                    type="range"
-                    value={currentSettings.startingTtTokenCount}
-                  />
-                </label>
-
-                <label className={styles.settingField}>
-                  <div className={styles.settingLabelRow}>
-                    <span>Challenge window</span>
-                    <strong className={styles.settingValue}>
-                      {currentSettings.challengeWindowDurationSeconds === null
-                        ? "Host manual"
-                        : `${currentSettings.challengeWindowDurationSeconds}s`}
-                    </strong>
-                  </div>
-                  <select
-                    className={styles.selectInput}
-                    onChange={(event) =>
-                      handleRoomSettingsChange({
-                        ...currentSettings,
-                        challengeWindowDurationSeconds:
-                          event.target.value === "manual"
-                            ? null
-                            : Number(event.target.value),
-                      })
-                    }
-                    value={
-                      currentSettings.challengeWindowDurationSeconds === null
-                        ? "manual"
-                        : currentSettings.challengeWindowDurationSeconds.toString()
-                    }
-                  >
-                    <option value="manual">Host manual</option>
-                    <option value={DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS.toString()}>
-                      {DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS} seconds
-                    </option>
-                    <option value={MIN_CHALLENGE_WINDOW_DURATION_SECONDS.toString()}>
-                      {MIN_CHALLENGE_WINDOW_DURATION_SECONDS} seconds
-                    </option>
-                    <option value={MAX_CHALLENGE_WINDOW_DURATION_SECONDS.toString()}>
-                      {MAX_CHALLENGE_WINDOW_DURATION_SECONDS} seconds
-                    </option>
-                  </select>
-                </label>
-              </>
-            ) : null}
-
-            <p className={styles.settingsHint}>
-              You are the host, so you can change this setting.
-            </p>
-
-            <button
-              className={styles.startGameButton}
-              onClick={handleStartGame}
-              type="button"
-            >
-              Start Game
-            </button>
-
-            <button
-              className={styles.cancelRoomButton}
-              onClick={handleCloseRoom}
-              type="button"
-            >
-              Cancel Room
-            </button>
-
-          </section>
-        ) : null}
-
-        <ul className={styles.playerList}>
-          {(roomState?.players ?? []).map((player) => (
-            <li className={styles.playerItem} key={player.id}>
-              <div className={styles.playerInfoRow}>
-                <span>{player.displayName}</span>
-                <div className={styles.playerBadges}>
-                  <span className={styles.startingCardsBadge}>
-                    {player.startingTimelineCardCount} starting cards
-                  </span>
-                  {currentSettings.ttModeEnabled ? (
-                    <span>{player.ttTokenCount} TT</span>
-                  ) : null}
-                  {player.isHost ? <span>Host</span> : null}
                 </div>
-              </div>
+              </section>
+            )}
+          </div>
 
-              {isHost ? (
-                <label className={styles.playerSettingField}>
-                  <div className={styles.settingLabelRow}>
-                    <span>Starting cards</span>
-                    <strong className={styles.settingValue}>
-                      {player.startingTimelineCardCount}
-                    </strong>
-                  </div>
-                  <input
-                    className={styles.rangeInput}
-                    max={MAX_STARTING_TIMELINE_CARD_COUNT}
-                    min={MIN_STARTING_TIMELINE_CARD_COUNT}
-                    onChange={(event) =>
-                      handlePlayerStartingCardCountChange(
-                        player,
-                        Number(event.target.value),
-                      )
-                    }
-                    type="range"
-                    value={player.startingTimelineCardCount}
-                  />
-                </label>
-              ) : null}
-            </li>
-          ))}
-        </ul>
+          <aside className={styles.secondaryColumn}>
+            <LobbyPlayerList
+              currentPlayerId={currentPlayerId}
+              isHost={isHost}
+              onPlayerStartingCardCountChange={handlePlayerStartingCardCountChange}
+              players={players}
+              roomSettings={currentSettings}
+            />
+
+            {isHost ? <LobbyRoomActions onCloseRoom={handleCloseRoom} /> : null}
+          </aside>
+        </div>
       </section>
     </main>
   );

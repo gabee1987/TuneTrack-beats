@@ -212,15 +212,23 @@
 @media (max-width: 720px) {
   .menuOverlay {
     justify-content: stretch;
-    align-items: flex-end;
+    align-items: stretch;
   }
 
   .menuSheet {
     width: 100%;
-    height: min(82vh, 720px);
+    height: 100%;
+    padding: calc(var(--safe-area-top) + 16px) calc(var(--safe-area-right) + 16px)
+      calc(var(--safe-area-bottom) + 16px) calc(var(--safe-area-left) + 16px);
     border-left: 0;
-    border-top: 1px solid var(--color-border-subtle);
-    border-top-left-radius: 28px;
-    border-top-right-radius: 28px;
+    border-top: 0;
+    border-radius: 0;
+  }
+
+  .menuTrigger,
+  .menuCloseButton,
+  .tabButton,
+  .segmentedButton {
+    min-height: 48px;
   }
 }

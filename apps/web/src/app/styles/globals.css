@@ -1,15 +1,18 @@
 :root {
-  --color-bg-app: #101116;
-  --color-bg-app-accent: #1a1d28;
-  --color-surface: rgba(12, 12, 22, 0.72);
+  --color-bg-app: #071018;
+  --color-bg-app-accent: #121c2a;
+  --color-surface: rgba(8, 13, 22, 0.78);
   --color-surface-elevated: rgba(255, 255, 255, 0.08);
+  --color-surface-soft: rgba(255, 255, 255, 0.05);
+  --color-surface-strong: rgba(7, 10, 18, 0.72);
   --color-card: rgba(255, 255, 255, 0.08);
   --color-chip: rgba(255, 255, 255, 0.08);
-  --color-overlay: rgba(9, 9, 17, 0.72);
+  --color-overlay: rgba(6, 9, 16, 0.78);
   --color-border-subtle: rgba(255, 255, 255, 0.12);
-  --color-text-primary: #f7f7fb;
-  --color-text-secondary: rgba(247, 247, 251, 0.72);
-  --color-accent-primary: linear-gradient(135deg, #7c6cff 0%, #ff4f9a 100%);
+  --color-text-primary: #f5f7fb;
+  --color-text-secondary: rgba(245, 247, 251, 0.78);
+  --color-text-muted: rgba(245, 247, 251, 0.58);
+  --color-accent-primary: linear-gradient(135deg, #ff6a3d 0%, #ff4f9a 100%);
   --color-accent-danger: rgba(255, 94, 129, 0.18);
   --color-accent-success: rgba(82, 227, 173, 0.18);
   --shadow-surface: 0 24px 80px rgba(0, 0, 0, 0.4);
@@ -18,9 +21,14 @@
   --radius-pill: 999px;
   --radius-input: 18px;
   --radius-button: 18px;
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --app-height: 100vh;
   color: var(--color-text-primary);
   background: linear-gradient(
-    160deg,
+    155deg,
     var(--color-bg-app) 0%,
     var(--color-bg-app-accent) 100%
   );
@@ -31,6 +39,7 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color-scheme: dark;
 }
 
 * {
@@ -42,16 +51,22 @@ body,
 #root {
   min-width: 320px;
   min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
 }
 
 body {
   color: var(--color-text-primary);
   background: linear-gradient(
-    160deg,
+    155deg,
     var(--color-bg-app) 0%,
     var(--color-bg-app-accent) 100%
   );
+  background-attachment: fixed;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
 }
 
 button,
@@ -63,4 +78,36 @@ button,
 select,
 textarea {
   font: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid rgba(255, 171, 120, 0.95);
+  outline-offset: 2px;
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --app-height: 100dvh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
