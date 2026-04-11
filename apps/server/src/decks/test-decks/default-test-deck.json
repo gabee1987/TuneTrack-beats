@@ -1,6 +1,46 @@
 [
   {
     "id": "track-001",
+    "releaseYear": 1967,
+    "title": "Respect",
+    "artist": "Aretha Franklin",
+    "albumTitle": "I Never Loved a Man the Way I Love You",
+    "genre": "Soul"
+  },
+  {
+    "id": "track-002",
+    "releaseYear": 1969,
+    "title": "Fortunate Son",
+    "artist": "Creedence Clearwater Revival",
+    "albumTitle": "Willy and the Poor Boys",
+    "genre": "Rock"
+  },
+  {
+    "id": "track-003",
+    "releaseYear": 1971,
+    "title": "Imagine",
+    "artist": "John Lennon",
+    "albumTitle": "Imagine",
+    "genre": "Singer-Songwriter"
+  },
+  {
+    "id": "track-004",
+    "releaseYear": 1972,
+    "title": "Superstition",
+    "artist": "Stevie Wonder",
+    "albumTitle": "Talking Book",
+    "genre": "Funk"
+  },
+  {
+    "id": "track-005",
+    "releaseYear": 1973,
+    "title": "Jolene",
+    "artist": "Dolly Parton",
+    "albumTitle": "Jolene",
+    "genre": "Country"
+  },
+  {
+    "id": "track-006",
     "releaseYear": 1975,
     "title": "Bohemian Rhapsody",
     "artist": "Queen",
@@ -8,7 +48,47 @@
     "genre": "Rock"
   },
   {
-    "id": "track-002",
+    "id": "track-007",
+    "releaseYear": 1976,
+    "title": "Hotel California",
+    "artist": "Eagles",
+    "albumTitle": "Hotel California",
+    "genre": "Rock"
+  },
+  {
+    "id": "track-008",
+    "releaseYear": 1977,
+    "title": "Three Little Birds",
+    "artist": "Bob Marley and the Wailers",
+    "albumTitle": "Exodus",
+    "genre": "Reggae"
+  },
+  {
+    "id": "track-009",
+    "releaseYear": 1978,
+    "title": "Le Freak",
+    "artist": "Chic",
+    "albumTitle": "C'est Chic",
+    "genre": "Disco"
+  },
+  {
+    "id": "track-010",
+    "releaseYear": 1979,
+    "title": "London Calling",
+    "artist": "The Clash",
+    "albumTitle": "London Calling",
+    "genre": "Punk"
+  },
+  {
+    "id": "track-011",
+    "releaseYear": 1980,
+    "title": "Once in a Lifetime",
+    "artist": "Talking Heads",
+    "albumTitle": "Remain in Light",
+    "genre": "New Wave"
+  },
+  {
+    "id": "track-012",
     "releaseYear": 1982,
     "title": "Billie Jean",
     "artist": "Michael Jackson",
@@ -16,7 +96,47 @@
     "genre": "Pop"
   },
   {
-    "id": "track-003",
+    "id": "track-013",
+    "releaseYear": 1983,
+    "title": "Sweet Dreams (Are Made of This)",
+    "artist": "Eurythmics",
+    "albumTitle": "Sweet Dreams (Are Made of This)",
+    "genre": "Synth-pop"
+  },
+  {
+    "id": "track-014",
+    "releaseYear": 1985,
+    "title": "Take on Me",
+    "artist": "a-ha",
+    "albumTitle": "Hunting High and Low",
+    "genre": "Synth-pop"
+  },
+  {
+    "id": "track-015",
+    "releaseYear": 1988,
+    "title": "Fast Car",
+    "artist": "Tracy Chapman",
+    "albumTitle": "Tracy Chapman",
+    "genre": "Folk Rock"
+  },
+  {
+    "id": "track-016",
+    "releaseYear": 1989,
+    "title": "Personal Jesus",
+    "artist": "Depeche Mode",
+    "albumTitle": "Violator",
+    "genre": "Synth-rock"
+  },
+  {
+    "id": "track-017",
+    "releaseYear": 1991,
+    "title": "Enter Sandman",
+    "artist": "Metallica",
+    "albumTitle": "Metallica",
+    "genre": "Metal"
+  },
+  {
+    "id": "track-018",
     "releaseYear": 1991,
     "title": "Smells Like Teen Spirit",
     "artist": "Nirvana",
@@ -24,7 +144,23 @@
     "genre": "Grunge"
   },
   {
-    "id": "track-004",
+    "id": "track-019",
+    "releaseYear": 1992,
+    "title": "Creep",
+    "artist": "Radiohead",
+    "albumTitle": "Pablo Honey",
+    "genre": "Alternative Rock"
+  },
+  {
+    "id": "track-020",
+    "releaseYear": 1994,
+    "title": "Juicy",
+    "artist": "The Notorious B.I.G.",
+    "albumTitle": "Ready to Die",
+    "genre": "Hip Hop"
+  },
+  {
+    "id": "track-021",
     "releaseYear": 1995,
     "title": "Wonderwall",
     "artist": "Oasis",
@@ -32,7 +168,31 @@
     "genre": "Britpop"
   },
   {
-    "id": "track-005",
+    "id": "track-022",
+    "releaseYear": 1996,
+    "title": "No Diggity",
+    "artist": "Blackstreet feat. Dr. Dre and Queen Pen",
+    "albumTitle": "Another Level",
+    "genre": "R&B"
+  },
+  {
+    "id": "track-023",
+    "releaseYear": 1997,
+    "title": "Around the World",
+    "artist": "Daft Punk",
+    "albumTitle": "Homework",
+    "genre": "French House"
+  },
+  {
+    "id": "track-024",
+    "releaseYear": 2000,
+    "title": "Ms. Jackson",
+    "artist": "Outkast",
+    "albumTitle": "Stankonia",
+    "genre": "Hip Hop"
+  },
+  {
+    "id": "track-025",
     "releaseYear": 2000,
     "title": "Yellow",
     "artist": "Coldplay",
@@ -40,15 +200,55 @@
     "genre": "Alternative Rock"
   },
   {
-    "id": "track-006",
-    "releaseYear": 2003,
-    "title": "Hey Ya!",
-    "artist": "Outkast",
-    "albumTitle": "Speakerboxxx/The Love Below",
-    "genre": "Hip Hop"
+    "id": "track-026",
+    "releaseYear": 2001,
+    "title": "Last Nite",
+    "artist": "The Strokes",
+    "albumTitle": "Is This It",
+    "genre": "Indie Rock"
   },
   {
-    "id": "track-007",
+    "id": "track-027",
+    "releaseYear": 2003,
+    "title": "Seven Nation Army",
+    "artist": "The White Stripes",
+    "albumTitle": "Elephant",
+    "genre": "Garage Rock"
+  },
+  {
+    "id": "track-028",
+    "releaseYear": 2003,
+    "title": "Crazy in Love",
+    "artist": "Beyonce feat. Jay-Z",
+    "albumTitle": "Dangerously in Love",
+    "genre": "R&B"
+  },
+  {
+    "id": "track-029",
+    "releaseYear": 2004,
+    "title": "Gasolina",
+    "artist": "Daddy Yankee",
+    "albumTitle": "Barrio Fino",
+    "genre": "Reggaeton"
+  },
+  {
+    "id": "track-030",
+    "releaseYear": 2006,
+    "title": "Rehab",
+    "artist": "Amy Winehouse",
+    "albumTitle": "Back to Black",
+    "genre": "Soul"
+  },
+  {
+    "id": "track-031",
+    "releaseYear": 2007,
+    "title": "Paper Planes",
+    "artist": "M.I.A.",
+    "albumTitle": "Kala",
+    "genre": "Alternative Hip Hop"
+  },
+  {
+    "id": "track-032",
     "releaseYear": 2008,
     "title": "Viva la Vida",
     "artist": "Coldplay",
@@ -56,27 +256,67 @@
     "genre": "Pop Rock"
   },
   {
-    "id": "track-008",
-    "releaseYear": 2011,
-    "title": "Rolling in the Deep",
-    "artist": "Adele",
-    "albumTitle": "21",
-    "genre": "Soul"
+    "id": "track-033",
+    "releaseYear": 2009,
+    "title": "Bad Romance",
+    "artist": "Lady Gaga",
+    "albumTitle": "The Fame Monster",
+    "genre": "Dance-pop"
   },
   {
-    "id": "track-009",
+    "id": "track-034",
+    "releaseYear": 2011,
+    "title": "Somebody That I Used to Know",
+    "artist": "Gotye feat. Kimbra",
+    "albumTitle": "Making Mirrors",
+    "genre": "Indie Pop"
+  },
+  {
+    "id": "track-035",
     "releaseYear": 2013,
     "title": "Get Lucky",
-    "artist": "Daft Punk",
+    "artist": "Daft Punk feat. Pharrell Williams and Nile Rodgers",
     "albumTitle": "Random Access Memories",
     "genre": "Disco"
   },
   {
-    "id": "track-010",
+    "id": "track-036",
+    "releaseYear": 2014,
+    "title": "Uptown Funk",
+    "artist": "Mark Ronson feat. Bruno Mars",
+    "albumTitle": "Uptown Special",
+    "genre": "Funk-pop"
+  },
+  {
+    "id": "track-037",
+    "releaseYear": 2015,
+    "title": "Alright",
+    "artist": "Kendrick Lamar",
+    "albumTitle": "To Pimp a Butterfly",
+    "genre": "Hip Hop"
+  },
+  {
+    "id": "track-038",
+    "releaseYear": 2016,
+    "title": "Formation",
+    "artist": "Beyonce",
+    "albumTitle": "Lemonade",
+    "genre": "Pop"
+  },
+  {
+    "id": "track-039",
     "releaseYear": 2019,
-    "title": "Blinding Lights",
-    "artist": "The Weeknd",
-    "albumTitle": "After Hours",
-    "genre": "Synth-pop"
+    "title": "bad guy",
+    "artist": "Billie Eilish",
+    "albumTitle": "When We All Fall Asleep, Where Do We Go?",
+    "genre": "Electropop"
+  },
+  {
+    "id": "track-040",
+    "releaseYear": 2020,
+    "title": "Levitating",
+    "artist": "Dua Lipa",
+    "albumTitle": "Future Nostalgia",
+    "genre": "Disco-pop"
   }
 ]

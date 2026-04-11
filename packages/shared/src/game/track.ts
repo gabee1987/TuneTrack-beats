@@ -5,6 +5,7 @@ export interface TrackCardPublic {
   title: string;
   artist: string;
   albumTitle: string;
+  releaseYear?: number;
   genre?: string;
   artworkUrl?: string;
 }

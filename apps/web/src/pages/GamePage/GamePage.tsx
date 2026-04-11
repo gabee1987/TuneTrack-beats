@@ -50,6 +50,9 @@ export function GamePage() {
         ) : null}
 
         <TimelinePanel
+          celebrationCard={controller.challengeSuccessCelebrationCard}
+          celebrationKey={controller.challengeSuccessCelebrationKey}
+          celebrationMessage={controller.challengeSuccessMessage}
           cardCount={controller.visibleTimelineCardCount}
           canToggleView={controller.canToggleTimelineView}
           challengeMarkerTone={controller.challengeMarkerTone}
@@ -66,6 +69,7 @@ export function GamePage() {
           selectedSlotIndex={controller.selectedSlotIndex}
           showDevAlbumInfo={controller.isHost && controller.showDevAlbumInfo}
           showDevCardInfo={controller.isHost && controller.showDevCardInfo}
+          showDevYearInfo={controller.isHost && controller.showDevYearInfo}
           showDevGenreInfo={controller.isHost && controller.showDevGenreInfo}
           showCorrectPlacementPreview={controller.showCorrectPlacementPreview}
           showCorrectionPreview={controller.showCorrectionPreview}

@@ -80,6 +80,9 @@ export function useGamePageController({
   const showDevCardInfo = useUiPreferencesStore(
     (state) => state.showDevCardInfo,
   );
+  const showDevYearInfo = useUiPreferencesStore(
+    (state) => state.showDevYearInfo,
+  );
   const showDevAlbumInfo = useUiPreferencesStore(
     (state) => state.showDevAlbumInfo,
   );
@@ -516,6 +519,26 @@ export function useGamePageController({
         ? "success"
         : "failure"
       : "pending";
+  const challengeSuccessCelebrationCard =
+    roomState?.status === "reveal" &&
+    roomState.revealState?.challengerPlayerId === currentPlayerId &&
+    roomState.revealState.challengeWasSuccessful
+      ? roomState.revealState.placedCard
+      : null;
+  const challengeSuccessCelebrationKey =
+    roomState?.status === "reveal" &&
+    roomState.revealState?.challengerPlayerId === currentPlayerId &&
+    roomState.revealState.challengeWasSuccessful
+      ? [
+          roomState.roomId,
+          roomState.turn?.turnNumber ?? "reveal",
+          roomState.revealState.playerId,
+          roomState.revealState.placedCard.id,
+          roomState.revealState.challengerSelectedSlotIndex ?? "challenge",
+        ].join(":")
+      : null;
+  const challengeSuccessMessage =
+    challengeSuccessCelebrationCard ? "Clean Beat!" : null;
   const canToggleTimelineView = showOwnTimeline;
   const isViewingOwnTimeline = canToggleTimelineView && timelineView === "mine";
   const visibleTimelineCards = isViewingOwnTimeline
@@ -547,10 +570,7 @@ export function useGamePageController({
       ? roomState.revealState.awardedSlotIndex
       : null
     : activeTimelineChallengeSlot;
-  const disabledTimelineSlots =
-    !isViewingOwnTimeline && roomState?.status === "challenge" && canSelectChallengeSlot
-      ? [roomState.challengeState?.originalSelectedSlotIndex ?? -1]
-      : [];
+  const disabledTimelineSlots: number[] = [];
   const leadingPlayers =
     roomState?.players
       .slice()
@@ -601,6 +621,9 @@ export function useGamePageController({
     challengeActionTitle,
     challengeCountdownLabel,
     challengeMarkerTone,
+    challengeSuccessCelebrationCard,
+    challengeSuccessCelebrationKey,
+    challengeSuccessMessage,
     currentPlayerId,
     currentPlayerTtCount: currentPlayer?.ttTokenCount ?? 0,
     disabledTimelineSlots,
@@ -627,6 +650,7 @@ export function useGamePageController({
     showCorrectionPreview: Boolean(showCorrectionPreview),
     showDevAlbumInfo,
     showDevCardInfo,
+    showDevYearInfo,
     showDevGenreInfo,
     showHelperLabels,
     showMiniStandings,

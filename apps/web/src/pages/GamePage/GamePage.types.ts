@@ -18,6 +18,9 @@ export interface TimelinePanelProps {
   title: string;
   hint: string;
   showHint: boolean;
+  celebrationCard: TrackCardPublic | TimelineCardPublic | null;
+  celebrationKey: string | null;
+  celebrationMessage: string | null;
   cardCount: number;
   canToggleView?: boolean;
   timelineView?: "active" | "mine";
@@ -34,6 +37,7 @@ export interface TimelinePanelProps {
   disabledSlotIndexes?: number[];
   hiddenCardMode: HiddenCardMode;
   showDevCardInfo: boolean;
+  showDevYearInfo: boolean;
   showDevAlbumInfo: boolean;
   showDevGenreInfo: boolean;
   showCorrectionPreview?: boolean;
@@ -55,6 +59,9 @@ export interface GamePageController {
   challengeMarkerTone: "pending" | "success" | "failure";
   currentPlayerId: string | null;
   currentPlayerTtCount: number;
+  challengeSuccessCelebrationCard: TrackCardPublic | TimelineCardPublic | null;
+  challengeSuccessCelebrationKey: string | null;
+  challengeSuccessMessage: string | null;
   disabledTimelineSlots: number[];
   errorMessage: string | null;
   hiddenCardMode: HiddenCardMode;
@@ -70,6 +77,7 @@ export interface GamePageController {
   showCorrectionPreview: boolean;
   showDevAlbumInfo: boolean;
   showDevCardInfo: boolean;
+  showDevYearInfo: boolean;
   showDevGenreInfo: boolean;
   showHelperLabels: boolean;
   showMiniStandings: boolean;

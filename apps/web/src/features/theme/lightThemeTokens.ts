@@ -75,7 +75,7 @@ export const lightThemeDefinition: ThemeDefinition = {
     "color-game-card-challenge-outline": "rgba(37, 162, 119, 0.64)",
     "color-game-card-failure-outline": "rgba(219, 82, 126, 0.64)",
     "color-game-card-correct-outline": "rgba(50, 177, 129, 0.76)",
-    "color-game-card-draggable-outline": "rgba(123, 140, 255, 0.88)",
+    "color-game-card-draggable-outline": "rgba(0, 175, 123, 0.94)",
     "color-game-card-correction-outline": "rgba(240, 162, 77, 0.78)",
     "color-game-preview-scrim": "rgba(248, 243, 238, 0.42)",
     "gradient-game-preview-surface":
@@ -88,7 +88,7 @@ export const lightThemeDefinition: ThemeDefinition = {
     "color-game-album-text": "rgba(31, 36, 48, 0.72)",
     "gradient-floating-primary-action":
       "linear-gradient(135deg, #7b8cff 0%, #f06fb0 100%)",
-    "color-floating-secondary-action-background": "rgba(255, 252, 248, 0.94)",
+    "color-floating-secondary-action-background": "rgba(0, 175, 123, 0.94)",
 
     // Shadows
     "shadow-surface": "0 24px 70px rgba(90, 79, 74, 0.12)",

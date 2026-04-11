@@ -217,6 +217,7 @@
 .timelinePanel {
   --timeline-card-width: 176px;
   --timeline-card-height: 176px;
+  position: relative;
   min-height: 240px;
   margin-top: 10px;
   padding: 0;
@@ -283,6 +284,34 @@
   font-size: 12px;
 }
 
+.timelineCelebrationLayer {
+  position: absolute;
+  inset: 46px 0 0;
+  z-index: 12;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.timelineCelebrationMessage {
+  padding: 10px 18px;
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04)),
+    color-mix(in srgb, var(--color-accent-success) 76%, transparent);
+  color: var(--color-text-primary);
+  font-size: clamp(16px, 2vw, 22px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(12px) saturate(1.08);
+  -webkit-backdrop-filter: blur(12px) saturate(1.08);
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
 .timelineViewSwitcherCompact {
   justify-self: center;
   display: flex;
@@ -317,6 +346,14 @@
   background: var(--color-surface);
   box-shadow: var(--shadow-game-drop-slot-hover);
   transform: translateY(-1px);
+}
+
+.flyToMineCard {
+  position: fixed;
+  z-index: 1400;
+  pointer-events: none;
+  transform-origin: center center;
+  filter: drop-shadow(0 18px 34px rgba(0, 0, 0, 0.16));
 }
 
 .cardTitle {
@@ -426,9 +463,12 @@
   transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.timelineCardCurrentPick,
-.previewCardCurrentPick {
+.timelineCardCurrentPick {
   outline: 2px solid var(--color-game-card-current-outline);
+}
+
+.previewCardCurrentPick {
+  outline: 2px dashed var(--color-game-card-current-outline);
 }
 
 .timelineCardChallenge,
@@ -497,15 +537,19 @@
 }
 
 .previewCardArtwork {
-  background: var(--gradient-game-preview-surface);
+  background:
+    var(--gradient-game-preview-surface),
+    var(--card-gradient);
 }
 
 .previewCardGradient {
-  background: var(--gradient-game-preview-surface);
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%),
+    var(--card-gradient);
 }
 
 .previewCardDraggable {
-  outline: 2px solid var(--color-game-card-draggable-outline);
+  outline: 2px dashed var(--color-game-card-draggable-outline);
 }
 
 .previewCardRevealed {

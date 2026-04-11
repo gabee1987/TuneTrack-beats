@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "framer-motion";
 import {
   DndContext,
   DragOverlay,
@@ -24,10 +25,12 @@ import {
   forwardRef,
   type CSSProperties,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import type {
   HiddenCardMode,
   ThemeId,
@@ -45,12 +48,16 @@ import {
   animateTimelineLayoutChanges,
   getCardGradient,
 } from "../gamePage.utils";
+import { TimelineCelebration } from "./TimelineCelebration";
 import styles from "../GamePage.module.css";
 
 export function TimelinePanel({
   title,
   hint,
   showHint,
+  celebrationCard,
+  celebrationKey,
+  celebrationMessage,
   cardCount,
   canToggleView = false,
   timelineView = "active",
@@ -67,6 +74,7 @@ export function TimelinePanel({
   disabledSlotIndexes = [],
   hiddenCardMode,
   showDevCardInfo,
+  showDevYearInfo,
   showDevAlbumInfo,
   showDevGenreInfo,
   showCorrectionPreview = false,
@@ -75,8 +83,18 @@ export function TimelinePanel({
 }: TimelinePanelProps) {
   const [isDraggingPreviewCard, setIsDraggingPreviewCard] = useState(false);
   const [hasTimelineOverflow, setHasTimelineOverflow] = useState(false);
+  const [flyAnimationState, setFlyAnimationState] = useState<{
+    card: TrackCardPublic | TimelineCardPublic;
+    sourceRect: DOMRect;
+    targetRect: DOMRect;
+  } | null>(null);
+  const [showCelebrationToast, setShowCelebrationToast] = useState(false);
   const timelineRowRef = useRef<HTMLDivElement | null>(null);
+  const previewCardElementRef = useRef<HTMLElement | null>(null);
+  const previewCardRectRef = useRef<DOMRect | null>(null);
   const lastPreviewReorderAtRef = useRef(0);
+  const lastCelebrationKeyRef = useRef<string | null>(null);
+  const mineButtonRef = useRef<HTMLButtonElement | null>(null);
   const previewItemId = "timeline-preview-card";
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -133,6 +151,67 @@ export function TimelinePanel({
       resizeObserver.disconnect();
     };
   }, [orderedItemIds]);
+
+  useLayoutEffect(() => {
+    if (!previewCardElementRef.current) {
+      return;
+    }
+
+    previewCardRectRef.current =
+      previewCardElementRef.current.getBoundingClientRect();
+  }, [orderedItemIds, previewCard, previewSlotIndex, timelineView]);
+
+  useEffect(() => {
+    if (!flyAnimationState) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setFlyAnimationState(null);
+    }, 850);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [flyAnimationState]);
+
+  useEffect(() => {
+    if (!showCelebrationToast) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setShowCelebrationToast(false);
+    }, 1800);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [showCelebrationToast]);
+
+  useEffect(() => {
+    if (!celebrationKey || lastCelebrationKeyRef.current === celebrationKey) {
+      return;
+    }
+
+    lastCelebrationKeyRef.current = celebrationKey;
+    setShowCelebrationToast(true);
+
+    if (
+      !celebrationCard ||
+      timelineView === "mine" ||
+      !previewCardRectRef.current ||
+      !mineButtonRef.current
+    ) {
+      return;
+    }
+
+    setFlyAnimationState({
+      card: celebrationCard,
+      sourceRect: previewCardRectRef.current,
+      targetRect: mineButtonRef.current.getBoundingClientRect(),
+    });
+  }, [celebrationCard, celebrationKey, timelineView]);
 
   const timelineItemMap = useMemo(() => {
     const map = new Map<
@@ -309,6 +388,7 @@ export function TimelinePanel({
               }`}
               data-active={timelineView === "mine"}
               onClick={() => onToggleTimelineView("mine")}
+              ref={mineButtonRef}
               type="button"
             >
               Mine
@@ -317,6 +397,11 @@ export function TimelinePanel({
         ) : null}
       </div>
       {showHint ? <p className={styles.timelineHint}>{hint}</p> : null}
+      <AnimatePresence>
+        {showCelebrationToast && celebrationMessage ? (
+          <TimelineCelebration key={celebrationKey ?? celebrationMessage} message={celebrationMessage} />
+        ) : null}
+      </AnimatePresence>
       <DndContext
         autoScroll
         collisionDetection={closestCenter}
@@ -372,8 +457,16 @@ export function TimelinePanel({
                   showCorrectionPreview={showCorrectionPreview}
                   showDevAlbumInfo={showDevAlbumInfo}
                   showDevCardInfo={showDevCardInfo}
+                  showDevYearInfo={showDevYearInfo}
                   showDevGenreInfo={showDevGenreInfo}
                   theme={theme}
+                  {...(item.type === "preview"
+                    ? {
+                        previewCardRef: (node: HTMLElement | null) => {
+                          previewCardElementRef.current = node;
+                        },
+                      }
+                    : {})}
                 />
               );
             })}
@@ -392,6 +485,7 @@ export function TimelinePanel({
               selectable={false}
               showDevAlbumInfo={showDevAlbumInfo}
               showDevCardInfo={showDevCardInfo}
+              showDevYearInfo={showDevYearInfo}
               showDevGenreInfo={showDevGenreInfo}
               showRevealedContent={showCorrectionPreview}
               theme={theme}
@@ -400,6 +494,60 @@ export function TimelinePanel({
           ) : null}
         </DragOverlay>
       </DndContext>
+      {typeof document !== "undefined" && flyAnimationState
+        ? createPortal(
+            <motion.div
+              animate={{
+                opacity: 0,
+                scale: 0.2,
+                x:
+                  flyAnimationState.targetRect.left +
+                  flyAnimationState.targetRect.width / 2 -
+                  (flyAnimationState.sourceRect.left +
+                    flyAnimationState.sourceRect.width / 2),
+                y:
+                  flyAnimationState.targetRect.top +
+                  flyAnimationState.targetRect.height / 2 -
+                  (flyAnimationState.sourceRect.top +
+                    flyAnimationState.sourceRect.height / 2),
+              }}
+              className={styles.flyToMineCard}
+              initial={{
+                opacity: 1,
+                scale: 1,
+                x: 0,
+                y: 0,
+              }}
+              style={{
+                height: flyAnimationState.sourceRect.height,
+                left: flyAnimationState.sourceRect.left,
+                top: flyAnimationState.sourceRect.top,
+                width: flyAnimationState.sourceRect.width,
+              }}
+              transition={{
+                duration: 0.82,
+                ease: [0.18, 0.84, 0.24, 1],
+              }}
+            >
+              <PreviewCard
+                hiddenCardMode="gradient"
+                isChallengeSlot={false}
+                isGhosted={false}
+                isOriginalSlot={false}
+                previewCard={flyAnimationState.card}
+                selectable={false}
+                showDevAlbumInfo={showDevAlbumInfo}
+                showDevCardInfo={true}
+                showDevYearInfo={true}
+                showDevGenreInfo={showDevGenreInfo}
+                showRevealedContent={true}
+                theme={theme}
+                tone="success"
+              />
+            </motion.div>,
+            document.body,
+          )
+        : null}
     </section>
   );
 }
@@ -414,11 +562,13 @@ interface TimelineSortableItemProps {
   isOriginalSlot: boolean;
   isPreview: boolean;
   isPreviewDisabled: boolean;
+  previewCardRef?: (node: HTMLElement | null) => void;
   selectable: boolean;
   showCorrectPlacementPreview?: boolean;
   showCorrectionPreview?: boolean;
   showDevAlbumInfo: boolean;
   showDevCardInfo: boolean;
+  showDevYearInfo: boolean;
   showDevGenreInfo: boolean;
   theme: ThemeId;
 }
@@ -433,11 +583,13 @@ function TimelineSortableItem({
   isOriginalSlot,
   isPreview,
   isPreviewDisabled,
+  previewCardRef,
   selectable,
   showCorrectPlacementPreview = false,
   showCorrectionPreview = false,
   showDevAlbumInfo,
   showDevCardInfo,
+  showDevYearInfo,
   showDevGenreInfo,
   theme,
 }: TimelineSortableItemProps) {
@@ -454,7 +606,11 @@ function TimelineSortableItem({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    ["--card-gradient" as string]: getCardGradient(theme, id),
+    ...(!isPreview
+      ? {
+          ["--card-gradient" as string]: getCardGradient(theme, id),
+        }
+      : {}),
   } as CSSProperties;
 
   return (
@@ -481,10 +637,12 @@ function TimelineSortableItem({
           selectable={selectable}
           showDevAlbumInfo={showDevAlbumInfo}
           showDevCardInfo={showDevCardInfo}
+          showDevYearInfo={showDevYearInfo}
           showDevGenreInfo={showDevGenreInfo}
           showRevealedContent={showCorrectionPreview}
           theme={theme}
           tone={challengeMarkerTone}
+          ref={previewCardRef}
         />
       ) : (
         <article
@@ -532,6 +690,7 @@ interface PreviewCardProps {
   selectable: boolean;
   showDevAlbumInfo: boolean;
   showDevCardInfo: boolean;
+  showDevYearInfo: boolean;
   showDevGenreInfo: boolean;
   showRevealedContent?: boolean;
   theme: ThemeId;
@@ -553,6 +712,7 @@ const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(function PreviewCa
     selectable,
     showDevAlbumInfo,
     showDevCardInfo,
+    showDevYearInfo,
     showDevGenreInfo,
     showRevealedContent = false,
     theme,
@@ -601,9 +761,13 @@ const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(function PreviewCa
           <>
             <p className={styles.previewCardArtist}>{previewCard.artist}</p>
             <div className={styles.previewCardCenter}>
-              <strong className={styles.previewCardYear}>
-                {"releaseYear" in previewCard ? String(previewCard.releaseYear) : ""}
-              </strong>
+              {showDevYearInfo || showRevealedContent ? (
+                <strong className={styles.previewCardYear}>
+                  {"releaseYear" in previewCard
+                    ? String(previewCard.releaseYear)
+                    : ""}
+                </strong>
+              ) : null}
               {showDevGenreInfo &&
               "genre" in previewCard &&
               previewCard.genre ? (

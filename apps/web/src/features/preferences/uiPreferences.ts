@@ -19,6 +19,7 @@ export interface UiPreferences {
   hiddenCardMode: HiddenCardMode;
   view: ViewPreferences;
   showDevCardInfo: boolean;
+  showDevYearInfo: boolean;
   showDevAlbumInfo: boolean;
   showDevGenreInfo: boolean;
   lastOpenedMenuTab: MenuTabId;
@@ -32,6 +33,7 @@ interface UiPreferencesStore extends UiPreferences {
   updateViewPreferences: (nextView: Partial<ViewPreferences>) => void;
   setDevVisibility: (settings: {
     showDevCardInfo?: boolean;
+    showDevYearInfo?: boolean;
     showDevAlbumInfo?: boolean;
     showDevGenreInfo?: boolean;
   }) => void;
@@ -49,6 +51,7 @@ export const defaultUiPreferences: UiPreferences = {
     showTurnNumberChip: true,
   },
   showDevCardInfo: false,
+  showDevYearInfo: false,
   showDevAlbumInfo: false,
   showDevGenreInfo: false,
   lastOpenedMenuTab: "players",
@@ -76,6 +79,8 @@ export const useUiPreferencesStore = create<UiPreferencesStore>()(
         set((state) => ({
           showDevCardInfo:
             settings.showDevCardInfo ?? state.showDevCardInfo,
+          showDevYearInfo:
+            settings.showDevYearInfo ?? state.showDevYearInfo,
           showDevAlbumInfo:
             settings.showDevAlbumInfo ?? state.showDevAlbumInfo,
           showDevGenreInfo:
@@ -89,6 +94,7 @@ export const useUiPreferencesStore = create<UiPreferencesStore>()(
         hiddenCardMode: state.hiddenCardMode,
         view: state.view,
         showDevCardInfo: state.showDevCardInfo,
+        showDevYearInfo: state.showDevYearInfo,
         showDevAlbumInfo: state.showDevAlbumInfo,
         showDevGenreInfo: state.showDevGenreInfo,
         lastOpenedMenuTab: state.lastOpenedMenuTab,

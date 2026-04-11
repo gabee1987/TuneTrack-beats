@@ -1013,6 +1013,7 @@ function mapTrackCardToPublicTrackCard(
     title: trackCard.title,
     artist: trackCard.artist,
     albumTitle: trackCard.albumTitle,
+    releaseYear: trackCard.releaseYear,
     ...(trackCard.genre ? { genre: trackCard.genre } : {}),
     ...(trackCard.artworkUrl ? { artworkUrl: trackCard.artworkUrl } : {}),
   };
