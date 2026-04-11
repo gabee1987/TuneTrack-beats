@@ -1,0 +1,107 @@
+.challengePanel,
+.revealPanel {
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: var(--radius-panel);
+  background: var(--color-surface-elevated);
+}
+
+.sectionLabel {
+  margin: 0 0 10px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: -0.04em;
+}
+
+.actionRail {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--color-surface-elevated);
+}
+
+.actionRailHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.actionRailTitle {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: -0.03em;
+}
+
+.actionRailText {
+  margin: 6px 0 0;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  font-size: 14px;
+}
+
+.floatingActionDock {
+  position: sticky;
+  bottom: 16px;
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 16px;
+  animation: floatingDockIn 180ms ease-out;
+}
+
+.floatingPrimaryButton,
+.floatingSecondaryButton {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  color: var(--color-text-on-accent);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--shadow-floating-action);
+}
+
+.floatingPrimaryButton {
+  background: var(--gradient-floating-primary-action);
+}
+
+.floatingSecondaryButton {
+  background: var(--color-floating-secondary-action-background);
+  outline: 1px solid var(--color-border-subtle);
+}
+
+@keyframes floatingDockIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.challengeMetaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.challengeChip {
+  padding: 10px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-chip);
+  color: var(--color-text-primary);
+  font-size: 14px;
+}

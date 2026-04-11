@@ -9,6 +9,23 @@ import type {
   ThemeId,
 } from "../../features/preferences/uiPreferences";
 
+export type TimelineView = "active" | "mine";
+
+export type ChallengeMarkerTone = "pending" | "success" | "failure";
+
+export type GamePageCard = TrackCardPublic | TimelineCardPublic;
+
+export interface GamePageActionHandlers {
+  handleBuyTimelineCardWithTt: () => void;
+  handleClaimChallenge: () => void;
+  handleCloseRoom: () => void;
+  handleConfirmReveal: () => void;
+  handlePlaceCard: () => void;
+  handlePlaceChallenge: () => void;
+  handleResolveChallengeWindow: () => void;
+  handleSkipTrackWithTt: () => void;
+}
+
 export interface GameRouteState {
   currentPlayerId: string | null;
   roomState: PublicRoomState | null;
@@ -18,22 +35,22 @@ export interface TimelinePanelProps {
   title: string;
   hint: string;
   showHint: boolean;
-  celebrationCard: TrackCardPublic | TimelineCardPublic | null;
+  celebrationCard: GamePageCard | null;
   celebrationKey: string | null;
   celebrationMessage: string | null;
   cardCount: number;
   canToggleView?: boolean;
-  timelineView?: "active" | "mine";
+  timelineView?: TimelineView;
   timelineCards: TimelineCardPublic[];
-  onToggleTimelineView?: (view: "active" | "mine") => void;
-  previewCard: TrackCardPublic | TimelineCardPublic | null;
+  onToggleTimelineView?: (view: TimelineView) => void;
+  previewCard: GamePageCard | null;
   previewSlotIndex: number | null;
   selectable: boolean;
   selectedSlotIndex: number;
   onSelectSlot: (slotIndex: number) => void;
   originalChosenSlotIndex: number | null;
   challengerChosenSlotIndex: number | null;
-  challengeMarkerTone?: "pending" | "success" | "failure";
+  challengeMarkerTone?: ChallengeMarkerTone;
   disabledSlotIndexes?: number[];
   hiddenCardMode: HiddenCardMode;
   showDevCardInfo: boolean;
@@ -56,10 +73,10 @@ export interface GamePageController {
   challengeActionBody: string | null;
   challengeActionTitle: string | null;
   challengeCountdownLabel: string | null;
-  challengeMarkerTone: "pending" | "success" | "failure";
+  challengeMarkerTone: ChallengeMarkerTone;
   currentPlayerId: string | null;
   currentPlayerTtCount: number;
-  challengeSuccessCelebrationCard: TrackCardPublic | TimelineCardPublic | null;
+  challengeSuccessCelebrationCard: GamePageCard | null;
   challengeSuccessCelebrationKey: string | null;
   challengeSuccessMessage: string | null;
   disabledTimelineSlots: number[];
@@ -72,7 +89,7 @@ export interface GamePageController {
   roomState: PublicRoomState | null;
   selectedSlotIndex: number;
   setSelectedSlotIndex: (slotIndex: number) => void;
-  setTimelineView: (view: "active" | "mine") => void;
+  setTimelineView: (view: TimelineView) => void;
   showCorrectPlacementPreview: boolean;
   showCorrectionPreview: boolean;
   showDevAlbumInfo: boolean;
@@ -88,24 +105,24 @@ export interface GamePageController {
   statusBadgeText: string;
   statusDetailText: string;
   theme: ThemeId;
-  timelineView: "active" | "mine";
+  timelineView: TimelineView;
   updateViewPreferences: (nextView: {
     showMiniStandings?: boolean;
   }) => void;
   visibleChallengeChosenSlot: number | null;
   visibleOriginalChosenSlot: number | null;
-  visiblePreviewCard: TrackCardPublic | TimelineCardPublic | null;
+  visiblePreviewCard: GamePageCard | null;
   visiblePreviewSlot: number | null;
   visibleTimelineCardCount: number;
   visibleTimelineCards: TimelineCardPublic[];
   visibleTimelineHint: string;
   visibleTimelineTitle: string;
-  handleBuyTimelineCardWithTt: () => void;
-  handleClaimChallenge: () => void;
-  handleCloseRoom: () => void;
-  handleConfirmReveal: () => void;
-  handlePlaceCard: () => void;
-  handlePlaceChallenge: () => void;
-  handleResolveChallengeWindow: () => void;
-  handleSkipTrackWithTt: () => void;
+}
+
+export interface GamePageController extends GamePageActionHandlers {}
+
+export interface GamePageControllerExtras {
+  canClaimChallenge: boolean;
+  canResolveChallengeWindow: boolean;
+  getPlayerName: (playerId: string | null | undefined) => string;
 }

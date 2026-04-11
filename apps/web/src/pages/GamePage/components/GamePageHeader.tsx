@@ -1,24 +1,27 @@
 import type { PublicRoomState } from "@tunetrack/shared";
 import {
   AppShellMenu,
-  type AppShellMenuTab,
 } from "../../../features/app-shell/AppShellMenu";
+import type { GamePageController } from "../GamePage.types";
 import styles from "../GamePage.module.css";
 import { formatPhaseLabel } from "../gamePage.utils";
 
-interface GamePageHeaderProps {
-  currentPlayerId: string | null;
-  leadingPlayers: PublicRoomState["players"];
-  menuTabs: AppShellMenuTab[];
+interface GamePageHeaderProps
+  extends Pick<
+    GamePageController,
+    | "currentPlayerId"
+    | "leadingPlayers"
+    | "menuTabs"
+    | "showMiniStandings"
+    | "showPhaseChip"
+    | "showRoomCodeChip"
+    | "showTimelineHints"
+    | "showTurnNumberChip"
+    | "statusBadgeText"
+    | "statusDetailText"
+    | "updateViewPreferences"
+  > {
   roomState: PublicRoomState;
-  showMiniStandings: boolean;
-  showPhaseChip: boolean;
-  showRoomCodeChip: boolean;
-  showTimelineHints: boolean;
-  showTurnNumberChip: boolean;
-  statusBadgeText: string;
-  statusDetailText: string;
-  updateViewPreferences: (nextView: { showMiniStandings?: boolean }) => void;
 }
 
 export function GamePageHeader({

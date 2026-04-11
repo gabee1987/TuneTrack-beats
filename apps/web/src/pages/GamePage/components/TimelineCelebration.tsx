@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import styles from "../GamePage.module.css";
+import styles from "./TimelinePanel.module.css";
 
 interface TimelineCelebrationProps {
   message: string;
