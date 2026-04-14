@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { ActionButton } from "../../../features/ui/ActionButton";
 import { SelectInput } from "../../../features/ui/SelectInput";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
+import { AdaptiveSelectSheet } from "./AdaptiveSelectSheet";
 import styles from "../LobbyPage.module.css";
 
 export interface AdaptiveSelectOption {
@@ -47,66 +49,24 @@ export function AdaptiveSelect({
 
   return (
     <>
-      <button
+      <ActionButton
         className={styles.mobileSelectButton}
         onClick={() => setIsOpen(true)}
         type="button"
+        variant="danger"
       >
         <span className={styles.mobileSelectLabel}>{selectedOption?.label}</span>
         <span className={styles.mobileSelectChevron}>Select</span>
-      </button>
+      </ActionButton>
 
       {isOpen ? (
-        <div
-          className={styles.mobileSelectOverlay}
-          onClick={() => setIsOpen(false)}
-          role="presentation"
-        >
-          <div
-            className={styles.mobileSelectSheet}
-            onClick={(event) => event.stopPropagation()}
-            role="dialog"
-          >
-            <div className={styles.mobileSelectSheetHeader}>
-              <div>
-                <p className={styles.mobileSelectEyebrow}>{label}</p>
-                <h4 className={styles.mobileSelectTitle}>Choose one option</h4>
-              </div>
-              <button
-                className={styles.mobileSelectClose}
-                onClick={() => setIsOpen(false)}
-                type="button"
-              >
-                Close
-              </button>
-            </div>
-
-            <div className={styles.mobileSelectOptions}>
-              {options.map((option) => {
-                const isSelected = option.value === value;
-
-                return (
-                  <button
-                    className={`${styles.mobileSelectOption} ${
-                      isSelected ? styles.mobileSelectOptionActive : ""
-                    }`}
-                    key={option.value}
-                    onClick={() => {
-                      onChange(option.value);
-                      setIsOpen(false);
-                    }}
-                    type="button"
-                  >
-                    <span>{option.label}</span>
-                    {isSelected ? (
-                      <span className={styles.mobileSelectOptionState}>Selected</span>
-                    ) : null}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+        <AdaptiveSelectSheet
+          label={label}
+          onChange={onChange}
+          onClose={() => setIsOpen(false)}
+          options={options}
+          value={value}
+        />
       ) : null}
     </>
   );

@@ -8,8 +8,11 @@ import {
 } from "@tunetrack/shared";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { AdaptiveSelect } from "./AdaptiveSelect";
+import { LobbyRangeSettingField } from "./LobbyRangeSettingField";
+import { LobbySelectSettingField } from "./LobbySelectSettingField";
 import type { LobbyRoomSettingsChangeHandler } from "./LobbyHostSettings.types";
 import { LobbySectionHeader } from "./LobbySectionHeader";
+import { LobbyToggleField } from "./LobbyToggleField";
 import styles from "../LobbyPage.module.css";
 
 interface LobbyHostTtSettingsProps {
@@ -32,54 +35,36 @@ export function LobbyHostTtSettings({
         variant="compact"
       />
 
-      <label className={styles.toggleField}>
-        <div className={styles.toggleCopy}>
-          <span className={styles.toggleLabel}>Enable TT mode</span>
-          <span className={styles.toggleHint}>
-            Shows TT settings and defaults starting TT to 1.
-          </span>
-        </div>
-        <input
-          checked={currentSettings.ttModeEnabled}
-          className={styles.checkbox}
-          onChange={(event) => onToggleTtMode(event.target.checked)}
-          type="checkbox"
-        />
-      </label>
+      <LobbyToggleField
+        checked={currentSettings.ttModeEnabled}
+        hint="Shows TT settings and defaults starting TT to 1."
+        label="Enable TT mode"
+        onChange={onToggleTtMode}
+      />
 
       {currentSettings.ttModeEnabled ? (
         <div className={styles.conditionalGroup}>
-          <label className={styles.settingField}>
-            <div className={styles.settingLabelRow}>
-              <span>Starting TT for every player</span>
-              <strong className={styles.settingValue}>
-                {currentSettings.startingTtTokenCount}
-              </strong>
-            </div>
-            <input
-              className={styles.rangeInput}
-              max={MAX_STARTING_TT_TOKEN_COUNT}
-              min={MIN_STARTING_TT_TOKEN_COUNT}
-              onChange={(event) =>
-                onRoomSettingsChange({
-                  ...currentSettings,
-                  startingTtTokenCount: Number(event.target.value),
-                })
-              }
-              type="range"
-              value={currentSettings.startingTtTokenCount}
-            />
-          </label>
+          <LobbyRangeSettingField
+            label="Starting TT for every player"
+            max={MAX_STARTING_TT_TOKEN_COUNT}
+            min={MIN_STARTING_TT_TOKEN_COUNT}
+            onChange={(startingTtTokenCount) =>
+              onRoomSettingsChange({
+                ...currentSettings,
+                startingTtTokenCount,
+              })
+            }
+            value={currentSettings.startingTtTokenCount}
+          />
 
-          <label className={styles.settingField}>
-            <div className={styles.settingLabelRow}>
-              <span>Challenge window</span>
-              <strong className={styles.settingValue}>
-                {currentSettings.challengeWindowDurationSeconds === null
-                  ? "Manual"
-                  : `${currentSettings.challengeWindowDurationSeconds}s`}
-              </strong>
-            </div>
+          <LobbySelectSettingField
+            label="Challenge window"
+            value={
+              currentSettings.challengeWindowDurationSeconds === null
+                ? "Manual"
+                : `${currentSettings.challengeWindowDurationSeconds}s`
+            }
+          >
             <AdaptiveSelect
               label="Challenge window"
               onChange={(nextValue) =>
@@ -113,7 +98,7 @@ export function LobbyHostTtSettings({
                   : currentSettings.challengeWindowDurationSeconds.toString()
               }
             />
-          </label>
+          </LobbySelectSettingField>
         </div>
       ) : (
         <p className={styles.settingsInlineHint}>

@@ -8,6 +8,8 @@ import {
 } from "@tunetrack/shared";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { AdaptiveSelect } from "./AdaptiveSelect";
+import { LobbyRangeSettingField } from "./LobbyRangeSettingField";
+import { LobbySelectSettingField } from "./LobbySelectSettingField";
 import type { LobbyRoomSettingsChangeHandler } from "./LobbyHostSettings.types";
 import { LobbySectionHeader } from "./LobbySectionHeader";
 import styles from "../LobbyPage.module.css";
@@ -30,54 +32,33 @@ export function LobbyHostCoreSettings({
         variant="compact"
       />
 
-      <label className={styles.settingField}>
-        <div className={styles.settingLabelRow}>
-          <span>Cards needed to win</span>
-          <strong className={styles.settingValue}>
-            {currentSettings.targetTimelineCardCount}
-          </strong>
-        </div>
-        <input
-          className={styles.rangeInput}
-          max={MAX_TARGET_TIMELINE_CARD_COUNT}
-          min={MIN_TARGET_TIMELINE_CARD_COUNT}
-          onChange={(event) =>
-            onRoomSettingsChange({
-              ...currentSettings,
-              targetTimelineCardCount: Number(event.target.value),
-            })
-          }
-          type="range"
-          value={currentSettings.targetTimelineCardCount}
-        />
-      </label>
+      <LobbyRangeSettingField
+        label="Cards needed to win"
+        max={MAX_TARGET_TIMELINE_CARD_COUNT}
+        min={MIN_TARGET_TIMELINE_CARD_COUNT}
+        onChange={(targetTimelineCardCount) =>
+          onRoomSettingsChange({
+            ...currentSettings,
+            targetTimelineCardCount,
+          })
+        }
+        value={currentSettings.targetTimelineCardCount}
+      />
 
-      <label className={styles.settingField}>
-        <div className={styles.settingLabelRow}>
-          <span>Default starting cards</span>
-          <strong className={styles.settingValue}>
-            {currentSettings.defaultStartingTimelineCardCount}
-          </strong>
-        </div>
-        <input
-          className={styles.rangeInput}
-          max={MAX_STARTING_TIMELINE_CARD_COUNT}
-          min={MIN_STARTING_TIMELINE_CARD_COUNT}
-          onChange={(event) =>
-            onRoomSettingsChange({
-              ...currentSettings,
-              defaultStartingTimelineCardCount: Number(event.target.value),
-            })
-          }
-          type="range"
-          value={currentSettings.defaultStartingTimelineCardCount}
-        />
-      </label>
+      <LobbyRangeSettingField
+        label="Default starting cards"
+        max={MAX_STARTING_TIMELINE_CARD_COUNT}
+        min={MIN_STARTING_TIMELINE_CARD_COUNT}
+        onChange={(defaultStartingTimelineCardCount) =>
+          onRoomSettingsChange({
+            ...currentSettings,
+            defaultStartingTimelineCardCount,
+          })
+        }
+        value={currentSettings.defaultStartingTimelineCardCount}
+      />
 
-      <label className={styles.settingField}>
-        <div className={styles.settingLabelRow}>
-          <span>Reveal confirmation</span>
-        </div>
+      <LobbySelectSettingField label="Reveal confirmation">
         <AdaptiveSelect
           label="Reveal confirmation"
           onChange={(nextValue) =>
@@ -98,7 +79,7 @@ export function LobbyHostCoreSettings({
           ]}
           value={currentSettings.revealConfirmMode}
         />
-      </label>
+      </LobbySelectSettingField>
     </SurfaceCard>
   );
 }

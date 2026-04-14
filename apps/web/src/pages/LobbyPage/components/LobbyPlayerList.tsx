@@ -5,6 +5,7 @@ import {
   type PublicRoomSettings,
 } from "@tunetrack/shared";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
+import { LobbyRangeSettingField } from "./LobbyRangeSettingField";
 import { LobbySectionHeader } from "./LobbySectionHeader";
 import styles from "../LobbyPage.module.css";
 
@@ -65,27 +66,19 @@ export function LobbyPlayerList({
               </div>
 
               {isHost ? (
-                <label className={styles.playerSettingField}>
-                  <div className={styles.settingLabelRow}>
-                    <span>Starting cards for {isCurrentPlayer ? "you" : player.displayName}</span>
-                    <strong className={styles.settingValue}>
-                      {player.startingTimelineCardCount}
-                    </strong>
-                  </div>
-                  <input
-                    className={styles.rangeInput}
+                <div className={styles.playerSettingField}>
+                  <LobbyRangeSettingField
+                    label={`Starting cards for ${
+                      isCurrentPlayer ? "you" : player.displayName
+                    }`}
                     max={MAX_STARTING_TIMELINE_CARD_COUNT}
                     min={MIN_STARTING_TIMELINE_CARD_COUNT}
-                    onChange={(event) =>
-                      onPlayerStartingCardCountChange(
-                        player,
-                        Number(event.target.value),
-                      )
+                    onChange={(nextValue) =>
+                      onPlayerStartingCardCountChange(player, nextValue)
                     }
-                    type="range"
                     value={player.startingTimelineCardCount}
                   />
-                </label>
+                </div>
               ) : null}
             </li>
           );
