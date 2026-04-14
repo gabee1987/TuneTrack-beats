@@ -1,4 +1,5 @@
 import { AppShellMenu } from "../../../features/app-shell/AppShellMenu";
+import { Badge } from "../../../features/ui/Badge";
 import styles from "../LobbyPage.module.css";
 
 interface LobbyHeaderProps {
@@ -23,13 +24,14 @@ export function LobbyHeader({
       </div>
 
       <div className={styles.headerActions}>
-        <div
-          className={`${styles.statusBadge} ${
-            connectionStatus === "Connected" ? styles.statusBadgeConnected : ""
-          }`}
+        <Badge
+          size="md"
+          variant={
+            connectionStatus === "Connected" ? "connected" : "mutedSurface"
+          }
         >
           {connectionStatus}
-        </div>
+        </Badge>
         <AppShellMenu
           subtitle="Grouped room, view, and developer controls live here."
           tabs={[

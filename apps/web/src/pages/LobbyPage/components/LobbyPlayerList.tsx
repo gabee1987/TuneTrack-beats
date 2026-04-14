@@ -4,8 +4,9 @@ import {
   type PublicPlayerState,
   type PublicRoomSettings,
 } from "@tunetrack/shared";
+import { Badge } from "../../../features/ui/Badge";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
-import { LobbyRangeSettingField } from "./LobbyRangeSettingField";
+import { RangeField } from "../../../features/ui/RangeField";
 import { LobbySectionHeader } from "./LobbySectionHeader";
 import styles from "../LobbyPage.module.css";
 
@@ -53,21 +54,19 @@ export function LobbyPlayerList({
                 </div>
 
                 <div className={styles.playerBadges}>
-                  <span className={styles.inlineBadge}>
-                    {player.startingTimelineCardCount} cards
-                  </span>
+                  <Badge>{player.startingTimelineCardCount} cards</Badge>
                   {roomSettings.ttModeEnabled ? (
-                    <span className={styles.inlineBadge}>{player.ttTokenCount} TT</span>
+                    <Badge>{player.ttTokenCount} TT</Badge>
                   ) : null}
                   {player.isHost ? (
-                    <span className={styles.inlineBadgeStrong}>Host</span>
+                    <Badge variant="strong">Host</Badge>
                   ) : null}
                 </div>
               </div>
 
               {isHost ? (
                 <div className={styles.playerSettingField}>
-                  <LobbyRangeSettingField
+                  <RangeField
                     label={`Starting cards for ${
                       isCurrentPlayer ? "you" : player.displayName
                     }`}

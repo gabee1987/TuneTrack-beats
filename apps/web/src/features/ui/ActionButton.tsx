@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes } from "react";
 import styles from "./FormControls.module.css";
 
-type ActionButtonVariant = "danger" | "primary";
+type ActionButtonVariant = "danger" | "neutral" | "primary";
 
 interface ActionButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   className?: string | undefined;
@@ -13,12 +13,17 @@ export function ActionButton({
   variant = "primary",
   ...props
 }: ActionButtonProps) {
+  const variantClassName =
+    variant === "danger"
+      ? styles.buttonDanger
+      : variant === "neutral"
+        ? styles.buttonNeutral
+        : styles.buttonPrimary;
+
   return (
     <button
       {...props}
-      className={`${styles.button} ${
-        variant === "danger" ? styles.buttonDanger : styles.buttonPrimary
-      }${className ? ` ${className}` : ""}`}
+      className={`${styles.button} ${variantClassName}${className ? ` ${className}` : ""}`}
     />
   );
 }

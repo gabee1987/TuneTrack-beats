@@ -1,19 +1,12 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { rememberPlayerDisplayName } from "../../../services/session/playerSession";
+import type { HomePageController } from "../HomePage.types";
 import {
   DEFAULT_DISPLAY_NAME,
   DEFAULT_ROOM_ID,
   buildHomePageNavigationTarget,
 } from "../homePageNavigation";
-
-export interface HomePageController {
-  displayName: string;
-  roomId: string;
-  setDisplayName: (value: string) => void;
-  setRoomId: (value: string) => void;
-  handleSubmit: (event: FormEvent<HTMLFormElement>) => void;
-}
 
 export function useHomePageController(): HomePageController {
   const navigate = useNavigate();

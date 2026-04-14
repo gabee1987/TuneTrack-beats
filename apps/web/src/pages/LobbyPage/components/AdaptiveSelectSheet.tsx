@@ -1,4 +1,5 @@
 import { ActionButton } from "../../../features/ui/ActionButton";
+import { BottomSheet } from "../../../features/ui/BottomSheet";
 import type { AdaptiveSelectOption } from "./AdaptiveSelect";
 import styles from "../LobbyPage.module.css";
 
@@ -18,12 +19,7 @@ export function AdaptiveSelectSheet({
   value,
 }: AdaptiveSelectSheetProps) {
   return (
-    <div className={styles.mobileSelectOverlay} onClick={onClose} role="presentation">
-      <div
-        className={styles.mobileSelectSheet}
-        onClick={(event) => event.stopPropagation()}
-        role="dialog"
-      >
+    <BottomSheet onClose={onClose} sheetClassName={styles.mobileSelectSheet}>
         <div className={styles.mobileSelectSheetHeader}>
           <div>
             <p className={styles.mobileSelectEyebrow}>{label}</p>
@@ -33,7 +29,7 @@ export function AdaptiveSelectSheet({
             className={styles.mobileSelectClose}
             onClick={onClose}
             type="button"
-            variant="danger"
+            variant="neutral"
           >
             Close
           </ActionButton>
@@ -63,7 +59,6 @@ export function AdaptiveSelectSheet({
             );
           })}
         </div>
-      </div>
-    </div>
+    </BottomSheet>
   );
 }

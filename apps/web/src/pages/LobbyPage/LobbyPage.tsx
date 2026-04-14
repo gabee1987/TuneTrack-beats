@@ -1,3 +1,4 @@
+import { StatusBanner } from "../../features/ui/StatusBanner";
 import { SurfaceCard } from "../../features/ui/SurfaceCard";
 import { AppPageShell } from "../../features/mobile-shell/AppPageShell";
 import { LobbyHeader } from "./components/LobbyHeader";
@@ -40,7 +41,7 @@ export function LobbyPage() {
           roomId={resolvedRoomId}
         />
 
-        {errorMessage ? <p className={styles.error}>{errorMessage}</p> : null}
+        {errorMessage ? <StatusBanner>{errorMessage}</StatusBanner> : null}
 
         <div className={styles.layoutGrid}>
           <div className={styles.primaryColumn}>

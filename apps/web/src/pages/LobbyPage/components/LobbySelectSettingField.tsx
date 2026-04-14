@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import styles from "../LobbyPage.module.css";
+import { SettingField } from "../../../features/ui/SettingField";
 
 interface LobbySelectSettingFieldProps {
   children: ReactNode;
@@ -12,13 +12,5 @@ export function LobbySelectSettingField({
   label,
   value,
 }: LobbySelectSettingFieldProps) {
-  return (
-    <label className={styles.settingField}>
-      <div className={styles.settingLabelRow}>
-        <span>{label}</span>
-        {value ? <strong className={styles.settingValue}>{value}</strong> : null}
-      </div>
-      {children}
-    </label>
-  );
+  return <SettingField label={label} value={value}>{children}</SettingField>;
 }

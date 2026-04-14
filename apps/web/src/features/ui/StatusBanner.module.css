@@ -1,0 +1,10 @@
+.banner {
+  margin: 18px 0 0;
+  padding: 14px 16px;
+  border-radius: 18px;
+}
+
+.danger {
+  background: var(--color-status-danger-chip-surface);
+  color: var(--color-status-danger-chip-text);
+}

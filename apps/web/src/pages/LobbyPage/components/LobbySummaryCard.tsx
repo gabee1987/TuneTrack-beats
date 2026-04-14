@@ -1,3 +1,4 @@
+import { Badge } from "../../../features/ui/Badge";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import styles from "../LobbyPage.module.css";
 
@@ -21,7 +22,7 @@ export function LobbySummaryCard({
           <p className={styles.summaryLabel}>Joined as</p>
           <strong className={styles.summaryValue}>{displayName}</strong>
         </div>
-        <span className={styles.summaryChip}>{isHost ? "Host" : "Player"}</span>
+        <Badge>{isHost ? "Host" : "Player"}</Badge>
       </div>
 
       <div className={styles.summaryGrid}>

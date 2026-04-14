@@ -53,7 +53,7 @@ export function AdaptiveSelect({
         className={styles.mobileSelectButton}
         onClick={() => setIsOpen(true)}
         type="button"
-        variant="danger"
+        variant="neutral"
       >
         <span className={styles.mobileSelectLabel}>{selectedOption?.label}</span>
         <span className={styles.mobileSelectChevron}>Select</span>

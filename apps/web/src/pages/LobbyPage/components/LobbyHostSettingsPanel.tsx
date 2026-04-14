@@ -1,3 +1,4 @@
+import { Badge } from "../../../features/ui/Badge";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { LobbyHostCoreSettings } from "./LobbyHostCoreSettings";
 import { LobbyHostStartPanel } from "./LobbyHostStartPanel";
@@ -15,7 +16,7 @@ export function LobbyHostSettingsPanel({
   return (
     <SurfaceCard className={styles.settingsPanel}>
       <LobbySectionHeader
-        badge={<span className={styles.summaryChip}>Host only</span>}
+        badge={<Badge>Host only</Badge>}
         description="Set the rules, then start."
         title="Host setup"
       />

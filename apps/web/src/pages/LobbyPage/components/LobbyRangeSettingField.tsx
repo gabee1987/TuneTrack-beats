@@ -1,4 +1,4 @@
-import styles from "../LobbyPage.module.css";
+import { RangeField } from "../../../features/ui/RangeField";
 
 interface LobbyRangeSettingFieldProps {
   label: string;
@@ -16,19 +16,12 @@ export function LobbyRangeSettingField({
   value,
 }: LobbyRangeSettingFieldProps) {
   return (
-    <label className={styles.settingField}>
-      <div className={styles.settingLabelRow}>
-        <span>{label}</span>
-        <strong className={styles.settingValue}>{value}</strong>
-      </div>
-      <input
-        className={styles.rangeInput}
-        max={max}
-        min={min}
-        onChange={(event) => onChange(Number(event.target.value))}
-        type="range"
-        value={value}
-      />
-    </label>
+    <RangeField
+      label={label}
+      max={max}
+      min={min}
+      onChange={onChange}
+      value={value}
+    />
   );
 }
