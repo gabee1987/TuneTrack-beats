@@ -3,6 +3,7 @@ import {
   SKIP_TRACK_TT_COST,
   type PublicRoomState,
 } from "@tunetrack/shared";
+import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import { createGameMenuTabs } from "../gamePageMenuTabs";
 
 interface UseGamePageCapabilityStateOptions {
@@ -15,12 +16,29 @@ interface UseGamePageCapabilityStateOptions {
   roomState: PublicRoomState | null;
 }
 
+interface UseGamePageCapabilityStateResult {
+  canClaimChallenge: boolean;
+  canConfirmBeatPlacement: boolean;
+  canConfirmReveal: boolean;
+  canConfirmTurnPlacement: boolean;
+  canResolveChallengeWindow: boolean;
+  canSelectChallengeSlot: boolean;
+  canSelectSlot: boolean;
+  canSelectTurnSlot: boolean;
+  canUseBuyCard: boolean;
+  canUseSkipTrack: boolean;
+  isChallengeOwner: boolean;
+  isCurrentPlayerTurn: boolean;
+  leadingPlayers: PublicRoomState["players"];
+  menuTabs: AppShellMenuTab[];
+}
+
 export function useGamePageCapabilityState({
   currentPlayerId,
   currentPlayerTtCount,
   handlers,
   roomState,
-}: UseGamePageCapabilityStateOptions) {
+}: UseGamePageCapabilityStateOptions): UseGamePageCapabilityStateResult {
   const isCurrentPlayerTurn =
     Boolean(currentPlayerId) &&
     roomState?.turn?.activePlayerId === currentPlayerId;

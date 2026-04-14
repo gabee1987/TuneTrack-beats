@@ -8,7 +8,6 @@ import {
   type PublicPlayerState,
   type PublicRoomSettings,
   type PublicRoomState,
-  type RevealConfirmMode,
   type RoomClosedPayload,
   type ServerErrorPayload,
   ServerToClientEvent,

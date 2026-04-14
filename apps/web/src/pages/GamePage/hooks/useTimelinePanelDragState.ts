@@ -21,6 +21,27 @@ interface UseTimelinePanelDragStateOptions {
   onSelectSlot: (slotIndex: number) => void;
 }
 
+interface UseTimelinePanelDragStateResult {
+  handleDragCancel: () => void;
+  handleDragEnd: (event: DragEndEvent) => void;
+  handleDragMove: (event: DragMoveEvent) => void;
+  handleDragStart: (event: DragStartEvent) => void;
+  isDraggingPreviewCard: boolean;
+  orderedItemIds: string[];
+  previewItemId: string;
+  timelineItemMap: Map<
+    string,
+    | {
+        type: "preview";
+        card: GamePageCard;
+      }
+    | {
+        type: "timeline";
+        card: TimelineCardPublic;
+      }
+  >;
+}
+
 const PREVIEW_ITEM_ID = "timeline-preview-card";
 
 export function useTimelinePanelDragState({
@@ -30,7 +51,7 @@ export function useTimelinePanelDragState({
   timelineCards,
   timelineRowRef,
   onSelectSlot,
-}: UseTimelinePanelDragStateOptions) {
+}: UseTimelinePanelDragStateOptions): UseTimelinePanelDragStateResult {
   const [isDraggingPreviewCard, setIsDraggingPreviewCard] = useState(false);
   const lastPreviewReorderAtRef = useRef(0);
 

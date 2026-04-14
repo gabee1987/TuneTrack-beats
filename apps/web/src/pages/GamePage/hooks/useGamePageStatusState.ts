@@ -1,5 +1,9 @@
 import type { PublicRoomState } from "@tunetrack/shared";
-import type { ChallengeMarkerTone, GamePageCard } from "../GamePage.types";
+import type {
+  ChallengeMarkerTone,
+  GamePageCard,
+  GamePagePlayerNameResolver,
+} from "../GamePage.types";
 
 interface UseGamePageStatusStateOptions {
   activePlayerId: string | null | undefined;
@@ -7,11 +11,22 @@ interface UseGamePageStatusStateOptions {
   currentPlayerId: string | null;
   canSelectChallengeSlot: boolean;
   challengeSuccessCelebrationCard: GamePageCard | null;
-  getPlayerName: (playerId: string | null | undefined) => string;
-  getPossessivePlayerName: (playerId: string | null | undefined) => string;
+  getPlayerName: GamePagePlayerNameResolver;
+  getPossessivePlayerName: GamePagePlayerNameResolver;
   isCurrentPlayerTurn: boolean;
   nowEpochMs: number;
   roomState: PublicRoomState | null;
+}
+
+interface UseGamePageStatusStateResult {
+  activeTimelineHint: string;
+  challengeActionBody: string | null;
+  challengeActionTitle: string | null;
+  challengeCountdownLabel: string | null;
+  challengeMarkerTone: ChallengeMarkerTone;
+  challengeSuccessMessage: string | null;
+  statusBadgeText: string;
+  statusDetailText: string;
 }
 
 export function useGamePageStatusState({
@@ -25,7 +40,7 @@ export function useGamePageStatusState({
   isCurrentPlayerTurn,
   nowEpochMs,
   roomState,
-}: UseGamePageStatusStateOptions) {
+}: UseGamePageStatusStateOptions): UseGamePageStatusStateResult {
   function getChallengeCountdownLabel(): string | null {
     const deadlineEpochMs = roomState?.challengeState?.challengeDeadlineEpochMs;
 

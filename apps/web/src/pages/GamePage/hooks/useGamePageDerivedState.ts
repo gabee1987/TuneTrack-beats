@@ -1,6 +1,14 @@
 import { type PublicRoomState } from "@tunetrack/shared";
 import { useMemo } from "react";
-import type { TimelineView } from "../GamePage.types";
+import type {
+  ChallengeMarkerTone,
+  GamePageCard,
+  GamePagePlayerNameResolver,
+  GamePageViewPreferenceUpdater,
+  TimelineView,
+} from "../GamePage.types";
+import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
+import type { ThemeId } from "../../../features/preferences/uiPreferences";
 import { useGamePageCapabilityState } from "./useGamePageCapabilityState";
 import { useGamePageStatusState } from "./useGamePageStatusState";
 import { useGamePageTimelineState } from "./useGamePageTimelineState";
@@ -11,7 +19,7 @@ interface UseGamePageDerivedStateOptions {
   nowEpochMs: number;
   roomState: PublicRoomState | null;
   selectedSlotIndex: number;
-  theme: "dark" | "light";
+  theme: ThemeId;
   timelineView: TimelineView;
   showDevAlbumInfo: boolean;
   showDevCardInfo: boolean;
@@ -23,14 +31,85 @@ interface UseGamePageDerivedStateOptions {
   showRoomCodeChip: boolean;
   showTimelineHints: boolean;
   showTurnNumberChip: boolean;
-  updateViewPreferences: (nextView: {
-    showMiniStandings?: boolean;
-  }) => void;
+  updateViewPreferences: GamePageViewPreferenceUpdater;
   handlers: {
     handleAwardTt: (playerId: string) => void;
     handleCloseRoom: () => void;
   };
 }
+
+interface GamePageDerivedPlayerState {
+  activePlayer: PublicRoomState["players"][number] | undefined;
+  challengeOwner: PublicRoomState["players"][number] | undefined;
+  currentPlayer: PublicRoomState["players"][number] | undefined;
+  getPlayerName: GamePagePlayerNameResolver;
+  isChallengeOwner: boolean;
+  isCurrentPlayerTurn: boolean;
+  leadingPlayers: PublicRoomState["players"];
+}
+
+interface GamePageDerivedInteractionState {
+  canClaimChallenge: boolean;
+  canConfirmBeatPlacement: boolean;
+  canConfirmReveal: boolean;
+  canConfirmTurnPlacement: boolean;
+  canResolveChallengeWindow: boolean;
+  canSelectChallengeSlot: boolean;
+  canSelectSlot: boolean;
+  canToggleTimelineView: boolean;
+  canUseBuyCard: boolean;
+  canUseSkipTrack: boolean;
+  isViewingOwnTimeline: boolean;
+}
+
+interface GamePageDerivedChallengeState {
+  challengeActionBody: string | null;
+  challengeActionTitle: string | null;
+  challengeCountdownLabel: string | null;
+  challengeMarkerTone: ChallengeMarkerTone;
+  challengeSuccessCelebrationCard: GamePageCard | null;
+  challengeSuccessCelebrationKey: string | null;
+  challengeSuccessMessage: string | null;
+  disabledTimelineSlots: number[];
+  showCorrectPlacementPreview: boolean;
+  showCorrectionPreview: boolean;
+  statusBadgeText: string;
+  statusDetailText: string;
+  visibleChallengeChosenSlot: number | null;
+  visibleOriginalChosenSlot: number | null;
+}
+
+interface GamePageDerivedPreferenceState {
+  showDevAlbumInfo: boolean;
+  showDevCardInfo: boolean;
+  showDevGenreInfo: boolean;
+  showDevYearInfo: boolean;
+  showHelperLabels: boolean;
+  showMiniStandings: boolean;
+  showPhaseChip: boolean;
+  showRoomCodeChip: boolean;
+  showTimelineHints: boolean;
+  showTurnNumberChip: boolean;
+  theme: ThemeId;
+  timelineView: TimelineView;
+  updateViewPreferences: GamePageViewPreferenceUpdater;
+}
+
+interface GamePageDerivedTimelineViewState {
+  menuTabs: AppShellMenuTab[];
+  visiblePreviewCard: GamePageCard | null;
+  visiblePreviewSlot: number | null;
+  visibleTimelineCardCount: number;
+  visibleTimelineCards: PublicRoomState["timelines"][string];
+  visibleTimelineHint: string;
+  visibleTimelineTitle: string;
+}
+
+type UseGamePageDerivedStateResult = GamePageDerivedPlayerState &
+  GamePageDerivedInteractionState &
+  GamePageDerivedChallengeState &
+  GamePageDerivedPreferenceState &
+  GamePageDerivedTimelineViewState;
 
 export function useGamePageDerivedState({
   currentPlayerId,
@@ -52,7 +131,7 @@ export function useGamePageDerivedState({
   theme,
   timelineView,
   updateViewPreferences,
-}: UseGamePageDerivedStateOptions) {
+}: UseGamePageDerivedStateOptions): UseGamePageDerivedStateResult {
   const activePlayer = roomState?.players.find(
     (player) => player.id === roomState.turn?.activePlayerId,
   );
@@ -145,7 +224,8 @@ export function useGamePageDerivedState({
     handlers,
     roomState,
   });
-  const canToggleTimelineView = showOwnTimeline;
+  const canToggleTimelineView =
+    showOwnTimeline && !capabilityState.canSelectChallengeSlot;
   const isViewingOwnTimeline = canToggleTimelineView && timelineView === "mine";
   const disabledTimelineSlots: number[] = [];
 

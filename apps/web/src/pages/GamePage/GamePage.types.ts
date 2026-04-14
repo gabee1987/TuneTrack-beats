@@ -6,6 +6,7 @@ import type {
 import type { AppShellMenuTab } from "../../features/app-shell/AppShellMenu";
 import type {
   HiddenCardMode,
+  ViewPreferences,
   ThemeId,
 } from "../../features/preferences/uiPreferences";
 
@@ -14,6 +15,13 @@ export type TimelineView = "active" | "mine";
 export type ChallengeMarkerTone = "pending" | "success" | "failure";
 
 export type GamePageCard = TrackCardPublic | TimelineCardPublic;
+export type GamePagePlayerNameResolver = (
+  playerId: string | null | undefined,
+) => string;
+export type GamePageViewPreferenceUpdate = Partial<ViewPreferences>;
+export type GamePageViewPreferenceUpdater = (
+  nextView: GamePageViewPreferenceUpdate,
+) => void;
 
 export interface GamePageActionHandlers {
   handleBuyTimelineCardWithTt: () => void;
@@ -62,7 +70,7 @@ export interface TimelinePanelProps {
   theme: ThemeId;
 }
 
-export interface GamePageController {
+export type GamePageController = GamePageActionHandlers & {
   canConfirmBeatPlacement: boolean;
   canConfirmReveal: boolean;
   canConfirmTurnPlacement: boolean;
@@ -106,9 +114,7 @@ export interface GamePageController {
   statusDetailText: string;
   theme: ThemeId;
   timelineView: TimelineView;
-  updateViewPreferences: (nextView: {
-    showMiniStandings?: boolean;
-  }) => void;
+  updateViewPreferences: GamePageViewPreferenceUpdater;
   visibleChallengeChosenSlot: number | null;
   visibleOriginalChosenSlot: number | null;
   visiblePreviewCard: GamePageCard | null;
@@ -117,12 +123,13 @@ export interface GamePageController {
   visibleTimelineCards: TimelineCardPublic[];
   visibleTimelineHint: string;
   visibleTimelineTitle: string;
-}
-
-export interface GamePageController extends GamePageActionHandlers {}
+};
 
 export interface GamePageControllerExtras {
   canClaimChallenge: boolean;
   canResolveChallengeWindow: boolean;
-  getPlayerName: (playerId: string | null | undefined) => string;
+  getPlayerName: GamePagePlayerNameResolver;
 }
+
+export type UseGamePageControllerResult = GamePageController &
+  GamePageControllerExtras;

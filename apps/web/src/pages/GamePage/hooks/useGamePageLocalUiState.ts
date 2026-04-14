@@ -28,6 +28,21 @@ export function useGamePageLocalUiState({
   }, [currentPlayerId, roomState?.turn?.activePlayerId]);
 
   useEffect(() => {
+    if (
+      roomState?.status === "challenge" &&
+      roomState.challengeState?.phase === "claimed" &&
+      roomState.challengeState.challengerPlayerId === currentPlayerId
+    ) {
+      setTimelineView("active");
+    }
+  }, [
+    currentPlayerId,
+    roomState?.challengeState?.challengerPlayerId,
+    roomState?.challengeState?.phase,
+    roomState?.status,
+  ]);
+
+  useEffect(() => {
     if (roomState?.status === "turn") {
       setLocallyPlacedCard(null);
     }

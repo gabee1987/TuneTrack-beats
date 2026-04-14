@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { PublicRoomState } from "@tunetrack/shared";
+import type { GamePageCard, GamePagePlayerNameResolver } from "../GamePage.types";
 
 interface UseGamePageTimelineStateOptions {
   activePlayerId: string | null | undefined;
@@ -9,11 +10,24 @@ interface UseGamePageTimelineStateOptions {
   currentPlayerId: string | null;
   currentPlayerTimeline: PublicRoomState["timelines"][string];
   activePlayerTimeline: PublicRoomState["timelines"][string];
-  getPossessivePlayerName: (playerId: string | null | undefined) => string;
+  getPossessivePlayerName: GamePagePlayerNameResolver;
   isViewingOwnTimeline: boolean;
   locallyPlacedCard: PublicRoomState["currentTrackCard"] | null;
   roomState: PublicRoomState | null;
   selectedSlotIndex: number;
+}
+
+interface UseGamePageTimelineStateResult {
+  showCorrectPlacementPreview: boolean;
+  showCorrectionPreview: boolean;
+  visibleChallengeChosenSlot: number | null;
+  visibleOriginalChosenSlot: number | null;
+  visiblePreviewCard: GamePageCard | null;
+  visiblePreviewSlot: number | null;
+  visibleTimelineCardCount: number;
+  visibleTimelineCards: PublicRoomState["timelines"][string];
+  visibleTimelineHint: string;
+  visibleTimelineTitle: string;
 }
 
 export function useGamePageTimelineState({
@@ -29,7 +43,7 @@ export function useGamePageTimelineState({
   locallyPlacedCard,
   roomState,
   selectedSlotIndex,
-}: UseGamePageTimelineStateOptions) {
+}: UseGamePageTimelineStateOptions): UseGamePageTimelineStateResult {
   function getActiveTimelineOriginalSlot(): number | null {
     if (roomState?.status === "challenge") {
       return roomState.challengeState?.originalSelectedSlotIndex ?? null;

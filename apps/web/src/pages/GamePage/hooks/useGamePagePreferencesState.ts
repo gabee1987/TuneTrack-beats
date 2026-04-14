@@ -1,6 +1,26 @@
 import { useUiPreferencesStore } from "../../../features/preferences/uiPreferences";
 
-export function useGamePagePreferencesState() {
+interface UseGamePagePreferencesStateResult {
+  hiddenCardMode: ReturnType<
+    typeof useUiPreferencesStore.getState
+  >["hiddenCardMode"];
+  showDevAlbumInfo: boolean;
+  showDevCardInfo: boolean;
+  showDevGenreInfo: boolean;
+  showDevYearInfo: boolean;
+  showHelperLabels: boolean;
+  showMiniStandings: boolean;
+  showPhaseChip: boolean;
+  showRoomCodeChip: boolean;
+  showTimelineHints: boolean;
+  showTurnNumberChip: boolean;
+  theme: ReturnType<typeof useUiPreferencesStore.getState>["theme"];
+  updateViewPreferences: ReturnType<
+    typeof useUiPreferencesStore.getState
+  >["updateViewPreferences"];
+}
+
+export function useGamePagePreferencesState(): UseGamePagePreferencesStateResult {
   const showMiniStandings = useUiPreferencesStore(
     (state) => state.view.showMiniStandings,
   );

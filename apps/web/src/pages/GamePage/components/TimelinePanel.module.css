@@ -16,6 +16,7 @@
   gap: 12px;
   align-items: center;
   min-height: 32px;
+  margin-bottom: 32px;
 }
 
 .timelineHeaderCopy {
@@ -263,9 +264,7 @@
 }
 
 .previewCardArtwork {
-  background:
-    var(--gradient-game-preview-surface),
-    var(--card-gradient);
+  background: var(--gradient-game-preview-surface), var(--card-gradient);
 }
 
 .previewCardGradient {
@@ -284,9 +283,7 @@
 }
 
 .previewCardCorrectionSurface {
-  background:
-    var(--gradient-game-preview-correction-surface),
-    var(--card-gradient);
+  background: var(--gradient-game-preview-correction-surface), var(--card-gradient);
 }
 
 .previewCardFace {

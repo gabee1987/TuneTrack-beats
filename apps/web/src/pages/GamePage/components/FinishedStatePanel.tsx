@@ -1,8 +1,9 @@
 import type { PublicRoomState } from "@tunetrack/shared";
+import type { GamePagePlayerNameResolver } from "../GamePage.types";
 import styles from "./GamePageActionPanels.module.css";
 
 interface FinishedStatePanelProps {
-  getPlayerName: (playerId: string | null | undefined) => string;
+  getPlayerName: GamePagePlayerNameResolver;
   roomState: PublicRoomState;
   showHelperLabels: boolean;
 }
