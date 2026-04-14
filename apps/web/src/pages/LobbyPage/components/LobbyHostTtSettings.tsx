@@ -13,6 +13,11 @@ import { LobbySelectSettingField } from "./LobbySelectSettingField";
 import type { LobbyRoomSettingsChangeHandler } from "./LobbyHostSettings.types";
 import { LobbySectionHeader } from "./LobbySectionHeader";
 import { LobbyToggleField } from "./LobbyToggleField";
+import {
+  formatChallengeWindowSettingValue,
+  getChallengeWindowOptionValueMap,
+  getChallengeWindowSelectValue,
+} from "../lobbySettingsSelectors";
 import styles from "../LobbyPage.module.css";
 
 interface LobbyHostTtSettingsProps {
@@ -26,6 +31,8 @@ export function LobbyHostTtSettings({
   onRoomSettingsChange,
   onToggleTtMode,
 }: LobbyHostTtSettingsProps) {
+  const challengeWindowOptionValues = getChallengeWindowOptionValueMap();
+
   return (
     <SurfaceCard className={styles.settingsGroup}>
       <LobbySectionHeader
@@ -59,11 +66,9 @@ export function LobbyHostTtSettings({
 
           <LobbySelectSettingField
             label="Challenge window"
-            value={
-              currentSettings.challengeWindowDurationSeconds === null
-                ? "Manual"
-                : `${currentSettings.challengeWindowDurationSeconds}s`
-            }
+            value={formatChallengeWindowSettingValue(
+              currentSettings.challengeWindowDurationSeconds,
+            )}
           >
             <AdaptiveSelect
               label="Challenge window"
@@ -77,26 +82,24 @@ export function LobbyHostTtSettings({
               options={[
                 {
                   label: "Host manual",
-                  value: "manual",
+                  value: challengeWindowOptionValues.manual,
                 },
                 {
                   label: `${DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS} seconds`,
-                  value: DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS.toString(),
+                  value: challengeWindowOptionValues.defaultDuration,
                 },
                 {
                   label: `${MIN_CHALLENGE_WINDOW_DURATION_SECONDS} seconds`,
-                  value: MIN_CHALLENGE_WINDOW_DURATION_SECONDS.toString(),
+                  value: challengeWindowOptionValues.minDuration,
                 },
                 {
                   label: `${MAX_CHALLENGE_WINDOW_DURATION_SECONDS} seconds`,
-                  value: MAX_CHALLENGE_WINDOW_DURATION_SECONDS.toString(),
+                  value: challengeWindowOptionValues.maxDuration,
                 },
               ]}
-              value={
-                currentSettings.challengeWindowDurationSeconds === null
-                  ? "manual"
-                  : currentSettings.challengeWindowDurationSeconds.toString()
-              }
+              value={getChallengeWindowSelectValue(
+                currentSettings.challengeWindowDurationSeconds,
+              )}
             />
           </LobbySelectSettingField>
         </div>

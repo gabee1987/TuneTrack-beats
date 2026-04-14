@@ -1,9 +1,11 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { rememberPlayerDisplayName } from "../../../services/session/playerSession";
-
-const DEFAULT_ROOM_ID = "party-room";
-const DEFAULT_DISPLAY_NAME = "Player 1";
+import {
+  DEFAULT_DISPLAY_NAME,
+  DEFAULT_ROOM_ID,
+  buildHomePageNavigationTarget,
+} from "../homePageNavigation";
 
 export interface HomePageController {
   displayName: string;
@@ -21,20 +23,17 @@ export function useHomePageController(): HomePageController {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const trimmedRoomId = roomId.trim();
-    const trimmedDisplayName = displayName.trim();
+    const navigationTarget = buildHomePageNavigationTarget({
+      displayName,
+      roomId,
+    });
 
-    if (!trimmedRoomId || !trimmedDisplayName) {
+    if (navigationTarget === null) {
       return;
     }
 
-    rememberPlayerDisplayName(trimmedDisplayName);
-
-    navigate(
-      `/lobby/${encodeURIComponent(trimmedRoomId)}?playerName=${encodeURIComponent(
-        trimmedDisplayName,
-      )}`,
-    );
+    rememberPlayerDisplayName(navigationTarget.displayName);
+    navigate(navigationTarget.path);
   }
 
   return {
