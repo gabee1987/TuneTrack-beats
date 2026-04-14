@@ -1,0 +1,103 @@
+import {
+  ClientToServerEvent,
+  type PublicPlayerState,
+  type PublicRoomSettings,
+  type PublicRoomState,
+} from "@tunetrack/shared";
+import { socketClient } from "../../../services/socket/socketClient";
+
+const DEFAULT_ENABLED_STARTING_TT_TOKEN_COUNT = 1;
+
+interface UseLobbyRoomActionsOptions {
+  currentSettings: PublicRoomSettings;
+  isHost: boolean;
+  roomState: PublicRoomState | null;
+}
+
+interface UseLobbyRoomActionsResult {
+  handleCloseRoom: () => void;
+  handlePlayerStartingCardCountChange: (
+    player: PublicPlayerState,
+    nextValue: number,
+  ) => void;
+  handleRoomSettingsChange: (nextSettings: PublicRoomSettings) => void;
+  handleStartGame: () => void;
+  toggleTtMode: (enabled: boolean) => void;
+}
+
+export function useLobbyRoomActions({
+  currentSettings,
+  isHost,
+  roomState,
+}: UseLobbyRoomActionsOptions): UseLobbyRoomActionsResult {
+  function handleRoomSettingsChange(nextSettings: PublicRoomSettings) {
+    if (!roomState || !isHost) {
+      return;
+    }
+
+    socketClient.emit(ClientToServerEvent.UpdateRoomSettings, {
+      roomId: roomState.roomId,
+      ...nextSettings,
+    });
+  }
+
+  function handlePlayerStartingCardCountChange(
+    player: PublicPlayerState,
+    nextValue: number,
+  ) {
+    if (!roomState || !isHost) {
+      return;
+    }
+
+    socketClient.emit(ClientToServerEvent.UpdatePlayerSettings, {
+      playerId: player.id,
+      roomId: roomState.roomId,
+      startingTimelineCardCount: nextValue,
+    });
+  }
+
+  function handleStartGame() {
+    if (!roomState || !isHost) {
+      return;
+    }
+
+    socketClient.emit(ClientToServerEvent.StartGame, {
+      roomId: roomState.roomId,
+    });
+  }
+
+  function handleCloseRoom() {
+    if (!roomState || !isHost) {
+      return;
+    }
+
+    socketClient.emit(ClientToServerEvent.CloseRoom, {
+      roomId: roomState.roomId,
+    });
+  }
+
+  function toggleTtMode(enabled: boolean) {
+    handleRoomSettingsChange(
+      enabled
+        ? {
+            ...currentSettings,
+            startingTtTokenCount: currentSettings.ttModeEnabled
+              ? currentSettings.startingTtTokenCount
+              : DEFAULT_ENABLED_STARTING_TT_TOKEN_COUNT,
+            ttModeEnabled: true,
+          }
+        : {
+            ...currentSettings,
+            ttModeEnabled: false,
+          },
+    );
+  }
+
+  return {
+    handleCloseRoom,
+    handlePlayerStartingCardCountChange,
+    handleRoomSettingsChange,
+    handleStartGame,
+    toggleTtMode,
+  };
+}

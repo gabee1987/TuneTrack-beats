@@ -1,5 +1,4 @@
 import { type PublicRoomState } from "@tunetrack/shared";
-import { useMemo } from "react";
 import type {
   ChallengeMarkerTone,
   GamePageCard,
@@ -10,8 +9,11 @@ import type {
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import type { ThemeId } from "../../../features/preferences/uiPreferences";
 import { useGamePageCapabilityState } from "./useGamePageCapabilityState";
+import { useGamePageChallengeCelebrationState } from "./useGamePageChallengeCelebrationState";
+import { useGamePagePlayerState } from "./useGamePagePlayerState";
 import { useGamePageStatusState } from "./useGamePageStatusState";
 import { useGamePageTimelineState } from "./useGamePageTimelineState";
+import { useGamePageTimelineViewMode } from "./useGamePageTimelineViewMode";
 
 interface UseGamePageDerivedStateOptions {
   currentPlayerId: string | null;
@@ -133,103 +135,42 @@ export function useGamePageDerivedState({
   timelineView,
   updateViewPreferences,
 }: UseGamePageDerivedStateOptions): UseGamePageDerivedStateResult {
-  const activePlayer = roomState?.players.find(
-    (player) => player.id === roomState.turn?.activePlayerId,
-  );
-  const currentPlayer = roomState?.players.find(
-    (player) => player.id === currentPlayerId,
-  );
-  const challengeOwner = roomState?.players.find(
-    (player) => player.id === roomState.challengeState?.challengerPlayerId,
-  );
-
-  const activePlayerTimeline = useMemo(() => {
-    if (!roomState || !roomState.turn?.activePlayerId) {
-      return [];
-    }
-
-    return roomState.timelines[roomState.turn.activePlayerId] ?? [];
-  }, [roomState]);
-
-  const currentPlayerTimeline = useMemo(() => {
-    if (!roomState || !currentPlayerId) {
-      return [];
-    }
-
-    return roomState.timelines[currentPlayerId] ?? [];
-  }, [currentPlayerId, roomState]);
-
-  function getPlayerName(playerId: string | null | undefined): string {
-    if (!playerId) {
-      return "Unknown player";
-    }
-
-    if (playerId === currentPlayerId) {
-      return "You";
-    }
-
-    return (
-      roomState?.players.find((player) => player.id === playerId)?.displayName ??
-      "Unknown player"
-    );
-  }
-
-  function getPossessivePlayerName(playerId: string | null | undefined): string {
-    if (!playerId) {
-      return "Unknown player's";
-    }
-
-    if (playerId === currentPlayerId) {
-      return "Your";
-    }
-
-    return `${getPlayerName(playerId)}'s`;
-  }
-
-  function getChallengeSuccessCelebrationState(): {
-    card: PublicRoomState["currentTrackCard"] | null;
-    key: string | null;
-  } {
-    if (
-      roomState?.status !== "reveal" ||
-      roomState.revealState?.challengerPlayerId !== currentPlayerId ||
-      !roomState.revealState.challengeWasSuccessful
-    ) {
-      return {
-        card: null,
-        key: null,
-      };
-    }
-
-    return {
-      card: roomState.revealState.placedCard,
-      key: [
-        roomState.roomId,
-        roomState.turn?.turnNumber ?? "reveal",
-        roomState.revealState.playerId,
-        roomState.revealState.placedCard.id,
-        roomState.revealState.challengerSelectedSlotIndex ?? "challenge",
-      ].join(":"),
-    };
-  }
-
-  const showOwnTimeline =
-    Boolean(currentPlayerId) && currentPlayerId !== activePlayer?.id;
   const {
-    card: challengeSuccessCelebrationCard,
-    key: challengeSuccessCelebrationKey,
-  } = getChallengeSuccessCelebrationState();
+    activePlayer,
+    activePlayerTimeline,
+    challengeOwner,
+    currentPlayer,
+    currentPlayerTimeline,
+    getPlayerName,
+    getPossessivePlayerName,
+    showOwnTimeline,
+  } = useGamePagePlayerState({
+    currentPlayerId,
+    roomState,
+  });
+
   const capabilityState = useGamePageCapabilityState({
     currentPlayerId,
     currentPlayerTtCount: currentPlayer?.ttTokenCount ?? 0,
     handlers,
     roomState,
   });
-  const canToggleTimelineView =
-    showOwnTimeline;
-  const canChangeTimelineView =
-    showOwnTimeline && !capabilityState.canSelectChallengeSlot;
-  const isViewingOwnTimeline = canToggleTimelineView && timelineView === "mine";
+  const {
+    challengeSuccessCelebrationCard,
+    challengeSuccessCelebrationKey,
+  } = useGamePageChallengeCelebrationState({
+    currentPlayerId,
+    roomState,
+  });
+  const {
+    canChangeTimelineView,
+    canToggleTimelineView,
+    isViewingOwnTimeline,
+  } = useGamePageTimelineViewMode({
+    canSelectChallengeSlot: capabilityState.canSelectChallengeSlot,
+    showOwnTimeline,
+    timelineView,
+  });
   const disabledTimelineSlots: number[] = [];
 
   const statusState = useGamePageStatusState({
