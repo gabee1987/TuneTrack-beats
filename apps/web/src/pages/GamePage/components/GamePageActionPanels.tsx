@@ -1,39 +1,8 @@
-import type { PublicRoomState } from "@tunetrack/shared";
-import type {
-  GamePageController,
-  GamePageControllerExtras,
-} from "../GamePage.types";
+import type { GamePageActionPanelsProps } from "../GamePage.types";
 import { ChallengeActionPanel } from "./ChallengeActionPanel";
 import { FinishedStatePanel } from "./FinishedStatePanel";
 import { RevealActionDock } from "./RevealActionDock";
 import { TurnActionDock } from "./TurnActionDock";
-
-interface GamePageActionPanelsProps
-  extends Pick<
-    GamePageController & GamePageControllerExtras,
-    | "canClaimChallenge"
-    | "canConfirmBeatPlacement"
-    | "canConfirmReveal"
-    | "canConfirmTurnPlacement"
-    | "canResolveChallengeWindow"
-    | "canUseBuyCard"
-    | "canUseSkipTrack"
-    | "challengeActionBody"
-    | "challengeActionTitle"
-    | "challengeCountdownLabel"
-    | "currentPlayerTtCount"
-    | "getPlayerName"
-    | "handleBuyTimelineCardWithTt"
-    | "handleClaimChallenge"
-    | "handleConfirmReveal"
-    | "handlePlaceCard"
-    | "handlePlaceChallenge"
-    | "handleResolveChallengeWindow"
-    | "handleSkipTrackWithTt"
-    | "showHelperLabels"
-  > {
-  roomState: PublicRoomState;
-}
 
 export function GamePageActionPanels({
   canClaimChallenge,

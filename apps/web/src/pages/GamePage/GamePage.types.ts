@@ -71,6 +71,33 @@ export interface TimelinePanelProps {
   theme: ThemeId;
 }
 
+export interface GamePageActionPanelsProps
+  extends Pick<
+    GamePageController & GamePageControllerExtras,
+    | "canClaimChallenge"
+    | "canConfirmBeatPlacement"
+    | "canConfirmReveal"
+    | "canConfirmTurnPlacement"
+    | "canResolveChallengeWindow"
+    | "canUseBuyCard"
+    | "canUseSkipTrack"
+    | "challengeActionBody"
+    | "challengeActionTitle"
+    | "challengeCountdownLabel"
+    | "currentPlayerTtCount"
+    | "getPlayerName"
+    | "handleBuyTimelineCardWithTt"
+    | "handleClaimChallenge"
+    | "handleConfirmReveal"
+    | "handlePlaceCard"
+    | "handlePlaceChallenge"
+    | "handleResolveChallengeWindow"
+    | "handleSkipTrackWithTt"
+    | "showHelperLabels"
+  > {
+  roomState: PublicRoomState;
+}
+
 export type GamePageController = GamePageActionHandlers & {
   canChangeTimelineView: boolean;
   canConfirmBeatPlacement: boolean;

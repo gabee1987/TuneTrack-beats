@@ -8,6 +8,7 @@ import type {
   GameRouteState,
   UseGamePageControllerResult,
 } from "../GamePage.types";
+import { buildGamePageControllerResult } from "./buildGamePageControllerResult";
 import { useGamePageActionAvailability } from "./useGamePageActionAvailability";
 import { useGamePageActions } from "./useGamePageActions";
 import { useGamePageDerivedState } from "./useGamePageDerivedState";
@@ -181,13 +182,13 @@ export function useGamePageController({
     roomState,
   };
 
-  return {
-    ...actionState,
-    ...capabilityState,
-    ...displayState,
-    ...playerState,
-    ...preferenceState,
-    ...timelineState,
+  return buildGamePageControllerResult({
+    actionState,
+    capabilityState,
+    displayState,
     errorMessage,
-  };
+    playerState,
+    preferenceState,
+    timelineState,
+  });
 }

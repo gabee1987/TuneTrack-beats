@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import type { PublicRoomState } from "@tunetrack/shared";
 import type { GamePageCard, GamePagePlayerNameResolver } from "../GamePage.types";
+import { useGamePageActiveTimelinePreviewState } from "./useGamePageActiveTimelinePreviewState";
+import { useGamePageRevealTimelineState } from "./useGamePageRevealTimelineState";
 
 interface UseGamePageTimelineStateOptions {
   activePlayerId: string | null | undefined;
@@ -44,120 +46,30 @@ export function useGamePageTimelineState({
   roomState,
   selectedSlotIndex,
 }: UseGamePageTimelineStateOptions): UseGamePageTimelineStateResult {
-  function getActiveTimelineOriginalSlot(): number | null {
-    if (roomState?.status === "challenge") {
-      return roomState.challengeState?.originalSelectedSlotIndex ?? null;
-    }
-
-    if (roomState?.status === "reveal") {
-      return roomState.revealState?.selectedSlotIndex ?? null;
-    }
-
-    return canSelectTurnSlot ? selectedSlotIndex : null;
-  }
-
-  function getActiveTimelineChallengeSlot(): number | null {
-    if (roomState?.status === "challenge") {
-      return canSelectChallengeSlot ? selectedSlotIndex : null;
-    }
-
-    if (roomState?.status === "reveal") {
-      return roomState.revealState?.challengerSelectedSlotIndex ?? null;
-    }
-
-    return null;
-  }
-
-  function getActiveTimelinePreviewCard():
-    | PublicRoomState["currentTrackCard"]
-    | null {
-    if (roomState?.status === "challenge") {
-      return roomState.currentTrackCard ?? locallyPlacedCard;
-    }
-
-    if (canSelectTurnSlot) {
-      return roomState?.currentTrackCard ?? null;
-    }
-
-    return null;
-  }
-
-  function getActiveTimelinePreviewSlot(
-    originalSlot: number | null,
-  ): number | null {
-    if (!canSelectTurnSlot && roomState?.status !== "challenge") {
-      return null;
-    }
-
-    return canSelectChallengeSlot ? selectedSlotIndex : originalSlot;
-  }
-
-  function getRevealPreviewState(): {
-    previewCard: PublicRoomState["currentTrackCard"] | null;
-    previewSlot: number | null;
-    showCorrectionPreview: boolean;
-    showCorrectPlacementPreview: boolean;
-  } {
-    if (
-      roomState?.status !== "reveal" ||
-      !roomState.revealState ||
-      roomState.settings.ttModeEnabled
-    ) {
-      return {
-        previewCard: null,
-        previewSlot: null,
-        showCorrectionPreview: false,
-        showCorrectPlacementPreview: false,
-      };
-    }
-
-    if (roomState.revealState.wasCorrect) {
-      return {
-        previewCard: null,
-        previewSlot: null,
-        showCorrectionPreview: false,
-        showCorrectPlacementPreview: true,
-      };
-    }
-
-    return {
-      previewCard: roomState.revealState.placedCard,
-      previewSlot: roomState.revealState.validSlotIndexes[0] ?? null,
-      showCorrectionPreview: true,
-      showCorrectPlacementPreview: false,
-    };
-  }
-
-  function getOwnTimelineRevealAwardedSlot(
-    awardedToChallenger: boolean,
-  ): number | null {
-    if (
-      roomState?.status !== "reveal" ||
-      roomState.revealState?.awardedPlayerId !== currentPlayerId
-    ) {
-      return null;
-    }
-
-    const challengerOwnsAward =
-      roomState.revealState.challengerPlayerId === currentPlayerId;
-
-    return challengerOwnsAward === awardedToChallenger
-      ? roomState.revealState.awardedSlotIndex
-      : null;
-  }
-
-  const activeTimelineOriginalSlot = getActiveTimelineOriginalSlot();
-  const activeTimelineChallengeSlot = getActiveTimelineChallengeSlot();
-  const activeTimelinePreviewCard = getActiveTimelinePreviewCard();
-  const activeTimelinePreviewSlot =
-    getActiveTimelinePreviewSlot(activeTimelineOriginalSlot);
+  const {
+    activeTimelineChallengeSlot,
+    activeTimelineOriginalSlot,
+    activeTimelinePreviewCard,
+    activeTimelinePreviewSlot,
+  } = useGamePageActiveTimelinePreviewState({
+    canSelectChallengeSlot,
+    canSelectTurnSlot,
+    locallyPlacedCard,
+    roomState,
+    selectedSlotIndex,
+  });
 
   const {
-    previewCard: revealPreviewCard,
-    previewSlot: revealPreviewSlot,
+    ownTimelineChallengeAwardSlot,
+    ownTimelineOriginalAwardSlot,
+    revealPreviewCard,
+    revealPreviewSlot,
     showCorrectionPreview,
     showCorrectPlacementPreview,
-  } = getRevealPreviewState();
+  } = useGamePageRevealTimelineState({
+    currentPlayerId,
+    roomState,
+  });
 
   const visibleTimelineCards = useMemo(
     () => (isViewingOwnTimeline ? currentPlayerTimeline : activePlayerTimeline),
@@ -196,10 +108,10 @@ export function useGamePageTimelineState({
     showCorrectPlacementPreview,
     showCorrectionPreview,
     visibleChallengeChosenSlot: isViewingOwnTimeline
-      ? getOwnTimelineRevealAwardedSlot(true)
+      ? ownTimelineChallengeAwardSlot
       : activeTimelineChallengeSlot,
     visibleOriginalChosenSlot: isViewingOwnTimeline
-      ? getOwnTimelineRevealAwardedSlot(false)
+      ? ownTimelineOriginalAwardSlot
       : activeTimelineOriginalSlot,
     visiblePreviewCard: getVisiblePreviewCard(),
     visiblePreviewSlot: getVisiblePreviewSlot(),

@@ -9,10 +9,8 @@ import type {
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import type { ThemeId } from "../../../features/preferences/uiPreferences";
 import { useGamePageCapabilityState } from "./useGamePageCapabilityState";
-import { useGamePageChallengeCelebrationState } from "./useGamePageChallengeCelebrationState";
+import { useGamePageDisplayState } from "./useGamePageDisplayState";
 import { useGamePagePlayerState } from "./useGamePagePlayerState";
-import { useGamePageStatusState } from "./useGamePageStatusState";
-import { useGamePageTimelineState } from "./useGamePageTimelineState";
 import { useGamePageTimelineViewMode } from "./useGamePageTimelineViewMode";
 
 interface UseGamePageDerivedStateOptions {
@@ -156,13 +154,6 @@ export function useGamePageDerivedState({
     roomState,
   });
   const {
-    challengeSuccessCelebrationCard,
-    challengeSuccessCelebrationKey,
-  } = useGamePageChallengeCelebrationState({
-    currentPlayerId,
-    roomState,
-  });
-  const {
     canChangeTimelineView,
     canToggleTimelineView,
     isViewingOwnTimeline,
@@ -171,32 +162,20 @@ export function useGamePageDerivedState({
     showOwnTimeline,
     timelineView,
   });
-  const disabledTimelineSlots: number[] = [];
-
-  const statusState = useGamePageStatusState({
+  const displayState = useGamePageDisplayState({
     activePlayerId: activePlayer?.id,
+    activePlayerTimeline,
+    canSelectChallengeSlot: capabilityState.canSelectChallengeSlot,
+    canSelectTurnSlot: capabilityState.canSelectTurnSlot,
     challengeOwnerId: challengeOwner?.id,
     currentPlayerId,
-    canSelectChallengeSlot: capabilityState.canSelectChallengeSlot,
-    challengeSuccessCelebrationCard,
+    currentPlayerTimeline,
     getPlayerName,
     getPossessivePlayerName,
     isCurrentPlayerTurn: capabilityState.isCurrentPlayerTurn,
-    nowEpochMs,
-    roomState,
-  });
-
-  const timelineState = useGamePageTimelineState({
-    activePlayerId: activePlayer?.id,
-    activePlayerTimeline,
-    activeTimelineHint: statusState.activeTimelineHint,
-    canSelectChallengeSlot: capabilityState.canSelectChallengeSlot,
-    canSelectTurnSlot: capabilityState.canSelectTurnSlot,
-    currentPlayerId,
-    currentPlayerTimeline,
-    getPossessivePlayerName,
     isViewingOwnTimeline,
     locallyPlacedCard,
+    nowEpochMs,
     roomState,
     selectedSlotIndex,
   });
@@ -227,20 +206,20 @@ export function useGamePageDerivedState({
   };
 
   const challengeState = {
-    challengeActionBody: statusState.challengeActionBody,
-    challengeActionTitle: statusState.challengeActionTitle,
-    challengeCountdownLabel: statusState.challengeCountdownLabel,
-    challengeMarkerTone: statusState.challengeMarkerTone,
-    challengeSuccessCelebrationCard,
-    challengeSuccessCelebrationKey,
-    challengeSuccessMessage: statusState.challengeSuccessMessage,
-    disabledTimelineSlots,
-    showCorrectPlacementPreview: timelineState.showCorrectPlacementPreview,
-    showCorrectionPreview: timelineState.showCorrectionPreview,
-    statusBadgeText: statusState.statusBadgeText,
-    statusDetailText: statusState.statusDetailText,
-    visibleChallengeChosenSlot: timelineState.visibleChallengeChosenSlot,
-    visibleOriginalChosenSlot: timelineState.visibleOriginalChosenSlot,
+    challengeActionBody: displayState.challengeActionBody,
+    challengeActionTitle: displayState.challengeActionTitle,
+    challengeCountdownLabel: displayState.challengeCountdownLabel,
+    challengeMarkerTone: displayState.challengeMarkerTone,
+    challengeSuccessCelebrationCard: displayState.challengeSuccessCelebrationCard,
+    challengeSuccessCelebrationKey: displayState.challengeSuccessCelebrationKey,
+    challengeSuccessMessage: displayState.challengeSuccessMessage,
+    disabledTimelineSlots: displayState.disabledTimelineSlots,
+    showCorrectPlacementPreview: displayState.showCorrectPlacementPreview,
+    showCorrectionPreview: displayState.showCorrectionPreview,
+    statusBadgeText: displayState.statusBadgeText,
+    statusDetailText: displayState.statusDetailText,
+    visibleChallengeChosenSlot: displayState.visibleChallengeChosenSlot,
+    visibleOriginalChosenSlot: displayState.visibleOriginalChosenSlot,
   };
 
   const preferenceState = {
@@ -261,12 +240,12 @@ export function useGamePageDerivedState({
 
   const timelineViewState = {
     menuTabs: capabilityState.menuTabs,
-    visiblePreviewCard: timelineState.visiblePreviewCard,
-    visiblePreviewSlot: timelineState.visiblePreviewSlot,
-    visibleTimelineCardCount: timelineState.visibleTimelineCardCount,
-    visibleTimelineCards: timelineState.visibleTimelineCards,
-    visibleTimelineHint: timelineState.visibleTimelineHint,
-    visibleTimelineTitle: timelineState.visibleTimelineTitle,
+    visiblePreviewCard: displayState.visiblePreviewCard,
+    visiblePreviewSlot: displayState.visiblePreviewSlot,
+    visibleTimelineCardCount: displayState.visibleTimelineCardCount,
+    visibleTimelineCards: displayState.visibleTimelineCards,
+    visibleTimelineHint: displayState.visibleTimelineHint,
+    visibleTimelineTitle: displayState.visibleTimelineTitle,
   };
 
   return {
