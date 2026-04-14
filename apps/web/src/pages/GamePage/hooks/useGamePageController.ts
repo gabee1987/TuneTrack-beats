@@ -112,6 +112,7 @@ export function useGamePageController({
   };
 
   const capabilityState = {
+    canChangeTimelineView: derivedState.canChangeTimelineView,
     canClaimChallenge: derivedState.canClaimChallenge,
     canConfirmBeatPlacement: derivedState.canConfirmBeatPlacement,
     canConfirmReveal: derivedState.canConfirmReveal,

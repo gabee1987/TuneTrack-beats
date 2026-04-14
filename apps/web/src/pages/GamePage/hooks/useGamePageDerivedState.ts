@@ -49,6 +49,7 @@ interface GamePageDerivedPlayerState {
 }
 
 interface GamePageDerivedInteractionState {
+  canChangeTimelineView: boolean;
   canClaimChallenge: boolean;
   canConfirmBeatPlacement: boolean;
   canConfirmReveal: boolean;
@@ -225,6 +226,8 @@ export function useGamePageDerivedState({
     roomState,
   });
   const canToggleTimelineView =
+    showOwnTimeline;
+  const canChangeTimelineView =
     showOwnTimeline && !capabilityState.canSelectChallengeSlot;
   const isViewingOwnTimeline = canToggleTimelineView && timelineView === "mine";
   const disabledTimelineSlots: number[] = [];
@@ -268,6 +271,7 @@ export function useGamePageDerivedState({
   };
 
   const interactionState = {
+    canChangeTimelineView,
     canClaimChallenge: capabilityState.canClaimChallenge,
     canConfirmBeatPlacement: capabilityState.canConfirmBeatPlacement,
     canConfirmReveal: capabilityState.canConfirmReveal,

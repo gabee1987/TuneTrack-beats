@@ -25,7 +25,7 @@ export interface UiPreferences {
   lastOpenedMenuTab: MenuTabId;
 }
 
-interface UiPreferencesStore extends UiPreferences {
+export interface UiPreferencesStore extends UiPreferences {
   setTheme: (theme: ThemeId) => void;
   toggleTheme: () => void;
   setHiddenCardMode: (mode: HiddenCardMode) => void;

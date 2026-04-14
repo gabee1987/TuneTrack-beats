@@ -47,6 +47,7 @@ export interface TimelinePanelProps {
   celebrationKey: string | null;
   celebrationMessage: string | null;
   cardCount: number;
+  canChangeTimelineView?: boolean;
   canToggleView?: boolean;
   timelineView?: TimelineView;
   timelineCards: TimelineCardPublic[];
@@ -71,6 +72,7 @@ export interface TimelinePanelProps {
 }
 
 export type GamePageController = GamePageActionHandlers & {
+  canChangeTimelineView: boolean;
   canConfirmBeatPlacement: boolean;
   canConfirmReveal: boolean;
   canConfirmTurnPlacement: boolean;

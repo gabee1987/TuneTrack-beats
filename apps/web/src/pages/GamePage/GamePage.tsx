@@ -53,6 +53,7 @@ export function GamePage() {
           celebrationCard={controller.challengeSuccessCelebrationCard}
           celebrationKey={controller.challengeSuccessCelebrationKey}
           celebrationMessage={controller.challengeSuccessMessage}
+          canChangeTimelineView={controller.canChangeTimelineView}
           cardCount={controller.visibleTimelineCardCount}
           canToggleView={controller.canToggleTimelineView}
           challengeMarkerTone={controller.challengeMarkerTone}

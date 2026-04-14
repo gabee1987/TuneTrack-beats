@@ -34,6 +34,7 @@ export function TimelinePanel({
   celebrationKey,
   celebrationMessage,
   cardCount,
+  canChangeTimelineView = true,
   canToggleView = false,
   timelineView = "active",
   timelineCards,
@@ -124,6 +125,7 @@ export function TimelinePanel({
                   : ""
               }`}
               data-active={timelineView === "active"}
+              disabled={!canChangeTimelineView}
               onClick={() => onToggleTimelineView("active")}
               type="button"
             >
@@ -136,6 +138,7 @@ export function TimelinePanel({
                   : ""
               }`}
               data-active={timelineView === "mine"}
+              disabled={!canChangeTimelineView}
               onClick={() => onToggleTimelineView("mine")}
               ref={mineButtonRef}
               type="button"
