@@ -1,15 +1,7 @@
-import { FormEvent } from "react";
 import { ActionButton } from "../../../features/ui/ActionButton";
 import { TextInput } from "../../../features/ui/TextInput";
+import type { JoinRoomFormProps } from "../HomePage.types";
 import styles from "../HomePage.module.css";
-
-interface JoinRoomFormProps {
-  displayName: string;
-  roomId: string;
-  onDisplayNameChange: (value: string) => void;
-  onRoomIdChange: (value: string) => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-}
 
 export function JoinRoomForm({
   displayName,

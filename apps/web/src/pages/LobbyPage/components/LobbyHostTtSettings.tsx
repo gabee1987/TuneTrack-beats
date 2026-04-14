@@ -6,13 +6,13 @@ import {
   MIN_STARTING_TT_TOKEN_COUNT,
   type PublicRoomSettings,
 } from "@tunetrack/shared";
+import { RangeField } from "../../../features/ui/RangeField";
+import { SettingField } from "../../../features/ui/SettingField";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
+import { ToggleField } from "../../../features/ui/ToggleField";
 import { AdaptiveSelect } from "./AdaptiveSelect";
-import { LobbyRangeSettingField } from "./LobbyRangeSettingField";
-import { LobbySelectSettingField } from "./LobbySelectSettingField";
 import type { LobbyRoomSettingsChangeHandler } from "./LobbyHostSettings.types";
 import { LobbySectionHeader } from "./LobbySectionHeader";
-import { LobbyToggleField } from "./LobbyToggleField";
 import {
   formatChallengeWindowSettingValue,
   getChallengeWindowOptionValueMap,
@@ -42,7 +42,7 @@ export function LobbyHostTtSettings({
         variant="compact"
       />
 
-      <LobbyToggleField
+      <ToggleField
         checked={currentSettings.ttModeEnabled}
         hint="Shows TT settings and defaults starting TT to 1."
         label="Enable TT mode"
@@ -51,7 +51,7 @@ export function LobbyHostTtSettings({
 
       {currentSettings.ttModeEnabled ? (
         <div className={styles.conditionalGroup}>
-          <LobbyRangeSettingField
+          <RangeField
             label="Starting TT for every player"
             max={MAX_STARTING_TT_TOKEN_COUNT}
             min={MIN_STARTING_TT_TOKEN_COUNT}
@@ -64,7 +64,7 @@ export function LobbyHostTtSettings({
             value={currentSettings.startingTtTokenCount}
           />
 
-          <LobbySelectSettingField
+          <SettingField
             label="Challenge window"
             value={formatChallengeWindowSettingValue(
               currentSettings.challengeWindowDurationSeconds,
@@ -101,7 +101,7 @@ export function LobbyHostTtSettings({
                 currentSettings.challengeWindowDurationSeconds,
               )}
             />
-          </LobbySelectSettingField>
+          </SettingField>
         </div>
       ) : (
         <p className={styles.settingsInlineHint}>

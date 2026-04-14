@@ -6,10 +6,10 @@ import {
   type PublicRoomSettings,
   type RevealConfirmMode,
 } from "@tunetrack/shared";
+import { RangeField } from "../../../features/ui/RangeField";
+import { SettingField } from "../../../features/ui/SettingField";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { AdaptiveSelect } from "./AdaptiveSelect";
-import { LobbyRangeSettingField } from "./LobbyRangeSettingField";
-import { LobbySelectSettingField } from "./LobbySelectSettingField";
 import type { LobbyRoomSettingsChangeHandler } from "./LobbyHostSettings.types";
 import { LobbySectionHeader } from "./LobbySectionHeader";
 import styles from "../LobbyPage.module.css";
@@ -32,7 +32,7 @@ export function LobbyHostCoreSettings({
         variant="compact"
       />
 
-      <LobbyRangeSettingField
+      <RangeField
         label="Cards needed to win"
         max={MAX_TARGET_TIMELINE_CARD_COUNT}
         min={MIN_TARGET_TIMELINE_CARD_COUNT}
@@ -45,7 +45,7 @@ export function LobbyHostCoreSettings({
         value={currentSettings.targetTimelineCardCount}
       />
 
-      <LobbyRangeSettingField
+      <RangeField
         label="Default starting cards"
         max={MAX_STARTING_TIMELINE_CARD_COUNT}
         min={MIN_STARTING_TIMELINE_CARD_COUNT}
@@ -58,7 +58,7 @@ export function LobbyHostCoreSettings({
         value={currentSettings.defaultStartingTimelineCardCount}
       />
 
-      <LobbySelectSettingField label="Reveal confirmation">
+      <SettingField label="Reveal confirmation">
         <AdaptiveSelect
           label="Reveal confirmation"
           onChange={(nextValue) =>
@@ -79,7 +79,7 @@ export function LobbyHostCoreSettings({
           ]}
           value={currentSettings.revealConfirmMode}
         />
-      </LobbySelectSettingField>
+      </SettingField>
     </SurfaceCard>
   );
 }
