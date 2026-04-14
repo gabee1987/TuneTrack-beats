@@ -1,7 +1,10 @@
 import { AppShellMenu } from "../../../features/app-shell/AppShellMenu";
+import { getHomePageMenuTabSpecs } from "../homePageMenuConfig";
 import styles from "../HomePage.module.css";
 
 export function HomePageTopBar() {
+  const menuTabs = getHomePageMenuTabSpecs();
+
   return (
     <div className={styles.topBar}>
       <div className={styles.topBarCopy}>
@@ -13,27 +16,11 @@ export function HomePageTopBar() {
 
       <AppShellMenu
         subtitle="Local preferences and future app controls live here."
-        tabs={[
-          {
-            id: "view",
-            label: "View",
-            content: (
-              <p className={styles.menuPlaceholder}>
-                Gameplay visibility controls will appear here as the final
-                mobile shell takes shape.
-              </p>
-            ),
-          },
-          {
-            id: "settings",
-            label: "Settings",
-            content: (
-              <p className={styles.menuPlaceholder}>
-                Theme and hidden-card preferences are ready for testing now.
-              </p>
-            ),
-          },
-        ]}
+        tabs={menuTabs.map((tab) => ({
+          id: tab.id,
+          label: tab.label,
+          content: <p className={styles.menuPlaceholder}>{tab.message}</p>,
+        }))}
         title="TuneTrack menu"
       />
     </div>
