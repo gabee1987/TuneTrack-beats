@@ -6,8 +6,10 @@ import {
   MIN_STARTING_TT_TOKEN_COUNT,
   type PublicRoomSettings,
 } from "@tunetrack/shared";
+import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { AdaptiveSelect } from "./AdaptiveSelect";
 import type { LobbyRoomSettingsChangeHandler } from "./LobbyHostSettings.types";
+import { LobbySectionHeader } from "./LobbySectionHeader";
 import styles from "../LobbyPage.module.css";
 
 interface LobbyHostTtSettingsProps {
@@ -22,13 +24,13 @@ export function LobbyHostTtSettings({
   onToggleTtMode,
 }: LobbyHostTtSettingsProps) {
   return (
-    <section className={styles.settingsGroup}>
-      <div className={styles.settingsGroupHeader}>
-        <h3 className={styles.settingsGroupTitle}>TT mode</h3>
-        <p className={styles.settingsGroupDescription}>
-          Tokens for skips, buys, and challenges.
-        </p>
-      </div>
+    <SurfaceCard className={styles.settingsGroup}>
+      <LobbySectionHeader
+        description="Tokens for skips, buys, and challenges."
+        title="TT mode"
+        titleAs="h3"
+        variant="compact"
+      />
 
       <label className={styles.toggleField}>
         <div className={styles.toggleCopy}>
@@ -118,6 +120,6 @@ export function LobbyHostTtSettings({
           Turn this on to show TT options.
         </p>
       )}
-    </section>
+    </SurfaceCard>
   );
 }

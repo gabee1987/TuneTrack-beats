@@ -1,0 +1,11 @@
+.screen {
+  min-height: var(--app-height);
+}
+
+.panel {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-surface);
+}

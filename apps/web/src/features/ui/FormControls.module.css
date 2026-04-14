@@ -1,0 +1,42 @@
+.textInput,
+.selectInput {
+  width: 100%;
+  border: 0;
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-surface-elevated) 88%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 88%, transparent);
+}
+
+.textInput {
+  min-height: 56px;
+  border-radius: var(--radius-input);
+  padding: 18px;
+}
+
+.textInput::placeholder {
+  color: var(--color-text-muted);
+}
+
+.selectInput {
+  min-height: 52px;
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+
+.button {
+  border: 0;
+  border-radius: var(--radius-button);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.buttonPrimary {
+  background: var(--color-accent-primary);
+  color: var(--color-text-on-accent);
+}
+
+.buttonDanger {
+  background: var(--color-status-danger-surface);
+  color: var(--color-status-danger-text);
+  outline: 1px solid var(--color-surface-outline-soft);
+}

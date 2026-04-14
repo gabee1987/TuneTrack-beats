@@ -1,3 +1,4 @@
+import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import styles from "../LobbyPage.module.css";
 
 interface LobbySummaryCardProps {
@@ -14,7 +15,7 @@ export function LobbySummaryCard({
   roomId,
 }: LobbySummaryCardProps) {
   return (
-    <section className={styles.summaryCard}>
+    <SurfaceCard className={styles.summaryCard}>
       <div className={styles.summaryRow}>
         <div>
           <p className={styles.summaryLabel}>Joined as</p>
@@ -33,6 +34,6 @@ export function LobbySummaryCard({
           <strong className={styles.summaryValue}>{playerCount}</strong>
         </div>
       </div>
-    </section>
+    </SurfaceCard>
   );
 }

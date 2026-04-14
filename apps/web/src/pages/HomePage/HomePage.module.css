@@ -1,22 +1,19 @@
-.screen {
+.screenShell {
   min-height: var(--app-height);
   padding: calc(var(--safe-area-top) + 20px) calc(var(--safe-area-right) + 16px)
     calc(var(--safe-area-bottom) + 20px) calc(var(--safe-area-left) + 16px);
 }
 
-.panel {
-  position: relative;
+.panelShell {
   width: min(100%, 1180px);
   min-height: calc(var(--app-height) - var(--safe-area-top) - var(--safe-area-bottom) - 40px);
   margin: 0 auto;
   padding: clamp(18px, 3vw, 28px);
-  border: 1px solid var(--color-border-subtle);
   border-radius: clamp(24px, 4vw, 36px);
   background: var(--gradient-home-shell-background);
-  box-shadow: var(--shadow-surface);
 }
 
-.panel::before {
+.panelShell::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -147,20 +144,7 @@
   color: var(--color-text-secondary);
 }
 
-.input {
-  width: 100%;
-  min-height: 56px;
-  border: 0;
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--color-surface-elevated) 88%, transparent);
-  color: var(--color-text-primary);
-  padding: 18px 18px;
-  outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 90%, transparent);
-}
-
-.input::placeholder {
-  color: var(--color-text-muted);
-}
+.textInput {}
 
 .formFooter {
   display: grid;
@@ -177,14 +161,8 @@
 .primaryButton {
   width: 100%;
   min-height: 56px;
-  border: 0;
-  border-radius: var(--radius-button);
-  background: var(--color-accent-primary);
-  color: var(--color-text-on-accent);
   padding: 18px 22px;
-  font-weight: 800;
   letter-spacing: 0.01em;
-  cursor: pointer;
 }
 
 @media (min-width: 900px) {
@@ -204,7 +182,7 @@
 }
 
 @media (orientation: landscape) and (max-width: 960px) {
-  .panel {
+  .panelShell {
     min-height: auto;
   }
 
@@ -230,7 +208,7 @@
     margin-top: 16px;
   }
 
-  .input,
+  .textInput,
   .primaryButton {
     min-height: 50px;
   }
@@ -241,11 +219,11 @@
 }
 
 @media (max-width: 640px) {
-  .screen {
+  .screenShell {
     padding-inline: calc(var(--safe-area-left) + 10px) calc(var(--safe-area-right) + 10px);
   }
 
-  .panel {
+  .panelShell {
     min-height: auto;
     padding: 10px 12px 14px;
     border: 0;
@@ -285,7 +263,7 @@
 }
 
 @media (max-width: 640px) and (orientation: landscape) {
-  .screen {
+  .screenShell {
     padding-top: calc(var(--safe-area-top));
     padding-bottom: calc(var(--safe-area-bottom));
   }
@@ -318,12 +296,12 @@
 }
 
 @media (hover: none) and (pointer: coarse) {
-  .screen {
+  .screenShell {
     padding: calc(var(--safe-area-top)) var(--safe-area-right) calc(var(--safe-area-bottom))
       var(--safe-area-left);
   }
 
-  .panel {
+  .panelShell {
     width: 100%;
     min-height: var(--app-height);
     padding: 10px 12px 12px;
@@ -333,7 +311,7 @@
     box-shadow: none;
   }
 
-  .panel::before,
+  .panelShell::before,
   .topBarCopy {
     display: none;
   }
@@ -375,7 +353,7 @@
     margin-top: 14px;
   }
 
-  .input,
+  .textInput,
   .primaryButton {
     min-height: 48px;
     padding-block: 14px;

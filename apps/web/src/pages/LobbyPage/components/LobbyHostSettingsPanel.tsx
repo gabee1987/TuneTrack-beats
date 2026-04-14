@@ -1,6 +1,8 @@
+import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { LobbyHostCoreSettings } from "./LobbyHostCoreSettings";
 import { LobbyHostStartPanel } from "./LobbyHostStartPanel";
 import { LobbyHostTtSettings } from "./LobbyHostTtSettings";
+import { LobbySectionHeader } from "./LobbySectionHeader";
 import type { LobbyHostSettingsPanelProps } from "./LobbyHostSettings.types";
 import styles from "../LobbyPage.module.css";
 
@@ -11,14 +13,12 @@ export function LobbyHostSettingsPanel({
   onToggleTtMode,
 }: LobbyHostSettingsPanelProps) {
   return (
-    <section className={styles.settingsPanel}>
-      <div className={styles.sectionHeading}>
-        <div>
-          <h2 className={styles.sectionTitle}>Host setup</h2>
-          <p className={styles.sectionDescription}>Set the rules, then start.</p>
-        </div>
-        <span className={styles.summaryChip}>Host only</span>
-      </div>
+    <SurfaceCard className={styles.settingsPanel}>
+      <LobbySectionHeader
+        badge={<span className={styles.summaryChip}>Host only</span>}
+        description="Set the rules, then start."
+        title="Host setup"
+      />
 
       <div className={styles.settingsGrid}>
         <LobbyHostCoreSettings
@@ -33,6 +33,6 @@ export function LobbyHostSettingsPanel({
       </div>
 
       <LobbyHostStartPanel onStartGame={onStartGame} />
-    </section>
+    </SurfaceCard>
   );
 }

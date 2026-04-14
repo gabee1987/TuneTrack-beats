@@ -1,4 +1,5 @@
 import { AppShellMenu } from "../../features/app-shell/AppShellMenu";
+import { AppPageShell } from "../../features/mobile-shell/AppPageShell";
 import { HomePageHero } from "./components/HomePageHero";
 import { JoinRoomForm } from "./components/JoinRoomForm";
 import { useHomePageController } from "./hooks/useHomePageController";
@@ -14,8 +15,10 @@ export function HomePage() {
   } = useHomePageController();
 
   return (
-    <main className={styles.screen}>
-      <section className={styles.panel}>
+    <AppPageShell
+      panelClassName={styles.panelShell}
+      screenClassName={styles.screenShell}
+    >
         <div className={styles.topBar}>
           <div className={styles.topBarCopy}>
             <span className={styles.topBarLabel}>TuneTrack</span>
@@ -61,7 +64,6 @@ export function HomePage() {
             roomId={roomId}
           />
         </div>
-      </section>
-    </main>
+    </AppPageShell>
   );
 }

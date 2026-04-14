@@ -1,7 +1,10 @@
+import { SurfaceCard } from "../../features/ui/SurfaceCard";
+import { AppPageShell } from "../../features/mobile-shell/AppPageShell";
 import { LobbyHeader } from "./components/LobbyHeader";
 import { LobbyHostSettingsPanel } from "./components/LobbyHostSettingsPanel";
 import { LobbyPlayerList } from "./components/LobbyPlayerList";
 import { LobbyRoomActions } from "./components/LobbyRoomActions";
+import { LobbySectionHeader } from "./components/LobbySectionHeader";
 import { LobbySummaryCard } from "./components/LobbySummaryCard";
 import { useLobbyPageController } from "./hooks/useLobbyPageController";
 import styles from "./LobbyPage.module.css";
@@ -27,8 +30,10 @@ export function LobbyPage() {
   const players = roomState?.players ?? [];
 
   return (
-    <main className={styles.screen}>
-      <section className={styles.panel}>
+    <AppPageShell
+      panelClassName={styles.panelShell}
+      screenClassName={styles.screenShell}
+    >
         <LobbyHeader
           connectionStatus={connectionStatus}
           isHost={isHost}
@@ -54,17 +59,12 @@ export function LobbyPage() {
                 onToggleTtMode={toggleTtMode}
               />
             ) : (
-              <section className={styles.waitingCard}>
-                <div className={styles.sectionHeading}>
-                  <div>
-                    <h2 className={styles.sectionTitle}>Waiting for host</h2>
-                    <p className={styles.sectionDescription}>
-                      The host is setting the room up. You will move into the game
-                      automatically when it starts.
-                    </p>
-                  </div>
-                </div>
-              </section>
+              <SurfaceCard className={styles.waitingCard}>
+                <LobbySectionHeader
+                  description="The host is setting the room up. You will move into the game automatically when it starts."
+                  title="Waiting for host"
+                />
+              </SurfaceCard>
             )}
           </div>
 
@@ -80,7 +80,6 @@ export function LobbyPage() {
             {isHost ? <LobbyRoomActions onCloseRoom={handleCloseRoom} /> : null}
           </aside>
         </div>
-      </section>
-    </main>
+    </AppPageShell>
   );
 }

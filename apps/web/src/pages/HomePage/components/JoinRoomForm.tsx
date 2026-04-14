@@ -1,4 +1,6 @@
 import { FormEvent } from "react";
+import { ActionButton } from "../../../features/ui/ActionButton";
+import { TextInput } from "../../../features/ui/TextInput";
 import styles from "../HomePage.module.css";
 
 interface JoinRoomFormProps {
@@ -30,10 +32,10 @@ export function JoinRoomForm({
       <form className={styles.form} onSubmit={onSubmit}>
         <label className={styles.field}>
           <span className={styles.fieldLabel}>Room code</span>
-          <input
+          <TextInput
             autoCapitalize="none"
             autoCorrect="off"
-            className={styles.input}
+            className={styles.textInput}
             inputMode="text"
             onChange={(event) => onRoomIdChange(event.target.value)}
             placeholder="party-room"
@@ -44,8 +46,8 @@ export function JoinRoomForm({
 
         <label className={styles.field}>
           <span className={styles.fieldLabel}>Player name</span>
-          <input
-            className={styles.input}
+          <TextInput
+            className={styles.textInput}
             maxLength={24}
             onChange={(event) => onDisplayNameChange(event.target.value)}
             placeholder="Player 1"
@@ -56,9 +58,9 @@ export function JoinRoomForm({
 
         <div className={styles.formFooter}>
           <p className={styles.formHint}>Your name stays saved on this device.</p>
-          <button className={styles.primaryButton} type="submit">
+          <ActionButton className={styles.primaryButton} type="submit">
             Open Lobby
-          </button>
+          </ActionButton>
         </div>
       </form>
     </section>

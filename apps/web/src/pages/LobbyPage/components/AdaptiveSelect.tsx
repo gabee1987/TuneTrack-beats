@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SelectInput } from "../../../features/ui/SelectInput";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import styles from "../LobbyPage.module.css";
 
@@ -29,7 +30,7 @@ export function AdaptiveSelect({
 
   if (!isCompactTouch) {
     return (
-      <select
+      <SelectInput
         aria-label={label}
         className={styles.selectInput}
         onChange={(event) => onChange(event.target.value)}
@@ -40,7 +41,7 @@ export function AdaptiveSelect({
             {option.label}
           </option>
         ))}
-      </select>
+      </SelectInput>
     );
   }
 

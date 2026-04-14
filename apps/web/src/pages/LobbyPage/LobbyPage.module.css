@@ -1,18 +1,16 @@
-.screen {
+.screenShell {
   min-height: var(--app-height);
   padding: calc(var(--safe-area-top) + 16px) calc(var(--safe-area-right) + 14px)
     calc(var(--safe-area-bottom) + 24px) calc(var(--safe-area-left) + 14px);
 }
 
-.panel {
+.panelShell {
   width: min(100%, 1280px);
   min-height: calc(var(--app-height) - var(--safe-area-top) - var(--safe-area-bottom) - 40px);
   margin: 0 auto;
   padding: clamp(16px, 2vw, 24px);
-  border: 1px solid var(--color-border-subtle);
   border-radius: clamp(24px, 3vw, 34px);
   background: var(--gradient-lobby-shell-background);
-  box-shadow: var(--shadow-surface);
 }
 
 .header {
@@ -83,24 +81,17 @@
   align-content: start;
 }
 
-.summaryCard,
-.settingsPanel,
-.rosterSection,
-.roomActionsSection,
-.waitingCard {
-  padding: clamp(16px, 2vw, 22px);
-  border-radius: 24px;
-  background: color-mix(in srgb, var(--color-surface-strong) 92%, transparent);
-  outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 88%, transparent);
-  backdrop-filter: blur(16px);
-}
-
 .summaryRow,
 .sectionHeading {
   display: flex;
   justify-content: space-between;
   gap: 16px;
   align-items: flex-start;
+}
+
+.sectionHeadingCompact {
+  display: grid;
+  gap: 6px;
 }
 
 .summaryGrid {
@@ -152,10 +143,19 @@
   letter-spacing: -0.04em;
 }
 
+.sectionTitleCompact {
+  font-size: 18px;
+  letter-spacing: -0.03em;
+}
+
 .sectionDescription {
   margin: 8px 0 0;
   color: var(--color-text-secondary);
   line-height: 1.5;
+}
+
+.sectionDescriptionCompact {
+  margin-top: 0;
 }
 
 .settingsGrid {
@@ -172,19 +172,12 @@
   background: var(--color-surface-soft);
 }
 
-.settingsGroupHeader {
-  display: grid;
-  gap: 6px;
-}
-
-.settingsGroupTitle,
 .primaryActionTitle {
   margin: 0;
   font-size: 18px;
   letter-spacing: -0.03em;
 }
 
-.settingsGroupDescription,
 .primaryActionDescription,
 .settingsInlineHint {
   margin: 0;
@@ -278,37 +271,17 @@
 }
 
 .selectInput {
-  width: 100%;
   min-height: 52px;
-  border: 0;
-  border-radius: 16px;
-  padding: 14px 16px;
-  background: color-mix(in srgb, var(--color-surface-elevated) 88%, transparent);
-  color: var(--color-text-primary);
-  outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 88%, transparent);
 }
 
 .startGameButton {
   min-width: 180px;
-  border: 0;
-  border-radius: var(--radius-button);
   padding: 16px 22px;
-  background: var(--color-accent-primary);
-  color: var(--color-text-on-accent);
-  font-weight: 800;
-  cursor: pointer;
 }
 
 .cancelRoomButton {
   width: 100%;
-  border: 0;
-  border-radius: var(--radius-button);
   padding: 16px 22px;
-  background: var(--color-status-danger-surface);
-  color: var(--color-status-danger-text);
-  font-weight: 800;
-  cursor: pointer;
-  outline: 1px solid var(--color-surface-outline-soft);
 }
 
 .playerList {
@@ -406,11 +379,11 @@
 }
 
 @media (max-width: 720px) {
-  .screen {
+  .screenShell {
     padding-inline: calc(var(--safe-area-left) + 10px) calc(var(--safe-area-right) + 10px);
   }
 
-  .panel {
+  .panelShell {
     padding: 14px;
     border: 0;
     border-radius: 0;
@@ -442,7 +415,7 @@
 
   .subtitle,
   .sectionDescription,
-  .settingsGroupDescription,
+  .sectionDescriptionCompact,
   .primaryActionDescription,
   .settingsInlineHint,
   .toggleHint {
@@ -452,15 +425,6 @@
 
   .sectionTitle {
     font-size: 18px;
-  }
-
-  .summaryCard,
-  .settingsPanel,
-  .rosterSection,
-  .roomActionsSection,
-  .waitingCard {
-    padding: 14px;
-    border-radius: 18px;
   }
 
   .startGameButton {
@@ -538,7 +502,7 @@
 }
 
 @media (max-width: 720px) and (orientation: landscape) {
-  .screen {
+  .screenShell {
     padding-top: calc(var(--safe-area-top));
     padding-bottom: calc(var(--safe-area-bottom));
   }
@@ -565,12 +529,12 @@
 }
 
 @media (hover: none) and (pointer: coarse) {
-  .screen {
+  .screenShell {
     padding: calc(var(--safe-area-top)) var(--safe-area-right) calc(var(--safe-area-bottom))
       var(--safe-area-left);
   }
 
-  .panel {
+  .panelShell {
     width: 100%;
     min-height: var(--app-height);
     padding: 10px 12px 12px;
@@ -586,22 +550,13 @@
     gap: 12px;
   }
 
-  .summaryCard,
-  .settingsPanel,
-  .rosterSection,
-  .roomActionsSection,
-  .waitingCard {
-    padding: 14px;
-    border-radius: 18px;
-  }
-
   .title {
     font-size: 28px;
   }
 
   .subtitle,
   .sectionDescription,
-  .settingsGroupDescription,
+  .sectionDescriptionCompact,
   .primaryActionDescription,
   .settingsInlineHint,
   .toggleHint {

@@ -6,8 +6,10 @@ import {
   type PublicRoomSettings,
   type RevealConfirmMode,
 } from "@tunetrack/shared";
+import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { AdaptiveSelect } from "./AdaptiveSelect";
 import type { LobbyRoomSettingsChangeHandler } from "./LobbyHostSettings.types";
+import { LobbySectionHeader } from "./LobbySectionHeader";
 import styles from "../LobbyPage.module.css";
 
 interface LobbyHostCoreSettingsProps {
@@ -20,11 +22,13 @@ export function LobbyHostCoreSettings({
   onRoomSettingsChange,
 }: LobbyHostCoreSettingsProps) {
   return (
-    <section className={styles.settingsGroup}>
-      <div className={styles.settingsGroupHeader}>
-        <h3 className={styles.settingsGroupTitle}>Core rules</h3>
-        <p className={styles.settingsGroupDescription}>Win target and starting hand.</p>
-      </div>
+    <SurfaceCard className={styles.settingsGroup}>
+      <LobbySectionHeader
+        description="Win target and starting hand."
+        title="Core rules"
+        titleAs="h3"
+        variant="compact"
+      />
 
       <label className={styles.settingField}>
         <div className={styles.settingLabelRow}>
@@ -95,6 +99,6 @@ export function LobbyHostCoreSettings({
           value={currentSettings.revealConfirmMode}
         />
       </label>
-    </section>
+    </SurfaceCard>
   );
 }

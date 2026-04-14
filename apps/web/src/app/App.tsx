@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
 import { useUiPreferencesStore } from "../features/preferences/uiPreferences";
 import { applyTheme } from "../features/theme/themeRegistry";
+import { AppRouteFallback } from "./components/AppRouteFallback";
 import { router } from "./router";
 
 export function App() {
@@ -13,7 +14,7 @@ export function App() {
 
   return (
     <>
-      <RouterProvider router={router} />
+      <RouterProvider fallbackElement={<AppRouteFallback />} router={router} />
     </>
   );
 }

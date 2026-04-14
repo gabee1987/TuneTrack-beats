@@ -4,6 +4,8 @@ import {
   type PublicPlayerState,
   type PublicRoomSettings,
 } from "@tunetrack/shared";
+import { SurfaceCard } from "../../../features/ui/SurfaceCard";
+import { LobbySectionHeader } from "./LobbySectionHeader";
 import styles from "../LobbyPage.module.css";
 
 interface LobbyPlayerListProps {
@@ -25,13 +27,11 @@ export function LobbyPlayerList({
   onPlayerStartingCardCountChange,
 }: LobbyPlayerListProps) {
   return (
-    <section className={styles.rosterSection}>
-      <div className={styles.sectionHeading}>
-        <div>
-          <h2 className={styles.sectionTitle}>Players</h2>
-          <p className={styles.sectionDescription}>Everyone currently in the room.</p>
-        </div>
-      </div>
+    <SurfaceCard className={styles.rosterSection}>
+      <LobbySectionHeader
+        description="Everyone currently in the room."
+        title="Players"
+      />
 
       <ul className={styles.playerList}>
         {players.map((player) => {
@@ -91,6 +91,6 @@ export function LobbyPlayerList({
           );
         })}
       </ul>
-    </section>
+    </SurfaceCard>
   );
 }

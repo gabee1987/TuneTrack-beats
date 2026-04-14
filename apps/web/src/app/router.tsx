@@ -1,19 +1,34 @@
 import { createBrowserRouter } from "react-router-dom";
-import { GamePage } from "../pages/GamePage/GamePage";
-import { HomePage } from "../pages/HomePage/HomePage";
-import { LobbyPage } from "../pages/LobbyPage/LobbyPage";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <HomePage />,
+    lazy: async () => {
+      const { HomePage } = await import("../pages/HomePage/HomePage");
+
+      return {
+        Component: HomePage,
+      };
+    },
   },
   {
     path: "/lobby/:roomId",
-    element: <LobbyPage />,
+    lazy: async () => {
+      const { LobbyPage } = await import("../pages/LobbyPage/LobbyPage");
+
+      return {
+        Component: LobbyPage,
+      };
+    },
   },
   {
     path: "/game/:roomId",
-    element: <GamePage />,
+    lazy: async () => {
+      const { GamePage } = await import("../pages/GamePage/GamePage");
+
+      return {
+        Component: GamePage,
+      };
+    },
   },
 ]);

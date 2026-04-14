@@ -1,3 +1,6 @@
+import { ActionButton } from "../../../features/ui/ActionButton";
+import { SurfaceCard } from "../../../features/ui/SurfaceCard";
+import { LobbySectionHeader } from "./LobbySectionHeader";
 import styles from "../LobbyPage.module.css";
 
 interface LobbyRoomActionsProps {
@@ -6,16 +9,19 @@ interface LobbyRoomActionsProps {
 
 export function LobbyRoomActions({ onCloseRoom }: LobbyRoomActionsProps) {
   return (
-    <section className={styles.roomActionsSection}>
-      <div>
-        <h2 className={styles.sectionTitle}>Room actions</h2>
-        <p className={styles.sectionDescription}>
-          Closing the room sends everyone back to the main menu.
-        </p>
-      </div>
-      <button className={styles.cancelRoomButton} onClick={onCloseRoom} type="button">
+    <SurfaceCard className={styles.roomActionsSection}>
+      <LobbySectionHeader
+        description="Closing the room sends everyone back to the main menu."
+        title="Room actions"
+      />
+      <ActionButton
+        className={styles.cancelRoomButton}
+        onClick={onCloseRoom}
+        type="button"
+        variant="danger"
+      >
         Close Room
-      </button>
-    </section>
+      </ActionButton>
+    </SurfaceCard>
   );
 }

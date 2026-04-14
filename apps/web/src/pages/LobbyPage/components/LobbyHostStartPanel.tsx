@@ -1,3 +1,4 @@
+import { ActionButton } from "../../../features/ui/ActionButton";
 import styles from "../LobbyPage.module.css";
 
 interface LobbyHostStartPanelProps {
@@ -15,9 +16,13 @@ export function LobbyHostStartPanel({
           Start when the room looks right.
         </p>
       </div>
-      <button className={styles.startGameButton} onClick={onStartGame} type="button">
+      <ActionButton
+        className={styles.startGameButton}
+        onClick={onStartGame}
+        type="button"
+      >
         Start Game
-      </button>
+      </ActionButton>
     </div>
   );
 }
