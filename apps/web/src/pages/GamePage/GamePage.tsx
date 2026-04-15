@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { AppRouteFallback } from "../../app/components/AppRouteFallback";
 import { usePageLayoutMode } from "../../hooks/usePageLayoutMode";
 import type { GameRouteState, LoadedGamePageController } from "./GamePage.types";
+import { buildGamePageAssemblyModel } from "./hooks/buildGamePageAssemblyModel";
 import { useGamePageController } from "./hooks/useGamePageController";
 import styles from "./GamePage.module.css";
 
@@ -42,13 +43,14 @@ export function GamePage() {
     ...controller,
     roomState: controller.roomState,
   };
+  const model = buildGamePageAssemblyModel(loadedController);
 
   return (
     <Suspense fallback={<AppRouteFallback />}>
       {layoutMode === "mobile" ? (
-        <GamePageMobile controller={loadedController} />
+        <GamePageMobile model={model} />
       ) : (
-        <GamePageDesktop controller={loadedController} />
+        <GamePageDesktop model={model} />
       )}
     </Suspense>
   );

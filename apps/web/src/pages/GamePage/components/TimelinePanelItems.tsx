@@ -1,28 +1,12 @@
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
-import type {
-  HiddenCardMode,
-  ThemeId,
-} from "../../../features/preferences/uiPreferences";
-import type { ChallengeMarkerTone, GamePageCard } from "../GamePage.types";
+import type { GamePageCard, TimelinePanelItemsModel } from "../GamePage.types";
 import { TimelineSortableItem } from "./TimelineSortableItem";
 
 interface TimelinePanelItemsProps {
-  challengeMarkerTone: ChallengeMarkerTone;
-  challengerChosenSlotIndex: number | null;
-  disabledSlotIndexes: number[];
-  hiddenCardMode: HiddenCardMode;
   isDraggingPreviewCard: boolean;
+  model: TimelinePanelItemsModel;
   orderedItemIds: string[];
-  originalChosenSlotIndex: number | null;
   onPreviewCardRef: (node: HTMLElement | null) => void;
-  selectable: boolean;
-  showCorrectPlacementPreview: boolean;
-  showCorrectionPreview: boolean;
-  showDevAlbumInfo: boolean;
-  showDevCardInfo: boolean;
-  showDevGenreInfo: boolean;
-  showDevYearInfo: boolean;
-  theme: ThemeId;
   timelineItemMap: Map<
     string,
     | {
@@ -37,24 +21,28 @@ interface TimelinePanelItemsProps {
 }
 
 export function TimelinePanelItems({
-  challengeMarkerTone,
-  challengerChosenSlotIndex,
-  disabledSlotIndexes,
-  hiddenCardMode,
   isDraggingPreviewCard,
+  model,
   orderedItemIds,
-  originalChosenSlotIndex,
   onPreviewCardRef,
-  selectable,
-  showCorrectPlacementPreview,
-  showCorrectionPreview,
-  showDevAlbumInfo,
-  showDevCardInfo,
-  showDevGenreInfo,
-  showDevYearInfo,
-  theme,
   timelineItemMap,
 }: TimelinePanelItemsProps) {
+  const {
+    challengeMarkerTone,
+    challengerChosenSlotIndex,
+    disabledSlotIndexes,
+    hiddenCardMode,
+    originalChosenSlotIndex,
+    selectable,
+    showCorrectPlacementPreview,
+    showCorrectionPreview,
+    showDevAlbumInfo,
+    showDevCardInfo,
+    showDevGenreInfo,
+    showDevYearInfo,
+    theme,
+  } = model;
+
   return (
     <SortableContext
       items={orderedItemIds}

@@ -1,25 +1,24 @@
-import type { TimelineView } from "../GamePage.types";
+import type { TimelinePanelHeaderModel } from "../GamePage.types";
 import styles from "./TimelinePanel.module.css";
 
 interface TimelinePanelHeaderProps {
-  canChangeTimelineView: boolean;
-  canToggleView: boolean;
-  cardCount: number;
+  model: TimelinePanelHeaderModel;
   onMineButtonRef: (node: HTMLButtonElement | null) => void;
-  onToggleTimelineView: ((view: TimelineView) => void) | undefined;
-  timelineView: TimelineView;
-  title: string;
 }
 
 export function TimelinePanelHeader({
-  canChangeTimelineView,
-  canToggleView,
-  cardCount,
+  model,
   onMineButtonRef,
-  onToggleTimelineView,
-  timelineView,
-  title,
 }: TimelinePanelHeaderProps) {
+  const {
+    canChangeTimelineView = true,
+    canToggleView = false,
+    cardCount,
+    onToggleTimelineView,
+    timelineView = "active",
+    title,
+  } = model;
+
   return (
     <div className={styles.timelineHeader}>
       <div className={styles.timelineHeaderCopy}>

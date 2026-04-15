@@ -11,7 +11,11 @@ import {
   useLayoutEffect,
   useRef,
 } from "react";
-import type { TimelinePanelProps } from "../GamePage.types";
+import type {
+  TimelinePanelDragModel,
+  TimelinePanelItemsModel,
+  TimelinePanelModel,
+} from "../GamePage.types";
 import { DRAG_ACTIVATION_DISTANCE_PX } from "../gamePage.constants";
 import { useTimelinePanelCelebrationState } from "../hooks/useTimelinePanelCelebrationState";
 import { useTimelinePanelDragState } from "../hooks/useTimelinePanelDragState";
@@ -23,37 +27,37 @@ import { TimelinePanelItems } from "./TimelinePanelItems";
 import { PreviewCard } from "./PreviewCard";
 import styles from "./TimelinePanel.module.css";
 
-export function TimelinePanel({
-  title,
-  hint,
-  showHint,
-  celebrationCard,
-  celebrationKey,
-  celebrationMessage,
-  cardCount,
-  canChangeTimelineView = true,
-  canToggleView = false,
-  timelineView = "active",
-  timelineCards,
-  onToggleTimelineView,
-  previewCard,
-  previewSlotIndex,
-  selectable,
-  selectedSlotIndex,
-  onSelectSlot,
-  originalChosenSlotIndex,
-  challengerChosenSlotIndex,
-  challengeMarkerTone = "pending",
-  disabledSlotIndexes = [],
-  hiddenCardMode,
-  showDevCardInfo,
-  showDevYearInfo,
-  showDevAlbumInfo,
-  showDevGenreInfo,
-  showCorrectionPreview = false,
-  showCorrectPlacementPreview = false,
-  theme,
-}: TimelinePanelProps) {
+interface TimelinePanelProps {
+  model: TimelinePanelModel;
+}
+
+export function TimelinePanel({ model }: TimelinePanelProps) {
+  const timelineView = model.render.timelineView ?? "active";
+  const dragModel: TimelinePanelDragModel = {
+    onSelectSlot: model.interaction.onSelectSlot,
+    previewCard: model.interaction.previewCard,
+    previewSlotIndex: model.interaction.previewSlotIndex,
+    selectedSlotIndex: model.interaction.selectedSlotIndex,
+    timelineCards: model.render.timelineCards,
+  };
+  const itemsModel: TimelinePanelItemsModel = {
+    challengeMarkerTone: model.interaction.challengeMarkerTone ?? "pending",
+    challengerChosenSlotIndex: model.interaction.challengerChosenSlotIndex,
+    disabledSlotIndexes: model.interaction.disabledSlotIndexes ?? [],
+    hiddenCardMode: model.render.hiddenCardMode,
+    originalChosenSlotIndex: model.interaction.originalChosenSlotIndex,
+    selectable: model.interaction.selectable,
+    showCorrectPlacementPreview: model.render.showCorrectPlacementPreview ?? false,
+    showCorrectionPreview: model.render.showCorrectionPreview ?? false,
+    showDevAlbumInfo: model.render.showDevAlbumInfo,
+    showDevCardInfo: model.render.showDevCardInfo,
+    showDevGenreInfo: model.render.showDevGenreInfo,
+    showDevYearInfo: model.render.showDevYearInfo,
+    theme: model.render.theme,
+  };
+  const previewCard = dragModel.previewCard;
+  const previewSlotIndex = dragModel.previewSlotIndex;
+
   const timelineRowRef = useRef<HTMLDivElement | null>(null);
   const previewCardElementRef = useRef<HTMLElement | null>(null);
   const {
@@ -62,8 +66,8 @@ export function TimelinePanel({
     previewCardRectRef,
     showCelebrationToast,
   } = useTimelinePanelCelebrationState({
-    celebrationCard,
-    celebrationKey,
+    celebrationCard: model.render.celebrationCard,
+    celebrationKey: model.render.celebrationKey,
     timelineView,
   });
   const sensors = useSensors(
@@ -82,11 +86,11 @@ export function TimelinePanel({
     orderedItemIds,
     timelineItemMap,
   } = useTimelinePanelDragState({
-    onSelectSlot,
-    previewCard,
-    previewSlotIndex,
-    selectedSlotIndex,
-    timelineCards,
+    onSelectSlot: dragModel.onSelectSlot,
+    previewCard: dragModel.previewCard,
+    previewSlotIndex: dragModel.previewSlotIndex,
+    selectedSlotIndex: dragModel.selectedSlotIndex,
+    timelineCards: dragModel.timelineCards,
     timelineRowRef,
   });
   const hasTimelineOverflow = useTimelineOverflowState({
@@ -106,20 +110,20 @@ export function TimelinePanel({
   return (
     <section className={styles.timelinePanel}>
       <TimelinePanelHeader
-        canChangeTimelineView={canChangeTimelineView}
-        canToggleView={canToggleView}
-        cardCount={cardCount}
+        model={model.header}
         onMineButtonRef={(node) => {
           mineButtonRef.current = node;
         }}
-        onToggleTimelineView={onToggleTimelineView}
-        timelineView={timelineView}
-        title={title}
       />
-      {showHint ? <p className={styles.timelineHint}>{hint}</p> : null}
+      {model.render.showHint ? (
+        <p className={styles.timelineHint}>{model.render.hint}</p>
+      ) : null}
       <AnimatePresence>
-        {showCelebrationToast && celebrationMessage ? (
-          <TimelineCelebration key={celebrationKey ?? celebrationMessage} message={celebrationMessage} />
+        {showCelebrationToast && model.render.celebrationMessage ? (
+          <TimelineCelebration
+            key={model.render.celebrationKey ?? model.render.celebrationMessage}
+            message={model.render.celebrationMessage}
+          />
         ) : null}
       </AnimatePresence>
       <DndContext
@@ -138,24 +142,12 @@ export function TimelinePanel({
           ref={timelineRowRef}
         >
           <TimelinePanelItems
-            challengeMarkerTone={challengeMarkerTone}
-            challengerChosenSlotIndex={challengerChosenSlotIndex}
-            disabledSlotIndexes={disabledSlotIndexes}
-            hiddenCardMode={hiddenCardMode}
             isDraggingPreviewCard={isDraggingPreviewCard}
+            model={itemsModel}
             orderedItemIds={orderedItemIds}
-            originalChosenSlotIndex={originalChosenSlotIndex}
             onPreviewCardRef={(node) => {
               previewCardElementRef.current = node;
             }}
-            selectable={selectable}
-            showCorrectPlacementPreview={showCorrectPlacementPreview}
-            showCorrectionPreview={showCorrectionPreview}
-            showDevAlbumInfo={showDevAlbumInfo}
-            showDevCardInfo={showDevCardInfo}
-            showDevGenreInfo={showDevGenreInfo}
-            showDevYearInfo={showDevYearInfo}
-            theme={theme}
             timelineItemMap={timelineItemMap}
           />
         </div>
@@ -163,19 +155,19 @@ export function TimelinePanel({
         <DragOverlay dropAnimation={null}>
           {isDraggingPreviewCard && previewCard ? (
             <PreviewCard
-              hiddenCardMode={hiddenCardMode}
+              hiddenCardMode={model.render.hiddenCardMode}
               isChallengeSlot={false}
               isGhosted={false}
               isOriginalSlot={false}
               isOverlay={true}
               previewCard={previewCard}
               selectable={false}
-              showDevAlbumInfo={showDevAlbumInfo}
-              showDevCardInfo={showDevCardInfo}
-              showDevYearInfo={showDevYearInfo}
-              showDevGenreInfo={showDevGenreInfo}
-              showRevealedContent={showCorrectionPreview}
-              theme={theme}
+              showDevAlbumInfo={model.render.showDevAlbumInfo}
+              showDevCardInfo={model.render.showDevCardInfo}
+              showDevYearInfo={model.render.showDevYearInfo}
+              showDevGenreInfo={model.render.showDevGenreInfo}
+              showRevealedContent={model.render.showCorrectionPreview ?? false}
+              theme={model.render.theme}
               tone="pending"
             />
           ) : null}
@@ -183,9 +175,9 @@ export function TimelinePanel({
       </DndContext>
       <TimelinePanelFlyAnimation
         flyAnimationState={flyAnimationState}
-        showDevAlbumInfo={showDevAlbumInfo}
-        showDevGenreInfo={showDevGenreInfo}
-        theme={theme}
+        showDevAlbumInfo={model.render.showDevAlbumInfo}
+        showDevGenreInfo={model.render.showDevGenreInfo}
+        theme={model.render.theme}
       />
     </section>
   );

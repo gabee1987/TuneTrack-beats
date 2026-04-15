@@ -1,32 +1,38 @@
-import type { GamePageActionPanelsProps } from "../GamePage.types";
+import type { GamePageActionPanelsModel } from "../GamePage.types";
 import { ChallengeActionPanel } from "./ChallengeActionPanel";
 import { FinishedStatePanel } from "./FinishedStatePanel";
 import { RevealActionDock } from "./RevealActionDock";
 import { TurnActionDock } from "./TurnActionDock";
 
-export function GamePageActionPanels({
-  canClaimChallenge,
-  canConfirmBeatPlacement,
-  canConfirmReveal,
-  canConfirmTurnPlacement,
-  canResolveChallengeWindow,
-  canUseBuyCard,
-  canUseSkipTrack,
-  challengeActionBody,
-  challengeActionTitle,
-  challengeCountdownLabel,
-  currentPlayerTtCount,
-  getPlayerName,
-  handleBuyTimelineCardWithTt,
-  handleClaimChallenge,
-  handleConfirmReveal,
-  handlePlaceCard,
-  handlePlaceChallenge,
-  handleResolveChallengeWindow,
-  handleSkipTrackWithTt,
-  roomState,
-  showHelperLabels,
-}: GamePageActionPanelsProps) {
+interface GamePageActionPanelsProps {
+  model: GamePageActionPanelsModel;
+}
+
+export function GamePageActionPanels({ model }: GamePageActionPanelsProps) {
+  const {
+    canClaimChallenge,
+    canConfirmBeatPlacement,
+    canConfirmReveal,
+    canConfirmTurnPlacement,
+    canResolveChallengeWindow,
+    canUseBuyCard,
+    canUseSkipTrack,
+    challengeActionBody,
+    challengeActionTitle,
+    challengeCountdownLabel,
+    currentPlayerTtCount,
+    getPlayerName,
+    handleBuyTimelineCardWithTt,
+    handleClaimChallenge,
+    handleConfirmReveal,
+    handlePlaceCard,
+    handlePlaceChallenge,
+    handleResolveChallengeWindow,
+    handleSkipTrackWithTt,
+    roomState,
+    showHelperLabels,
+  } = model;
+
   return (
     <>
       <ChallengeActionPanel

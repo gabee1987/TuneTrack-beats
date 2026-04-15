@@ -39,39 +39,94 @@ export interface GameRouteState {
   roomState: PublicRoomState | null;
 }
 
-export interface TimelinePanelProps {
-  title: string;
-  hint: string;
-  showHint: boolean;
-  celebrationCard: GamePageCard | null;
-  celebrationKey: string | null;
-  celebrationMessage: string | null;
-  cardCount: number;
+export interface TimelinePanelHeaderModel {
   canChangeTimelineView?: boolean;
   canToggleView?: boolean;
-  timelineView?: TimelineView;
-  timelineCards: TimelineCardPublic[];
+  cardCount: number;
   onToggleTimelineView?: (view: TimelineView) => void;
+  timelineView?: TimelineView;
+  title: string;
+}
+
+export interface TimelinePanelInteractionModel {
+  challengeMarkerTone?: ChallengeMarkerTone;
+  challengerChosenSlotIndex: number | null;
+  disabledSlotIndexes?: number[];
+  onSelectSlot: (slotIndex: number) => void;
+  originalChosenSlotIndex: number | null;
   previewCard: GamePageCard | null;
   previewSlotIndex: number | null;
   selectable: boolean;
   selectedSlotIndex: number;
-  onSelectSlot: (slotIndex: number) => void;
-  originalChosenSlotIndex: number | null;
-  challengerChosenSlotIndex: number | null;
-  challengeMarkerTone?: ChallengeMarkerTone;
-  disabledSlotIndexes?: number[];
+}
+
+export interface TimelinePanelRenderModel {
+  celebrationCard: GamePageCard | null;
+  celebrationKey: string | null;
+  celebrationMessage: string | null;
   hiddenCardMode: HiddenCardMode;
-  showDevCardInfo: boolean;
-  showDevYearInfo: boolean;
-  showDevAlbumInfo: boolean;
-  showDevGenreInfo: boolean;
-  showCorrectionPreview?: boolean;
+  hint: string;
   showCorrectPlacementPreview?: boolean;
+  showCorrectionPreview?: boolean;
+  showDevAlbumInfo: boolean;
+  showDevCardInfo: boolean;
+  showDevGenreInfo: boolean;
+  showDevYearInfo: boolean;
+  showHint: boolean;
+  theme: ThemeId;
+  timelineCards: TimelineCardPublic[];
+  timelineView?: TimelineView;
+}
+
+export interface TimelinePanelModel {
+  header: TimelinePanelHeaderModel;
+  interaction: TimelinePanelInteractionModel;
+  render: TimelinePanelRenderModel;
+}
+
+export interface TimelinePanelItemsModel {
+  challengeMarkerTone: ChallengeMarkerTone;
+  challengerChosenSlotIndex: number | null;
+  disabledSlotIndexes: number[];
+  hiddenCardMode: HiddenCardMode;
+  originalChosenSlotIndex: number | null;
+  selectable: boolean;
+  showCorrectPlacementPreview: boolean;
+  showCorrectionPreview: boolean;
+  showDevAlbumInfo: boolean;
+  showDevCardInfo: boolean;
+  showDevGenreInfo: boolean;
+  showDevYearInfo: boolean;
   theme: ThemeId;
 }
 
-export interface GamePageActionPanelsProps
+export interface TimelinePanelDragModel {
+  previewCard: GamePageCard | null;
+  previewSlotIndex: number | null;
+  selectedSlotIndex: number;
+  onSelectSlot: (slotIndex: number) => void;
+  timelineCards: TimelineCardPublic[];
+}
+
+export interface GamePageHeaderModel
+  extends Pick<
+    GamePageController,
+    | "currentPlayerId"
+    | "leadingPlayers"
+    | "menuTabs"
+    | "showMiniStandings"
+    | "showPhaseChip"
+    | "showRoomCodeChip"
+    | "showTimelineHints"
+    | "showTurnNumberChip"
+    | "statusBadgeText"
+    | "statusDetailText"
+    | "updateViewPreferences"
+  > {
+  roomState: PublicRoomState;
+}
+
+export interface GamePageActionPanelsModel
   extends Pick<
     GamePageController & GamePageControllerExtras,
     | "canClaimChallenge"
@@ -96,6 +151,13 @@ export interface GamePageActionPanelsProps
     | "showHelperLabels"
   > {
   roomState: PublicRoomState;
+}
+
+export interface GamePageAssemblyModel {
+  actions: GamePageActionPanelsModel;
+  errorMessage: string | null;
+  header: GamePageHeaderModel;
+  timeline: TimelinePanelModel;
 }
 
 export type GamePageController = GamePageActionHandlers & {
@@ -171,5 +233,5 @@ export type LoadedGamePageController = Omit<
 };
 
 export interface GamePageAssemblyProps {
-  controller: LoadedGamePageController;
+  model: GamePageAssemblyModel;
 }

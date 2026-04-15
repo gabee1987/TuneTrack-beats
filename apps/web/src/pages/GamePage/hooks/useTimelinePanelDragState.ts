@@ -11,6 +11,13 @@ import {
   TIMELINE_REORDER_THROTTLE_MS,
 } from "../gamePage.constants";
 import type { GamePageCard } from "../GamePage.types";
+import {
+  TIMELINE_PREVIEW_ITEM_ID,
+  buildBaseOrderedTimelineItemIds,
+  buildOrderedTimelineItemIdsForPreviewIndex,
+  buildTimelineItemMap,
+  clampPreviewIndex,
+} from "../gamePageTimelineItems";
 
 interface UseTimelinePanelDragStateOptions {
   previewCard: GamePageCard | null;
@@ -42,8 +49,6 @@ interface UseTimelinePanelDragStateResult {
   >;
 }
 
-const PREVIEW_ITEM_ID = "timeline-preview-card";
-
 export function useTimelinePanelDragState({
   previewCard,
   previewSlotIndex,
@@ -55,24 +60,17 @@ export function useTimelinePanelDragState({
   const [isDraggingPreviewCard, setIsDraggingPreviewCard] = useState(false);
   const lastPreviewReorderAtRef = useRef(0);
 
-  const previewIndex = previewCard
-    ? Math.max(
-        0,
-        Math.min(previewSlotIndex ?? selectedSlotIndex, timelineCards.length),
-      )
-    : null;
+  const previewIndex = clampPreviewIndex(
+    previewCard,
+    previewSlotIndex,
+    selectedSlotIndex,
+    timelineCards.length,
+  );
 
-  const baseOrderedItemIds = useMemo(() => {
-    const itemIds = timelineCards.map(
-      (card, index) => `timeline-card-${card.id}-${index}`,
-    );
-
-    if (previewCard && previewIndex !== null) {
-      itemIds.splice(previewIndex, 0, PREVIEW_ITEM_ID);
-    }
-
-    return itemIds;
-  }, [previewCard, previewIndex, timelineCards]);
+  const baseOrderedItemIds = useMemo(
+    () => buildBaseOrderedTimelineItemIds(timelineCards, previewCard, previewIndex),
+    [previewCard, previewIndex, timelineCards],
+  );
 
   const [orderedItemIds, setOrderedItemIds] = useState<string[]>(baseOrderedItemIds);
 
@@ -82,35 +80,10 @@ export function useTimelinePanelDragState({
     }
   }, [baseOrderedItemIds, isDraggingPreviewCard]);
 
-  const timelineItemMap = useMemo(() => {
-    const map = new Map<
-      string,
-        | {
-          type: "preview";
-          card: GamePageCard;
-        }
-      | {
-          type: "timeline";
-          card: TimelineCardPublic;
-        }
-    >();
-
-    timelineCards.forEach((card, index) => {
-      map.set(`timeline-card-${card.id}-${index}`, {
-        type: "timeline",
-        card,
-      });
-    });
-
-    if (previewCard) {
-      map.set(PREVIEW_ITEM_ID, {
-        type: "preview",
-        card: previewCard,
-      });
-    }
-
-    return map;
-  }, [previewCard, timelineCards]);
+  const timelineItemMap = useMemo(
+    () => buildTimelineItemMap(timelineCards, previewCard),
+    [previewCard, timelineCards],
+  );
 
   function syncPreviewIndexFromActiveRect(
     translatedRect: DragMoveEvent["active"]["rect"]["current"]["translated"] | null,
@@ -143,7 +116,7 @@ export function useTimelinePanelDragState({
       }
     }
 
-    if (orderedItemIds.indexOf(PREVIEW_ITEM_ID) === nextPreviewIndex) {
+    if (orderedItemIds.indexOf(TIMELINE_PREVIEW_ITEM_ID) === nextPreviewIndex) {
       return;
     }
 
@@ -153,11 +126,10 @@ export function useTimelinePanelDragState({
       return;
     }
 
-    const nextOrder = timelineCards.map(
-      (card, index) => `timeline-card-${card.id}-${index}`,
+    const nextOrder = buildOrderedTimelineItemIdsForPreviewIndex(
+      timelineCards,
+      nextPreviewIndex,
     );
-
-    nextOrder.splice(nextPreviewIndex, 0, PREVIEW_ITEM_ID);
 
     lastPreviewReorderAtRef.current = now;
     setOrderedItemIds(nextOrder);
@@ -207,12 +179,12 @@ export function useTimelinePanelDragState({
   }
 
   function handleDragEnd(event: DragEndEvent) {
-    if (event.active.id !== PREVIEW_ITEM_ID) {
+    if (event.active.id !== TIMELINE_PREVIEW_ITEM_ID) {
       setIsDraggingPreviewCard(false);
       return;
     }
 
-    const slotIndex = orderedItemIds.indexOf(PREVIEW_ITEM_ID);
+    const slotIndex = orderedItemIds.indexOf(TIMELINE_PREVIEW_ITEM_ID);
 
     if (slotIndex !== -1) {
       onSelectSlot(slotIndex);
@@ -229,7 +201,7 @@ export function useTimelinePanelDragState({
   return {
     isDraggingPreviewCard,
     orderedItemIds,
-    previewItemId: PREVIEW_ITEM_ID,
+    previewItemId: TIMELINE_PREVIEW_ITEM_ID,
     timelineItemMap,
     handleDragCancel,
     handleDragEnd,

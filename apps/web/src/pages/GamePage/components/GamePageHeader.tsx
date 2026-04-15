@@ -1,43 +1,30 @@
-import type { PublicRoomState } from "@tunetrack/shared";
 import {
   AppShellMenu,
 } from "../../../features/app-shell/AppShellMenu";
-import type { GamePageController } from "../GamePage.types";
+import type { GamePageHeaderModel } from "../GamePage.types";
 import styles from "../GamePage.module.css";
 import { formatPhaseLabel } from "../gamePage.utils";
 
-interface GamePageHeaderProps
-  extends Pick<
-    GamePageController,
-    | "currentPlayerId"
-    | "leadingPlayers"
-    | "menuTabs"
-    | "showMiniStandings"
-    | "showPhaseChip"
-    | "showRoomCodeChip"
-    | "showTimelineHints"
-    | "showTurnNumberChip"
-    | "statusBadgeText"
-    | "statusDetailText"
-    | "updateViewPreferences"
-  > {
-  roomState: PublicRoomState;
+interface GamePageHeaderProps {
+  model: GamePageHeaderModel;
 }
 
-export function GamePageHeader({
-  currentPlayerId,
-  leadingPlayers,
-  menuTabs,
-  roomState,
-  showMiniStandings,
-  showPhaseChip,
-  showRoomCodeChip,
-  showTimelineHints,
-  showTurnNumberChip,
-  statusBadgeText,
-  statusDetailText,
-  updateViewPreferences,
-}: GamePageHeaderProps) {
+export function GamePageHeader({ model }: GamePageHeaderProps) {
+  const {
+    currentPlayerId,
+    leadingPlayers,
+    menuTabs,
+    roomState,
+    showMiniStandings,
+    showPhaseChip,
+    showRoomCodeChip,
+    showTimelineHints,
+    showTurnNumberChip,
+    statusBadgeText,
+    statusDetailText,
+    updateViewPreferences,
+  } = model;
+
   return (
     <header className={styles.header}>
       <div className={styles.headerMain}>
