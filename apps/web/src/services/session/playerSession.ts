@@ -1,3 +1,5 @@
+import { createSessionId } from "./sessionId";
+
 const PLAYER_SESSION_ID_STORAGE_KEY = "tunetrack.playerSessionId";
 const PLAYER_DISPLAY_NAME_STORAGE_KEY = "tunetrack.playerDisplayName";
 
@@ -10,7 +12,7 @@ export function getOrCreatePlayerSessionId(): string {
     return existingSessionId;
   }
 
-  const nextSessionId = crypto.randomUUID();
+  const nextSessionId = createSessionId(window.crypto);
   window.sessionStorage.setItem(PLAYER_SESSION_ID_STORAGE_KEY, nextSessionId);
 
   return nextSessionId;

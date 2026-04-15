@@ -162,3 +162,14 @@ export interface GamePageControllerExtras {
 
 export type UseGamePageControllerResult = GamePageController &
   GamePageControllerExtras;
+
+export type LoadedGamePageController = Omit<
+  UseGamePageControllerResult,
+  "roomState"
+> & {
+  roomState: PublicRoomState;
+};
+
+export interface GamePageAssemblyProps {
+  controller: LoadedGamePageController;
+}

@@ -1,0 +1,66 @@
+.screenShell {
+  min-height: var(--app-height);
+  padding: calc(var(--safe-area-top) + 16px) calc(var(--safe-area-right) + 14px)
+    calc(var(--safe-area-bottom) + 24px) calc(var(--safe-area-left) + 14px);
+}
+
+.panelShell {
+  width: min(100%, 1280px);
+  min-height: calc(var(--app-height) - var(--safe-area-top) - var(--safe-area-bottom) - 40px);
+  margin: 0 auto;
+  padding: clamp(16px, 2vw, 24px);
+  border-radius: clamp(24px, 3vw, 34px);
+  background: var(--gradient-lobby-shell-background);
+}
+
+.contentStack {
+  display: grid;
+  gap: 18px;
+  margin-top: 22px;
+}
+
+@media (max-width: 720px) {
+  .screenShell {
+    padding-inline: calc(var(--safe-area-left) + 10px) calc(var(--safe-area-right) + 10px);
+  }
+
+  .panelShell {
+    padding: 14px;
+    border: 0;
+    border-radius: 0;
+    background: var(--gradient-lobby-shell-background-mobile);
+    box-shadow: none;
+  }
+}
+
+@media (max-width: 720px) and (orientation: landscape) {
+  .screenShell {
+    padding-top: calc(var(--safe-area-top));
+    padding-bottom: calc(var(--safe-area-bottom));
+  }
+
+  .contentStack {
+    gap: 12px;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .screenShell {
+    padding: calc(var(--safe-area-top)) var(--safe-area-right) calc(var(--safe-area-bottom))
+      var(--safe-area-left);
+  }
+
+  .panelShell {
+    width: 100%;
+    min-height: var(--app-height);
+    padding: 10px 12px 12px;
+    border: 0;
+    border-radius: 0;
+    background: var(--gradient-lobby-shell-background-mobile);
+    box-shadow: none;
+  }
+
+  .contentStack {
+    gap: 12px;
+  }
+}

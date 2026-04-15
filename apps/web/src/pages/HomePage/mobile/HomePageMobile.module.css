@@ -1,0 +1,103 @@
+.screenShell {
+  min-height: var(--app-height);
+  padding: calc(var(--safe-area-top) + 20px) calc(var(--safe-area-right) + 16px)
+    calc(var(--safe-area-bottom) + 20px) calc(var(--safe-area-left) + 16px);
+}
+
+.panelShell {
+  width: min(100%, 1180px);
+  min-height: calc(var(--app-height) - var(--safe-area-top) - var(--safe-area-bottom) - 40px);
+  margin: 0 auto;
+  padding: clamp(18px, 3vw, 28px);
+  border-radius: clamp(24px, 4vw, 36px);
+  background: var(--gradient-home-shell-background);
+}
+
+.panelShell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-surface-sheen);
+  pointer-events: none;
+  border-radius: clamp(24px, 4vw, 36px);
+}
+
+.contentGrid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: clamp(20px, 3vw, 28px);
+  margin-top: clamp(18px, 3vw, 28px);
+}
+
+@media (orientation: landscape) and (max-width: 960px) {
+  .panelShell {
+    min-height: auto;
+  }
+
+  .contentGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(292px, 0.92fr);
+    align-items: start;
+  }
+}
+
+@media (max-width: 640px) {
+  .screenShell {
+    padding-inline: calc(var(--safe-area-left) + 10px) calc(var(--safe-area-right) + 10px);
+  }
+
+  .panelShell {
+    min-height: auto;
+    padding: 10px 12px 14px;
+    border: 0;
+    border-radius: 0;
+    background: var(--gradient-home-shell-background-mobile);
+    box-shadow: none;
+  }
+}
+
+@media (max-width: 640px) and (orientation: landscape) {
+  .screenShell {
+    padding-top: calc(var(--safe-area-top));
+    padding-bottom: calc(var(--safe-area-bottom));
+  }
+
+  .contentGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(272px, 0.95fr);
+    gap: 12px;
+    align-items: start;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .screenShell {
+    padding: calc(var(--safe-area-top)) var(--safe-area-right) calc(var(--safe-area-bottom))
+      var(--safe-area-left);
+  }
+
+  .panelShell {
+    width: 100%;
+    min-height: var(--app-height);
+    padding: 10px 12px 12px;
+    border: 0;
+    border-radius: 0;
+    background: var(--gradient-home-shell-background-mobile);
+    box-shadow: none;
+  }
+
+  .panelShell::before {
+    display: none;
+  }
+
+  .contentGrid {
+    gap: 12px;
+    margin-top: 10px;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (max-height: 520px) {
+  .contentGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(270px, 0.92fr);
+    align-items: start;
+  }
+}

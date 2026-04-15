@@ -8,6 +8,10 @@ export interface HomePageController {
   handleSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }
 
+export interface HomePageAssemblyProps {
+  controller: HomePageController;
+}
+
 export interface JoinRoomFormProps {
   displayName: string;
   roomId: string;

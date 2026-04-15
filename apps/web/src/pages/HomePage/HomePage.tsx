@@ -1,36 +1,29 @@
-import { AppPageShell } from "../../features/mobile-shell/AppPageShell";
-import { HomePageHero } from "./components/HomePageHero";
-import { JoinRoomForm } from "./components/JoinRoomForm";
-import { HomePageTopBar } from "./components/HomePageTopBar";
+import { lazy, Suspense } from "react";
+import { AppRouteFallback } from "../../app/components/AppRouteFallback";
+import { usePageLayoutMode } from "../../hooks/usePageLayoutMode";
 import { useHomePageController } from "./hooks/useHomePageController";
-import styles from "./HomePage.module.css";
+
+const HomePageMobile = lazy(async () => {
+  const module = await import("./mobile/HomePageMobile");
+  return { default: module.HomePageMobile };
+});
+
+const HomePageDesktop = lazy(async () => {
+  const module = await import("./desktop/HomePageDesktop");
+  return { default: module.HomePageDesktop };
+});
 
 export function HomePage() {
-  const {
-    displayName,
-    handleSubmit,
-    roomId,
-    setDisplayName,
-    setRoomId,
-  } = useHomePageController();
+  const controller = useHomePageController();
+  const layoutMode = usePageLayoutMode();
 
   return (
-    <AppPageShell
-      panelClassName={styles.panelShell}
-      screenClassName={styles.screenShell}
-    >
-      <HomePageTopBar />
-
-      <div className={styles.contentGrid}>
-        <HomePageHero />
-        <JoinRoomForm
-          displayName={displayName}
-          onDisplayNameChange={setDisplayName}
-          onRoomIdChange={setRoomId}
-          onSubmit={handleSubmit}
-          roomId={roomId}
-        />
-      </div>
-    </AppPageShell>
+    <Suspense fallback={<AppRouteFallback />}>
+      {layoutMode === "mobile" ? (
+        <HomePageMobile controller={controller} />
+      ) : (
+        <HomePageDesktop controller={controller} />
+      )}
+    </Suspense>
   );
 }

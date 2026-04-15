@@ -1,0 +1,23 @@
+.screen {
+  min-height: 100dvh;
+  padding: 4px;
+  background: linear-gradient(
+    160deg,
+    var(--color-bg-app) 0%,
+    var(--color-bg-app-accent) 100%
+  );
+}
+
+.panel {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: 8px 8px 6px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.error {
+  margin-top: 24px;
+  color: var(--color-game-error-text);
+}

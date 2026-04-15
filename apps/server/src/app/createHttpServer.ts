@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import { createServer } from "node:http";
+import { createCorsOriginValidator } from "./clientOrigin.js";
 import { env } from "./env.js";
 import { registerHealthRoutes } from "../http/healthRoutes.js";
 
@@ -9,7 +10,7 @@ export function createHttpServer() {
 
   app.use(
     cors({
-      origin: env.CLIENT_ORIGIN,
+      origin: createCorsOriginValidator(env.CLIENT_ORIGIN, env.NODE_ENV),
     }),
   );
   app.use(express.json());

@@ -22,3 +22,7 @@ export interface LobbyPageController {
   roomState: PublicRoomState | null;
   toggleTtMode: (enabled: boolean) => void;
 }
+
+export interface LobbyPageAssemblyProps {
+  controller: LobbyPageController;
+}

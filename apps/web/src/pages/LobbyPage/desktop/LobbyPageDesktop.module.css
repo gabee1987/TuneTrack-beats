@@ -1,0 +1,36 @@
+.screenShell {
+  min-height: var(--app-height);
+  padding: calc(var(--safe-area-top) + 24px) calc(var(--safe-area-right) + 22px)
+    calc(var(--safe-area-bottom) + 28px) calc(var(--safe-area-left) + 22px);
+}
+
+.panelShell {
+  width: min(100%, 1320px);
+  min-height: calc(var(--app-height) - var(--safe-area-top) - var(--safe-area-bottom) - 52px);
+  margin: 0 auto;
+  padding: clamp(24px, 2vw, 32px);
+  border-radius: clamp(24px, 3vw, 34px);
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--color-accent-control) 14%, transparent), transparent 28%),
+    var(--gradient-lobby-shell-background);
+}
+
+.layoutGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.18fr) minmax(340px, 0.82fr);
+  gap: 18px;
+  align-items: start;
+  margin-top: 22px;
+}
+
+.primaryColumn,
+.secondaryColumn {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+
+.secondaryColumn {
+  position: sticky;
+  top: calc(var(--safe-area-top) + 16px);
+}

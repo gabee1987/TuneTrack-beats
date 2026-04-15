@@ -1,0 +1,47 @@
+.screenShell {
+  min-height: var(--app-height);
+  padding: calc(var(--safe-area-top) + 28px) calc(var(--safe-area-right) + 28px)
+    calc(var(--safe-area-bottom) + 28px) calc(var(--safe-area-left) + 28px);
+}
+
+.panelShell {
+  width: min(100%, 1380px);
+  min-height: calc(var(--app-height) - var(--safe-area-top) - var(--safe-area-bottom) - 56px);
+  margin: 0 auto;
+  padding: clamp(28px, 3vw, 40px);
+  border-radius: clamp(28px, 3vw, 40px);
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--color-accent-primary) 18%, transparent), transparent 32%),
+    var(--gradient-home-shell-background);
+}
+
+.panelShell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-surface-sheen);
+  pointer-events: none;
+  border-radius: clamp(28px, 3vw, 40px);
+}
+
+.contentGrid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(360px, 0.72fr);
+  gap: clamp(28px, 4vw, 48px);
+  align-items: stretch;
+  margin-top: clamp(28px, 4vw, 44px);
+}
+
+.heroColumn {
+  display: grid;
+  align-content: center;
+  min-height: 100%;
+  padding: clamp(16px, 2vw, 28px) clamp(4px, 1vw, 16px) clamp(24px, 2vw, 36px) 0;
+}
+
+.formColumn {
+  display: grid;
+  align-content: center;
+}
