@@ -4,6 +4,7 @@ export interface HomePageController {
   displayName: string;
   roomId: string;
   preloadLobby: () => void;
+  handleQuickStart: () => void;
   setDisplayName: (value: string) => void;
   setRoomId: (value: string) => void;
   handleSubmit: (event: FormEvent<HTMLFormElement>) => void;

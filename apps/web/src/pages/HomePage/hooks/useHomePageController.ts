@@ -14,8 +14,7 @@ export function useHomePageController(): HomePageController {
   const [roomId, setRoomId] = useState(DEFAULT_ROOM_ID);
   const [displayName, setDisplayName] = useState(DEFAULT_DISPLAY_NAME);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function openLobby() {
     preloadLobbyRuntime();
 
     const navigationTarget = buildHomePageNavigationTarget({
@@ -31,8 +30,14 @@ export function useHomePageController(): HomePageController {
     navigate(navigationTarget.path);
   }
 
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    openLobby();
+  }
+
   return {
     displayName,
+    handleQuickStart: openLobby,
     preloadLobby: preloadLobbyRuntime,
     roomId,
     setDisplayName,
