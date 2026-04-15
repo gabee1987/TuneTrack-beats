@@ -2,10 +2,12 @@ import { ActionButton } from "../../../features/ui/ActionButton";
 import styles from "../LobbyPage.module.css";
 
 interface LobbyHostStartPanelProps {
+  onIntentToStart: () => void;
   onStartGame: () => void;
 }
 
 export function LobbyHostStartPanel({
+  onIntentToStart,
   onStartGame,
 }: LobbyHostStartPanelProps) {
   return (
@@ -18,7 +20,10 @@ export function LobbyHostStartPanel({
       </div>
       <ActionButton
         className={styles.startGameButton}
+        onFocus={onIntentToStart}
         onClick={onStartGame}
+        onMouseEnter={onIntentToStart}
+        onTouchStart={onIntentToStart}
         type="button"
       >
         Start Game

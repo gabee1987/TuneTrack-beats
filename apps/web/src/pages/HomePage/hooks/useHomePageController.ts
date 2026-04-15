@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { preloadLobbyRuntime } from "../../../app/preloadRoutes";
 import { rememberPlayerDisplayName } from "../../../services/session/playerSession";
 import type { HomePageController } from "../HomePage.types";
 import {
@@ -15,6 +16,7 @@ export function useHomePageController(): HomePageController {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    preloadLobbyRuntime();
 
     const navigationTarget = buildHomePageNavigationTarget({
       displayName,
@@ -31,6 +33,7 @@ export function useHomePageController(): HomePageController {
 
   return {
     displayName,
+    preloadLobby: preloadLobbyRuntime,
     roomId,
     setDisplayName,
     setRoomId,

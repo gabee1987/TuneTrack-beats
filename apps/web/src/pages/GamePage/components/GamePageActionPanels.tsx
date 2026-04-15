@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { GamePageActionPanelsModel } from "../GamePage.types";
 import { ChallengeActionPanel } from "./ChallengeActionPanel";
 import { FinishedStatePanel } from "./FinishedStatePanel";
@@ -8,7 +9,7 @@ interface GamePageActionPanelsProps {
   model: GamePageActionPanelsModel;
 }
 
-export function GamePageActionPanels({ model }: GamePageActionPanelsProps) {
+function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
   const {
     canClaimChallenge,
     canConfirmBeatPlacement,
@@ -73,3 +74,38 @@ export function GamePageActionPanels({ model }: GamePageActionPanelsProps) {
     </>
   );
 }
+
+function areActionPanelModelsEqual(
+  previousModel: GamePageActionPanelsModel,
+  nextModel: GamePageActionPanelsModel,
+): boolean {
+  return (
+    previousModel.canClaimChallenge === nextModel.canClaimChallenge &&
+    previousModel.canConfirmBeatPlacement === nextModel.canConfirmBeatPlacement &&
+    previousModel.canConfirmReveal === nextModel.canConfirmReveal &&
+    previousModel.canConfirmTurnPlacement === nextModel.canConfirmTurnPlacement &&
+    previousModel.canResolveChallengeWindow === nextModel.canResolveChallengeWindow &&
+    previousModel.canUseBuyCard === nextModel.canUseBuyCard &&
+    previousModel.canUseSkipTrack === nextModel.canUseSkipTrack &&
+    previousModel.challengeActionBody === nextModel.challengeActionBody &&
+    previousModel.challengeActionTitle === nextModel.challengeActionTitle &&
+    previousModel.challengeCountdownLabel === nextModel.challengeCountdownLabel &&
+    previousModel.currentPlayerTtCount === nextModel.currentPlayerTtCount &&
+    previousModel.getPlayerName === nextModel.getPlayerName &&
+    previousModel.handleBuyTimelineCardWithTt === nextModel.handleBuyTimelineCardWithTt &&
+    previousModel.handleClaimChallenge === nextModel.handleClaimChallenge &&
+    previousModel.handleConfirmReveal === nextModel.handleConfirmReveal &&
+    previousModel.handlePlaceCard === nextModel.handlePlaceCard &&
+    previousModel.handlePlaceChallenge === nextModel.handlePlaceChallenge &&
+    previousModel.handleResolveChallengeWindow === nextModel.handleResolveChallengeWindow &&
+    previousModel.handleSkipTrackWithTt === nextModel.handleSkipTrackWithTt &&
+    previousModel.roomState === nextModel.roomState &&
+    previousModel.showHelperLabels === nextModel.showHelperLabels
+  );
+}
+
+export const GamePageActionPanels = memo(
+  GamePageActionPanelsComponent,
+  (previousProps, nextProps) =>
+    areActionPanelModelsEqual(previousProps.model, nextProps.model),
+);

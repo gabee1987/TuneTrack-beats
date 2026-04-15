@@ -2,7 +2,7 @@ import {
   ClientToServerEvent,
   type PublicRoomState,
 } from "@tunetrack/shared";
-import { socketClient } from "../../../services/socket/socketClient";
+import { getSocketClient } from "../../../services/socket/socketClient";
 
 interface UseGamePageActionsOptions {
   canClaimChallenge: boolean | null | undefined;
@@ -27,10 +27,11 @@ export function useGamePageActions({
   selectedSlotIndex,
   setLocallyPlacedCard,
 }: UseGamePageActionsOptions) {
-  function emitRoomEvent<TPayload>(
+  async function emitRoomEvent<TPayload>(
     event: (typeof ClientToServerEvent)[keyof typeof ClientToServerEvent],
     payload: TPayload,
   ) {
+    const socketClient = await getSocketClient();
     socketClient.emit(event, payload);
   }
 
@@ -40,7 +41,7 @@ export function useGamePageActions({
     }
 
     setLocallyPlacedCard(roomState.currentTrackCard ?? null);
-    emitRoomEvent(ClientToServerEvent.PlaceCard, {
+    void emitRoomEvent(ClientToServerEvent.PlaceCard, {
       roomId: roomState.roomId,
       selectedSlotIndex,
     });
@@ -51,7 +52,7 @@ export function useGamePageActions({
       return;
     }
 
-    emitRoomEvent(ClientToServerEvent.ConfirmReveal, {
+    void emitRoomEvent(ClientToServerEvent.ConfirmReveal, {
       roomId: roomState.roomId,
     });
   }
@@ -61,7 +62,7 @@ export function useGamePageActions({
       return;
     }
 
-    emitRoomEvent(ClientToServerEvent.ClaimChallenge, {
+    void emitRoomEvent(ClientToServerEvent.ClaimChallenge, {
       roomId: roomState.roomId,
     });
   }
@@ -71,7 +72,7 @@ export function useGamePageActions({
       return;
     }
 
-    emitRoomEvent(ClientToServerEvent.PlaceChallenge, {
+    void emitRoomEvent(ClientToServerEvent.PlaceChallenge, {
       roomId: roomState.roomId,
       selectedSlotIndex,
     });
@@ -82,7 +83,7 @@ export function useGamePageActions({
       return;
     }
 
-    emitRoomEvent(ClientToServerEvent.ResolveChallengeWindow, {
+    void emitRoomEvent(ClientToServerEvent.ResolveChallengeWindow, {
       roomId: roomState.roomId,
     });
   }
@@ -92,7 +93,7 @@ export function useGamePageActions({
       return;
     }
 
-    emitRoomEvent(ClientToServerEvent.CloseRoom, {
+    void emitRoomEvent(ClientToServerEvent.CloseRoom, {
       roomId: roomState.roomId,
     });
   }
@@ -106,7 +107,7 @@ export function useGamePageActions({
       return;
     }
 
-    emitRoomEvent(ClientToServerEvent.AwardTt, {
+    void emitRoomEvent(ClientToServerEvent.AwardTt, {
       roomId: roomState.roomId,
       playerId,
       amount: 1,
@@ -123,7 +124,7 @@ export function useGamePageActions({
       return;
     }
 
-    emitRoomEvent(ClientToServerEvent.SkipTrackWithTt, {
+    void emitRoomEvent(ClientToServerEvent.SkipTrackWithTt, {
       roomId: roomState.roomId,
     });
   }
@@ -138,7 +139,7 @@ export function useGamePageActions({
       return;
     }
 
-    emitRoomEvent(ClientToServerEvent.BuyTimelineCardWithTt, {
+    void emitRoomEvent(ClientToServerEvent.BuyTimelineCardWithTt, {
       roomId: roomState.roomId,
     });
   }

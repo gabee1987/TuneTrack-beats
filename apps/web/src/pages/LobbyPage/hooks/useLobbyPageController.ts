@@ -5,12 +5,13 @@ import {
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
   type PublicRoomSettings,
 } from "@tunetrack/shared";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   getOrCreatePlayerSessionId,
   getRememberedPlayerDisplayName,
 } from "../../../services/session/playerSession";
+import { preloadGameRuntime } from "../../../app/preloadRoutes";
 import type { LobbyPageController } from "../LobbyPage.types";
 import { useLobbyRoomActions } from "./useLobbyRoomActions";
 import { useLobbyRoomConnection } from "./useLobbyRoomConnection";
@@ -53,6 +54,12 @@ export function useLobbyPageController(): LobbyPageController {
     roomState,
   });
 
+  useEffect(() => {
+    if (roomState?.status === "lobby") {
+      preloadGameRuntime();
+    }
+  }, [roomState?.roomId, roomState?.status]);
+
   return {
     connectionStatus,
     currentPlayerId,
@@ -65,6 +72,7 @@ export function useLobbyPageController(): LobbyPageController {
     handleRoomSettingsChange: actions.handleRoomSettingsChange,
     handleStartGame: actions.handleStartGame,
     isHost,
+    preloadGame: preloadGameRuntime,
     roomId,
     roomState,
     toggleTtMode: actions.toggleTtMode,

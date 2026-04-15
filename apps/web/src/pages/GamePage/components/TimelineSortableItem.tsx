@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { CSSProperties } from "react";
@@ -38,7 +39,7 @@ interface TimelineSortableItemProps {
   theme: ThemeId;
 }
 
-export function TimelineSortableItem({
+function TimelineSortableItemComponent({
   card,
   challengeMarkerTone,
   hiddenCardMode,
@@ -140,3 +141,5 @@ export function TimelineSortableItem({
     </div>
   );
 }
+
+export const TimelineSortableItem = memo(TimelineSortableItemComponent);

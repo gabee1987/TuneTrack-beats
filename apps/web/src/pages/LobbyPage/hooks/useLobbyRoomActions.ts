@@ -4,7 +4,7 @@ import {
   type PublicRoomSettings,
   type PublicRoomState,
 } from "@tunetrack/shared";
-import { socketClient } from "../../../services/socket/socketClient";
+import { getSocketClient } from "../../../services/socket/socketClient";
 
 const DEFAULT_ENABLED_STARTING_TT_TOKEN_COUNT = 1;
 
@@ -30,12 +30,20 @@ export function useLobbyRoomActions({
   isHost,
   roomState,
 }: UseLobbyRoomActionsOptions): UseLobbyRoomActionsResult {
+  async function emitRoomEvent<TPayload>(
+    event: (typeof ClientToServerEvent)[keyof typeof ClientToServerEvent],
+    payload: TPayload,
+  ) {
+    const socketClient = await getSocketClient();
+    socketClient.emit(event, payload);
+  }
+
   function handleRoomSettingsChange(nextSettings: PublicRoomSettings) {
     if (!roomState || !isHost) {
       return;
     }
 
-    socketClient.emit(ClientToServerEvent.UpdateRoomSettings, {
+    void emitRoomEvent(ClientToServerEvent.UpdateRoomSettings, {
       roomId: roomState.roomId,
       ...nextSettings,
     });
@@ -49,7 +57,7 @@ export function useLobbyRoomActions({
       return;
     }
 
-    socketClient.emit(ClientToServerEvent.UpdatePlayerSettings, {
+    void emitRoomEvent(ClientToServerEvent.UpdatePlayerSettings, {
       playerId: player.id,
       roomId: roomState.roomId,
       startingTimelineCardCount: nextValue,
@@ -61,7 +69,7 @@ export function useLobbyRoomActions({
       return;
     }
 
-    socketClient.emit(ClientToServerEvent.StartGame, {
+    void emitRoomEvent(ClientToServerEvent.StartGame, {
       roomId: roomState.roomId,
     });
   }
@@ -71,7 +79,7 @@ export function useLobbyRoomActions({
       return;
     }
 
-    socketClient.emit(ClientToServerEvent.CloseRoom, {
+    void emitRoomEvent(ClientToServerEvent.CloseRoom, {
       roomId: roomState.roomId,
     });
   }

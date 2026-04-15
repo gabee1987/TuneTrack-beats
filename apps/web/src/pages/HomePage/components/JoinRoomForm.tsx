@@ -6,6 +6,7 @@ import styles from "../HomePage.module.css";
 export function JoinRoomForm({
   displayName,
   roomId,
+  onIntentToSubmit,
   onDisplayNameChange,
   onRoomIdChange,
   onSubmit,
@@ -50,7 +51,13 @@ export function JoinRoomForm({
 
         <div className={styles.formFooter}>
           <p className={styles.formHint}>Your name stays saved on this device.</p>
-          <ActionButton className={styles.primaryButton} type="submit">
+          <ActionButton
+            className={styles.primaryButton}
+            onFocus={onIntentToSubmit}
+            onMouseEnter={onIntentToSubmit}
+            onTouchStart={onIntentToSubmit}
+            type="submit"
+          >
             Open Lobby
           </ActionButton>
         </div>

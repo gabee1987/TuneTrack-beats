@@ -9,7 +9,7 @@ import {
 } from "@tunetrack/shared";
 import { useEffect, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
-import { socketClient } from "../../../services/socket/socketClient";
+import { getSocketClient } from "../../../services/socket/socketClient";
 import type { GameRouteState } from "../GamePage.types";
 
 interface UseGameRoomConnectionOptions {
@@ -37,12 +37,15 @@ export function useGameRoomConnection({
   const [nowEpochMs, setNowEpochMs] = useState(() => Date.now());
 
   useEffect(() => {
+    let isDisposed = false;
+    let cleanupSocketListeners: (() => void) | null = null;
+
     if (!roomId || !rememberedDisplayName) {
       navigate("/");
       return;
     }
 
-    function handleConnect() {
+    function handleConnect(socketClient: Awaited<ReturnType<typeof getSocketClient>>) {
       socketClient.emit(ClientToServerEvent.JoinRoom, {
         roomId,
         displayName: rememberedDisplayName,
@@ -67,24 +70,37 @@ export function useGameRoomConnection({
       navigate("/");
     }
 
-    socketClient.on("connect", handleConnect);
-    socketClient.on(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
-    socketClient.on(ServerToClientEvent.RoomClosed, handleRoomClosed);
-    socketClient.on(ServerToClientEvent.StateUpdate, handleStateUpdate);
-    socketClient.on(ServerToClientEvent.Error, handleError);
+    void getSocketClient().then((socketClient) => {
+      if (isDisposed) {
+        return;
+      }
 
-    if (!socketClient.connected) {
-      socketClient.connect();
-    } else {
-      handleConnect();
-    }
+      const connectListener = () => handleConnect(socketClient);
+
+      socketClient.on("connect", connectListener);
+      socketClient.on(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
+      socketClient.on(ServerToClientEvent.RoomClosed, handleRoomClosed);
+      socketClient.on(ServerToClientEvent.StateUpdate, handleStateUpdate);
+      socketClient.on(ServerToClientEvent.Error, handleError);
+
+      cleanupSocketListeners = () => {
+        socketClient.off("connect", connectListener);
+        socketClient.off(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
+        socketClient.off(ServerToClientEvent.RoomClosed, handleRoomClosed);
+        socketClient.off(ServerToClientEvent.StateUpdate, handleStateUpdate);
+        socketClient.off(ServerToClientEvent.Error, handleError);
+      };
+
+      if (!socketClient.connected) {
+        socketClient.connect();
+      } else {
+        handleConnect(socketClient);
+      }
+    });
 
     return () => {
-      socketClient.off("connect", handleConnect);
-      socketClient.off(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
-      socketClient.off(ServerToClientEvent.RoomClosed, handleRoomClosed);
-      socketClient.off(ServerToClientEvent.StateUpdate, handleStateUpdate);
-      socketClient.off(ServerToClientEvent.Error, handleError);
+      isDisposed = true;
+      cleanupSocketListeners?.();
     };
   }, [navigate, playerSessionId, rememberedDisplayName, roomId]);
 

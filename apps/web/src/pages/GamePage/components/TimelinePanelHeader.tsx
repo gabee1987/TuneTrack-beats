@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { TimelinePanelHeaderModel } from "../GamePage.types";
 import styles from "./TimelinePanel.module.css";
 
@@ -6,7 +7,7 @@ interface TimelinePanelHeaderProps {
   onMineButtonRef: (node: HTMLButtonElement | null) => void;
 }
 
-export function TimelinePanelHeader({
+function TimelinePanelHeaderComponent({
   model,
   onMineButtonRef,
 }: TimelinePanelHeaderProps) {
@@ -62,3 +63,24 @@ export function TimelinePanelHeader({
     </div>
   );
 }
+
+function areTimelineHeaderModelsEqual(
+  previousModel: TimelinePanelHeaderModel,
+  nextModel: TimelinePanelHeaderModel,
+): boolean {
+  return (
+    previousModel.canChangeTimelineView === nextModel.canChangeTimelineView &&
+    previousModel.canToggleView === nextModel.canToggleView &&
+    previousModel.cardCount === nextModel.cardCount &&
+    previousModel.onToggleTimelineView === nextModel.onToggleTimelineView &&
+    previousModel.timelineView === nextModel.timelineView &&
+    previousModel.title === nextModel.title
+  );
+}
+
+export const TimelinePanelHeader = memo(
+  TimelinePanelHeaderComponent,
+  (previousProps, nextProps) =>
+    previousProps.onMineButtonRef === nextProps.onMineButtonRef &&
+    areTimelineHeaderModelsEqual(previousProps.model, nextProps.model),
+);

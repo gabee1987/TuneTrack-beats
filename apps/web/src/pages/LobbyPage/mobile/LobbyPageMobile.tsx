@@ -40,6 +40,7 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
         {controller.isHost ? (
           <LobbyHostSettingsPanel
             currentSettings={controller.currentSettings}
+            onIntentToStartGame={controller.preloadGame}
             onRoomSettingsChange={controller.handleRoomSettingsChange}
             onStartGame={controller.handleStartGame}
             onToggleTtMode={controller.toggleTtMode}

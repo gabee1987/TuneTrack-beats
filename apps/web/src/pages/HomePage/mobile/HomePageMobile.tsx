@@ -17,6 +17,7 @@ export function HomePageMobile({ controller }: HomePageAssemblyProps) {
         <HomePageHero />
         <JoinRoomForm
           displayName={controller.displayName}
+          onIntentToSubmit={controller.preloadLobby}
           onDisplayNameChange={controller.setDisplayName}
           onRoomIdChange={controller.setRoomId}
           onSubmit={controller.handleSubmit}

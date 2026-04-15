@@ -18,6 +18,7 @@ export interface LobbyPageController {
   handleRoomSettingsChange: (nextSettings: PublicRoomSettings) => void;
   handleStartGame: () => void;
   isHost: boolean;
+  preloadGame: () => void;
   roomId: string | undefined;
   roomState: PublicRoomState | null;
   toggleTtMode: (enabled: boolean) => void;

@@ -10,7 +10,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { rememberPlayerDisplayName } from "../../../services/session/playerSession";
-import { socketClient } from "../../../services/socket/socketClient";
+import { getSocketClient } from "../../../services/socket/socketClient";
 
 interface UseLobbyRoomConnectionOptions {
   displayName: string;
@@ -39,6 +39,9 @@ export function useLobbyRoomConnection({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    let isDisposed = false;
+    let cleanupSocketListeners: (() => void) | null = null;
+
     if (!roomId || !displayName) {
       navigate("/");
       return;
@@ -46,7 +49,7 @@ export function useLobbyRoomConnection({
 
     rememberPlayerDisplayName(displayName);
 
-    function handleConnect() {
+    function handleConnect(socketClient: Awaited<ReturnType<typeof getSocketClient>>) {
       setConnectionStatus("Connected");
       setErrorMessage(null);
       socketClient.emit(ClientToServerEvent.JoinRoom, {
@@ -86,26 +89,39 @@ export function useLobbyRoomConnection({
       navigate("/");
     }
 
-    socketClient.on("connect", handleConnect);
-    socketClient.on("disconnect", handleDisconnect);
-    socketClient.on(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
-    socketClient.on(ServerToClientEvent.RoomClosed, handleRoomClosed);
-    socketClient.on(ServerToClientEvent.StateUpdate, handleStateUpdate);
-    socketClient.on(ServerToClientEvent.Error, handleError);
+    void getSocketClient().then((socketClient) => {
+      if (isDisposed) {
+        return;
+      }
 
-    if (!socketClient.connected) {
-      socketClient.connect();
-    } else {
-      handleConnect();
-    }
+      const connectListener = () => handleConnect(socketClient);
+
+      socketClient.on("connect", connectListener);
+      socketClient.on("disconnect", handleDisconnect);
+      socketClient.on(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
+      socketClient.on(ServerToClientEvent.RoomClosed, handleRoomClosed);
+      socketClient.on(ServerToClientEvent.StateUpdate, handleStateUpdate);
+      socketClient.on(ServerToClientEvent.Error, handleError);
+
+      cleanupSocketListeners = () => {
+        socketClient.off("connect", connectListener);
+        socketClient.off("disconnect", handleDisconnect);
+        socketClient.off(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
+        socketClient.off(ServerToClientEvent.RoomClosed, handleRoomClosed);
+        socketClient.off(ServerToClientEvent.StateUpdate, handleStateUpdate);
+        socketClient.off(ServerToClientEvent.Error, handleError);
+      };
+
+      if (!socketClient.connected) {
+        socketClient.connect();
+      } else {
+        handleConnect(socketClient);
+      }
+    });
 
     return () => {
-      socketClient.off("connect", handleConnect);
-      socketClient.off("disconnect", handleDisconnect);
-      socketClient.off(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
-      socketClient.off(ServerToClientEvent.RoomClosed, handleRoomClosed);
-      socketClient.off(ServerToClientEvent.StateUpdate, handleStateUpdate);
-      socketClient.off(ServerToClientEvent.Error, handleError);
+      isDisposed = true;
+      cleanupSocketListeners?.();
     };
   }, [displayName, navigate, playerSessionId, roomId]);
 

@@ -6,6 +6,7 @@ export type LobbyRoomSettingsChangeHandler = (
 
 export interface LobbyHostSettingsPanelProps {
   currentSettings: PublicRoomSettings;
+  onIntentToStartGame: () => void;
   onRoomSettingsChange: LobbyRoomSettingsChangeHandler;
   onStartGame: () => void;
   onToggleTtMode: (enabled: boolean) => void;

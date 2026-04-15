@@ -21,6 +21,7 @@ export function HomePageDesktop({ controller }: HomePageAssemblyProps) {
         <aside className={styles.formColumn}>
           <JoinRoomForm
             displayName={controller.displayName}
+            onIntentToSubmit={controller.preloadLobby}
             onDisplayNameChange={controller.setDisplayName}
             onRoomIdChange={controller.setRoomId}
             onSubmit={controller.handleSubmit}

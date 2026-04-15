@@ -9,6 +9,7 @@ import styles from "../LobbyPage.module.css";
 
 export function LobbyHostSettingsPanel({
   currentSettings,
+  onIntentToStartGame,
   onRoomSettingsChange,
   onStartGame,
   onToggleTtMode,
@@ -33,7 +34,10 @@ export function LobbyHostSettingsPanel({
         />
       </div>
 
-      <LobbyHostStartPanel onStartGame={onStartGame} />
+      <LobbyHostStartPanel
+        onIntentToStart={onIntentToStartGame}
+        onStartGame={onStartGame}
+      />
     </SurfaceCard>
   );
 }

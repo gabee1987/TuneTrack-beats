@@ -1,3 +1,4 @@
+import { memo } from "react";
 import {
   AppShellMenu,
 } from "../../../features/app-shell/AppShellMenu";
@@ -9,7 +10,7 @@ interface GamePageHeaderProps {
   model: GamePageHeaderModel;
 }
 
-export function GamePageHeader({ model }: GamePageHeaderProps) {
+function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
   const {
     currentPlayerId,
     leadingPlayers,
@@ -125,3 +126,29 @@ export function GamePageHeader({ model }: GamePageHeaderProps) {
     </header>
   );
 }
+
+function areHeaderModelsEqual(
+  previousModel: GamePageHeaderModel,
+  nextModel: GamePageHeaderModel,
+): boolean {
+  return (
+    previousModel.currentPlayerId === nextModel.currentPlayerId &&
+    previousModel.leadingPlayers === nextModel.leadingPlayers &&
+    previousModel.menuTabs === nextModel.menuTabs &&
+    previousModel.roomState === nextModel.roomState &&
+    previousModel.showMiniStandings === nextModel.showMiniStandings &&
+    previousModel.showPhaseChip === nextModel.showPhaseChip &&
+    previousModel.showRoomCodeChip === nextModel.showRoomCodeChip &&
+    previousModel.showTimelineHints === nextModel.showTimelineHints &&
+    previousModel.showTurnNumberChip === nextModel.showTurnNumberChip &&
+    previousModel.statusBadgeText === nextModel.statusBadgeText &&
+    previousModel.statusDetailText === nextModel.statusDetailText &&
+    previousModel.updateViewPreferences === nextModel.updateViewPreferences
+  );
+}
+
+export const GamePageHeader = memo(
+  GamePageHeaderComponent,
+  (previousProps, nextProps) =>
+    areHeaderModelsEqual(previousProps.model, nextProps.model),
+);
