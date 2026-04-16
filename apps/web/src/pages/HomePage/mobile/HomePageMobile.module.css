@@ -1,29 +1,102 @@
 .screenShell {
-  min-height: var(--app-height);
   padding: 0;
   overflow: hidden;
   background:
-    radial-gradient(circle at top left, color-mix(in srgb, #ff8a3d 18%, transparent), transparent 34%),
-    radial-gradient(circle at top right, color-mix(in srgb, #7c5cff 20%, transparent), transparent 32%),
-    linear-gradient(160deg, #060814 0%, #0b1020 48%, #120d1d 100%);
+    radial-gradient(
+      circle at 50% 50%,
+      color-mix(in srgb, white 2%, transparent) 0 1px,
+      transparent 1px 100%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      color-mix(in srgb, white 2.2%, transparent) 0 1px,
+      transparent 1px 4px
+    ),
+    linear-gradient(
+      132deg,
+      transparent 0 60%,
+      color-mix(in srgb, #ff9352 30%, transparent) 60% 60.35%,
+      transparent 60.35% 100%
+    ),
+    linear-gradient(
+      138deg,
+      transparent 0 74%,
+      color-mix(in srgb, #ff9352 18%, transparent) 74% 74.22%,
+      transparent 74.22% 100%
+    ),
+    linear-gradient(
+      144deg,
+      transparent 0 82%,
+      color-mix(in srgb, #8a62ff 24%, transparent) 82% 82.24%,
+      transparent 82.24% 100%
+    ),
+    linear-gradient(
+      146deg,
+      transparent 0 90%,
+      color-mix(in srgb, #8a62ff 16%, transparent) 90% 90.16%,
+      transparent 90.16% 100%
+    ),
+    radial-gradient(
+      92% 88% at 16% 10%,
+      color-mix(in srgb, #ff8a3d 18%, transparent),
+      transparent 34%
+    ),
+    radial-gradient(
+      86% 82% at 90% 10%,
+      color-mix(in srgb, #7c5cff 20%, transparent),
+      transparent 36%
+    ),
+    radial-gradient(
+      78% 78% at 88% 88%,
+      color-mix(in srgb, #ff4d9d 14%, transparent),
+      transparent 34%
+    ),
+    radial-gradient(
+      72% 72% at 72% 92%,
+      color-mix(in srgb, #6f4cff 16%, transparent),
+      transparent 38%
+    ),
+    radial-gradient(
+      68% 68% at 14% 72%,
+      color-mix(in srgb, #2b3166 24%, transparent),
+      transparent 42%
+    ),
+    radial-gradient(
+      92% 92% at 50% 54%,
+      color-mix(in srgb, #4b2762 24%, transparent),
+      transparent 54%
+    ),
+    radial-gradient(
+      120% 120% at 50% 100%,
+      color-mix(in srgb, #21142f 88%, transparent),
+      transparent 70%
+    ),
+    linear-gradient(160deg, #06070d 0%, #0a0b12 28%, #120f17 62%, #18111d 100%);
+  background-blend-mode: normal, soft-light, screen, screen, screen, screen,
+    screen, screen, screen, overlay, normal;
 }
 
 .panelShell {
+  --menu-pad-top: calc(var(--safe-area-top) + 14px);
+  --menu-pad-right: calc(var(--safe-area-right) + 16px);
+  --menu-pad-bottom: calc(var(--safe-area-bottom) + 14px);
+  --menu-pad-left: calc(var(--safe-area-left) + 16px);
   width: 100%;
-  min-height: var(--app-height);
   margin: 0 auto;
-  padding:
-    calc(var(--safe-area-top) + 22px)
-    calc(var(--safe-area-right) + 18px)
-    calc(var(--safe-area-bottom) + 22px)
-    calc(var(--safe-area-left) + 18px);
+  padding: var(--menu-pad-top) var(--menu-pad-right) var(--menu-pad-bottom)
+    var(--menu-pad-left);
   border: 0;
   border-radius: 0;
   background:
-    linear-gradient(180deg, color-mix(in srgb, #0d1224 88%, transparent), color-mix(in srgb, #070a14 94%, transparent)),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #0d1224 72%, transparent),
+      color-mix(in srgb, #070a14 90%, transparent)
+    ),
     linear-gradient(145deg, #0b0f1a 0%, #090d18 52%, #110b1a 100%);
   box-shadow: none;
   isolation: isolate;
+  display: flex;
 }
 
 .panelShell::before {
@@ -31,10 +104,52 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, color-mix(in srgb, white 7%, transparent), transparent 22%),
-    radial-gradient(circle at bottom center, color-mix(in srgb, #ff4d9d 12%, transparent), transparent 34%);
+    linear-gradient(180deg, color-mix(in srgb, white 4%, transparent), transparent 18%),
+    radial-gradient(
+      80% 70% at 8% 12%,
+      color-mix(in srgb, #ff8a3d 10%, transparent),
+      transparent 24%
+    ),
+    radial-gradient(
+      88% 82% at 92% 84%,
+      color-mix(in srgb, #7c5cff 12%, transparent),
+      transparent 30%
+    ),
+    radial-gradient(
+      68% 60% at 78% 98%,
+      color-mix(in srgb, #ff4d9d 10%, transparent),
+      transparent 42%
+    );
   pointer-events: none;
-  opacity: 0.9;
+  opacity: 0.82;
+}
+
+.panelShell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      132deg,
+      transparent 0 70%,
+      color-mix(in srgb, #ff8a3d 20%, transparent) 70% 70.22%,
+      transparent 70.3% 100%
+    ),
+    linear-gradient(
+      138deg,
+      transparent 0 78%,
+      color-mix(in srgb, #7c5cff 18%, transparent) 78% 78.2%,
+      transparent 78.25% 100%
+    ),
+    linear-gradient(
+      126deg,
+      transparent 0 58%,
+      color-mix(in srgb, #ff4d9d 10%, transparent) 58% 58.14%,
+      transparent 58.18% 100%
+    );
+  opacity: 0.54;
+  filter: blur(0.3px);
+  pointer-events: none;
 }
 
 .backgroundOrbs {
@@ -42,7 +157,7 @@
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  filter: blur(18px);
+  filter: blur(132px);
 }
 
 .orbOne,
@@ -50,35 +165,35 @@
 .orbThree {
   position: absolute;
   border-radius: 999px;
-  opacity: 0.72;
+  opacity: 0.66;
   mix-blend-mode: screen;
-  animation: drift 18s ease-in-out infinite alternate;
+  animation: drift 24s ease-in-out infinite alternate;
 }
 
 .orbOne {
-  top: -8%;
-  left: -18%;
-  width: 72vw;
-  height: 72vw;
-  background: linear-gradient(135deg, #ff8a3d, #ff4d9d);
+  top: -26%;
+  left: -40%;
+  width: 146vw;
+  height: 146vw;
+  background: radial-gradient(circle, #bb6c3f 0%, #713146 46%, transparent 100%);
 }
 
 .orbTwo {
-  top: 14%;
-  right: -24%;
-  width: 82vw;
-  height: 82vw;
-  background: linear-gradient(135deg, #00d4ff, #7c5cff);
-  animation-duration: 22s;
+  top: -22%;
+  right: -34%;
+  width: 138vw;
+  height: 138vw;
+  background: radial-gradient(circle, #7f57ff 0%, #47328d 48%, transparent 100%);
+  animation-duration: 27s;
 }
 
 .orbThree {
-  bottom: -12%;
+  bottom: -38%;
   left: 18%;
-  width: 68vw;
-  height: 68vw;
-  background: linear-gradient(135deg, #7c5cff, #ff4d9d);
-  animation-duration: 26s;
+  width: 132vw;
+  height: 132vw;
+  background: radial-gradient(circle, #9f4664 0%, #592b60 48%, transparent 100%);
+  animation-duration: 30s;
 }
 
 .content {
@@ -86,56 +201,78 @@
   z-index: 1;
   display: flex;
   flex-direction: column;
-  min-height: calc(var(--app-height) - var(--safe-area-top) - var(--safe-area-bottom) - 44px);
-  gap: 24px;
+  flex: 1;
+  min-height: calc(100dvh - var(--menu-pad-top) - var(--menu-pad-bottom));
+  gap: 14px;
 }
 
 .hero {
   display: grid;
-  gap: 22px;
+  gap: 12px;
 }
 
 .logoBadge {
   position: relative;
   display: grid;
   place-items: center;
-  width: clamp(88px, 22vw, 118px);
+  width: clamp(76px, 19vw, 104px);
   aspect-ratio: 1;
   border-radius: 30px;
-  background:
-    linear-gradient(145deg, color-mix(in srgb, #ff8a3d 88%, white 8%), color-mix(in srgb, #7c5cff 84%, black 4%));
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, #ff8a3d 88%, white 8%),
+    color-mix(in srgb, #7c5cff 84%, black 4%)
+  );
   box-shadow:
     0 18px 48px color-mix(in srgb, #7c5cff 34%, transparent),
     inset 0 1px 0 color-mix(in srgb, white 24%, transparent);
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .logoBadge::before,
 .logoBadge::after {
   content: "";
   position: absolute;
-  border-radius: 22px;
 }
 
 .logoBadge::before {
-  inset: 12px;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, #0f1326 90%, transparent), color-mix(in srgb, #171020 82%, transparent));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, white 10%, transparent);
+  z-index: 1;
+  inset: 1.5px;
+  border-radius: 28px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #141a30 70%, transparent),
+    color-mix(in srgb, #0a1020 62%, transparent)
+  );
+  backdrop-filter: blur(24px) saturate(130%);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 12%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, black 18%, transparent);
 }
 
 .logoBadge::after {
-  top: 14px;
-  right: 14px;
-  width: 22px;
-  height: 22px;
-  background: linear-gradient(135deg, #ffffff, #c8d1ff);
-  clip-path: polygon(0 0, 100% 0, 100% 100%);
+  z-index: 0;
+  inset: -42%;
+  border-radius: 40%;
+  background: conic-gradient(
+    from 0deg,
+    color-mix(in srgb, #ff8a3d 36%, transparent),
+    color-mix(in srgb, #ff4d9d 28%, transparent),
+    color-mix(in srgb, #7c5cff 32%, transparent),
+    color-mix(in srgb, #00d4ff 24%, transparent),
+    color-mix(in srgb, #ff8a3d 36%, transparent)
+  );
+  filter: blur(18px);
+  opacity: 0.44;
+  animation: spinBorder 28s linear infinite;
 }
 
 .logoCore {
   position: relative;
-  z-index: 1;
-  font-size: clamp(28px, 7vw, 38px);
+  z-index: 2;
+  font-size: clamp(24px, 6vw, 34px);
   font-weight: 900;
   letter-spacing: -0.08em;
   color: white;
@@ -143,12 +280,12 @@
 
 .heroCopy {
   display: grid;
-  gap: 14px;
+  gap: 10px;
 }
 
 .eyebrow {
   margin: 0;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -157,7 +294,7 @@
 
 .title {
   margin: 0;
-  font-size: clamp(48px, 15vw, 82px);
+  font-size: clamp(38px, 11vw, 64px);
   line-height: 0.9;
   letter-spacing: -0.08em;
   color: #f6f3ff;
@@ -174,84 +311,100 @@
 
 .previewCard {
   position: relative;
-  display: grid;
-  gap: 18px;
-  padding: 18px;
-  border-radius: 32px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, #181d33 92%, transparent), color-mix(in srgb, #0e1222 94%, transparent));
-  box-shadow:
-    0 24px 60px color-mix(in srgb, black 32%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
-  overflow: hidden;
-}
-
-.previewCard::before {
-  content: "";
-  position: absolute;
-  inset: auto -20% 68% 44%;
-  height: 140px;
-  background: linear-gradient(135deg, color-mix(in srgb, #7c5cff 42%, transparent), color-mix(in srgb, #ff8a3d 56%, transparent));
-  filter: blur(30px);
-  opacity: 0.8;
-}
-
-.previewTop {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: flex-start;
-}
-
-.previewLabel {
-  margin: 0 0 6px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, white 58%, transparent);
-}
-
-.previewTitle {
-  max-width: 12ch;
-  margin: 0;
-  font-size: clamp(24px, 6.8vw, 32px);
-  line-height: 1;
-  letter-spacing: -0.05em;
-}
-
-.statusPill {
-  flex-shrink: 0;
-  min-height: 38px;
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: color-mix(in srgb, white 8%, transparent);
-  color: color-mix(in srgb, white 78%, transparent);
-  font-size: 12px;
-  font-weight: 700;
+  display: block;
+  margin-top: auto;
 }
 
 .featureList {
   position: relative;
-  z-index: 1;
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .featureCard {
+  position: relative;
   display: grid;
-  gap: 8px;
-  padding: 16px;
+  gap: 6px;
+  padding: 12px 14px;
   border-radius: 24px;
+  background: transparent;
+  /* box-shadow:
+    0 18px 40px color-mix(in srgb, black 18%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 18%, transparent); */
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.featureCard::after {
+  content: "";
+  position: absolute;
+  inset: 1.5px;
+  border-radius: inherit;
   background:
-    linear-gradient(180deg, color-mix(in srgb, white 8%, transparent), color-mix(in srgb, white 4%, transparent));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, white 8%, transparent);
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, #7c5cff 10%, transparent),
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      color-mix(in srgb, #ff8a3d 10%, transparent),
+      transparent 44%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #161c31 52%, transparent),
+      color-mix(in srgb, #0b1020 44%, transparent)
+    );
+  backdrop-filter: blur(28px) saturate(118%);
+  -webkit-backdrop-filter: blur(28px) saturate(118%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, black 18%, transparent);
+  opacity: 1;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.featureCard::before {
+  content: "";
+  position: absolute;
+  inset: -48%;
+  border-radius: 40%;
+  background: conic-gradient(
+    from 0deg,
+    color-mix(in srgb, #ff8a3d 32%, transparent),
+    color-mix(in srgb, #ff4d9d 24%, transparent),
+    color-mix(in srgb, #7c5cff 28%, transparent),
+    color-mix(in srgb, #00d4ff 20%, transparent),
+    color-mix(in srgb, #ff8a3d 32%, transparent)
+  );
+  filter: blur(18px);
+  opacity: 0.36;
+  animation: spinBorder 30s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.featureCard:nth-child(1)::before {
+  animation-duration: 24s;
+  animation-delay: -3s;
+}
+
+.featureCard:nth-child(2)::before {
+  animation-duration: 31s;
+  animation-delay: -11s;
+}
+
+.featureCard:nth-child(3)::before {
+  animation-duration: 27s;
+  animation-delay: -18s;
 }
 
 .featureStep {
-  font-size: 11px;
+  position: relative;
+  z-index: 2;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -259,28 +412,32 @@
 }
 
 .featureCard h3 {
+  position: relative;
+  z-index: 2;
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   letter-spacing: -0.03em;
 }
 
 .featureCard p {
+  position: relative;
+  z-index: 2;
   margin: 0;
   color: color-mix(in srgb, white 72%, transparent);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.35;
 }
 
 .actionZone {
-  margin-top: auto;
-  padding-top: 4px;
+  margin-top: 8px;
+  padding-top: 0;
 }
 
 .primaryAction {
   position: relative;
   width: 100%;
-  min-height: 64px;
-  padding: 1.5px;
+  min-height: 58px;
+  padding: 1px;
   border: 0;
   border-radius: 999px;
   background: linear-gradient(120deg, #ff8a3d, #ff4d9d, #7c5cff, #00d4ff, #ff8a3d);
@@ -296,26 +453,74 @@
 }
 
 .primaryActionInner {
+  position: relative;
   display: grid;
   gap: 4px;
   width: 100%;
-  min-height: calc(64px - 3px);
-  padding: 16px 24px;
+  min-height: calc(58px - 2px);
+  padding: 14px 22px;
   border-radius: 999px;
+  background: transparent;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.primaryActionInner::before {
+  content: "";
+  position: absolute;
+  inset: -52%;
+  border-radius: 40%;
+  background: conic-gradient(
+    from 0deg,
+    color-mix(in srgb, #ff8a3d 34%, transparent),
+    color-mix(in srgb, #ff4d9d 26%, transparent),
+    color-mix(in srgb, #7c5cff 30%, transparent),
+    color-mix(in srgb, #00d4ff 22%, transparent),
+    color-mix(in srgb, #ff8a3d 34%, transparent)
+  );
+  filter: blur(18px);
+  opacity: 0.4;
+  animation: spinBorder 28s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.primaryActionInner::after {
+  content: "";
+  position: absolute;
+  inset: 0.75px;
+  border-radius: inherit;
   background:
-    linear-gradient(180deg, color-mix(in srgb, #151b32 92%, transparent), color-mix(in srgb, #0c1120 96%, transparent));
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, #7c5cff 6%, transparent),
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      color-mix(in srgb, #ff8a3d 5%, transparent),
+      transparent 44%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #151b32 64%, transparent),
+      color-mix(in srgb, #0c1120 62%, transparent)
+    );
+  backdrop-filter: blur(26px) saturate(116%);
+  -webkit-backdrop-filter: blur(26px) saturate(116%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, black 18%, transparent);
+  z-index: 1;
 }
 
 .primaryActionLabel {
-  font-size: 17px;
+  position: relative;
+  z-index: 2;
+  font-size: 16px;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: white;
-}
-
-.primaryActionMeta {
-  font-size: 12px;
-  color: color-mix(in srgb, white 62%, transparent);
 }
 
 .primaryAction:hover,
@@ -336,11 +541,21 @@
   }
 
   50% {
-    transform: translate3d(4%, -2%, 0) scale(1.06);
+    transform: translate3d(8%, -6%, 0) scale(1.1);
   }
 
   100% {
-    transform: translate3d(-3%, 4%, 0) scale(0.96);
+    transform: translate3d(-7%, 8%, 0) scale(0.92);
+  }
+}
+
+@keyframes spinBorder {
+  0% {
+    transform: rotate(0turn);
+  }
+
+  100% {
+    transform: rotate(1turn);
   }
 }
 
@@ -356,52 +571,82 @@
 
 @media (orientation: landscape) and (max-width: 960px) {
   .panelShell {
-    padding-top: calc(var(--safe-area-top) + 18px);
-    padding-bottom: calc(var(--safe-area-bottom) + 18px);
+    --menu-pad-top: calc(var(--safe-area-top) + 12px);
+    --menu-pad-bottom: calc(var(--safe-area-bottom) + 12px);
   }
 
   .content {
-    display: grid;
-    grid-template-columns: minmax(0, 1.08fr) minmax(300px, 0.92fr);
-    grid-template-areas:
-      "hero preview"
-      "action action";
-    align-items: start;
-    gap: 18px;
-  }
-
-  .hero {
-    grid-area: hero;
-    align-content: start;
-  }
-
-  .previewCard {
-    grid-area: preview;
-    height: 100%;
+    gap: 10px;
+    min-height: calc(100dvh - var(--menu-pad-top) - var(--menu-pad-bottom));
   }
 
   .actionZone {
-    grid-area: action;
     margin-top: 0;
   }
 }
 
 @media (max-width: 640px) {
   .panelShell {
-    padding-inline: calc(var(--safe-area-left) + 14px) calc(var(--safe-area-right) + 14px);
+    --menu-pad-right: calc(var(--safe-area-right) + 14px);
+    --menu-pad-left: calc(var(--safe-area-left) + 14px);
   }
 
   .content {
-    gap: 20px;
+    gap: 10px;
+    min-height: calc(100dvh - var(--menu-pad-top) - var(--menu-pad-bottom));
   }
 
   .hero {
-    gap: 18px;
+    gap: 10px;
   }
 
   .previewCard,
   .featureCard {
     border-radius: 26px;
+  }
+}
+
+@media (max-height: 760px) {
+  .panelShell {
+    --menu-pad-top: calc(var(--safe-area-top) + 10px);
+    --menu-pad-bottom: calc(var(--safe-area-bottom) + 10px);
+  }
+
+  .content {
+    gap: 8px;
+  }
+
+  .logoBadge {
+    width: clamp(68px, 17vw, 92px);
+  }
+
+  .logoCore {
+    font-size: clamp(22px, 5.4vw, 30px);
+  }
+
+  .title {
+    font-size: clamp(32px, 9.6vw, 52px);
+  }
+
+  .featureList {
+    gap: 6px;
+  }
+
+  .featureCard {
+    padding: 10px 12px;
+  }
+
+  .featureCard h3 {
+    font-size: 15px;
+  }
+
+  .featureCard p {
+    font-size: 12px;
+    line-height: 1.3;
+  }
+
+  .actionZone {
+    margin-top: 6px;
   }
 }
 

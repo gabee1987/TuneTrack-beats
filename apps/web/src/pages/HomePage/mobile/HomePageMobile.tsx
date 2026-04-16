@@ -4,10 +4,7 @@ import styles from "./HomePageMobile.module.css";
 
 export function HomePageMobile({ controller }: HomePageAssemblyProps) {
   return (
-    <AppPageShell
-      panelClassName={styles.panelShell}
-      screenClassName={styles.screenShell}
-    >
+    <AppPageShell panelClassName={styles.panelShell} screenClassName={styles.screenShell}>
       <div className={styles.backgroundOrbs} aria-hidden="true">
         <span className={styles.orbOne} />
         <span className={styles.orbTwo} />
@@ -23,39 +20,30 @@ export function HomePageMobile({ controller }: HomePageAssemblyProps) {
           <div className={styles.heroCopy}>
             <p className={styles.eyebrow}>Party music timeline game</p>
             <h1 className={styles.title}>TuneTrack Beats</h1>
-            <p className={styles.description}>
-              Build the timeline, challenge risky placements, and turn every
-              round into a fast social showdown.
-            </p>
+            {/* <p className={styles.description}>
+              Guess when songs came out, place them on the timeline, and challenge wrong picks
+            </p> */}
           </div>
         </header>
 
         <section className={styles.previewCard} aria-label="Experience preview">
-          <div className={styles.previewTop}>
-            <div>
-              <p className={styles.previewLabel}>What you do</p>
-              <h2 className={styles.previewTitle}>One tap to start. Setup comes next.</h2>
-            </div>
-            <div className={styles.statusPill}>Mobile first</div>
-          </div>
-
           <div className={styles.featureList}>
             <article className={styles.featureCard}>
               <span className={styles.featureStep}>01</span>
-              <h3>Jump in fast</h3>
-              <p>Start from one clean entry point instead of filling out the lobby here.</p>
+              <h3>Guess</h3>
+              <p>When did this song come out?</p>
             </article>
 
             <article className={styles.featureCard}>
               <span className={styles.featureStep}>02</span>
-              <h3>Guided setup</h3>
-              <p>Lobby settings can become a tighter onboarding flow with just a few choices per step.</p>
+              <h3>Place</h3>
+              <p>Drop it where you think it belongs on your timeline</p>
             </article>
 
             <article className={styles.featureCard}>
               <span className={styles.featureStep}>03</span>
-              <h3>Built for tension</h3>
-              <p>Quick reads, bold contrast, and a dramatic visual tone that fits a music party game.</p>
+              <h3>Challenge</h3>
+              <p>Call out wrong placements from others</p>
             </article>
           </div>
         </section>
@@ -70,8 +58,7 @@ export function HomePageMobile({ controller }: HomePageAssemblyProps) {
             type="button"
           >
             <span className={styles.primaryActionInner}>
-              <span className={styles.primaryActionLabel}>Start the experience</span>
-              <span className={styles.primaryActionMeta}>Lobby setup opens next</span>
+              <span className={styles.primaryActionLabel}>Lets go!</span>
             </span>
           </button>
         </div>
