@@ -19,7 +19,13 @@ export function useTimelineOverflowState({
     const rowElement = timelineRowRef.current;
 
     function updateOverflowState() {
-      setHasTimelineOverflow(rowElement.scrollWidth - rowElement.clientWidth > 4);
+      const isGridLayout = getComputedStyle(rowElement).display === "grid";
+
+      setHasTimelineOverflow(
+        isGridLayout
+          ? rowElement.scrollHeight - rowElement.clientHeight > 4
+          : rowElement.scrollWidth - rowElement.clientWidth > 4,
+      );
     }
 
     updateOverflowState();

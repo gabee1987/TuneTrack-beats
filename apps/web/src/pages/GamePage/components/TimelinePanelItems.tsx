@@ -1,5 +1,5 @@
 import { memo, useMemo } from "react";
-import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
+import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import type { GamePageCard, TimelinePanelItemsModel } from "../GamePage.types";
 import { buildTimelineSortableItemViewModels } from "../gamePageTimelineItemViewModels";
 import { TimelineSortableItem } from "./TimelineSortableItem";
@@ -37,7 +37,7 @@ function TimelinePanelItemsComponent({
   return (
     <SortableContext
       items={orderedItemIds}
-      strategy={horizontalListSortingStrategy}
+      strategy={rectSortingStrategy}
     >
       {itemViewModels.map((item) => (
         <TimelineSortableItem

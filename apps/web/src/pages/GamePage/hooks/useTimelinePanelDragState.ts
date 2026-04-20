@@ -49,6 +49,66 @@ interface UseTimelinePanelDragStateResult {
   >;
 }
 
+function isGridTimelineLayout(container: HTMLElement): boolean {
+  return getComputedStyle(container).display === "grid";
+}
+
+function getGridPreviewIndex(
+  activeCenterX: number,
+  activeCenterY: number,
+  timelineCards: HTMLElement[],
+): number {
+  let nextPreviewIndex = 0;
+
+  for (const timelineCard of timelineCards) {
+    const cardRect = timelineCard.getBoundingClientRect();
+    const cardCenterX = cardRect.left + cardRect.width / 2;
+    const cardCenterY = cardRect.top + cardRect.height / 2;
+    const sameRowTop = cardRect.top;
+    const sameRowBottom = cardRect.bottom;
+
+    if (activeCenterY > sameRowBottom) {
+      nextPreviewIndex += 1;
+      continue;
+    }
+
+    if (activeCenterY >= sameRowTop && activeCenterY <= sameRowBottom) {
+      if (activeCenterX > cardCenterX) {
+        nextPreviewIndex += 1;
+        continue;
+      }
+
+      break;
+    }
+
+    if (activeCenterY < cardCenterY) {
+      break;
+    }
+  }
+
+  return nextPreviewIndex;
+}
+
+function getHorizontalPreviewIndex(
+  activeCenterX: number,
+  timelineCards: HTMLElement[],
+): number {
+  let nextPreviewIndex = 0;
+
+  for (const timelineCard of timelineCards) {
+    const cardRect = timelineCard.getBoundingClientRect();
+    const cardCenterX = cardRect.left + cardRect.width / 2;
+
+    if (activeCenterX > cardCenterX) {
+      nextPreviewIndex += 1;
+    } else {
+      break;
+    }
+  }
+
+  return nextPreviewIndex;
+}
+
 export function useTimelinePanelDragState({
   previewCard,
   previewSlotIndex,
@@ -99,22 +159,13 @@ export function useTimelinePanelDragState({
     }
 
     const activeCenterX = translatedRect.left + translatedRect.width / 2;
+    const activeCenterY = translatedRect.top + translatedRect.height / 2;
     const renderedTimelineCards = Array.from(
       timelineRow.querySelectorAll<HTMLElement>("[data-timeline-card='true']"),
     );
-
-    let nextPreviewIndex = 0;
-
-    for (const timelineCard of renderedTimelineCards) {
-      const cardRect = timelineCard.getBoundingClientRect();
-      const cardCenterX = cardRect.left + cardRect.width / 2;
-
-      if (activeCenterX > cardCenterX) {
-        nextPreviewIndex += 1;
-      } else {
-        break;
-      }
-    }
+    const nextPreviewIndex = isGridTimelineLayout(timelineRow)
+      ? getGridPreviewIndex(activeCenterX, activeCenterY, renderedTimelineCards)
+      : getHorizontalPreviewIndex(activeCenterX, renderedTimelineCards);
 
     if (orderedItemIds.indexOf(TIMELINE_PREVIEW_ITEM_ID) === nextPreviewIndex) {
       return;
@@ -151,6 +202,7 @@ export function useTimelinePanelDragState({
 
     const containerRect = container.getBoundingClientRect();
     let scrollLeft = 0;
+    let scrollTop = 0;
 
     if (translatedRect.right > containerRect.right - DRAG_EDGE_SCROLL_ZONE_PX) {
       scrollLeft = Math.min(
@@ -173,6 +225,31 @@ export function useTimelinePanelDragState({
         left: scrollLeft,
         behavior: "auto",
       });
+    }
+
+    if (isGridTimelineLayout(container)) {
+      if (translatedRect.bottom > containerRect.bottom - DRAG_EDGE_SCROLL_ZONE_PX) {
+        scrollTop = Math.min(
+          DRAG_EDGE_SCROLL_MAX_STEP_PX,
+          (translatedRect.bottom - (containerRect.bottom - DRAG_EDGE_SCROLL_ZONE_PX)) /
+            5,
+        );
+      } else if (
+        translatedRect.top < containerRect.top + DRAG_EDGE_SCROLL_ZONE_PX
+      ) {
+        scrollTop = -Math.min(
+          DRAG_EDGE_SCROLL_MAX_STEP_PX,
+          ((containerRect.top + DRAG_EDGE_SCROLL_ZONE_PX) - translatedRect.top) /
+            5,
+        );
+      }
+
+      if (scrollTop !== 0) {
+        container.scrollBy({
+          top: scrollTop,
+          behavior: "auto",
+        });
+      }
     }
 
     syncPreviewIndexFromActiveRect(translatedRect);
