@@ -1,0 +1,191 @@
+.background {
+  /* Background tuning zone:
+     Base: --bg-base-top, --bg-base-mid, --bg-base-bottom, --bg-vignette-strength.
+     Orbs: --orb-size, --orb-blur, --orb-opacity, and each orb's local override vars.
+     Local overrides: --orb-local-size, --orb-local-blur, --orb-local-opacity, --orb-local-speed.
+     Position: --orb-top, --orb-right, --orb-bottom, --orb-left.
+     Colors: --orb-core, --orb-mid, --orb-alt-core, --orb-alt-mid.
+     Motion: --orb-motion-x, --orb-motion-y, --orb-motion-speed.
+     Color drift: each orb crossfades to --orb-alt-* colors.
+     Performance: movement uses transform; color drift uses opacity only. */
+  --bg-base-top: #201310;
+  --bg-base-mid: #100023;
+  --bg-base-bottom: #03050d;
+  --bg-vignette-strength: 0.78;
+  --orb-size: 72vw;
+  --orb-blur: 72px;
+  --orb-opacity: 0.52;
+  --orb-motion-x: 12vw;
+  --orb-motion-y: 10vh;
+  --orb-motion-speed: 26s;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+}
+
+.background::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      110% 90% at 50% 0%,
+      color-mix(in srgb, #4d3a74 34%, transparent),
+      transparent 58%
+    ),
+    radial-gradient(
+      120% 100% at 50% 100%,
+      color-mix(in srgb, #04050c calc(var(--bg-vignette-strength) * 100%), transparent),
+      transparent 68%
+    ),
+    linear-gradient(
+      180deg,
+      var(--bg-base-top) 0%,
+      var(--bg-base-mid) 48%,
+      var(--bg-base-bottom) 100%
+    );
+}
+
+.orb {
+  --orb-top: auto;
+  --orb-right: auto;
+  --orb-bottom: auto;
+  --orb-left: auto;
+  --orb-local-size: var(--orb-size);
+  --orb-local-blur: var(--orb-blur);
+  --orb-local-opacity: var(--orb-opacity);
+  --orb-local-speed: var(--orb-motion-speed);
+  --orb-scale: 1;
+  --orb-core: #8b5cff;
+  --orb-mid: #5634c9;
+  --orb-alt-core: #ff8a3d;
+  --orb-alt-mid: #a94757;
+  position: absolute;
+  top: var(--orb-top);
+  right: var(--orb-right);
+  bottom: var(--orb-bottom);
+  left: var(--orb-left);
+  width: var(--orb-local-size);
+  height: var(--orb-local-size);
+  border-radius: 999px;
+  background: radial-gradient(circle, var(--orb-core) 0%, var(--orb-mid) 38%, transparent 74%);
+  opacity: var(--orb-local-opacity);
+  filter: blur(var(--orb-local-blur));
+  mix-blend-mode: screen;
+  will-change: transform;
+  transform: translate3d(0, 0, 0) scale(var(--orb-scale));
+  animation: backgroundOrbFloat var(--orb-local-speed) ease-in-out infinite alternate;
+}
+
+.orb::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle,
+    var(--orb-alt-core) 0%,
+    var(--orb-alt-mid) 40%,
+    transparent 74%
+  );
+  opacity: 0;
+  animation: backgroundOrbColorMix calc(var(--orb-local-speed) * 1.9) ease-in-out infinite alternate;
+}
+
+.orbOrange {
+  --orb-top: -14%;
+  --orb-left: -42%;
+  --orb-core: #ff8a3d;
+  --orb-mid: #b34853;
+  --orb-alt-core: #ff4d9d;
+  --orb-alt-mid: #6f39bb;
+  --orb-scale: 1.08;
+}
+
+.orbViolet {
+  --orb-top: -18%;
+  --orb-right: -42%;
+  --orb-local-size: 138vw;
+  --orb-core: #8b5cff;
+  --orb-mid: #5634c9;
+  --orb-alt-core: #ff8a3d;
+  --orb-alt-mid: #a94757;
+  --orb-scale: 0.95;
+  --orb-local-speed: calc(var(--orb-motion-speed) * 1.18);
+  animation-delay: -9s;
+}
+
+.orbRose {
+  --orb-right: -28%;
+  --orb-bottom: -40%;
+  --orb-local-size: 142vw;
+  --orb-core: #ff4d9d;
+  --orb-mid: #7535b9;
+  --orb-alt-core: #8b5cff;
+  --orb-alt-mid: #5138c4;
+  --orb-scale: 1.02;
+  --orb-local-speed: calc(var(--orb-motion-speed) * 1.32);
+  animation-delay: -16s;
+}
+
+.orbCards {
+  --orb-left: 12%;
+  --orb-bottom: 6%;
+  --orb-local-size: 86vw;
+  --orb-local-blur: 72px;
+  --orb-local-opacity: 0.18;
+  --orb-core: #ff8a3d;
+  --orb-mid: #8b5cff;
+  --orb-alt-core: #ff4d9d;
+  --orb-alt-mid: #38c8ff;
+  --orb-scale: 0.86;
+  --orb-local-speed: calc(var(--orb-motion-speed) * 1.08);
+  animation-delay: -6s;
+}
+
+@keyframes backgroundOrbFloat {
+  0% {
+    transform: translate3d(0, 0, 0) scale(var(--orb-scale));
+  }
+
+  50% {
+    transform: translate3d(var(--orb-motion-x), calc(var(--orb-motion-y) * -1), 0)
+      scale(calc(var(--orb-scale) * 1.05));
+  }
+
+  100% {
+    transform: translate3d(calc(var(--orb-motion-x) * -0.8), var(--orb-motion-y), 0)
+      scale(calc(var(--orb-scale) * 0.97));
+  }
+}
+
+@keyframes backgroundOrbColorMix {
+  0% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 0.82;
+  }
+
+  100% {
+    opacity: 0.28;
+  }
+}
+
+@media (min-width: 560px) {
+  .background {
+    --orb-size: 720px;
+    --orb-blur: 84px;
+    --orb-motion-x: 52px;
+    --orb-motion-y: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb {
+    animation: none;
+  }
+}

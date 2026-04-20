@@ -1,15 +1,12 @@
 import { AppPageShell } from "../../../features/mobile-shell/AppPageShell";
 import type { HomePageAssemblyProps } from "../HomePage.types";
+import { AnimatedMenuBackground } from "./AnimatedMenuBackground";
 import styles from "./HomePageMobile.module.css";
 
 export function HomePageMobile({ controller }: HomePageAssemblyProps) {
   return (
     <AppPageShell panelClassName={styles.panelShell} screenClassName={styles.screenShell}>
-      <div className={styles.backgroundOrbs} aria-hidden="true">
-        <span className={styles.orbOne} />
-        <span className={styles.orbTwo} />
-        <span className={styles.orbThree} />
-      </div>
+      <AnimatedMenuBackground />
 
       <div className={styles.content}>
         <header className={styles.hero}>
@@ -19,7 +16,10 @@ export function HomePageMobile({ controller }: HomePageAssemblyProps) {
 
           <div className={styles.heroCopy}>
             <p className={styles.eyebrow}>Party music timeline game</p>
-            <h1 className={styles.title}>TuneTrack Beats</h1>
+            <h1 className={styles.title}>
+              <span className={styles.titleTuneTrack}>TuneTrack</span>
+              <span className={styles.titleBeats}>beats</span>
+            </h1>
             {/* <p className={styles.description}>
               Guess when songs came out, place them on the timeline, and challenge wrong picks
             </p> */}

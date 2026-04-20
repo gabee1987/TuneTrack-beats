@@ -1,79 +1,7 @@
 .screenShell {
   padding: 0;
   overflow: hidden;
-  background:
-    radial-gradient(
-      circle at 50% 50%,
-      color-mix(in srgb, white 2%, transparent) 0 1px,
-      transparent 1px 100%
-    ),
-    repeating-linear-gradient(
-      0deg,
-      color-mix(in srgb, white 2.2%, transparent) 0 1px,
-      transparent 1px 4px
-    ),
-    linear-gradient(
-      132deg,
-      transparent 0 60%,
-      color-mix(in srgb, #ff9352 30%, transparent) 60% 60.35%,
-      transparent 60.35% 100%
-    ),
-    linear-gradient(
-      138deg,
-      transparent 0 74%,
-      color-mix(in srgb, #ff9352 18%, transparent) 74% 74.22%,
-      transparent 74.22% 100%
-    ),
-    linear-gradient(
-      144deg,
-      transparent 0 82%,
-      color-mix(in srgb, #8a62ff 24%, transparent) 82% 82.24%,
-      transparent 82.24% 100%
-    ),
-    linear-gradient(
-      146deg,
-      transparent 0 90%,
-      color-mix(in srgb, #8a62ff 16%, transparent) 90% 90.16%,
-      transparent 90.16% 100%
-    ),
-    radial-gradient(
-      92% 88% at 16% 10%,
-      color-mix(in srgb, #ff8a3d 18%, transparent),
-      transparent 34%
-    ),
-    radial-gradient(
-      86% 82% at 90% 10%,
-      color-mix(in srgb, #7c5cff 20%, transparent),
-      transparent 36%
-    ),
-    radial-gradient(
-      78% 78% at 88% 88%,
-      color-mix(in srgb, #ff4d9d 14%, transparent),
-      transparent 34%
-    ),
-    radial-gradient(
-      72% 72% at 72% 92%,
-      color-mix(in srgb, #6f4cff 16%, transparent),
-      transparent 38%
-    ),
-    radial-gradient(
-      68% 68% at 14% 72%,
-      color-mix(in srgb, #2b3166 24%, transparent),
-      transparent 42%
-    ),
-    radial-gradient(
-      92% 92% at 50% 54%,
-      color-mix(in srgb, #4b2762 24%, transparent),
-      transparent 54%
-    ),
-    radial-gradient(
-      120% 120% at 50% 100%,
-      color-mix(in srgb, #21142f 88%, transparent),
-      transparent 70%
-    ),
-    linear-gradient(160deg, #06070d 0%, #0a0b12 28%, #120f17 62%, #18111d 100%);
-  background-blend-mode: normal, soft-light, screen, screen, screen, screen,
-    screen, screen, screen, overlay, normal;
+  background: #050710;
 }
 
 .panelShell {
@@ -83,117 +11,21 @@
   --menu-pad-left: calc(var(--safe-area-left) + 16px);
   width: 100%;
   margin: 0 auto;
-  padding: var(--menu-pad-top) var(--menu-pad-right) var(--menu-pad-bottom)
-    var(--menu-pad-left);
+  padding: var(--menu-pad-top) var(--menu-pad-right) var(--menu-pad-bottom) var(--menu-pad-left);
   border: 0;
   border-radius: 0;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, #0d1224 72%, transparent),
-      color-mix(in srgb, #070a14 90%, transparent)
-    ),
-    linear-gradient(145deg, #0b0f1a 0%, #090d18 52%, #110b1a 100%);
+  background: transparent;
   box-shadow: none;
   isolation: isolate;
   display: flex;
 }
 
 .panelShell::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, white 4%, transparent), transparent 18%),
-    radial-gradient(
-      80% 70% at 8% 12%,
-      color-mix(in srgb, #ff8a3d 10%, transparent),
-      transparent 24%
-    ),
-    radial-gradient(
-      88% 82% at 92% 84%,
-      color-mix(in srgb, #7c5cff 12%, transparent),
-      transparent 30%
-    ),
-    radial-gradient(
-      68% 60% at 78% 98%,
-      color-mix(in srgb, #ff4d9d 10%, transparent),
-      transparent 42%
-    );
-  pointer-events: none;
-  opacity: 0.82;
+  content: none;
 }
 
 .panelShell::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(
-      132deg,
-      transparent 0 70%,
-      color-mix(in srgb, #ff8a3d 20%, transparent) 70% 70.22%,
-      transparent 70.3% 100%
-    ),
-    linear-gradient(
-      138deg,
-      transparent 0 78%,
-      color-mix(in srgb, #7c5cff 18%, transparent) 78% 78.2%,
-      transparent 78.25% 100%
-    ),
-    linear-gradient(
-      126deg,
-      transparent 0 58%,
-      color-mix(in srgb, #ff4d9d 10%, transparent) 58% 58.14%,
-      transparent 58.18% 100%
-    );
-  opacity: 0.54;
-  filter: blur(0.3px);
-  pointer-events: none;
-}
-
-.backgroundOrbs {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  filter: blur(132px);
-}
-
-.orbOne,
-.orbTwo,
-.orbThree {
-  position: absolute;
-  border-radius: 999px;
-  opacity: 0.66;
-  mix-blend-mode: screen;
-  animation: drift 24s ease-in-out infinite alternate;
-}
-
-.orbOne {
-  top: -26%;
-  left: -40%;
-  width: 146vw;
-  height: 146vw;
-  background: radial-gradient(circle, #bb6c3f 0%, #713146 46%, transparent 100%);
-}
-
-.orbTwo {
-  top: -22%;
-  right: -34%;
-  width: 138vw;
-  height: 138vw;
-  background: radial-gradient(circle, #7f57ff 0%, #47328d 48%, transparent 100%);
-  animation-duration: 27s;
-}
-
-.orbThree {
-  bottom: -38%;
-  left: 18%;
-  width: 132vw;
-  height: 132vw;
-  background: radial-gradient(circle, #9f4664 0%, #592b60 48%, transparent 100%);
-  animation-duration: 30s;
+  content: none;
 }
 
 .content {
@@ -293,12 +125,27 @@
 }
 
 .title {
+  display: inline-grid;
+  justify-items: start;
+  width: max-content;
   margin: 0;
   font-size: clamp(38px, 11vw, 64px);
-  line-height: 0.9;
+  line-height: 0.77;
   letter-spacing: -0.08em;
   color: #f6f3ff;
   text-wrap: balance;
+}
+
+.titleTuneTrack,
+.titleBeats {
+  display: block;
+}
+
+.titleBeats {
+  justify-self: start;
+  margin-top: -0.04em;
+  margin-left: 2.105em;
+  padding-right: 0;
 }
 
 .description {
@@ -322,46 +169,55 @@
 }
 
 .featureCard {
+  --feature-border-angle: 0.08turn;
+  --feature-border-width: 1px;
+  --feature-glass-opacity: 0.36;
   position: relative;
   display: grid;
-  gap: 6px;
-  padding: 12px 14px;
+  gap: 7px;
+  padding: 13px 48px 14px 15px;
+  border: 0;
   border-radius: 24px;
   background: transparent;
-  /* box-shadow:
-    0 18px 40px color-mix(in srgb, black 18%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 18%, transparent); */
   overflow: hidden;
   isolation: isolate;
+}
+
+.featureCard:nth-child(2) {
+  --feature-border-angle: 0.27turn;
+}
+
+.featureCard:nth-child(3) {
+  --feature-border-angle: 0.46turn;
 }
 
 .featureCard::after {
   content: "";
   position: absolute;
-  inset: 1.5px;
+  inset: var(--feature-border-width);
   border-radius: inherit;
   background:
     radial-gradient(
       circle at top right,
-      color-mix(in srgb, #7c5cff 10%, transparent),
+      color-mix(in srgb, #8b5cff 18%, transparent),
       transparent 42%
     ),
     radial-gradient(
       circle at bottom left,
-      color-mix(in srgb, #ff8a3d 10%, transparent),
+      color-mix(in srgb, #ff8a3d 16%, transparent),
       transparent 44%
     ),
     linear-gradient(
       180deg,
-      color-mix(in srgb, #161c31 52%, transparent),
-      color-mix(in srgb, #0b1020 44%, transparent)
+      color-mix(in srgb, #17203a 38%, transparent),
+      color-mix(in srgb, #050914 24%, transparent)
     );
-  backdrop-filter: blur(28px) saturate(118%);
-  -webkit-backdrop-filter: blur(28px) saturate(118%);
+  backdrop-filter: blur(36px) saturate(148%);
+  -webkit-backdrop-filter: blur(36px);
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
-    inset 0 -1px 0 color-mix(in srgb, black 18%, transparent);
-  opacity: 1;
+    inset 0 1px 0 color-mix(in srgb, white 16%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, #8b5cff 14%, transparent);
+  opacity: var(--feature-glass-opacity);
   pointer-events: none;
   z-index: 1;
 }
@@ -369,40 +225,36 @@
 .featureCard::before {
   content: "";
   position: absolute;
-  inset: -48%;
-  border-radius: 40%;
+  inset: 0;
+  border-radius: inherit;
+  padding: var(--feature-border-width);
   background: conic-gradient(
-    from 0deg,
-    color-mix(in srgb, #ff8a3d 32%, transparent),
-    color-mix(in srgb, #ff4d9d 24%, transparent),
-    color-mix(in srgb, #7c5cff 28%, transparent),
-    color-mix(in srgb, #00d4ff 20%, transparent),
-    color-mix(in srgb, #ff8a3d 32%, transparent)
+    from var(--feature-border-angle),
+    color-mix(in srgb, #ff8a3d 30%, transparent) 0%,
+    color-mix(in srgb, #ff8a3d 30%, transparent) 100%,
+    #38c8ff 28%,
+    #8b5cff 26%,
+    #ff4d9d 26%,
+    #ffb26b 24%,
+    color-mix(in srgb, #ff8a3d 20%, transparent) 20%
   );
-  filter: blur(18px);
-  opacity: 0.36;
-  animation: spinBorder 30s linear infinite;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 1;
   pointer-events: none;
   z-index: 0;
 }
 
-.featureCard:nth-child(1)::before {
-  animation-duration: 24s;
-  animation-delay: -3s;
-}
-
-.featureCard:nth-child(2)::before {
-  animation-duration: 31s;
-  animation-delay: -11s;
-}
-
-.featureCard:nth-child(3)::before {
-  animation-duration: 27s;
-  animation-delay: -18s;
-}
-
 .featureStep {
-  position: relative;
+  position: absolute;
+  top: 13px;
+  right: 16px;
   z-index: 2;
   font-size: 10px;
   font-weight: 800;
@@ -415,8 +267,10 @@
   position: relative;
   z-index: 2;
   margin: 0;
-  font-size: 16px;
-  letter-spacing: -0.03em;
+  font-size: 18px;
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+  color: #ffffff;
 }
 
 .featureCard p {
@@ -424,8 +278,8 @@
   z-index: 2;
   margin: 0;
   color: color-mix(in srgb, white 72%, transparent);
-  font-size: 13px;
-  line-height: 1.35;
+  font-size: 14px;
+  line-height: 1.38;
 }
 
 .actionZone {
@@ -434,22 +288,55 @@
 }
 
 .primaryAction {
+  --button-border-angle: 0turn;
+  --button-border-width: 1px;
+  --button-glass-opacity: 0.36;
   position: relative;
   width: 100%;
   min-height: 58px;
-  padding: 1px;
+  padding: var(--button-border-width);
   border: 0;
   border-radius: 999px;
-  background: linear-gradient(120deg, #ff8a3d, #ff4d9d, #7c5cff, #00d4ff, #ff8a3d);
-  background-size: 240% 240%;
+  background: transparent;
   box-shadow:
-    0 18px 44px color-mix(in srgb, #7c5cff 32%, transparent),
-    0 0 0 1px color-mix(in srgb, white 12%, transparent);
+    0 0 14px color-mix(in srgb, #7c5cff 8%, transparent),
+    0 0 30px color-mix(in srgb, #ff4d9d 4%, transparent),
+    0 0 0 1px color-mix(in srgb, white 4%, transparent);
   cursor: pointer;
-  animation: buttonBorderFlow 8s linear infinite;
   transition:
     transform 220ms ease,
     box-shadow 220ms ease;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.primaryAction::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  padding: var(--button-border-width);
+  background: conic-gradient(
+    from var(--button-border-angle),
+    color-mix(in srgb, #ff8a3d 90%, transparent) 0%,
+    color-mix(in srgb, #ff8a3d 90%, transparent) 58%,
+    #38c8ff 68%,
+    #8b5cff 76%,
+    #ff4d9d 86%,
+    #ffb26b 94%,
+    color-mix(in srgb, #ff8a3d 90%, transparent) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: buttonBorderSpin 5.5s linear infinite;
 }
 
 .primaryActionInner {
@@ -457,32 +344,17 @@
   display: grid;
   gap: 4px;
   width: 100%;
-  min-height: calc(58px - 2px);
+  min-height: calc(58px - (var(--button-border-width) * 2));
   padding: 14px 22px;
   border-radius: 999px;
   background: transparent;
   overflow: hidden;
   isolation: isolate;
+  z-index: 1;
 }
 
 .primaryActionInner::before {
-  content: "";
-  position: absolute;
-  inset: -52%;
-  border-radius: 40%;
-  background: conic-gradient(
-    from 0deg,
-    color-mix(in srgb, #ff8a3d 34%, transparent),
-    color-mix(in srgb, #ff4d9d 26%, transparent),
-    color-mix(in srgb, #7c5cff 30%, transparent),
-    color-mix(in srgb, #00d4ff 22%, transparent),
-    color-mix(in srgb, #ff8a3d 34%, transparent)
-  );
-  filter: blur(18px);
-  opacity: 0.4;
-  animation: spinBorder 28s linear infinite;
-  pointer-events: none;
-  z-index: 0;
+  content: none;
 }
 
 .primaryActionInner::after {
@@ -493,24 +365,25 @@
   background:
     radial-gradient(
       circle at top right,
-      color-mix(in srgb, #7c5cff 6%, transparent),
+      color-mix(in srgb, #8b5cff 18%, transparent),
       transparent 42%
     ),
     radial-gradient(
       circle at bottom left,
-      color-mix(in srgb, #ff8a3d 5%, transparent),
+      color-mix(in srgb, #ff8a3d 16%, transparent),
       transparent 44%
     ),
     linear-gradient(
       180deg,
-      color-mix(in srgb, #151b32 64%, transparent),
-      color-mix(in srgb, #0c1120 62%, transparent)
+      color-mix(in srgb, #17203a 38%, transparent),
+      color-mix(in srgb, #050914 24%, transparent)
     );
-  backdrop-filter: blur(26px) saturate(116%);
-  -webkit-backdrop-filter: blur(26px) saturate(116%);
+  backdrop-filter: blur(36px) saturate(148%);
+  -webkit-backdrop-filter: blur(36px) saturate(148%);
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
-    inset 0 -1px 0 color-mix(in srgb, black 18%, transparent);
+    inset 0 1px 0 color-mix(in srgb, white 16%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, #8b5cff 14%, transparent);
+  opacity: var(--button-glass-opacity);
   z-index: 1;
 }
 
@@ -519,34 +392,22 @@
   z-index: 2;
   font-size: 16px;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.12em;
   color: white;
+  line-height: 1.7em;
 }
 
 .primaryAction:hover,
 .primaryAction:focus-visible {
   transform: translateY(-2px);
   box-shadow:
-    0 22px 54px color-mix(in srgb, #7c5cff 42%, transparent),
+    0 22px 58px color-mix(in srgb, #7c5cff 42%, transparent),
+    0 0 36px color-mix(in srgb, #ff4d9d 28%, transparent),
     0 0 0 1px color-mix(in srgb, white 18%, transparent);
 }
 
 .primaryAction:active {
   transform: translateY(0);
-}
-
-@keyframes drift {
-  0% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-
-  50% {
-    transform: translate3d(8%, -6%, 0) scale(1.1);
-  }
-
-  100% {
-    transform: translate3d(-7%, 8%, 0) scale(0.92);
-  }
 }
 
 @keyframes spinBorder {
@@ -559,13 +420,15 @@
   }
 }
 
-@keyframes buttonBorderFlow {
-  0% {
-    background-position: 0% 50%;
-  }
+@property --button-border-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0turn;
+}
 
-  100% {
-    background-position: 200% 50%;
+@keyframes buttonBorderSpin {
+  to {
+    --button-border-angle: 1turn;
   }
 }
 
@@ -657,14 +520,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .orbOne,
-  .orbTwo,
-  .orbThree,
-  .primaryAction {
+  .primaryAction::before {
     animation: none;
-  }
-
-  .primaryAction {
-    background-position: 50% 50%;
   }
 }
