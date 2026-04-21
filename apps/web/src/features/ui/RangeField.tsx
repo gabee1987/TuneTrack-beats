@@ -2,6 +2,7 @@ import styles from "./SettingField.module.css";
 import { SettingField } from "./SettingField";
 
 interface RangeFieldProps {
+  info?: string;
   label: string;
   max: number;
   min: number;
@@ -11,13 +12,14 @@ interface RangeFieldProps {
 
 export function RangeField({
   label,
+  info,
   max,
   min,
   onChange,
   value,
 }: RangeFieldProps) {
   return (
-    <SettingField label={label} value={value}>
+    <SettingField info={info} label={label} value={value}>
       <input
         className={styles.rangeInput}
         max={max}

@@ -15,6 +15,7 @@ export interface LobbyPageController {
     player: PublicPlayerState,
     nextValue: number,
   ) => void;
+  handlePlayerProfileChange: (displayName: string) => void;
   handleRoomSettingsChange: (nextSettings: PublicRoomSettings) => void;
   handleStartGame: () => void;
   isHost: boolean;

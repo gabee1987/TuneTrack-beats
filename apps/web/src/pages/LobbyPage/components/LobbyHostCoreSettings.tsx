@@ -33,6 +33,7 @@ export function LobbyHostCoreSettings({
       />
 
       <RangeField
+        info="The first player to reach this many timeline cards wins the game."
         label="Cards needed to win"
         max={MAX_TARGET_TIMELINE_CARD_COUNT}
         min={MIN_TARGET_TIMELINE_CARD_COUNT}
@@ -46,6 +47,7 @@ export function LobbyHostCoreSettings({
       />
 
       <RangeField
+        info="New players start with this many cards unless you override them individually."
         label="Default starting cards"
         max={MAX_STARTING_TIMELINE_CARD_COUNT}
         min={MIN_STARTING_TIMELINE_CARD_COUNT}
@@ -58,7 +60,10 @@ export function LobbyHostCoreSettings({
         value={currentSettings.defaultStartingTimelineCardCount}
       />
 
-      <SettingField label="Reveal confirmation">
+      <SettingField
+        info="Choose who can confirm the correct year after a song is placed."
+        label="Reveal confirmation"
+      >
         <AdaptiveSelect
           label="Reveal confirmation"
           onChange={(nextValue) =>

@@ -12,6 +12,7 @@ import type {
   ResolveChallengeWindowPayloadParsed,
   SkipTrackWithTtPayloadParsed,
   StartGamePayloadParsed,
+  UpdatePlayerProfilePayloadParsed,
   UpdatePlayerSettingsPayloadParsed,
   UpdateRoomSettingsPayloadParsed,
 } from "@tunetrack/shared";
@@ -59,6 +60,16 @@ export class RoomService {
     return this.roomRegistry.updatePlayerSettings(
       socketId,
       updatePlayerSettingsPayload,
+    );
+  }
+
+  public updatePlayerProfile(
+    updatePlayerProfilePayload: UpdatePlayerProfilePayloadParsed,
+    socketId: string,
+  ): PublicRoomState {
+    return this.roomRegistry.updatePlayerProfile(
+      socketId,
+      updatePlayerProfilePayload,
     );
   }
 

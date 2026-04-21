@@ -12,6 +12,7 @@ import {
   resolveChallengeWindowPayloadSchema,
   skipTrackWithTtPayloadSchema,
   startGamePayloadSchema,
+  updatePlayerProfilePayloadSchema,
   updatePlayerSettingsPayloadSchema,
   updateRoomSettingsPayloadSchema,
 } from "@tunetrack/shared";
@@ -41,6 +42,7 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
     registerCloseRoomHandler(io, socket, roomService);
     registerUpdateRoomSettingsHandler(io, socket, roomService);
     registerUpdatePlayerSettingsHandler(io, socket, roomService);
+    registerUpdatePlayerProfileHandler(io, socket, roomService);
     registerDisconnectHandler(io, socket, roomService);
   });
 }
@@ -316,6 +318,39 @@ function registerUpdatePlayerSettingsHandler(
       emitServerError(socket, error, "PLAYER_SETTINGS_UPDATE_FAILED", {
         ONLY_HOST_CAN_UPDATE_PLAYER_SETTINGS:
           "Only the host can change player settings.",
+      });
+    }
+  });
+}
+
+function registerUpdatePlayerProfileHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.UpdatePlayerProfile, (payload: unknown) => {
+    const parseResult = updatePlayerProfilePayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_PLAYER_PROFILE_PAYLOAD",
+        message: "Player name is invalid.",
+      });
+      return;
+    }
+
+    try {
+      const roomState = roomService.updatePlayerProfile(
+        parseResult.data,
+        socket.id,
+      );
+
+      io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
+        roomState,
+      });
+    } catch (error) {
+      emitServerError(socket, error, "PLAYER_PROFILE_UPDATE_FAILED", {
+        GAME_ALREADY_STARTED: "Names can only be changed before the game starts.",
       });
     }
   });

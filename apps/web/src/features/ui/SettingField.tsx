@@ -1,20 +1,88 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import styles from "./SettingField.module.css";
 
 interface SettingFieldProps {
   children: ReactNode;
+  info?: ReactNode;
   label: string;
   value?: ReactNode;
 }
 
-export function SettingField({ children, label, value }: SettingFieldProps) {
+export function SettingField({ children, info, label, value }: SettingFieldProps) {
   return (
     <label className={styles.field}>
       <div className={styles.labelRow}>
-        <span>{label}</span>
+        <span className={styles.labelWithInfo}>
+          <span>{label}</span>
+          {info ? <SettingInfoButton info={info} label={label} /> : null}
+        </span>
         {value ? <strong className={styles.value}>{value}</strong> : null}
       </div>
       {children}
     </label>
+  );
+}
+
+interface SettingInfoButtonProps {
+  info: ReactNode;
+  label: string;
+}
+
+export function SettingInfoButton({ info, label }: SettingInfoButtonProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <span className={styles.infoWrap}>
+      <button
+        aria-label={`${label} info`}
+        className={styles.infoButton}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          setIsOpen(true);
+        }}
+        type="button"
+      >
+        i
+      </button>
+
+      {isOpen ? (
+        <span
+          className={styles.infoOverlay}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            setIsOpen(false);
+          }}
+          role="presentation"
+        >
+          <span
+            aria-label={label}
+            aria-modal="true"
+            className={styles.infoCard}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+            }}
+            role="dialog"
+          >
+            <button
+              className={styles.infoCloseButton}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                setIsOpen(false);
+              }}
+              type="button"
+            >
+              Close
+            </button>
+            <span className={styles.infoEyebrow}>Info</span>
+            <span className={styles.infoTitle}>{label}</span>
+            <span className={styles.infoBody}>{info}</span>
+          </span>
+        </span>
+      ) : null}
+    </span>
   );
 }

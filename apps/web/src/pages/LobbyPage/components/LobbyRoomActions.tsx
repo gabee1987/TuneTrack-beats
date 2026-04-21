@@ -4,10 +4,14 @@ import { LobbySectionHeader } from "./LobbySectionHeader";
 import styles from "../LobbyPage.module.css";
 
 interface LobbyRoomActionsProps {
+  buttonClassName?: string | undefined;
   onCloseRoom: () => void;
 }
 
-export function LobbyRoomActions({ onCloseRoom }: LobbyRoomActionsProps) {
+export function LobbyRoomActions({
+  buttonClassName,
+  onCloseRoom,
+}: LobbyRoomActionsProps) {
   return (
     <SurfaceCard className={styles.roomActionsSection}>
       <LobbySectionHeader
@@ -15,7 +19,7 @@ export function LobbyRoomActions({ onCloseRoom }: LobbyRoomActionsProps) {
         title="Room actions"
       />
       <ActionButton
-        className={styles.cancelRoomButton}
+        className={`${styles.cancelRoomButton}${buttonClassName ? ` ${buttonClassName}` : ""}`}
         onClick={onCloseRoom}
         type="button"
         variant="danger"

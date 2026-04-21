@@ -12,16 +12,102 @@
   font-size: 14px;
 }
 
+.labelWithInfo,
+.toggleLabel {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.infoWrap {
+  display: inline-grid;
+}
+
+.infoButton {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 80%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-surface-soft) 78%, transparent);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .value {
   font-size: 18px;
   font-weight: 800;
 }
 
+.infoOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1600;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: color-mix(in srgb, #02030a 72%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.infoCard {
+  width: min(100%, 360px);
+  display: grid;
+  gap: 10px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 96%, transparent);
+  border-radius: 30px;
+  padding: 22px;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, #8b5cff 20%, transparent), transparent 46%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-surface-strong) 96%, transparent), #070813);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 12%, transparent),
+    0 28px 90px color-mix(in srgb, black 44%, transparent);
+  color: var(--color-text-primary);
+}
+
+.infoCloseButton {
+  justify-self: end;
+  min-height: 36px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 88%, transparent);
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--color-surface-elevated) 76%, transparent);
+  color: var(--color-text-primary);
+  font-weight: 800;
+}
+
+.infoEyebrow {
+  color: #ffb26b;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.infoTitle {
+  color: var(--color-text-primary);
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.infoBody {
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.5;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
 .toggleField {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: center;
+  display: grid;
+  gap: 12px;
+  align-items: stretch;
 }
 
 .toggleCopy {
@@ -40,8 +126,8 @@
 }
 
 .checkbox {
-  width: 22px;
-  height: 22px;
+  width: 100%;
+  height: 54px;
   accent-color: var(--color-accent-control);
 }
 
@@ -91,7 +177,12 @@
 
 @media (max-width: 720px) {
   .toggleField {
-    align-items: stretch;
+    padding: 14px;
+    border: 1px solid color-mix(in srgb, var(--color-border-subtle) 92%, transparent);
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-accent-primary) 14%, transparent), transparent 42%),
+      color-mix(in srgb, var(--color-surface-elevated) 76%, transparent);
   }
 
   .toggleHint {
@@ -102,24 +193,31 @@
   .checkbox {
     appearance: none;
     position: relative;
-    width: 52px;
-    height: 32px;
-    align-self: center;
-    background: color-mix(in srgb, var(--color-chip) 90%, transparent);
+    width: 100%;
+    height: 54px;
+    align-self: stretch;
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--color-surface-strong) 74%, transparent), color-mix(in srgb, #050914 72%, transparent));
     border-radius: 999px;
-    outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 90%, transparent);
+    outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 96%, transparent);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, white 9%, transparent),
+      0 12px 28px color-mix(in srgb, black 20%, transparent);
   }
 
   .checkbox::after {
     content: "";
     position: absolute;
-    top: 4px;
-    left: 4px;
-    width: 24px;
-    height: 24px;
+    top: 6px;
+    left: 6px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
-    background: var(--color-text-primary);
-    transition: transform 0.18s ease;
+    background:
+      radial-gradient(circle at 30% 25%, color-mix(in srgb, white 92%, transparent), transparent 24%),
+      linear-gradient(135deg, #ffffff, color-mix(in srgb, var(--color-accent-primary) 42%, white));
+    box-shadow: 0 8px 22px color-mix(in srgb, black 28%, transparent);
+    transition: left 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
   .checkbox:checked {
@@ -127,7 +225,7 @@
   }
 
   .checkbox:checked::after {
-    transform: translateX(20px);
+    left: calc(100% - 48px);
   }
 
   .rangeInput {
@@ -139,7 +237,12 @@
 
 @media (hover: none) and (pointer: coarse) {
   .toggleField {
-    align-items: stretch;
+    padding: 14px;
+    border: 1px solid color-mix(in srgb, var(--color-border-subtle) 92%, transparent);
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-accent-primary) 14%, transparent), transparent 42%),
+      color-mix(in srgb, var(--color-surface-elevated) 76%, transparent);
   }
 
   .toggleHint {
@@ -150,26 +253,33 @@
   .checkbox {
     appearance: none;
     position: relative;
-    width: 54px;
-    height: 32px;
-    min-width: 54px;
+    width: 100%;
+    height: 54px;
+    min-width: 0;
     overflow: hidden;
-    align-self: center;
-    background: color-mix(in srgb, var(--color-chip) 90%, transparent);
+    align-self: stretch;
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--color-surface-strong) 74%, transparent), color-mix(in srgb, #050914 72%, transparent));
     border-radius: 999px;
-    outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 90%, transparent);
+    outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 96%, transparent);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, white 9%, transparent),
+      0 12px 28px color-mix(in srgb, black 20%, transparent);
   }
 
   .checkbox::after {
     content: "";
     position: absolute;
-    top: 4px;
-    left: 4px;
-    width: 24px;
-    height: 24px;
+    top: 6px;
+    left: 6px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
-    background: var(--color-text-primary);
-    transition: transform 0.18s ease;
+    background:
+      radial-gradient(circle at 30% 25%, color-mix(in srgb, white 92%, transparent), transparent 24%),
+      linear-gradient(135deg, #ffffff, color-mix(in srgb, var(--color-accent-primary) 42%, white));
+    box-shadow: 0 8px 22px color-mix(in srgb, black 28%, transparent);
+    transition: left 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
   .checkbox:checked {
@@ -177,7 +287,7 @@
   }
 
   .checkbox:checked::after {
-    transform: translateX(22px);
+    left: calc(100% - 48px);
   }
 
   .rangeInput {

@@ -19,46 +19,50 @@ export function AdaptiveSelectSheet({
   value,
 }: AdaptiveSelectSheetProps) {
   return (
-    <BottomSheet onClose={onClose} sheetClassName={styles.mobileSelectSheet}>
-        <div className={styles.mobileSelectSheetHeader}>
-          <div>
-            <p className={styles.mobileSelectEyebrow}>{label}</p>
-            <h4 className={styles.mobileSelectTitle}>Choose one option</h4>
-          </div>
-          <ActionButton
-            className={styles.mobileSelectClose}
-            onClick={onClose}
-            type="button"
-            variant="neutral"
-          >
-            Close
-          </ActionButton>
+    <BottomSheet
+      onClose={onClose}
+      overlayClassName={styles.mobileSelectOverlay}
+      sheetClassName={styles.mobileSelectSheet}
+    >
+      <div className={styles.mobileSelectSheetHeader}>
+        <div>
+          <p className={styles.mobileSelectEyebrow}>{label}</p>
+          <h4 className={styles.mobileSelectTitle}>Choose one option</h4>
         </div>
+        <ActionButton
+          className={styles.mobileSelectClose}
+          onClick={onClose}
+          type="button"
+          variant="neutral"
+        >
+          Close
+        </ActionButton>
+      </div>
 
-        <div className={styles.mobileSelectOptions}>
-          {options.map((option) => {
-            const isSelected = option.value === value;
+      <div className={styles.mobileSelectOptions}>
+        {options.map((option) => {
+          const isSelected = option.value === value;
 
-            return (
-              <button
-                className={`${styles.mobileSelectOption} ${
-                  isSelected ? styles.mobileSelectOptionActive : ""
-                }`}
-                key={option.value}
-                onClick={() => {
-                  onChange(option.value);
-                  onClose();
-                }}
-                type="button"
-              >
-                <span>{option.label}</span>
-                {isSelected ? (
-                  <span className={styles.mobileSelectOptionState}>Selected</span>
-                ) : null}
-              </button>
-            );
-          })}
-        </div>
+          return (
+            <button
+              className={`${styles.mobileSelectOption} ${
+                isSelected ? styles.mobileSelectOptionActive : ""
+              }`}
+              key={option.value}
+              onClick={() => {
+                onChange(option.value);
+                onClose();
+              }}
+              type="button"
+            >
+              <span>{option.label}</span>
+              {isSelected ? (
+                <span className={styles.mobileSelectOptionState}>Selected</span>
+              ) : null}
+            </button>
+          );
+        })}
+      </div>
     </BottomSheet>
   );
 }

@@ -20,6 +20,7 @@ interface UseLobbyRoomActionsResult {
     player: PublicPlayerState,
     nextValue: number,
   ) => void;
+  handlePlayerProfileChange: (displayName: string) => void;
   handleRoomSettingsChange: (nextSettings: PublicRoomSettings) => void;
   handleStartGame: () => void;
   toggleTtMode: (enabled: boolean) => void;
@@ -64,6 +65,17 @@ export function useLobbyRoomActions({
     });
   }
 
+  function handlePlayerProfileChange(displayName: string) {
+    if (!roomState) {
+      return;
+    }
+
+    void emitRoomEvent(ClientToServerEvent.UpdatePlayerProfile, {
+      displayName,
+      roomId: roomState.roomId,
+    });
+  }
+
   function handleStartGame() {
     if (!roomState || !isHost) {
       return;
@@ -104,6 +116,7 @@ export function useLobbyRoomActions({
   return {
     handleCloseRoom,
     handlePlayerStartingCardCountChange,
+    handlePlayerProfileChange,
     handleRoomSettingsChange,
     handleStartGame,
     toggleTtMode,

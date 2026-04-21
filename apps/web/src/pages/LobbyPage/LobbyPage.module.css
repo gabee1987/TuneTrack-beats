@@ -170,6 +170,14 @@
 
 .selectInput {
   min-height: 52px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 92%, transparent);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-accent-primary) 10%, transparent), transparent 44%),
+    color-mix(in srgb, var(--color-surface-elevated) 86%, transparent);
+  color: var(--color-text-primary);
+  color-scheme: dark;
+  outline: 0;
 }
 
 .startGameButton {
@@ -233,6 +241,10 @@
 .roomActionsSection {
   display: grid;
   gap: 16px;
+}
+
+.rosterSection {
+  display: grid;
 }
 
 .menuPlaceholder {
@@ -325,6 +337,46 @@
     justify-content: flex-start;
   }
 
+  .settingsGroup,
+  .rosterSection,
+  .roomActionsSection {
+    gap: 18px;
+    padding: 18px;
+    border: 1px solid color-mix(in srgb, var(--color-border-subtle) 96%, transparent);
+    border-radius: 28px;
+    background:
+      radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-accent-primary) 10%, transparent), transparent 42%),
+      linear-gradient(180deg, color-mix(in srgb, var(--color-surface-strong) 88%, transparent), color-mix(in srgb, #060813 86%, transparent));
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
+      0 18px 54px color-mix(in srgb, black 24%, transparent);
+    outline: 0;
+  }
+
+  .sectionTitle,
+  .sectionTitleCompact,
+  .playerName,
+  .primaryActionTitle {
+    color: var(--color-text-primary);
+  }
+
+  .sectionDescription,
+  .sectionDescriptionCompact,
+  .primaryActionDescription,
+  .settingsInlineHint,
+  .playerSecondaryName {
+    color: var(--color-text-secondary);
+  }
+
+  .playerItem {
+    border: 1px solid color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at 100% 0%, color-mix(in srgb, #8b5cff 10%, transparent), transparent 42%),
+      color-mix(in srgb, var(--color-surface-elevated) 70%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+  }
+
   .selectInput {
     min-height: 56px;
     padding-right: 44px;
@@ -410,6 +462,46 @@
     font-size: 18px;
   }
 
+  .settingsGroup,
+  .rosterSection,
+  .roomActionsSection {
+    gap: 18px;
+    padding: 18px;
+    border: 1px solid color-mix(in srgb, var(--color-border-subtle) 96%, transparent);
+    border-radius: 28px;
+    background:
+      radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-accent-primary) 10%, transparent), transparent 42%),
+      linear-gradient(180deg, color-mix(in srgb, var(--color-surface-strong) 88%, transparent), color-mix(in srgb, #060813 86%, transparent));
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
+      0 18px 54px color-mix(in srgb, black 24%, transparent);
+    outline: 0;
+  }
+
+  .sectionTitle,
+  .sectionTitleCompact,
+  .playerName,
+  .primaryActionTitle {
+    color: var(--color-text-primary);
+  }
+
+  .sectionDescription,
+  .sectionDescriptionCompact,
+  .primaryActionDescription,
+  .settingsInlineHint,
+  .playerSecondaryName {
+    color: var(--color-text-secondary);
+  }
+
+  .playerItem {
+    border: 1px solid color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at 100% 0%, color-mix(in srgb, #8b5cff 10%, transparent), transparent 42%),
+      color-mix(in srgb, var(--color-surface-elevated) 70%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+  }
+
   .selectInput {
     min-height: 56px;
     padding-right: 44px;
@@ -463,13 +555,18 @@
 
 .mobileSelectButton {
   width: 100%;
-  min-height: 52px;
+  min-height: 58px;
   border: 0;
-  border-radius: 16px;
-  padding: 14px 16px;
-  background: color-mix(in srgb, var(--color-surface-elevated) 88%, transparent);
+  border-radius: 20px;
+  padding: 16px 18px;
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-accent-primary) 12%, transparent), transparent 44%),
+    color-mix(in srgb, var(--color-surface-elevated) 80%, transparent);
   color: var(--color-text-primary);
-  outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 88%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 98%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 9%, transparent),
+    0 12px 30px color-mix(in srgb, black 18%, transparent);
   display: flex;
   justify-content: space-between;
   gap: 12px;
@@ -482,18 +579,34 @@
 }
 
 .mobileSelectChevron {
-  color: var(--color-text-secondary);
+  color: color-mix(in srgb, var(--color-text-primary) 72%, #ffb26b);
   font-size: 13px;
+  font-weight: 900;
+}
+
+.mobileSelectOverlay {
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--safe-area-top) + 18px) calc(var(--safe-area-right) + 18px)
+    calc(var(--safe-area-bottom) + 18px) calc(var(--safe-area-left) + 18px);
+  background: color-mix(in srgb, #02030a 78%, transparent);
 }
 
 .mobileSelectSheet {
-  width: 100%;
-  padding: 16px calc(var(--safe-area-right) + 16px) calc(var(--safe-area-bottom) + 16px)
-    calc(var(--safe-area-left) + 16px);
-  border-top-left-radius: 24px;
-  border-top-right-radius: 24px;
-  background: color-mix(in srgb, var(--color-surface-strong) 96%, transparent);
-  outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 88%, transparent);
+  width: min(100%, 390px);
+  max-height: min(78vh, 560px);
+  overflow-y: auto;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 96%, transparent);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, #ff8a3d 15%, transparent), transparent 42%),
+    radial-gradient(circle at 0% 100%, color-mix(in srgb, #8b5cff 14%, transparent), transparent 46%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-surface-strong) 96%, transparent), color-mix(in srgb, #060812 96%, transparent));
+  outline: 0;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 12%, transparent),
+    0 28px 90px color-mix(in srgb, black 46%, transparent);
   display: grid;
   gap: 14px;
 }
@@ -521,6 +634,7 @@
 .mobileSelectClose {
   min-height: 44px;
   padding: 10px 14px;
+  border-radius: 999px;
 }
 
 .mobileSelectOptions {
@@ -529,11 +643,12 @@
 }
 
 .mobileSelectOption {
-  min-height: 56px;
-  padding: 14px 16px;
-  border: 0;
-  border-radius: 18px;
-  background: var(--color-surface-soft);
+  min-height: 58px;
+  padding: 15px 16px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 90%, transparent);
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-surface-elevated) 82%, transparent), color-mix(in srgb, var(--color-surface-soft) 82%, transparent));
   color: var(--color-text-primary);
   display: flex;
   justify-content: space-between;
@@ -543,7 +658,10 @@
 }
 
 .mobileSelectOptionActive {
-  background: var(--color-badge-strong-background);
+  border-color: color-mix(in srgb, #ffb26b 52%, var(--color-border-subtle));
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, #ff8a3d 22%, transparent), transparent 44%),
+    color-mix(in srgb, var(--color-badge-strong-background) 86%, transparent);
 }
 
 .mobileSelectOptionState {

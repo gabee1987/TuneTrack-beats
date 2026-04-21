@@ -14,6 +14,7 @@ export const ClientToServerEvent = {
   ResolveChallengeWindow: "resolve_challenge_window",
   SkipTrackWithTt: "skip_track_with_tt",
   StartGame: "start_game",
+  UpdatePlayerProfile: "update_player_profile",
   UpdatePlayerSettings: "update_player_settings",
   UpdateRoomSettings: "update_room_settings",
 } as const;
@@ -41,6 +42,11 @@ export interface UpdatePlayerSettingsPayload {
   roomId: RoomId;
   playerId: PlayerId;
   startingTimelineCardCount: number;
+}
+
+export interface UpdatePlayerProfilePayload {
+  roomId: RoomId;
+  displayName: string;
 }
 
 export interface AwardTtPayload {

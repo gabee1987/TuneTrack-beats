@@ -45,6 +45,7 @@ export function LobbyHostTtSettings({
       <ToggleField
         checked={currentSettings.ttModeEnabled}
         hint="Shows TT settings and defaults starting TT to 1."
+        info="TT adds token powers for skips, buys, and challenge actions."
         label="Enable TT mode"
         onChange={onToggleTtMode}
       />
@@ -52,6 +53,7 @@ export function LobbyHostTtSettings({
       {currentSettings.ttModeEnabled ? (
         <div className={styles.conditionalGroup}>
           <RangeField
+            info="How many TT tokens each player receives when the game starts."
             label="Starting TT for every player"
             max={MAX_STARTING_TT_TOKEN_COUNT}
             min={MIN_STARTING_TT_TOKEN_COUNT}
@@ -65,6 +67,7 @@ export function LobbyHostTtSettings({
           />
 
           <SettingField
+            info="How long players have to challenge a placement before it locks in."
             label="Challenge window"
             value={formatChallengeWindowSettingValue(
               currentSettings.challengeWindowDurationSeconds,

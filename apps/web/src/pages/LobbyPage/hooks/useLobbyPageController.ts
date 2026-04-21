@@ -69,6 +69,7 @@ export function useLobbyPageController(): LobbyPageController {
     handleCloseRoom: actions.handleCloseRoom,
     handlePlayerStartingCardCountChange:
       actions.handlePlayerStartingCardCountChange,
+    handlePlayerProfileChange: actions.handlePlayerProfileChange,
     handleRoomSettingsChange: actions.handleRoomSettingsChange,
     handleStartGame: actions.handleStartGame,
     isHost,

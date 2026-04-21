@@ -29,6 +29,7 @@ import {
   type StartGamePayloadParsed,
   type TimelineCardPublic,
   type TrackCardPublic,
+  type UpdatePlayerProfilePayloadParsed,
   type UpdatePlayerSettingsPayloadParsed,
   type UpdateRoomSettingsPayloadParsed,
 } from "@tunetrack/shared";
@@ -268,6 +269,42 @@ export class RoomRegistry {
     };
 
     this.roomsById.set(updatePlayerSettingsPayload.roomId, {
+      ...roomRecord,
+      roomState: nextRoomState,
+    });
+
+    return nextRoomState;
+  }
+
+  public updatePlayerProfile(
+    socketId: string,
+    updatePlayerProfilePayload: UpdatePlayerProfilePayloadParsed,
+  ): PublicRoomState {
+    const membership = this.socketMemberships.get(socketId);
+    const roomRecord = this.roomsById.get(updatePlayerProfilePayload.roomId);
+
+    if (
+      !membership ||
+      membership.roomId !== updatePlayerProfilePayload.roomId ||
+      !roomRecord
+    ) {
+      throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
+    }
+
+    if (roomRecord.roomState.status !== "lobby") {
+      throw new Error("GAME_ALREADY_STARTED");
+    }
+
+    const nextRoomState: PublicRoomState = {
+      ...roomRecord.roomState,
+      players: roomRecord.roomState.players.map((player) =>
+        player.id === membership.playerId
+          ? { ...player, displayName: updatePlayerProfilePayload.displayName }
+          : player,
+      ),
+    };
+
+    this.roomsById.set(updatePlayerProfilePayload.roomId, {
       ...roomRecord,
       roomState: nextRoomState,
     });
