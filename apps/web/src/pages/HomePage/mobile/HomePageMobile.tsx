@@ -10,20 +10,8 @@ export function HomePageMobile({ controller }: HomePageAssemblyProps) {
 
       <div className={styles.content}>
         <header className={styles.hero}>
-          <div className={styles.logoBadge} aria-hidden="true">
-            <span className={styles.logoCore}>TT</span>
-          </div>
-
-          <div className={styles.heroCopy}>
-            <p className={styles.eyebrow}>Party music timeline game</p>
-            <h1 className={styles.title}>
-              <span className={styles.titleTuneTrack}>TuneTrack</span>
-              <span className={styles.titleBeats}>beats</span>
-            </h1>
-            {/* <p className={styles.description}>
-              Guess when songs came out, place them on the timeline, and challenge wrong picks
-            </p> */}
-          </div>
+          <img className={styles.brandLogo} src="/logo.png" alt="TuneTrack Beats" />
+          {/* <p className={styles.eyebrow}>Party music timeline game</p> */}
         </header>
 
         <section className={styles.previewCard} aria-label="Experience preview">

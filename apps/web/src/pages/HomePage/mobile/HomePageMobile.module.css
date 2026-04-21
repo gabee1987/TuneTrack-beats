@@ -40,79 +40,16 @@
 
 .hero {
   display: grid;
-  gap: 12px;
+  place-items: start center;
 }
 
-.logoBadge {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: clamp(76px, 19vw, 104px);
-  aspect-ratio: 1;
-  border-radius: 30px;
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, #ff8a3d 88%, white 8%),
-    color-mix(in srgb, #7c5cff 84%, black 4%)
-  );
-  box-shadow:
-    0 18px 48px color-mix(in srgb, #7c5cff 34%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 24%, transparent);
-  overflow: hidden;
-  isolation: isolate;
-}
-
-.logoBadge::before,
-.logoBadge::after {
-  content: "";
-  position: absolute;
-}
-
-.logoBadge::before {
-  z-index: 1;
-  inset: 1.5px;
-  border-radius: 28px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, #141a30 70%, transparent),
-    color-mix(in srgb, #0a1020 62%, transparent)
-  );
-  backdrop-filter: blur(24px) saturate(130%);
-  -webkit-backdrop-filter: blur(24px) saturate(130%);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white 12%, transparent),
-    inset 0 -1px 0 color-mix(in srgb, black 18%, transparent);
-}
-
-.logoBadge::after {
-  z-index: 0;
-  inset: -42%;
-  border-radius: 40%;
-  background: conic-gradient(
-    from 0deg,
-    color-mix(in srgb, #ff8a3d 36%, transparent),
-    color-mix(in srgb, #ff4d9d 28%, transparent),
-    color-mix(in srgb, #7c5cff 32%, transparent),
-    color-mix(in srgb, #00d4ff 24%, transparent),
-    color-mix(in srgb, #ff8a3d 36%, transparent)
-  );
-  filter: blur(18px);
-  opacity: 0.44;
-  animation: spinBorder 28s linear infinite;
-}
-
-.logoCore {
-  position: relative;
-  z-index: 2;
-  font-size: clamp(24px, 6vw, 34px);
-  font-weight: 900;
-  letter-spacing: -0.08em;
-  color: white;
-}
-
-.heroCopy {
-  display: grid;
-  gap: 10px;
+.brandLogo {
+  display: block;
+  width: min(100%, 430px);
+  max-height: min(42dvh, 430px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 20px 46px color-mix(in srgb, #7c5cff 24%, transparent));
 }
 
 .eyebrow {
@@ -122,38 +59,6 @@
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: color-mix(in srgb, white 68%, #ffb17f 32%);
-}
-
-.title {
-  display: inline-grid;
-  justify-items: start;
-  width: max-content;
-  margin: 0;
-  font-size: clamp(38px, 11vw, 64px);
-  line-height: 0.77;
-  letter-spacing: -0.08em;
-  color: #f6f3ff;
-  text-wrap: balance;
-}
-
-.titleTuneTrack,
-.titleBeats {
-  display: block;
-}
-
-.titleBeats {
-  justify-self: start;
-  margin-top: -0.04em;
-  margin-left: 2.105em;
-  padding-right: 0;
-}
-
-.description {
-  max-width: 20rem;
-  margin: 0;
-  font-size: 16px;
-  line-height: 1.6;
-  color: color-mix(in srgb, white 82%, transparent);
 }
 
 .previewCard {
@@ -212,8 +117,6 @@
       color-mix(in srgb, #17203a 38%, transparent),
       color-mix(in srgb, #050914 24%, transparent)
     );
-  backdrop-filter: blur(36px) saturate(148%);
-  -webkit-backdrop-filter: blur(36px);
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, white 16%, transparent),
     inset 0 -1px 0 color-mix(in srgb, #8b5cff 14%, transparent);
@@ -314,7 +217,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 1;
   border-radius: inherit;
   padding: var(--button-border-width);
   background: conic-gradient(
@@ -339,6 +242,29 @@
   animation: buttonBorderSpin 5.5s linear infinite;
 }
 
+.primaryAction::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  z-index: 0;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--button-border-angle),
+    color-mix(in srgb, #ff8a3d 62%, transparent) 0%,
+    color-mix(in srgb, #ff8a3d 52%, transparent) 56%,
+    color-mix(in srgb, #38c8ff 72%, transparent) 68%,
+    color-mix(in srgb, #8b5cff 68%, transparent) 78%,
+    color-mix(in srgb, #ff4d9d 62%, transparent) 88%,
+    color-mix(in srgb, #ffb26b 58%, transparent) 96%,
+    color-mix(in srgb, #ff8a3d 62%, transparent) 100%
+  );
+  filter: blur(12px);
+  opacity: 0.32;
+  pointer-events: none;
+  transform: translate3d(0, 0, 0);
+  animation: buttonBorderSpin 5.5s linear infinite;
+}
+
 .primaryActionInner {
   position: relative;
   display: grid;
@@ -350,7 +276,7 @@
   background: transparent;
   overflow: hidden;
   isolation: isolate;
-  z-index: 1;
+  z-index: 2;
 }
 
 .primaryActionInner::before {
@@ -378,8 +304,6 @@
       color-mix(in srgb, #17203a 38%, transparent),
       color-mix(in srgb, #050914 24%, transparent)
     );
-  backdrop-filter: blur(36px) saturate(148%);
-  -webkit-backdrop-filter: blur(36px) saturate(148%);
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, white 16%, transparent),
     inset 0 -1px 0 color-mix(in srgb, #8b5cff 14%, transparent);
@@ -410,13 +334,9 @@
   transform: translateY(0);
 }
 
-@keyframes spinBorder {
-  0% {
-    transform: rotate(0turn);
-  }
-
-  100% {
-    transform: rotate(1turn);
+@keyframes buttonBorderSpin {
+  to {
+    --button-border-angle: 1turn;
   }
 }
 
@@ -424,12 +344,6 @@
   syntax: "<angle>";
   inherits: false;
   initial-value: 0turn;
-}
-
-@keyframes buttonBorderSpin {
-  to {
-    --button-border-angle: 1turn;
-  }
 }
 
 @media (orientation: landscape) and (max-width: 960px) {
@@ -479,16 +393,9 @@
     gap: 8px;
   }
 
-  .logoBadge {
-    width: clamp(68px, 17vw, 92px);
-  }
-
-  .logoCore {
-    font-size: clamp(22px, 5.4vw, 30px);
-  }
-
-  .title {
-    font-size: clamp(32px, 9.6vw, 52px);
+  .brandLogo {
+    width: min(100%, 360px);
+    max-height: min(34dvh, 250px);
   }
 
   .featureList {
@@ -520,7 +427,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .primaryAction::before {
+  .primaryAction::before,
+  .primaryAction::after {
     animation: none;
   }
 }

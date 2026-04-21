@@ -1,8 +1,10 @@
 .background {
   /* Background tuning zone:
      Base: --bg-base-top, --bg-base-mid, --bg-base-bottom, --bg-vignette-strength.
-     Orbs: --orb-size, --orb-blur, --orb-opacity, and each orb's local override vars.
-     Local overrides: --orb-local-size, --orb-local-blur, --orb-local-opacity, --orb-local-speed.
+     Orbs: --orb-size, --orb-opacity, --orb-blur, and each orb's local override vars.
+     Local overrides: --orb-local-size, --orb-local-opacity, --orb-local-speed,
+       --orb-local-motion-x, --orb-local-motion-y, --orb-local-scale-pulse,
+       --orb-local-blur.
      Position: --orb-top, --orb-right, --orb-bottom, --orb-left.
      Colors: --orb-core, --orb-mid, --orb-alt-core, --orb-alt-mid.
      Motion: --orb-motion-x, --orb-motion-y, --orb-motion-speed.
@@ -12,17 +14,19 @@
   --bg-base-mid: #100023;
   --bg-base-bottom: #03050d;
   --bg-vignette-strength: 0.78;
-  --orb-size: 72vw;
-  --orb-blur: 72px;
-  --orb-opacity: 0.52;
-  --orb-motion-x: 12vw;
-  --orb-motion-y: 10vh;
-  --orb-motion-speed: 26s;
+  --orb-size: 88vw;
+  --orb-opacity: 0.34;
+  --orb-blur: 34px;
+  --orb-motion-x: 8vw;
+  --orb-motion-y: 7vh;
+  --orb-motion-speed: 34s;
+  --orb-scale-pulse: 0.12;
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
   isolation: isolate;
+  contain: strict;
 }
 
 .background::before {
@@ -54,9 +58,12 @@
   --orb-bottom: auto;
   --orb-left: auto;
   --orb-local-size: var(--orb-size);
-  --orb-local-blur: var(--orb-blur);
   --orb-local-opacity: var(--orb-opacity);
   --orb-local-speed: var(--orb-motion-speed);
+  --orb-local-blur: var(--orb-blur);
+  --orb-local-motion-x: var(--orb-motion-x);
+  --orb-local-motion-y: var(--orb-motion-y);
+  --orb-local-scale-pulse: var(--orb-scale-pulse);
   --orb-scale: 1;
   --orb-core: #8b5cff;
   --orb-mid: #5634c9;
@@ -70,10 +77,16 @@
   width: var(--orb-local-size);
   height: var(--orb-local-size);
   border-radius: 999px;
-  background: radial-gradient(circle, var(--orb-core) 0%, var(--orb-mid) 38%, transparent 74%);
+  background: radial-gradient(
+    circle,
+    var(--orb-core) 0%,
+    var(--orb-mid) 24%,
+    color-mix(in srgb, var(--orb-mid) 30%, transparent) 50%,
+    color-mix(in srgb, var(--orb-mid) 10%, transparent) 70%,
+    transparent 92%
+  );
   opacity: var(--orb-local-opacity);
   filter: blur(var(--orb-local-blur));
-  mix-blend-mode: screen;
   will-change: transform;
   transform: translate3d(0, 0, 0) scale(var(--orb-scale));
   animation: backgroundOrbFloat var(--orb-local-speed) ease-in-out infinite alternate;
@@ -87,62 +100,61 @@
   background: radial-gradient(
     circle,
     var(--orb-alt-core) 0%,
-    var(--orb-alt-mid) 40%,
-    transparent 74%
+    var(--orb-alt-mid) 24%,
+    color-mix(in srgb, var(--orb-alt-mid) 28%, transparent) 52%,
+    color-mix(in srgb, var(--orb-alt-mid) 10%, transparent) 72%,
+    transparent 94%
   );
   opacity: 0;
   animation: backgroundOrbColorMix calc(var(--orb-local-speed) * 1.9) ease-in-out infinite alternate;
 }
 
 .orbOrange {
-  --orb-top: -14%;
+  --orb-top: -18%;
   --orb-left: -42%;
   --orb-core: #ff8a3d;
   --orb-mid: #b34853;
   --orb-alt-core: #ff4d9d;
   --orb-alt-mid: #6f39bb;
   --orb-scale: 1.08;
+  --orb-local-blur: 38px;
+  --orb-local-motion-x: 11vw;
+  --orb-local-motion-y: 9vh;
+  --orb-local-scale-pulse: 0.15;
 }
 
 .orbViolet {
   --orb-top: -18%;
   --orb-right: -42%;
-  --orb-local-size: 138vw;
+  --orb-local-size: 116vw;
   --orb-core: #8b5cff;
   --orb-mid: #5634c9;
   --orb-alt-core: #ff8a3d;
   --orb-alt-mid: #a94757;
   --orb-scale: 0.95;
+  --orb-local-blur: 42px;
   --orb-local-speed: calc(var(--orb-motion-speed) * 1.18);
+  --orb-local-motion-x: 9vw;
+  --orb-local-motion-y: 6vh;
+  --orb-local-scale-pulse: 0.1;
   animation-delay: -9s;
 }
 
 .orbRose {
   --orb-right: -28%;
   --orb-bottom: -40%;
-  --orb-local-size: 142vw;
+  --orb-local-size: 118vw;
   --orb-core: #ff4d9d;
   --orb-mid: #7535b9;
   --orb-alt-core: #8b5cff;
   --orb-alt-mid: #5138c4;
   --orb-scale: 1.02;
+  --orb-local-blur: 40px;
   --orb-local-speed: calc(var(--orb-motion-speed) * 1.32);
+  --orb-local-motion-x: 7vw;
+  --orb-local-motion-y: 10vh;
+  --orb-local-scale-pulse: 0.13;
   animation-delay: -16s;
-}
-
-.orbCards {
-  --orb-left: 12%;
-  --orb-bottom: 6%;
-  --orb-local-size: 86vw;
-  --orb-local-blur: 72px;
-  --orb-local-opacity: 0.18;
-  --orb-core: #ff8a3d;
-  --orb-mid: #8b5cff;
-  --orb-alt-core: #ff4d9d;
-  --orb-alt-mid: #38c8ff;
-  --orb-scale: 0.86;
-  --orb-local-speed: calc(var(--orb-motion-speed) * 1.08);
-  animation-delay: -6s;
 }
 
 @keyframes backgroundOrbFloat {
@@ -150,14 +162,31 @@
     transform: translate3d(0, 0, 0) scale(var(--orb-scale));
   }
 
-  50% {
-    transform: translate3d(var(--orb-motion-x), calc(var(--orb-motion-y) * -1), 0)
-      scale(calc(var(--orb-scale) * 1.05));
+  28% {
+    transform: translate3d(
+        calc(var(--orb-local-motion-x) * 0.75),
+        calc(var(--orb-local-motion-y) * -0.7),
+        0
+      )
+      scale(calc(var(--orb-scale) + var(--orb-local-scale-pulse)));
+  }
+
+  62% {
+    transform: translate3d(
+        calc(var(--orb-local-motion-x) * -0.35),
+        calc(var(--orb-local-motion-y) * 0.45),
+        0
+      )
+      scale(calc(var(--orb-scale) - (var(--orb-local-scale-pulse) * 0.45)));
   }
 
   100% {
-    transform: translate3d(calc(var(--orb-motion-x) * -0.8), var(--orb-motion-y), 0)
-      scale(calc(var(--orb-scale) * 0.97));
+    transform: translate3d(
+        calc(var(--orb-local-motion-x) * -0.9),
+        var(--orb-local-motion-y),
+        0
+      )
+      scale(calc(var(--orb-scale) + (var(--orb-local-scale-pulse) * 0.35)));
   }
 }
 
@@ -178,14 +207,16 @@
 @media (min-width: 560px) {
   .background {
     --orb-size: 720px;
-    --orb-blur: 84px;
+    --orb-blur: 42px;
     --orb-motion-x: 52px;
     --orb-motion-y: 44px;
+    --orb-scale-pulse: 0.1;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .orb {
+  .orb,
+  .orb::before {
     animation: none;
   }
 }
