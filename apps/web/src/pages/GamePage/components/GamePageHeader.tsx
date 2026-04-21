@@ -24,6 +24,8 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
     statusBadgeText,
     statusDetailText,
     updateViewPreferences,
+    visibleTimelineCardCount,
+    visibleTimelineTitle,
   } = model;
 
   return (
@@ -39,7 +41,7 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
             </span>
           ) : null}
           {showTurnNumberChip ? (
-            <span className={styles.headerChip}>
+            <span className={`${styles.headerChip} ${styles.headerChipTurn}`}>
               Turn {roomState.turn?.turnNumber ?? "-"}
             </span>
           ) : null}
@@ -47,7 +49,13 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
       </div>
       <div className={styles.headerAside}>
         <div className={styles.headerActionRow}>
-          <div className={styles.statusBadge}>{statusBadgeText}</div>
+          <div className={styles.statusBadge}>
+            <span className={styles.statusBadgeDefault}>{statusBadgeText}</span>
+            <span className={styles.statusBadgeTimeline}>
+              {visibleTimelineTitle} · {visibleTimelineCardCount}{" "}
+              card{visibleTimelineCardCount === 1 ? "" : "s"}
+            </span>
+          </div>
           {showMiniStandings ? (
             <div className={styles.headerLeadersStrip}>
               {leadingPlayers.map((player, index) => (
@@ -119,7 +127,7 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
             title="Game menu"
           />
         </div>
-        {showTimelineHints ? (
+        {showTimelineHints && statusDetailText ? (
           <p className={styles.statusCaption}>{statusDetailText}</p>
         ) : null}
       </div>
@@ -143,7 +151,9 @@ function areHeaderModelsEqual(
     previousModel.showTurnNumberChip === nextModel.showTurnNumberChip &&
     previousModel.statusBadgeText === nextModel.statusBadgeText &&
     previousModel.statusDetailText === nextModel.statusDetailText &&
-    previousModel.updateViewPreferences === nextModel.updateViewPreferences
+    previousModel.updateViewPreferences === nextModel.updateViewPreferences &&
+    previousModel.visibleTimelineCardCount === nextModel.visibleTimelineCardCount &&
+    previousModel.visibleTimelineTitle === nextModel.visibleTimelineTitle
   );
 }
 

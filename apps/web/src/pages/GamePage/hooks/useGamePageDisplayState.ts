@@ -3,8 +3,8 @@ import type {
   ChallengeMarkerTone,
   GamePageCard,
   GamePagePlayerNameResolver,
+  TimelineCelebrationTone,
 } from "../GamePage.types";
-import { useGamePageChallengeCelebrationState } from "./useGamePageChallengeCelebrationState";
 import { useGamePageStatusState } from "./useGamePageStatusState";
 import { useGamePageTimelineState } from "./useGamePageTimelineState";
 
@@ -34,6 +34,8 @@ interface UseGamePageDisplayStateResult {
   challengeSuccessCelebrationCard: GamePageCard | null;
   challengeSuccessCelebrationKey: string | null;
   challengeSuccessMessage: string | null;
+  challengeSuccessTone: TimelineCelebrationTone;
+  shouldAnimateCelebrationCardToMine: boolean;
   disabledTimelineSlots: number[];
   showCorrectPlacementPreview: boolean;
   showCorrectionPreview: boolean;
@@ -66,20 +68,55 @@ export function useGamePageDisplayState({
   roomState,
   selectedSlotIndex,
 }: UseGamePageDisplayStateOptions): UseGamePageDisplayStateResult {
-  const {
-    challengeSuccessCelebrationCard,
-    challengeSuccessCelebrationKey,
-  } = useGamePageChallengeCelebrationState({
-    currentPlayerId,
-    roomState,
-  });
+  const revealOutcomeCard =
+    roomState?.status === "reveal" && roomState.revealState?.revealType === "placement"
+      ? roomState.revealState.placedCard
+      : null;
+  const revealOutcomeKey =
+    revealOutcomeCard && roomState?.revealState
+      ? [
+          roomState.roomId,
+          roomState.turn?.turnNumber ?? "reveal",
+          roomState.revealState.playerId,
+          roomState.revealState.placedCard.id,
+          roomState.revealState.selectedSlotIndex,
+          roomState.revealState.challengerPlayerId ?? "placement",
+          roomState.revealState.challengeWasSuccessful === null
+            ? roomState.revealState.wasCorrect
+              ? "correct"
+              : "wrong"
+            : roomState.revealState.challengeWasSuccessful
+              ? "challenge-success"
+              : "challenge-failure",
+        ].join(":")
+      : null;
+  const revealOutcomeTone: TimelineCelebrationTone =
+    roomState?.revealState?.challengeWasSuccessful === false ||
+    (roomState?.revealState?.challengeWasSuccessful === null &&
+      roomState.revealState.wasCorrect === false)
+      ? "failure"
+      : "success";
+  const revealOutcomeMessage =
+    roomState?.status !== "reveal" || !roomState.revealState
+      ? null
+      : roomState.revealState.challengeWasSuccessful === true
+        ? "Challenge won."
+        : roomState.revealState.challengeWasSuccessful === false
+          ? "Challenge failed."
+          : roomState.revealState.wasCorrect
+            ? "Correct placement."
+            : "Wrong placement.";
+  const shouldAnimateCelebrationCardToMine =
+    roomState?.status === "reveal" &&
+    roomState.revealState?.challengeWasSuccessful === true &&
+    roomState.revealState.challengerPlayerId === currentPlayerId;
 
   const statusState = useGamePageStatusState({
     activePlayerId,
     challengeOwnerId,
     currentPlayerId,
     canSelectChallengeSlot,
-    challengeSuccessCelebrationCard,
+    challengeSuccessCelebrationCard: revealOutcomeCard,
     getPlayerName,
     getPossessivePlayerName,
     isCurrentPlayerTurn,
@@ -107,9 +144,11 @@ export function useGamePageDisplayState({
     challengeActionTitle: statusState.challengeActionTitle,
     challengeCountdownLabel: statusState.challengeCountdownLabel,
     challengeMarkerTone: statusState.challengeMarkerTone,
-    challengeSuccessCelebrationCard,
-    challengeSuccessCelebrationKey,
-    challengeSuccessMessage: statusState.challengeSuccessMessage,
+    challengeSuccessCelebrationCard: revealOutcomeCard,
+    challengeSuccessCelebrationKey: revealOutcomeKey,
+    challengeSuccessMessage: revealOutcomeMessage ?? statusState.challengeSuccessMessage,
+    challengeSuccessTone: revealOutcomeTone,
+    shouldAnimateCelebrationCardToMine,
     disabledTimelineSlots: [],
     showCorrectPlacementPreview: timelineState.showCorrectPlacementPreview,
     showCorrectionPreview: timelineState.showCorrectionPreview,

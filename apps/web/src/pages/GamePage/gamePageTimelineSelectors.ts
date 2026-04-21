@@ -98,7 +98,7 @@ export function getGamePageRevealTimelineState({
     : null;
 
   const revealPreviewSlot = showCorrectionPreview
-    ? roomState?.revealState?.validSlotIndexes[0] ?? null
+    ? roomState?.revealState?.selectedSlotIndex ?? null
     : null;
 
   const hasAwardedOwnTimelineSlot =

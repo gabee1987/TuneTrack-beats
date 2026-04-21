@@ -45,7 +45,7 @@ export const defaultUiPreferences: UiPreferences = {
   view: {
     showMiniStandings: false,
     showHelperLabels: true,
-    showTimelineHints: true,
+    showTimelineHints: false,
     showRoomCodeChip: false,
     showPhaseChip: false,
     showTurnNumberChip: true,

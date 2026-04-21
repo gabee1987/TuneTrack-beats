@@ -44,6 +44,8 @@ export function buildGamePageAssemblyModel(
       statusBadgeText: controller.statusBadgeText,
       statusDetailText: controller.statusDetailText,
       updateViewPreferences: controller.updateViewPreferences,
+      visibleTimelineCardCount: controller.visibleTimelineCardCount,
+      visibleTimelineTitle: controller.visibleTimelineTitle,
     },
     timeline: {
       header: {
@@ -69,6 +71,7 @@ export function buildGamePageAssemblyModel(
         celebrationCard: controller.challengeSuccessCelebrationCard,
         celebrationKey: controller.challengeSuccessCelebrationKey,
         celebrationMessage: controller.challengeSuccessMessage,
+        celebrationTone: controller.challengeSuccessTone,
         hiddenCardMode: controller.hiddenCardMode,
         hint: controller.visibleTimelineHint,
         showCorrectPlacementPreview: controller.showCorrectPlacementPreview,
@@ -77,7 +80,10 @@ export function buildGamePageAssemblyModel(
         showDevCardInfo: controller.isHost && controller.showDevCardInfo,
         showDevGenreInfo: controller.isHost && controller.showDevGenreInfo,
         showDevYearInfo: controller.isHost && controller.showDevYearInfo,
-        showHint: controller.showTimelineHints,
+        shouldAnimateCelebrationCardToMine:
+          controller.shouldAnimateCelebrationCardToMine,
+        showHint:
+          controller.showTimelineHints && controller.visibleTimelineHint.length > 0,
         theme: controller.theme,
         timelineCards: controller.visibleTimelineCards,
         timelineView: controller.timelineView,

@@ -19,7 +19,7 @@ export function RevealActionDock({
   return (
     <ActionDock>
       <PrimaryActionButton onClick={handleConfirmReveal}>
-        Confirm Reveal
+        Next song
       </PrimaryActionButton>
     </ActionDock>
   );

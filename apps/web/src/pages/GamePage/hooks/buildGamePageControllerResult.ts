@@ -43,6 +43,8 @@ interface BuildGamePageControllerResultOptions {
     | "challengeSuccessCelebrationCard"
     | "challengeSuccessCelebrationKey"
     | "challengeSuccessMessage"
+    | "challengeSuccessTone"
+    | "shouldAnimateCelebrationCardToMine"
     | "disabledTimelineSlots"
     | "showCorrectPlacementPreview"
     | "showCorrectionPreview"

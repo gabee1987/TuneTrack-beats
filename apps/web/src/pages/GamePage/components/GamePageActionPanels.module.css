@@ -64,6 +64,11 @@
   border: 0;
   border-radius: 999px;
   padding: 12px 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 94px;
   color: var(--color-text-on-accent);
   font-weight: 800;
   cursor: pointer;
@@ -77,6 +82,26 @@
 .floatingSecondaryButton {
   background: var(--color-floating-secondary-action-background);
   outline: 1px solid var(--color-border-subtle);
+}
+
+.actionButtonLabel {
+  min-width: 0;
+}
+
+.ttCostBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-text-on-accent) 18%, transparent);
+  color: color-mix(in srgb, var(--color-text-on-accent) 86%, transparent);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 @keyframes floatingDockIn {
@@ -104,4 +129,36 @@
   background: var(--color-chip);
   color: var(--color-text-primary);
   font-size: 14px;
+}
+
+@media (max-width: 720px), (hover: none) and (pointer: coarse) {
+  .floatingActionDock {
+    position: fixed;
+    left: max(14px, env(safe-area-inset-left));
+    right: max(14px, env(safe-area-inset-right));
+    bottom: calc(env(safe-area-inset-bottom) + 16px);
+    z-index: 900;
+    margin-top: 0;
+    padding: 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-surface) 62%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-border-subtle) 78%, transparent);
+    backdrop-filter: blur(18px) saturate(1.08);
+    -webkit-backdrop-filter: blur(18px) saturate(1.08);
+    box-shadow: 0 18px 44px rgb(0 0 0 / 42%);
+  }
+
+  .floatingPrimaryButton,
+  .floatingSecondaryButton {
+    flex: 1;
+    min-height: 54px;
+    min-width: 0;
+    padding: 13px 14px;
+    font-size: 18px;
+  }
+
+  .ttCostBadge {
+    margin-left: auto;
+    font-size: 9px;
+  }
 }

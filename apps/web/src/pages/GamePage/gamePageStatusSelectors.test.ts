@@ -131,6 +131,26 @@ describe("gamePageStatusSelectors", () => {
     });
   });
 
+  it("removes current-turn instructional clutter", () => {
+    const roomState = createRoomState();
+
+    expect(
+      getGamePageStatusCopyState({
+        activePlayerId: "player-1",
+        challengeOwnerId: null,
+        currentPlayerId: "player-1",
+        canSelectChallengeSlot: false,
+        getPlayerName,
+        getPossessivePlayerName,
+        isCurrentPlayerTurn: true,
+        roomState,
+      }),
+    ).toMatchObject({
+      activeTimelineHint: "",
+      statusDetailText: "",
+    });
+  });
+
   it("derives reveal success marker and celebration copy", () => {
     const roomState = createRoomState({
       revealState: {

@@ -4,12 +4,14 @@ import type { GamePageCard, TimelineView } from "../GamePage.types";
 interface UseTimelinePanelCelebrationStateOptions {
   celebrationCard: GamePageCard | null;
   celebrationKey: string | null;
+  shouldAnimateCelebrationCardToMine: boolean;
   timelineView: TimelineView;
 }
 
 export function useTimelinePanelCelebrationState({
   celebrationCard,
   celebrationKey,
+  shouldAnimateCelebrationCardToMine,
   timelineView,
 }: UseTimelinePanelCelebrationStateOptions) {
   const [flyAnimationState, setFlyAnimationState] = useState<{
@@ -60,6 +62,7 @@ export function useTimelinePanelCelebrationState({
 
     if (
       !celebrationCard ||
+      !shouldAnimateCelebrationCardToMine ||
       timelineView === "mine" ||
       !previewCardRectRef.current ||
       !mineButtonRef.current
@@ -72,7 +75,12 @@ export function useTimelinePanelCelebrationState({
       sourceRect: previewCardRectRef.current,
       targetRect: mineButtonRef.current.getBoundingClientRect(),
     });
-  }, [celebrationCard, celebrationKey, timelineView]);
+  }, [
+    celebrationCard,
+    celebrationKey,
+    shouldAnimateCelebrationCardToMine,
+    timelineView,
+  ]);
 
   return {
     flyAnimationState,

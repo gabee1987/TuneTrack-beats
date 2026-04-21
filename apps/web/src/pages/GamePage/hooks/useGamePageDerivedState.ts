@@ -4,6 +4,7 @@ import type {
   GamePageCard,
   GamePagePlayerNameResolver,
   GamePageViewPreferenceUpdater,
+  TimelineCelebrationTone,
   TimelineView,
 } from "../GamePage.types";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
@@ -71,6 +72,8 @@ interface GamePageDerivedChallengeState {
   challengeSuccessCelebrationCard: GamePageCard | null;
   challengeSuccessCelebrationKey: string | null;
   challengeSuccessMessage: string | null;
+  challengeSuccessTone: TimelineCelebrationTone;
+  shouldAnimateCelebrationCardToMine: boolean;
   disabledTimelineSlots: number[];
   showCorrectPlacementPreview: boolean;
   showCorrectionPreview: boolean;
@@ -213,6 +216,8 @@ export function useGamePageDerivedState({
     challengeSuccessCelebrationCard: displayState.challengeSuccessCelebrationCard,
     challengeSuccessCelebrationKey: displayState.challengeSuccessCelebrationKey,
     challengeSuccessMessage: displayState.challengeSuccessMessage,
+    challengeSuccessTone: displayState.challengeSuccessTone,
+    shouldAnimateCelebrationCardToMine: displayState.shouldAnimateCelebrationCardToMine,
     disabledTimelineSlots: displayState.disabledTimelineSlots,
     showCorrectPlacementPreview: displayState.showCorrectPlacementPreview,
     showCorrectionPreview: displayState.showCorrectionPreview,

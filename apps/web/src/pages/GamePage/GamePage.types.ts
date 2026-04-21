@@ -13,6 +13,7 @@ import type {
 export type TimelineView = "active" | "mine";
 
 export type ChallengeMarkerTone = "pending" | "success" | "failure";
+export type TimelineCelebrationTone = "success" | "failure";
 
 export type GamePageCard = TrackCardPublic | TimelineCardPublic;
 export type GamePagePlayerNameResolver = (
@@ -64,6 +65,7 @@ export interface TimelinePanelRenderModel {
   celebrationCard: GamePageCard | null;
   celebrationKey: string | null;
   celebrationMessage: string | null;
+  celebrationTone?: TimelineCelebrationTone;
   hiddenCardMode: HiddenCardMode;
   hint: string;
   showCorrectPlacementPreview?: boolean;
@@ -72,6 +74,7 @@ export interface TimelinePanelRenderModel {
   showDevCardInfo: boolean;
   showDevGenreInfo: boolean;
   showDevYearInfo: boolean;
+  shouldAnimateCelebrationCardToMine: boolean;
   showHint: boolean;
   theme: ThemeId;
   timelineCards: TimelineCardPublic[];
@@ -122,6 +125,8 @@ export interface GamePageHeaderModel
     | "statusBadgeText"
     | "statusDetailText"
     | "updateViewPreferences"
+    | "visibleTimelineCardCount"
+    | "visibleTimelineTitle"
   > {
   roomState: PublicRoomState;
 }
@@ -178,6 +183,8 @@ export type GamePageController = GamePageActionHandlers & {
   challengeSuccessCelebrationCard: GamePageCard | null;
   challengeSuccessCelebrationKey: string | null;
   challengeSuccessMessage: string | null;
+  challengeSuccessTone: TimelineCelebrationTone;
+  shouldAnimateCelebrationCardToMine: boolean;
   disabledTimelineSlots: number[];
   errorMessage: string | null;
   hiddenCardMode: HiddenCardMode;

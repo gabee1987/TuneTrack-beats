@@ -68,6 +68,8 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
   } = useTimelinePanelCelebrationState({
     celebrationCard: model.render.celebrationCard,
     celebrationKey: model.render.celebrationKey,
+    shouldAnimateCelebrationCardToMine:
+      model.render.shouldAnimateCelebrationCardToMine,
     timelineView,
   });
   const sensors = useSensors(
@@ -123,6 +125,7 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
           <TimelineCelebration
             key={model.render.celebrationKey ?? model.render.celebrationMessage}
             message={model.render.celebrationMessage}
+            tone={model.render.celebrationTone ?? "success"}
           />
         ) : null}
       </AnimatePresence>

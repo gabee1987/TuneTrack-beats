@@ -1,17 +1,24 @@
+import type { TimelineCelebrationTone } from "../GamePage.types";
 import { motion } from "framer-motion";
 import styles from "./TimelinePanel.module.css";
 
 interface TimelineCelebrationProps {
   message: string;
+  tone?: TimelineCelebrationTone;
 }
 
 export function TimelineCelebration({
   message,
+  tone = "success",
 }: TimelineCelebrationProps) {
   return (
     <div className={styles.timelineCelebrationLayer}>
       <motion.div
-        className={styles.timelineCelebrationMessage}
+        className={`${styles.timelineCelebrationMessage} ${
+          tone === "failure"
+            ? styles.timelineCelebrationMessageFailure
+            : styles.timelineCelebrationMessageSuccess
+        }`}
         initial={{
           opacity: 0,
           rotate: -10,

@@ -112,7 +112,7 @@ export function getGamePageStatusCopyState({
   const activeTimelineHint =
     roomState?.status !== "challenge"
       ? isCurrentPlayerTurn
-        ? "Tap a slot to preview your decision directly in the timeline, then confirm it."
+        ? ""
         : "This is the timeline being judged on this turn."
       : canSelectChallengeSlot
         ? `You called Beat! Pick the slot where the card should have gone in ${getPossessivePlayerName(activePlayerId)} timeline.`
@@ -142,7 +142,7 @@ export function getGamePageStatusCopyState({
     ? `${getPlayerName(roomState.winnerPlayerId)} reached the win target first.`
     : roomState?.status === "turn"
       ? isCurrentPlayerTurn
-        ? "Choose a slot in your timeline, then confirm your placement."
+        ? ""
         : `${getPlayerName(activePlayerId)} is deciding where the current song belongs.`
       : roomState?.status === "challenge"
         ? roomState.challengeState?.phase === "claimed"

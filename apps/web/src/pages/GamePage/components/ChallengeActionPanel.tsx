@@ -70,7 +70,7 @@ export function ChallengeActionPanel({
         canClaimChallenge || canResolveChallengeWindow ? (
           <ActionDock>
             {canClaimChallenge ? (
-              <PrimaryActionButton onClick={handleClaimChallenge}>
+              <PrimaryActionButton onClick={handleClaimChallenge} ttCost={1}>
                 Beat!
               </PrimaryActionButton>
             ) : null}

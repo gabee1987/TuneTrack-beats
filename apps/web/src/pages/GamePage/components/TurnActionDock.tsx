@@ -1,4 +1,8 @@
-import type { PublicRoomState } from "@tunetrack/shared";
+import {
+  BUY_TIMELINE_CARD_TT_COST,
+  SKIP_TRACK_TT_COST,
+  type PublicRoomState,
+} from "@tunetrack/shared";
 import {
   ActionDock,
   PrimaryActionButton,
@@ -34,12 +38,18 @@ export function TurnActionDock({
   return (
     <ActionDock>
       {canUseSkipTrack ? (
-        <SecondaryActionButton onClick={handleSkipTrackWithTt}>
+        <SecondaryActionButton
+          onClick={handleSkipTrackWithTt}
+          ttCost={SKIP_TRACK_TT_COST}
+        >
           Skip
         </SecondaryActionButton>
       ) : null}
       {canUseBuyCard ? (
-        <SecondaryActionButton onClick={handleBuyTimelineCardWithTt}>
+        <SecondaryActionButton
+          onClick={handleBuyTimelineCardWithTt}
+          ttCost={BUY_TIMELINE_CARD_TT_COST}
+        >
           Buy
         </SecondaryActionButton>
       ) : null}

@@ -10,11 +10,15 @@
 
 .panel {
   width: min(100%, 1180px);
+  min-height: calc(100dvh - 8px);
   margin: 0 auto;
-  padding: 8px 8px 6px;
+  padding: 8px 8px calc(env(safe-area-inset-bottom) + 106px);
   border: 0;
   border-radius: 0;
   background: transparent;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .error {

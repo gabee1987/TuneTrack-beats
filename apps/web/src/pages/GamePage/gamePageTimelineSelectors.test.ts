@@ -90,7 +90,7 @@ describe("gamePageTimelineSelectors", () => {
     });
   });
 
-  it("derives reveal correction preview state for wrong placements", () => {
+  it("keeps wrong reveal previews in the chosen slot", () => {
     const roomState = createRoomState({
       revealState: {
         awardedPlayerId: null,
@@ -124,7 +124,7 @@ describe("gamePageTimelineSelectors", () => {
       ownTimelineChallengeAwardSlot: null,
       ownTimelineOriginalAwardSlot: null,
       revealPreviewCard: roomState.revealState?.placedCard ?? null,
-      revealPreviewSlot: 3,
+      revealPreviewSlot: 2,
       showCorrectPlacementPreview: false,
       showCorrectionPreview: true,
     });

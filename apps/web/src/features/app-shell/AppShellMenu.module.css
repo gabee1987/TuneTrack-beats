@@ -1,13 +1,22 @@
 .menuTrigger {
   border: 0;
   border-radius: var(--radius-pill);
-  padding: 12px 16px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
   background: var(--color-surface);
   color: var(--color-text-primary);
   backdrop-filter: blur(16px);
   box-shadow: var(--shadow-surface);
   outline: 1px solid var(--color-border-subtle);
   cursor: pointer;
+}
+
+.menuTriggerIcon {
+  width: 20px;
+  height: 20px;
 }
 
 .menuOverlay {
@@ -227,5 +236,10 @@
   .tabButton,
   .segmentedButton {
     min-height: 48px;
+  }
+
+  .menuTrigger {
+    width: 48px;
+    min-width: 48px;
   }
 }

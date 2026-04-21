@@ -11,11 +11,13 @@ export function ActionDock({ children }: ActionDockProps) {
 interface ActionButtonProps {
   children: React.ReactNode;
   onClick: () => void;
+  ttCost?: number;
 }
 
 export function PrimaryActionButton({
   children,
   onClick,
+  ttCost,
 }: ActionButtonProps) {
   return (
     <button
@@ -23,7 +25,8 @@ export function PrimaryActionButton({
       onClick={onClick}
       type="button"
     >
-      {children}
+      <span className={styles.actionButtonLabel}>{children}</span>
+      {ttCost ? <span className={styles.ttCostBadge}>{ttCost} TT</span> : null}
     </button>
   );
 }
@@ -31,6 +34,7 @@ export function PrimaryActionButton({
 export function SecondaryActionButton({
   children,
   onClick,
+  ttCost,
 }: ActionButtonProps) {
   return (
     <button
@@ -38,7 +42,8 @@ export function SecondaryActionButton({
       onClick={onClick}
       type="button"
     >
-      {children}
+      <span className={styles.actionButtonLabel}>{children}</span>
+      {ttCost ? <span className={styles.ttCostBadge}>{ttCost} TT</span> : null}
     </button>
   );
 }

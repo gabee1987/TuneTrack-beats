@@ -133,6 +133,9 @@ export function useGamePageController({
     challengeSuccessCelebrationCard: derivedState.challengeSuccessCelebrationCard,
     challengeSuccessCelebrationKey: derivedState.challengeSuccessCelebrationKey,
     challengeSuccessMessage: derivedState.challengeSuccessMessage,
+    challengeSuccessTone: derivedState.challengeSuccessTone,
+    shouldAnimateCelebrationCardToMine:
+      derivedState.shouldAnimateCelebrationCardToMine,
     disabledTimelineSlots: derivedState.disabledTimelineSlots,
     showCorrectPlacementPreview: derivedState.showCorrectPlacementPreview,
     showCorrectionPreview: derivedState.showCorrectionPreview,

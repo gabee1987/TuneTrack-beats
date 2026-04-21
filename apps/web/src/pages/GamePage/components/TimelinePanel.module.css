@@ -65,9 +65,6 @@
 .timelineCelebrationMessage {
   padding: 10px 18px;
   border-radius: 999px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04)),
-    color-mix(in srgb, var(--color-accent-success) 76%, transparent);
   color: var(--color-text-primary);
   font-size: clamp(16px, 2vw, 22px);
   font-weight: 900;
@@ -79,6 +76,18 @@
   -webkit-backdrop-filter: blur(12px) saturate(1.08);
   transform-origin: center center;
   will-change: transform, opacity;
+}
+
+.timelineCelebrationMessageSuccess {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04)),
+    color-mix(in srgb, var(--color-accent-success) 76%, transparent);
+}
+
+.timelineCelebrationMessageFailure {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.035)),
+    color-mix(in srgb, #ff315f 78%, transparent);
 }
 
 .timelineViewSwitcherCompact {
@@ -284,11 +293,17 @@
 
 .previewCardCorrection,
 .previewCardCorrectionSurface {
-  outline: 2px solid var(--color-game-card-correction-outline);
+  outline: 2px solid #ff244f;
+  outline-offset: -2px;
+  box-shadow: var(--shadow-game-preview-card);
+  animation: wrongPlacementPulse 1.12s ease-in-out infinite;
 }
 
 .previewCardCorrectionSurface {
-  background: var(--gradient-game-preview-correction-surface), var(--card-gradient);
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, #ff4f6d 34%, transparent), transparent 50%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(255, 79, 109, 0.16)),
+    var(--card-gradient);
 }
 
 .previewCardFace {
@@ -401,29 +416,59 @@
   .timelinePanel {
     --timeline-card-width: 100%;
     --timeline-card-height: auto;
+    flex: 1 1 auto;
+    display: flex;
     min-height: 0;
+    flex-direction: column;
     margin-top: 6px;
   }
 
   .timelineHeader {
-    min-height: 28px;
-    margin-bottom: 10px;
+    display: block;
+    min-height: 0;
+    margin-bottom: 12px;
+  }
+
+  .timelineHeaderCopy {
+    display: none;
+  }
+
+  .timelineViewSwitcherCompact {
+    width: 100%;
+    min-height: 50px;
+    justify-self: stretch;
+    padding: 4px;
+    border-radius: 999px;
+  }
+
+  .timelineViewCompactButton {
+    flex: 1;
+    min-height: 42px;
+    min-width: 0;
+    padding: 10px 16px;
+    font-size: 14px;
   }
 
   .timelineHint {
-    margin: 4px 0 8px;
+    margin: -2px 0 10px;
+    padding: 7px 10px;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--color-chip) 68%, transparent);
     font-size: 11px;
     line-height: 1.35;
   }
 
   .timelineRow {
+    flex: 1 1 auto;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    align-items: stretch;
+    align-content: start;
+    align-items: start;
     justify-content: stretch;
+    grid-auto-rows: max-content;
     gap: 6px;
     min-height: 0;
-    max-height: min(55dvh, 460px);
+    max-height: none;
     overflow-x: hidden;
     overflow-y: auto;
     padding: 2px;
@@ -447,6 +492,7 @@
     width: 100%;
     min-width: 0;
     aspect-ratio: 1;
+    align-self: start;
     scroll-snap-align: start;
   }
 
@@ -511,5 +557,23 @@
 @media (orientation: landscape) and (max-width: 1024px) {
   .timelineRow {
     padding-bottom: 12px;
+  }
+}
+
+@keyframes wrongPlacementPulse {
+  0%,
+  100% {
+    outline-color: #ff244f;
+  }
+
+  50% {
+    outline-color: #ffb0bd;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .previewCardCorrection,
+  .previewCardCorrectionSurface {
+    animation: none;
   }
 }
