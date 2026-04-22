@@ -3,11 +3,18 @@ import {
   SKIP_TRACK_TT_COST,
   type PublicRoomState,
 } from "@tunetrack/shared";
+import { motion, useReducedMotion } from "framer-motion";
+import {
+  MotionPresence,
+  createActionButtonExitMotion,
+  createLayoutTransition,
+} from "../../../features/motion";
 import {
   ActionDock,
   PrimaryActionButton,
   SecondaryActionButton,
 } from "./ActionDock";
+import styles from "./GamePageActionPanels.module.css";
 
 interface TurnActionDockProps {
   canConfirmTurnPlacement: boolean;
@@ -28,6 +35,8 @@ export function TurnActionDock({
   handleSkipTrackWithTt,
   roomState,
 }: TurnActionDockProps) {
+  const reduceMotion = useReducedMotion() ?? false;
+
   if (
     roomState.status !== "turn" ||
     (!canUseSkipTrack && !canUseBuyCard && !canConfirmTurnPlacement)
@@ -37,26 +46,52 @@ export function TurnActionDock({
 
   return (
     <ActionDock>
-      {canUseSkipTrack ? (
-        <SecondaryActionButton
-          onClick={handleSkipTrackWithTt}
-          ttCost={SKIP_TRACK_TT_COST}
-        >
-          Skip
-        </SecondaryActionButton>
-      ) : null}
+      <MotionPresence mode="sync">
+        {canUseSkipTrack ? (
+          <motion.span
+            animate="animate"
+            className={styles.actionButtonMotionWrap}
+            exit="exit"
+            initial="initial"
+            key="skip-track"
+            layout
+            style={{ originX: 0.5 }}
+            transition={createLayoutTransition(reduceMotion)}
+            variants={createActionButtonExitMotion(reduceMotion)}
+          >
+            <SecondaryActionButton
+              onClick={handleSkipTrackWithTt}
+              ttCost={SKIP_TRACK_TT_COST}
+            >
+              Skip
+            </SecondaryActionButton>
+          </motion.span>
+        ) : null}
+      </MotionPresence>
       {canUseBuyCard ? (
-        <SecondaryActionButton
-          onClick={handleBuyTimelineCardWithTt}
-          ttCost={BUY_TIMELINE_CARD_TT_COST}
+        <motion.span
+          className={styles.actionButtonMotionWrap}
+          layout
+          transition={createLayoutTransition(reduceMotion)}
         >
-          Buy
-        </SecondaryActionButton>
+          <SecondaryActionButton
+            onClick={handleBuyTimelineCardWithTt}
+            ttCost={BUY_TIMELINE_CARD_TT_COST}
+          >
+            Buy
+          </SecondaryActionButton>
+        </motion.span>
       ) : null}
       {canConfirmTurnPlacement ? (
-        <PrimaryActionButton onClick={handlePlaceCard}>
-          Confirm
-        </PrimaryActionButton>
+        <motion.span
+          className={styles.actionButtonMotionWrap}
+          layout
+          transition={createLayoutTransition(reduceMotion)}
+        >
+          <PrimaryActionButton onClick={handlePlaceCard}>
+            Confirm
+          </PrimaryActionButton>
+        </motion.span>
       ) : null}
     </ActionDock>
   );

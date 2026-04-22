@@ -1011,9 +1011,19 @@
 }
 
 .mobileSelectClose {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
   min-height: 44px;
-  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 88%, transparent);
   border-radius: 999px;
+  padding: 0;
+  background: color-mix(in srgb, var(--color-surface-elevated) 76%, transparent);
+  color: var(--color-text-primary);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .mobileSelectOptions {

@@ -1,3 +1,8 @@
+import { motion, useReducedMotion } from "framer-motion";
+import {
+  createActionDockMotion,
+  createStandardTransition,
+} from "../../../features/motion";
 import {
   TtTokenAmount,
 } from "../../../features/ui/TtToken";
@@ -8,7 +13,21 @@ interface ActionDockProps {
 }
 
 export function ActionDock({ children }: ActionDockProps) {
-  return <div className={styles.floatingActionDock}>{children}</div>;
+  const reduceMotion = useReducedMotion() ?? false;
+
+  return (
+    <motion.div
+      animate="animate"
+      className={styles.floatingActionDock}
+      exit="exit"
+      initial="initial"
+      layout
+      transition={createStandardTransition(reduceMotion)}
+      variants={createActionDockMotion(reduceMotion)}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
 interface ActionButtonProps {

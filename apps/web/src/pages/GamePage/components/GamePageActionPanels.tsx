@@ -1,4 +1,10 @@
+import { motion, useReducedMotion } from "framer-motion";
 import { memo } from "react";
+import {
+  MotionPresence,
+  createExpressiveTransition,
+  createTokenSpendFlyoutMotion,
+} from "../../../features/motion";
 import { TtTokenIcon } from "../../../features/ui/TtToken";
 import type { GamePageActionPanelsModel } from "../GamePage.types";
 import { ChallengeActionPanel } from "./ChallengeActionPanel";
@@ -12,6 +18,7 @@ interface GamePageActionPanelsProps {
 }
 
 function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
+  const reduceMotion = useReducedMotion() ?? false;
   const {
     canClaimChallenge,
     canConfirmBeatPlacement,
@@ -39,15 +46,20 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
 
   return (
     <>
-      {skipTrackSpendAnimationKey > 0 ? (
-        <span
-          aria-hidden="true"
-          className={styles.tokenSpendFlyout}
-          key={skipTrackSpendAnimationKey}
-        >
-          <TtTokenIcon className={styles.tokenSpendIcon} />
-        </span>
-      ) : null}
+      <MotionPresence mode="sync">
+        {skipTrackSpendAnimationKey > 0 ? (
+          <motion.span
+            animate={createTokenSpendFlyoutMotion(reduceMotion)}
+            aria-hidden="true"
+            className={styles.tokenSpendFlyout}
+            initial={false}
+            key={skipTrackSpendAnimationKey}
+            transition={createExpressiveTransition(reduceMotion)}
+          >
+            <TtTokenIcon className={styles.tokenSpendIcon} />
+          </motion.span>
+        ) : null}
+      </MotionPresence>
 
       <ChallengeActionPanel
         canClaimChallenge={canClaimChallenge}

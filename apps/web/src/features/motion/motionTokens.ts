@@ -6,10 +6,10 @@ export type ScreenTransitionDirection = -1 | 0 | 1;
 
 export const motionDurations = {
   instant: 0.01,
-  quick: 0.16,
-  standard: 0.24,
-  screen: 0.46,
-  expressive: 0.82,
+  quick: 0.2,
+  standard: 0.3,
+  screen: 0.52,
+  expressive: 0.92,
 } as const;
 
 export const motionEasings = {
@@ -68,6 +68,129 @@ export function createBottomSheetMotion(
   };
 }
 
+export function createDialogCardMotion(
+  reduceMotion: boolean,
+): Record<"initial" | "animate" | "exit", TargetAndTransition> {
+  if (reduceMotion) {
+    return {
+      initial: { opacity: 0 },
+      animate: { opacity: 1 },
+      exit: { opacity: 0 },
+    };
+  }
+
+  return {
+    initial: { opacity: 0, scale: 0.96, y: 16 },
+    animate: { opacity: 1, scale: 1, y: 0 },
+    exit: { opacity: 0, scale: 0.98, y: 10 },
+  };
+}
+
+export function createActionDockMotion(
+  reduceMotion: boolean,
+): Record<"initial" | "animate" | "exit", TargetAndTransition> {
+  if (reduceMotion) {
+    return {
+      initial: { opacity: 1, y: 0 },
+      animate: { opacity: 1, y: 0 },
+      exit: { opacity: 1, y: 0 },
+    };
+  }
+
+  return {
+    initial: { opacity: 0, y: 18 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: 12 },
+  };
+}
+
+export function createDisclosurePanelMotion(
+  reduceMotion: boolean,
+): Record<"initial" | "animate" | "exit", TargetAndTransition> {
+  if (reduceMotion) {
+    return {
+      initial: { opacity: 1, height: "auto" },
+      animate: { opacity: 1, height: "auto" },
+      exit: { opacity: 1, height: "auto" },
+    };
+  }
+
+  return {
+    initial: { opacity: 0, height: 0 },
+    animate: { opacity: 1, height: "auto" },
+    exit: { opacity: 0, height: 0 },
+  };
+}
+
+export function createChallengePanelMotion(
+  reduceMotion: boolean,
+): Record<"initial" | "animate" | "exit", TargetAndTransition> {
+  if (reduceMotion) {
+    return {
+      initial: { opacity: 1, y: 0 },
+      animate: { opacity: 1, y: 0 },
+      exit: { opacity: 1, y: 0 },
+    };
+  }
+
+  return {
+    initial: { opacity: 0, scale: 0.98, y: 18 },
+    animate: { opacity: 1, scale: 1, y: 0 },
+    exit: { opacity: 0, scale: 0.985, y: 12 },
+  };
+}
+
+export function createActionButtonExitMotion(
+  reduceMotion: boolean,
+): Record<"initial" | "animate" | "exit", TargetAndTransition> {
+  if (reduceMotion) {
+    return {
+      initial: { opacity: 1 },
+      animate: { opacity: 1 },
+      exit: { opacity: 0 },
+    };
+  }
+
+  return {
+    initial: { opacity: 0, scale: 0.98 },
+    animate: { opacity: 1, scale: 1 },
+    exit: { opacity: 0, scale: 0.96 },
+  };
+}
+
+export function createLayoutTransition(reduceMotion: boolean): Transition {
+  return {
+    duration: reduceMotion ? motionDurations.instant : motionDurations.standard,
+    ease: motionEasings.standard,
+    layout: {
+      duration: reduceMotion ? motionDurations.instant : motionDurations.standard,
+      ease: motionEasings.standard,
+    },
+  };
+}
+
+export function createTokenSpendFlyoutMotion(
+  reduceMotion: boolean,
+): Pick<TargetAndTransition, "opacity" | "rotate" | "scale" | "x" | "y"> {
+  if (reduceMotion) {
+    return {
+      opacity: 0,
+      rotate: 0,
+      scale: 1,
+      x: 0,
+      y: 0,
+    };
+  }
+
+  return {
+    opacity: [0, 1, 1, 0],
+    rotate: [0, 0, -8, -16],
+    scale: [0.58, 1, 0.92, 0.76],
+    x: [0, 0, -8, -18],
+    y: [8, -18, -62, -96],
+  };
+}
+
 export function createFadeMotion(
   reduceMotion: boolean,
 ): Record<"initial" | "animate" | "exit", TargetAndTransition> {
@@ -88,6 +211,13 @@ export function createStandardTransition(reduceMotion: boolean): Transition {
   return {
     duration: reduceMotion ? motionDurations.instant : motionDurations.standard,
     ease: motionEasings.standard,
+  };
+}
+
+export function createExpressiveTransition(reduceMotion: boolean): Transition {
+  return {
+    duration: reduceMotion ? motionDurations.instant : motionDurations.expressive,
+    ease: motionEasings.emphasized,
   };
 }
 

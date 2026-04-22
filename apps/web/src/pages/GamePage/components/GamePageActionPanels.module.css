@@ -178,7 +178,6 @@
   justify-content: center;
   gap: 10px;
   margin-top: 16px;
-  animation: floatingDockIn 180ms ease-out;
   overflow: visible;
 }
 
@@ -198,6 +197,11 @@
   cursor: pointer;
   box-shadow: var(--shadow-floating-action);
   overflow: visible;
+}
+
+.actionButtonMotionWrap {
+  display: flex;
+  min-width: 0;
 }
 
 .floatingPrimaryButton {
@@ -251,42 +255,12 @@
   box-shadow:
     0 0 20px color-mix(in srgb, #ffb86b 34%, transparent),
     0 12px 28px color-mix(in srgb, black 32%, transparent);
-  animation: tokenSpendFlyout 760ms cubic-bezier(0.18, 0.82, 0.24, 1) both;
   will-change: transform, opacity;
 }
 
 .tokenSpendIcon {
   width: 24px;
   height: 24px;
-}
-
-@keyframes floatingDockIn {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes tokenSpendFlyout {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 8px, 0) scale(0.58);
-  }
-
-  18% {
-    opacity: 1;
-    transform: translate3d(0, -18px, 0) scale(1);
-  }
-
-  100% {
-    opacity: 0;
-    transform: translate3d(-18px, -96px, 0) scale(0.76) rotate(-16deg);
-  }
 }
 
 @keyframes beatCalloutPulse {
@@ -353,8 +327,13 @@
   }
 
   .floatingPrimaryButton,
-  .floatingSecondaryButton {
+  .floatingSecondaryButton,
+  .actionButtonMotionWrap {
     flex: 1;
+  }
+
+  .floatingPrimaryButton,
+  .floatingSecondaryButton {
     min-height: 54px;
     min-width: 0;
     padding: 13px 12px;
@@ -373,7 +352,6 @@
   }
 
   .tokenSpendFlyout {
-    animation: none;
     display: none;
   }
 }

@@ -1,4 +1,5 @@
 import { type ReactNode } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
   MAX_CHALLENGE_WINDOW_DURATION_SECONDS,
@@ -7,6 +8,11 @@ import {
   MIN_STARTING_TT_TOKEN_COUNT,
   type PublicRoomSettings,
 } from "@tunetrack/shared";
+import {
+  MotionPresence,
+  createDisclosurePanelMotion,
+  createLayoutTransition,
+} from "../../../features/motion";
 import { RangeField } from "../../../features/ui/RangeField";
 import { SettingField, SettingInfoButton } from "../../../features/ui/SettingField";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
@@ -74,6 +80,7 @@ export function LobbyHostTtSettings({
   onRoomSettingsChange,
   onToggleTtMode,
 }: LobbyHostTtSettingsProps) {
+  const reduceMotion = useReducedMotion() ?? false;
   const challengeWindowOptionValues = getChallengeWindowOptionValueMap();
 
   return (
@@ -116,62 +123,87 @@ export function LobbyHostTtSettings({
         </span>
       </label>
 
-      {currentSettings.ttModeEnabled ? (
-        <div className={styles.conditionalGroup}>
-          <RangeField
-            info="How many tokens each player receives when the game starts."
-            label="Starting tokens for every player"
-            max={MAX_STARTING_TT_TOKEN_COUNT}
-            min={MIN_STARTING_TT_TOKEN_COUNT}
-            onChange={(startingTtTokenCount) =>
-              onRoomSettingsChange({
-                ...currentSettings,
-                startingTtTokenCount,
-              })
-            }
-            value={currentSettings.startingTtTokenCount}
-          />
-
-          <SettingField
-            info="How long players can challenge a placement before it locks in."
-            label="Challenge window"
-            value={formatChallengeWindowSettingValue(
-              currentSettings.challengeWindowDurationSeconds,
-            )}
+      <MotionPresence mode="sync">
+        {currentSettings.ttModeEnabled ? (
+          <motion.div
+            animate="animate"
+            className={styles.conditionalGroup}
+            exit="exit"
+            initial="initial"
+            key="tt-settings"
+            style={{ overflow: "hidden" }}
+            transition={createLayoutTransition(reduceMotion)}
+            variants={createDisclosurePanelMotion(reduceMotion)}
           >
-            <AdaptiveSelect
-              label="Challenge window"
-              onChange={(nextValue) =>
+            <RangeField
+              info="How many tokens each player receives when the game starts."
+              label="Starting tokens for every player"
+              max={MAX_STARTING_TT_TOKEN_COUNT}
+              min={MIN_STARTING_TT_TOKEN_COUNT}
+              onChange={(startingTtTokenCount) =>
                 onRoomSettingsChange({
                   ...currentSettings,
-                  challengeWindowDurationSeconds: nextValue === "manual" ? null : Number(nextValue),
+                  startingTtTokenCount,
                 })
               }
-              options={[
-                {
-                  label: "Host manual",
-                  value: challengeWindowOptionValues.manual,
-                },
-                {
-                  label: `${DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS} seconds`,
-                  value: challengeWindowOptionValues.defaultDuration,
-                },
-                {
-                  label: `${MIN_CHALLENGE_WINDOW_DURATION_SECONDS} seconds`,
-                  value: challengeWindowOptionValues.minDuration,
-                },
-                {
-                  label: `${MAX_CHALLENGE_WINDOW_DURATION_SECONDS} seconds`,
-                  value: challengeWindowOptionValues.maxDuration,
-                },
-              ]}
-              value={getChallengeWindowSelectValue(currentSettings.challengeWindowDurationSeconds)}
+              value={currentSettings.startingTtTokenCount}
             />
-          </SettingField>
-        </div>
-      ) : (
-        <p className={styles.settingsInlineHint}>Turn this on to show token options.</p>
-      )}
+
+            <SettingField
+              info="How long players can challenge a placement before it locks in."
+              label="Challenge window"
+              value={formatChallengeWindowSettingValue(
+                currentSettings.challengeWindowDurationSeconds,
+              )}
+            >
+              <AdaptiveSelect
+                label="Challenge window"
+                onChange={(nextValue) =>
+                  onRoomSettingsChange({
+                    ...currentSettings,
+                    challengeWindowDurationSeconds:
+                      nextValue === "manual" ? null : Number(nextValue),
+                  })
+                }
+                options={[
+                  {
+                    label: "Host manual",
+                    value: challengeWindowOptionValues.manual,
+                  },
+                  {
+                    label: `${DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS} seconds`,
+                    value: challengeWindowOptionValues.defaultDuration,
+                  },
+                  {
+                    label: `${MIN_CHALLENGE_WINDOW_DURATION_SECONDS} seconds`,
+                    value: challengeWindowOptionValues.minDuration,
+                  },
+                  {
+                    label: `${MAX_CHALLENGE_WINDOW_DURATION_SECONDS} seconds`,
+                    value: challengeWindowOptionValues.maxDuration,
+                  },
+                ]}
+                value={getChallengeWindowSelectValue(
+                  currentSettings.challengeWindowDurationSeconds,
+                )}
+              />
+            </SettingField>
+          </motion.div>
+        ) : (
+          <motion.p
+            animate="animate"
+            className={styles.settingsInlineHint}
+            exit="exit"
+            initial="initial"
+            key="tt-settings-hint"
+            style={{ overflow: "hidden" }}
+            transition={createLayoutTransition(reduceMotion)}
+            variants={createDisclosurePanelMotion(reduceMotion)}
+          >
+            Turn this on to show token options.
+          </motion.p>
+        )}
+      </MotionPresence>
     </SurfaceCard>
   );
 }

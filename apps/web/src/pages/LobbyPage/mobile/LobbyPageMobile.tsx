@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppPageShell } from "../../../features/mobile-shell/AppPageShell";
+import { MotionDialogPortal } from "../../../features/motion";
 import { rememberPlayerDisplayName } from "../../../services/session/playerSession";
 import { StatusBanner } from "../../../features/ui/StatusBanner";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
@@ -253,19 +254,15 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
         ) : null}
       </section>
 
-      {infoContent ? (
-        <div
-          className={styles.infoOverlay}
-          onClick={() => setInfoContent(null)}
-          role="presentation"
-        >
-          <div
-            className={styles.infoCard}
-            onClick={(event) => event.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-label={infoContent.title}
-          >
+      <MotionDialogPortal
+        cardClassName={styles.infoCard}
+        isOpen={Boolean(infoContent)}
+        label={infoContent?.title ?? "Lobby info"}
+        onClose={() => setInfoContent(null)}
+        overlayClassName={styles.infoOverlay}
+      >
+        {infoContent ? (
+          <>
             <div className={styles.infoHeaderRow}>
               <p className={styles.infoEyebrow}>Info</p>
               <button
@@ -279,9 +276,9 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
             </div>
             <h2 className={styles.infoTitle}>{infoContent.title}</h2>
             <p className={styles.infoBody}>{infoContent.body}</p>
-          </div>
-        </div>
-      ) : null}
+          </>
+        ) : null}
+      </MotionDialogPortal>
     </AppPageShell>
   );
 }
