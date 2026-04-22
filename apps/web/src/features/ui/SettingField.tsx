@@ -18,16 +18,18 @@ export function SettingField({
   value,
 }: SettingFieldProps) {
   return (
-    <label className={`${styles.field}${className ? ` ${className}` : ""}`}>
+    <div className={`${styles.field}${className ? ` ${className}` : ""}`}>
       <div className={styles.labelRow}>
         <span className={styles.labelWithInfo}>
           <span>{label}</span>
           {info ? <SettingInfoButton info={info} label={label} /> : null}
         </span>
-        {value ? <strong className={styles.value}>{value}</strong> : null}
+        {value !== undefined && value !== null ? (
+          <strong className={styles.value}>{value}</strong>
+        ) : null}
       </div>
       {children}
-    </label>
+    </div>
   );
 }
 

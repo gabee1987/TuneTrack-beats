@@ -10,7 +10,6 @@ import {
 import { RangeField } from "../../../features/ui/RangeField";
 import { SettingField, SettingInfoButton } from "../../../features/ui/SettingField";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
-import { ToggleField } from "../../../features/ui/ToggleField";
 import { TtTokenAmount, TtTokenIcon } from "../../../features/ui/TtToken";
 import { AdaptiveSelect } from "./AdaptiveSelect";
 import type { LobbyRoomSettingsChangeHandler } from "./LobbyHostSettings.types";
@@ -93,12 +92,29 @@ export function LobbyHostTtSettings({
         variant="compact"
       />
 
-      <ToggleField
-        checked={currentSettings.ttModeEnabled}
-        hint="Shows token settings and defaults each player to 1 token."
-        label="Enable token mode"
-        onChange={onToggleTtMode}
-      />
+      <label className={styles.tokenModeToggle}>
+        <input
+          checked={currentSettings.ttModeEnabled}
+          className={styles.tokenModeToggleInput}
+          onChange={(event) => onToggleTtMode(event.target.checked)}
+          type="checkbox"
+        />
+        <span className={styles.tokenModeToggleCopy}>
+          <span className={styles.tokenModeToggleTitleRow}>
+            <TtTokenIcon className={styles.tokenModeToggleIcon} />
+            <span className={styles.tokenModeToggleTitle}>Enable token mode</span>
+          </span>
+          <span className={styles.tokenModeToggleHint}>
+            Adds skips, instant claims, and Beat! stakes to each round.
+          </span>
+        </span>
+        <span className={styles.tokenModeSwitch} aria-hidden="true">
+          <span className={styles.tokenModeSwitchStatus}>
+            {currentSettings.ttModeEnabled ? "On" : "Off"}
+          </span>
+          <span className={styles.tokenModeSwitchThumb} />
+        </span>
+      </label>
 
       {currentSettings.ttModeEnabled ? (
         <div className={styles.conditionalGroup}>
@@ -117,7 +133,7 @@ export function LobbyHostTtSettings({
           />
 
           <SettingField
-            info="How long players have to challenge a placement before it locks in."
+            info="How long players can challenge a placement before it locks in."
             label="Challenge window"
             value={formatChallengeWindowSettingValue(
               currentSettings.challengeWindowDurationSeconds,
