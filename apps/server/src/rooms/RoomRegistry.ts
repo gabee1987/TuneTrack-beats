@@ -160,7 +160,7 @@ export class RoomRegistry {
       id: playerId,
       displayName,
       isHost: false,
-      ttTokenCount: 0,
+      ttTokenCount: existingRoomRecord.roomState.settings.startingTtTokenCount,
       startingTimelineCardCount:
         existingRoomRecord.roomState.settings.defaultStartingTimelineCardCount,
     };
@@ -206,14 +206,30 @@ export class RoomRegistry {
     const didDefaultStartingCardCountChange =
       roomRecord.roomState.settings.defaultStartingTimelineCardCount !==
       roomSettingsPayload.defaultStartingTimelineCardCount;
+    const didStartingTtTokenCountChange =
+      roomRecord.roomState.settings.startingTtTokenCount !==
+      roomSettingsPayload.startingTtTokenCount;
+    const didEnableTtMode =
+      !roomRecord.roomState.settings.ttModeEnabled &&
+      roomSettingsPayload.ttModeEnabled;
+    const shouldResetStartingTtTokenCount =
+      didStartingTtTokenCountChange || didEnableTtMode;
     const nextRoomState: PublicRoomState = {
       ...roomRecord.roomState,
       targetTimelineCardCount: roomSettingsPayload.targetTimelineCardCount,
-      players: didDefaultStartingCardCountChange
+      players:
+        didDefaultStartingCardCountChange || shouldResetStartingTtTokenCount
         ? roomRecord.roomState.players.map((player) => ({
             ...player,
-            startingTimelineCardCount:
-              roomSettingsPayload.defaultStartingTimelineCardCount,
+            ...(didDefaultStartingCardCountChange
+              ? {
+                  startingTimelineCardCount:
+                    roomSettingsPayload.defaultStartingTimelineCardCount,
+                }
+              : {}),
+            ...(shouldResetStartingTtTokenCount
+              ? { ttTokenCount: roomSettingsPayload.startingTtTokenCount }
+              : {}),
           }))
         : roomRecord.roomState.players,
       settings: {
@@ -261,6 +277,7 @@ export class RoomRegistry {
             ...player,
             startingTimelineCardCount:
               updatePlayerSettingsPayload.startingTimelineCardCount,
+            ttTokenCount: updatePlayerSettingsPayload.startingTtTokenCount,
           }
         : player,
     );
@@ -473,7 +490,7 @@ export class RoomRegistry {
         id: player.id,
         displayName: player.displayName,
         startingTimelineCardCount: player.startingTimelineCardCount,
-        startingTtTokenCount: roomRecord.roomState.settings.startingTtTokenCount,
+        startingTtTokenCount: player.ttTokenCount,
       })),
       deck: deckCards,
       targetTimelineCardCount:

@@ -19,7 +19,7 @@ describe("tt actions", () => {
       "guest-session",
     );
 
-    roomRegistry.updateRoomSettings("host-socket", "tt-room", {
+    const tokenSettingsRoomState = roomRegistry.updateRoomSettings("host-socket", "tt-room", {
       roomId: "tt-room",
       targetTimelineCardCount: 10,
       defaultStartingTimelineCardCount: 1,
@@ -27,6 +27,20 @@ describe("tt actions", () => {
       revealConfirmMode: "host_only",
       ttModeEnabled: true,
       challengeWindowDurationSeconds: 10,
+    });
+    expect(
+      tokenSettingsRoomState.players.find((player) => player.id === hostJoin.playerId)
+        ?.ttTokenCount,
+    ).toBe(4);
+    expect(
+      tokenSettingsRoomState.players.find((player) => player.id === guestJoin.playerId)
+        ?.ttTokenCount,
+    ).toBe(4);
+    roomRegistry.updatePlayerSettings("host-socket", {
+      roomId: "tt-room",
+      playerId: guestJoin.playerId,
+      startingTimelineCardCount: 1,
+      startingTtTokenCount: 2,
     });
 
     const startedRoomState = roomRegistry.startGame(
@@ -41,6 +55,10 @@ describe("tt actions", () => {
       startedRoomState.players.find((player) => player.id === hostJoin.playerId)
         ?.ttTokenCount,
     ).toBe(4);
+    expect(
+      startedRoomState.players.find((player) => player.id === guestJoin.playerId)
+        ?.ttTokenCount,
+    ).toBe(2);
 
     const roomAfterSkip = roomRegistry.skipTrackWithTt("host-socket", {
       roomId: "tt-room",

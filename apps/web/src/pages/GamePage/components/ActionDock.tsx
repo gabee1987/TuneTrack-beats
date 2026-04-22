@@ -29,7 +29,7 @@ export function PrimaryActionButton({
       <span className={styles.actionButtonLabel}>{children}</span>
       {ttCost ? (
         <span className={styles.ttCostBadge}>
-          <TtTokenAmount amount={ttCost} />
+          <TtTokenAmount amount={ttCost} iconClassName={styles.ttCostIcon} />
         </span>
       ) : null}
     </button>
@@ -50,7 +50,7 @@ export function SecondaryActionButton({
       <span className={styles.actionButtonLabel}>{children}</span>
       {ttCost ? (
         <span className={styles.ttCostBadge}>
-          <TtTokenAmount amount={ttCost} />
+          <TtTokenAmount amount={ttCost} iconClassName={styles.ttCostIcon} />
         </span>
       ) : null}
     </button>

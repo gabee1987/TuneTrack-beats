@@ -20,6 +20,10 @@ interface UseLobbyRoomActionsResult {
     player: PublicPlayerState,
     nextValue: number,
   ) => void;
+  handlePlayerStartingTtTokenCountChange: (
+    player: PublicPlayerState,
+    nextValue: number,
+  ) => void;
   handlePlayerProfileChange: (displayName: string) => void;
   handleRoomSettingsChange: (nextSettings: PublicRoomSettings) => void;
   handleStartGame: () => void;
@@ -62,6 +66,23 @@ export function useLobbyRoomActions({
       playerId: player.id,
       roomId: roomState.roomId,
       startingTimelineCardCount: nextValue,
+      startingTtTokenCount: player.ttTokenCount,
+    });
+  }
+
+  function handlePlayerStartingTtTokenCountChange(
+    player: PublicPlayerState,
+    nextValue: number,
+  ) {
+    if (!roomState || !isHost) {
+      return;
+    }
+
+    void emitRoomEvent(ClientToServerEvent.UpdatePlayerSettings, {
+      playerId: player.id,
+      roomId: roomState.roomId,
+      startingTimelineCardCount: player.startingTimelineCardCount,
+      startingTtTokenCount: nextValue,
     });
   }
 
@@ -116,6 +137,7 @@ export function useLobbyRoomActions({
   return {
     handleCloseRoom,
     handlePlayerStartingCardCountChange,
+    handlePlayerStartingTtTokenCountChange,
     handlePlayerProfileChange,
     handleRoomSettingsChange,
     handleStartGame,

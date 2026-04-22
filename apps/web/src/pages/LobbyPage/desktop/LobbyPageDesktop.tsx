@@ -63,6 +63,9 @@ export function LobbyPageDesktop({ controller }: LobbyPageAssemblyProps) {
             onPlayerStartingCardCountChange={
               controller.handlePlayerStartingCardCountChange
             }
+            onPlayerStartingTtTokenCountChange={
+              controller.handlePlayerStartingTtTokenCountChange
+            }
             players={players}
             roomSettings={controller.currentSettings}
           />

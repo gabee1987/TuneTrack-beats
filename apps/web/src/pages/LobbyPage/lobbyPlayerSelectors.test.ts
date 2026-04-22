@@ -29,9 +29,8 @@ describe("lobbyPlayerSelectors", () => {
       }),
     ).toEqual({
       primaryName: "You",
-      secondaryName: null,
-      startingCardsLabel: "Starting cards for you",
-      badges: [{ label: "4 cards", variant: "neutral" }],
+      startingCardsLabel: "Starting cards",
+      counterBadges: [{ label: "4 cards", variant: "neutral" }],
     });
   });
 
@@ -50,9 +49,8 @@ describe("lobbyPlayerSelectors", () => {
       }),
     ).toEqual({
       primaryName: "Nova",
-      secondaryName: "Nova",
-      startingCardsLabel: "Starting cards for Nova",
-      badges: [
+      startingCardsLabel: "Starting cards",
+      counterBadges: [
         { label: "4 cards", variant: "neutral" },
         { label: "2 TT", variant: "neutral" },
         { label: "Host", variant: "strong" },

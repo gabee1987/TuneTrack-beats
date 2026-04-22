@@ -76,6 +76,11 @@ export const updatePlayerSettingsPayloadSchema = z.object({
     .int()
     .min(MIN_STARTING_TIMELINE_CARD_COUNT)
     .max(MAX_STARTING_TIMELINE_CARD_COUNT),
+  startingTtTokenCount: z
+    .number()
+    .int()
+    .min(MIN_STARTING_TT_TOKEN_COUNT)
+    .max(MAX_STARTING_TT_TOKEN_COUNT),
 });
 
 export const updatePlayerProfilePayloadSchema = z.object({

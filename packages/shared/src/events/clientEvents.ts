@@ -42,6 +42,7 @@ export interface UpdatePlayerSettingsPayload {
   roomId: RoomId;
   playerId: PlayerId;
   startingTimelineCardCount: number;
+  startingTtTokenCount: number;
 }
 
 export interface UpdatePlayerProfilePayload {

@@ -63,7 +63,7 @@
 .floatingSecondaryButton {
   border: 0;
   border-radius: 999px;
-  padding: 12px 18px;
+  padding: 12px 12px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -93,15 +93,20 @@
   align-items: center;
   justify-content: center;
   min-width: 28px;
-  padding: 3px 7px;
+  padding: 3px 0px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--color-text-on-accent) 18%, transparent);
+  /* background: color-mix(in srgb, var(--color-text-on-accent) 18%, transparent); */
   color: color-mix(in srgb, var(--color-text-on-accent) 86%, transparent);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.04em;
   line-height: 1;
   white-space: nowrap;
+}
+
+.ttCostIcon {
+  width: 2em;
+  height: 2em;
 }
 
 @keyframes floatingDockIn {
@@ -153,12 +158,12 @@
     flex: 1;
     min-height: 54px;
     min-width: 0;
-    padding: 13px 14px;
+    padding: 13px 12px;
     font-size: 18px;
   }
 
   .ttCostBadge {
     margin-left: auto;
-    font-size: 9px;
+    font-size: 10px;
   }
 }

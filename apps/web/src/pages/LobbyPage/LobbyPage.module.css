@@ -316,8 +316,17 @@
 }
 
 .playerIdentity {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.playerNameRow {
   display: grid;
-  gap: 2px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
   min-width: 0;
 }
 
@@ -341,6 +350,14 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 6px;
+}
+
+.playerCounterBadges {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 5px;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .playerBadge {

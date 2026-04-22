@@ -6,9 +6,8 @@ export interface LobbyPlayerBadgeSpec {
 }
 
 export interface LobbyPlayerDisplayState {
-  badges: LobbyPlayerBadgeSpec[];
+  counterBadges: LobbyPlayerBadgeSpec[];
   primaryName: string;
-  secondaryName: string | null;
   startingCardsLabel: string;
 }
 
@@ -25,9 +24,8 @@ export function getLobbyPlayerDisplayState({
 
   return {
     primaryName: isCurrentPlayer ? "You" : player.displayName,
-    secondaryName: isCurrentPlayer ? null : player.displayName,
-    startingCardsLabel: `Starting cards for ${isCurrentPlayer ? "you" : player.displayName}`,
-    badges: [
+    startingCardsLabel: "Starting cards",
+    counterBadges: [
       {
         label: `${player.startingTimelineCardCount} cards`,
         variant: "neutral",

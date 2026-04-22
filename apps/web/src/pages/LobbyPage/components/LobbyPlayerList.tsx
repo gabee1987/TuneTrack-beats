@@ -13,6 +13,10 @@ interface LobbyPlayerListProps {
     player: PublicPlayerState,
     nextValue: number,
   ) => void;
+  onPlayerStartingTtTokenCountChange: (
+    player: PublicPlayerState,
+    nextValue: number,
+  ) => void;
 }
 
 export function LobbyPlayerList({
@@ -21,6 +25,7 @@ export function LobbyPlayerList({
   players,
   roomSettings,
   onPlayerStartingCardCountChange,
+  onPlayerStartingTtTokenCountChange,
 }: LobbyPlayerListProps) {
   return (
     <SurfaceCard className={styles.rosterSection}>
@@ -36,6 +41,9 @@ export function LobbyPlayerList({
             isHost={isHost}
             key={player.id}
             onPlayerStartingCardCountChange={onPlayerStartingCardCountChange}
+            onPlayerStartingTtTokenCountChange={
+              onPlayerStartingTtTokenCountChange
+            }
             player={player}
             roomSettings={roomSettings}
           />
