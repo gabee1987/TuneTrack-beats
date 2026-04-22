@@ -1,10 +1,7 @@
 import type { PublicRoomState } from "@tunetrack/shared";
+import { TtTokenAmount } from "../../../features/ui/TtToken";
 import styles from "./GamePageActionPanels.module.css";
-import {
-  ActionDock,
-  PrimaryActionButton,
-  SecondaryActionButton,
-} from "./ActionDock";
+import { ActionDock, PrimaryActionButton, SecondaryActionButton } from "./ActionDock";
 
 interface ChallengeActionPanelProps {
   canClaimChallenge: boolean;
@@ -55,12 +52,12 @@ export function ChallengeActionPanel({
       </div>
 
       <div className={styles.challengeMetaRow}>
-        <span className={styles.challengeChip}>
+        {/* <span className={styles.challengeChip}>
           Chosen slot: {roomState.challengeState.originalSelectedSlotIndex}
-        </span>
+        </span> */}
         {roomState.settings.ttModeEnabled ? (
           <span className={styles.challengeChip}>
-            Your TT: {currentPlayerTtCount}
+            Your tokens: <TtTokenAmount amount={currentPlayerTtCount} />
           </span>
         ) : null}
         <span className={styles.challengeChip}>{challengeStatusText}</span>
@@ -83,9 +80,7 @@ export function ChallengeActionPanel({
         ) : null
       ) : canConfirmBeatPlacement ? (
         <ActionDock>
-          <PrimaryActionButton onClick={handlePlaceChallenge}>
-            Confirm Beat
-          </PrimaryActionButton>
+          <PrimaryActionButton onClick={handlePlaceChallenge}>Confirm Beat</PrimaryActionButton>
         </ActionDock>
       ) : null}
     </section>

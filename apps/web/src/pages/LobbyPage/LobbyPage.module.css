@@ -111,6 +111,12 @@
   letter-spacing: -0.04em;
 }
 
+.sectionTitleContent {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .sectionTitleCompact {
   font-size: 18px;
   letter-spacing: -0.03em;
@@ -158,6 +164,38 @@
   gap: 16px;
 }
 
+.ttInfoStack {
+  display: grid;
+  gap: 12px;
+}
+
+.ttModeTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ttModeTitleIcon {
+  width: 1.2em;
+  height: 1.2em;
+}
+
+.ttInfoStack > span {
+  display: grid;
+  gap: 5px;
+}
+
+.ttInfoStack strong {
+  color: var(--color-text-primary);
+  font-size: 16px;
+}
+
+.ttInfoStack span {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.42;
+}
+
 .primaryActionBar {
   display: flex;
   justify-content: space-between;
@@ -173,7 +211,11 @@
   border: 1px solid color-mix(in srgb, var(--color-border-subtle) 92%, transparent);
   border-radius: 18px;
   background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-accent-primary) 10%, transparent), transparent 44%),
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, var(--color-accent-primary) 10%, transparent),
+      transparent 44%
+    ),
     color-mix(in srgb, var(--color-surface-elevated) 86%, transparent);
   color: var(--color-text-primary);
   color-scheme: dark;
@@ -185,57 +227,131 @@
   padding: 16px 22px;
 }
 
-.cancelRoomButton {
+.roomStartGameButton.roomStartGameButton,
+.cancelRoomButton.cancelRoomButton {
+  position: relative;
   width: 100%;
+  min-height: 58px;
   padding: 16px 22px;
+  border: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--room-action-bg-start) 78%, transparent),
+      color-mix(in srgb, var(--room-action-bg-end) 84%, transparent)
+    )
+    padding-box;
+  color: var(--room-action-text);
+  outline: 0;
+  box-shadow:
+    0 14px 32px color-mix(in srgb, var(--room-action-glow) 14%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 12%, transparent);
+}
+
+.roomStartGameButton.roomStartGameButton::before,
+.cancelRoomButton.cancelRoomButton::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background:
+    linear-gradient(135deg, transparent 14%, var(--room-action-border), transparent 86%),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--room-action-border) 36%, transparent),
+      color-mix(in srgb, white 14%, transparent),
+      color-mix(in srgb, var(--room-action-border) 44%, transparent)
+    );
+  pointer-events: none;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.roomStartGameButton.roomStartGameButton {
+  --room-action-bg-start: #10281d;
+  --room-action-bg-end: #07140f;
+  --room-action-border: #55f2a7;
+  --room-action-glow: #30dc8c;
+  --room-action-text: #caffdf;
+}
+
+.cancelRoomButton.cancelRoomButton {
+  --room-action-bg-start: #2b1018;
+  --room-action-bg-end: #12060b;
+  --room-action-border: #ff5f7d;
+  --room-action-glow: #ff3f67;
+  --room-action-text: #ffd4dc;
 }
 
 .playerList {
   list-style: none;
-  margin: 18px 0 0;
+  margin: 14px 0 0;
   padding: 0;
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .playerItem {
-  padding: 16px;
-  border-radius: 18px;
+  padding: 12px;
+  border-radius: 16px;
   background: var(--color-surface-soft);
 }
 
 .playerInfoRow {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
-  align-items: flex-start;
+  gap: 10px;
+  align-items: center;
 }
 
 .playerIdentity {
   display: grid;
-  gap: 4px;
+  gap: 2px;
+  min-width: 0;
 }
 
 .playerName {
-  font-size: 16px;
+  overflow: hidden;
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .playerSecondaryName {
   color: var(--color-text-muted);
-  font-size: 13px;
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .playerBadges {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 6px;
+}
+
+.playerBadge {
+  padding: 6px 10px;
+  font-size: 11px;
 }
 
 .playerSettingField {
   display: grid;
-  gap: 12px;
-  margin-top: 14px;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .roomActionsSection {
@@ -345,8 +461,16 @@
     border: 1px solid color-mix(in srgb, var(--color-border-subtle) 96%, transparent);
     border-radius: 28px;
     background:
-      radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-accent-primary) 10%, transparent), transparent 42%),
-      linear-gradient(180deg, color-mix(in srgb, var(--color-surface-strong) 88%, transparent), color-mix(in srgb, #060813 86%, transparent));
+      radial-gradient(
+        circle at 100% 0%,
+        color-mix(in srgb, var(--color-accent-primary) 10%, transparent),
+        transparent 42%
+      ),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-surface-strong) 88%, transparent),
+        color-mix(in srgb, #060813 86%, transparent)
+      );
     box-shadow:
       inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
       0 18px 54px color-mix(in srgb, black 24%, transparent);
@@ -370,9 +494,13 @@
 
   .playerItem {
     border: 1px solid color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
-    border-radius: 24px;
+    border-radius: 20px;
     background:
-      radial-gradient(circle at 100% 0%, color-mix(in srgb, #8b5cff 10%, transparent), transparent 42%),
+      radial-gradient(
+        circle at 100% 0%,
+        color-mix(in srgb, #8b5cff 10%, transparent),
+        transparent 42%
+      ),
       color-mix(in srgb, var(--color-surface-elevated) 70%, transparent);
     box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
   }
@@ -392,7 +520,6 @@
     background-repeat: no-repeat;
     appearance: none;
   }
-
 }
 
 @media (max-width: 720px) and (orientation: landscape) {
@@ -470,8 +597,16 @@
     border: 1px solid color-mix(in srgb, var(--color-border-subtle) 96%, transparent);
     border-radius: 28px;
     background:
-      radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-accent-primary) 10%, transparent), transparent 42%),
-      linear-gradient(180deg, color-mix(in srgb, var(--color-surface-strong) 88%, transparent), color-mix(in srgb, #060813 86%, transparent));
+      radial-gradient(
+        circle at 100% 0%,
+        color-mix(in srgb, var(--color-accent-primary) 10%, transparent),
+        transparent 42%
+      ),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-surface-strong) 88%, transparent),
+        color-mix(in srgb, #060813 86%, transparent)
+      );
     box-shadow:
       inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
       0 18px 54px color-mix(in srgb, black 24%, transparent);
@@ -495,9 +630,13 @@
 
   .playerItem {
     border: 1px solid color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
-    border-radius: 24px;
+    border-radius: 20px;
     background:
-      radial-gradient(circle at 100% 0%, color-mix(in srgb, #8b5cff 10%, transparent), transparent 42%),
+      radial-gradient(
+        circle at 100% 0%,
+        color-mix(in srgb, #8b5cff 10%, transparent),
+        transparent 42%
+      ),
       color-mix(in srgb, var(--color-surface-elevated) 70%, transparent);
     box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
   }
@@ -560,7 +699,11 @@
   border-radius: 20px;
   padding: 16px 18px;
   background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-accent-primary) 12%, transparent), transparent 44%),
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, var(--color-accent-primary) 12%, transparent),
+      transparent 44%
+    ),
     color-mix(in srgb, var(--color-surface-elevated) 80%, transparent);
   color: var(--color-text-primary);
   outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 98%, transparent);
@@ -600,9 +743,21 @@
   border: 1px solid color-mix(in srgb, var(--color-border-subtle) 96%, transparent);
   border-radius: 30px;
   background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, #ff8a3d 15%, transparent), transparent 42%),
-    radial-gradient(circle at 0% 100%, color-mix(in srgb, #8b5cff 14%, transparent), transparent 46%),
-    linear-gradient(180deg, color-mix(in srgb, var(--color-surface-strong) 96%, transparent), color-mix(in srgb, #060812 96%, transparent));
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, #ff8a3d 15%, transparent),
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at 0% 100%,
+      color-mix(in srgb, #8b5cff 14%, transparent),
+      transparent 46%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-surface-strong) 96%, transparent),
+      color-mix(in srgb, #060812 96%, transparent)
+    );
   outline: 0;
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, white 12%, transparent),
@@ -647,8 +802,11 @@
   padding: 15px 16px;
   border: 1px solid color-mix(in srgb, var(--color-border-subtle) 90%, transparent);
   border-radius: 20px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-surface-elevated) 82%, transparent), color-mix(in srgb, var(--color-surface-soft) 82%, transparent));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-surface-elevated) 82%, transparent),
+    color-mix(in srgb, var(--color-surface-soft) 82%, transparent)
+  );
   color: var(--color-text-primary);
   display: flex;
   justify-content: space-between;
@@ -660,7 +818,11 @@
 .mobileSelectOptionActive {
   border-color: color-mix(in srgb, #ffb26b 52%, var(--color-border-subtle));
   background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, #ff8a3d 22%, transparent), transparent 44%),
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, #ff8a3d 22%, transparent),
+      transparent 44%
+    ),
     color-mix(in srgb, var(--color-badge-strong-background) 86%, transparent);
 }
 

@@ -6,6 +6,7 @@ import {
 } from "@tunetrack/shared";
 import { Badge } from "../../../features/ui/Badge";
 import { RangeField } from "../../../features/ui/RangeField";
+import { TtTokenAmount } from "../../../features/ui/TtToken";
 import { getLobbyPlayerDisplayState } from "../lobbyPlayerSelectors";
 import styles from "../LobbyPage.module.css";
 
@@ -46,17 +47,30 @@ export function LobbyPlayerListItem({
         </div>
 
         <div className={styles.playerBadges}>
-          {displayState.badges.map((badge) => (
-            <Badge key={badge.label} variant={badge.variant}>
-              {badge.label}
-            </Badge>
-          ))}
+          {displayState.badges.map((badge) => {
+            const tokenMatch = /^(\d+) TT$/.exec(badge.label);
+
+            return (
+              <Badge
+                className={styles.playerBadge}
+                key={badge.label}
+                variant={badge.variant}
+              >
+                {tokenMatch ? (
+                  <TtTokenAmount amount={Number(tokenMatch[1])} />
+                ) : (
+                  badge.label
+                )}
+              </Badge>
+            );
+          })}
         </div>
       </div>
 
       {isHost ? (
         <div className={styles.playerSettingField}>
           <RangeField
+            density="compact"
             label={displayState.startingCardsLabel}
             max={MAX_STARTING_TIMELINE_CARD_COUNT}
             min={MIN_STARTING_TIMELINE_CARD_COUNT}

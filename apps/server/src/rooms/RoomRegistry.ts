@@ -203,9 +203,19 @@ export class RoomRegistry {
       throw new Error("ONLY_HOST_CAN_UPDATE_ROOM_SETTINGS");
     }
 
+    const didDefaultStartingCardCountChange =
+      roomRecord.roomState.settings.defaultStartingTimelineCardCount !==
+      roomSettingsPayload.defaultStartingTimelineCardCount;
     const nextRoomState: PublicRoomState = {
       ...roomRecord.roomState,
       targetTimelineCardCount: roomSettingsPayload.targetTimelineCardCount,
+      players: didDefaultStartingCardCountChange
+        ? roomRecord.roomState.players.map((player) => ({
+            ...player,
+            startingTimelineCardCount:
+              roomSettingsPayload.defaultStartingTimelineCardCount,
+          }))
+        : roomRecord.roomState.players,
       settings: {
         targetTimelineCardCount: roomSettingsPayload.targetTimelineCardCount,
         defaultStartingTimelineCardCount:

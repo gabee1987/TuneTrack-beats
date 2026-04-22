@@ -7,6 +7,7 @@
   justify-content: stretch;
   background: var(--color-overlay);
   backdrop-filter: blur(10px);
+  border-radius: 28px;
 }
 
 .sheet {

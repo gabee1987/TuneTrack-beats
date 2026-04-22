@@ -13,6 +13,7 @@ If a candidate track has the same release year as one or more adjacent timeline
 cards, every slot inside that same-year block counts as a correct placement.
 
 Example:
+
 - Timeline years: `1988, 1990, 1990, 1990, 1994`
 - Candidate year: `1990`
 - Valid slot indexes: `1, 2, 3, 4`
@@ -23,6 +24,7 @@ The number of cards needed to win is configurable per room instead of being
 hardcoded to 10.
 
 Current limits:
+
 - Minimum: `3`
 - Default: `10`
 - Maximum: `30`
@@ -51,6 +53,7 @@ newly joined players.
 ### Reveal confirmation rule
 
 Reveal confirmation is configurable by room:
+
 - `host_only`
 - `host_or_active_player`
 
@@ -77,6 +80,7 @@ Local JSON test decks live in
 
 The server loads every `.json` file from that folder and expects each card to
 contain:
+
 - `id`
 - `releaseYear`
 - `title`
@@ -94,6 +98,7 @@ that ID.
 The browser now stores a stable per-tab player session in `sessionStorage`.
 
 Current behavior:
+
 - refreshing the same tab keeps the same player identity
 - lobby and in-progress games can be rejoined during a short reconnect grace
   period
@@ -101,6 +106,7 @@ Current behavior:
   testing still works
 
 Current server rule:
+
 - disconnected players stay reserved for a short grace period before they are
   removed from the room
 - if they reconnect in time with the same session, they regain the same player
@@ -109,11 +115,12 @@ Current server rule:
 ### Beat challenge reward rule
 
 If a `Beat!` challenge succeeds:
-- the challenger gains `+1 TT`
+
 - the challenged card is stolen into the challenger's own timeline
 - the challenger does not need to guess a second time on their own timeline
 
 If a `Beat!` challenge fails:
+
 - the challenger loses `1 TT`
 - TT can never go below `0`
 
@@ -122,6 +129,7 @@ If a `Beat!` challenge fails:
 The challenge timer only gates the initial `Beat!` claim.
 
 Current behavior:
+
 - if nobody claims before the deadline, the server auto-resolves the original
   placement
 - if a player claims `Beat!` in time, the timer stops immediately
@@ -133,12 +141,16 @@ Current behavior:
 For MVP testing, the host can manually award TT during a game.
 
 Reason:
+
 - this supports party-style manual judging for song/artist callouts before
   automated token earning exists
+- TT's can be eraned by guessing the current cards artist and song name correctly
+- TT is awarded by the host manually to the players
 
 ### TT spending actions in MVP
 
 When TT mode is enabled, players can spend TT during their own turn:
+
 - spend `1 TT` to skip the current track and draw the next one
 - a player can only skip once per turn
 - spend `3 TT` to claim the current song immediately, place it into the
@@ -147,6 +159,7 @@ When TT mode is enabled, players can spend TT during their own turn:
 - a TT-buy turn does not open a Beat window
 
 Current enforcement:
+
 - both actions are server-authoritative
 - both actions require the acting player to be the active player
 - both actions are blocked when TT mode is disabled
@@ -159,6 +172,7 @@ Current implementation lets the player type any valid room code and creates the
 room if it does not exist.
 
 Still to decide:
+
 - Should host-created rooms generate a short random code automatically?
 - Should room codes be uppercase-only for easier party sharing?
 
@@ -167,16 +181,19 @@ Still to decide:
 Current implementation allows duplicate display names.
 
 Still to decide:
+
 - Should duplicate names be blocked within one room?
 - Or should we keep allowing them and rely on internal player IDs only?
 
 ### Challenge timing authority
 
 Still to decide:
+
 - What is the exact server-authoritative timing model for the challenge window?
 - Should late client challenge clicks be rejected based on server timestamps only?
 
 Recommendation:
+
 - Yes, resolve challenge timing with server-side timestamps only.
 
 ---

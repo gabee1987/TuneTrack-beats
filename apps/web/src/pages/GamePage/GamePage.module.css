@@ -210,7 +210,16 @@
 }
 
 .menuActionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   background: var(--color-accent-success);
+}
+
+.menuTokenIcon {
+  width: 1.1em;
+  height: 1.1em;
 }
 
 .menuDangerButton {

@@ -4,8 +4,9 @@ import styles from "../LobbyPage.module.css";
 interface LobbySectionHeaderProps {
   badge?: ReactNode;
   description: string;
-  title: string;
+  title: ReactNode;
   titleAs?: "h2" | "h3" | undefined;
+  titleAccessory?: ReactNode;
   variant?: "default" | "compact" | undefined;
 }
 
@@ -14,6 +15,7 @@ export function LobbySectionHeader({
   description,
   title,
   titleAs = "h2",
+  titleAccessory,
   variant = "default",
 }: LobbySectionHeaderProps) {
   const Title = titleAs;
@@ -31,7 +33,10 @@ export function LobbySectionHeader({
             isCompact ? ` ${styles.sectionTitleCompact}` : ""
           }`}
         >
-          {title}
+          <span className={styles.sectionTitleContent}>
+            <span>{title}</span>
+            {titleAccessory}
+          </span>
         </Title>
         <p
           className={`${styles.sectionDescription}${

@@ -1,3 +1,4 @@
+import { TtTokenAmount } from "../../../features/ui/TtToken";
 import styles from "./GamePageActionPanels.module.css";
 
 interface ActionDockProps {
@@ -26,7 +27,11 @@ export function PrimaryActionButton({
       type="button"
     >
       <span className={styles.actionButtonLabel}>{children}</span>
-      {ttCost ? <span className={styles.ttCostBadge}>{ttCost} TT</span> : null}
+      {ttCost ? (
+        <span className={styles.ttCostBadge}>
+          <TtTokenAmount amount={ttCost} />
+        </span>
+      ) : null}
     </button>
   );
 }
@@ -43,7 +48,11 @@ export function SecondaryActionButton({
       type="button"
     >
       <span className={styles.actionButtonLabel}>{children}</span>
-      {ttCost ? <span className={styles.ttCostBadge}>{ttCost} TT</span> : null}
+      {ttCost ? (
+        <span className={styles.ttCostBadge}>
+          <TtTokenAmount amount={ttCost} />
+        </span>
+      ) : null}
     </button>
   );
 }

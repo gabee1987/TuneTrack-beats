@@ -1,5 +1,9 @@
 import type { PublicRoomState } from "@tunetrack/shared";
 import type { AppShellMenuTab } from "../../features/app-shell/AppShellMenu";
+import {
+  TtTokenAmount,
+  TtTokenIcon,
+} from "../../features/ui/TtToken";
 import styles from "./GamePage.module.css";
 
 interface CreateGameMenuTabsOptions {
@@ -31,9 +35,12 @@ export function createGameMenuTabs({
                   </strong>
                   <p className={styles.menuPlayerMeta}>
                     {roomState.timelines[player.id]?.length ?? 0} cards
-                    {roomState.settings.ttModeEnabled
-                      ? ` · ${player.ttTokenCount} TT`
-                      : ""}
+                    {roomState.settings.ttModeEnabled ? (
+                      <>
+                        {" · "}
+                        <TtTokenAmount amount={player.ttTokenCount} />
+                      </>
+                    ) : null}
                     {player.isHost ? " · Host" : ""}
                     {player.id === roomState.turn?.activePlayerId ? " · Turn" : ""}
                   </p>
@@ -45,7 +52,7 @@ export function createGameMenuTabs({
                     onClick={() => onAwardTt(player.id)}
                     type="button"
                   >
-                    +TT
+                    +<TtTokenIcon className={styles.menuTokenIcon} />
                   </button>
                 ) : null}
               </div>

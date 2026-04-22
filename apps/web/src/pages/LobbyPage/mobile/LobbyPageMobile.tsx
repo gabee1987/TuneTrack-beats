@@ -244,6 +244,8 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
           <LobbyRoomActions
             buttonClassName={styles.dangerAction}
             onCloseRoom={controller.handleCloseRoom}
+            onIntentToStartGame={controller.preloadGame}
+            onStartGame={controller.handleStartGame}
           />
         ) : null}
       </section>
@@ -261,14 +263,17 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
             aria-modal="true"
             aria-label={infoContent.title}
           >
-            <button
-              className={styles.infoCloseButton}
-              onClick={() => setInfoContent(null)}
-              type="button"
-            >
-              Close
-            </button>
-            <p className={styles.infoEyebrow}>Info</p>
+            <div className={styles.infoHeaderRow}>
+              <p className={styles.infoEyebrow}>Info</p>
+              <button
+                aria-label="Close info"
+                className={styles.infoCloseButton}
+                onClick={() => setInfoContent(null)}
+                type="button"
+              >
+                ×
+              </button>
+            </div>
             <h2 className={styles.infoTitle}>{infoContent.title}</h2>
             <p className={styles.infoBody}>{infoContent.body}</p>
           </div>

@@ -2,6 +2,7 @@ import styles from "./SettingField.module.css";
 import { SettingField } from "./SettingField";
 
 interface RangeFieldProps {
+  density?: "compact" | "default" | undefined;
   info?: string;
   label: string;
   max: number;
@@ -11,6 +12,7 @@ interface RangeFieldProps {
 }
 
 export function RangeField({
+  density = "default",
   label,
   info,
   max,
@@ -18,10 +20,17 @@ export function RangeField({
   onChange,
   value,
 }: RangeFieldProps) {
+  const isCompact = density === "compact";
+
   return (
-    <SettingField info={info} label={label} value={value}>
+    <SettingField
+      className={isCompact ? styles.compactField : undefined}
+      info={info}
+      label={label}
+      value={value}
+    >
       <input
-        className={styles.rangeInput}
+        className={`${styles.rangeInput}${isCompact ? ` ${styles.compactRange}` : ""}`}
         max={max}
         min={min}
         onChange={(event) => onChange(Number(event.target.value))}

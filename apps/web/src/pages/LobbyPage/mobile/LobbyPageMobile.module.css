@@ -376,40 +376,29 @@
 
 .dangerAction {
   --button-border-angle: 0turn;
-  position: relative;
   min-height: 58px;
-  border: 0;
   border-radius: 999px;
   background:
-    linear-gradient(180deg, color-mix(in srgb, #2b101b 74%, transparent), color-mix(in srgb, #090712 74%, transparent))
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #331019 82%, transparent),
+      color-mix(in srgb, #12060c 88%, transparent)
+    )
     padding-box;
-  color: white;
-  overflow: hidden;
-  isolation: isolate;
+  color: #ffd6df;
+  box-shadow:
+    0 14px 32px color-mix(in srgb, #ff3f67 16%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
 }
 
 .dangerAction::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: inherit;
-  padding: 1px;
   background: conic-gradient(
     from var(--button-border-angle),
-    color-mix(in srgb, #ff4d9d 88%, transparent),
-    color-mix(in srgb, #ff8a3d 86%, transparent),
-    color-mix(in srgb, #8b5cff 72%, transparent),
-    color-mix(in srgb, #ff4d9d 88%, transparent)
+    color-mix(in srgb, #ff4d6d 88%, transparent),
+    color-mix(in srgb, #ff8a3d 78%, transparent),
+    color-mix(in srgb, #ff6b8d 86%, transparent),
+    color-mix(in srgb, #ff4d6d 88%, transparent)
   );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
   animation: buttonBorderSpin 6.5s linear infinite;
 }
 
@@ -421,6 +410,8 @@
   place-items: center;
   padding: 20px;
   background: color-mix(in srgb, #02030a 62%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .infoCard {
@@ -434,15 +425,27 @@
   box-shadow: 0 28px 90px color-mix(in srgb, black 44%, transparent);
 }
 
+.infoHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
 .infoCloseButton {
-  float: right;
-  min-height: 36px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
   border: 1px solid color-mix(in srgb, white 14%, transparent);
   border-radius: 999px;
-  padding: 8px 12px;
+  padding: 0;
   background: color-mix(in srgb, white 8%, transparent);
   color: white;
+  font-size: 22px;
   font-weight: 800;
+  line-height: 1;
 }
 
 .infoEyebrow {

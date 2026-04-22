@@ -1,0 +1,20 @@
+.tokenIcon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  object-fit: contain;
+  vertical-align: -0.14em;
+}
+
+.tokenAmount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.34em;
+  white-space: nowrap;
+}
+
+.tokenAmountIcon {
+  width: 1.08em;
+  height: 1.08em;
+}

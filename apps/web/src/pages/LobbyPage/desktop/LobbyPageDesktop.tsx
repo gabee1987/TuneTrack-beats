@@ -68,7 +68,11 @@ export function LobbyPageDesktop({ controller }: LobbyPageAssemblyProps) {
           />
 
           {controller.isHost ? (
-            <LobbyRoomActions onCloseRoom={controller.handleCloseRoom} />
+            <LobbyRoomActions
+              onCloseRoom={controller.handleCloseRoom}
+              onIntentToStartGame={controller.preloadGame}
+              onStartGame={controller.handleStartGame}
+            />
           ) : null}
         </aside>
       </div>

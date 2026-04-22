@@ -2,6 +2,7 @@ import { memo } from "react";
 import {
   AppShellMenu,
 } from "../../../features/app-shell/AppShellMenu";
+import { TtTokenAmount } from "../../../features/ui/TtToken";
 import type { GamePageHeaderModel } from "../GamePage.types";
 import styles from "../GamePage.module.css";
 import { formatPhaseLabel } from "../gamePage.utils";
@@ -66,9 +67,12 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
                   </strong>
                   <span className={styles.headerLeaderMeta}>
                     {roomState.timelines[player.id]?.length ?? 0}
-                    {roomState.settings.ttModeEnabled
-                      ? ` · ${player.ttTokenCount} TT`
-                      : ""}
+                    {roomState.settings.ttModeEnabled ? (
+                      <>
+                        {" · "}
+                        <TtTokenAmount amount={player.ttTokenCount} />
+                      </>
+                    ) : null}
                   </span>
                 </article>
               ))}
