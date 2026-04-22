@@ -1,54 +1,97 @@
 .screen {
   min-height: var(--app-height);
-  display: grid;
-  place-items: center;
   padding: calc(var(--safe-area-top) + 20px) calc(var(--safe-area-right) + 20px)
     calc(var(--safe-area-bottom) + 20px) calc(var(--safe-area-left) + 20px);
 }
 
-.panel {
+.skeleton {
+  width: min(100%, 720px);
+  min-height: calc(var(--app-height) - var(--safe-area-top) - var(--safe-area-bottom) - 40px);
+  margin: 0 auto;
   display: grid;
-  justify-items: center;
-  gap: 14px;
-  min-width: min(100%, 220px);
-  padding: 28px 24px;
-  border-radius: 24px;
-  background: color-mix(in srgb, var(--color-surface-strong) 88%, transparent);
-  outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 88%, transparent);
-  box-shadow: var(--shadow-surface);
-  backdrop-filter: blur(14px);
+  align-content: start;
+  gap: 18px;
 }
 
-.pulseDot {
-  width: 16px;
-  height: 16px;
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logoBlock,
+.iconBlock,
+.heroBlock,
+.lineWide,
+.lineMedium,
+.actionBlock {
+  border-radius: 18px;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-surface-strong) 68%, transparent),
+      color-mix(in srgb, var(--color-surface-elevated) 92%, transparent),
+      color-mix(in srgb, var(--color-surface-strong) 68%, transparent)
+    );
+  background-size: 220% 100%;
+  animation: skeletonPulse 1.3s ease-in-out infinite;
+  outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 72%, transparent);
+}
+
+.logoBlock {
+  width: 148px;
+  height: 34px;
+}
+
+.iconBlock {
+  width: 42px;
+  height: 42px;
   border-radius: 999px;
-  background: var(--color-accent-primary);
-  box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent-primary) 46%, transparent);
-  animation: pulse 1.2s ease-out infinite;
 }
 
-.label {
-  margin: 0;
-  color: var(--color-text-secondary);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+.heroBlock {
+  min-height: 260px;
+  border-radius: 28px;
 }
 
-@keyframes pulse {
-  0% {
-    transform: scale(0.92);
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent-primary) 48%, transparent);
+.contentStack {
+  display: grid;
+  gap: 12px;
+}
+
+.lineWide {
+  width: 82%;
+  height: 18px;
+}
+
+.lineMedium {
+  width: 58%;
+  height: 18px;
+}
+
+.actionBlock {
+  width: 100%;
+  height: 58px;
+  margin-top: 10px;
+}
+
+@keyframes skeletonPulse {
+  from {
+    background-position: 120% 0;
   }
 
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 14px color-mix(in srgb, var(--color-accent-primary) 0%, transparent);
+  to {
+    background-position: -120% 0;
   }
+}
 
-  100% {
-    transform: scale(0.96);
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent-primary) 0%, transparent);
+@media (prefers-reduced-motion: reduce) {
+  .logoBlock,
+  .iconBlock,
+  .heroBlock,
+  .lineWide,
+  .lineMedium,
+  .actionBlock {
+    animation: none;
   }
 }

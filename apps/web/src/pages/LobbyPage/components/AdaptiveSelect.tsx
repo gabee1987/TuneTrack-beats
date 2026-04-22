@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { MotionPresence } from "../../../features/motion";
 import { ActionButton } from "../../../features/ui/ActionButton";
 import { SelectInput } from "../../../features/ui/SelectInput";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
@@ -59,15 +60,17 @@ export function AdaptiveSelect({
         <span className={styles.mobileSelectChevron}>Select</span>
       </ActionButton>
 
-      {isOpen ? (
-        <AdaptiveSelectSheet
-          label={label}
-          onChange={onChange}
-          onClose={() => setIsOpen(false)}
-          options={options}
-          value={value}
-        />
-      ) : null}
+      <MotionPresence>
+        {isOpen ? (
+          <AdaptiveSelectSheet
+            label={label}
+            onChange={onChange}
+            onClose={() => setIsOpen(false)}
+            options={options}
+            value={value}
+          />
+        ) : null}
+      </MotionPresence>
     </>
   );
 }

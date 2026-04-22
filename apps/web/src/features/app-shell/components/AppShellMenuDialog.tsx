@@ -1,6 +1,11 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { useMemo } from "react";
 import { createPortal } from "react-dom";
+import {
+  MotionPresence,
+  createFadeMotion,
+  createStandardTransition,
+} from "../../motion";
 import type { AppShellMenuProps } from "../AppShellMenu.types";
 import { useAppShellMenuPreferencesState } from "../hooks/useAppShellMenuPreferencesState";
 import { AppShellMenuSheet } from "./AppShellMenuSheet";
@@ -18,6 +23,7 @@ export function AppShellMenuDialog({
   tabs,
   title,
 }: AppShellMenuDialogProps) {
+  const reduceMotion = useReducedMotion() ?? false;
   const preferencesState = useAppShellMenuPreferencesState();
   const availableTabs = useMemo(() => tabs, [tabs]);
   const activeTabId = availableTabs.some(
@@ -36,14 +42,16 @@ export function AppShellMenuDialog({
   }
 
   return createPortal(
-    <AnimatePresence>
+    <MotionPresence>
       {isOpen ? (
         <motion.div
-          animate={{ opacity: 1 }}
+          animate="animate"
           className={styles.menuOverlay}
-          exit={{ opacity: 0 }}
-          initial={{ opacity: 0 }}
+          exit="exit"
+          initial="initial"
           onClick={onClose}
+          transition={createStandardTransition(reduceMotion)}
+          variants={createFadeMotion(reduceMotion)}
         >
           <AppShellMenuSheet
             activeTab={activeTab}
@@ -57,7 +65,7 @@ export function AppShellMenuDialog({
           />
         </motion.div>
       ) : null}
-    </AnimatePresence>,
+    </MotionPresence>,
     menuLayer,
   );
 }

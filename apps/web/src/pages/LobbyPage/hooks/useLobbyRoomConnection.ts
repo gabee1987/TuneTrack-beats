@@ -35,6 +35,7 @@ export function useLobbyRoomConnection({
   const [connectionStatus, setConnectionStatus] = useState("Connecting");
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
   const currentPlayerIdRef = useRef<string | null>(null);
+  const hasNavigatedToGameRef = useRef(false);
   const [roomState, setRoomState] = useState<PublicRoomState | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -66,7 +67,8 @@ export function useLobbyRoomConnection({
     function handleStateUpdate(payload: StateUpdatePayload) {
       setRoomState(payload.roomState);
 
-      if (payload.roomState.status !== "lobby") {
+      if (payload.roomState.status !== "lobby" && !hasNavigatedToGameRef.current) {
+        hasNavigatedToGameRef.current = true;
         navigate(`/game/${encodeURIComponent(payload.roomState.roomId)}`, {
           state: {
             currentPlayerId: currentPlayerIdRef.current,

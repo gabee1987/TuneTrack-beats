@@ -1,4 +1,10 @@
 import type { MouseEventHandler, ReactNode } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import {
+  createBottomSheetMotion,
+  createFadeMotion,
+  createStandardTransition,
+} from "../motion";
 import styles from "./BottomSheet.module.css";
 
 interface BottomSheetProps {
@@ -14,23 +20,34 @@ export function BottomSheet({
   overlayClassName,
   sheetClassName,
 }: BottomSheetProps) {
+  const reduceMotion = useReducedMotion() ?? false;
   const stopPropagation: MouseEventHandler<HTMLDivElement> = (event) => {
     event.stopPropagation();
   };
 
   return (
-    <div
+    <motion.div
+      animate="animate"
       className={`${styles.overlay}${overlayClassName ? ` ${overlayClassName}` : ""}`}
+      exit="exit"
+      initial="initial"
       onClick={onClose}
       role="presentation"
+      transition={createStandardTransition(reduceMotion)}
+      variants={createFadeMotion(reduceMotion)}
     >
-      <div
+      <motion.div
+        animate="animate"
         className={`${styles.sheet}${sheetClassName ? ` ${sheetClassName}` : ""}`}
+        exit="exit"
+        initial="initial"
         onClick={stopPropagation}
         role="dialog"
+        transition={createStandardTransition(reduceMotion)}
+        variants={createBottomSheetMotion(reduceMotion)}
       >
         {children}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

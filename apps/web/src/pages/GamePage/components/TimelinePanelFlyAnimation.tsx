@@ -1,9 +1,10 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { createPortal } from "react-dom";
 import type {
   HiddenCardMode,
   ThemeId,
 } from "../../../features/preferences/uiPreferences";
+import { motionDurations, motionEasings } from "../../../features/motion";
 import type { GamePageCard } from "../GamePage.types";
 import { PreviewCard } from "./PreviewCard";
 import styles from "./TimelinePanel.module.css";
@@ -27,6 +28,8 @@ export function TimelinePanelFlyAnimation({
   showDevGenreInfo,
   theme,
 }: TimelinePanelFlyAnimationProps) {
+  const reduceMotion = useReducedMotion() ?? false;
+
   if (typeof document === "undefined" || !flyAnimationState) {
     return null;
   }
@@ -61,8 +64,8 @@ export function TimelinePanelFlyAnimation({
         width: flyAnimationState.sourceRect.width,
       }}
       transition={{
-        duration: 0.82,
-        ease: [0.18, 0.84, 0.24, 1],
+        duration: reduceMotion ? motionDurations.instant : motionDurations.expressive,
+        ease: motionEasings.emphasized,
       }}
     >
       <PreviewCard

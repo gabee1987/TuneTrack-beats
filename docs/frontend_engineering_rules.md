@@ -306,6 +306,46 @@ If a future animation framework is adopted, it must be chosen based on:
 
 Animation framework choice must never force business logic into animation code.
 
+### 10.4 Framer Motion Usage Rules
+
+Framer Motion is the preferred tool for meaningful UI state transitions, not a replacement for all CSS motion.
+
+Use Framer Motion for:
+
+- route and screen transitions
+- mount/unmount animations that need exit behavior
+- sheets, dialogs, overlays, and temporary presence-based UI
+- gameplay phase feedback such as reveal, challenge, placement, and celebration moments
+- coordinated or interruptible animation sequences
+
+Keep CSS for:
+
+- static layout and styling
+- simple hover, pressed, focus, and disabled transitions
+- small opacity or transform transitions inside stable components
+- cheap component-local feedback that does not need React state orchestration
+
+Keep specialist libraries in charge of specialist behavior:
+
+- drag and sortable mechanics stay owned by `@dnd-kit`
+- Framer Motion may decorate drag outcomes, but should not duplicate drag state ownership
+
+Performance rules:
+
+- animate `transform` and `opacity` by default
+- avoid animating layout-affecting properties such as `width`, `height`, `top`, `left`, `margin`, and `padding`
+- avoid heavy paint properties such as large `filter`, `backdrop-filter`, blur, and shadow animation on mobile
+- avoid always-on decorative animations during gameplay unless they are proven cheap on real mobile devices
+- respect reduced-motion preferences through shared motion helpers, not one-off checks scattered across pages
+
+Architecture rules:
+
+- Framer imports should usually live in `features/motion` or in dedicated animation components
+- page controllers must not import Framer Motion
+- animation variants and timing tokens that are reused across the app belong in the shared motion layer
+- screen/page animation should be applied at the route or assembly boundary, not inside business logic
+- server state remains the source of gameplay truth; animation expresses confirmed state and must tolerate interruption or correction
+
 ## 11. CSS And Styling Rules
 
 ### 11.1 General Styling

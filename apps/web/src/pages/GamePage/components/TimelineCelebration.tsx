@@ -1,5 +1,6 @@
 import type { TimelineCelebrationTone } from "../GamePage.types";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
+import { motionDurations } from "../../../features/motion";
 import styles from "./TimelinePanel.module.css";
 
 interface TimelineCelebrationProps {
@@ -11,6 +12,8 @@ export function TimelineCelebration({
   message,
   tone = "success",
 }: TimelineCelebrationProps) {
+  const reduceMotion = useReducedMotion() ?? false;
+
   return (
     <div className={styles.timelineCelebrationLayer}>
       <motion.div
@@ -38,7 +41,7 @@ export function TimelineCelebration({
           y: -28,
         }}
         transition={{
-          duration: 1.6,
+          duration: reduceMotion ? motionDurations.instant : 1.6,
           ease: "easeInOut",
           times: [0, 0.24, 0.72, 1],
         }}
