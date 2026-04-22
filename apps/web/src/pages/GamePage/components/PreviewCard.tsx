@@ -17,8 +17,10 @@ export interface PreviewCardProps {
   isGhosted: boolean;
   isOverlay?: boolean;
   isOriginalSlot: boolean;
+  isReplacing?: boolean;
   listeners?: Record<string, unknown> | undefined;
   previewCard: GamePageCard;
+  replacementAnimationKey?: number;
   selectable: boolean;
   showDevAlbumInfo: boolean;
   showDevCardInfo: boolean;
@@ -40,8 +42,10 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
       isGhosted,
       isOverlay = false,
       isOriginalSlot,
+      isReplacing = false,
       listeners,
       previewCard,
+      replacementAnimationKey = 0,
       selectable,
       showDevAlbumInfo,
       showDevCardInfo,
@@ -68,6 +72,7 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
     return (
       <article
         ref={ref}
+        key={isReplacing ? `${previewCard.id}-${replacementAnimationKey}` : undefined}
         className={`${styles.previewCard} ${
           hiddenCardMode === "gradient"
             ? styles.previewCardGradient
@@ -76,7 +81,9 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
           isGhosted ? styles.previewCardGhost : ""
         } ${isOverlay ? styles.previewCardOverlay : ""} ${
           showRevealedContent ? styles.previewCardRevealed : ""
-        } ${isCorrectionPreview ? styles.previewCardCorrectionSurface : ""}`}
+        } ${isCorrectionPreview ? styles.previewCardCorrectionSurface : ""} ${
+          isReplacing ? styles.previewCardReplacing : ""
+        }`}
         style={
           {
             ["--card-gradient" as string]: getCardGradient(

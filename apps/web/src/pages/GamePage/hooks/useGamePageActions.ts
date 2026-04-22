@@ -13,6 +13,7 @@ interface UseGamePageActionsOptions {
   isCurrentPlayerTurn: boolean;
   roomState: PublicRoomState | null;
   selectedSlotIndex: number;
+  onSkipTrackWithTtIntent?: (cardId: string | null) => void;
   setLocallyPlacedCard: (card: PublicRoomState["currentTrackCard"] | null) => void;
 }
 
@@ -25,6 +26,7 @@ export function useGamePageActions({
   isCurrentPlayerTurn,
   roomState,
   selectedSlotIndex,
+  onSkipTrackWithTtIntent,
   setLocallyPlacedCard,
 }: UseGamePageActionsOptions) {
   async function emitRoomEvent<TPayload>(
@@ -124,6 +126,7 @@ export function useGamePageActions({
       return;
     }
 
+    onSkipTrackWithTtIntent?.(roomState.currentTrackCard?.id ?? null);
     void emitRoomEvent(ClientToServerEvent.SkipTrackWithTt, {
       roomId: roomState.roomId,
     });

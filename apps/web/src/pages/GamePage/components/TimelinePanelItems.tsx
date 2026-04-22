@@ -51,6 +51,8 @@ function TimelinePanelItemsComponent({
           isPreview={item.isPreview}
           isPreviewDisabled={item.isPreviewDisabled}
           key={item.id}
+          isPreviewCardReplacing={model.isPreviewCardReplacing}
+          previewCardSwapKey={model.previewCardSwapKey}
           selectable={model.selectable}
           showCorrectPlacementPreview={model.showCorrectPlacementPreview}
           showCorrectionPreview={model.showCorrectionPreview}

@@ -101,11 +101,31 @@
 }
 
 .statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
   padding: 8px 12px;
   border-radius: var(--radius-pill);
   background: var(--color-chip);
   font-size: 13px;
   font-weight: 700;
+}
+
+.statusBadgeTextGroup {
+  min-width: 0;
+}
+
+.statusBadgeTokenCount {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-surface) 46%, transparent);
+  color: var(--color-text-primary);
+  font-size: 12px;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
 }
 
 .statusBadgeTimeline {
@@ -341,6 +361,11 @@
     min-height: 48px;
     min-width: 0;
     padding: 10px 14px;
+    overflow: hidden;
+  }
+
+  .statusBadgeTextGroup {
+    min-width: 0;
     overflow: hidden;
   }
 

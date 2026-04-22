@@ -29,6 +29,7 @@ export function buildGamePageAssemblyModel(
       handleSkipTrackWithTt: controller.handleSkipTrackWithTt,
       roomState: controller.roomState,
       showHelperLabels: controller.showHelperLabels,
+      skipTrackSpendAnimationKey: controller.skipTrackSpendAnimationKey,
     },
     errorMessage: controller.errorMessage,
     header: {
@@ -74,6 +75,8 @@ export function buildGamePageAssemblyModel(
         celebrationTone: controller.challengeSuccessTone,
         hiddenCardMode: controller.hiddenCardMode,
         hint: controller.visibleTimelineHint,
+        isPreviewCardReplacing: controller.isPreviewCardReplacing,
+        previewCardSwapKey: controller.previewCardSwapKey,
         showCorrectPlacementPreview: controller.showCorrectPlacementPreview,
         showCorrectionPreview: controller.showCorrectionPreview,
         showDevAlbumInfo: controller.isHost && controller.showDevAlbumInfo,

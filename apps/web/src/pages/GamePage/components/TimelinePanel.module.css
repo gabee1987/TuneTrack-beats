@@ -306,9 +306,30 @@
     var(--card-gradient);
 }
 
+.previewCardReplacing {
+  animation: previewCardSwapIn 640ms cubic-bezier(0.18, 0.9, 0.2, 1) both;
+  will-change: transform, opacity, filter;
+}
+
+.previewCardReplacing::after {
+  content: "";
+  position: absolute;
+  inset: -24%;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 184, 107, 0.34), transparent 34%),
+    radial-gradient(circle at 82% 22%, rgba(255, 77, 157, 0.3), transparent 38%),
+    linear-gradient(115deg, transparent 28%, rgba(255, 255, 255, 0.24) 48%, transparent 68%);
+  mix-blend-mode: screen;
+  animation: previewCardSwapSheen 640ms cubic-bezier(0.18, 0.9, 0.2, 1) both;
+  will-change: transform, opacity;
+}
+
 .previewCardFace {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   min-height: 100%;
   flex-direction: column;
@@ -571,9 +592,47 @@
   }
 }
 
+@keyframes previewCardSwapIn {
+  0% {
+    opacity: 0.18;
+    filter: saturate(1.4) brightness(1.28) blur(8px);
+    transform: translate3d(0, 10px, 0) scale(0.92) rotateX(8deg);
+  }
+
+  58% {
+    opacity: 1;
+    filter: saturate(1.16) brightness(1.12) blur(0);
+    transform: translate3d(0, -3px, 0) scale(1.018);
+  }
+
+  100% {
+    opacity: 1;
+    filter: none;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes previewCardSwapSheen {
+  0% {
+    opacity: 0;
+    transform: translate3d(-42%, 16%, 0) rotate(-12deg);
+  }
+
+  30% {
+    opacity: 0.72;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(42%, -18%, 0) rotate(-12deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .previewCardCorrection,
-  .previewCardCorrectionSurface {
+  .previewCardCorrectionSurface,
+  .previewCardReplacing,
+  .previewCardReplacing::after {
     animation: none;
   }
 }

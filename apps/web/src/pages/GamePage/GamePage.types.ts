@@ -68,6 +68,8 @@ export interface TimelinePanelRenderModel {
   celebrationTone?: TimelineCelebrationTone;
   hiddenCardMode: HiddenCardMode;
   hint: string;
+  isPreviewCardReplacing: boolean;
+  previewCardSwapKey: number;
   showCorrectPlacementPreview?: boolean;
   showCorrectionPreview?: boolean;
   showDevAlbumInfo: boolean;
@@ -92,7 +94,9 @@ export interface TimelinePanelItemsModel {
   challengerChosenSlotIndex: number | null;
   disabledSlotIndexes: number[];
   hiddenCardMode: HiddenCardMode;
+  isPreviewCardReplacing: boolean;
   originalChosenSlotIndex: number | null;
+  previewCardSwapKey: number;
   selectable: boolean;
   showCorrectPlacementPreview: boolean;
   showCorrectionPreview: boolean;
@@ -153,6 +157,7 @@ export interface GamePageActionPanelsModel
     | "handlePlaceChallenge"
     | "handleResolveChallengeWindow"
     | "handleSkipTrackWithTt"
+    | "skipTrackSpendAnimationKey"
     | "showHelperLabels"
   > {
   roomState: PublicRoomState;
@@ -196,6 +201,9 @@ export type GamePageController = GamePageActionHandlers & {
   selectedSlotIndex: number;
   setSelectedSlotIndex: (slotIndex: number) => void;
   setTimelineView: (view: TimelineView) => void;
+  isPreviewCardReplacing: boolean;
+  skipTrackSpendAnimationKey: number;
+  previewCardSwapKey: number;
   showCorrectPlacementPreview: boolean;
   showCorrectionPreview: boolean;
   showDevAlbumInfo: boolean;

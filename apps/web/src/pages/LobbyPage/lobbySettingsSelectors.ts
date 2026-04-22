@@ -1,4 +1,8 @@
-import { DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS } from "@tunetrack/shared";
+import {
+  DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
+  MAX_CHALLENGE_WINDOW_DURATION_SECONDS,
+  MIN_CHALLENGE_WINDOW_DURATION_SECONDS,
+} from "@tunetrack/shared";
 
 export interface ChallengeWindowOptionValues {
   defaultDuration: string;
@@ -31,7 +35,7 @@ export function getChallengeWindowOptionValueMap(): ChallengeWindowOptionValues 
   return {
     manual: "manual",
     defaultDuration: DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS.toString(),
-    minDuration: "5",
-    maxDuration: "15",
+    minDuration: MIN_CHALLENGE_WINDOW_DURATION_SECONDS.toString(),
+    maxDuration: MAX_CHALLENGE_WINDOW_DURATION_SECONDS.toString(),
   };
 }

@@ -1,9 +1,11 @@
 import { memo } from "react";
+import { TtTokenIcon } from "../../../features/ui/TtToken";
 import type { GamePageActionPanelsModel } from "../GamePage.types";
 import { ChallengeActionPanel } from "./ChallengeActionPanel";
 import { FinishedStatePanel } from "./FinishedStatePanel";
 import { RevealActionDock } from "./RevealActionDock";
 import { TurnActionDock } from "./TurnActionDock";
+import styles from "./GamePageActionPanels.module.css";
 
 interface GamePageActionPanelsProps {
   model: GamePageActionPanelsModel;
@@ -32,10 +34,21 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     handleSkipTrackWithTt,
     roomState,
     showHelperLabels,
+    skipTrackSpendAnimationKey,
   } = model;
 
   return (
     <>
+      {skipTrackSpendAnimationKey > 0 ? (
+        <span
+          aria-hidden="true"
+          className={styles.tokenSpendFlyout}
+          key={skipTrackSpendAnimationKey}
+        >
+          <TtTokenIcon className={styles.tokenSpendIcon} />
+        </span>
+      ) : null}
+
       <ChallengeActionPanel
         canClaimChallenge={canClaimChallenge}
         canConfirmBeatPlacement={canConfirmBeatPlacement}
@@ -100,7 +113,8 @@ function areActionPanelModelsEqual(
     previousModel.handleResolveChallengeWindow === nextModel.handleResolveChallengeWindow &&
     previousModel.handleSkipTrackWithTt === nextModel.handleSkipTrackWithTt &&
     previousModel.roomState === nextModel.roomState &&
-    previousModel.showHelperLabels === nextModel.showHelperLabels
+    previousModel.showHelperLabels === nextModel.showHelperLabels &&
+    previousModel.skipTrackSpendAnimationKey === nextModel.skipTrackSpendAnimationKey
   );
 }
 

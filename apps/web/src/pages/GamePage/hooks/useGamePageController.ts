@@ -1,4 +1,9 @@
-import { useMemo } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { NavigateFunction } from "react-router-dom";
 import {
   getOrCreatePlayerSessionId,
@@ -33,6 +38,11 @@ export function useGamePageController({
     [],
   );
   const preferencesState = useGamePagePreferencesState();
+  const [skipTrackSpendAnimationKey, setSkipTrackSpendAnimationKey] =
+    useState(0);
+  const [previewCardSwapKey, setPreviewCardSwapKey] = useState(0);
+  const [isPreviewCardReplacing, setIsPreviewCardReplacing] = useState(false);
+  const pendingSkippedTrackIdRef = useRef<string | null>(null);
 
   const {
     currentPlayerId,
@@ -73,8 +83,46 @@ export function useGamePageController({
     isCurrentPlayerTurn: actionAvailability.isCurrentPlayerTurn,
     roomState,
     selectedSlotIndex,
+    onSkipTrackWithTtIntent: (cardId) => {
+      pendingSkippedTrackIdRef.current = cardId;
+      setSkipTrackSpendAnimationKey((key) => key + 1);
+    },
     setLocallyPlacedCard,
   });
+
+  useEffect(() => {
+    const pendingSkippedTrackId = pendingSkippedTrackIdRef.current;
+
+    if (!pendingSkippedTrackId || roomState?.status !== "turn") {
+      return;
+    }
+
+    const nextTrackId = roomState.currentTrackCard?.id ?? null;
+
+    if (nextTrackId && nextTrackId !== pendingSkippedTrackId) {
+      pendingSkippedTrackIdRef.current = null;
+      setIsPreviewCardReplacing(true);
+      setPreviewCardSwapKey((key) => key + 1);
+    }
+  }, [
+    roomState?.currentTrackCard?.id,
+    roomState?.status,
+    roomState?.turn?.hasUsedSkipTrackWithTt,
+  ]);
+
+  useEffect(() => {
+    if (!isPreviewCardReplacing) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setIsPreviewCardReplacing(false);
+    }, 720);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [isPreviewCardReplacing, previewCardSwapKey]);
 
   const derivedState = useGamePageDerivedState({
     currentPlayerId,
@@ -110,6 +158,7 @@ export function useGamePageController({
     handlePlaceChallenge: actions.handlePlaceChallenge,
     handleResolveChallengeWindow: actions.handleResolveChallengeWindow,
     handleSkipTrackWithTt: actions.handleSkipTrackWithTt,
+    skipTrackSpendAnimationKey,
   };
 
   const capabilityState = {
@@ -137,6 +186,8 @@ export function useGamePageController({
     shouldAnimateCelebrationCardToMine:
       derivedState.shouldAnimateCelebrationCardToMine,
     disabledTimelineSlots: derivedState.disabledTimelineSlots,
+    isPreviewCardReplacing,
+    previewCardSwapKey,
     showCorrectPlacementPreview: derivedState.showCorrectPlacementPreview,
     showCorrectionPreview: derivedState.showCorrectionPreview,
     statusBadgeText: derivedState.statusBadgeText,

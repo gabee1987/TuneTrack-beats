@@ -27,8 +27,10 @@ interface TimelineSortableItemProps {
   isDraggingPreviewCard: boolean;
   isOriginalSlot: boolean;
   isPreview: boolean;
+  isPreviewCardReplacing: boolean;
   isPreviewDisabled: boolean;
   previewCardRef?: (node: HTMLElement | null) => void;
+  previewCardSwapKey: number;
   selectable: boolean;
   showCorrectPlacementPreview?: boolean;
   showCorrectionPreview?: boolean;
@@ -48,8 +50,10 @@ function TimelineSortableItemComponent({
   isDraggingPreviewCard,
   isOriginalSlot,
   isPreview,
+  isPreviewCardReplacing,
   isPreviewDisabled,
   previewCardRef,
+  previewCardSwapKey,
   selectable,
   showCorrectPlacementPreview = false,
   showCorrectionPreview = false,
@@ -98,8 +102,10 @@ function TimelineSortableItemComponent({
           isCorrectPlacement={showCorrectPlacementPreview}
           isGhosted={isDragging}
           isOriginalSlot={isOriginalSlot}
+          isReplacing={isPreviewCardReplacing}
           listeners={selectable ? listeners : undefined}
           previewCard={card}
+          replacementAnimationKey={previewCardSwapKey}
           selectable={selectable}
           showDevAlbumInfo={showDevAlbumInfo}
           showDevCardInfo={showDevCardInfo}

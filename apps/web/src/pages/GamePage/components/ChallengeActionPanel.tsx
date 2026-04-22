@@ -39,50 +39,64 @@ export function ChallengeActionPanel({
     : roomState.challengeState.phase === "claimed"
       ? "Beat! was claimed. Waiting for the placement."
       : "Host resolves this window manually";
+  const isOpenChallengeWindow = roomState.challengeState.phase === "open";
+  const hasTimedChallengeWindow = isOpenChallengeWindow && Boolean(challengeCountdownLabel);
+  const panelClassName = `${styles.challengeCallout}${
+    hasTimedChallengeWindow ? ` ${styles.challengeCalloutTimed}` : ""
+  }`;
+  const titleText =
+    roomState.challengeState.phase === "open"
+      ? "Make your Beat!"
+      : challengeActionTitle;
+  const bodyText =
+    roomState.challengeState.phase === "open"
+      ? "Think the placement is wrong? Call Beat before the window closes."
+      : challengeActionBody;
+  const actionDock =
+    isOpenChallengeWindow ? (
+      canClaimChallenge || canResolveChallengeWindow ? (
+        <ActionDock>
+          {canClaimChallenge ? (
+            <PrimaryActionButton onClick={handleClaimChallenge} ttCost={1}>
+              Beat!
+            </PrimaryActionButton>
+          ) : null}
+          {canResolveChallengeWindow ? (
+            <SecondaryActionButton onClick={handleResolveChallengeWindow}>
+              Resolve
+            </SecondaryActionButton>
+          ) : null}
+        </ActionDock>
+      ) : null
+    ) : canConfirmBeatPlacement ? (
+      <ActionDock>
+        <PrimaryActionButton onClick={handlePlaceChallenge}>Confirm Beat</PrimaryActionButton>
+      </ActionDock>
+    ) : null;
 
   return (
-    <section className={styles.actionRail}>
-      <div className={styles.actionRailHeader}>
-        <div>
-          <h3 className={styles.actionRailTitle}>{challengeActionTitle}</h3>
-          {challengeActionBody ? (
-            <p className={styles.actionRailText}>{challengeActionBody}</p>
+    <>
+      <section className={panelClassName} aria-live="polite">
+        <div className={styles.challengeCalloutInner}>
+          <p className={styles.challengeEyebrow}>Limited time</p>
+          <h3 className={styles.challengeTitle}>{titleText}</h3>
+          {bodyText ? (
+            <p className={styles.challengeText}>{bodyText}</p>
+          ) : null}
+
+          <div className={styles.challengeCountdownBadge}>
+            <span className={styles.challengeCountdownDot} aria-hidden="true" />
+            <span>{challengeStatusText}</span>
+          </div>
+
+          {roomState.settings.ttModeEnabled ? (
+            <span className={styles.challengeTokenChip}>
+              Your tokens <TtTokenAmount amount={currentPlayerTtCount} />
+            </span>
           ) : null}
         </div>
-      </div>
-
-      <div className={styles.challengeMetaRow}>
-        {/* <span className={styles.challengeChip}>
-          Chosen slot: {roomState.challengeState.originalSelectedSlotIndex}
-        </span> */}
-        {roomState.settings.ttModeEnabled ? (
-          <span className={styles.challengeChip}>
-            Your tokens: <TtTokenAmount amount={currentPlayerTtCount} />
-          </span>
-        ) : null}
-        <span className={styles.challengeChip}>{challengeStatusText}</span>
-      </div>
-
-      {roomState.challengeState.phase === "open" ? (
-        canClaimChallenge || canResolveChallengeWindow ? (
-          <ActionDock>
-            {canClaimChallenge ? (
-              <PrimaryActionButton onClick={handleClaimChallenge} ttCost={1}>
-                Beat!
-              </PrimaryActionButton>
-            ) : null}
-            {canResolveChallengeWindow ? (
-              <SecondaryActionButton onClick={handleResolveChallengeWindow}>
-                Resolve
-              </SecondaryActionButton>
-            ) : null}
-          </ActionDock>
-        ) : null
-      ) : canConfirmBeatPlacement ? (
-        <ActionDock>
-          <PrimaryActionButton onClick={handlePlaceChallenge}>Confirm Beat</PrimaryActionButton>
-        </ActionDock>
-      ) : null}
-    </section>
+      </section>
+      {actionDock}
+    </>
   );
 }

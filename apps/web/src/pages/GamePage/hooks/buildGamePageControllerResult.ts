@@ -20,6 +20,7 @@ interface BuildGamePageControllerResultOptions {
     | "handlePlaceChallenge"
     | "handleResolveChallengeWindow"
     | "handleSkipTrackWithTt"
+    | "skipTrackSpendAnimationKey"
   >;
   capabilityState: Pick<
     UseGamePageControllerResult,
@@ -46,6 +47,8 @@ interface BuildGamePageControllerResultOptions {
     | "challengeSuccessTone"
     | "shouldAnimateCelebrationCardToMine"
     | "disabledTimelineSlots"
+    | "isPreviewCardReplacing"
+    | "previewCardSwapKey"
     | "showCorrectPlacementPreview"
     | "showCorrectionPreview"
     | "statusBadgeText"

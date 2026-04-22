@@ -28,6 +28,11 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
     visibleTimelineCardCount,
     visibleTimelineTitle,
   } = model;
+  const currentPlayer = currentPlayerId
+    ? roomState.players.find((player) => player.id === currentPlayerId)
+    : null;
+  const showStatusTokenCount =
+    roomState.settings.ttModeEnabled && currentPlayer !== null;
 
   return (
     <header className={styles.header}>
@@ -51,11 +56,18 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
       <div className={styles.headerAside}>
         <div className={styles.headerActionRow}>
           <div className={styles.statusBadge}>
-            <span className={styles.statusBadgeDefault}>{statusBadgeText}</span>
-            <span className={styles.statusBadgeTimeline}>
-              {visibleTimelineTitle} · {visibleTimelineCardCount}{" "}
-              card{visibleTimelineCardCount === 1 ? "" : "s"}
+            <span className={styles.statusBadgeTextGroup}>
+              <span className={styles.statusBadgeDefault}>{statusBadgeText}</span>
+              <span className={styles.statusBadgeTimeline}>
+                {visibleTimelineTitle} · {visibleTimelineCardCount}{" "}
+                card{visibleTimelineCardCount === 1 ? "" : "s"}
+              </span>
             </span>
+            {showStatusTokenCount ? (
+              <span className={styles.statusBadgeTokenCount}>
+                <TtTokenAmount amount={currentPlayer?.ttTokenCount ?? 0} />
+              </span>
+            ) : null}
           </div>
           {showMiniStandings ? (
             <div className={styles.headerLeadersStrip}>

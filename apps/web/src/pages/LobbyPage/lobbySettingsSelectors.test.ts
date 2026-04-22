@@ -1,4 +1,8 @@
-import { DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS } from "@tunetrack/shared";
+import {
+  DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
+  MAX_CHALLENGE_WINDOW_DURATION_SECONDS,
+  MIN_CHALLENGE_WINDOW_DURATION_SECONDS,
+} from "@tunetrack/shared";
 import { describe, expect, it } from "vitest";
 import {
   formatChallengeWindowSettingValue,
@@ -22,8 +26,8 @@ describe("lobbySettingsSelectors", () => {
     expect(getChallengeWindowOptionValues()).toEqual([
       "manual",
       DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS.toString(),
-      "5",
-      "15",
+      MIN_CHALLENGE_WINDOW_DURATION_SECONDS.toString(),
+      MAX_CHALLENGE_WINDOW_DURATION_SECONDS.toString(),
     ]);
   });
 
@@ -31,8 +35,8 @@ describe("lobbySettingsSelectors", () => {
     expect(getChallengeWindowOptionValueMap()).toEqual({
       manual: "manual",
       defaultDuration: DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS.toString(),
-      minDuration: "5",
-      maxDuration: "15",
+      minDuration: MIN_CHALLENGE_WINDOW_DURATION_SECONDS.toString(),
+      maxDuration: MAX_CHALLENGE_WINDOW_DURATION_SECONDS.toString(),
     });
   });
 });

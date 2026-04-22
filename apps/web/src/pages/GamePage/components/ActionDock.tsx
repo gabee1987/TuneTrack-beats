@@ -1,4 +1,6 @@
-import { TtTokenAmount } from "../../../features/ui/TtToken";
+import {
+  TtTokenAmount,
+} from "../../../features/ui/TtToken";
 import styles from "./GamePageActionPanels.module.css";
 
 interface ActionDockProps {
