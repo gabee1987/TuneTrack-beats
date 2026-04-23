@@ -34,7 +34,6 @@ export function buildTimelineSortableItemViewModels(
           itemIndex === model.challengerChosenSlotIndex,
         isOriginalSlot:
           model.originalChosenSlotIndex !== null &&
-          isPreview &&
           itemIndex === model.originalChosenSlotIndex,
         isPreview,
         isPreviewDisabled: isPreview && model.disabledSlotIndexes.includes(itemIndex),

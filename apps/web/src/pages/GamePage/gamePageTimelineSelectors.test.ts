@@ -165,4 +165,44 @@ describe("gamePageTimelineSelectors", () => {
       ownTimelineOriginalAwardSlot: null,
     });
   });
+
+  it("shows correct placement preview in reveal even when TT mode is enabled", () => {
+    const roomState = createRoomState({
+      settings: {
+        ...createRoomState().settings,
+        ttModeEnabled: true,
+      },
+      revealState: {
+        awardedPlayerId: null,
+        awardedSlotIndex: null,
+        challengeWasSuccessful: null,
+        challengerPlayerId: null,
+        challengerSelectedSlotIndex: null,
+        challengerTtChange: 0,
+        placedCard: {
+          albumTitle: "Album",
+          artist: "Artist",
+          id: "track-3",
+          releaseYear: 2003,
+          title: "Correct Song",
+        },
+        playerId: "player-1",
+        revealType: "placement",
+        selectedSlotIndex: 1,
+        validSlotIndexes: [1],
+        wasCorrect: true,
+      },
+      status: "reveal",
+    });
+
+    expect(
+      getGamePageRevealTimelineState({
+        currentPlayerId: "player-1",
+        roomState,
+      }),
+    ).toMatchObject({
+      showCorrectPlacementPreview: true,
+      showCorrectionPreview: false,
+    });
+  });
 });

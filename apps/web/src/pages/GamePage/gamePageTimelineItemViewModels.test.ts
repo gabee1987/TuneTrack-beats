@@ -64,4 +64,41 @@ describe("gamePageTimelineItemViewModels", () => {
       isPreviewDisabled: true,
     });
   });
+
+  it("marks non-preview timeline slots as original when selected index points to a timeline card", () => {
+    const orderedItemIds = ["timeline-card-a-0", "timeline-preview-card", "timeline-card-b-1"];
+    const timelineItemMap = buildTimelineItemMap(
+      [createTimelineCard("a"), createTimelineCard("b")],
+      createPreviewCard(),
+    );
+
+    const viewModels = buildTimelineSortableItemViewModels(orderedItemIds, timelineItemMap, {
+      challengeMarkerTone: "pending",
+      challengerChosenSlotIndex: null,
+      disabledSlotIndexes: [],
+      hiddenCardMode: "artwork",
+      isPreviewCardReplacing: false,
+      originalChosenSlotIndex: 0,
+      previewCardSwapKey: 0,
+      selectable: true,
+      showCorrectPlacementPreview: true,
+      showCorrectionPreview: false,
+      showDevAlbumInfo: false,
+      showDevCardInfo: false,
+      showDevGenreInfo: false,
+      showDevYearInfo: false,
+      theme: "dark",
+    });
+
+    expect(viewModels[0]).toMatchObject({
+      id: "timeline-card-a-0",
+      isPreview: false,
+      isOriginalSlot: true,
+    });
+    expect(viewModels[1]).toMatchObject({
+      id: "timeline-preview-card",
+      isPreview: true,
+      isOriginalSlot: false,
+    });
+  });
 });
