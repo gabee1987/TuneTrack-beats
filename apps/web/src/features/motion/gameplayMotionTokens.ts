@@ -297,20 +297,53 @@ export function createPreviewCardReplaceMotion(
 ): Record<"initial" | "animate", TargetAndTransition> {
   if (reduceMotion) {
     return {
-      initial: { opacity: 0.82, scale: 0.985, y: 4 },
-      animate: { opacity: 1, scale: 1, y: 0 },
+      initial: { opacity: 0.94, rotateY: 0, scale: 1 },
+      animate: { opacity: 1, rotateY: 0, scale: 1 },
     };
   }
 
   return {
-    initial: { opacity: 0.18, scale: 0.92, y: 10 },
-    animate: { opacity: 1, scale: 1, y: 0 },
+    initial: {
+      opacity: 1,
+      rotateY: 0,
+      scale: 1,
+      transformPerspective: 980,
+      transformOrigin: "50% 50%",
+    },
+    animate: {
+      opacity: 1,
+      rotateY: [0, 89.5, 89.5, 0],
+      scale: [1, 1, 1.018, 1],
+      transformPerspective: 980,
+      transformOrigin: "50% 50%",
+    },
   };
 }
 
 export function createPreviewCardReplaceTransition(reduceMotion: boolean): Transition {
+  if (reduceMotion) {
+    return {
+      duration: motionDurations.quick,
+      ease: motionEasings.standard,
+    };
+  }
+
   return {
-    duration: reduceMotion ? motionDurations.quick : 0.64,
-    ease: [0.18, 0.9, 0.2, 1],
+    rotateY: {
+      duration: 0.56,
+      ease: [0.24, 0.84, 0.26, 1],
+      times: [0, 0.44, 0.58, 1],
+    },
+    scale: {
+      type: "spring",
+      stiffness: 420,
+      damping: 28,
+      mass: 0.62,
+      delay: 0.34,
+    },
+    opacity: {
+      duration: 0.18,
+      ease: "linear",
+    },
   };
 }

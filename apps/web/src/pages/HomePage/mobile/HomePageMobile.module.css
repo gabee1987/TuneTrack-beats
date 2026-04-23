@@ -41,12 +41,14 @@
 .hero {
   display: grid;
   place-items: start center;
+  width: 100%;
 }
 
 .brandLogo {
   display: block;
-  width: min(100%, 430px);
-  max-height: min(42dvh, 430px);
+  width: 100%;
+  max-width: 100%;
+  max-height: min(48dvh, 460px);
   height: auto;
   object-fit: contain;
   filter: drop-shadow(0 20px 46px color-mix(in srgb, #7c5cff 24%, transparent));
@@ -394,8 +396,9 @@
   }
 
   .brandLogo {
-    width: min(100%, 360px);
-    max-height: min(34dvh, 250px);
+    width: 100%;
+    max-width: 100%;
+    max-height: min(38dvh, 300px);
   }
 
   .featureList {

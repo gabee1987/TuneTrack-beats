@@ -97,6 +97,20 @@
   justify-content: space-between;
   gap: 12px;
   align-items: center;
+  position: sticky;
+  top: -22px;
+  z-index: 3;
+  margin: -22px -22px 0;
+  padding: 14px 22px 10px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-surface-strong) 98%, transparent),
+      color-mix(in srgb, var(--color-surface-strong) 84%, transparent),
+      transparent
+    );
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .infoCloseButton {
