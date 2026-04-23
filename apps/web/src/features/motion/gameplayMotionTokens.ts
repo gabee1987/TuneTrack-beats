@@ -306,15 +306,19 @@ export function createPreviewCardReplaceMotion(
     initial: {
       opacity: 1,
       rotateY: 0,
+      rotateX: 0,
+      z: 0,
       scale: 1,
-      transformPerspective: 980,
+      transformPerspective: 1260,
       transformOrigin: "50% 50%",
     },
     animate: {
       opacity: 1,
       rotateY: [0, 89.5, 89.5, 0],
-      scale: [1, 1, 1.018, 1],
-      transformPerspective: 980,
+      rotateX: [0, 3.2, 3.2, 0],
+      z: [0, 34, 34, 0],
+      scale: [1, 0.992, 1.028, 1],
+      transformPerspective: 1260,
       transformOrigin: "50% 50%",
     },
   };
@@ -330,6 +334,16 @@ export function createPreviewCardReplaceTransition(reduceMotion: boolean): Trans
 
   return {
     rotateY: {
+      duration: 0.56,
+      ease: [0.24, 0.84, 0.26, 1],
+      times: [0, 0.44, 0.58, 1],
+    },
+    rotateX: {
+      duration: 0.56,
+      ease: [0.24, 0.84, 0.26, 1],
+      times: [0, 0.44, 0.58, 1],
+    },
+    z: {
       duration: 0.56,
       ease: [0.24, 0.84, 0.26, 1],
       times: [0, 0.44, 0.58, 1],
