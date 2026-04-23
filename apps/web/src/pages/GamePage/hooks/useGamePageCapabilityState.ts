@@ -11,6 +11,7 @@ interface UseGamePageCapabilityStateOptions {
   currentPlayerTtCount: number;
   handlers: {
     handleAwardTt: (playerId: string) => void;
+    handleRemoveTt: (playerId: string) => void;
     handleCloseRoom: () => void;
   };
   roomState: PublicRoomState | null;
@@ -98,7 +99,7 @@ export function useGamePageCapabilityState({
     ? createGameMenuTabs({
         currentPlayerId,
         onAwardTt: handlers.handleAwardTt,
-        onCloseRoom: handlers.handleCloseRoom,
+        onRemoveTt: handlers.handleRemoveTt,
         roomState,
       })
     : [];

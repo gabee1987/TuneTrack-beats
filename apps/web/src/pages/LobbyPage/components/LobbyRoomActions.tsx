@@ -1,4 +1,5 @@
 import { ActionButton } from "../../../features/ui/ActionButton";
+import { RoomDangerActionButton } from "../../../features/ui/RoomDangerActionButton";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { LobbySectionHeader } from "./LobbySectionHeader";
 import styles from "../LobbyPage.module.css";
@@ -34,14 +35,13 @@ export function LobbyRoomActions({
           Start Game
         </ActionButton>
       ) : null}
-      <ActionButton
+      <RoomDangerActionButton
         className={`${styles.cancelRoomButton}${buttonClassName ? ` ${buttonClassName}` : ""}`}
         onClick={onCloseRoom}
         type="button"
-        variant="danger"
       >
         Close Room
-      </ActionButton>
+      </RoomDangerActionButton>
     </SurfaceCard>
   );
 }

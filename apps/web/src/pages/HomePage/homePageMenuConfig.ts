@@ -14,7 +14,7 @@ export function getHomePageMenuTabSpecs(): HomePageMenuTabSpec[] {
     },
     {
       id: "settings",
-      label: "Settings",
+      label: "Theme",
       message: "Theme and hidden-card preferences are ready for testing now.",
     },
   ];

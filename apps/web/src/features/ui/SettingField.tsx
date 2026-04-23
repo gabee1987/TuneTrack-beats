@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { MotionDialogPortal } from "../motion";
+import { CloseIconButton } from "./CloseIconButton";
 import styles from "./SettingField.module.css";
 
 interface SettingFieldProps {
@@ -64,18 +65,16 @@ export function SettingInfoButton({ info, label }: SettingInfoButtonProps) {
       >
         <span className={styles.infoHeaderRow}>
           <span className={styles.infoEyebrow}>Info</span>
-          <button
-            aria-label="Close info"
+          <CloseIconButton
+            ariaLabel="Close info"
             className={styles.infoCloseButton}
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
               setIsOpen(false);
             }}
-            type="button"
-          >
-            ×
-          </button>
+            size="sm"
+          />
         </span>
         <span className={styles.infoTitle}>{label}</span>
         <span className={styles.infoBody}>{info}</span>

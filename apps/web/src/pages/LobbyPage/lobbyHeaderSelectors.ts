@@ -1,7 +1,7 @@
 export type LobbyConnectionBadgeVariant = "connected" | "mutedSurface";
 
 export interface LobbyHeaderMenuTabSpec {
-  id: "dev" | "host" | "players" | "settings" | "view";
+  id: "dev" | "players" | "settings" | "view";
   label: string;
   message: string;
 }
@@ -28,19 +28,14 @@ export function getLobbyHeaderMenuTabSpecs(
     },
     {
       id: "settings",
-      label: "Settings",
+      label: "Theme",
       message: "Theme and hidden-card preferences remain device-local.",
     },
     ...(isHost
       ? [
           {
-            id: "host" as const,
-            label: "Host",
-            message: "Core host room setup now stays on the main lobby surface.",
-          },
-          {
             id: "dev" as const,
-            label: "Dev",
+            label: "Diagnostics",
             message: "Developer-only host tools continue to live behind the shared menu.",
           },
         ]

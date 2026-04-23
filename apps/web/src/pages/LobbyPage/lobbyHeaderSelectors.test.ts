@@ -18,12 +18,11 @@ describe("lobbyHeaderSelectors", () => {
     ]);
   });
 
-  it("adds host-only tabs for hosts", () => {
+  it("adds only the diagnostics host tab for hosts", () => {
     expect(getLobbyHeaderMenuTabSpecs(true).map((tab) => tab.id)).toEqual([
       "players",
       "view",
       "settings",
-      "host",
       "dev",
     ]);
   });

@@ -1,3 +1,5 @@
+import type { Transition } from "framer-motion";
+
 export function createAppShellMenuSheetOffset(
   reduceMotion: boolean,
   isMobileSheet: boolean,
@@ -26,4 +28,17 @@ export function createAppShellMenuSheetMotionTargets(
     exit: { opacity: 0, x: offset.x, y: offset.y },
     initial: { opacity: 0, x: offset.x, y: offset.y },
   };
+}
+
+export function createMenuTabActivationTransition(
+  reduceMotion: boolean,
+): Transition {
+  return reduceMotion
+    ? { duration: 0.01 }
+    : {
+        type: "spring",
+        stiffness: 340,
+        damping: 32,
+        mass: 1,
+      };
 }

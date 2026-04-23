@@ -15,6 +15,11 @@ export interface AppShellMenuTab {
 }
 
 export interface AppShellMenuProps {
+  footerAction?: {
+    label: string;
+    onClick: () => void;
+    tone?: "danger" | "neutral";
+  };
   title: string;
   subtitle: string;
   tabs: AppShellMenuTab[];

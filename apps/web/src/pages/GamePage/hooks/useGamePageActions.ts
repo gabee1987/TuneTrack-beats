@@ -116,6 +116,22 @@ export function useGamePageActions({
     });
   }
 
+  function handleRemoveTt(playerId: string) {
+    if (
+      !roomState ||
+      roomState.hostId !== currentPlayerId ||
+      !roomState.settings.ttModeEnabled
+    ) {
+      return;
+    }
+
+    void emitRoomEvent(ClientToServerEvent.AwardTt, {
+      roomId: roomState.roomId,
+      playerId,
+      amount: -1,
+    });
+  }
+
   function handleSkipTrackWithTt() {
     if (
       !roomState ||
@@ -149,6 +165,7 @@ export function useGamePageActions({
 
   return {
     handleAwardTt,
+    handleRemoveTt,
     handleBuyTimelineCardWithTt,
     handleClaimChallenge,
     handleCloseRoom,

@@ -128,6 +128,7 @@ export function useGamePageController({
     currentPlayerId,
     handlers: {
       handleAwardTt: actions.handleAwardTt,
+      handleRemoveTt: actions.handleRemoveTt,
       handleCloseRoom: actions.handleCloseRoom,
     },
     locallyPlacedCard,

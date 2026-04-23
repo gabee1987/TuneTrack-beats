@@ -420,7 +420,7 @@ export class GameFlowService {
     playerId: string,
     tokenAmount: number,
   ): GameState {
-    if (!Number.isInteger(tokenAmount) || tokenAmount <= 0) {
+    if (!Number.isInteger(tokenAmount) || tokenAmount === 0) {
       throw new Error("INVALID_TT_AMOUNT");
     }
 

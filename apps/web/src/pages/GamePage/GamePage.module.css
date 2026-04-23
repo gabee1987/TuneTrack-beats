@@ -1,11 +1,7 @@
 .screen {
   min-height: 100dvh;
   padding: 4px;
-  background: linear-gradient(
-    160deg,
-    var(--color-bg-app) 0%,
-    var(--color-bg-app-accent) 100%
-  );
+  background: linear-gradient(160deg, var(--color-bg-app) 0%, var(--color-bg-app-accent) 100%);
 }
 
 .panel {
@@ -196,45 +192,102 @@
 }
 
 .menuPlayerList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: grid;
   gap: 10px;
 }
 
-.menuPlayerRow {
+.menuPlayerItem {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
+  border-radius: 20px;
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, #8b5cff 10%, transparent),
+      transparent 42%
+    ),
+    color-mix(in srgb, var(--color-surface-elevated) 70%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+}
+
+.menuPlayerInfoRow {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
-  padding: 12px 14px;
-  border-radius: 16px;
-  background: var(--color-card);
+}
+
+.menuPlayerIdentity {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.menuPlayerNameRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
 }
 
 .menuPlayerName {
-  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
 }
 
-.menuPlayerMeta {
-  margin: 6px 0 0;
-  color: var(--color-text-secondary);
-  font-size: 14px;
+.menuPlayerBadges {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.menuPlayerBadge {
+  white-space: nowrap;
 }
 
 .menuActionButton,
 .menuDangerButton {
   border: 0;
-  border-radius: 14px;
+  border-radius: 999px;
+  min-height: 44px;
   padding: 10px 14px;
-  color: var(--color-text-on-accent);
+  color: var(--color-text-primary);
+  font-weight: 800;
+  letter-spacing: 0.01em;
   cursor: pointer;
+  outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 84%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
 }
 
 .menuActionButton {
   display: inline-flex;
+  width: 100%;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  background: var(--color-accent-success);
+  gap: 5px;
+}
+
+.menuTokenActionContent {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.menuActionButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  filter: saturate(0.72);
 }
 
 .menuTokenIcon {
@@ -244,6 +297,72 @@
 
 .menuDangerButton {
   background: var(--color-accent-danger);
+}
+
+.menuTokenActions {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  overflow: visible;
+}
+
+.menuActionButtonAdd {
+  color: #d4ffe8;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #10281d 88%, transparent),
+    color-mix(in srgb, #07140f 90%, transparent)
+  );
+  outline-color: color-mix(in srgb, #55f2a7 42%, var(--color-border-subtle));
+}
+
+.menuActionButtonRemove {
+  color: #ffd8de;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #2b1018 88%, transparent),
+    color-mix(in srgb, #12060b 90%, transparent)
+  );
+  outline-color: color-mix(in srgb, #ff5f7d 42%, var(--color-border-subtle));
+}
+
+.menuTokenFlyoutAnchor {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.menuTokenFlyout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.menuTokenFlyoutContent {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.menuTokenFlyoutAdd {
+  color: #8ff2c0;
+}
+
+.menuTokenFlyoutRemove {
+  color: #ff9daf;
+}
+
+.menuTokenFlyoutIcon {
+  width: 1em;
+  height: 1em;
 }
 
 .error {
@@ -305,7 +424,7 @@
   }
 
   .header {
-    gap: 10px;
+    gap: 4px;
   }
 
   .headerMain {
@@ -395,5 +514,4 @@
   .panel {
     width: min(100%, 1120px);
   }
-
 }

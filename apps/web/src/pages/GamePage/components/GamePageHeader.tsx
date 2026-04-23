@@ -14,6 +14,7 @@ interface GamePageHeaderProps {
 function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
   const {
     currentPlayerId,
+    handleCloseRoom,
     leadingPlayers,
     menuTabs,
     roomState,
@@ -138,9 +139,18 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
             </svg>
           </button>
           <AppShellMenu
-            subtitle="Grouped player, host, and developer controls now share one consistent menu shell."
+            subtitle="Manage visuals, match visibility, and local diagnostics during this game."
             tabs={menuTabs}
-            title="Game menu"
+            title="TuneTrack"
+            {...(roomState.hostId === currentPlayerId
+              ? {
+                  footerAction: {
+                    label: "Close Room",
+                    onClick: handleCloseRoom,
+                    tone: "danger" as const,
+                  },
+                }
+              : {})}
           />
         </div>
         {showTimelineHints && statusDetailText ? (
@@ -157,6 +167,7 @@ function areHeaderModelsEqual(
 ): boolean {
   return (
     previousModel.currentPlayerId === nextModel.currentPlayerId &&
+    previousModel.handleCloseRoom === nextModel.handleCloseRoom &&
     previousModel.leadingPlayers === nextModel.leadingPlayers &&
     previousModel.menuTabs === nextModel.menuTabs &&
     previousModel.roomState === nextModel.roomState &&

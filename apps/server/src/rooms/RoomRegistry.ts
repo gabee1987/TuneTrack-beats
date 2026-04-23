@@ -377,9 +377,12 @@ export class RoomRegistry {
             player.id === awardTtPayload.playerId
               ? {
                   ...player,
-                  ttTokenCount: Math.min(
-                    MAX_STARTING_TT_TOKEN_COUNT,
-                    player.ttTokenCount + awardTtPayload.amount,
+                  ttTokenCount: Math.max(
+                    0,
+                    Math.min(
+                      MAX_STARTING_TT_TOKEN_COUNT,
+                      player.ttTokenCount + awardTtPayload.amount,
+                    ),
                   ),
                 }
               : player,

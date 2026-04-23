@@ -37,13 +37,13 @@ export function LobbyHeader({
           {connectionStatus}
         </Badge>
         <AppShellMenu
-          subtitle="Grouped room, view, and developer controls live here."
+          subtitle="Review players, adjust visibility, and tune your local lobby experience."
           tabs={menuTabs.map((tab) => ({
             id: tab.id,
             label: tab.label,
             content: <p className={styles.menuPlaceholder}>{tab.message}</p>,
           }))}
-          title="Lobby menu"
+          title="TuneTrack"
         />
       </div>
     </header>

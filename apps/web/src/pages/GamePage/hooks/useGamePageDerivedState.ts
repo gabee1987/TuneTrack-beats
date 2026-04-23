@@ -35,6 +35,7 @@ interface UseGamePageDerivedStateOptions {
   updateViewPreferences: GamePageViewPreferenceUpdater;
   handlers: {
     handleAwardTt: (playerId: string) => void;
+    handleRemoveTt: (playerId: string) => void;
     handleCloseRoom: () => void;
   };
 }

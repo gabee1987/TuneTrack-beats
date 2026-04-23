@@ -21,6 +21,7 @@ import {
 import { RangeField } from "../../../features/ui/RangeField";
 import { SettingField, SettingInfoButton } from "../../../features/ui/SettingField";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
+import { ToggleSwitch } from "../../../features/ui/ToggleSwitch";
 import { TtTokenAmount, TtTokenIcon } from "../../../features/ui/TtToken";
 import { AdaptiveSelect } from "./AdaptiveSelect";
 import type { LobbyRoomSettingsChangeHandler } from "./LobbyHostSettings.types";
@@ -129,13 +130,7 @@ export function LobbyHostTtSettings({
         variant="compact"
       />
 
-      <label className={styles.tokenModeToggle}>
-        <input
-          checked={currentSettings.ttModeEnabled}
-          className={styles.tokenModeToggleInput}
-          onChange={(event) => onToggleTtMode(event.target.checked)}
-          type="checkbox"
-        />
+      <div className={styles.tokenModeToggle}>
         <span className={styles.tokenModeToggleCopy}>
           <span className={styles.tokenModeToggleTitleRow}>
             <TtTokenIcon className={styles.tokenModeToggleIcon} />
@@ -145,13 +140,12 @@ export function LobbyHostTtSettings({
             Adds skips, instant claims, and Beat! stakes to each round.
           </span>
         </span>
-        <span className={styles.tokenModeSwitch} aria-hidden="true">
-          <span className={styles.tokenModeSwitchStatus}>
-            {currentSettings.ttModeEnabled ? "On" : "Off"}
-          </span>
-          <span className={styles.tokenModeSwitchThumb} />
-        </span>
-      </label>
+        <ToggleSwitch
+          ariaLabel="Enable token mode"
+          checked={currentSettings.ttModeEnabled}
+          onChange={onToggleTtMode}
+        />
+      </div>
 
       <motion.p
         animate={createToggleHintFadeMotion(

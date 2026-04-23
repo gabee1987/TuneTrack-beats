@@ -6,16 +6,16 @@ export type ScreenTransitionDirection = -1 | 0 | 1;
 
 export const motionDurations = {
   instant: 0.01,
-  quick: 0.2,
-  standard: 0.3,
-  screen: 0.52,
-  expressive: 0.92,
+  quick: 0.16,
+  standard: 0.24,
+  screen: 0.32,
+  expressive: 0.4,
 } as const;
 
 export const motionEasings = {
-  standard: [0.22, 1, 0.36, 1] as CubicBezier,
-  screenSlide: [0.3, 0, 0.2, 1] as CubicBezier,
-  emphasized: [0.18, 0.84, 0.24, 1] as CubicBezier,
+  standard: [0.2, 0, 0, 1] as CubicBezier,
+  screenSlide: [0.2, 0, 0, 1] as CubicBezier,
+  emphasized: [0.05, 0.7, 0.1, 1] as CubicBezier,
 } as const;
 
 export function createPageTransitionVariants(reduceMotion: boolean): Variants {

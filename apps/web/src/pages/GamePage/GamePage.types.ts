@@ -119,6 +119,7 @@ export interface GamePageHeaderModel
   extends Pick<
     GamePageController,
     | "currentPlayerId"
+    | "handleCloseRoom"
     | "leadingPlayers"
     | "menuTabs"
     | "showMiniStandings"

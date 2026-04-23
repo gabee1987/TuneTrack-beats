@@ -101,18 +101,6 @@
 
 .infoCloseButton {
   flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 88%, transparent);
-  border-radius: 999px;
-  padding: 0;
-  background: color-mix(in srgb, var(--color-surface-elevated) 76%, transparent);
-  color: var(--color-text-primary);
-  font-size: 22px;
-  font-weight: 800;
-  line-height: 1;
 }
 
 .infoEyebrow {

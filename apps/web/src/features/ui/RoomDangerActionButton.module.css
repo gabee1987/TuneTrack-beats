@@ -1,0 +1,48 @@
+.dangerAction {
+  position: relative;
+  width: 100%;
+  min-height: 58px;
+  padding: 16px 22px;
+  border: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #2b1018 78%, transparent),
+      color-mix(in srgb, #12060b 84%, transparent)
+    )
+    padding-box;
+  color: #ffd4dc;
+  outline: 0;
+  box-shadow:
+    0 14px 32px color-mix(in srgb, #ff3f67 14%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 12%, transparent);
+}
+
+.dangerAction::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background:
+    linear-gradient(135deg, transparent 14%, #ff5f7d, transparent 86%),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, #ff5f7d 36%, transparent),
+      color-mix(in srgb, white 14%, transparent),
+      color-mix(in srgb, #ff5f7d 44%, transparent)
+    );
+  pointer-events: none;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}

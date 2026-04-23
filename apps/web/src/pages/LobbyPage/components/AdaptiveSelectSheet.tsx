@@ -1,4 +1,5 @@
 import { BottomSheet } from "../../../features/ui/BottomSheet";
+import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import type { AdaptiveSelectOption } from "./AdaptiveSelect";
 import styles from "../LobbyPage.module.css";
 
@@ -28,14 +29,11 @@ export function AdaptiveSelectSheet({
           <p className={styles.mobileSelectEyebrow}>{label}</p>
           <h4 className={styles.mobileSelectTitle}>Choose one option</h4>
         </div>
-        <button
-          aria-label="Close select menu"
+        <CloseIconButton
+          ariaLabel="Close select menu"
           className={styles.mobileSelectClose}
           onClick={onClose}
-          type="button"
-        >
-          ×
-        </button>
+        />
       </div>
 
       <div className={styles.mobileSelectOptions}>

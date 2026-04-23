@@ -1,0 +1,30 @@
+.button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 88%, transparent);
+  border-radius: 999px;
+  padding: 0;
+  background: color-mix(in srgb, var(--color-surface-elevated) 76%, transparent);
+  color: var(--color-text-primary);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 9%, transparent);
+  cursor: pointer;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+}
+
+.sm {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+}
+
+.sm .icon {
+  width: 16px;
+  height: 16px;
+}

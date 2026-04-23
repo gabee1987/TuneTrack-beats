@@ -7,6 +7,7 @@ import type {
   AppShellMenuPreferencesState,
   AppShellMenuTab,
 } from "../AppShellMenu.types";
+import { ToggleSwitch } from "../../ui/ToggleSwitch";
 import styles from "../AppShellMenu.module.css";
 
 interface AppShellMenuPanelsProps {
@@ -35,33 +36,33 @@ const viewPreferenceFields: Array<{
 }> = [
   {
     key: "showMiniStandings",
-    label: "Show mini standings",
-    hint: "Keep the future top-3 strip ready without forcing it on.",
+    label: "Mini standings strip",
+    hint: "Keep the live top-three race visible in the header.",
   },
   {
     key: "showHelperLabels",
-    label: "Show helper labels",
-    hint: "Keep small supporting labels visible while the final UI is evolving.",
+    label: "Interface helper labels",
+    hint: "Display supporting labels for faster in-match readability.",
   },
   {
     key: "showTimelineHints",
-    label: "Show timeline hints",
-    hint: "Helpful while we transition to the final timeline-first UX.",
+    label: "Timeline callout hints",
+    hint: "Surface contextual timeline guidance during active play.",
   },
   {
     key: "showRoomCodeChip",
-    label: "Show room code",
-    hint: "Keep the room chip visible in the top bar when you need it.",
+    label: "Room code chip",
+    hint: "Show a compact room identifier in the top status rail.",
   },
   {
     key: "showPhaseChip",
-    label: "Show phase",
-    hint: "Show the current game phase as a compact top-bar chip.",
+    label: "Phase chip",
+    hint: "Track the current phase with a compact status indicator.",
   },
   {
     key: "showTurnNumberChip",
-    label: "Show turn number",
-    hint: "Keep the current round number visible in the top bar.",
+    label: "Turn counter chip",
+    hint: "Keep the active turn number visible in the top bar.",
   },
 ];
 
@@ -74,22 +75,27 @@ const developerFields: Array<{
     | "showDevYearInfo"
   >;
   label: string;
+  hint: string;
 }> = [
   {
     key: "showDevCardInfo",
-    label: "Song info",
+    label: "Track metadata overlay",
+    hint: "Reveal title and artist details on hidden cards for QA sessions.",
   },
   {
     key: "showDevYearInfo",
-    label: "Year",
+    label: "Release year tag",
+    hint: "Show the release year directly on card faces.",
   },
   {
     key: "showDevAlbumInfo",
-    label: "Album info",
+    label: "Album tag",
+    hint: "Display album details as an additional inspection layer.",
   },
   {
     key: "showDevGenreInfo",
-    label: "Genre info",
+    label: "Genre tag",
+    hint: "Expose genre labels for balancing and content checks.",
   },
 ];
 
@@ -100,9 +106,9 @@ export function AppShellMenuPanels({
   if (activeTab?.id === "view") {
     return (
       <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>View preferences</h3>
+        <h3 className={styles.sectionTitle}>View layout controls</h3>
         <p className={styles.sectionDescription}>
-          Tune the amount of information you want to keep on screen.
+          Fine tune match information density for this device.
         </p>
         <div className={styles.fieldGroup}>
           {viewPreferenceFields.map((field) => (
@@ -127,9 +133,9 @@ export function AppShellMenuPanels({
     return (
       <>
         <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Theme</h3>
+          <h3 className={styles.sectionTitle}>Theme mode</h3>
           <p className={styles.sectionDescription}>
-            Choose the look you prefer on this device.
+            Choose the visual identity you want to play with.
           </p>
           <div className={styles.segmentedRow}>
             <SegmentedButton
@@ -150,7 +156,7 @@ export function AppShellMenuPanels({
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>Hidden card style</h3>
           <p className={styles.sectionDescription}>
-            Prepare how unrevealed cards should look in the final game shell.
+            Pick how unrevealed cards are rendered in-match.
           </p>
           <div className={styles.segmentedRow}>
             <SegmentedButton
@@ -187,14 +193,15 @@ export function AppShellMenuPanels({
   if (activeTab?.id === "dev") {
     return (
       <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Developer helpers</h3>
+        <h3 className={styles.sectionTitle}>Developer diagnostics</h3>
         <p className={styles.sectionDescription}>
-          Keep these local to your browser while testing card states.
+          Local debug overlays for validating hidden-card and timeline states.
         </p>
         <div className={styles.fieldGroup}>
           {developerFields.map((field) => (
             <ToggleField
               checked={preferencesState[field.key]}
+              hint={field.hint}
               key={field.key}
               label={field.label}
               onChange={(checked) =>
@@ -224,11 +231,12 @@ function ToggleField({
         <span className={styles.toggleLabel}>{label}</span>
         {hint ? <span className={styles.toggleHint}>{hint}</span> : null}
       </div>
-      <input
+      <ToggleSwitch
+        ariaLabel={label}
         checked={checked}
-        className={styles.checkbox}
-        onChange={(event) => onChange(event.target.checked)}
-        type="checkbox"
+        className={styles.toggleSwitch}
+        onChange={onChange}
+        size="compact"
       />
     </label>
   );

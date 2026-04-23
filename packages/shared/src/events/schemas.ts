@@ -91,7 +91,7 @@ export const updatePlayerProfilePayloadSchema = z.object({
 export const awardTtPayloadSchema = z.object({
   roomId: roomIdSchema,
   playerId: z.string().trim().min(1),
-  amount: z.number().int().positive().max(5),
+  amount: z.number().int().min(-5).max(5).refine((amount) => amount !== 0),
 });
 
 export const startGamePayloadSchema = z.object({

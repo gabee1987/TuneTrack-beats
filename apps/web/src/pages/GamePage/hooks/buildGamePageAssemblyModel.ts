@@ -34,6 +34,7 @@ export function buildGamePageAssemblyModel(
     errorMessage: controller.errorMessage,
     header: {
       currentPlayerId: controller.currentPlayerId,
+      handleCloseRoom: controller.handleCloseRoom,
       leadingPlayers: controller.leadingPlayers,
       menuTabs: controller.menuTabs,
       roomState: controller.roomState,

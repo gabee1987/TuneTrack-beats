@@ -4,16 +4,21 @@ export { MotionDialogPortal } from "./MotionDialogPortal";
 export type { ScreenTransitionDirection } from "./coreMotionTokens";
 export {
   createAppShellMenuSheetMotionTargets,
+  createMenuTabActivationTransition,
 } from "./appShellMotionTokens";
 export {
   createToggleHintFadeMotion,
   createMeasuredDisclosureMotion,
 } from "./lobbyMotionTokens";
 export {
+  createMenuTokenAdjustFlyoutPopTransition,
+  createMenuTokenAdjustFlyoutPopVariants,
   createActionButtonExitMotion,
   createActionDockMotion,
   createChallengePanelMotion,
   createLayoutTransition,
+  createMenuTokenAdjustFlyoutTransition,
+  createMenuTokenAdjustFlyoutVariants,
   createPreviewCardReplaceMotion,
   createPreviewCardReplaceTransition,
   createTimelineCelebrationTransition,

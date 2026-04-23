@@ -15,13 +15,13 @@ export function HomePageTopBar() {
       </div>
 
       <AppShellMenu
-        subtitle="Local preferences and future app controls live here."
+        subtitle="Choose your theme, view options, and local interface preferences."
         tabs={menuTabs.map((tab) => ({
           id: tab.id,
           label: tab.label,
           content: <p className={styles.menuPlaceholder}>{tab.message}</p>,
         }))}
-        title="TuneTrack menu"
+        title="TuneTrack"
       />
     </div>
   );
