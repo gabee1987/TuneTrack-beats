@@ -32,14 +32,16 @@ export function ActionDock({ children }: ActionDockProps) {
 
 interface ActionButtonProps {
   children: React.ReactNode;
-  onClick: () => void;
+  onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
   ttCost?: number;
+  ttCostBadgeRef?: React.Ref<HTMLSpanElement>;
 }
 
 export function PrimaryActionButton({
   children,
   onClick,
   ttCost,
+  ttCostBadgeRef,
 }: ActionButtonProps) {
   return (
     <button
@@ -49,7 +51,7 @@ export function PrimaryActionButton({
     >
       <span className={styles.actionButtonLabel}>{children}</span>
       {ttCost ? (
-        <span className={styles.ttCostBadge}>
+        <span className={styles.ttCostBadge} ref={ttCostBadgeRef}>
           <TtTokenAmount amount={ttCost} iconClassName={styles.ttCostIcon} />
         </span>
       ) : null}
@@ -61,6 +63,7 @@ export function SecondaryActionButton({
   children,
   onClick,
   ttCost,
+  ttCostBadgeRef,
 }: ActionButtonProps) {
   return (
     <button
@@ -70,7 +73,7 @@ export function SecondaryActionButton({
     >
       <span className={styles.actionButtonLabel}>{children}</span>
       {ttCost ? (
-        <span className={styles.ttCostBadge}>
+        <span className={styles.ttCostBadge} ref={ttCostBadgeRef}>
           <TtTokenAmount amount={ttCost} iconClassName={styles.ttCostIcon} />
         </span>
       ) : null}

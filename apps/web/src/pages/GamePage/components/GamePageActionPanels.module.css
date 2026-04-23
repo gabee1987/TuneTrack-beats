@@ -266,29 +266,38 @@
   height: 2em;
 }
 
-.tokenSpendFlyout {
+.tokenSpendFlyoutAnchor {
   position: fixed;
-  left: max(42px, calc(env(safe-area-inset-left) + 42px));
-  bottom: calc(env(safe-area-inset-bottom) + 84px);
   z-index: 1200;
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
+  transform: translate(-50%, -50%);
   pointer-events: none;
-  background:
-    radial-gradient(circle at 36% 26%, rgba(255, 255, 255, 0.34), transparent 42%),
-    color-mix(in srgb, #0f1020 52%, transparent);
-  box-shadow:
-    0 0 20px color-mix(in srgb, #ffb86b 34%, transparent),
-    0 12px 28px color-mix(in srgb, black 32%, transparent);
+}
+
+.tokenSpendFlyout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #ff9daf;
   will-change: transform, opacity;
 }
 
+.tokenSpendFlyoutContent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.tokenSpendFlyoutAmount {
+  line-height: 1;
+}
+
 .tokenSpendIcon {
-  width: 24px;
-  height: 24px;
+  width: 1.15em;
+  height: 1.15em;
 }
 
 .challengeMetaRow {

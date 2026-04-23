@@ -27,6 +27,7 @@ export function buildGamePageAssemblyModel(
       handlePlaceChallenge: controller.handlePlaceChallenge,
       handleResolveChallengeWindow: controller.handleResolveChallengeWindow,
       handleSkipTrackWithTt: controller.handleSkipTrackWithTt,
+      buyTimelineCardSpendAnimationKey: controller.buyTimelineCardSpendAnimationKey,
       roomState: controller.roomState,
       showHelperLabels: controller.showHelperLabels,
       skipTrackSpendAnimationKey: controller.skipTrackSpendAnimationKey,

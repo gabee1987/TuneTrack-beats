@@ -1,5 +1,6 @@
 import type { PublicRoomState } from "@tunetrack/shared";
 import { motion, useReducedMotion } from "framer-motion";
+import { useRef } from "react";
 import {
   MotionPresence,
   createChallengePanelMotion,
@@ -47,6 +48,11 @@ interface ChallengeActionPanelProps {
   handleClaimChallenge: () => void;
   handlePlaceChallenge: () => void;
   handleResolveChallengeWindow: () => void;
+  onTokenSpendAnimationStart?: (payload: {
+    amount: number;
+    originX: number;
+    originY: number;
+  }) => void;
   roomState: PublicRoomState;
 }
 
@@ -61,9 +67,11 @@ export function ChallengeActionPanel({
   handleClaimChallenge,
   handlePlaceChallenge,
   handleResolveChallengeWindow,
+  onTokenSpendAnimationStart,
   roomState,
 }: ChallengeActionPanelProps) {
   const reduceMotion = useReducedMotion() ?? false;
+  const beatCostBadgeRef = useRef<HTMLSpanElement | null>(null);
 
   const challengeState = roomState.status === "challenge" ? roomState.challengeState : null;
 
@@ -82,11 +90,37 @@ export function ChallengeActionPanel({
     challengeState?.phase === "open"
       ? "Think the placement is wrong? Call Beat before the window closes."
       : challengeActionBody;
+  function resolveSpendOrigin(
+    fallbackButton: HTMLButtonElement,
+    badgeElement: HTMLSpanElement | null,
+  ) {
+    const sourceElement = badgeElement ?? fallbackButton;
+    const sourceBounds = sourceElement.getBoundingClientRect();
+    return {
+      originX: sourceBounds.left + sourceBounds.width / 2,
+      originY: sourceBounds.top + sourceBounds.height / 2,
+    };
+  }
+
   const actionDock = isOpenChallengeWindow ? (
     canClaimChallenge || canResolveChallengeWindow ? (
       <ActionDock>
         {canClaimChallenge ? (
-          <PrimaryActionButton onClick={handleClaimChallenge} ttCost={1}>
+          <PrimaryActionButton
+            onClick={(event) => {
+              const origin = resolveSpendOrigin(
+                event.currentTarget,
+                beatCostBadgeRef.current,
+              );
+              onTokenSpendAnimationStart?.({
+                amount: -1,
+                ...origin,
+              });
+              handleClaimChallenge();
+            }}
+            ttCost={1}
+            ttCostBadgeRef={beatCostBadgeRef}
+          >
             Beat!
           </PrimaryActionButton>
         ) : null}

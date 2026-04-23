@@ -1,9 +1,11 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { memo } from "react";
+import { memo, useRef, useState } from "react";
 import {
   MotionPresence,
-  createExpressiveTransition,
-  createTokenSpendFlyoutVariants,
+  createMenuTokenAdjustFlyoutPopTransition,
+  createMenuTokenAdjustFlyoutPopVariants,
+  createMenuTokenAdjustFlyoutTransition,
+  createMenuTokenAdjustFlyoutVariants,
 } from "../../../features/motion";
 import { TtTokenIcon } from "../../../features/ui/TtToken";
 import type { GamePageActionPanelsModel } from "../GamePage.types";
@@ -17,8 +19,19 @@ interface GamePageActionPanelsProps {
   model: GamePageActionPanelsModel;
 }
 
+interface TokenSpendFlyoutState {
+  amount: number;
+  key: number;
+  originX: number;
+  originY: number;
+}
+
 function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
   const reduceMotion = useReducedMotion() ?? false;
+  const animationKeyRef = useRef(0);
+  const [tokenSpendFlyouts, setTokenSpendFlyouts] = useState<
+    TokenSpendFlyoutState[]
+  >([]);
   const {
     canClaimChallenge,
     canConfirmBeatPlacement,
@@ -41,26 +54,67 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     handleSkipTrackWithTt,
     roomState,
     showHelperLabels,
-    skipTrackSpendAnimationKey,
   } = model;
-  const tokenSpendFlyoutVariants = createTokenSpendFlyoutVariants(reduceMotion);
+
+  function handleTokenSpendAnimationStart(payload: {
+    amount: number;
+    originX: number;
+    originY: number;
+  }) {
+    animationKeyRef.current += 1;
+    setTokenSpendFlyouts((currentFlyouts) => [
+      ...currentFlyouts,
+      {
+        amount: payload.amount,
+        key: animationKeyRef.current,
+        originX: payload.originX,
+        originY: payload.originY,
+      },
+    ]);
+  }
+
+  function clearTokenSpendFlyout(animationKey: number) {
+    setTokenSpendFlyouts((currentFlyouts) =>
+      currentFlyouts.filter((flyout) => flyout.key !== animationKey),
+    );
+  }
 
   return (
     <>
       <MotionPresence mode="sync">
-        {skipTrackSpendAnimationKey > 0 ? (
-          <motion.span
-            animate="animate"
+        {tokenSpendFlyouts.map((flyout) => (
+          <span
             aria-hidden="true"
-            className={styles.tokenSpendFlyout}
-            initial="initial"
-            key={skipTrackSpendAnimationKey}
-            transition={createExpressiveTransition(reduceMotion)}
-            variants={tokenSpendFlyoutVariants}
+            className={styles.tokenSpendFlyoutAnchor}
+            key={flyout.key}
+            style={{ left: flyout.originX, top: flyout.originY }}
           >
-            <TtTokenIcon className={styles.tokenSpendIcon} />
-          </motion.span>
-        ) : null}
+            <motion.span
+              animate="animate"
+              className={styles.tokenSpendFlyout}
+              initial="initial"
+              onAnimationComplete={() => clearTokenSpendFlyout(flyout.key)}
+              transition={createMenuTokenAdjustFlyoutTransition(reduceMotion)}
+              variants={createMenuTokenAdjustFlyoutVariants(
+                reduceMotion,
+                "remove",
+              )}
+            >
+              <motion.span
+                animate="animate"
+                className={styles.tokenSpendFlyoutContent}
+                initial="initial"
+                transition={createMenuTokenAdjustFlyoutPopTransition(reduceMotion)}
+                variants={createMenuTokenAdjustFlyoutPopVariants(reduceMotion)}
+              >
+                <span className={styles.tokenSpendFlyoutAmount}>
+                  {flyout.amount}
+                </span>
+                <TtTokenIcon className={styles.tokenSpendIcon} />
+              </motion.span>
+            </motion.span>
+          </span>
+        ))}
       </MotionPresence>
 
       <ChallengeActionPanel
@@ -74,6 +128,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
         handleClaimChallenge={handleClaimChallenge}
         handlePlaceChallenge={handlePlaceChallenge}
         handleResolveChallengeWindow={handleResolveChallengeWindow}
+        onTokenSpendAnimationStart={handleTokenSpendAnimationStart}
         roomState={roomState}
       />
 
@@ -96,6 +151,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
         handleBuyTimelineCardWithTt={handleBuyTimelineCardWithTt}
         handlePlaceCard={handlePlaceCard}
         handleSkipTrackWithTt={handleSkipTrackWithTt}
+        onTokenSpendAnimationStart={handleTokenSpendAnimationStart}
         roomState={roomState}
       />
     </>

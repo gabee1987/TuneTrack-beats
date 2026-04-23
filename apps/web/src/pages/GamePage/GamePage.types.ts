@@ -158,6 +158,7 @@ export interface GamePageActionPanelsModel
     | "handlePlaceChallenge"
     | "handleResolveChallengeWindow"
     | "handleSkipTrackWithTt"
+    | "buyTimelineCardSpendAnimationKey"
     | "skipTrackSpendAnimationKey"
     | "showHelperLabels"
   > {
@@ -203,6 +204,7 @@ export type GamePageController = GamePageActionHandlers & {
   setSelectedSlotIndex: (slotIndex: number) => void;
   setTimelineView: (view: TimelineView) => void;
   isPreviewCardReplacing: boolean;
+  buyTimelineCardSpendAnimationKey: number;
   skipTrackSpendAnimationKey: number;
   previewCardSwapKey: number;
   showCorrectPlacementPreview: boolean;

@@ -14,6 +14,7 @@ interface UseGamePageActionsOptions {
   roomState: PublicRoomState | null;
   selectedSlotIndex: number;
   onSkipTrackWithTtIntent?: (cardId: string | null) => void;
+  onBuyTimelineCardWithTtIntent?: () => void;
   setLocallyPlacedCard: (card: PublicRoomState["currentTrackCard"] | null) => void;
 }
 
@@ -27,6 +28,7 @@ export function useGamePageActions({
   roomState,
   selectedSlotIndex,
   onSkipTrackWithTtIntent,
+  onBuyTimelineCardWithTtIntent,
   setLocallyPlacedCard,
 }: UseGamePageActionsOptions) {
   async function emitRoomEvent<TPayload>(
@@ -158,6 +160,7 @@ export function useGamePageActions({
       return;
     }
 
+    onBuyTimelineCardWithTtIntent?.();
     void emitRoomEvent(ClientToServerEvent.BuyTimelineCardWithTt, {
       roomId: roomState.roomId,
     });

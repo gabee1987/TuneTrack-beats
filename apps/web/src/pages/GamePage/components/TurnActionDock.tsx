@@ -4,6 +4,7 @@ import {
   type PublicRoomState,
 } from "@tunetrack/shared";
 import { motion, useReducedMotion } from "framer-motion";
+import { useRef } from "react";
 import {
   MotionPresence,
   createActionButtonExitMotion,
@@ -23,6 +24,11 @@ interface TurnActionDockProps {
   handleBuyTimelineCardWithTt: () => void;
   handlePlaceCard: () => void;
   handleSkipTrackWithTt: () => void;
+  onTokenSpendAnimationStart?: (payload: {
+    amount: number;
+    originX: number;
+    originY: number;
+  }) => void;
   roomState: PublicRoomState;
 }
 
@@ -33,9 +39,24 @@ export function TurnActionDock({
   handleBuyTimelineCardWithTt,
   handlePlaceCard,
   handleSkipTrackWithTt,
+  onTokenSpendAnimationStart,
   roomState,
 }: TurnActionDockProps) {
   const reduceMotion = useReducedMotion() ?? false;
+  const skipCostBadgeRef = useRef<HTMLSpanElement | null>(null);
+  const buyCostBadgeRef = useRef<HTMLSpanElement | null>(null);
+
+  function resolveSpendOrigin(
+    fallbackButton: HTMLButtonElement,
+    badgeElement: HTMLSpanElement | null,
+  ) {
+    const sourceElement = badgeElement ?? fallbackButton;
+    const sourceBounds = sourceElement.getBoundingClientRect();
+    return {
+      originX: sourceBounds.left + sourceBounds.width / 2,
+      originY: sourceBounds.top + sourceBounds.height / 2,
+    };
+  }
 
   if (
     roomState.status !== "turn" ||
@@ -60,8 +81,19 @@ export function TurnActionDock({
             variants={createActionButtonExitMotion(reduceMotion)}
           >
             <SecondaryActionButton
-              onClick={handleSkipTrackWithTt}
+              onClick={(event) => {
+                const origin = resolveSpendOrigin(
+                  event.currentTarget,
+                  skipCostBadgeRef.current,
+                );
+                onTokenSpendAnimationStart?.({
+                  amount: -SKIP_TRACK_TT_COST,
+                  ...origin,
+                });
+                handleSkipTrackWithTt();
+              }}
               ttCost={SKIP_TRACK_TT_COST}
+              ttCostBadgeRef={skipCostBadgeRef}
             >
               Skip
             </SecondaryActionButton>
@@ -75,8 +107,19 @@ export function TurnActionDock({
           transition={createLayoutTransition(reduceMotion)}
         >
           <SecondaryActionButton
-            onClick={handleBuyTimelineCardWithTt}
+            onClick={(event) => {
+              const origin = resolveSpendOrigin(
+                event.currentTarget,
+                buyCostBadgeRef.current,
+              );
+              onTokenSpendAnimationStart?.({
+                amount: -BUY_TIMELINE_CARD_TT_COST,
+                ...origin,
+              });
+              handleBuyTimelineCardWithTt();
+            }}
             ttCost={BUY_TIMELINE_CARD_TT_COST}
+            ttCostBadgeRef={buyCostBadgeRef}
           >
             Buy
           </SecondaryActionButton>
@@ -88,7 +131,7 @@ export function TurnActionDock({
           layout="position"
           transition={createLayoutTransition(reduceMotion)}
         >
-          <PrimaryActionButton onClick={handlePlaceCard}>
+          <PrimaryActionButton onClick={() => handlePlaceCard()}>
             Confirm
           </PrimaryActionButton>
         </motion.span>

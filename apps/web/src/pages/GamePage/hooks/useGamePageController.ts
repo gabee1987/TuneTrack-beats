@@ -40,6 +40,8 @@ export function useGamePageController({
   const preferencesState = useGamePagePreferencesState();
   const [skipTrackSpendAnimationKey, setSkipTrackSpendAnimationKey] =
     useState(0);
+  const [buyTimelineCardSpendAnimationKey, setBuyTimelineCardSpendAnimationKey] =
+    useState(0);
   const [previewCardSwapKey, setPreviewCardSwapKey] = useState(0);
   const [isPreviewCardReplacing, setIsPreviewCardReplacing] = useState(false);
   const pendingSkippedTrackIdRef = useRef<string | null>(null);
@@ -86,6 +88,9 @@ export function useGamePageController({
     onSkipTrackWithTtIntent: (cardId) => {
       pendingSkippedTrackIdRef.current = cardId;
       setSkipTrackSpendAnimationKey((key) => key + 1);
+    },
+    onBuyTimelineCardWithTtIntent: () => {
+      setBuyTimelineCardSpendAnimationKey((key) => key + 1);
     },
     setLocallyPlacedCard,
   });
@@ -159,6 +164,7 @@ export function useGamePageController({
     handlePlaceChallenge: actions.handlePlaceChallenge,
     handleResolveChallengeWindow: actions.handleResolveChallengeWindow,
     handleSkipTrackWithTt: actions.handleSkipTrackWithTt,
+    buyTimelineCardSpendAnimationKey,
     skipTrackSpendAnimationKey,
   };
 

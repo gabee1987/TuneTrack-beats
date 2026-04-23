@@ -20,6 +20,7 @@ interface BuildGamePageControllerResultOptions {
     | "handlePlaceChallenge"
     | "handleResolveChallengeWindow"
     | "handleSkipTrackWithTt"
+    | "buyTimelineCardSpendAnimationKey"
     | "skipTrackSpendAnimationKey"
   >;
   capabilityState: Pick<
