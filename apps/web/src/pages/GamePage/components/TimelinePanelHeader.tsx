@@ -1,4 +1,6 @@
+import { LayoutGroup, motion, useReducedMotion } from "framer-motion";
 import { memo } from "react";
+import { createLayoutTransition } from "../../../features/motion";
 import type { TimelinePanelHeaderModel } from "../GamePage.types";
 import styles from "./TimelinePanel.module.css";
 
@@ -11,6 +13,8 @@ function TimelinePanelHeaderComponent({
   model,
   onMineButtonRef,
 }: TimelinePanelHeaderProps) {
+  const reduceMotion = useReducedMotion() ?? false;
+  const layoutTransition = createLayoutTransition(reduceMotion);
   const {
     canChangeTimelineView = true,
     canToggleView = false,
@@ -30,35 +34,51 @@ function TimelinePanelHeaderComponent({
         </span>
       </div>
       {canToggleView && onToggleTimelineView ? (
-        <div className={styles.timelineViewSwitcherCompact}>
-          <button
-            className={`${styles.timelineViewCompactButton} ${
-              timelineView === "active"
-                ? styles.timelineViewCompactButtonActive
-                : ""
-            }`}
-            data-active={timelineView === "active"}
-            disabled={!canChangeTimelineView}
-            onClick={() => onToggleTimelineView("active")}
-            type="button"
-          >
-            Active
-          </button>
-          <button
-            className={`${styles.timelineViewCompactButton} ${
-              timelineView === "mine"
-                ? styles.timelineViewCompactButtonActive
-                : ""
-            }`}
-            data-active={timelineView === "mine"}
-            disabled={!canChangeTimelineView}
-            onClick={() => onToggleTimelineView("mine")}
-            ref={onMineButtonRef}
-            type="button"
-          >
-            Mine
-          </button>
-        </div>
+        <LayoutGroup id="timeline-view-switcher">
+          <div className={styles.timelineViewSwitcherCompact}>
+            <button
+              className={styles.timelineViewCompactButton}
+              data-active={timelineView === "active"}
+              disabled={!canChangeTimelineView}
+              onClick={() => onToggleTimelineView("active")}
+              type="button"
+            >
+              {timelineView === "active" ? (
+                <motion.span
+                  className={styles.timelineViewCompactActivePill}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  layoutId="timeline-view-active-pill"
+                  transition={layoutTransition}
+                >
+                  <span className={styles.timelineViewCompactActiveGlow} />
+                </motion.span>
+              ) : null}
+              <span className={styles.timelineViewCompactButtonLabel}>Active</span>
+            </button>
+            <button
+              className={styles.timelineViewCompactButton}
+              data-active={timelineView === "mine"}
+              disabled={!canChangeTimelineView}
+              onClick={() => onToggleTimelineView("mine")}
+              ref={onMineButtonRef}
+              type="button"
+            >
+              {timelineView === "mine" ? (
+                <motion.span
+                  className={styles.timelineViewCompactActivePill}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  layoutId="timeline-view-active-pill"
+                  transition={layoutTransition}
+                >
+                  <span className={styles.timelineViewCompactActiveGlow} />
+                </motion.span>
+              ) : null}
+              <span className={styles.timelineViewCompactButtonLabel}>Mine</span>
+            </button>
+          </div>
+        </LayoutGroup>
       ) : null}
     </div>
   );
