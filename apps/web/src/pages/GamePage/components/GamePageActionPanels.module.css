@@ -49,12 +49,15 @@
 }
 
 .challengeCallout {
+  --challenge-stage-border: rgb(255 209 102 / 70%);
+  --challenge-stage-glow: rgb(255 209 102 / 26%);
+  --challenge-stage-dot: #ffd166;
   position: relative;
   isolation: isolate;
-  overflow: hidden;
+  overflow: visible;
   margin-top: 18px;
   padding: 18px;
-  border: 1px solid color-mix(in srgb, #ff8a3d 34%, var(--color-border-subtle));
+  border: 1px solid var(--challenge-stage-border);
   border-radius: 28px;
   background:
     radial-gradient(
@@ -77,6 +80,24 @@
     0 18px 46px color-mix(in srgb, black 34%, transparent);
 }
 
+.challengeCalloutStageYellow {
+  --challenge-stage-border: rgb(255 209 102 / 70%);
+  --challenge-stage-glow: rgb(255 209 102 / 28%);
+  --challenge-stage-dot: #ffd166;
+}
+
+.challengeCalloutStageOrange {
+  --challenge-stage-border: rgb(255 138 61 / 78%);
+  --challenge-stage-glow: rgb(255 138 61 / 30%);
+  --challenge-stage-dot: #ff8a3d;
+}
+
+.challengeCalloutStageRed {
+  --challenge-stage-border: rgb(255 49 95 / 88%);
+  --challenge-stage-glow: rgb(255 49 95 / 38%);
+  --challenge-stage-dot: #ff315f;
+}
+
 .challengeCallout::before {
   content: "";
   position: absolute;
@@ -93,8 +114,15 @@
   opacity: 0.7;
 }
 
-.challengeCalloutTimed {
-  animation: beatCalloutPulse 1.08s cubic-bezier(0.35, 0, 0.25, 1) infinite;
+.challengePulseBorder {
+  position: absolute;
+  inset: -1px;
+  border: 1.5px solid var(--challenge-stage-border);
+  border-radius: inherit;
+  pointer-events: none;
+  transform-origin: center center;
+  will-change: transform, opacity, box-shadow;
+  animation: challengeBorderPulseStep 980ms cubic-bezier(0.22, 0.61, 0.36, 1) 1;
 }
 
 .challengeCalloutInner {
@@ -158,8 +186,8 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #ff8a3d;
-  box-shadow: 0 0 18px color-mix(in srgb, #ff8a3d 74%, transparent);
+  background: var(--challenge-stage-dot);
+  box-shadow: 0 0 18px var(--challenge-stage-glow);
 }
 
 .challengeTokenChip {
@@ -263,28 +291,6 @@
   height: 24px;
 }
 
-@keyframes beatCalloutPulse {
-  0%,
-  100% {
-    border-color: color-mix(in srgb, #ff8a3d 32%, var(--color-border-subtle));
-    box-shadow:
-      inset 0 1px 0 color-mix(in srgb, white 12%, transparent),
-      0 18px 46px color-mix(in srgb, black 34%, transparent),
-      0 0 0 0 color-mix(in srgb, #ff4d9d 0%, transparent);
-    transform: translateZ(0) scale(1);
-  }
-
-  48% {
-    border-color: color-mix(in srgb, #ff4d9d 70%, #ffb26b);
-    box-shadow:
-      inset 0 1px 0 color-mix(in srgb, white 16%, transparent),
-      0 20px 52px color-mix(in srgb, black 38%, transparent),
-      0 0 0 4px color-mix(in srgb, #ff4d9d 14%, transparent),
-      0 0 34px color-mix(in srgb, #ff8a3d 22%, transparent);
-    transform: translateZ(0) scale(1.006);
-  }
-}
-
 .challengeMetaRow {
   display: flex;
   flex-wrap: wrap;
@@ -298,6 +304,44 @@
   background: var(--color-chip);
   color: var(--color-text-primary);
   font-size: 14px;
+}
+
+@keyframes challengeBorderPulseStep {
+  0% {
+    opacity: 0;
+    transform: scale(1);
+    box-shadow:
+      0 0 0 0 rgb(255 255 255 / 0%),
+      0 0 0 0 var(--challenge-stage-glow),
+      0 0 0 0 var(--challenge-stage-glow);
+  }
+
+  18% {
+    opacity: 0.45;
+    transform: scale(1.005);
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 5%),
+      0 0 10px 1px var(--challenge-stage-glow),
+      0 0 16px 2px var(--challenge-stage-glow);
+  }
+
+  48% {
+    opacity: 0.32;
+    transform: scale(1.01);
+    box-shadow:
+      0 0 0 2px rgb(255 255 255 / 4%),
+      0 0 14px 2px var(--challenge-stage-glow),
+      0 0 22px 3px var(--challenge-stage-glow);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.014);
+    box-shadow:
+      0 0 0 5px rgb(255 255 255 / 0%),
+      0 0 20px 4px rgb(255 255 255 / 0%),
+      0 0 30px 6px rgb(255 255 255 / 0%);
+  }
 }
 
 @media (max-width: 720px), (hover: none) and (pointer: coarse) {
@@ -347,7 +391,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .challengeCalloutTimed {
+  .challengePulseBorder {
     animation: none;
   }
 

@@ -1,5 +1,10 @@
 import type { DraggableAttributes } from "@dnd-kit/core";
+import { motion, useReducedMotion, type MotionStyle } from "framer-motion";
 import { forwardRef, type CSSProperties } from "react";
+import {
+  createPreviewCardReplaceMotion,
+  createPreviewCardReplaceTransition,
+} from "../../../features/motion";
 import type {
   HiddenCardMode,
   ThemeId,
@@ -57,6 +62,7 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
     },
     ref,
   ) {
+    const reduceMotion = useReducedMotion() ?? false;
     const cardToneClass = isChallengeSlot
       ? tone === "failure"
         ? styles.previewCardChallengeFailure
@@ -70,9 +76,10 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
             : "";
 
     return (
-      <article
+      <motion.article
         ref={ref}
         key={isReplacing ? `${previewCard.id}-${replacementAnimationKey}` : undefined}
+        {...(isReplacing ? { animate: "animate" as const } : {})}
         className={`${styles.previewCard} ${
           hiddenCardMode === "gradient"
             ? styles.previewCardGradient
@@ -84,6 +91,7 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
         } ${isCorrectionPreview ? styles.previewCardCorrectionSurface : ""} ${
           isReplacing ? styles.previewCardReplacing : ""
         }`}
+        {...(isReplacing ? { initial: "initial" as const } : {})}
         style={
           {
             ["--card-gradient" as string]: getCardGradient(
@@ -91,8 +99,14 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
               `${previewCard.id}-preview`,
               isOverlay ? "overlay" : "preview",
             ),
-          } as CSSProperties
+          } as CSSProperties as MotionStyle
         }
+        {...(isReplacing
+          ? {
+              transition: createPreviewCardReplaceTransition(reduceMotion),
+              variants: createPreviewCardReplaceMotion(reduceMotion),
+            }
+          : {})}
         {...attributes}
         {...listeners}
       >
@@ -137,7 +151,7 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
             </>
           )}
         </div>
-      </article>
+      </motion.article>
     );
   },
 );

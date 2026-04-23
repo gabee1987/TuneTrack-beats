@@ -9,6 +9,33 @@ import { TtTokenAmount } from "../../../features/ui/TtToken";
 import styles from "./GamePageActionPanels.module.css";
 import { ActionDock, PrimaryActionButton, SecondaryActionButton } from "./ActionDock";
 
+function parseCountdownSeconds(challengeCountdownLabel: string | null): number | null {
+  if (!challengeCountdownLabel) {
+    return null;
+  }
+
+  const match = challengeCountdownLabel.match(/(\d+)\s*s\b/i);
+  if (!match || !match[1]) {
+    return null;
+  }
+
+  const parsedSeconds = Number.parseInt(match[1], 10);
+  return Number.isFinite(parsedSeconds) ? parsedSeconds : null;
+}
+
+function getCountdownStageClassName(
+  countdownSeconds: number | null,
+): "challengeCalloutStageYellow" | "challengeCalloutStageOrange" | "challengeCalloutStageRed" {
+  switch (true) {
+    case countdownSeconds !== null && countdownSeconds <= 3:
+      return "challengeCalloutStageRed";
+    case countdownSeconds !== null && countdownSeconds <= 7:
+      return "challengeCalloutStageOrange";
+    default:
+      return "challengeCalloutStageYellow";
+  }
+}
+
 interface ChallengeActionPanelProps {
   canClaimChallenge: boolean;
   canConfirmBeatPlacement: boolean;
@@ -47,38 +74,34 @@ export function ChallengeActionPanel({
       : "Host resolves this window manually";
   const isOpenChallengeWindow = challengeState?.phase === "open";
   const hasTimedChallengeWindow = isOpenChallengeWindow && Boolean(challengeCountdownLabel);
-  const panelClassName = `${styles.challengeCallout}${
-    hasTimedChallengeWindow ? ` ${styles.challengeCalloutTimed}` : ""
-  }`;
-  const titleText =
-    challengeState?.phase === "open"
-      ? "Make your Beat!"
-      : challengeActionTitle;
+  const countdownSeconds = parseCountdownSeconds(challengeCountdownLabel);
+  const countdownStageClassName = styles[getCountdownStageClassName(countdownSeconds)];
+  const panelClassName = `${styles.challengeCallout} ${countdownStageClassName}`;
+  const titleText = challengeState?.phase === "open" ? "Make your Beat!" : challengeActionTitle;
   const bodyText =
     challengeState?.phase === "open"
       ? "Think the placement is wrong? Call Beat before the window closes."
       : challengeActionBody;
-  const actionDock =
-    isOpenChallengeWindow ? (
-      canClaimChallenge || canResolveChallengeWindow ? (
-        <ActionDock>
-          {canClaimChallenge ? (
-            <PrimaryActionButton onClick={handleClaimChallenge} ttCost={1}>
-              Beat!
-            </PrimaryActionButton>
-          ) : null}
-          {canResolveChallengeWindow ? (
-            <SecondaryActionButton onClick={handleResolveChallengeWindow}>
-              Resolve
-            </SecondaryActionButton>
-          ) : null}
-        </ActionDock>
-      ) : null
-    ) : canConfirmBeatPlacement ? (
+  const actionDock = isOpenChallengeWindow ? (
+    canClaimChallenge || canResolveChallengeWindow ? (
       <ActionDock>
-        <PrimaryActionButton onClick={handlePlaceChallenge}>Confirm Beat</PrimaryActionButton>
+        {canClaimChallenge ? (
+          <PrimaryActionButton onClick={handleClaimChallenge} ttCost={1}>
+            Beat!
+          </PrimaryActionButton>
+        ) : null}
+        {canResolveChallengeWindow ? (
+          <SecondaryActionButton onClick={handleResolveChallengeWindow}>
+            Resolve
+          </SecondaryActionButton>
+        ) : null}
       </ActionDock>
-    ) : null;
+    ) : null
+  ) : canConfirmBeatPlacement ? (
+    <ActionDock>
+      <PrimaryActionButton onClick={handlePlaceChallenge}>Confirm Beat</PrimaryActionButton>
+    </ActionDock>
+  ) : null;
 
   return (
     <>
@@ -94,12 +117,17 @@ export function ChallengeActionPanel({
             transition={createStandardTransition(reduceMotion)}
             variants={createChallengePanelMotion(reduceMotion)}
           >
+            {hasTimedChallengeWindow && !reduceMotion ? (
+              <span
+                aria-hidden="true"
+                className={styles.challengePulseBorder}
+                key={`challenge-pulse-${countdownSeconds ?? "tick"}`}
+              />
+            ) : null}
             <div className={styles.challengeCalloutInner}>
               <p className={styles.challengeEyebrow}>Limited time</p>
               <h3 className={styles.challengeTitle}>{titleText}</h3>
-              {bodyText ? (
-                <p className={styles.challengeText}>{bodyText}</p>
-              ) : null}
+              {bodyText ? <p className={styles.challengeText}>{bodyText}</p> : null}
 
               <div className={styles.challengeCountdownBadge}>
                 <span className={styles.challengeCountdownDot} aria-hidden="true" />

@@ -46,7 +46,7 @@ export function TurnActionDock({
 
   return (
     <ActionDock>
-      <MotionPresence mode="sync">
+      <MotionPresence mode="popLayout">
         {canUseSkipTrack ? (
           <motion.span
             animate="animate"
@@ -54,7 +54,7 @@ export function TurnActionDock({
             exit="exit"
             initial="initial"
             key="skip-track"
-            layout
+            layout="position"
             style={{ originX: 0.5 }}
             transition={createLayoutTransition(reduceMotion)}
             variants={createActionButtonExitMotion(reduceMotion)}
@@ -71,7 +71,7 @@ export function TurnActionDock({
       {canUseBuyCard ? (
         <motion.span
           className={styles.actionButtonMotionWrap}
-          layout
+          layout="position"
           transition={createLayoutTransition(reduceMotion)}
         >
           <SecondaryActionButton
@@ -85,7 +85,7 @@ export function TurnActionDock({
       {canConfirmTurnPlacement ? (
         <motion.span
           className={styles.actionButtonMotionWrap}
-          layout
+          layout="position"
           transition={createLayoutTransition(reduceMotion)}
         >
           <PrimaryActionButton onClick={handlePlaceCard}>

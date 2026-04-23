@@ -140,6 +140,46 @@ export function createChallengePanelMotion(
   };
 }
 
+export function createChallengeCalloutPulseMotion(
+  reduceMotion: boolean,
+): Pick<TargetAndTransition, "scale" | "y"> {
+  if (reduceMotion) {
+    return { scale: 1, y: 0 };
+  }
+
+  return {
+    scale: [1, 1.02, 1],
+    y: [0, -1, 0],
+  };
+}
+
+export function createChallengeCalloutPulseTransition(
+  reduceMotion: boolean,
+): Transition {
+  return {
+    duration: reduceMotion ? motionDurations.instant : 1.08,
+    ease: [0.35, 0, 0.25, 1],
+    repeat: reduceMotion ? 0 : Infinity,
+    repeatType: "loop",
+  };
+}
+
+export function createChallengeCalloutPulseRingMotion(
+  reduceMotion: boolean,
+): TargetAndTransition {
+  if (reduceMotion) {
+    return {
+      opacity: 0.7,
+      scale: 1,
+    };
+  }
+
+  return {
+    opacity: [0.35, 0.95, 0.35],
+    scale: [1, 1.032, 1],
+  };
+}
+
 export function createActionButtonExitMotion(
   reduceMotion: boolean,
 ): Record<"initial" | "animate" | "exit", TargetAndTransition> {
@@ -152,26 +192,15 @@ export function createActionButtonExitMotion(
   }
 
   return {
-    initial: { opacity: 0, scale: 0.98 },
-    animate: { opacity: 1, scale: 1 },
-    exit: { opacity: 0, scale: 0.96 },
+    initial: { opacity: 0, x: 12, scale: 0.98 },
+    animate: { opacity: 1, x: 0, scale: 1 },
+    exit: { opacity: 0, x: -18, scale: 0.94 },
   };
 }
 
-export function createLayoutTransition(reduceMotion: boolean): Transition {
-  return {
-    duration: reduceMotion ? motionDurations.instant : motionDurations.standard,
-    ease: motionEasings.standard,
-    layout: {
-      duration: reduceMotion ? motionDurations.instant : motionDurations.standard,
-      ease: motionEasings.standard,
-    },
-  };
-}
-
-export function createTokenSpendFlyoutMotion(
+export function createTokenSpendFlyoutInitial(
   reduceMotion: boolean,
-): Pick<TargetAndTransition, "opacity" | "rotate" | "scale" | "x" | "y"> {
+): TargetAndTransition {
   if (reduceMotion) {
     return {
       opacity: 0,
@@ -183,11 +212,78 @@ export function createTokenSpendFlyoutMotion(
   }
 
   return {
+    opacity: 0,
+    rotate: 0,
+    scale: 0.58,
+    x: 0,
+    y: 8,
+  };
+}
+
+export function createLayoutTransition(reduceMotion: boolean): Transition {
+  return {
+    duration: reduceMotion ? motionDurations.quick : motionDurations.standard,
+    ease: motionEasings.standard,
+    layout: {
+      duration: reduceMotion ? motionDurations.quick : motionDurations.standard,
+      ease: motionEasings.standard,
+    },
+  };
+}
+
+export function createTokenSpendFlyoutMotion(
+  reduceMotion: boolean,
+): TargetAndTransition {
+  if (reduceMotion) {
+    return {
+      opacity: [0, 1, 0],
+      rotate: 0,
+      scale: 1,
+      x: 0,
+      y: [0, -8, -16],
+    };
+  }
+
+  return {
     opacity: [0, 1, 1, 0],
     rotate: [0, 0, -8, -16],
     scale: [0.58, 1, 0.92, 0.76],
     x: [0, 0, -8, -18],
     y: [8, -18, -62, -96],
+  };
+}
+
+export function createTokenSpendFlyoutVariants(
+  reduceMotion: boolean,
+): Record<"initial" | "animate", TargetAndTransition> {
+  return {
+    initial: createTokenSpendFlyoutInitial(reduceMotion),
+    animate: createTokenSpendFlyoutMotion(reduceMotion),
+  };
+}
+
+export function createPreviewCardReplaceMotion(
+  reduceMotion: boolean,
+): Record<"initial" | "animate", TargetAndTransition> {
+  if (reduceMotion) {
+    return {
+      initial: { opacity: 0.82, scale: 0.985, y: 4 },
+      animate: { opacity: 1, scale: 1, y: 0 },
+    };
+  }
+
+  return {
+    initial: { opacity: 0.18, scale: 0.92, y: 10 },
+    animate: { opacity: 1, scale: 1, y: 0 },
+  };
+}
+
+export function createPreviewCardReplaceTransition(
+  reduceMotion: boolean,
+): Transition {
+  return {
+    duration: reduceMotion ? motionDurations.quick : 0.64,
+    ease: [0.18, 0.9, 0.2, 1],
   };
 }
 

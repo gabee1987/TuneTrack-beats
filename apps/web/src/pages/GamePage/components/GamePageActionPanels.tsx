@@ -3,7 +3,7 @@ import { memo } from "react";
 import {
   MotionPresence,
   createExpressiveTransition,
-  createTokenSpendFlyoutMotion,
+  createTokenSpendFlyoutVariants,
 } from "../../../features/motion";
 import { TtTokenIcon } from "../../../features/ui/TtToken";
 import type { GamePageActionPanelsModel } from "../GamePage.types";
@@ -43,18 +43,20 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     showHelperLabels,
     skipTrackSpendAnimationKey,
   } = model;
+  const tokenSpendFlyoutVariants = createTokenSpendFlyoutVariants(reduceMotion);
 
   return (
     <>
       <MotionPresence mode="sync">
         {skipTrackSpendAnimationKey > 0 ? (
           <motion.span
-            animate={createTokenSpendFlyoutMotion(reduceMotion)}
+            animate="animate"
             aria-hidden="true"
             className={styles.tokenSpendFlyout}
-            initial={false}
+            initial="initial"
             key={skipTrackSpendAnimationKey}
             transition={createExpressiveTransition(reduceMotion)}
+            variants={tokenSpendFlyoutVariants}
           >
             <TtTokenIcon className={styles.tokenSpendIcon} />
           </motion.span>

@@ -1,4 +1,3 @@
-import { AnimatePresence } from "framer-motion";
 import {
   DndContext,
   DragOverlay,
@@ -11,6 +10,7 @@ import {
   useLayoutEffect,
   useRef,
 } from "react";
+import { MotionPresence } from "../../../features/motion";
 import type {
   TimelinePanelDragModel,
   TimelinePanelItemsModel,
@@ -122,7 +122,7 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
       {model.render.showHint ? (
         <p className={styles.timelineHint}>{model.render.hint}</p>
       ) : null}
-      <AnimatePresence>
+      <MotionPresence mode="sync">
         {showCelebrationToast && model.render.celebrationMessage ? (
           <TimelineCelebration
             key={model.render.celebrationKey ?? model.render.celebrationMessage}
@@ -130,7 +130,7 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
             tone={model.render.celebrationTone ?? "success"}
           />
         ) : null}
-      </AnimatePresence>
+      </MotionPresence>
       <DndContext
         autoScroll
         collisionDetection={closestCenter}
