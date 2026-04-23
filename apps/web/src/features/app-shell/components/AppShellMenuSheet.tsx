@@ -1,5 +1,8 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { createStandardTransition } from "../../motion";
+import {
+  createAppShellMenuSheetMotionTargets,
+  createStandardTransition,
+} from "../../motion";
 import type {
   AppShellMenuPreferencesState,
   AppShellMenuTab,
@@ -29,14 +32,17 @@ export function AppShellMenuSheet({
   title,
 }: AppShellMenuSheetProps) {
   const reduceMotion = useReducedMotion() ?? false;
-  const sheetOffset = isMobileSheet ? { x: 0, y: 32 } : { x: 32, y: 0 };
+  const menuSheetMotionTargets = createAppShellMenuSheetMotionTargets(
+    reduceMotion,
+    isMobileSheet,
+  );
 
   return (
     <motion.aside
-      animate={{ x: 0, y: 0 }}
+      animate={menuSheetMotionTargets.animate}
       className={styles.menuSheet}
-      exit={sheetOffset}
-      initial={sheetOffset}
+      exit={menuSheetMotionTargets.exit}
+      initial={menuSheetMotionTargets.initial}
       onClick={(event) => event.stopPropagation()}
       transition={createStandardTransition(reduceMotion)}
     >

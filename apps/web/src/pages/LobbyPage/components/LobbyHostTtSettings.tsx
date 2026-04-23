@@ -14,7 +14,9 @@ import {
   type PublicRoomSettings,
 } from "@tunetrack/shared";
 import {
+  createMeasuredDisclosureMotion,
   createStandardTransition,
+  createToggleHintFadeMotion,
 } from "../../../features/motion";
 import { RangeField } from "../../../features/ui/RangeField";
 import { SettingField, SettingInfoButton } from "../../../features/ui/SettingField";
@@ -152,9 +154,10 @@ export function LobbyHostTtSettings({
       </label>
 
       <motion.p
-        animate={{
-          opacity: currentSettings.ttModeEnabled ? 0 : 1,
-        }}
+        animate={createToggleHintFadeMotion(
+          reduceMotion,
+          currentSettings.ttModeEnabled,
+        )}
         className={styles.settingsInlineHint}
         layout="position"
         transition={createStandardTransition(reduceMotion)}
@@ -163,10 +166,11 @@ export function LobbyHostTtSettings({
       </motion.p>
 
       <motion.div
-        animate={{
-          height: currentSettings.ttModeEnabled ? ttSettingsContentHeight : 0,
-          opacity: currentSettings.ttModeEnabled ? 1 : 0,
-        }}
+        animate={createMeasuredDisclosureMotion(
+          reduceMotion,
+          currentSettings.ttModeEnabled,
+          ttSettingsContentHeight,
+        )}
         initial={false}
         style={{
           overflow: "hidden",

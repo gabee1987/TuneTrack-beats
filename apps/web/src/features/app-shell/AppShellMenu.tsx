@@ -42,17 +42,15 @@ export function AppShellMenu({ title, subtitle, tabs }: AppShellMenuProps) {
         </svg>
       </button>
 
-      {isOpen ? (
-        <Suspense fallback={null}>
-          <AppShellMenuDialog
-            isOpen={isOpen}
-            onClose={() => setIsOpen(false)}
-            subtitle={subtitle}
-            tabs={tabs}
-            title={title}
-          />
-        </Suspense>
-      ) : null}
+      <Suspense fallback={null}>
+        <AppShellMenuDialog
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+          subtitle={subtitle}
+          tabs={tabs}
+          title={title}
+        />
+      </Suspense>
     </>
   );
 }

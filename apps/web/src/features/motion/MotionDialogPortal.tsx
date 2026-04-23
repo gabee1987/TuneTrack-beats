@@ -5,7 +5,7 @@ import {
   createDialogCardMotion,
   createFadeMotion,
   createStandardTransition,
-} from "./motionTokens";
+} from "./coreMotionTokens";
 import { MotionPresence } from "./MotionPresence";
 
 interface MotionDialogPortalProps {

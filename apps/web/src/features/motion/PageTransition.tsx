@@ -4,7 +4,7 @@ import {
   type ScreenTransitionDirection,
   createPageTransitionVariants,
   createScreenTransition,
-} from "./motionTokens";
+} from "./coreMotionTokens";
 
 interface PageTransitionProps {
   children: ReactNode;
