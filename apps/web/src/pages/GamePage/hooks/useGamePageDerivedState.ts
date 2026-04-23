@@ -107,6 +107,7 @@ interface GamePageDerivedTimelineViewState {
   visibleTimelineCardCount: number;
   visibleTimelineCards: PublicRoomState["timelines"][string];
   visibleTimelineHint: string;
+  visibleTimelineTtCount: number;
   visibleTimelineTitle: string;
 }
 
@@ -168,11 +169,13 @@ export function useGamePageDerivedState({
   });
   const displayState = useGamePageDisplayState({
     activePlayerId: activePlayer?.id,
+    activePlayerTtCount: activePlayer?.ttTokenCount ?? 0,
     activePlayerTimeline,
     canSelectChallengeSlot: capabilityState.canSelectChallengeSlot,
     canSelectTurnSlot: capabilityState.canSelectTurnSlot,
     challengeOwnerId: challengeOwner?.id,
     currentPlayerId,
+    currentPlayerTtCount: currentPlayer?.ttTokenCount ?? 0,
     currentPlayerTimeline,
     getPlayerName,
     getPossessivePlayerName,
@@ -251,6 +254,7 @@ export function useGamePageDerivedState({
     visibleTimelineCardCount: displayState.visibleTimelineCardCount,
     visibleTimelineCards: displayState.visibleTimelineCards,
     visibleTimelineHint: displayState.visibleTimelineHint,
+    visibleTimelineTtCount: displayState.visibleTimelineTtCount,
     visibleTimelineTitle: displayState.visibleTimelineTitle,
   };
 

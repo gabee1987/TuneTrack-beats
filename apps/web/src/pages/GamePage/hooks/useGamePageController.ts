@@ -229,6 +229,7 @@ export function useGamePageController({
     visibleTimelineCardCount: derivedState.visibleTimelineCardCount,
     visibleTimelineCards: derivedState.visibleTimelineCards,
     visibleTimelineHint: derivedState.visibleTimelineHint,
+    visibleTimelineTtCount: derivedState.visibleTimelineTtCount,
     visibleTimelineTitle: derivedState.visibleTimelineTitle,
   };
 

@@ -131,6 +131,7 @@ export interface GamePageHeaderModel
     | "statusDetailText"
     | "updateViewPreferences"
     | "visibleTimelineCardCount"
+    | "visibleTimelineTtCount"
     | "visibleTimelineTitle"
   > {
   roomState: PublicRoomState;
@@ -231,6 +232,7 @@ export type GamePageController = GamePageActionHandlers & {
   visibleTimelineCardCount: number;
   visibleTimelineCards: TimelineCardPublic[];
   visibleTimelineHint: string;
+  visibleTimelineTtCount: number;
   visibleTimelineTitle: string;
 };
 

@@ -27,13 +27,10 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
     statusDetailText,
     updateViewPreferences,
     visibleTimelineCardCount,
+    visibleTimelineTtCount,
     visibleTimelineTitle,
   } = model;
-  const currentPlayer = currentPlayerId
-    ? roomState.players.find((player) => player.id === currentPlayerId)
-    : null;
-  const showStatusTokenCount =
-    roomState.settings.ttModeEnabled && currentPlayer !== null;
+  const showStatusTokenCount = roomState.settings.ttModeEnabled;
 
   return (
     <header className={styles.header}>
@@ -66,7 +63,7 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
             </span>
             {showStatusTokenCount ? (
               <span className={styles.statusBadgeTokenCount}>
-                <TtTokenAmount amount={currentPlayer?.ttTokenCount ?? 0} />
+                <TtTokenAmount amount={visibleTimelineTtCount} />
               </span>
             ) : null}
           </div>
@@ -180,6 +177,7 @@ function areHeaderModelsEqual(
     previousModel.statusDetailText === nextModel.statusDetailText &&
     previousModel.updateViewPreferences === nextModel.updateViewPreferences &&
     previousModel.visibleTimelineCardCount === nextModel.visibleTimelineCardCount &&
+    previousModel.visibleTimelineTtCount === nextModel.visibleTimelineTtCount &&
     previousModel.visibleTimelineTitle === nextModel.visibleTimelineTitle
   );
 }

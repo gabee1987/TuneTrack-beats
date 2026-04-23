@@ -93,6 +93,7 @@ interface BuildGamePageControllerResultOptions {
     visibleTimelineCardCount: number;
     visibleTimelineCards: UseGamePageControllerResult["visibleTimelineCards"];
     visibleTimelineHint: string;
+    visibleTimelineTtCount: number;
     visibleTimelineTitle: string;
   };
 }

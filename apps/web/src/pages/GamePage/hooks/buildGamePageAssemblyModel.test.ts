@@ -76,6 +76,7 @@ describe("buildGamePageAssemblyModel", () => {
       visibleTimelineCardCount: 6,
       visibleTimelineCards: [],
       visibleTimelineHint: "Place the current track",
+      visibleTimelineTtCount: 3,
       visibleTimelineTitle: "Active timeline",
     } as unknown as LoadedGamePageController;
 
@@ -84,6 +85,7 @@ describe("buildGamePageAssemblyModel", () => {
     expect(model.errorMessage).toBe("Room sync issue");
     expect(model.header.roomState.roomId).toBe("ABCD");
     expect(model.header.statusBadgeText).toBe("Your turn");
+    expect(model.header.visibleTimelineTtCount).toBe(3);
     expect(model.timeline.interaction.selectable).toBe(true);
     expect(model.timeline.render.showDevCardInfo).toBe(true);
     expect(model.timeline.render.showDevGenreInfo).toBe(false);

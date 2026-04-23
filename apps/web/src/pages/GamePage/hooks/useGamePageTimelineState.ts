@@ -6,10 +6,12 @@ import { useGamePageRevealTimelineState } from "./useGamePageRevealTimelineState
 
 interface UseGamePageTimelineStateOptions {
   activePlayerId: string | null | undefined;
+  activePlayerTtCount: number;
   activeTimelineHint: string;
   canSelectChallengeSlot: boolean;
   canSelectTurnSlot: boolean;
   currentPlayerId: string | null;
+  currentPlayerTtCount: number;
   currentPlayerTimeline: PublicRoomState["timelines"][string];
   activePlayerTimeline: PublicRoomState["timelines"][string];
   getPossessivePlayerName: GamePagePlayerNameResolver;
@@ -29,15 +31,18 @@ interface UseGamePageTimelineStateResult {
   visibleTimelineCardCount: number;
   visibleTimelineCards: PublicRoomState["timelines"][string];
   visibleTimelineHint: string;
+  visibleTimelineTtCount: number;
   visibleTimelineTitle: string;
 }
 
 export function useGamePageTimelineState({
   activePlayerId,
+  activePlayerTtCount,
   activeTimelineHint,
   canSelectChallengeSlot,
   canSelectTurnSlot,
   currentPlayerId,
+  currentPlayerTtCount,
   currentPlayerTimeline,
   activePlayerTimeline,
   getPossessivePlayerName,
@@ -118,6 +123,9 @@ export function useGamePageTimelineState({
     visibleTimelineCardCount: visibleTimelineCards.length,
     visibleTimelineCards,
     visibleTimelineHint: getVisibleTimelineHint(),
+    visibleTimelineTtCount: isViewingOwnTimeline
+      ? currentPlayerTtCount
+      : activePlayerTtCount,
     visibleTimelineTitle: getVisibleTimelineTitle(),
   };
 }

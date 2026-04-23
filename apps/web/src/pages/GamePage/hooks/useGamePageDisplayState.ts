@@ -10,11 +10,13 @@ import { useGamePageTimelineState } from "./useGamePageTimelineState";
 
 interface UseGamePageDisplayStateOptions {
   activePlayerId: string | null | undefined;
+  activePlayerTtCount: number;
   activePlayerTimeline: PublicRoomState["timelines"][string];
   canSelectChallengeSlot: boolean;
   canSelectTurnSlot: boolean;
   challengeOwnerId: string | null | undefined;
   currentPlayerId: string | null;
+  currentPlayerTtCount: number;
   currentPlayerTimeline: PublicRoomState["timelines"][string];
   getPlayerName: GamePagePlayerNameResolver;
   getPossessivePlayerName: GamePagePlayerNameResolver;
@@ -48,16 +50,19 @@ interface UseGamePageDisplayStateResult {
   visibleTimelineCardCount: number;
   visibleTimelineCards: PublicRoomState["timelines"][string];
   visibleTimelineHint: string;
+  visibleTimelineTtCount: number;
   visibleTimelineTitle: string;
 }
 
 export function useGamePageDisplayState({
   activePlayerId,
+  activePlayerTtCount,
   activePlayerTimeline,
   canSelectChallengeSlot,
   canSelectTurnSlot,
   challengeOwnerId,
   currentPlayerId,
+  currentPlayerTtCount,
   currentPlayerTimeline,
   getPlayerName,
   getPossessivePlayerName,
@@ -126,11 +131,13 @@ export function useGamePageDisplayState({
 
   const timelineState = useGamePageTimelineState({
     activePlayerId,
+    activePlayerTtCount,
     activePlayerTimeline,
     activeTimelineHint: statusState.activeTimelineHint,
     canSelectChallengeSlot,
     canSelectTurnSlot,
     currentPlayerId,
+    currentPlayerTtCount,
     currentPlayerTimeline,
     getPossessivePlayerName,
     isViewingOwnTimeline,
@@ -161,6 +168,7 @@ export function useGamePageDisplayState({
     visibleTimelineCardCount: timelineState.visibleTimelineCardCount,
     visibleTimelineCards: timelineState.visibleTimelineCards,
     visibleTimelineHint: timelineState.visibleTimelineHint,
+    visibleTimelineTtCount: timelineState.visibleTimelineTtCount,
     visibleTimelineTitle: timelineState.visibleTimelineTitle,
   };
 }

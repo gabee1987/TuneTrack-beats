@@ -48,6 +48,7 @@ export function buildGamePageAssemblyModel(
       statusDetailText: controller.statusDetailText,
       updateViewPreferences: controller.updateViewPreferences,
       visibleTimelineCardCount: controller.visibleTimelineCardCount,
+      visibleTimelineTtCount: controller.visibleTimelineTtCount,
       visibleTimelineTitle: controller.visibleTimelineTitle,
     },
     timeline: {
