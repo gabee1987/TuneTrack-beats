@@ -4,7 +4,10 @@ import type {
   HiddenCardMode,
   ThemeId,
 } from "../../../features/preferences/uiPreferences";
-import { motionDurations, motionEasings } from "../../../features/motion";
+import {
+  createTimelineFlyAnimationVariants,
+  createTimelineFlyAnimationTransition,
+} from "../../../features/motion";
 import type { GamePageCard } from "../GamePage.types";
 import { PreviewCard } from "./PreviewCard";
 import styles from "./TimelinePanel.module.css";
@@ -34,39 +37,31 @@ export function TimelinePanelFlyAnimation({
     return null;
   }
 
+  const deltaX =
+    flyAnimationState.targetRect.left +
+    flyAnimationState.targetRect.width / 2 -
+    (flyAnimationState.sourceRect.left +
+      flyAnimationState.sourceRect.width / 2);
+  const deltaY =
+    flyAnimationState.targetRect.top +
+    flyAnimationState.targetRect.height / 2 -
+    (flyAnimationState.sourceRect.top +
+      flyAnimationState.sourceRect.height / 2);
+  const flyVariants = createTimelineFlyAnimationVariants(reduceMotion, deltaX, deltaY);
+
   return createPortal(
     <motion.div
-      animate={{
-        opacity: 0,
-        scale: 0.2,
-        x:
-          flyAnimationState.targetRect.left +
-          flyAnimationState.targetRect.width / 2 -
-          (flyAnimationState.sourceRect.left +
-            flyAnimationState.sourceRect.width / 2),
-        y:
-          flyAnimationState.targetRect.top +
-          flyAnimationState.targetRect.height / 2 -
-          (flyAnimationState.sourceRect.top +
-            flyAnimationState.sourceRect.height / 2),
-      }}
+      animate="animate"
       className={styles.flyToMineCard}
-      initial={{
-        opacity: 1,
-        scale: 1,
-        x: 0,
-        y: 0,
-      }}
+      initial="initial"
       style={{
         height: flyAnimationState.sourceRect.height,
         left: flyAnimationState.sourceRect.left,
         top: flyAnimationState.sourceRect.top,
         width: flyAnimationState.sourceRect.width,
       }}
-      transition={{
-        duration: reduceMotion ? motionDurations.instant : motionDurations.expressive,
-        ease: motionEasings.emphasized,
-      }}
+      transition={createTimelineFlyAnimationTransition(reduceMotion)}
+      variants={flyVariants}
     >
       <PreviewCard
         hiddenCardMode={"gradient" as HiddenCardMode}

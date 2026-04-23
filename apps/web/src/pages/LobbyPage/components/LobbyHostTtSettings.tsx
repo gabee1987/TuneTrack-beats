@@ -1,4 +1,9 @@
-import { type ReactNode } from "react";
+import {
+  type ReactNode,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
@@ -73,8 +78,6 @@ interface LobbyHostTtSettingsProps {
   onToggleTtMode: (enabled: boolean) => void;
 }
 
-const TT_SETTINGS_MAX_HEIGHT_PX = 520;
-
 export function LobbyHostTtSettings({
   currentSettings,
   onRoomSettingsChange,
@@ -82,6 +85,31 @@ export function LobbyHostTtSettings({
 }: LobbyHostTtSettingsProps) {
   const reduceMotion = useReducedMotion() ?? false;
   const challengeWindowOptionValues = getChallengeWindowOptionValueMap();
+  const ttSettingsContentRef = useRef<HTMLDivElement | null>(null);
+  const [ttSettingsContentHeight, setTtSettingsContentHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    const contentElement = ttSettingsContentRef.current;
+    if (!contentElement) {
+      return;
+    }
+
+    const updateMeasuredHeight = () => {
+      setTtSettingsContentHeight(contentElement.scrollHeight);
+    };
+
+    updateMeasuredHeight();
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateMeasuredHeight();
+    });
+
+    resizeObserver.observe(contentElement);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
 
   return (
     <SurfaceCard className={styles.settingsGroup}>
@@ -128,6 +156,7 @@ export function LobbyHostTtSettings({
           opacity: currentSettings.ttModeEnabled ? 0 : 1,
         }}
         className={styles.settingsInlineHint}
+        layout="position"
         transition={createStandardTransition(reduceMotion)}
       >
         Turn this on to show token options.
@@ -135,9 +164,7 @@ export function LobbyHostTtSettings({
 
       <motion.div
         animate={{
-          maxHeight: currentSettings.ttModeEnabled
-            ? TT_SETTINGS_MAX_HEIGHT_PX
-            : 0,
+          height: currentSettings.ttModeEnabled ? ttSettingsContentHeight : 0,
           opacity: currentSettings.ttModeEnabled ? 1 : 0,
         }}
         initial={false}
@@ -147,7 +174,7 @@ export function LobbyHostTtSettings({
         }}
         transition={createStandardTransition(reduceMotion)}
       >
-        <div className={styles.conditionalGroup}>
+        <div className={styles.conditionalGroup} ref={ttSettingsContentRef}>
             <RangeField
               info="How many tokens each player receives when the game starts."
               label="Starting tokens for every player"

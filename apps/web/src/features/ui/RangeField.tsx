@@ -101,7 +101,9 @@ export function RangeField({
     const clampedScrollLeft = Math.max(0, Math.min(maxScrollLeft, nextScrollLeft));
 
     scroller.scrollTo({
-      behavior: "smooth",
+      // Avoid fighting momentum/inertial scrolling when the user flicks.
+      // Snap layout already provides smooth physical movement.
+      behavior: "auto",
       left: clampedScrollLeft,
     });
   }, [tickWidth, value]);

@@ -62,6 +62,15 @@ textarea {
   touch-action: manipulation;
 }
 
+button,
+input,
+select,
+textarea,
+a,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
