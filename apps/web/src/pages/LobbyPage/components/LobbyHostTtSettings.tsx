@@ -9,9 +9,7 @@ import {
   type PublicRoomSettings,
 } from "@tunetrack/shared";
 import {
-  MotionPresence,
-  createDisclosurePanelMotion,
-  createLayoutTransition,
+  createStandardTransition,
 } from "../../../features/motion";
 import { RangeField } from "../../../features/ui/RangeField";
 import { SettingField, SettingInfoButton } from "../../../features/ui/SettingField";
@@ -75,6 +73,8 @@ interface LobbyHostTtSettingsProps {
   onToggleTtMode: (enabled: boolean) => void;
 }
 
+const TT_SETTINGS_MAX_HEIGHT_PX = 520;
+
 export function LobbyHostTtSettings({
   currentSettings,
   onRoomSettingsChange,
@@ -123,18 +123,31 @@ export function LobbyHostTtSettings({
         </span>
       </label>
 
-      <MotionPresence mode="sync">
-        {currentSettings.ttModeEnabled ? (
-          <motion.div
-            animate="animate"
-            className={styles.conditionalGroup}
-            exit="exit"
-            initial="initial"
-            key="tt-settings"
-            style={{ overflow: "hidden" }}
-            transition={createLayoutTransition(reduceMotion)}
-            variants={createDisclosurePanelMotion(reduceMotion)}
-          >
+      <motion.p
+        animate={{
+          opacity: currentSettings.ttModeEnabled ? 0 : 1,
+        }}
+        className={styles.settingsInlineHint}
+        transition={createStandardTransition(reduceMotion)}
+      >
+        Turn this on to show token options.
+      </motion.p>
+
+      <motion.div
+        animate={{
+          maxHeight: currentSettings.ttModeEnabled
+            ? TT_SETTINGS_MAX_HEIGHT_PX
+            : 0,
+          opacity: currentSettings.ttModeEnabled ? 1 : 0,
+        }}
+        initial={false}
+        style={{
+          overflow: "hidden",
+          pointerEvents: currentSettings.ttModeEnabled ? "auto" : "none",
+        }}
+        transition={createStandardTransition(reduceMotion)}
+      >
+        <div className={styles.conditionalGroup}>
             <RangeField
               info="How many tokens each player receives when the game starts."
               label="Starting tokens for every player"
@@ -188,22 +201,8 @@ export function LobbyHostTtSettings({
                 )}
               />
             </SettingField>
-          </motion.div>
-        ) : (
-          <motion.p
-            animate="animate"
-            className={styles.settingsInlineHint}
-            exit="exit"
-            initial="initial"
-            key="tt-settings-hint"
-            style={{ overflow: "hidden" }}
-            transition={createLayoutTransition(reduceMotion)}
-            variants={createDisclosurePanelMotion(reduceMotion)}
-          >
-            Turn this on to show token options.
-          </motion.p>
-        )}
-      </MotionPresence>
+        </div>
+      </motion.div>
     </SurfaceCard>
   );
 }
