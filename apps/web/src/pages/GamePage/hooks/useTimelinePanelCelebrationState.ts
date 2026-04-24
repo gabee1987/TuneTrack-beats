@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { timelineCelebrationTransitionContract } from "../../../features/motion";
 import type { TimelineView } from "../GamePage.types";
 import type { TimelineCelebrationTransitionEvent } from "../gamePageTransitionEvents";
+import {
+  createTimelineCelebrationFlyAnimationState,
+  shouldHandleTimelineCelebrationEvent,
+  type TimelineFlyAnimationState,
+} from "./timelinePanelCelebrationState.utils";
 
 interface UseTimelinePanelCelebrationStateOptions {
   timelineView: TimelineView;
@@ -14,11 +19,8 @@ export function useTimelinePanelCelebrationState({
 }: UseTimelinePanelCelebrationStateOptions) {
   const [activeCelebrationEvent, setActiveCelebrationEvent] =
     useState<TimelineCelebrationTransitionEvent | null>(null);
-  const [flyAnimationState, setFlyAnimationState] = useState<{
-    card: NonNullable<TimelineCelebrationTransitionEvent["celebrationCard"]>;
-    sourceRect: DOMRect;
-    targetRect: DOMRect;
-  } | null>(null);
+  const [flyAnimationState, setFlyAnimationState] =
+    useState<TimelineFlyAnimationState | null>(null);
   const previewCardRectRef = useRef<DOMRect | null>(null);
   const lastHandledEventKeyRef = useRef<number | null>(
     transitionEvent?.eventKey ?? null,
@@ -26,32 +28,23 @@ export function useTimelinePanelCelebrationState({
   const mineButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
-    if (
-      !transitionEvent ||
-      transitionEvent.eventKey === lastHandledEventKeyRef.current
-    ) {
+    if (!shouldHandleTimelineCelebrationEvent(
+      lastHandledEventKeyRef.current,
+      transitionEvent,
+    )) {
       return;
     }
 
     lastHandledEventKeyRef.current = transitionEvent.eventKey;
     setActiveCelebrationEvent(transitionEvent);
-
-    if (
-      !transitionEvent.celebrationCard ||
-      !transitionEvent.shouldAnimateCardToMine ||
-      timelineView === "mine" ||
-      !previewCardRectRef.current ||
-      !mineButtonRef.current
-    ) {
-      setFlyAnimationState(null);
-      return;
-    }
-
-    setFlyAnimationState({
-      card: transitionEvent.celebrationCard,
-      sourceRect: previewCardRectRef.current,
-      targetRect: mineButtonRef.current.getBoundingClientRect(),
-    });
+    setFlyAnimationState(
+      createTimelineCelebrationFlyAnimationState({
+        mineButtonRect: mineButtonRef.current?.getBoundingClientRect() ?? null,
+        previewCardRect: previewCardRectRef.current,
+        timelineView,
+        transitionEvent,
+      }),
+    );
   }, [timelineView, transitionEvent]);
 
   useEffect(() => {

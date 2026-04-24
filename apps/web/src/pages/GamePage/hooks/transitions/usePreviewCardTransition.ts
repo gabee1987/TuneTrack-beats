@@ -35,9 +35,12 @@ export function usePreviewCardTransition({
   const lastHandledTransitionKeyRef = useRef<number | null>(
     transitionEvent?.eventKey ?? null,
   );
+  const hasPendingTransitionEvent =
+    transitionEvent !== null &&
+    transitionEvent.eventKey !== lastHandledTransitionKeyRef.current;
 
   useEffect(() => {
-    if (isTransitionActive) {
+    if (isTransitionActive || hasPendingTransitionEvent) {
       return;
     }
 
@@ -49,6 +52,7 @@ export function usePreviewCardTransition({
     });
   }, [
     animationControls,
+    hasPendingTransitionEvent,
     isTransitionActive,
     previewCard,
     showRevealedContent,

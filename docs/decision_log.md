@@ -250,6 +250,27 @@ Reason:
 - this keeps the motion layer aligned with the same explicit-boundary rules used
   elsewhere in the frontend architecture
 
+### Coordinator test strategy without a DOM-heavy runner
+
+GamePage coordinator coverage now favors pure state helpers when the current
+test runtime does not provide the right DOM environment for hook-level animation
+tests by default.
+
+Current rule:
+
+- extract coordinator decision logic into pure helpers when practical
+- test transition snapshots, display-state derivation, and fly-animation
+  eligibility directly in unit tests
+- treat higher-level hook/component animation tests as a later enhancement, not
+  a reason to hide logic inside untestable effects
+
+Reason:
+
+- this keeps test coverage growing without introducing avoidable test-runtime
+  complexity into the repo
+- this preserves the architectural goal that backend-driven UI sequencing should
+  be explicit and verifiable
+
 ## Still Open
 
 ### Room code generation rules

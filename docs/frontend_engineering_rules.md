@@ -541,6 +541,11 @@ Recommended testing split:
 - component tests for rendered behavior and interaction
 - later end-to-end tests for critical flows like join, place, challenge, reveal
 
+For backend-driven animation coordinators:
+
+- prefer extracting the coordinator decision logic into pure helpers when that makes state sequencing easier to test
+- if the repo does not yet have the right DOM test runtime for hook/component-level animation tests, do not force brittle infra into the change; test the pure coordinator helpers first and document the missing higher-level coverage
+
 ## 18. Refactor Rules For Current Codebase
 
 The following patterns should be actively reduced over time:
