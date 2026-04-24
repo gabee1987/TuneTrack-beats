@@ -292,72 +292,76 @@ export function createTimelineFlyAnimationTransition(reduceMotion: boolean): Tra
   };
 }
 
-export function createPreviewCardReplaceMotion(
+export function createPreviewCardReplaceExitMotion(
   reduceMotion: boolean,
-): Record<"initial" | "animate", TargetAndTransition> {
+): TargetAndTransition {
   if (reduceMotion) {
     return {
-      initial: { opacity: 0.94, rotateY: 0, scale: 1 },
-      animate: { opacity: 1, rotateY: 0, scale: 1 },
+      opacity: 0,
+      scale: 0,
+      transition: {
+        duration: motionDurations.quick,
+        ease: motionEasings.standard,
+      },
     };
   }
 
   return {
-    initial: {
-      opacity: 1,
-      rotateY: 0,
-      rotateX: 0,
-      z: 0,
-      scale: 1,
-      transformPerspective: 1260,
-      transformOrigin: "50% 50%",
-    },
-    animate: {
-      opacity: 1,
-      rotateY: [0, 89.5, 89.5, 0],
-      rotateX: [0, 3.2, 3.2, 0],
-      z: [0, 34, 34, 0],
-      scale: [1, 0.992, 1.028, 1],
-      transformPerspective: 1260,
-      transformOrigin: "50% 50%",
+    opacity: 0,
+    scale: 0,
+    transition: {
+      type: "spring",
+      stiffness: 340,
+      damping: 30,
+      mass: 0.82,
     },
   };
 }
 
-export function createPreviewCardReplaceTransition(reduceMotion: boolean): Transition {
+export function createPreviewCardReplaceEnterInitial(
+  reduceMotion: boolean,
+): TargetAndTransition {
   if (reduceMotion) {
     return {
-      duration: motionDurations.quick,
-      ease: motionEasings.standard,
+      opacity: 0,
+      scale: 0,
     };
   }
 
   return {
-    rotateY: {
-      duration: 0.56,
-      ease: [0.24, 0.84, 0.26, 1],
-      times: [0, 0.44, 0.58, 1],
-    },
-    rotateX: {
-      duration: 0.56,
-      ease: [0.24, 0.84, 0.26, 1],
-      times: [0, 0.44, 0.58, 1],
-    },
-    z: {
-      duration: 0.56,
-      ease: [0.24, 0.84, 0.26, 1],
-      times: [0, 0.44, 0.58, 1],
-    },
-    scale: {
-      type: "spring",
-      stiffness: 420,
-      damping: 28,
-      mass: 0.62,
-      delay: 0.34,
-    },
-    opacity: {
-      duration: 0.18,
-      ease: "linear",
+    opacity: 0,
+    scale: 0,
+  };
+}
+
+export function createPreviewCardReplaceEnterMotion(
+  reduceMotion: boolean,
+): TargetAndTransition {
+  if (reduceMotion) {
+    return {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: motionDurations.quick,
+        ease: motionEasings.standard,
+      },
+    };
+  }
+
+  return {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      scale: {
+        type: "spring",
+        stiffness: 250,
+        damping: 18,
+        mass: 0.74,
+      },
+      opacity: {
+        duration: 0.24,
+        ease: [0.2, 0.8, 0.2, 1],
+      },
     },
   };
 }

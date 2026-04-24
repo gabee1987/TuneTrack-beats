@@ -1,9 +1,20 @@
 import type { DraggableAttributes } from "@dnd-kit/core";
-import { motion, useReducedMotion, type MotionStyle } from "framer-motion";
-import { forwardRef, type CSSProperties } from "react";
 import {
-  createPreviewCardReplaceMotion,
-  createPreviewCardReplaceTransition,
+  motion,
+  useAnimationControls,
+  useReducedMotion,
+  type MotionStyle,
+} from "framer-motion";
+import {
+  forwardRef,
+  useEffect,
+  useState,
+  type CSSProperties,
+} from "react";
+import {
+  createPreviewCardReplaceEnterInitial,
+  createPreviewCardReplaceEnterMotion,
+  createPreviewCardReplaceExitMotion,
 } from "../../../features/motion";
 import type {
   HiddenCardMode,
@@ -36,6 +47,56 @@ export interface PreviewCardProps {
   tone: ChallengeMarkerTone;
 }
 
+interface PreviewCardContentProps {
+  card: GamePageCard;
+  showDevAlbumInfo: boolean;
+  showDevCardInfo: boolean;
+  showDevGenreInfo: boolean;
+  showDevYearInfo: boolean;
+  showRevealedContent: boolean;
+}
+
+function PreviewCardContent({
+  card,
+  showDevAlbumInfo,
+  showDevCardInfo,
+  showDevGenreInfo,
+  showDevYearInfo,
+  showRevealedContent,
+}: PreviewCardContentProps) {
+  return showDevCardInfo || showRevealedContent ? (
+    <>
+      <p className={styles.previewCardArtist}>{card.artist}</p>
+      <div className={styles.previewCardCenter}>
+        {showDevYearInfo || showRevealedContent ? (
+          <strong className={styles.previewCardYear}>
+            {"releaseYear" in card ? String(card.releaseYear) : ""}
+          </strong>
+        ) : null}
+        {showDevGenreInfo && "genre" in card && card.genre ? (
+          <p className={styles.previewCardMetaPill}>{String(card.genre)}</p>
+        ) : null}
+      </div>
+      <div className={styles.previewCardBottom}>
+        {showDevAlbumInfo && "albumTitle" in card ? (
+          <p className={styles.previewCardAlbum}>{String(card.albumTitle)}</p>
+        ) : null}
+        <h3 className={styles.previewCardTitle}>{card.title}</h3>
+      </div>
+    </>
+  ) : (
+    <>
+      <p className={styles.previewCardArtist}>TuneTrack</p>
+      <div className={styles.previewCardCenter}>
+        <strong className={styles.previewCardYear}>TT</strong>
+      </div>
+      <div className={styles.previewCardBottom}>
+        <h3 className={styles.previewCardTitle}>Hidden Until Reveal</h3>
+      </div>
+    </>
+  );
+}
+
 export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
   function PreviewCard(
     {
@@ -63,6 +124,10 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
     ref,
   ) {
     const reduceMotion = useReducedMotion() ?? false;
+    const controls = useAnimationControls();
+    const [displayCard, setDisplayCard] = useState(previewCard);
+    const [displayShowRevealedContent, setDisplayShowRevealedContent] =
+      useState(showRevealedContent);
     const cardToneClass = isChallengeSlot
       ? tone === "failure"
         ? styles.previewCardChallengeFailure
@@ -75,11 +140,61 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
             ? styles.previewCardCurrentPick
             : "";
 
+    useEffect(() => {
+      if (isReplacing) {
+        return;
+      }
+
+      setDisplayCard(previewCard);
+      setDisplayShowRevealedContent(showRevealedContent);
+      controls.set({
+        opacity: 1,
+        scale: 1,
+      });
+    }, [controls, isReplacing, previewCard, showRevealedContent]);
+
+    useEffect(() => {
+      if (!isReplacing) {
+        return;
+      }
+
+      let isCancelled = false;
+
+      const runReplacement = async () => {
+        await controls.start(createPreviewCardReplaceExitMotion(reduceMotion));
+
+        if (isCancelled) {
+          return;
+        }
+
+        setDisplayCard(previewCard);
+        setDisplayShowRevealedContent(showRevealedContent);
+        controls.set(createPreviewCardReplaceEnterInitial(reduceMotion));
+
+        if (isCancelled) {
+          return;
+        }
+
+        await controls.start(createPreviewCardReplaceEnterMotion(reduceMotion));
+      };
+
+      void runReplacement();
+
+      return () => {
+        isCancelled = true;
+      };
+    }, [
+      controls,
+      isReplacing,
+      previewCard,
+      reduceMotion,
+      replacementAnimationKey,
+      showRevealedContent,
+    ]);
+
     return (
       <motion.article
         ref={ref}
-        key={isReplacing ? `${previewCard.id}-${replacementAnimationKey}` : undefined}
-        {...(isReplacing ? { animate: "animate" as const } : {})}
         className={`${styles.previewCard} ${
           hiddenCardMode === "gradient"
             ? styles.previewCardGradient
@@ -91,7 +206,8 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
         } ${isCorrectionPreview ? styles.previewCardCorrectionSurface : ""} ${
           isReplacing ? styles.previewCardReplacing : ""
         }`}
-        {...(isReplacing ? { initial: "initial" as const } : {})}
+        animate={controls}
+        initial={false}
         style={
           {
             ["--card-gradient" as string]: getCardGradient(
@@ -101,55 +217,18 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
             ),
           } as CSSProperties as MotionStyle
         }
-        {...(isReplacing
-          ? {
-              transition: createPreviewCardReplaceTransition(reduceMotion),
-              variants: createPreviewCardReplaceMotion(reduceMotion),
-            }
-          : {})}
         {...attributes}
         {...listeners}
       >
         <div className={styles.previewCardFace}>
-          {showDevCardInfo || showRevealedContent ? (
-            <>
-              <p className={styles.previewCardArtist}>{previewCard.artist}</p>
-              <div className={styles.previewCardCenter}>
-                {showDevYearInfo || showRevealedContent ? (
-                  <strong className={styles.previewCardYear}>
-                    {"releaseYear" in previewCard
-                      ? String(previewCard.releaseYear)
-                      : ""}
-                  </strong>
-                ) : null}
-                {showDevGenreInfo &&
-                "genre" in previewCard &&
-                previewCard.genre ? (
-                  <p className={styles.previewCardMetaPill}>
-                    {String(previewCard.genre)}
-                  </p>
-                ) : null}
-              </div>
-              <div className={styles.previewCardBottom}>
-                {showDevAlbumInfo && "albumTitle" in previewCard ? (
-                  <p className={styles.previewCardAlbum}>
-                    {String(previewCard.albumTitle)}
-                  </p>
-                ) : null}
-                <h3 className={styles.previewCardTitle}>{previewCard.title}</h3>
-              </div>
-            </>
-          ) : (
-            <>
-              <p className={styles.previewCardArtist}>TuneTrack</p>
-              <div className={styles.previewCardCenter}>
-                <strong className={styles.previewCardYear}>TT</strong>
-              </div>
-              <div className={styles.previewCardBottom}>
-                <h3 className={styles.previewCardTitle}>Hidden Until Reveal</h3>
-              </div>
-            </>
-          )}
+          <PreviewCardContent
+            card={displayCard}
+            showDevAlbumInfo={showDevAlbumInfo}
+            showDevCardInfo={showDevCardInfo}
+            showDevGenreInfo={showDevGenreInfo}
+            showDevYearInfo={showDevYearInfo}
+            showRevealedContent={displayShowRevealedContent}
+          />
         </div>
       </motion.article>
     );

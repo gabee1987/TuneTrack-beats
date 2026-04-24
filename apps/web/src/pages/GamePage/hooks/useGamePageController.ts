@@ -122,7 +122,7 @@ export function useGamePageController({
 
     const timeoutId = window.setTimeout(() => {
       setIsPreviewCardReplacing(false);
-    }, 720);
+    }, 760);
 
     return () => {
       window.clearTimeout(timeoutId);
