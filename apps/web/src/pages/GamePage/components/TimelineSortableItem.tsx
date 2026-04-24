@@ -8,14 +8,9 @@ import type {
 } from "../../../features/preferences/uiPreferences";
 import type { ChallengeMarkerTone, GamePageCard } from "../GamePage.types";
 import type { PreviewCardTransitionEvent } from "../gamePageTransitionEvents";
-import {
-  TIMELINE_REORDER_DURATION_MS,
-  TIMELINE_REORDER_EASING,
-} from "../gamePage.constants";
-import {
-  animateTimelineLayoutChanges,
-  getCardGradient,
-} from "../gamePage.utils";
+import { TIMELINE_REORDER_DURATION_MS, TIMELINE_REORDER_EASING } from "../gamePage.constants";
+import { animateTimelineLayoutChanges, getCardGradient } from "../gamePage.utils";
+import { CorrectPlacementCelebration } from "./CorrectPlacementCelebration";
 import { PreviewCard } from "./PreviewCard";
 import styles from "./TimelinePanel.module.css";
 
@@ -62,6 +57,8 @@ function TimelineSortableItemComponent({
   showDevGenreInfo,
   theme,
 }: TimelineSortableItemProps) {
+  const shouldCelebrateCorrectPlacement =
+    !isPreview && isOriginalSlot && showCorrectPlacementPreview;
   const { attributes, isDragging, listeners, setNodeRef, transform, transition } =
     useSortable({
       id,
@@ -115,32 +112,53 @@ function TimelineSortableItemComponent({
           ref={previewCardRef}
         />
       ) : (
-        <article
-          data-timeline-card="true"
-          className={`${styles.timelineCard} ${
-            isOriginalSlot
-              ? showCorrectPlacementPreview
-                ? styles.timelineCardResolvedCorrect
-                : styles.timelineCardCurrentPick
-              : ""
-          } ${
-            isChallengeSlot
-              ? challengeMarkerTone === "failure"
-                ? styles.timelineCardChallengeFailure
-                : styles.timelineCardChallenge
-              : ""
-          }`}
-        >
-          <p className={styles.timelineArtist}>{card.artist}</p>
-          <div className={styles.timelineCardCenter}>
-            <strong className={styles.yearText}>
-              {"revealedYear" in card ? card.revealedYear : ""}
-            </strong>
-          </div>
-          <div className={styles.timelineCardBottom}>
-            <h3 className={styles.timelineTitle}>{card.title}</h3>
-          </div>
-        </article>
+        shouldCelebrateCorrectPlacement ? (
+          <CorrectPlacementCelebration
+            key={`resolved-correct-placement-${id}`}
+            className={`${styles.previewCard} ${styles.previewCardCurrentPick} ${styles.previewCardResolvedCorrect} ${
+              isChallengeSlot
+                ? challengeMarkerTone === "failure"
+                  ? styles.previewCardChallengeFailure
+                  : styles.previewCardChallenge
+                : ""
+            }`}
+          >
+            <p className={styles.timelineArtist}>{card.artist}</p>
+            <div className={styles.timelineCardCenter}>
+              <strong className={styles.yearText}>
+                {"revealedYear" in card ? card.revealedYear : ""}
+              </strong>
+            </div>
+            <div className={styles.timelineCardBottom}>
+              <h3 className={styles.timelineTitle}>{card.title}</h3>
+            </div>
+          </CorrectPlacementCelebration>
+        ) : (
+          <article
+            data-timeline-card="true"
+            className={`${styles.timelineCard} ${
+              isOriginalSlot ? styles.timelineCardCurrentPick : ""
+            } ${
+              isChallengeSlot
+                ? challengeMarkerTone === "failure"
+                  ? styles.timelineCardChallengeFailure
+                  : styles.timelineCardChallenge
+                : ""
+            }`}
+          >
+            <>
+              <p className={styles.timelineArtist}>{card.artist}</p>
+              <div className={styles.timelineCardCenter}>
+                <strong className={styles.yearText}>
+                  {"revealedYear" in card ? card.revealedYear : ""}
+                </strong>
+              </div>
+              <div className={styles.timelineCardBottom}>
+                <h3 className={styles.timelineTitle}>{card.title}</h3>
+              </div>
+            </>
+          </article>
+        )
       )}
     </div>
   );

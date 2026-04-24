@@ -23,6 +23,14 @@ export {
   createLayoutTransition,
 } from "./transitions/gameplayActionTransition";
 export {
+  createCorrectPlacementCardTransition,
+  createCorrectPlacementCardVariants,
+  createCorrectPlacementContentTransition,
+  createCorrectPlacementContentVariants,
+  createCorrectPlacementFillTransition,
+  createCorrectPlacementFillVariants,
+  createCorrectPlacementShellContentTransition,
+  createCorrectPlacementShellContentVariants,
   createTimelineCelebrationTransition,
   createTimelineCelebrationVariants,
   createTimelineFlyAnimationTransition,
