@@ -19,9 +19,6 @@ describe("buildGamePageAssemblyModel", () => {
       challengeActionTitle: "Beat move",
       challengeCountdownLabel: "12s left",
       challengeMarkerTone: "success",
-      challengeSuccessCelebrationCard: null,
-      challengeSuccessCelebrationKey: "celebration-key",
-      challengeSuccessMessage: "Beat confirmed",
       currentPlayerId: "player-1",
       currentPlayerTtCount: 2,
       disabledTimelineSlots: [1, 3],
@@ -41,6 +38,17 @@ describe("buildGamePageAssemblyModel", () => {
       isViewingOwnTimeline: false,
       leadingPlayers: [],
       menuTabs: [],
+      previewCardTransitionEvent: null,
+      timelinePreviewTransitionEvent: null,
+      timelineCelebrationTransitionEvent: {
+        celebrationCard: null,
+        celebrationKey: "celebration-key",
+        eventKey: 4,
+        message: "Beat confirmed",
+        reason: "challenge_success_celebration",
+        shouldAnimateCardToMine: false,
+        tone: "success",
+      },
       roomState: {
         players: [],
         roomId: "ABCD",
@@ -89,6 +97,10 @@ describe("buildGamePageAssemblyModel", () => {
     expect(model.timeline.interaction.selectable).toBe(true);
     expect(model.timeline.render.showDevCardInfo).toBe(true);
     expect(model.timeline.render.showDevGenreInfo).toBe(false);
+    expect(model.timeline.render.timelineCelebrationTransitionEvent).toMatchObject({
+      eventKey: 4,
+      message: "Beat confirmed",
+    });
     expect(model.timeline.interaction.disabledSlotIndexes).toEqual([1, 3]);
     expect(model.actions.challengeActionTitle).toBe("Beat move");
     expect(model.actions.roomState).toBe(controller.roomState);

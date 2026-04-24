@@ -72,22 +72,18 @@ export function buildGamePageAssemblyModel(
         selectedSlotIndex: controller.selectedSlotIndex,
       },
       render: {
-        celebrationCard: controller.challengeSuccessCelebrationCard,
-        celebrationKey: controller.challengeSuccessCelebrationKey,
-        celebrationMessage: controller.challengeSuccessMessage,
-        celebrationTone: controller.challengeSuccessTone,
         hiddenCardMode: controller.hiddenCardMode,
         hint: controller.visibleTimelineHint,
-        isPreviewCardReplacing: controller.isPreviewCardReplacing,
-        previewCardSwapKey: controller.previewCardSwapKey,
+        previewCardTransitionEvent: controller.previewCardTransitionEvent,
+        timelinePreviewTransitionEvent: controller.timelinePreviewTransitionEvent,
+        timelineCelebrationTransitionEvent:
+          controller.timelineCelebrationTransitionEvent,
         showCorrectPlacementPreview: controller.showCorrectPlacementPreview,
         showCorrectionPreview: controller.showCorrectionPreview,
         showDevAlbumInfo: controller.isHost && controller.showDevAlbumInfo,
         showDevCardInfo: controller.isHost && controller.showDevCardInfo,
         showDevGenreInfo: controller.isHost && controller.showDevGenreInfo,
         showDevYearInfo: controller.isHost && controller.showDevYearInfo,
-        shouldAnimateCelebrationCardToMine:
-          controller.shouldAnimateCelebrationCardToMine,
         showHint:
           controller.showTimelineHints && controller.visibleTimelineHint.length > 0,
         theme: controller.theme,

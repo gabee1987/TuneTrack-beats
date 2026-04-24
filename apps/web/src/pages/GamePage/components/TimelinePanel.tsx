@@ -17,6 +17,7 @@ import type {
   TimelinePanelModel,
 } from "../GamePage.types";
 import { DRAG_ACTIVATION_DISTANCE_PX } from "../gamePage.constants";
+import { useTimelinePreviewTransition } from "../hooks/transitions/useTimelinePreviewTransition";
 import { useTimelinePanelCelebrationState } from "../hooks/useTimelinePanelCelebrationState";
 import { useTimelinePanelDragState } from "../hooks/useTimelinePanelDragState";
 import { useTimelineOverflowState } from "../hooks/useTimelineOverflowState";
@@ -33,10 +34,23 @@ interface TimelinePanelProps {
 
 export function TimelinePanel({ model }: TimelinePanelProps) {
   const timelineView = model.render.timelineView ?? "active";
+  const {
+    displayPreviewCard,
+    displayPreviewSlot,
+    displayShowCorrectPlacementPreview,
+    displayShowCorrectionPreview,
+    displayShowRevealedContent,
+  } = useTimelinePreviewTransition({
+    previewCard: model.interaction.previewCard,
+    previewSlot: model.interaction.previewSlotIndex,
+    showCorrectPlacementPreview: model.render.showCorrectPlacementPreview ?? false,
+    showCorrectionPreview: model.render.showCorrectionPreview ?? false,
+    transitionEvent: model.render.timelinePreviewTransitionEvent,
+  });
   const dragModel: TimelinePanelDragModel = {
     onSelectSlot: model.interaction.onSelectSlot,
-    previewCard: model.interaction.previewCard,
-    previewSlotIndex: model.interaction.previewSlotIndex,
+    previewCard: displayPreviewCard,
+    previewSlotIndex: displayPreviewSlot,
     selectedSlotIndex: model.interaction.selectedSlotIndex,
     timelineCards: model.render.timelineCards,
   };
@@ -45,12 +59,11 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
     challengerChosenSlotIndex: model.interaction.challengerChosenSlotIndex,
     disabledSlotIndexes: model.interaction.disabledSlotIndexes ?? [],
     hiddenCardMode: model.render.hiddenCardMode,
-    isPreviewCardReplacing: model.render.isPreviewCardReplacing,
     originalChosenSlotIndex: model.interaction.originalChosenSlotIndex,
-    previewCardSwapKey: model.render.previewCardSwapKey,
+    previewCardTransitionEvent: model.render.previewCardTransitionEvent,
     selectable: model.interaction.selectable,
-    showCorrectPlacementPreview: model.render.showCorrectPlacementPreview ?? false,
-    showCorrectionPreview: model.render.showCorrectionPreview ?? false,
+    showCorrectPlacementPreview: displayShowCorrectPlacementPreview,
+    showCorrectionPreview: displayShowCorrectionPreview,
     showDevAlbumInfo: model.render.showDevAlbumInfo,
     showDevCardInfo: model.render.showDevCardInfo,
     showDevGenreInfo: model.render.showDevGenreInfo,
@@ -63,16 +76,13 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
   const timelineRowRef = useRef<HTMLDivElement | null>(null);
   const previewCardElementRef = useRef<HTMLElement | null>(null);
   const {
+    activeCelebrationEvent,
     flyAnimationState,
     mineButtonRef,
     previewCardRectRef,
-    showCelebrationToast,
   } = useTimelinePanelCelebrationState({
-    celebrationCard: model.render.celebrationCard,
-    celebrationKey: model.render.celebrationKey,
-    shouldAnimateCelebrationCardToMine:
-      model.render.shouldAnimateCelebrationCardToMine,
     timelineView,
+    transitionEvent: model.render.timelineCelebrationTransitionEvent,
   });
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -123,11 +133,11 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
         <p className={styles.timelineHint}>{model.render.hint}</p>
       ) : null}
       <MotionPresence mode="sync">
-        {showCelebrationToast && model.render.celebrationMessage ? (
+        {activeCelebrationEvent ? (
           <TimelineCelebration
-            key={model.render.celebrationKey ?? model.render.celebrationMessage}
-            message={model.render.celebrationMessage}
-            tone={model.render.celebrationTone ?? "success"}
+            key={activeCelebrationEvent.eventKey}
+            message={activeCelebrationEvent.message}
+            tone={activeCelebrationEvent.tone}
           />
         ) : null}
       </MotionPresence>
@@ -171,9 +181,10 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
               showDevCardInfo={model.render.showDevCardInfo}
               showDevYearInfo={model.render.showDevYearInfo}
               showDevGenreInfo={model.render.showDevGenreInfo}
-              showRevealedContent={model.render.showCorrectionPreview ?? false}
+              showRevealedContent={displayShowRevealedContent}
               theme={model.render.theme}
               tone="pending"
+              transitionEvent={null}
             />
           ) : null}
         </DragOverlay>

@@ -24,6 +24,7 @@ export interface GamePageRevealTimelineSelectorResult {
   ownTimelineChallengeAwardSlot: number | null;
   ownTimelineOriginalAwardSlot: number | null;
   revealPreviewCard: PublicRoomState["currentTrackCard"] | null;
+  revealPreviewTransitionKey: string | null;
   revealPreviewSlot: number | null;
   showCorrectPlacementPreview: boolean;
   showCorrectionPreview: boolean;
@@ -101,6 +102,18 @@ export function getGamePageRevealTimelineState({
     ? roomState?.revealState?.selectedSlotIndex ?? null
     : null;
 
+  const revealPreviewTransitionKey =
+    roomState?.status === "reveal" && roomState.revealState && revealPreviewCard
+      ? [
+          roomState.roomId,
+          roomState.turn?.turnNumber ?? "reveal",
+          roomState.revealState.playerId,
+          roomState.revealState.placedCard.id,
+          roomState.revealState.selectedSlotIndex,
+          showCorrectionPreview ? "reveal-correction" : "reveal-correct",
+        ].join(":")
+      : null;
+
   const hasAwardedOwnTimelineSlot =
     roomState?.status === "reveal" &&
     roomState.revealState?.awardedPlayerId === currentPlayerId;
@@ -119,6 +132,7 @@ export function getGamePageRevealTimelineState({
         ? roomState?.revealState?.awardedSlotIndex ?? null
         : null,
     revealPreviewCard,
+    revealPreviewTransitionKey,
     revealPreviewSlot,
     showCorrectPlacementPreview,
     showCorrectionPreview,

@@ -9,6 +9,11 @@ import type {
   ViewPreferences,
   ThemeId,
 } from "../../features/preferences/uiPreferences";
+import type {
+  PreviewCardTransitionEvent,
+  TimelinePreviewTransitionEvent,
+  TimelineCelebrationTransitionEvent,
+} from "./gamePageTransitionEvents";
 
 export type TimelineView = "active" | "mine";
 
@@ -62,21 +67,17 @@ export interface TimelinePanelInteractionModel {
 }
 
 export interface TimelinePanelRenderModel {
-  celebrationCard: GamePageCard | null;
-  celebrationKey: string | null;
-  celebrationMessage: string | null;
-  celebrationTone?: TimelineCelebrationTone;
   hiddenCardMode: HiddenCardMode;
   hint: string;
-  isPreviewCardReplacing: boolean;
-  previewCardSwapKey: number;
+  previewCardTransitionEvent: PreviewCardTransitionEvent | null;
+  timelinePreviewTransitionEvent: TimelinePreviewTransitionEvent | null;
+  timelineCelebrationTransitionEvent: TimelineCelebrationTransitionEvent | null;
   showCorrectPlacementPreview?: boolean;
   showCorrectionPreview?: boolean;
   showDevAlbumInfo: boolean;
   showDevCardInfo: boolean;
   showDevGenreInfo: boolean;
   showDevYearInfo: boolean;
-  shouldAnimateCelebrationCardToMine: boolean;
   showHint: boolean;
   theme: ThemeId;
   timelineCards: TimelineCardPublic[];
@@ -94,9 +95,8 @@ export interface TimelinePanelItemsModel {
   challengerChosenSlotIndex: number | null;
   disabledSlotIndexes: number[];
   hiddenCardMode: HiddenCardMode;
-  isPreviewCardReplacing: boolean;
   originalChosenSlotIndex: number | null;
-  previewCardSwapKey: number;
+  previewCardTransitionEvent: PreviewCardTransitionEvent | null;
   selectable: boolean;
   showCorrectPlacementPreview: boolean;
   showCorrectionPreview: boolean;
@@ -188,11 +188,6 @@ export type GamePageController = GamePageActionHandlers & {
   challengeMarkerTone: ChallengeMarkerTone;
   currentPlayerId: string | null;
   currentPlayerTtCount: number;
-  challengeSuccessCelebrationCard: GamePageCard | null;
-  challengeSuccessCelebrationKey: string | null;
-  challengeSuccessMessage: string | null;
-  challengeSuccessTone: TimelineCelebrationTone;
-  shouldAnimateCelebrationCardToMine: boolean;
   disabledTimelineSlots: number[];
   errorMessage: string | null;
   hiddenCardMode: HiddenCardMode;
@@ -204,10 +199,11 @@ export type GamePageController = GamePageActionHandlers & {
   selectedSlotIndex: number;
   setSelectedSlotIndex: (slotIndex: number) => void;
   setTimelineView: (view: TimelineView) => void;
-  isPreviewCardReplacing: boolean;
   buyTimelineCardSpendAnimationKey: number;
   skipTrackSpendAnimationKey: number;
-  previewCardSwapKey: number;
+  previewCardTransitionEvent: PreviewCardTransitionEvent | null;
+  timelinePreviewTransitionEvent: TimelinePreviewTransitionEvent | null;
+  timelineCelebrationTransitionEvent: TimelineCelebrationTransitionEvent | null;
   showCorrectPlacementPreview: boolean;
   showCorrectionPreview: boolean;
   showDevAlbumInfo: boolean;

@@ -1,27 +1,14 @@
 import type { DraggableAttributes } from "@dnd-kit/core";
-import {
-  motion,
-  useAnimationControls,
-  useReducedMotion,
-  type MotionStyle,
-} from "framer-motion";
-import {
-  forwardRef,
-  useEffect,
-  useState,
-  type CSSProperties,
-} from "react";
-import {
-  createPreviewCardReplaceEnterInitial,
-  createPreviewCardReplaceEnterMotion,
-  createPreviewCardReplaceExitMotion,
-} from "../../../features/motion";
+import { motion, type MotionStyle } from "framer-motion";
+import { forwardRef, type CSSProperties } from "react";
 import type {
   HiddenCardMode,
   ThemeId,
 } from "../../../features/preferences/uiPreferences";
 import type { ChallengeMarkerTone, GamePageCard } from "../GamePage.types";
+import type { PreviewCardTransitionEvent } from "../gamePageTransitionEvents";
 import { getCardGradient } from "../gamePage.utils";
+import { usePreviewCardTransition } from "../hooks/transitions/usePreviewCardTransition";
 import styles from "./TimelinePanel.module.css";
 
 export interface PreviewCardProps {
@@ -33,10 +20,8 @@ export interface PreviewCardProps {
   isGhosted: boolean;
   isOverlay?: boolean;
   isOriginalSlot: boolean;
-  isReplacing?: boolean;
   listeners?: Record<string, unknown> | undefined;
   previewCard: GamePageCard;
-  replacementAnimationKey?: number;
   selectable: boolean;
   showDevAlbumInfo: boolean;
   showDevCardInfo: boolean;
@@ -45,6 +30,7 @@ export interface PreviewCardProps {
   showRevealedContent?: boolean;
   theme: ThemeId;
   tone: ChallengeMarkerTone;
+  transitionEvent: PreviewCardTransitionEvent | null;
 }
 
 interface PreviewCardContentProps {
@@ -108,10 +94,8 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
       isGhosted,
       isOverlay = false,
       isOriginalSlot,
-      isReplacing = false,
       listeners,
       previewCard,
-      replacementAnimationKey = 0,
       selectable,
       showDevAlbumInfo,
       showDevCardInfo,
@@ -120,14 +104,10 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
       showRevealedContent = false,
       theme,
       tone,
+      transitionEvent,
     },
     ref,
   ) {
-    const reduceMotion = useReducedMotion() ?? false;
-    const controls = useAnimationControls();
-    const [displayCard, setDisplayCard] = useState(previewCard);
-    const [displayShowRevealedContent, setDisplayShowRevealedContent] =
-      useState(showRevealedContent);
     const cardToneClass = isChallengeSlot
       ? tone === "failure"
         ? styles.previewCardChallengeFailure
@@ -139,58 +119,17 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
           : isOriginalSlot
             ? styles.previewCardCurrentPick
             : "";
-
-    useEffect(() => {
-      if (isReplacing) {
-        return;
-      }
-
-      setDisplayCard(previewCard);
-      setDisplayShowRevealedContent(showRevealedContent);
-      controls.set({
-        opacity: 1,
-        scale: 1,
-      });
-    }, [controls, isReplacing, previewCard, showRevealedContent]);
-
-    useEffect(() => {
-      if (!isReplacing) {
-        return;
-      }
-
-      let isCancelled = false;
-
-      const runReplacement = async () => {
-        await controls.start(createPreviewCardReplaceExitMotion(reduceMotion));
-
-        if (isCancelled) {
-          return;
-        }
-
-        setDisplayCard(previewCard);
-        setDisplayShowRevealedContent(showRevealedContent);
-        controls.set(createPreviewCardReplaceEnterInitial(reduceMotion));
-
-        if (isCancelled) {
-          return;
-        }
-
-        await controls.start(createPreviewCardReplaceEnterMotion(reduceMotion));
-      };
-
-      void runReplacement();
-
-      return () => {
-        isCancelled = true;
-      };
-    }, [
-      controls,
-      isReplacing,
+    const {
+      animationControls,
+      displayCard,
+      displayShowRevealedContent,
+      isTransitionActive,
+    } = usePreviewCardTransition({
       previewCard,
-      reduceMotion,
-      replacementAnimationKey,
       showRevealedContent,
-    ]);
+      transitionEvent,
+    });
+    const renderCard = displayCard ?? previewCard;
 
     return (
       <motion.article
@@ -202,11 +141,11 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
         } ${cardToneClass} ${selectable ? styles.previewCardDraggable : ""} ${
           isGhosted ? styles.previewCardGhost : ""
         } ${isOverlay ? styles.previewCardOverlay : ""} ${
-          showRevealedContent ? styles.previewCardRevealed : ""
+          displayShowRevealedContent ? styles.previewCardRevealed : ""
         } ${isCorrectionPreview ? styles.previewCardCorrectionSurface : ""} ${
-          isReplacing ? styles.previewCardReplacing : ""
+          isTransitionActive ? styles.previewCardReplacing : ""
         }`}
-        animate={controls}
+        animate={animationControls}
         initial={false}
         style={
           {
@@ -222,7 +161,7 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
       >
         <div className={styles.previewCardFace}>
           <PreviewCardContent
-            card={displayCard}
+            card={renderCard}
             showDevAlbumInfo={showDevAlbumInfo}
             showDevCardInfo={showDevCardInfo}
             showDevGenreInfo={showDevGenreInfo}

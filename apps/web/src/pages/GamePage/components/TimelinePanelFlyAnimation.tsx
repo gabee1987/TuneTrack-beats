@@ -77,6 +77,7 @@ export function TimelinePanelFlyAnimation({
         showRevealedContent={true}
         theme={theme}
         tone="success"
+        transitionEvent={null}
       />
     </motion.div>,
     document.body,

@@ -7,6 +7,7 @@ import type {
   ThemeId,
 } from "../../../features/preferences/uiPreferences";
 import type { ChallengeMarkerTone, GamePageCard } from "../GamePage.types";
+import type { PreviewCardTransitionEvent } from "../gamePageTransitionEvents";
 import {
   TIMELINE_REORDER_DURATION_MS,
   TIMELINE_REORDER_EASING,
@@ -27,10 +28,9 @@ interface TimelineSortableItemProps {
   isDraggingPreviewCard: boolean;
   isOriginalSlot: boolean;
   isPreview: boolean;
-  isPreviewCardReplacing: boolean;
   isPreviewDisabled: boolean;
   previewCardRef?: (node: HTMLElement | null) => void;
-  previewCardSwapKey: number;
+  previewCardTransitionEvent: PreviewCardTransitionEvent | null;
   selectable: boolean;
   showCorrectPlacementPreview?: boolean;
   showCorrectionPreview?: boolean;
@@ -50,10 +50,9 @@ function TimelineSortableItemComponent({
   isDraggingPreviewCard,
   isOriginalSlot,
   isPreview,
-  isPreviewCardReplacing,
   isPreviewDisabled,
   previewCardRef,
-  previewCardSwapKey,
+  previewCardTransitionEvent,
   selectable,
   showCorrectPlacementPreview = false,
   showCorrectionPreview = false,
@@ -102,10 +101,8 @@ function TimelineSortableItemComponent({
           isCorrectPlacement={showCorrectPlacementPreview}
           isGhosted={isDragging}
           isOriginalSlot={isOriginalSlot}
-          isReplacing={isPreviewCardReplacing}
           listeners={selectable ? listeners : undefined}
           previewCard={card}
-          replacementAnimationKey={previewCardSwapKey}
           selectable={selectable}
           showDevAlbumInfo={showDevAlbumInfo}
           showDevCardInfo={showDevCardInfo}
@@ -114,6 +111,7 @@ function TimelineSortableItemComponent({
           showRevealedContent={showCorrectionPreview}
           theme={theme}
           tone={challengeMarkerTone}
+          transitionEvent={previewCardTransitionEvent}
           ref={previewCardRef}
         />
       ) : (

@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useMemo, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import {
   getOrCreatePlayerSessionId,
@@ -14,6 +9,7 @@ import type {
   UseGamePageControllerResult,
 } from "../GamePage.types";
 import { buildGamePageControllerResult } from "./buildGamePageControllerResult";
+import { useGamePageTransitionEvents } from "./transitions/useGamePageTransitionEvents";
 import { useGamePageActionAvailability } from "./useGamePageActionAvailability";
 import { useGamePageActions } from "./useGamePageActions";
 import { useGamePageDerivedState } from "./useGamePageDerivedState";
@@ -42,9 +38,9 @@ export function useGamePageController({
     useState(0);
   const [buyTimelineCardSpendAnimationKey, setBuyTimelineCardSpendAnimationKey] =
     useState(0);
-  const [previewCardSwapKey, setPreviewCardSwapKey] = useState(0);
-  const [isPreviewCardReplacing, setIsPreviewCardReplacing] = useState(false);
-  const pendingSkippedTrackIdRef = useRef<string | null>(null);
+  const [pendingSkippedTrackId, setPendingSkippedTrackId] = useState<string | null>(
+    null,
+  );
 
   const {
     currentPlayerId,
@@ -86,7 +82,7 @@ export function useGamePageController({
     roomState,
     selectedSlotIndex,
     onSkipTrackWithTtIntent: (cardId) => {
-      pendingSkippedTrackIdRef.current = cardId;
+      setPendingSkippedTrackId(cardId);
       setSkipTrackSpendAnimationKey((key) => key + 1);
     },
     onBuyTimelineCardWithTtIntent: () => {
@@ -94,40 +90,6 @@ export function useGamePageController({
     },
     setLocallyPlacedCard,
   });
-
-  useEffect(() => {
-    const pendingSkippedTrackId = pendingSkippedTrackIdRef.current;
-
-    if (!pendingSkippedTrackId || roomState?.status !== "turn") {
-      return;
-    }
-
-    const nextTrackId = roomState.currentTrackCard?.id ?? null;
-
-    if (nextTrackId && nextTrackId !== pendingSkippedTrackId) {
-      pendingSkippedTrackIdRef.current = null;
-      setIsPreviewCardReplacing(true);
-      setPreviewCardSwapKey((key) => key + 1);
-    }
-  }, [
-    roomState?.currentTrackCard?.id,
-    roomState?.status,
-    roomState?.turn?.hasUsedSkipTrackWithTt,
-  ]);
-
-  useEffect(() => {
-    if (!isPreviewCardReplacing) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setIsPreviewCardReplacing(false);
-    }, 760);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [isPreviewCardReplacing, previewCardSwapKey]);
 
   const derivedState = useGamePageDerivedState({
     currentPlayerId,
@@ -153,6 +115,30 @@ export function useGamePageController({
     theme: preferencesState.theme,
     timelineView,
     updateViewPreferences: preferencesState.updateViewPreferences,
+  });
+
+  const {
+    previewCardTransitionEvent,
+    timelinePreviewTransitionEvent,
+    timelineCelebrationTransitionEvent,
+  } = useGamePageTransitionEvents({
+    celebrationCard: derivedState.challengeSuccessCelebrationCard,
+    celebrationKey: derivedState.challengeSuccessCelebrationKey,
+    celebrationMessage: derivedState.challengeSuccessMessage,
+    celebrationTone: derivedState.challengeSuccessTone,
+    currentTrackId: roomState?.currentTrackCard?.id ?? null,
+    pendingSkippedTrackId,
+    previewCard: derivedState.visiblePreviewCard,
+    previewSlot: derivedState.visiblePreviewSlot,
+    revealPreviewTransitionKey: derivedState.revealPreviewTransitionKey,
+    roomStatus: roomState?.status ?? null,
+    showCorrectPlacementPreview: derivedState.showCorrectPlacementPreview,
+    showCorrectionPreview: derivedState.showCorrectionPreview,
+    shouldAnimateCelebrationCardToMine:
+      derivedState.shouldAnimateCelebrationCardToMine,
+    onSkipTrackTransitionDetected: () => {
+      setPendingSkippedTrackId(null);
+    },
   });
 
   const actionState = {
@@ -186,15 +172,10 @@ export function useGamePageController({
     challengeActionTitle: derivedState.challengeActionTitle,
     challengeCountdownLabel: derivedState.challengeCountdownLabel,
     challengeMarkerTone: derivedState.challengeMarkerTone,
-    challengeSuccessCelebrationCard: derivedState.challengeSuccessCelebrationCard,
-    challengeSuccessCelebrationKey: derivedState.challengeSuccessCelebrationKey,
-    challengeSuccessMessage: derivedState.challengeSuccessMessage,
-    challengeSuccessTone: derivedState.challengeSuccessTone,
-    shouldAnimateCelebrationCardToMine:
-      derivedState.shouldAnimateCelebrationCardToMine,
     disabledTimelineSlots: derivedState.disabledTimelineSlots,
-    isPreviewCardReplacing,
-    previewCardSwapKey,
+    previewCardTransitionEvent,
+    timelinePreviewTransitionEvent,
+    timelineCelebrationTransitionEvent,
     showCorrectPlacementPreview: derivedState.showCorrectPlacementPreview,
     showCorrectionPreview: derivedState.showCorrectionPreview,
     statusBadgeText: derivedState.statusBadgeText,

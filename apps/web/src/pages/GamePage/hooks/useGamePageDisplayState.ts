@@ -39,6 +39,7 @@ interface UseGamePageDisplayStateResult {
   challengeSuccessTone: TimelineCelebrationTone;
   shouldAnimateCelebrationCardToMine: boolean;
   disabledTimelineSlots: number[];
+  revealPreviewTransitionKey: string | null;
   showCorrectPlacementPreview: boolean;
   showCorrectionPreview: boolean;
   statusBadgeText: string;
@@ -157,6 +158,7 @@ export function useGamePageDisplayState({
     challengeSuccessTone: revealOutcomeTone,
     shouldAnimateCelebrationCardToMine,
     disabledTimelineSlots: [],
+    revealPreviewTransitionKey: timelineState.revealPreviewTransitionKey,
     showCorrectPlacementPreview: timelineState.showCorrectPlacementPreview,
     showCorrectionPreview: timelineState.showCorrectionPreview,
     statusBadgeText: statusState.statusBadgeText,

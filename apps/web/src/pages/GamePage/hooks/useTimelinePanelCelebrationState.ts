@@ -1,28 +1,72 @@
 import { useEffect, useRef, useState } from "react";
-import type { GamePageCard, TimelineView } from "../GamePage.types";
+import { timelineCelebrationTransitionContract } from "../../../features/motion";
+import type { TimelineView } from "../GamePage.types";
+import type { TimelineCelebrationTransitionEvent } from "../gamePageTransitionEvents";
 
 interface UseTimelinePanelCelebrationStateOptions {
-  celebrationCard: GamePageCard | null;
-  celebrationKey: string | null;
-  shouldAnimateCelebrationCardToMine: boolean;
   timelineView: TimelineView;
+  transitionEvent: TimelineCelebrationTransitionEvent | null;
 }
 
 export function useTimelinePanelCelebrationState({
-  celebrationCard,
-  celebrationKey,
-  shouldAnimateCelebrationCardToMine,
   timelineView,
+  transitionEvent,
 }: UseTimelinePanelCelebrationStateOptions) {
+  const [activeCelebrationEvent, setActiveCelebrationEvent] =
+    useState<TimelineCelebrationTransitionEvent | null>(null);
   const [flyAnimationState, setFlyAnimationState] = useState<{
-    card: GamePageCard;
+    card: NonNullable<TimelineCelebrationTransitionEvent["celebrationCard"]>;
     sourceRect: DOMRect;
     targetRect: DOMRect;
   } | null>(null);
-  const [showCelebrationToast, setShowCelebrationToast] = useState(false);
   const previewCardRectRef = useRef<DOMRect | null>(null);
-  const lastCelebrationKeyRef = useRef<string | null>(null);
+  const lastHandledEventKeyRef = useRef<number | null>(
+    transitionEvent?.eventKey ?? null,
+  );
   const mineButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (
+      !transitionEvent ||
+      transitionEvent.eventKey === lastHandledEventKeyRef.current
+    ) {
+      return;
+    }
+
+    lastHandledEventKeyRef.current = transitionEvent.eventKey;
+    setActiveCelebrationEvent(transitionEvent);
+
+    if (
+      !transitionEvent.celebrationCard ||
+      !transitionEvent.shouldAnimateCardToMine ||
+      timelineView === "mine" ||
+      !previewCardRectRef.current ||
+      !mineButtonRef.current
+    ) {
+      setFlyAnimationState(null);
+      return;
+    }
+
+    setFlyAnimationState({
+      card: transitionEvent.celebrationCard,
+      sourceRect: previewCardRectRef.current,
+      targetRect: mineButtonRef.current.getBoundingClientRect(),
+    });
+  }, [timelineView, transitionEvent]);
+
+  useEffect(() => {
+    if (!activeCelebrationEvent) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setActiveCelebrationEvent(null);
+    }, timelineCelebrationTransitionContract.toastVisibilityMs);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [activeCelebrationEvent]);
 
   useEffect(() => {
     if (!flyAnimationState) {
@@ -31,62 +75,17 @@ export function useTimelinePanelCelebrationState({
 
     const timeoutId = window.setTimeout(() => {
       setFlyAnimationState(null);
-    }, 850);
+    }, timelineCelebrationTransitionContract.flyAnimationCleanupMs);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
   }, [flyAnimationState]);
 
-  useEffect(() => {
-    if (!showCelebrationToast) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setShowCelebrationToast(false);
-    }, 1800);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [showCelebrationToast]);
-
-  useEffect(() => {
-    if (!celebrationKey || lastCelebrationKeyRef.current === celebrationKey) {
-      return;
-    }
-
-    lastCelebrationKeyRef.current = celebrationKey;
-    setShowCelebrationToast(true);
-
-    if (
-      !celebrationCard ||
-      !shouldAnimateCelebrationCardToMine ||
-      timelineView === "mine" ||
-      !previewCardRectRef.current ||
-      !mineButtonRef.current
-    ) {
-      return;
-    }
-
-    setFlyAnimationState({
-      card: celebrationCard,
-      sourceRect: previewCardRectRef.current,
-      targetRect: mineButtonRef.current.getBoundingClientRect(),
-    });
-  }, [
-    celebrationCard,
-    celebrationKey,
-    shouldAnimateCelebrationCardToMine,
-    timelineView,
-  ]);
-
   return {
+    activeCelebrationEvent,
     flyAnimationState,
     mineButtonRef,
     previewCardRectRef,
-    setShowCelebrationToast,
-    showCelebrationToast,
   };
 }

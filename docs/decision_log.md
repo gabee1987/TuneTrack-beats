@@ -164,6 +164,92 @@ Current enforcement:
 - both actions require the acting player to be the active player
 - both actions are blocked when TT mode is disabled
 
+### Backend-driven preview-card transition architecture
+
+Frontend animation for preview-card replacement now follows an explicit
+backend-driven transition pattern instead of component-local timer guessing.
+
+Current rule:
+
+- the controller emits a typed UI transition event when a server-confirmed skip
+  replaces the current preview card
+- a dedicated coordinator hook owns temporary displayed card state during the
+  animation
+- the component renders coordinator output instead of immediately rendering the
+  new incoming server data
+- preview-card replacement motion is defined in a dedicated motion transition
+  module with an explicit contract
+
+Reason:
+
+- this keeps animation behavior stable even when realtime/backend data changes
+  arrive asynchronously
+- this is the intended pattern for future server-driven UI transitions,
+  including later Spotify-backed card data updates
+
+### GamePage transition-event layer and celebration coordinator
+
+GamePage now has a dedicated transition-event detection layer and a dedicated
+timeline celebration coordinator.
+
+Current rule:
+
+- `useGamePageTransitionEvents` detects meaningful backend-confirmed UI changes
+  and emits typed transition events
+- `useGamePageController` passes those events through the page/controller model
+  instead of forwarding loose celebration fields and local timer assumptions
+- `useTimelinePanelCelebrationState` owns temporary celebration visibility and
+  fly-animation cleanup using a named motion contract
+- celebration motion variants and cleanup timing live in a dedicated motion
+  transition module instead of a generic motion bucket file
+
+Reason:
+
+- this reduces controller coupling
+- this makes backend-driven animation behavior easier to trace and reuse
+- this creates a cleaner teaching example for future Spotify-backed,
+  server-driven UI transitions
+
+### Pure transition detectors and reveal-preview coordinator
+
+GamePage transition detection now prefers pure detector helpers plus thin hook
+orchestration, and reveal-preview state now follows the same event/coordinator
+pattern as other backend-driven transitions.
+
+Current rule:
+
+- backend-driven event semantics such as skip replacement, celebration, and
+  reveal preview detection should live in pure helpers when possible
+- the React hook layer should manage deduplication and event-key sequencing, but
+  not hide the underlying decision logic in opaque effects
+- reveal preview state should pass through a dedicated coordinator so the panel
+  consumes one displayed preview model instead of several synchronized raw props
+
+Reason:
+
+- this makes the transition rules directly unit-testable
+- this improves confidence when backend data flow becomes more complex
+- this keeps the codebase teachable by making animation/event semantics explicit
+
+### Motion layer split by transition responsibility
+
+The shared frontend motion layer now avoids a catch-all gameplay motion token
+file for reusable transitions.
+
+Current rule:
+
+- reusable motion exports are grouped by named transition responsibility
+- examples now include preview replacement, timeline celebration, action
+  surfaces, and token flyouts
+- `features/motion/index.ts` remains the stable shared API surface
+
+Reason:
+
+- this makes motion ownership easier to find
+- this prevents unrelated animation concerns from drifting into one large file
+- this keeps the motion layer aligned with the same explicit-boundary rules used
+  elsewhere in the frontend architecture
+
 ## Still Open
 
 ### Room code generation rules

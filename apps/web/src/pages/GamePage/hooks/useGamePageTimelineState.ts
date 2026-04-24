@@ -22,6 +22,7 @@ interface UseGamePageTimelineStateOptions {
 }
 
 interface UseGamePageTimelineStateResult {
+  revealPreviewTransitionKey: string | null;
   showCorrectPlacementPreview: boolean;
   showCorrectionPreview: boolean;
   visibleChallengeChosenSlot: number | null;
@@ -68,6 +69,7 @@ export function useGamePageTimelineState({
     ownTimelineChallengeAwardSlot,
     ownTimelineOriginalAwardSlot,
     revealPreviewCard,
+    revealPreviewTransitionKey,
     revealPreviewSlot,
     showCorrectionPreview,
     showCorrectPlacementPreview,
@@ -110,6 +112,7 @@ export function useGamePageTimelineState({
   }
 
   return {
+    revealPreviewTransitionKey,
     showCorrectPlacementPreview,
     showCorrectionPreview,
     visibleChallengeChosenSlot: isViewingOwnTimeline

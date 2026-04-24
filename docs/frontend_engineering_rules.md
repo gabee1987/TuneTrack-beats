@@ -280,6 +280,7 @@ When adding animations:
 - isolate animation into dedicated components or hooks
 - keep geometry capture and motion triggering out of giant page files where possible
 - prefer one animation coordinator per interaction type
+- backend-driven UI transitions must use dedicated transition coordinators instead of component-local ad hoc bookkeeping
 
 Examples:
 
@@ -287,6 +288,57 @@ Examples:
 - drag overlay motion
 - reward/celebration motion
 - tab-switch motion
+- server-driven preview-card replacement
+
+### 10.2.1 Backend-Driven Transition Rule
+
+For UI animations that react to confirmed backend or socket state changes:
+
+- model the UI-relevant transition reason explicitly
+- pass a transition event or transition contract into a coordinator hook
+- keep raw incoming data separate from temporarily displayed animated data
+- let the coordinator decide when the new backend data becomes visible on screen
+- do not let presentational components infer transition timing from random prop diffs
+
+Preferred flow:
+
+- controller detects a meaningful backend state change
+- controller or a dedicated transition-event hook emits a typed transition event such as `skip_track_replace`
+- a dedicated hook such as `usePreviewCardTransition` owns:
+  - displayed data
+  - animation phase
+  - animation completion sequencing
+- presentational UI renders the coordinator output, not the raw incoming state during the transition
+
+For `GamePage`, this pattern should be treated as the preferred baseline:
+
+- `useGamePageController` assembles page state but should not inline event-detection effects forever
+- backend-driven UI event detection belongs in dedicated hooks such as `useGamePageTransitionEvents`
+- the decision rules behind those hooks should prefer pure detector helpers when feasible so event semantics are unit-testable without rendering React
+- panel-level temporary animation state belongs in dedicated coordinators such as `usePreviewCardTransition` or `useTimelinePanelCelebrationState`
+- preview surfaces that depend on several backend fields changing together should expose one displayed preview model through a coordinator instead of fanning raw booleans and raw card data directly into presentation
+- render models should prefer passing one explicit transition event over several loosely related fields like `key`, `message`, `tone`, and booleans
+
+Disallowed pattern:
+
+- incoming prop changes immediately replace displayed content while the component tries to animate around it with local timers
+
+### 10.2.2 Transition Contracts
+
+Do not guess animation timing with scattered page-level timers when the animation sequence itself can define completion.
+
+Use:
+
+- explicit motion contracts in the shared motion layer
+- named phase contracts such as `exit`, `enterInitial`, and `enter`
+- animation promises or dedicated coordinator completion flow where possible
+
+Avoid:
+
+- page controllers owning magic timeout values that try to match visual motion by coincidence
+- duplicated duration constants spread across controller hooks and components
+
+If a transition requires timing metadata, it should come from a named contract in the motion domain layer, not an inline timeout hidden in page logic.
 
 ### 10.3 Animation Library Direction
 
@@ -343,6 +395,9 @@ Architecture rules:
 - Framer imports should usually live in `features/motion` or in dedicated animation components
 - page controllers must not import Framer Motion
 - animation variants and timing tokens that are reused across the app belong in the shared motion layer
+- backend-driven transition contracts belong in the shared motion layer or a dedicated motion transition module, not inside unrelated page logic
+- when a gameplay transition owns both visual variants and cleanup timing, those values should live together in one named transition module
+- avoid generic bucket files such as `gameplayMotionTokens.ts` for long-lived shared motion concerns; prefer modules named after the transition responsibility such as preview replacement, celebration, action surfaces, or token flyouts
 - screen/page animation should be applied at the route or assembly boundary, not inside business logic
 - server state remains the source of gameplay truth; animation expresses confirmed state and must tolerate interruption or correction
 

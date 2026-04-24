@@ -124,6 +124,7 @@ describe("gamePageTimelineSelectors", () => {
       ownTimelineChallengeAwardSlot: null,
       ownTimelineOriginalAwardSlot: null,
       revealPreviewCard: roomState.revealState?.placedCard ?? null,
+      revealPreviewTransitionKey: "ROOM1:2:player-1:track-2:2:reveal-correction",
       revealPreviewSlot: 2,
       showCorrectPlacementPreview: false,
       showCorrectionPreview: true,
@@ -201,6 +202,9 @@ describe("gamePageTimelineSelectors", () => {
         roomState,
       }),
     ).toMatchObject({
+      revealPreviewCard: null,
+      revealPreviewTransitionKey: null,
+      revealPreviewSlot: null,
       showCorrectPlacementPreview: true,
       showCorrectionPreview: false,
     });
