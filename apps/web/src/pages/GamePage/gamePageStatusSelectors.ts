@@ -52,6 +52,10 @@ export function getGamePageChallengeStatusState({
   roomState,
 }: GamePageChallengeStatusSelectorOptions): GamePageChallengeStatusSelectorResult {
   const deadlineEpochMs = roomState?.challengeState?.challengeDeadlineEpochMs;
+  const isManualChallengeWindow =
+    roomState?.status === "challenge" &&
+    roomState.challengeState?.phase === "open" &&
+    !deadlineEpochMs;
   const challengeCountdownLabel =
     !deadlineEpochMs ||
     roomState?.status !== "challenge" ||
@@ -65,7 +69,9 @@ export function getGamePageChallengeStatusState({
       : roomState.challengeState.phase === "open"
         ? isCurrentPlayerTurn
           ? "Challenge window open"
-          : "Beat available"
+          : isManualChallengeWindow
+            ? "Beat available"
+            : "Beat available"
         : challengeOwnerId === currentPlayerId
           ? "Place your Beat"
           : `${getPlayerName(challengeOwnerId)} is placing Beat`;
@@ -75,8 +81,12 @@ export function getGamePageChallengeStatusState({
       ? null
       : roomState.challengeState.phase === "open"
         ? isCurrentPlayerTurn
-          ? "Other players can still challenge this placement."
-          : `Chosen slot: ${roomState.challengeState.originalSelectedSlotIndex}`
+          ? isManualChallengeWindow
+            ? "Other players can still call Beat on this placement."
+            : "Other players can still challenge this placement."
+          : isManualChallengeWindow
+            ? "Think it's wrong? Call Beat before the host closes the window."
+            : `Chosen slot: ${roomState.challengeState.originalSelectedSlotIndex}`
         : canSelectChallengeSlot
           ? "Choose the slot you believe is right, then confirm."
           : "Waiting for the challenge placement.";
@@ -117,10 +127,14 @@ export function getGamePageStatusCopyState({
       : canSelectChallengeSlot
         ? `You called Beat! Pick the slot where the card should have gone in ${getPossessivePlayerName(activePlayerId)} timeline.`
         : isCurrentPlayerTurn
-          ? "Challenge window is open. Other players can decide whether to use Beat! against your choice."
+          ? roomState.challengeState?.challengeDeadlineEpochMs
+            ? "Challenge window is open. Other players can decide whether to use Beat! against your choice."
+            : "Challenge window is open. Other players can still call Beat until the host closes it."
           : roomState.challengeState?.phase === "claimed"
             ? `${getPlayerName(challengeOwnerId)} claimed Beat! first and is choosing the challenge slot now.`
-            : `${getPlayerName(roomState.challengeState?.originalPlayerId)} chose a slot. If you think it is wrong, press Beat! before the window ends.`;
+            : roomState.challengeState?.challengeDeadlineEpochMs
+              ? `${getPlayerName(roomState.challengeState?.originalPlayerId)} chose a slot. If you think it is wrong, press Beat! before the window ends.`
+              : `${getPlayerName(roomState.challengeState?.originalPlayerId)} chose a slot. If you think it is wrong, press Beat! before the host closes the window.`;
 
   const statusBadgeText = roomState?.winnerPlayerId
     ? "Game finished"
@@ -150,10 +164,16 @@ export function getGamePageStatusCopyState({
             ? "You claimed Beat! Choose the slot you believe is correct."
             : `${getPlayerName(challengeOwnerId)} claimed Beat! and is placing the answer now.`
           : isCurrentPlayerTurn
-            ? "Your placement is locked while other players decide whether to challenge it."
-            : `Beat! is open against ${getPossessivePlayerName(
-                roomState.challengeState?.originalPlayerId,
-              )} placement.`
+            ? roomState.challengeState?.challengeDeadlineEpochMs
+              ? "Your placement is locked while other players decide whether to challenge it."
+              : "Your placement is locked while the host waits for a Beat call or closes the window."
+            : roomState.challengeState?.challengeDeadlineEpochMs
+              ? `Beat! is open against ${getPossessivePlayerName(
+                  roomState.challengeState?.originalPlayerId,
+                )} placement.`
+              : `Beat! is open against ${getPossessivePlayerName(
+                  roomState.challengeState?.originalPlayerId,
+                )} placement until the host closes the window.`
         : roomState?.status === "reveal"
           ? "Check the result, then wait for the allowed player to confirm reveal."
           : "The room is in sync and ready.";

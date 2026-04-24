@@ -165,6 +165,7 @@ export function useGamePageController({
     canToggleTimelineView: derivedState.canToggleTimelineView,
     canUseBuyCard: derivedState.canUseBuyCard,
     canUseSkipTrack: derivedState.canUseSkipTrack,
+    isCurrentPlayerTurn: derivedState.isCurrentPlayerTurn,
   };
 
   const displayState = {

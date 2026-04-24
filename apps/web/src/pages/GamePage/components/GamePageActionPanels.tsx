@@ -52,6 +52,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     handlePlaceChallenge,
     handleResolveChallengeWindow,
     handleSkipTrackWithTt,
+    isCurrentPlayerTurn,
     roomState,
     showHelperLabels,
   } = model;
@@ -128,6 +129,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
         handleClaimChallenge={handleClaimChallenge}
         handlePlaceChallenge={handlePlaceChallenge}
         handleResolveChallengeWindow={handleResolveChallengeWindow}
+        isCurrentPlayerTurn={isCurrentPlayerTurn}
         onTokenSpendAnimationStart={handleTokenSpendAnimationStart}
         roomState={roomState}
       />
@@ -182,6 +184,7 @@ function areActionPanelModelsEqual(
     previousModel.handlePlaceChallenge === nextModel.handlePlaceChallenge &&
     previousModel.handleResolveChallengeWindow === nextModel.handleResolveChallengeWindow &&
     previousModel.handleSkipTrackWithTt === nextModel.handleSkipTrackWithTt &&
+    previousModel.isCurrentPlayerTurn === nextModel.isCurrentPlayerTurn &&
     previousModel.roomState === nextModel.roomState &&
     previousModel.showHelperLabels === nextModel.showHelperLabels &&
     previousModel.skipTrackSpendAnimationKey === nextModel.skipTrackSpendAnimationKey

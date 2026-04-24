@@ -48,6 +48,7 @@ interface ChallengeActionPanelProps {
   handleClaimChallenge: () => void;
   handlePlaceChallenge: () => void;
   handleResolveChallengeWindow: () => void;
+  isCurrentPlayerTurn: boolean;
   onTokenSpendAnimationStart?: (payload: {
     amount: number;
     originX: number;
@@ -67,6 +68,7 @@ export function ChallengeActionPanel({
   handleClaimChallenge,
   handlePlaceChallenge,
   handleResolveChallengeWindow,
+  isCurrentPlayerTurn,
   onTokenSpendAnimationStart,
   roomState,
 }: ChallengeActionPanelProps) {
@@ -74,21 +76,42 @@ export function ChallengeActionPanel({
   const beatCostBadgeRef = useRef<HTMLSpanElement | null>(null);
 
   const challengeState = roomState.status === "challenge" ? roomState.challengeState : null;
+  const isOpenChallengeWindow = challengeState?.phase === "open";
+  const isManualChallengeWindow = isOpenChallengeWindow && !challengeCountdownLabel;
+  const isActivePlayerChallengeView = isOpenChallengeWindow && isCurrentPlayerTurn;
 
   const challengeStatusText = challengeCountdownLabel
     ? challengeCountdownLabel
     : challengeState?.phase === "claimed"
       ? "Beat! was claimed. Waiting for the placement."
-      : "Host resolves this window manually";
-  const isOpenChallengeWindow = challengeState?.phase === "open";
+      : isActivePlayerChallengeView
+        ? canResolveChallengeWindow
+          ? "You close this Beat window"
+          : "Host closes this Beat window"
+        : "Host closes this Beat window";
   const hasTimedChallengeWindow = isOpenChallengeWindow && Boolean(challengeCountdownLabel);
   const countdownSeconds = parseCountdownSeconds(challengeCountdownLabel);
   const countdownStageClassName = styles[getCountdownStageClassName(countdownSeconds)];
   const panelClassName = `${styles.challengeCallout} ${countdownStageClassName}`;
-  const titleText = challengeState?.phase === "open" ? "Make your Beat!" : challengeActionTitle;
+  const titleText =
+    challengeState?.phase === "open"
+      ? isActivePlayerChallengeView
+        ? "Beat Window Open"
+        : "Call Beat!"
+      : challengeActionTitle;
   const bodyText =
     challengeState?.phase === "open"
-      ? "Think the placement is wrong? Call Beat before the window closes."
+      ? isActivePlayerChallengeView
+        ? canResolveChallengeWindow
+          ? isManualChallengeWindow
+            ? "Your drop is live. You can close Beat! whenever the table is ready."
+            : "Your drop is live. Hold tight while the Beat! timer plays out."
+          : isManualChallengeWindow
+            ? "Your drop is live. Other players can still call Beat! for now."
+            : "Your drop is live. Hold tight while the Beat! timer plays out."
+        : isManualChallengeWindow
+          ? "Spot a bad drop? Fire Beat! before the host locks it in."
+          : "Spot a bad drop? Call Beat before the timer ends."
       : challengeActionBody;
   function resolveSpendOrigin(
     fallbackButton: HTMLButtonElement,
@@ -159,20 +182,20 @@ export function ChallengeActionPanel({
               />
             ) : null}
             <div className={styles.challengeCalloutInner}>
-              <p className={styles.challengeEyebrow}>Limited time</p>
               <h3 className={styles.challengeTitle}>{titleText}</h3>
               {bodyText ? <p className={styles.challengeText}>{bodyText}</p> : null}
+              <div className={styles.challengeMetaRow}>
+                <div className={styles.challengeCountdownBadge}>
+                  <span className={styles.challengeCountdownDot} aria-hidden="true" />
+                  <span>{challengeStatusText}</span>
+                </div>
 
-              <div className={styles.challengeCountdownBadge}>
-                <span className={styles.challengeCountdownDot} aria-hidden="true" />
-                <span>{challengeStatusText}</span>
+                {roomState.settings.ttModeEnabled ? (
+                  <span className={styles.challengeTokenChip}>
+                    Your tokens <TtTokenAmount amount={currentPlayerTtCount} />
+                  </span>
+                ) : null}
               </div>
-
-              {roomState.settings.ttModeEnabled ? (
-                <span className={styles.challengeTokenChip}>
-                  Your tokens <TtTokenAmount amount={currentPlayerTtCount} />
-                </span>
-              ) : null}
             </div>
           </motion.section>
         ) : null}

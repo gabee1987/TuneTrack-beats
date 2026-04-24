@@ -35,6 +35,7 @@ interface BuildGamePageControllerResultOptions {
     | "canToggleTimelineView"
     | "canUseBuyCard"
     | "canUseSkipTrack"
+    | "isCurrentPlayerTurn"
   >;
   displayState: Pick<
     UseGamePageControllerResult,

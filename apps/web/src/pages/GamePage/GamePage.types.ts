@@ -159,6 +159,7 @@ export interface GamePageActionPanelsModel
     | "handlePlaceChallenge"
     | "handleResolveChallengeWindow"
     | "handleSkipTrackWithTt"
+    | "isCurrentPlayerTurn"
     | "buyTimelineCardSpendAnimationKey"
     | "skipTrackSpendAnimationKey"
     | "showHelperLabels"
@@ -192,6 +193,7 @@ export type GamePageController = GamePageActionHandlers & {
   errorMessage: string | null;
   hiddenCardMode: HiddenCardMode;
   isHost: boolean;
+  isCurrentPlayerTurn: boolean;
   isViewingOwnTimeline: boolean;
   leadingPlayers: PublicRoomState["players"];
   menuTabs: AppShellMenuTab[];

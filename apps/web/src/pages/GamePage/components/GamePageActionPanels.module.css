@@ -55,25 +55,25 @@
   position: relative;
   isolation: isolate;
   overflow: visible;
-  margin-top: 18px;
-  padding: 18px;
+  margin-top: 14px;
+  padding: 14px 14px 12px;
   border: 1px solid var(--challenge-stage-border);
   border-radius: 28px;
   background:
     radial-gradient(
       circle at 50% 0%,
-      color-mix(in srgb, #ff4d9d 20%, transparent),
+      color-mix(in srgb, #ff4d9d 12%, transparent),
       transparent 42%
     ),
     radial-gradient(
       circle at 100% 100%,
-      color-mix(in srgb, #8b5cff 20%, transparent),
+      color-mix(in srgb, #8b5cff 12%, transparent),
       transparent 44%
     ),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--color-surface-elevated) 90%, transparent),
-      color-mix(in srgb, #070813 92%, transparent)
+      color-mix(in srgb, var(--color-surface-elevated) 18%, transparent),
+      color-mix(in srgb, #070813 24%, transparent)
     );
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, white 12%, transparent),
@@ -101,35 +101,42 @@
 .challengeCallout::before {
   content: "";
   position: absolute;
-  inset: 1px;
-  z-index: -1;
+  inset: 0;
+  z-index: 0;
   border-radius: inherit;
   background:
+    var(--color-game-preview-scrim),
     linear-gradient(
       135deg,
       color-mix(in srgb, #ff8a3d 16%, transparent),
       transparent 36%,
       color-mix(in srgb, #ff4d9d 12%, transparent)
     );
-  opacity: 0.7;
+  backdrop-filter: blur(24px) saturate(1.08);
+  -webkit-backdrop-filter: blur(24px) saturate(1.08);
+  opacity: 0.92;
+  pointer-events: none;
 }
 
 .challengePulseBorder {
   position: absolute;
-  inset: -1px;
+  inset: -2px;
   border: 1.5px solid var(--challenge-stage-border);
   border-radius: inherit;
   pointer-events: none;
   transform-origin: center center;
   will-change: transform, opacity, box-shadow;
+  z-index: 2;
   animation: challengeBorderPulseStep 980ms cubic-bezier(0.22, 0.61, 0.36, 1) 1;
 }
 
 .challengeCalloutInner {
   display: grid;
   justify-items: center;
-  gap: 10px;
+  gap: 8px;
   text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 .challengeEyebrow {
@@ -143,20 +150,30 @@
 
 .challengeTitle {
   margin: 0;
-  color: var(--color-text-primary);
-  font-size: clamp(26px, 7vw, 38px);
+  color: #ffb26b;
+  font-size: clamp(18px, 4.8vw, 24px);
   font-weight: 950;
-  letter-spacing: -0.06em;
-  line-height: 0.95;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .challengeText {
   max-width: 34rem;
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 650;
-  line-height: 1.35;
+  line-height: 1.25;
+}
+
+.challengeMetaRow {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
 }
 
 .challengeCountdownBadge,
@@ -165,6 +182,9 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: nowrap;
   border: 1px solid color-mix(in srgb, white 10%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, #090b16 66%, transparent);
@@ -175,10 +195,10 @@
 }
 
 .challengeCountdownBadge {
-  min-height: 38px;
-  padding: 9px 14px;
+  min-height: 32px;
+  padding: 7px 10px;
   color: #fff3dc;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 900;
 }
 
@@ -191,10 +211,10 @@
 }
 
 .challengeTokenChip {
-  min-height: 34px;
-  padding: 7px 12px;
+  min-height: 32px;
+  padding: 7px 10px;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
 }
 
