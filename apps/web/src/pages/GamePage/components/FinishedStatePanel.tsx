@@ -3,12 +3,14 @@ import type { GamePagePlayerNameResolver } from "../GamePage.types";
 import styles from "./GamePageActionPanels.module.css";
 
 interface FinishedStatePanelProps {
+  currentPlayerId: string | null;
   getPlayerName: GamePagePlayerNameResolver;
   roomState: PublicRoomState;
   showHelperLabels: boolean;
 }
 
 export function FinishedStatePanel({
+  currentPlayerId,
   getPlayerName,
   roomState,
   showHelperLabels,
@@ -17,12 +19,16 @@ export function FinishedStatePanel({
     return null;
   }
 
+  const didCurrentPlayerWin =
+    Boolean(currentPlayerId) && roomState.winnerPlayerId === currentPlayerId;
+  const titleText = didCurrentPlayerWin
+    ? "You won the game!"
+    : `${getPlayerName(roomState.winnerPlayerId)} won the game!`;
+
   return (
     <section className={styles.revealPanel}>
       {showHelperLabels ? <p className={styles.sectionLabel}>Game Over</p> : null}
-      <h2 className={styles.cardTitle}>
-        {getPlayerName(roomState.winnerPlayerId)} wins!
-      </h2>
+      <h2 className={styles.cardTitle}>{titleText}</h2>
     </section>
   );
 }

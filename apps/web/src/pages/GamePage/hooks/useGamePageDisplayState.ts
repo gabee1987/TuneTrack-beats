@@ -140,6 +140,7 @@ export function useGamePageDisplayState({
     currentPlayerId,
     currentPlayerTtCount,
     currentPlayerTimeline,
+    getPlayerName,
     getPossessivePlayerName,
     isViewingOwnTimeline,
     locallyPlacedCard,

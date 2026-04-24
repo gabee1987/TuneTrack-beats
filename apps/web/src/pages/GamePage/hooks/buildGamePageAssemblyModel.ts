@@ -18,6 +18,7 @@ export function buildGamePageAssemblyModel(
       challengeActionBody: controller.challengeActionBody,
       challengeActionTitle: controller.challengeActionTitle,
       challengeCountdownLabel: controller.challengeCountdownLabel,
+      currentPlayerId: controller.currentPlayerId,
       currentPlayerTtCount: controller.currentPlayerTtCount,
       getPlayerName: controller.getPlayerName,
       handleBuyTimelineCardWithTt: controller.handleBuyTimelineCardWithTt,

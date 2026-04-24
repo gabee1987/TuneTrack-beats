@@ -150,6 +150,7 @@ export interface GamePageActionPanelsModel
     | "challengeActionBody"
     | "challengeActionTitle"
     | "challengeCountdownLabel"
+    | "currentPlayerId"
     | "currentPlayerTtCount"
     | "getPlayerName"
     | "handleBuyTimelineCardWithTt"

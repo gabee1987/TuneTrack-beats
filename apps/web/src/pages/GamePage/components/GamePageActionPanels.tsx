@@ -135,6 +135,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
       />
 
       <FinishedStatePanel
+        currentPlayerId={model.currentPlayerId}
         getPlayerName={getPlayerName}
         roomState={roomState}
         showHelperLabels={showHelperLabels}

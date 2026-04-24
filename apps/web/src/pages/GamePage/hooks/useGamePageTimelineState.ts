@@ -15,6 +15,7 @@ interface UseGamePageTimelineStateOptions {
   currentPlayerTimeline: PublicRoomState["timelines"][string];
   activePlayerTimeline: PublicRoomState["timelines"][string];
   getPossessivePlayerName: GamePagePlayerNameResolver;
+  getPlayerName: GamePagePlayerNameResolver;
   isViewingOwnTimeline: boolean;
   locallyPlacedCard: PublicRoomState["currentTrackCard"] | null;
   roomState: PublicRoomState | null;
@@ -47,6 +48,7 @@ export function useGamePageTimelineState({
   currentPlayerTimeline,
   activePlayerTimeline,
   getPossessivePlayerName,
+  getPlayerName,
   isViewingOwnTimeline,
   locallyPlacedCard,
   roomState,
@@ -86,12 +88,16 @@ export function useGamePageTimelineState({
   function getVisibleTimelineTitle(): string {
     return isViewingOwnTimeline
       ? "Your timeline"
+      : roomState?.status === "finished"
+        ? `${getPlayerName(roomState.winnerPlayerId)}'s winning timeline`
       : `${getPossessivePlayerName(activePlayerId)} timeline`;
   }
 
   function getVisibleTimelineHint(): string {
     return isViewingOwnTimeline
       ? "This is your personal timeline. Switch back to the active timeline any time."
+      : roomState?.status === "finished"
+        ? "This is the winning timeline. Switch to Mine any time to compare your run."
       : activeTimelineHint;
   }
 

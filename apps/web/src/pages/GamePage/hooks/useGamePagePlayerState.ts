@@ -22,8 +22,12 @@ export function useGamePagePlayerState({
   currentPlayerId,
   roomState,
 }: UseGamePagePlayerStateOptions): UseGamePagePlayerStateResult {
+  const activeTimelineOwnerId =
+    roomState?.status === "finished"
+      ? roomState.winnerPlayerId
+      : roomState?.turn?.activePlayerId;
   const activePlayer = roomState?.players.find(
-    (player) => player.id === roomState.turn?.activePlayerId,
+    (player) => player.id === activeTimelineOwnerId,
   );
   const currentPlayer = roomState?.players.find(
     (player) => player.id === currentPlayerId,
@@ -33,12 +37,12 @@ export function useGamePagePlayerState({
   );
 
   const activePlayerTimeline = useMemo(() => {
-    if (!roomState || !roomState.turn?.activePlayerId) {
+    if (!roomState || !activeTimelineOwnerId) {
       return [];
     }
 
-    return roomState.timelines[roomState.turn.activePlayerId] ?? [];
-  }, [roomState]);
+    return roomState.timelines[activeTimelineOwnerId] ?? [];
+  }, [activeTimelineOwnerId, roomState]);
 
   const currentPlayerTimeline = useMemo(() => {
     if (!roomState || !currentPlayerId) {
