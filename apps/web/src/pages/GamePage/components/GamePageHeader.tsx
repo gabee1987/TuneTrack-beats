@@ -88,7 +88,7 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
                 <article className={styles.headerLeaderChip} key={player.id}>
                   <span className={styles.headerLeaderRank}>#{index + 1}</span>
                   <strong className={styles.headerLeaderName}>
-                    {player.id === currentPlayerId ? "You" : player.displayName}
+                    {player.displayName}
                   </strong>
                   <span className={styles.headerLeaderMeta}>
                     {roomState.timelines[player.id]?.length ?? 0}
@@ -151,7 +151,7 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
             </svg>
           </button>
           <AppShellMenu
-            subtitle=""
+            subtitle="Game lobby name"
             tabs={menuTabs}
             title={roomState.roomId}
             {...(roomState.hostId === currentPlayerId

@@ -114,8 +114,10 @@ export function AppShellMenuSheet({
     >
       <header className={styles.menuHeader}>
         <div>
+          {subtitle ? (
+            <p className={styles.menuSubtitle}>{subtitle}</p>
+          ) : null}
           <h2 className={styles.menuTitle}>{title}</h2>
-          {subtitle ? <p className={styles.menuSubtitle}>{subtitle}</p> : null}
         </div>
         <button
           aria-label="Close menu"
