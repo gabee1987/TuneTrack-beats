@@ -11,6 +11,7 @@ import {
   placeCardPayloadSchema,
   resolveChallengeWindowPayloadSchema,
   skipTrackWithTtPayloadSchema,
+  skipTurnPayloadSchema,
   startGamePayloadSchema,
   transferHostPayloadSchema,
   updatePlayerProfilePayloadSchema,
@@ -39,6 +40,7 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
     registerResolveChallengeWindowHandler(io, socket, roomService);
     registerAwardTtHandler(io, socket, roomService);
     registerSkipTrackWithTtHandler(io, socket, roomService);
+    registerSkipTurnHandler(io, socket, roomService);
     registerBuyTimelineCardWithTtHandler(io, socket, roomService);
     registerConfirmRevealHandler(io, socket, roomService);
     registerCloseRoomHandler(io, socket, roomService);
@@ -460,6 +462,39 @@ function registerSkipTrackWithTtHandler(
         SKIP_ALREADY_USED_THIS_TURN:
           "You already used your one allowed skip on this turn.",
         TT_MODE_DISABLED: "TT mode is disabled in this room.",
+      });
+    }
+  });
+}
+
+function registerSkipTurnHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.SkipTurn, (payload: unknown) => {
+    const parseResult = skipTurnPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_SKIP_TURN_PAYLOAD",
+        message: "Skip turn request payload is invalid.",
+      });
+      return;
+    }
+
+    try {
+      const roomState = roomService.skipTurn(parseResult.data, socket.id);
+
+      io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
+        roomState,
+      });
+    } catch (error) {
+      emitServerError(socket, error, "SKIP_TURN_FAILED", {
+        GAME_NOT_IN_TURN_PHASE:
+          "The game must be in turn phase to skip a turn.",
+        GAME_NOT_STARTED: "The game has not started yet.",
+        ONLY_HOST_CAN_SKIP_TURN: "Only the host can skip a turn.",
       });
     }
   });

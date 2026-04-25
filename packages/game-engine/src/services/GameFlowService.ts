@@ -571,6 +571,29 @@ export class GameFlowService {
           : null,
     };
   }
+
+  public skipOfflinePlayerTurn(gameState: GameState): GameState {
+    if (gameState.phase !== "turn" || !gameState.turn) {
+      throw new Error("GAME_NOT_IN_TURN_PHASE");
+    }
+
+    const nextActivePlayerId = findNextActivePlayerId(
+      gameState.players,
+      gameState.turn.activePlayerId,
+    );
+
+    return {
+      ...gameState,
+      turn: {
+        activePlayerId: nextActivePlayerId,
+        turnNumber: gameState.turn.turnNumber + 1,
+        hasUsedSkipTrackWithTt: false,
+      },
+      challengeState: null,
+      revealState: null,
+      currentTrackCard: drawNextCard(gameState.deck),
+    };
+  }
 }
 
 function findFirstValidSlotIndex(

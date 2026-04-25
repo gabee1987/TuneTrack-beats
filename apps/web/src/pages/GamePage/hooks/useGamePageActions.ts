@@ -181,6 +181,16 @@ export function useGamePageActions({
     });
   }
 
+  function handleSkipTurn() {
+    if (!roomState || roomState.status !== "turn") {
+      return;
+    }
+
+    void emitRoomEvent(ClientToServerEvent.SkipTurn, {
+      roomId: roomState.roomId,
+    });
+  }
+
   return {
     handleAwardTt,
     handleRemoveTt,
@@ -192,6 +202,7 @@ export function useGamePageActions({
     handlePlaceChallenge,
     handleResolveChallengeWindow,
     handleSkipTrackWithTt,
+    handleSkipTurn,
     handleTransferHost,
   };
 }

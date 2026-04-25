@@ -13,6 +13,7 @@ export const ClientToServerEvent = {
   PlaceChallenge: "place_challenge",
   ResolveChallengeWindow: "resolve_challenge_window",
   SkipTrackWithTt: "skip_track_with_tt",
+  SkipTurn: "skip_turn",
   StartGame: "start_game",
   TransferHost: "transfer_host",
   UpdatePlayerProfile: "update_player_profile",

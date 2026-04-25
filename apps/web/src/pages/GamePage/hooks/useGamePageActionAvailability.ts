@@ -37,11 +37,20 @@ export function useGamePageActionAvailability({
       ? isCurrentPlayerTurn || roomState.hostId === currentPlayerId
       : roomState.hostId === currentPlayerId);
 
+  const activePlayer = roomState?.turn?.activePlayerId
+    ? roomState.players.find((player) => player.id === roomState.turn?.activePlayerId)
+    : null;
+  const canSkipOfflinePlayer =
+    isHost &&
+    roomState?.status === "turn" &&
+    activePlayer?.connectionStatus === "disconnected";
+
   return {
     canClaimChallenge,
     canConfirmReveal,
     canResolveChallengeWindow,
     canSelectChallengeSlot,
+    canSkipOfflinePlayer,
     isChallengeOwner,
     isCurrentPlayerTurn,
     isHost,

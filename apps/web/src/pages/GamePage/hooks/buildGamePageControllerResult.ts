@@ -20,6 +20,7 @@ interface BuildGamePageControllerResultOptions {
     | "handlePlaceChallenge"
     | "handleResolveChallengeWindow"
     | "handleSkipTrackWithTt"
+    | "handleSkipTurn"
     | "buyTimelineCardSpendAnimationKey"
     | "skipTrackSpendAnimationKey"
   >;
@@ -32,6 +33,7 @@ interface BuildGamePageControllerResultOptions {
     | "canConfirmTurnPlacement"
     | "canResolveChallengeWindow"
     | "canSelectSlot"
+    | "canSkipOfflinePlayer"
     | "canToggleTimelineView"
     | "canUseBuyCard"
     | "canUseSkipTrack"
@@ -105,12 +107,12 @@ export function buildGamePageControllerResult({
   timelineState,
 }: BuildGamePageControllerResultOptions): UseGamePageControllerResult {
   return {
+    errorMessage,
     ...actionState,
     ...capabilityState,
     ...displayState,
     ...playerState,
     ...preferenceState,
     ...timelineState,
-    errorMessage,
-  };
+  } as unknown as UseGamePageControllerResult;
 }

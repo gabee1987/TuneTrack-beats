@@ -38,6 +38,7 @@ export interface GamePageActionHandlers {
   handlePlaceChallenge: () => void;
   handleResolveChallengeWindow: () => void;
   handleSkipTrackWithTt: () => void;
+  handleSkipTurn: () => void;
 }
 
 export interface GameRouteState {
@@ -146,6 +147,7 @@ export interface GamePageActionPanelsModel
     | "canConfirmReveal"
     | "canConfirmTurnPlacement"
     | "canResolveChallengeWindow"
+    | "canSkipOfflinePlayer"
     | "canUseBuyCard"
     | "canUseSkipTrack"
     | "challengeActionBody"
@@ -161,6 +163,7 @@ export interface GamePageActionPanelsModel
     | "handlePlaceChallenge"
     | "handleResolveChallengeWindow"
     | "handleSkipTrackWithTt"
+    | "handleSkipTurn"
     | "isCurrentPlayerTurn"
     | "buyTimelineCardSpendAnimationKey"
     | "skipTrackSpendAnimationKey"
@@ -182,6 +185,7 @@ export type GamePageController = GamePageActionHandlers & {
   canConfirmReveal: boolean;
   canConfirmTurnPlacement: boolean;
   canSelectSlot: boolean;
+  canSkipOfflinePlayer: boolean;
   canToggleTimelineView: boolean;
   canUseBuyCard: boolean;
   canUseSkipTrack: boolean;

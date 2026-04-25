@@ -38,6 +38,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     canConfirmReveal,
     canConfirmTurnPlacement,
     canResolveChallengeWindow,
+    canSkipOfflinePlayer,
     canUseBuyCard,
     canUseSkipTrack,
     challengeActionBody,
@@ -149,10 +150,12 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
 
       <TurnActionDock
         canConfirmTurnPlacement={canConfirmTurnPlacement}
+        canSkipOfflinePlayer={model.canSkipOfflinePlayer}
         canUseBuyCard={canUseBuyCard}
         canUseSkipTrack={canUseSkipTrack}
         handleBuyTimelineCardWithTt={handleBuyTimelineCardWithTt}
         handlePlaceCard={handlePlaceCard}
+        handleSkipOfflinePlayer={model.handleSkipTurn}
         handleSkipTrackWithTt={handleSkipTrackWithTt}
         onTokenSpendAnimationStart={handleTokenSpendAnimationStart}
         roomState={roomState}
@@ -171,6 +174,7 @@ function areActionPanelModelsEqual(
     previousModel.canConfirmReveal === nextModel.canConfirmReveal &&
     previousModel.canConfirmTurnPlacement === nextModel.canConfirmTurnPlacement &&
     previousModel.canResolveChallengeWindow === nextModel.canResolveChallengeWindow &&
+    previousModel.canSkipOfflinePlayer === nextModel.canSkipOfflinePlayer &&
     previousModel.canUseBuyCard === nextModel.canUseBuyCard &&
     previousModel.canUseSkipTrack === nextModel.canUseSkipTrack &&
     previousModel.challengeActionBody === nextModel.challengeActionBody &&
@@ -185,6 +189,7 @@ function areActionPanelModelsEqual(
     previousModel.handlePlaceChallenge === nextModel.handlePlaceChallenge &&
     previousModel.handleResolveChallengeWindow === nextModel.handleResolveChallengeWindow &&
     previousModel.handleSkipTrackWithTt === nextModel.handleSkipTrackWithTt &&
+    previousModel.handleSkipTurn === nextModel.handleSkipTurn &&
     previousModel.isCurrentPlayerTurn === nextModel.isCurrentPlayerTurn &&
     previousModel.roomState === nextModel.roomState &&
     previousModel.showHelperLabels === nextModel.showHelperLabels &&

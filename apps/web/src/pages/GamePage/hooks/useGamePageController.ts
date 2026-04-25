@@ -151,6 +151,7 @@ export function useGamePageController({
     handlePlaceChallenge: actions.handlePlaceChallenge,
     handleResolveChallengeWindow: actions.handleResolveChallengeWindow,
     handleSkipTrackWithTt: actions.handleSkipTrackWithTt,
+    handleSkipTurn: actions.handleSkipTurn,
     buyTimelineCardSpendAnimationKey,
     skipTrackSpendAnimationKey,
   };
@@ -163,6 +164,7 @@ export function useGamePageController({
     canConfirmTurnPlacement: derivedState.canConfirmTurnPlacement,
     canResolveChallengeWindow: derivedState.canResolveChallengeWindow,
     canSelectSlot: derivedState.canSelectSlot,
+    canSkipOfflinePlayer: actionAvailability.canSkipOfflinePlayer,
     canToggleTimelineView: derivedState.canToggleTimelineView,
     canUseBuyCard: derivedState.canUseBuyCard,
     canUseSkipTrack: derivedState.canUseSkipTrack,

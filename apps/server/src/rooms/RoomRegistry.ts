@@ -479,6 +479,46 @@ export class RoomRegistry {
     return nextRoomState;
   }
 
+  public skipTurn(
+    socketId: string,
+    skipTurnPayload: { roomId: RoomId },
+  ): PublicRoomState {
+    const roomRecord = this.getRoomRecordForMember(
+      socketId,
+      skipTurnPayload.roomId,
+    );
+    const membership = this.getMembership(socketId);
+
+    if (roomRecord.roomState.hostId !== membership.playerId) {
+      throw new Error("ONLY_HOST_CAN_SKIP_TURN");
+    }
+
+    if (!roomRecord.gameState) {
+      throw new Error("GAME_NOT_STARTED");
+    }
+
+    if (roomRecord.gameState.phase !== "turn") {
+      throw new Error("GAME_NOT_IN_TURN_PHASE");
+    }
+
+    const nextGameState = this.gameFlowService.skipOfflinePlayerTurn(
+      roomRecord.gameState,
+    );
+    const nextRoomState = mapGameStateToPublicRoomState(
+      roomRecord.roomState,
+      nextGameState,
+      roomRecord.trackCardsById,
+    );
+
+    this.roomsById.set(skipTurnPayload.roomId, {
+      ...roomRecord,
+      gameState: nextGameState,
+      roomState: nextRoomState,
+    });
+
+    return nextRoomState;
+  }
+
   public startGame(
     socketId: string,
     startGamePayload: StartGamePayloadParsed,

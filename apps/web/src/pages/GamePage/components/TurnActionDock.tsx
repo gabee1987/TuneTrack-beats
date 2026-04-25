@@ -19,10 +19,12 @@ import styles from "./GamePageActionPanels.module.css";
 
 interface TurnActionDockProps {
   canConfirmTurnPlacement: boolean;
+  canSkipOfflinePlayer: boolean;
   canUseBuyCard: boolean;
   canUseSkipTrack: boolean;
   handleBuyTimelineCardWithTt: () => void;
   handlePlaceCard: () => void;
+  handleSkipOfflinePlayer: () => void;
   handleSkipTrackWithTt: () => void;
   onTokenSpendAnimationStart?: (payload: {
     amount: number;
@@ -34,10 +36,12 @@ interface TurnActionDockProps {
 
 export function TurnActionDock({
   canConfirmTurnPlacement,
+  canSkipOfflinePlayer,
   canUseBuyCard,
   canUseSkipTrack,
   handleBuyTimelineCardWithTt,
   handlePlaceCard,
+  handleSkipOfflinePlayer,
   handleSkipTrackWithTt,
   onTokenSpendAnimationStart,
   roomState,
@@ -60,7 +64,7 @@ export function TurnActionDock({
 
   if (
     roomState.status !== "turn" ||
-    (!canUseSkipTrack && !canUseBuyCard && !canConfirmTurnPlacement)
+    (!canUseSkipTrack && !canUseBuyCard && !canConfirmTurnPlacement && !canSkipOfflinePlayer)
   ) {
     return null;
   }
@@ -134,6 +138,17 @@ export function TurnActionDock({
           <PrimaryActionButton onClick={() => handlePlaceCard()}>
             Confirm
           </PrimaryActionButton>
+        </motion.span>
+      ) : null}
+      {canSkipOfflinePlayer ? (
+        <motion.span
+          className={styles.actionButtonMotionWrap}
+          layout="position"
+          transition={createLayoutTransition(reduceMotion)}
+        >
+          <SecondaryActionButton onClick={() => handleSkipOfflinePlayer()}>
+            Skip Offline Player
+          </SecondaryActionButton>
         </motion.span>
       ) : null}
     </ActionDock>

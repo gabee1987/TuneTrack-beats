@@ -11,6 +11,7 @@ import type {
   PublicRoomState,
   ResolveChallengeWindowPayloadParsed,
   SkipTrackWithTtPayloadParsed,
+  SkipTurnPayloadParsed,
   StartGamePayloadParsed,
   TransferHostPayloadParsed,
   UpdatePlayerProfilePayloadParsed,
@@ -156,6 +157,13 @@ export class RoomService {
     socketId: string,
   ): PublicRoomState {
     return this.roomRegistry.confirmReveal(socketId, confirmRevealPayload);
+  }
+
+  public skipTurn(
+    skipTurnPayload: SkipTurnPayloadParsed,
+    socketId: string,
+  ): PublicRoomState {
+    return this.roomRegistry.skipTurn(socketId, skipTurnPayload);
   }
 
   public closeRoom(

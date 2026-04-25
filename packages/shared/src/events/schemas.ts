@@ -137,6 +137,10 @@ export const buyTimelineCardWithTtPayloadSchema = z.object({
   roomId: roomIdSchema,
 });
 
+export const skipTurnPayloadSchema = z.object({
+  roomId: roomIdSchema,
+});
+
 export type JoinRoomPayloadInput = z.input<typeof joinRoomPayloadSchema>;
 export type JoinRoomPayloadParsed = z.output<typeof joinRoomPayloadSchema>;
 export type UpdateRoomSettingsPayloadInput = z.input<
@@ -201,3 +205,5 @@ export type BuyTimelineCardWithTtPayloadInput = z.input<
 export type BuyTimelineCardWithTtPayloadParsed = z.output<
   typeof buyTimelineCardWithTtPayloadSchema
 >;
+export type SkipTurnPayloadInput = z.input<typeof skipTurnPayloadSchema>;
+export type SkipTurnPayloadParsed = z.output<typeof skipTurnPayloadSchema>;
