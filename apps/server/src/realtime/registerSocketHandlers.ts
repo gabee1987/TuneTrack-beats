@@ -12,6 +12,7 @@ import {
   resolveChallengeWindowPayloadSchema,
   skipTrackWithTtPayloadSchema,
   startGamePayloadSchema,
+  transferHostPayloadSchema,
   updatePlayerProfilePayloadSchema,
   updatePlayerSettingsPayloadSchema,
   updateRoomSettingsPayloadSchema,
@@ -31,6 +32,7 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
     logger.info({ socketId: socket.id }, "socket connected");
     registerJoinRoomHandler(io, socket, roomService);
     registerStartGameHandler(io, socket, roomService);
+    registerTransferHostHandler(io, socket, roomService);
     registerPlaceCardHandler(io, socket, roomService);
     registerClaimChallengeHandler(io, socket, roomService);
     registerPlaceChallengeHandler(io, socket, roomService);
@@ -77,6 +79,42 @@ function registerJoinRoomHandler(
     } catch (error) {
       emitServerError(socket, error, "JOIN_ROOM_FAILED", {
         GAME_ALREADY_STARTED: "This game has already started.",
+      });
+    }
+  });
+}
+
+function registerTransferHostHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.TransferHost, (payload: unknown) => {
+    const parseResult = transferHostPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_TRANSFER_HOST_PAYLOAD",
+        message: "Host transfer target is invalid.",
+      });
+      return;
+    }
+
+    try {
+      const roomState = roomService.transferHost(parseResult.data, socket.id);
+
+      io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
+        roomState,
+      });
+    } catch (error) {
+      emitServerError(socket, error, "TRANSFER_HOST_FAILED", {
+        HOST_TRANSFER_TARGET_DISCONNECTED:
+          "Host controls can only be transferred to a connected player.",
+        HOST_TRANSFER_TARGET_IS_ALREADY_HOST:
+          "That player already has host controls.",
+        HOST_TRANSFER_TARGET_NOT_FOUND: "That player is no longer in the room.",
+        ONLY_HOST_CAN_TRANSFER_HOST:
+          "Only the current host can transfer host controls.",
       });
     }
   });
@@ -284,6 +322,8 @@ function registerResolveChallengeWindowHandler(
         GAME_NOT_IN_CHALLENGE_PHASE: "Challenge resolution is only available during the challenge window.",
         ONLY_HOST_CAN_RESOLVE_CHALLENGE_WINDOW:
           "Only the host can manually resolve the challenge window.",
+        ONLY_HOST_OR_ACTIVE_PLAYER_CAN_RESOLVE_CHALLENGE_WINDOW:
+          "Only the host or active player can manually resolve the challenge window.",
       });
     }
   });

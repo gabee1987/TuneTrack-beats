@@ -14,6 +14,7 @@ export const ClientToServerEvent = {
   ResolveChallengeWindow: "resolve_challenge_window",
   SkipTrackWithTt: "skip_track_with_tt",
   StartGame: "start_game",
+  TransferHost: "transfer_host",
   UpdatePlayerProfile: "update_player_profile",
   UpdatePlayerSettings: "update_player_settings",
   UpdateRoomSettings: "update_room_settings",
@@ -58,6 +59,11 @@ export interface AwardTtPayload {
 
 export interface StartGamePayload {
   roomId: RoomId;
+}
+
+export interface TransferHostPayload {
+  roomId: RoomId;
+  playerId: PlayerId;
 }
 
 export interface PlaceCardPayload {

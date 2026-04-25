@@ -23,6 +23,8 @@ type InfoContent = {
 export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
   const resolvedRoomId = controller.roomState?.roomId ?? controller.roomId ?? "lobby";
   const players = controller.roomState?.players ?? [];
+  const hasStartedJoinError =
+    controller.errorMessage === "This game has already started.";
   const currentPlayer = players.find(
     (player) => player.id === controller.currentPlayerId,
   );
@@ -186,9 +188,11 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
                 <span className={styles.primaryActionLabel}>
                   {hasSetupChanges
                     ? "Apply setup"
-                    : controller.isHost
-                      ? "Start game"
-                      : "Waiting for host"}
+                    : hasStartedJoinError
+                      ? "Game already started"
+                      : controller.isHost
+                        ? "Start game"
+                        : "Waiting for host"}
                 </span>
               </span>
             </button>
@@ -210,7 +214,14 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
         ref={advancedSectionRef}
         aria-label="Advanced lobby settings"
       >
-        {controller.isHost ? (
+        {hasStartedJoinError ? (
+          <SurfaceCard className={styles.waitingCard}>
+            <LobbySectionHeader
+              description="This match is already in progress. New players cannot join after the first song starts."
+              title="Game already started"
+            />
+          </SurfaceCard>
+        ) : controller.isHost ? (
           <div className={styles.advancedStack}>
             <LobbyHostCoreSettings
               currentSettings={controller.currentSettings}

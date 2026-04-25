@@ -98,6 +98,7 @@ export interface TimelinePanelItemsModel {
   originalChosenSlotIndex: number | null;
   previewCardTransitionEvent: PreviewCardTransitionEvent | null;
   selectable: boolean;
+  shouldAnimateCorrectPlacement?: boolean;
   showCorrectPlacementPreview: boolean;
   showCorrectionPreview: boolean;
   showDevAlbumInfo: boolean;

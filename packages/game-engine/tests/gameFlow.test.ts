@@ -244,6 +244,28 @@ describe("GameFlowService", () => {
     expect(nextTurnState.revealState).toBeNull();
   });
 
+  it("can pass an interrupted turn to a specific next player without drawing a new card", () => {
+    const gameState = gameFlowService.startGame({
+      players,
+      deck,
+      targetTimelineCardCount: 3,
+    });
+
+    const nextTurnState = gameFlowService.advanceTurnToPlayer(
+      gameState,
+      "player-2",
+    );
+
+    expect(nextTurnState.phase).toBe("turn");
+    expect(nextTurnState.turn).toEqual({
+      activePlayerId: "player-2",
+      turnNumber: 2,
+      hasUsedSkipTrackWithTt: false,
+    });
+    expect(nextTurnState.currentTrackCard).toBe(gameState.currentTrackCard);
+    expect(nextTurnState.deck).toEqual(gameState.deck);
+  });
+
   it("throws when confirming reveal outside reveal phase", () => {
     const gameState = gameFlowService.startGame({
       players,

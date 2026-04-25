@@ -53,6 +53,9 @@ function TimelinePanelItemsComponent({
           key={item.id}
           previewCardTransitionEvent={model.previewCardTransitionEvent}
           selectable={model.selectable}
+          shouldAnimateCorrectPlacement={Boolean(
+            model.shouldAnimateCorrectPlacement,
+          )}
           showCorrectPlacementPreview={model.showCorrectPlacementPreview}
           showCorrectionPreview={model.showCorrectionPreview}
           showDevAlbumInfo={model.showDevAlbumInfo}

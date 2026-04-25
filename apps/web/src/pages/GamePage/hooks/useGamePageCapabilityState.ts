@@ -13,6 +13,7 @@ interface UseGamePageCapabilityStateOptions {
     handleAwardTt: (playerId: string) => void;
     handleRemoveTt: (playerId: string) => void;
     handleCloseRoom: () => void;
+    handleTransferHost: (playerId: string) => void;
   };
   roomState: PublicRoomState | null;
 }
@@ -60,7 +61,9 @@ export function useGamePageCapabilityState({
   const canResolveChallengeWindow =
     roomState?.status === "challenge" &&
     roomState.challengeState?.phase === "open" &&
-    roomState.hostId === currentPlayerId;
+    (roomState.settings.revealConfirmMode === "host_or_active_player"
+      ? isCurrentPlayerTurn || roomState.hostId === currentPlayerId
+      : roomState.hostId === currentPlayerId);
   const canConfirmReveal =
     roomState?.status === "reveal" &&
     (roomState.settings.revealConfirmMode === "host_or_active_player"
@@ -100,6 +103,7 @@ export function useGamePageCapabilityState({
         currentPlayerId,
         onAwardTt: handlers.handleAwardTt,
         onRemoveTt: handlers.handleRemoveTt,
+        onTransferHost: handlers.handleTransferHost,
         roomState,
       })
     : [];

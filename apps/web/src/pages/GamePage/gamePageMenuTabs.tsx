@@ -1,15 +1,19 @@
 import {
   MAX_STARTING_TT_TOKEN_COUNT,
   MIN_STARTING_TT_TOKEN_COUNT,
+  type PublicPlayerState,
   type PublicRoomState,
 } from "@tunetrack/shared";
 import { motion, useReducedMotion } from "framer-motion";
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import {
+  MotionDialogPortal,
+  createMeasuredDisclosureMotion,
   createMenuTokenAdjustFlyoutPopTransition,
   createMenuTokenAdjustFlyoutPopVariants,
   createMenuTokenAdjustFlyoutTransition,
   createMenuTokenAdjustFlyoutVariants,
+  createStandardTransition,
 } from "../../features/motion";
 import type { AppShellMenuTab } from "../../features/app-shell/AppShellMenu";
 import { Badge } from "../../features/ui/Badge";
@@ -21,6 +25,7 @@ interface CreateGameMenuTabsOptions {
   roomState: PublicRoomState;
   onAwardTt: (playerId: string) => void;
   onRemoveTt: (playerId: string) => void;
+  onTransferHost: (playerId: string) => void;
 }
 
 type TokenFlyAnimation = "add" | "remove" | null;
@@ -172,11 +177,237 @@ function TokenAdjustButtons({
   );
 }
 
+interface GameMenuPlayerItemProps {
+  currentPlayerId: string | null;
+  onAwardTt: (playerId: string) => void;
+  onRemoveTt: (playerId: string) => void;
+  onTransferHost: (playerId: string) => void;
+  player: PublicPlayerState;
+  roomState: PublicRoomState;
+}
+
+function GameMenuPlayerItem({
+  currentPlayerId,
+  onAwardTt,
+  onRemoveTt,
+  onTransferHost,
+  player,
+  roomState,
+}: GameMenuPlayerItemProps) {
+  const reduceMotion = useReducedMotion() ?? false;
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isTransferConfirmOpen, setIsTransferConfirmOpen] = useState(false);
+  const expandedContentRef = useRef<HTMLDivElement | null>(null);
+  const [expandedContentHeight, setExpandedContentHeight] = useState(0);
+  const isCurrentPlayerHost = roomState.hostId === currentPlayerId;
+  const isCurrentPlayer = player.id === currentPlayerId;
+  const isDisconnected = player.connectionStatus === "disconnected";
+  const canTransferHost =
+    isCurrentPlayerHost && !isCurrentPlayer && !player.isHost && !isDisconnected;
+  const hasTokenActions = roomState.settings.ttModeEnabled && isCurrentPlayerHost;
+  const hasTransferAction = isCurrentPlayerHost && !isCurrentPlayer;
+  const hasExpandableContent = hasTransferAction;
+
+  useLayoutEffect(() => {
+    const contentElement = expandedContentRef.current;
+    if (!contentElement) {
+      return;
+    }
+
+    const updateMeasuredHeight = () => {
+      setExpandedContentHeight(contentElement.scrollHeight);
+    };
+
+    updateMeasuredHeight();
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateMeasuredHeight();
+    });
+
+    resizeObserver.observe(contentElement);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  function handleTransferHost() {
+    if (!canTransferHost) {
+      return;
+    }
+
+    onTransferHost(player.id);
+    setIsTransferConfirmOpen(false);
+  }
+
+  return (
+    <li
+      className={`${styles.menuPlayerItem} ${
+        isDisconnected ? styles.menuPlayerItemDisconnected : ""
+      }`}
+    >
+      <button
+        aria-expanded={isExpanded}
+        className={styles.menuPlayerExpandButton}
+        disabled={!hasExpandableContent}
+        onClick={() => {
+          if (!hasExpandableContent) {
+            return;
+          }
+
+          setIsExpanded((currentValue) => !currentValue);
+        }}
+        type="button"
+      >
+        <div className={styles.menuPlayerInfoRow}>
+          <div className={styles.menuPlayerIdentity}>
+            <div className={styles.menuPlayerNameRow}>
+              <strong className={styles.menuPlayerName}>
+                {isCurrentPlayer ? "You" : player.displayName}
+              </strong>
+              <div className={styles.menuPlayerBadges}>
+                <Badge className={styles.menuPlayerBadge} size="sm" variant="neutral">
+                  {roomState.timelines[player.id]?.length ?? 0} cards
+                </Badge>
+                {roomState.settings.ttModeEnabled ? (
+                  <Badge className={styles.menuPlayerBadge} size="sm" variant="neutral">
+                    <TtTokenAmount amount={player.ttTokenCount} />
+                  </Badge>
+                ) : null}
+                {player.isHost ? (
+                  <Badge className={styles.menuPlayerBadge} size="sm" variant="strong">
+                    Host
+                  </Badge>
+                ) : null}
+                {isDisconnected ? (
+                  <Badge
+                    className={styles.menuPlayerBadge}
+                    size="sm"
+                    variant="mutedSurface"
+                  >
+                    Offline
+                  </Badge>
+                ) : null}
+                {player.id === roomState.turn?.activePlayerId ? (
+                  <Badge
+                    className={styles.menuPlayerBadge}
+                    size="sm"
+                    variant="mutedSurface"
+                  >
+                    Turn
+                  </Badge>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </div>
+      </button>
+      {hasTokenActions ? (
+        <TokenAdjustButtons
+          currentTokenCount={player.ttTokenCount}
+          onAwardTt={() => onAwardTt(player.id)}
+          onRemoveTt={() => onRemoveTt(player.id)}
+        />
+      ) : null}
+      {hasExpandableContent ? (
+        <button
+          aria-expanded={isExpanded}
+          aria-label={`${isExpanded ? "Hide" : "Show"} host transfer controls for ${
+            isCurrentPlayer ? "you" : player.displayName
+          }`}
+          className={`${styles.menuPlayerExpandIndicatorButton} ${
+            hasTokenActions ? styles.menuPlayerExpandIndicatorAfterTokens : ""
+          }`}
+          onClick={() => setIsExpanded((currentValue) => !currentValue)}
+          type="button"
+        >
+          <span
+            aria-hidden="true"
+            className={`${styles.menuPlayerExpandIndicator} ${
+              isExpanded ? styles.menuPlayerExpandIndicatorOpen : ""
+            }`}
+          />
+        </button>
+      ) : null}
+      <motion.div
+        animate={createMeasuredDisclosureMotion(
+          reduceMotion,
+          isExpanded && hasExpandableContent,
+          expandedContentHeight,
+        )}
+        initial={false}
+        style={{
+          overflow: "hidden",
+          pointerEvents: isExpanded && hasExpandableContent ? "auto" : "none",
+        }}
+        transition={createStandardTransition(reduceMotion)}
+      >
+        <div className={styles.menuPlayerExpandedActions} ref={expandedContentRef}>
+          {hasTransferAction ? (
+            <button
+              className={`${styles.menuActionButton} ${styles.menuTransferHostButton}`}
+              disabled={!canTransferHost}
+              onClick={() => setIsTransferConfirmOpen(true)}
+              type="button"
+            >
+              Transfer host
+            </button>
+          ) : null}
+        </div>
+      </motion.div>
+      <MotionDialogPortal
+        cardClassName={styles.transferConfirmCard}
+        isOpen={isTransferConfirmOpen}
+        label="Transfer host controls"
+        onClose={() => setIsTransferConfirmOpen(false)}
+        overlayClassName={styles.transferConfirmOverlay}
+      >
+        <div className={styles.transferConfirmHeaderRow}>
+          <p className={styles.transferConfirmEyebrow}>Host transfer</p>
+          <button
+            aria-label="Close host transfer confirmation"
+            className={styles.transferConfirmCloseButton}
+            onClick={() => setIsTransferConfirmOpen(false)}
+            type="button"
+          >
+            x
+          </button>
+        </div>
+        <h2 className={styles.transferConfirmTitle}>
+          Transfer host controls?
+        </h2>
+        <p className={styles.transferConfirmBody}>
+          {player.displayName} will receive host controls immediately. You will
+          stay in the game as a regular player.
+        </p>
+        <div className={styles.transferConfirmActions}>
+          <button
+            className={`${styles.menuActionButton} ${styles.transferConfirmSecondaryButton}`}
+            onClick={() => setIsTransferConfirmOpen(false)}
+            type="button"
+          >
+            Cancel
+          </button>
+          <button
+            className={`${styles.menuActionButton} ${styles.menuTransferHostButton}`}
+            disabled={!canTransferHost}
+            onClick={handleTransferHost}
+            type="button"
+          >
+            Transfer host
+          </button>
+        </div>
+      </MotionDialogPortal>
+    </li>
+  );
+}
+
 export function createGameMenuTabs({
   currentPlayerId,
   roomState,
   onAwardTt,
   onRemoveTt,
+  onTransferHost,
 }: CreateGameMenuTabsOptions): AppShellMenuTab[] {
   return [
     {
@@ -187,49 +418,15 @@ export function createGameMenuTabs({
           <h3 className={styles.menuInfoTitle}>Players summary</h3>
           <ul className={styles.menuPlayerList}>
             {roomState.players.map((player) => (
-              <li className={styles.menuPlayerItem} key={player.id}>
-                <div className={styles.menuPlayerInfoRow}>
-                  <div className={styles.menuPlayerIdentity}>
-                    <div className={styles.menuPlayerNameRow}>
-                      <strong className={styles.menuPlayerName}>
-                        {player.id === currentPlayerId ? "You" : player.displayName}
-                      </strong>
-                      <div className={styles.menuPlayerBadges}>
-                        <Badge className={styles.menuPlayerBadge} size="sm" variant="neutral">
-                          {roomState.timelines[player.id]?.length ?? 0} cards
-                        </Badge>
-                        {roomState.settings.ttModeEnabled ? (
-                          <Badge className={styles.menuPlayerBadge} size="sm" variant="neutral">
-                            <TtTokenAmount amount={player.ttTokenCount} />
-                          </Badge>
-                        ) : null}
-                        {player.isHost ? (
-                          <Badge className={styles.menuPlayerBadge} size="sm" variant="strong">
-                            Host
-                          </Badge>
-                        ) : null}
-                        {player.id === roomState.turn?.activePlayerId ? (
-                          <Badge
-                            className={styles.menuPlayerBadge}
-                            size="sm"
-                            variant="mutedSurface"
-                          >
-                            Turn
-                          </Badge>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {roomState.settings.ttModeEnabled &&
-                roomState.hostId === currentPlayerId ? (
-                  <TokenAdjustButtons
-                    currentTokenCount={player.ttTokenCount}
-                    onAwardTt={() => onAwardTt(player.id)}
-                    onRemoveTt={() => onRemoveTt(player.id)}
-                  />
-                ) : null}
-              </li>
+              <GameMenuPlayerItem
+                currentPlayerId={currentPlayerId}
+                key={player.id}
+                onAwardTt={onAwardTt}
+                onRemoveTt={onRemoveTt}
+                onTransferHost={onTransferHost}
+                player={player}
+                roomState={roomState}
+              />
             ))}
           </ul>
         </div>

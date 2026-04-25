@@ -13,6 +13,8 @@ import styles from "./LobbyPageDesktop.module.css";
 export function LobbyPageDesktop({ controller }: LobbyPageAssemblyProps) {
   const resolvedRoomId = controller.roomState?.roomId ?? controller.roomId ?? "lobby";
   const players = controller.roomState?.players ?? [];
+  const hasStartedJoinError =
+    controller.errorMessage === "This game has already started.";
 
   return (
     <AppPageShell
@@ -38,7 +40,14 @@ export function LobbyPageDesktop({ controller }: LobbyPageAssemblyProps) {
             roomId={resolvedRoomId}
           />
 
-          {controller.isHost ? (
+          {hasStartedJoinError ? (
+            <SurfaceCard className={styles.waitingCard}>
+              <LobbySectionHeader
+                description="This match is already in progress. New players cannot join after the first song starts."
+                title="Game already started"
+              />
+            </SurfaceCard>
+          ) : controller.isHost ? (
             <LobbyHostSettingsPanel
               currentSettings={controller.currentSettings}
               onIntentToStartGame={controller.preloadGame}

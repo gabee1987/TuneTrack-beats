@@ -27,6 +27,7 @@ import {
   type RoomId,
   type SkipTrackWithTtPayloadParsed,
   type StartGamePayloadParsed,
+  type TransferHostPayloadParsed,
   type TimelineCardPublic,
   type TrackCardPublic,
   type UpdatePlayerProfilePayloadParsed,
@@ -107,6 +108,9 @@ export class RoomRegistry {
         id: playerId,
         displayName,
         isHost: true,
+        connectionStatus: "connected",
+        disconnectedAtEpochMs: null,
+        reconnectExpiresAtEpochMs: null,
         ttTokenCount: 0,
         startingTimelineCardCount: DEFAULT_STARTING_TIMELINE_CARD_COUNT,
       };
@@ -160,6 +164,9 @@ export class RoomRegistry {
       id: playerId,
       displayName,
       isHost: false,
+      connectionStatus: "connected",
+      disconnectedAtEpochMs: null,
+      reconnectExpiresAtEpochMs: null,
       ttTokenCount: existingRoomRecord.roomState.settings.startingTtTokenCount,
       startingTimelineCardCount:
         existingRoomRecord.roomState.settings.defaultStartingTimelineCardCount,
@@ -515,6 +522,29 @@ export class RoomRegistry {
     return roomState;
   }
 
+  public transferHost(
+    socketId: string,
+    transferHostPayload: TransferHostPayloadParsed,
+  ): PublicRoomState {
+    const roomRecord = this.getRoomRecordForMember(
+      socketId,
+      transferHostPayload.roomId,
+    );
+    const membership = this.getMembership(socketId);
+
+    if (roomRecord.roomState.hostId !== membership.playerId) {
+      throw new Error("ONLY_HOST_CAN_TRANSFER_HOST");
+    }
+
+    return this.transferHostToPlayer(
+      transferHostPayload.roomId,
+      transferHostPayload.playerId,
+      {
+        requireConnectedTarget: true,
+      },
+    );
+  }
+
   public placeCard(
     socketId: string,
     placeCardPayload: PlaceCardPayloadParsed,
@@ -635,8 +665,20 @@ export class RoomRegistry {
       throw new Error("GAME_NOT_STARTED");
     }
 
-    if (roomRecord.roomState.hostId !== membership.playerId) {
+    if (
+      roomRecord.roomState.settings.revealConfirmMode === "host_only" &&
+      roomRecord.roomState.hostId !== membership.playerId
+    ) {
       throw new Error("ONLY_HOST_CAN_RESOLVE_CHALLENGE_WINDOW");
+    }
+
+    if (
+      roomRecord.roomState.settings.revealConfirmMode ===
+        "host_or_active_player" &&
+      roomRecord.roomState.hostId !== membership.playerId &&
+      roomRecord.gameState.turn?.activePlayerId !== membership.playerId
+    ) {
+      throw new Error("ONLY_HOST_OR_ACTIVE_PLAYER_CAN_RESOLVE_CHALLENGE_WINDOW");
     }
 
     const gameState =
@@ -743,9 +785,13 @@ export class RoomRegistry {
     }
 
     this.socketMemberships.delete(socketId);
-    this.scheduleDeferredPlayerRemoval(membership.sessionId);
+    const roomState = this.markPlayerDisconnected(membership);
 
-    return null;
+    if (roomState?.status === "lobby") {
+      this.scheduleDeferredPlayerRemoval(membership.sessionId);
+    }
+
+    return roomState;
   }
 
   private restorePlayerSession(
@@ -772,12 +818,252 @@ export class RoomRegistry {
       throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
     }
 
+    const connectedRoomState = this.markPlayerConnected(roomId, playerId);
     this.socketMemberships.set(socketId, { playerId, roomId, sessionId });
 
     return {
       playerId,
-      roomState: roomRecord.roomState,
+      roomState: connectedRoomState,
     };
+  }
+
+  private markPlayerDisconnected(
+    membership: SocketRoomMembership,
+  ): PublicRoomState | null {
+    const roomRecord = this.roomsById.get(membership.roomId);
+
+    if (!roomRecord) {
+      return null;
+    }
+
+    const disconnectedAtEpochMs = Date.now();
+    const reconnectExpiresAtEpochMs =
+      disconnectedAtEpochMs + this.reconnectGracePeriodMs;
+    const disconnectedRoomState: PublicRoomState = {
+      ...roomRecord.roomState,
+      players: roomRecord.roomState.players.map((player) =>
+        player.id === membership.playerId
+          ? {
+              ...player,
+              connectionStatus: "disconnected",
+              disconnectedAtEpochMs,
+              reconnectExpiresAtEpochMs,
+            }
+          : player,
+      ),
+    };
+
+    const nextRoomRecord: RoomRecord = {
+      ...roomRecord,
+      roomState: disconnectedRoomState,
+    };
+    this.roomsById.set(membership.roomId, nextRoomRecord);
+
+    let nextRoomState = disconnectedRoomState;
+
+    if (disconnectedRoomState.hostId === membership.playerId) {
+      const automaticHostCandidate = this.selectAutomaticHostCandidate(
+        disconnectedRoomState,
+      );
+
+      if (automaticHostCandidate) {
+        nextRoomState = this.transferHostToPlayer(
+          membership.roomId,
+          automaticHostCandidate.id,
+          {
+            requireConnectedTarget: true,
+          },
+        );
+      }
+    }
+
+    return (
+      this.advanceTurnIfDisconnectedActivePlayer(
+        membership.roomId,
+        membership.playerId,
+      ) ?? nextRoomState
+    );
+  }
+
+  private advanceTurnIfDisconnectedActivePlayer(
+    roomId: RoomId,
+    disconnectedPlayerId: string,
+  ): PublicRoomState | null {
+    const roomRecord = this.roomsById.get(roomId);
+
+    if (
+      !roomRecord?.gameState ||
+      roomRecord.gameState.phase !== "turn" ||
+      roomRecord.gameState.turn?.activePlayerId !== disconnectedPlayerId
+    ) {
+      return null;
+    }
+
+    const nextActivePlayer = this.selectNextConnectedTurnPlayer(
+      roomRecord.roomState,
+      disconnectedPlayerId,
+    );
+
+    if (!nextActivePlayer) {
+      return null;
+    }
+
+    const nextGameState = this.gameFlowService.advanceTurnToPlayer(
+      roomRecord.gameState,
+      nextActivePlayer.id,
+    );
+    const nextRoomState = mapGameStateToPublicRoomState(
+      roomRecord.roomState,
+      nextGameState,
+      roomRecord.trackCardsById,
+    );
+
+    this.roomsById.set(roomId, {
+      ...roomRecord,
+      gameState: nextGameState,
+      roomState: nextRoomState,
+    });
+
+    return nextRoomState;
+  }
+
+  private selectNextConnectedTurnPlayer(
+    roomState: PublicRoomState,
+    currentActivePlayerId: string,
+  ): PublicPlayerState | null {
+    const currentPlayerIndex = roomState.players.findIndex(
+      (player) => player.id === currentActivePlayerId,
+    );
+
+    if (currentPlayerIndex === -1) {
+      return null;
+    }
+
+    for (let offset = 1; offset < roomState.players.length; offset += 1) {
+      const candidateIndex = (currentPlayerIndex + offset) % roomState.players.length;
+      const candidatePlayer = roomState.players[candidateIndex];
+
+      if (candidatePlayer?.connectionStatus === "connected") {
+        return candidatePlayer;
+      }
+    }
+
+    return null;
+  }
+
+  private markPlayerConnected(roomId: RoomId, playerId: string): PublicRoomState {
+    const roomRecord = this.roomsById.get(roomId);
+
+    if (!roomRecord) {
+      throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
+    }
+
+    const connectedRoomState: PublicRoomState = {
+      ...roomRecord.roomState,
+      players: roomRecord.roomState.players.map((player) =>
+        player.id === playerId
+          ? {
+              ...player,
+              connectionStatus: "connected",
+              disconnectedAtEpochMs: null,
+              reconnectExpiresAtEpochMs: null,
+            }
+          : player,
+      ),
+    };
+
+    this.roomsById.set(roomId, {
+      ...roomRecord,
+      roomState: connectedRoomState,
+    });
+
+    const currentHost = connectedRoomState.players.find(
+      (player) => player.id === connectedRoomState.hostId,
+    );
+
+    if (currentHost?.connectionStatus !== "disconnected") {
+      return connectedRoomState;
+    }
+
+    const automaticHostCandidate =
+      this.selectAutomaticHostCandidate(connectedRoomState);
+
+    if (!automaticHostCandidate) {
+      return connectedRoomState;
+    }
+
+    return this.transferHostToPlayer(roomId, automaticHostCandidate.id, {
+      requireConnectedTarget: true,
+    });
+  }
+
+  private transferHostToPlayer(
+    roomId: RoomId,
+    targetPlayerId: string,
+    options: { requireConnectedTarget: boolean },
+  ): PublicRoomState {
+    const roomRecord = this.roomsById.get(roomId);
+
+    if (!roomRecord) {
+      throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
+    }
+
+    const targetPlayer = roomRecord.roomState.players.find(
+      (player) => player.id === targetPlayerId,
+    );
+
+    if (!targetPlayer) {
+      throw new Error("HOST_TRANSFER_TARGET_NOT_FOUND");
+    }
+
+    if (roomRecord.roomState.hostId === targetPlayerId) {
+      throw new Error("HOST_TRANSFER_TARGET_IS_ALREADY_HOST");
+    }
+
+    if (
+      options.requireConnectedTarget &&
+      targetPlayer.connectionStatus !== "connected"
+    ) {
+      throw new Error("HOST_TRANSFER_TARGET_DISCONNECTED");
+    }
+
+    const nextRoomState: PublicRoomState = {
+      ...roomRecord.roomState,
+      hostId: targetPlayerId,
+      players: this.normalizeHostFlags(
+        roomRecord.roomState.players,
+        targetPlayerId,
+      ),
+    };
+
+    this.roomsById.set(roomId, {
+      ...roomRecord,
+      roomState: nextRoomState,
+    });
+
+    return nextRoomState;
+  }
+
+  private selectAutomaticHostCandidate(
+    roomState: PublicRoomState,
+  ): PublicPlayerState | null {
+    return (
+      roomState.players.find(
+        (player) =>
+          player.id !== roomState.hostId &&
+          player.connectionStatus === "connected",
+      ) ?? null
+    );
+  }
+
+  private normalizeHostFlags(
+    players: PublicPlayerState[],
+    hostId: string,
+  ): PublicPlayerState[] {
+    return players.map((player) => ({
+      ...player,
+      isHost: player.id === hostId,
+    }));
   }
 
   private scheduleDeferredPlayerRemoval(sessionId: string): void {

@@ -12,6 +12,7 @@ import type {
   ResolveChallengeWindowPayloadParsed,
   SkipTrackWithTtPayloadParsed,
   StartGamePayloadParsed,
+  TransferHostPayloadParsed,
   UpdatePlayerProfilePayloadParsed,
   UpdatePlayerSettingsPayloadParsed,
   UpdateRoomSettingsPayloadParsed,
@@ -110,6 +111,13 @@ export class RoomService {
       startGamePayload,
       this.deckService.createShuffledDeck(),
     );
+  }
+
+  public transferHost(
+    transferHostPayload: TransferHostPayloadParsed,
+    socketId: string,
+  ): PublicRoomState {
+    return this.roomRegistry.transferHost(socketId, transferHostPayload);
   }
 
   public placeCard(

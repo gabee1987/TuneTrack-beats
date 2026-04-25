@@ -41,7 +41,9 @@ export function AppShellMenuSheet({
   isMobileSheet,
   onClose,
   preferencesState,
+  subtitle,
   tabs,
+  title,
 }: AppShellMenuSheetProps) {
   const reduceMotion = useReducedMotion() ?? false;
   const panelRef = useRef<HTMLElement | null>(null);
@@ -111,6 +113,10 @@ export function AppShellMenuSheet({
       transition={createStandardTransition(reduceMotion)}
     >
       <header className={styles.menuHeader}>
+        <div>
+          <h2 className={styles.menuTitle}>{title}</h2>
+          {subtitle ? <p className={styles.menuSubtitle}>{subtitle}</p> : null}
+        </div>
         <button
           aria-label="Close menu"
           className={`${styles.menuTrigger} ${styles.menuCloseButton}`}

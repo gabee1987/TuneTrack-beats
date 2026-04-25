@@ -7,10 +7,15 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import {
+  useEffect,
   useLayoutEffect,
   useRef,
+  useState,
 } from "react";
-import { MotionPresence } from "../../../features/motion";
+import {
+  MotionPresence,
+  timelineCelebrationTransitionContract,
+} from "../../../features/motion";
 import type {
   TimelinePanelDragModel,
   TimelinePanelItemsModel,
@@ -62,6 +67,7 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
     originalChosenSlotIndex: model.interaction.originalChosenSlotIndex,
     previewCardTransitionEvent: model.render.previewCardTransitionEvent,
     selectable: model.interaction.selectable,
+    shouldAnimateCorrectPlacement: false,
     showCorrectPlacementPreview: displayShowCorrectPlacementPreview,
     showCorrectionPreview: displayShowCorrectionPreview,
     showDevAlbumInfo: model.render.showDevAlbumInfo,
@@ -75,6 +81,13 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
 
   const timelineRowRef = useRef<HTMLDivElement | null>(null);
   const previewCardElementRef = useRef<HTMLElement | null>(null);
+  const lastCorrectPlacementAnimationKeyRef = useRef<number | null>(null);
+  const [activeCorrectPlacementAnimationKey, setActiveCorrectPlacementAnimationKey] =
+    useState<number | null>(null);
+  const correctPlacementAnimationKey =
+    displayShowCorrectPlacementPreview && model.render.timelineCelebrationTransitionEvent
+      ? model.render.timelineCelebrationTransitionEvent.eventKey
+      : null;
   const {
     activeCelebrationEvent,
     flyAnimationState,
@@ -91,6 +104,32 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
       },
     }),
   );
+
+  useEffect(() => {
+    if (
+      correctPlacementAnimationKey === null ||
+      lastCorrectPlacementAnimationKeyRef.current === correctPlacementAnimationKey
+    ) {
+      return;
+    }
+
+    lastCorrectPlacementAnimationKeyRef.current = correctPlacementAnimationKey;
+    setActiveCorrectPlacementAnimationKey(correctPlacementAnimationKey);
+
+    const timeoutId = window.setTimeout(() => {
+      setActiveCorrectPlacementAnimationKey((currentKey) =>
+        currentKey === correctPlacementAnimationKey ? null : currentKey,
+      );
+    }, timelineCelebrationTransitionContract.correctPlacementHeroDurationSeconds * 1000 + 250);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [correctPlacementAnimationKey]);
+
+  itemsModel.shouldAnimateCorrectPlacement =
+    correctPlacementAnimationKey !== null &&
+    activeCorrectPlacementAnimationKey === correctPlacementAnimationKey;
   const {
     handleDragCancel,
     handleDragEnd,

@@ -4,25 +4,18 @@
   width: 44px;
   height: 44px;
   padding: 0;
-  display: inline-grid;
-  place-items: center;
-  background: linear-gradient(
-    148deg,
-    color-mix(in srgb, var(--color-chip) 78%, transparent),
-    color-mix(in srgb, var(--color-surface-elevated) 62%, transparent)
-  );
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-chip);
   color: var(--color-text-primary);
-  backdrop-filter: blur(20px) saturate(1.08);
-  box-shadow:
-    0 14px 28px color-mix(in srgb, var(--color-bg-app) 36%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
-  outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 84%, white 16%);
+  outline: 1px solid var(--color-border-subtle);
   cursor: pointer;
 }
 
 .menuTriggerIcon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .menuOverlay {
@@ -55,7 +48,7 @@
 
 .menuHeader {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 12px;
   align-items: flex-start;
 }
@@ -368,7 +361,6 @@
     font-size: 22px;
   }
 
-  .menuTrigger,
   .menuCloseButton,
   .tabButton,
   .segmentedButton,
@@ -376,7 +368,7 @@
     min-height: 48px;
   }
 
-  .menuTrigger {
+  .menuCloseButton {
     width: 48px;
     min-width: 48px;
   }

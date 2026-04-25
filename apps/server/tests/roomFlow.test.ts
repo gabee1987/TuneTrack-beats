@@ -129,12 +129,128 @@ describe("room flow", () => {
     hostSocket.disconnect();
 
     const roomAfterHostDisconnect = await hostTransferPromise;
-    expect(roomAfterHostDisconnect.players).toHaveLength(1);
+    expect(roomAfterHostDisconnect.players).toHaveLength(2);
     expect(roomAfterHostDisconnect.hostId).toBe(guestIdentity.playerId);
-    expect(roomAfterHostDisconnect.players[0]).toEqual(
+    expect(
+      roomAfterHostDisconnect.players.find(
+        (player) => player.id === hostIdentity.playerId,
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        connectionStatus: "disconnected",
+        isHost: false,
+      }),
+    );
+    expect(
+      roomAfterHostDisconnect.players.find(
+        (player) => player.id === guestIdentity.playerId,
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        id: guestIdentity.playerId,
+        connectionStatus: "connected",
+        isHost: true,
+      }),
+    );
+  });
+
+  it("lets the host manually transfer host controls to another connected player", async () => {
+    const serverContext = await startTestServer();
+    const hostSocket = createClient(serverContext.baseUrl);
+    const guestSocket = createClient(serverContext.baseUrl);
+
+    const hostIdentityPromise = waitForEvent<PlayerIdentityPayload>(
+      hostSocket,
+      ServerToClientEvent.PlayerIdentity,
+    );
+    const guestIdentityPromise = waitForEvent<PlayerIdentityPayload>(
+      guestSocket,
+      ServerToClientEvent.PlayerIdentity,
+    );
+
+    hostSocket.connect();
+    guestSocket.connect();
+
+    await Promise.all([
+      waitForEvent(hostSocket, "connect"),
+      waitForEvent(guestSocket, "connect"),
+    ]);
+
+    const twoPlayerLobbyPromise = waitForStateUpdate(
+      guestSocket,
+      (roomState) =>
+        roomState.status === "lobby" && roomState.players.length === 2,
+    );
+
+    hostSocket.emit(ClientToServerEvent.JoinRoom, {
+      roomId: "xfer-room",
+      displayName: "Host Player",
+      sessionId: "host-session",
+    });
+    guestSocket.emit(ClientToServerEvent.JoinRoom, {
+      roomId: "xfer-room",
+      displayName: "Guest Player",
+      sessionId: "guest-session",
+    });
+
+    const [hostIdentity, guestIdentity] = await Promise.all([
+      hostIdentityPromise,
+      guestIdentityPromise,
+      twoPlayerLobbyPromise,
+    ]);
+
+    const transferredStatePromise = waitForStateUpdate(
+      guestSocket,
+      (roomState) => roomState.hostId === guestIdentity.playerId,
+    );
+
+    hostSocket.emit(ClientToServerEvent.TransferHost, {
+      roomId: "xfer-room",
+      playerId: guestIdentity.playerId,
+    });
+
+    const transferredState = await transferredStatePromise;
+
+    expect(transferredState.players).toEqual([
+      expect.objectContaining({
+        id: hostIdentity.playerId,
+        isHost: false,
+      }),
       expect.objectContaining({
         id: guestIdentity.playerId,
         isHost: true,
+      }),
+    ]);
+
+    const oldHostErrorPromise = waitForEvent<ServerErrorPayload>(
+      hostSocket,
+      ServerToClientEvent.Error,
+    );
+
+    hostSocket.emit(ClientToServerEvent.UpdateRoomSettings, {
+      roomId: "xfer-room",
+      targetTimelineCardCount: 12,
+    });
+
+    await expect(oldHostErrorPromise).resolves.toEqual({
+      code: "ONLY_HOST_CAN_UPDATE_ROOM_SETTINGS",
+      message: "Only the host can change room settings.",
+    });
+
+    const newHostUpdatePromise = waitForStateUpdate(
+      hostSocket,
+      (roomState) => roomState.targetTimelineCardCount === 12,
+    );
+
+    guestSocket.emit(ClientToServerEvent.UpdateRoomSettings, {
+      roomId: "xfer-room",
+      targetTimelineCardCount: 12,
+    });
+
+    await expect(newHostUpdatePromise).resolves.toEqual(
+      expect.objectContaining({
+        hostId: guestIdentity.playerId,
+        targetTimelineCardCount: 12,
       }),
     );
   });
@@ -205,6 +321,7 @@ describe("room flow", () => {
       artist: "Test Artist 3",
       albumTitle: "Test Album 3",
       genre: "Pop",
+      releaseYear: 1990,
     });
     expect(firstTurnState.timelines[hostIdentity.playerId]).toEqual([
       {
@@ -213,6 +330,7 @@ describe("room flow", () => {
         artist: "Test Artist 1",
         albumTitle: "Test Album 1",
         genre: "Rock",
+        releaseYear: 1980,
         revealedYear: 1980,
       },
     ]);
@@ -252,6 +370,7 @@ describe("room flow", () => {
         artist: "Test Artist 3",
         albumTitle: "Test Album 3",
         genre: "Pop",
+        releaseYear: 1990,
         revealedYear: 1990,
       },
       selectedSlotIndex: 1,
@@ -334,7 +453,7 @@ describe("room flow", () => {
       sessionId: "guest-session",
     });
 
-    const [hostIdentity] = await Promise.all([
+    const [hostIdentity, guestIdentity] = await Promise.all([
       hostIdentityPromise,
       guestIdentityPromise,
       waitForStateUpdate(
@@ -356,6 +475,22 @@ describe("room flow", () => {
     await firstTurnPromise;
 
     hostSocket.disconnect();
+
+    const transferredHostState = await waitForStateUpdate(
+      guestSocket,
+      (roomState) => roomState.hostId === guestIdentity.playerId,
+    );
+    expect(transferredHostState.players).toHaveLength(2);
+    expect(
+      transferredHostState.players.find(
+        (player) => player.id === hostIdentity.playerId,
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        connectionStatus: "disconnected",
+        isHost: false,
+      }),
+    );
 
     const refreshedHostSocket = createClient(serverContext.baseUrl);
     const refreshedHostConnectPromise = waitForEvent(refreshedHostSocket, "connect");
@@ -382,7 +517,15 @@ describe("room flow", () => {
 
     expect(refreshedIdentity.playerId).toBe(hostIdentity.playerId);
     expect(refreshedState.players).toHaveLength(2);
-    expect(refreshedState.hostId).toBe(hostIdentity.playerId);
+    expect(refreshedState.hostId).toBe(guestIdentity.playerId);
+    expect(
+      refreshedState.players.find((player) => player.id === hostIdentity.playerId),
+    ).toEqual(
+      expect.objectContaining({
+        connectionStatus: "connected",
+        isHost: false,
+      }),
+    );
     expect(refreshedState.status).toBe("turn");
   });
 

@@ -134,6 +134,21 @@ export function useGamePageActions({
     });
   }
 
+  function handleTransferHost(playerId: string) {
+    if (
+      !roomState ||
+      roomState.hostId !== currentPlayerId ||
+      playerId === currentPlayerId
+    ) {
+      return;
+    }
+
+    void emitRoomEvent(ClientToServerEvent.TransferHost, {
+      roomId: roomState.roomId,
+      playerId,
+    });
+  }
+
   function handleSkipTrackWithTt() {
     if (
       !roomState ||
@@ -177,5 +192,6 @@ export function useGamePageActions({
     handlePlaceChallenge,
     handleResolveChallengeWindow,
     handleSkipTrackWithTt,
+    handleTransferHost,
   };
 }

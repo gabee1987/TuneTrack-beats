@@ -27,6 +27,7 @@ interface TimelineSortableItemProps {
   previewCardRef?: (node: HTMLElement | null) => void;
   previewCardTransitionEvent: PreviewCardTransitionEvent | null;
   selectable: boolean;
+  shouldAnimateCorrectPlacement?: boolean;
   showCorrectPlacementPreview?: boolean;
   showCorrectionPreview?: boolean;
   showDevAlbumInfo: boolean;
@@ -49,6 +50,7 @@ function TimelineSortableItemComponent({
   previewCardRef,
   previewCardTransitionEvent,
   selectable,
+  shouldAnimateCorrectPlacement = false,
   showCorrectPlacementPreview = false,
   showCorrectionPreview = false,
   showDevAlbumInfo,
@@ -112,14 +114,14 @@ function TimelineSortableItemComponent({
           ref={previewCardRef}
         />
       ) : (
-        shouldCelebrateCorrectPlacement ? (
+        shouldCelebrateCorrectPlacement && shouldAnimateCorrectPlacement ? (
           <CorrectPlacementCelebration
             key={`resolved-correct-placement-${id}`}
-            className={`${styles.previewCard} ${styles.previewCardCurrentPick} ${styles.previewCardResolvedCorrect} ${
+            className={`${styles.timelineCard} ${styles.timelineCardCurrentPick} ${styles.timelineCardResolvedCorrect} ${
               isChallengeSlot
                 ? challengeMarkerTone === "failure"
-                  ? styles.previewCardChallengeFailure
-                  : styles.previewCardChallenge
+                  ? styles.timelineCardChallengeFailure
+                  : styles.timelineCardChallenge
                 : ""
             }`}
           >
@@ -138,6 +140,8 @@ function TimelineSortableItemComponent({
             data-timeline-card="true"
             className={`${styles.timelineCard} ${
               isOriginalSlot ? styles.timelineCardCurrentPick : ""
+            } ${
+              shouldCelebrateCorrectPlacement ? styles.timelineCardResolvedCorrect : ""
             } ${
               isChallengeSlot
                 ? challengeMarkerTone === "failure"

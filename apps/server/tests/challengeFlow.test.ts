@@ -104,6 +104,7 @@ describe("challenge flow", () => {
         artist: "Test Artist 3",
         albumTitle: "Test Album 3",
         genre: "Pop",
+        releaseYear: 1990,
         revealedYear: 1990,
       },
       selectedSlotIndex: 0,
@@ -117,6 +118,59 @@ describe("challenge flow", () => {
       awardedPlayerId: null,
       awardedSlotIndex: null,
     });
+  });
+
+  it("lets the active player resolve the challenge window when reveal confirmation allows it", () => {
+    const roomRegistry = new RoomRegistry();
+    roomRegistry.addPlayerToRoom(
+      "active-resolve-room",
+      "Host Player",
+      "host-socket",
+      "host-session",
+    );
+    const guestJoin = roomRegistry.addPlayerToRoom(
+      "active-resolve-room",
+      "Guest Player",
+      "guest-socket",
+      "guest-session",
+    );
+
+    roomRegistry.updateRoomSettings("host-socket", "active-resolve-room", {
+      roomId: "active-resolve-room",
+      targetTimelineCardCount: 12,
+      defaultStartingTimelineCardCount: 1,
+      startingTtTokenCount: 0,
+      revealConfirmMode: "host_or_active_player",
+      ttModeEnabled: true,
+      challengeWindowDurationSeconds: null,
+    });
+
+    roomRegistry.startGame(
+      "host-socket",
+      { roomId: "active-resolve-room" },
+      challengeDeck,
+    );
+    roomRegistry.placeCard("host-socket", {
+      roomId: "active-resolve-room",
+      selectedSlotIndex: 0,
+    });
+    roomRegistry.resolveChallengeWindow("host-socket", {
+      roomId: "active-resolve-room",
+    });
+    roomRegistry.confirmReveal("host-socket", {
+      roomId: "active-resolve-room",
+    });
+    roomRegistry.placeCard("guest-socket", {
+      roomId: "active-resolve-room",
+      selectedSlotIndex: 0,
+    });
+
+    const revealState = roomRegistry.resolveChallengeWindow("guest-socket", {
+      roomId: "active-resolve-room",
+    });
+
+    expect(revealState.status).toBe("reveal");
+    expect(revealState.revealState?.playerId).toBe(guestJoin.playerId);
   });
 
   it("lets a guest with TT claim Beat! and resolve a successful challenge", () => {
@@ -187,6 +241,7 @@ describe("challenge flow", () => {
         artist: "Test Artist 3",
         albumTitle: "Test Album 3",
         genre: "Pop",
+        releaseYear: 1990,
         revealedYear: 1990,
       },
       selectedSlotIndex: 0,
@@ -211,6 +266,7 @@ describe("challenge flow", () => {
         artist: "Test Artist 1",
         albumTitle: "Test Album 1",
         genre: "Rock",
+        releaseYear: 1980,
         revealedYear: 1980,
       },
     ]);
@@ -221,6 +277,7 @@ describe("challenge flow", () => {
         artist: "Test Artist 3",
         albumTitle: "Test Album 3",
         genre: "Pop",
+        releaseYear: 1990,
         revealedYear: 1990,
       },
       {
@@ -229,6 +286,7 @@ describe("challenge flow", () => {
         artist: "Test Artist 2",
         albumTitle: "Test Album 2",
         genre: "Soul",
+        releaseYear: 2000,
         revealedYear: 2000,
       },
     ]);

@@ -28,7 +28,9 @@ export function useGamePageActionAvailability({
   const canResolveChallengeWindow =
     roomState?.status === "challenge" &&
     roomState.challengeState?.phase === "open" &&
-    roomState.hostId === currentPlayerId;
+    (roomState.settings.revealConfirmMode === "host_or_active_player"
+      ? isCurrentPlayerTurn || roomState.hostId === currentPlayerId
+      : roomState.hostId === currentPlayerId);
   const canConfirmReveal =
     roomState?.status === "reveal" &&
     (roomState.settings.revealConfirmMode === "host_or_active_player"

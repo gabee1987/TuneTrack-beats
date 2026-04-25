@@ -97,6 +97,7 @@ export function useGamePageController({
       handleAwardTt: actions.handleAwardTt,
       handleRemoveTt: actions.handleRemoveTt,
       handleCloseRoom: actions.handleCloseRoom,
+      handleTransferHost: actions.handleTransferHost,
     },
     locallyPlacedCard,
     nowEpochMs,

@@ -6,6 +6,9 @@ const basePlayer: PublicPlayerState = {
   id: "player-1",
   displayName: "Nova",
   isHost: false,
+  connectionStatus: "connected",
+  disconnectedAtEpochMs: null,
+  reconnectExpiresAtEpochMs: null,
   startingTimelineCardCount: 4,
   ttTokenCount: 2,
 };

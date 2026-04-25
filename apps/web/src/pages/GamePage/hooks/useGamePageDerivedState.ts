@@ -37,6 +37,7 @@ interface UseGamePageDerivedStateOptions {
     handleAwardTt: (playerId: string) => void;
     handleRemoveTt: (playerId: string) => void;
     handleCloseRoom: () => void;
+    handleTransferHost: (playerId: string) => void;
   };
 }
 

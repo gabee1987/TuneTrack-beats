@@ -31,6 +31,8 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
     visibleTimelineTitle,
   } = model;
   const showStatusTokenCount = roomState.settings.ttModeEnabled;
+  const isHost = roomState.hostId === currentPlayerId;
+  const isCurrentPlayerLeading = leadingPlayers[0]?.id === currentPlayerId;
 
   return (
     <header className={styles.header}>
@@ -53,7 +55,19 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
       </div>
       <div className={styles.headerAside}>
         <div className={styles.headerActionRow}>
-          <div className={styles.statusBadge}>
+          <div
+            className={`${styles.statusBadge} ${
+              isCurrentPlayerLeading ? styles.statusBadgeLeading : ""
+            }`}
+          >
+            {isCurrentPlayerLeading ? (
+              <img
+                alt=""
+                aria-hidden="true"
+                className={styles.statusBadgeCrown}
+                src="/crown.png"
+              />
+            ) : null}
             <span className={styles.statusBadgeTextGroup}>
               <span className={styles.statusBadgeDefault}>{statusBadgeText}</span>
               <span className={styles.statusBadgeTimeline}>
@@ -61,13 +75,14 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
                 card{visibleTimelineCardCount === 1 ? "" : "s"}
               </span>
             </span>
+            {isHost ? <span className={styles.statusBadgeHostText}>Host</span> : null}
             {showStatusTokenCount ? (
               <span className={styles.statusBadgeTokenCount}>
                 <TtTokenAmount amount={visibleTimelineTtCount} />
               </span>
             ) : null}
           </div>
-          {showMiniStandings ? (
+            {showMiniStandings ? (
             <div className={styles.headerLeadersStrip}>
               {leadingPlayers.map((player, index) => (
                 <article className={styles.headerLeaderChip} key={player.id}>
@@ -136,9 +151,9 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
             </svg>
           </button>
           <AppShellMenu
-            subtitle="Manage visuals, match visibility, and local diagnostics during this game."
+            subtitle=""
             tabs={menuTabs}
-            title="TuneTrack"
+            title={roomState.roomId}
             {...(roomState.hostId === currentPlayerId
               ? {
                   footerAction: {

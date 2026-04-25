@@ -415,6 +415,34 @@ export class GameFlowService {
     };
   }
 
+  public advanceTurnToPlayer(
+    gameState: GameState,
+    nextActivePlayerId: string,
+  ): GameState {
+    if (gameState.phase !== "turn" || !gameState.turn) {
+      throw new Error("GAME_NOT_IN_TURN_PHASE");
+    }
+
+    if (!gameState.players.some((player) => player.id === nextActivePlayerId)) {
+      throw new Error("PLAYER_NOT_FOUND");
+    }
+
+    if (gameState.turn.activePlayerId === nextActivePlayerId) {
+      throw new Error("ACTIVE_PLAYER_UNCHANGED");
+    }
+
+    return {
+      ...gameState,
+      turn: {
+        activePlayerId: nextActivePlayerId,
+        turnNumber: gameState.turn.turnNumber + 1,
+        hasUsedSkipTrackWithTt: false,
+      },
+      challengeState: null,
+      revealState: null,
+    };
+  }
+
   public awardTtTokens(
     gameState: GameState,
     playerId: string,
