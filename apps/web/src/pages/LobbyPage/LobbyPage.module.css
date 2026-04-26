@@ -903,7 +903,7 @@
   align-self: start;
   padding: 14px 22px;
   border: 0;
-  border-radius: var(--radius-button);
+  border-radius: var(--radius-pill);
   background: var(--color-background-spotify);
   color: #000;
   font-size: 15px;
@@ -1030,7 +1030,7 @@
   min-height: 52px;
   padding: 14px 20px;
   border: 1px solid color-mix(in srgb, var(--color-border-spotify) 92%, transparent);
-  border-radius: var(--radius-button);
+  border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--color-border-spotify) 48%, transparent);
   color: var(--color-text-primary);
   font-size: 14px;
@@ -1099,7 +1099,7 @@
   min-height: 52px;
   padding: 14px 20px;
   border: 1px solid color-mix(in srgb, var(--color-border-spotify) 92%, transparent);
-  border-radius: var(--radius-button);
+  border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--color-border-spotify) 48%, transparent);
   color: var(--color-text-primary);
   font-size: 14px;

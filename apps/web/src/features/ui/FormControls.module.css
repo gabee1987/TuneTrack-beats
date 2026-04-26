@@ -10,7 +10,7 @@
 .textInput {
   min-height: 56px;
   border-radius: var(--radius-input);
-  padding: 18px;
+  padding: 14px 18px;
 }
 
 .textInput::placeholder {
