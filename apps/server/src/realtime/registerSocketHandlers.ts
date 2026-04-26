@@ -73,6 +73,7 @@ function registerJoinRoomHandler(
       return;
     }
 
+    logger.info({ socketId: socket.id, roomId: parseResult.data.roomId, displayName: parseResult.data.displayName }, "join_room");
     try {
       const { playerId, roomState } = roomService.joinRoom(
         parseResult.data,
@@ -108,6 +109,7 @@ function registerTransferHostHandler(
       return;
     }
 
+    logger.info({ socketId: socket.id, roomId: parseResult.data.roomId, targetPlayerId: parseResult.data.playerId }, "transfer_host");
     try {
       const roomState = roomService.transferHost(parseResult.data, socket.id);
 
@@ -144,6 +146,7 @@ function registerStartGameHandler(
       return;
     }
 
+    logger.info({ socketId: socket.id, roomId: parseResult.data.roomId }, "start_game");
     try {
       const roomState = roomService.startGame(parseResult.data, socket.id);
 
@@ -176,6 +179,7 @@ function registerPlaceCardHandler(
       return;
     }
 
+    logger.info({ socketId: socket.id, roomId: parseResult.data.roomId, selectedSlotIndex: parseResult.data.selectedSlotIndex }, "place_card");
     try {
       const roomState = roomService.placeCard(parseResult.data, socket.id);
 
@@ -209,6 +213,7 @@ function registerConfirmRevealHandler(
       return;
     }
 
+    logger.info({ socketId: socket.id, roomId: parseResult.data.roomId }, "confirm_reveal");
     try {
       const roomState = roomService.confirmReveal(parseResult.data, socket.id);
 
@@ -243,6 +248,7 @@ function registerClaimChallengeHandler(
       return;
     }
 
+    logger.info({ socketId: socket.id, roomId: parseResult.data.roomId }, "claim_challenge");
     try {
       const roomState = roomService.claimChallenge(parseResult.data, socket.id);
 
@@ -277,6 +283,7 @@ function registerPlaceChallengeHandler(
       return;
     }
 
+    logger.info({ socketId: socket.id, roomId: parseResult.data.roomId, selectedSlotIndex: parseResult.data.selectedSlotIndex }, "place_challenge");
     try {
       const roomState = roomService.placeChallenge(parseResult.data, socket.id);
 
@@ -420,6 +427,7 @@ function registerAwardTtHandler(
       return;
     }
 
+    logger.info({ socketId: socket.id, roomId: parseResult.data.roomId, targetPlayerId: parseResult.data.playerId, amount: parseResult.data.amount }, "award_tt");
     try {
       const roomState = roomService.awardTt(parseResult.data, socket.id);
 
@@ -452,6 +460,7 @@ function registerSkipTrackWithTtHandler(
       return;
     }
 
+    logger.info({ socketId: socket.id, roomId: parseResult.data.roomId }, "skip_track_with_tt");
     try {
       const roomState = roomService.skipTrackWithTt(parseResult.data, socket.id);
 
@@ -489,6 +498,7 @@ function registerSkipTurnHandler(
       return;
     }
 
+    logger.info({ socketId: socket.id, roomId: parseResult.data.roomId }, "skip_turn");
     try {
       const roomState = roomService.skipTurn(parseResult.data, socket.id);
 
@@ -591,6 +601,7 @@ function registerCloseRoomHandler(
       return;
     }
 
+    logger.info({ socketId: socket.id, roomId: parseResult.data.roomId }, "close_room");
     try {
       const roomId = roomService.closeRoom(parseResult.data, socket.id);
 
@@ -712,6 +723,7 @@ function emitServerError(
   messageByCode: Record<string, string>,
 ): void {
   const errorCode = error instanceof Error ? error.message : fallbackCode;
+  logger.warn({ socketId: socket.id, code: errorCode }, "socket action rejected");
 
   socket.emit(ServerToClientEvent.Error, {
     code: errorCode,

@@ -1,3 +1,4 @@
+import { logger } from "../app/logger.js";
 import { DeckService } from "../decks/DeckService.js";
 import { PlaylistImportService } from "../decks/PlaylistImportService.js";
 import { SpotifyAuthService } from "../spotify/SpotifyAuthService.js";
@@ -54,12 +55,17 @@ export class RoomService {
     joinRoomPayload: JoinRoomPayloadParsed,
     socketId: string,
   ): JoinRoomResult {
-    return this.roomRegistry.addPlayerToRoom(
+    const result = this.roomRegistry.addPlayerToRoom(
       joinRoomPayload.roomId,
       joinRoomPayload.displayName,
       socketId,
       joinRoomPayload.sessionId,
     );
+    logger.info(
+      { roomId: result.roomState.roomId, playerId: result.playerId, displayName: joinRoomPayload.displayName, playerCount: result.roomState.players.length },
+      "player joined room",
+    );
+    return result;
   }
 
   public updateRoomSettings(
@@ -118,7 +124,14 @@ export class RoomService {
   }
 
   public removePlayer(socketId: string): PublicRoomState | null {
-    return this.roomRegistry.removePlayerBySocketId(socketId);
+    const roomState = this.roomRegistry.removePlayerBySocketId(socketId);
+    if (roomState) {
+      logger.info(
+        { socketId, roomId: roomState.roomId, playerCount: roomState.players.length, gameStatus: roomState.status },
+        "player left room",
+      );
+    }
+    return roomState;
   }
 
   public startGame(
@@ -130,7 +143,12 @@ export class RoomService {
       ? this.deckService.createShuffledDeckFromCards(importedDeck)
       : this.deckService.createShuffledDeck();
 
-    return this.roomRegistry.startGame(socketId, startGamePayload, deck);
+    const roomState = this.roomRegistry.startGame(socketId, startGamePayload, deck);
+    logger.info(
+      { roomId: startGamePayload.roomId, deckSize: deck.length, usingImportedDeck: !!importedDeck, playerCount: roomState.players.length },
+      "game started",
+    );
+    return roomState;
   }
 
   public transferHost(
@@ -144,7 +162,14 @@ export class RoomService {
     placeCardPayload: PlaceCardPayloadParsed,
     socketId: string,
   ): PublicRoomState {
-    return this.roomRegistry.placeCard(socketId, placeCardPayload);
+    const roomState = this.roomRegistry.placeCard(socketId, placeCardPayload);
+    if (roomState.status === "challenge") {
+      logger.info(
+        { roomId: roomState.roomId, turnNumber: roomState.turn?.turnNumber, activePlayerId: roomState.turn?.activePlayerId },
+        "challenge window opened",
+      );
+    }
+    return roomState;
   }
 
   public claimChallenge(
@@ -175,7 +200,16 @@ export class RoomService {
     confirmRevealPayload: ConfirmRevealPayloadParsed,
     socketId: string,
   ): PublicRoomState {
-    return this.roomRegistry.confirmReveal(socketId, confirmRevealPayload);
+    const roomState = this.roomRegistry.confirmReveal(socketId, confirmRevealPayload);
+    if (roomState.winnerPlayerId) {
+      logger.info({ roomId: roomState.roomId, winnerPlayerId: roomState.winnerPlayerId }, "game won");
+    } else if (roomState.status === "turn") {
+      logger.info(
+        { roomId: roomState.roomId, turnNumber: roomState.turn?.turnNumber, activePlayerId: roomState.turn?.activePlayerId },
+        "next turn",
+      );
+    }
+    return roomState;
   }
 
   public skipTurn(
@@ -190,7 +224,9 @@ export class RoomService {
     socketId: string,
   ): string {
     this.spotifyAuthService.clearHostTokens(closeRoomPayload.roomId);
-    return this.roomRegistry.closeRoom(socketId, closeRoomPayload);
+    const roomId = this.roomRegistry.closeRoom(socketId, closeRoomPayload);
+    logger.info({ roomId, socketId }, "room closed");
+    return roomId;
   }
 
   public async importPlaylist(

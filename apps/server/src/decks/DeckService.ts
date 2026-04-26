@@ -2,6 +2,7 @@ import type { GameTrackCard } from "@tunetrack/game-engine";
 import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { z } from "zod";
+import { logger } from "../app/logger.js";
 
 const testDeckCardSchema = z.object({
   id: z.string().trim().min(1),
@@ -33,8 +34,9 @@ export class DeckService {
 
   public createShuffledDeck(): GameTrackCard[] {
     const deckCardsById = new Map<string, GameTrackCard>();
+    const fileNames = this.getDeckFileNames();
 
-    for (const deckFileName of this.getDeckFileNames()) {
+    for (const deckFileName of fileNames) {
       const deckFilePath = resolve(this.testDecksDirectoryPath, deckFileName);
       const rawDeckContent = readFileSync(deckFilePath, "utf-8");
       const parsedDeck = testDeckSchema.parse(JSON.parse(rawDeckContent));
@@ -44,7 +46,9 @@ export class DeckService {
       }
     }
 
-    return shuffleDeckCards([...deckCardsById.values()]);
+    const cards = shuffleDeckCards([...deckCardsById.values()]);
+    logger.info({ fileCount: fileNames.length, cardCount: cards.length }, "test deck loaded");
+    return cards;
   }
 
   private getDeckFileNames(): string[] {
