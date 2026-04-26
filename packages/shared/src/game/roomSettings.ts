@@ -1,3 +1,5 @@
+import type { SpotifyAccountType } from "../spotify/spotifyAuth.js";
+
 export type RevealConfirmMode = "host_only" | "host_or_active_player";
 export type SpotifyAuthStatus = "none" | "connected";
 
@@ -11,4 +13,5 @@ export interface PublicRoomSettings {
   playlistImported: boolean;
   importedTrackCount: number;
   spotifyAuthStatus: SpotifyAuthStatus;
+  spotifyAccountType: SpotifyAccountType | null;
 }

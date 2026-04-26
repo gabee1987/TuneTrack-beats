@@ -21,6 +21,7 @@ import type {
   ResolveChallengeWindowPayloadParsed,
   SkipTrackWithTtPayloadParsed,
   SkipTurnPayloadParsed,
+  SpotifyAccountType,
   StartGamePayloadParsed,
   TransferHostPayloadParsed,
   UpdatePlayerProfilePayloadParsed,
@@ -305,11 +306,13 @@ export class RoomService {
     roomId: string,
     socketId: string,
     connected: boolean,
+    accountType: SpotifyAccountType | null,
   ): PublicRoomState {
     return this.roomRegistry.setSpotifyAuthStatus(
       socketId,
       roomId,
       connected ? "connected" : "none",
+      accountType,
     );
   }
 }

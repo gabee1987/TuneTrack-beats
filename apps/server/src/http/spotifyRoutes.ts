@@ -37,7 +37,7 @@ async function handleSpotifyCallback(
 
   if (authResult.success && roomId && socketId) {
     try {
-      const roomState = roomService.updateSpotifyAuthStatus(roomId, socketId, true);
+      const roomState = roomService.updateSpotifyAuthStatus(roomId, socketId, true, authResult.accountType);
       io.to(roomId).emit(ServerToClientEvent.StateUpdate, { roomState });
     } catch {
       logger.warn({ roomId }, "Could not update Spotify auth status in room state");

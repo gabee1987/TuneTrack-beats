@@ -5,7 +5,10 @@
       "Bash(npm test *)",
       "Bash(xargs grep *)",
       "Bash(npm install *)",
-      "Bash(npm list *)"
+      "Bash(npm list *)",
+      "Bash(xargs basename *)",
+      "Bash(npx tsc *)",
+      "Bash(npx vitest *)"
     ]
   }
 }

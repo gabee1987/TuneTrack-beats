@@ -18,6 +18,7 @@ import {
 import type { AppShellMenuTab } from "../../features/app-shell/AppShellMenu";
 import { Badge } from "../../features/ui/Badge";
 import { TtTokenAmount, TtTokenIcon } from "../../features/ui/TtToken";
+import type { HostPlaybackState } from "./hooks/useHostPlayback";
 import styles from "./GamePage.module.css";
 
 interface CreateGameMenuTabsOptions {
@@ -26,6 +27,7 @@ interface CreateGameMenuTabsOptions {
   onAwardTt: (playerId: string) => void;
   onRemoveTt: (playerId: string) => void;
   onTransferHost: (playerId: string) => void;
+  playback?: HostPlaybackState;
 }
 
 type TokenFlyAnimation = "add" | "remove" | null;
@@ -402,13 +404,139 @@ function GameMenuPlayerItem({
   );
 }
 
+interface PlaybackTabContentProps {
+  playback: HostPlaybackState;
+  roomState: PublicRoomState;
+}
+
+function formatMs(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+function PlaybackTabContent({ playback, roomState }: PlaybackTabContentProps) {
+  const { isReady, isPlaying, position, duration, pause, resume, seek } = playback;
+  const { currentTrackCard, status } = roomState;
+  const showTrackDetails = status === "reveal" || status === "finished";
+  const hasTrack = currentTrackCard !== null;
+
+  return (
+    <div className={styles.playbackSection}>
+      {/* Artwork area — always shown when a track is loaded, hidden when no track yet */}
+      <div className={styles.playbackArtworkLarge}>
+        {hasTrack && showTrackDetails && currentTrackCard.artworkUrl ? (
+          <img
+            alt=""
+            className={styles.playbackArtworkImg}
+            src={currentTrackCard.artworkUrl}
+          />
+        ) : (
+          <PlaybackMusicNoteIcon />
+        )}
+      </div>
+
+      <div className={styles.playbackControls}>
+        {/* Metadata — visible only when there's a track and it's been revealed */}
+        {hasTrack && showTrackDetails ? (
+          <div className={styles.playbackMeta}>
+            <p className={styles.playbackTitle}>{currentTrackCard.title}</p>
+            <p className={styles.playbackArtist}>{currentTrackCard.artist}</p>
+            {currentTrackCard.albumTitle ? (
+              <p className={styles.playbackAlbumLine}>
+                {currentTrackCard.albumTitle}
+                {currentTrackCard.releaseYear !== undefined
+                  ? ` · ${currentTrackCard.releaseYear}`
+                  : ""}
+              </p>
+            ) : null}
+          </div>
+        ) : hasTrack ? (
+          <p className={styles.playbackHiddenNote}>
+            Song details are hidden until the card is revealed.
+          </p>
+        ) : (
+          <p className={styles.playbackHiddenNote}>No song loaded yet.</p>
+        )}
+
+        {/* Progress slider — shown once the SDK reports duration */}
+        {hasTrack && duration > 0 ? (
+          <div className={styles.playbackProgressBlock}>
+            <input
+              aria-label="Playback position"
+              className={styles.playbackSlider}
+              max={duration}
+              min={0}
+              onChange={(e) => seek(Number(e.target.value))}
+              step={1000}
+              type="range"
+              value={Math.min(position, duration)}
+            />
+            <div className={styles.playbackTimeLabels}>
+              <span>{formatMs(position)}</span>
+              <span>{formatMs(duration)}</span>
+            </div>
+          </div>
+        ) : null}
+
+        {/* Play / pause — only shown when a track is active */}
+        {hasTrack ? (
+          <button
+            aria-label={isPlaying ? "Pause" : "Play"}
+            className={styles.playbackPlayBtn}
+            disabled={!isReady}
+            onClick={isPlaying ? pause : resume}
+            type="button"
+          >
+            {isPlaying ? <PlaybackPauseIcon /> : <PlaybackPlayIcon />}
+            <span>{isPlaying ? "Pause" : "Play"}</span>
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function PlaybackPlayIcon() {
+  return (
+    <svg aria-hidden="true" fill="currentColor" height={16} viewBox="0 0 24 24" width={16}>
+      <path d="M8 5v14l11-7z" />
+    </svg>
+  );
+}
+
+function PlaybackPauseIcon() {
+  return (
+    <svg aria-hidden="true" fill="currentColor" height={16} viewBox="0 0 24 24" width={16}>
+      <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+    </svg>
+  );
+}
+
+function PlaybackMusicNoteIcon() {
+  return (
+    <svg aria-hidden="true" fill="currentColor" height={48} viewBox="0 0 24 24" width={48}>
+      <path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z" />
+    </svg>
+  );
+}
+
 export function createGameMenuTabs({
   currentPlayerId,
   roomState,
   onAwardTt,
   onRemoveTt,
   onTransferHost,
+  playback,
 }: CreateGameMenuTabsOptions): AppShellMenuTab[] {
+  const isHost = roomState.hostId === currentPlayerId;
+  const hasPlaybackTab =
+    isHost &&
+    roomState.settings.spotifyAuthStatus === "connected" &&
+    roomState.settings.playlistImported &&
+    playback !== undefined;
+
   return [
     {
       id: "players",
@@ -451,7 +579,7 @@ export function createGameMenuTabs({
         </p>
       ),
     },
-    ...(roomState.hostId === currentPlayerId
+    ...(isHost
       ? [
           {
             id: "dev" as const,
@@ -462,6 +590,15 @@ export function createGameMenuTabs({
                 the main game surface gets cleaned up.
               </p>
             ),
+          },
+        ]
+      : []),
+    ...(hasPlaybackTab
+      ? [
+          {
+            id: "playback" as const,
+            label: "Playback",
+            content: <PlaybackTabContent playback={playback!} roomState={roomState} />,
           },
         ]
       : []),

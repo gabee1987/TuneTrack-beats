@@ -1,3 +1,4 @@
+import basicSsl from "@vitejs/plugin-basic-ssl";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
@@ -8,6 +9,7 @@ const defaultThemeColor = darkThemeDefinition.cssVariables["color-bg-app"] as st
 export default defineConfig({
   plugins: [
     react(),
+    basicSsl(),
     VitePWA({
       injectRegister: "auto",
       registerType: "autoUpdate",
@@ -41,5 +43,13 @@ export default defineConfig({
   ],
   server: {
     port: 5173,
+    proxy: {
+      // Forward socket.io traffic to the HTTP server so HTTPS pages avoid mixed-content
+      "/socket.io": {
+        target: "http://localhost:3001",
+        ws: true,
+        changeOrigin: true,
+      },
+    },
   },
 });

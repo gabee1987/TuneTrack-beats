@@ -5,6 +5,7 @@ import {
 } from "@tunetrack/shared";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import { createGameMenuTabs } from "../gamePageMenuTabs";
+import { useHostPlayback } from "./useHostPlayback";
 
 interface UseGamePageCapabilityStateOptions {
   currentPlayerId: string | null;
@@ -98,6 +99,18 @@ export function useGamePageCapabilityState({
       })
       .slice(0, 3) ?? [];
 
+  const isHost = roomState?.hostId === currentPlayerId;
+  const playbackEnabled =
+    Boolean(isHost) &&
+    roomState?.settings.spotifyAuthStatus === "connected" &&
+    Boolean(roomState?.settings.playlistImported);
+
+  const playback = useHostPlayback({
+    roomId: roomState?.roomId ?? "",
+    roomState,
+    enabled: playbackEnabled,
+  });
+
   const menuTabs = roomState
     ? createGameMenuTabs({
         currentPlayerId,
@@ -105,6 +118,7 @@ export function useGamePageCapabilityState({
         onRemoveTt: handlers.handleRemoveTt,
         onTransferHost: handlers.handleTransferHost,
         roomState,
+        ...(playbackEnabled ? { playback } : {}),
       })
     : [];
 

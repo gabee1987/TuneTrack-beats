@@ -56,6 +56,7 @@ function createRoomState(
       playlistImported: false,
       importedTrackCount: 0,
       spotifyAuthStatus: "none",
+      spotifyAccountType: null,
     },
     turn: {
       activePlayerId: "player-1",

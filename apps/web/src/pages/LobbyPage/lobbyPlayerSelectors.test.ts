@@ -23,6 +23,7 @@ const baseRoomSettings: PublicRoomSettings = {
   playlistImported: false,
   importedTrackCount: 0,
   spotifyAuthStatus: "none",
+  spotifyAccountType: null,
 };
 
 describe("lobbyPlayerSelectors", () => {
