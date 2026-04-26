@@ -27,6 +27,10 @@ export class DeckService {
     ),
   ) {}
 
+  public createShuffledDeckFromCards(cards: GameTrackCard[]): GameTrackCard[] {
+    return shuffleDeckCards([...cards]);
+  }
+
   public createShuffledDeck(): GameTrackCard[] {
     const deckCardsById = new Map<string, GameTrackCard>();
 

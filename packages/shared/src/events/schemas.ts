@@ -141,6 +141,19 @@ export const skipTurnPayloadSchema = z.object({
   roomId: roomIdSchema,
 });
 
+export const importPlaylistPayloadSchema = z.object({
+  roomId: roomIdSchema,
+  playlistUrl: z.string().trim().min(1).max(500),
+});
+
+export const requestSpotifyAuthUrlPayloadSchema = z.object({
+  roomId: roomIdSchema,
+});
+
+export const refreshSpotifyTokenPayloadSchema = z.object({
+  roomId: roomIdSchema,
+});
+
 export type JoinRoomPayloadInput = z.input<typeof joinRoomPayloadSchema>;
 export type JoinRoomPayloadParsed = z.output<typeof joinRoomPayloadSchema>;
 export type UpdateRoomSettingsPayloadInput = z.input<
@@ -207,3 +220,12 @@ export type BuyTimelineCardWithTtPayloadParsed = z.output<
 >;
 export type SkipTurnPayloadInput = z.input<typeof skipTurnPayloadSchema>;
 export type SkipTurnPayloadParsed = z.output<typeof skipTurnPayloadSchema>;
+
+export type ImportPlaylistPayloadInput = z.input<typeof importPlaylistPayloadSchema>;
+export type ImportPlaylistPayloadParsed = z.output<typeof importPlaylistPayloadSchema>;
+
+export type RequestSpotifyAuthUrlPayloadInput = z.input<typeof requestSpotifyAuthUrlPayloadSchema>;
+export type RequestSpotifyAuthUrlPayloadParsed = z.output<typeof requestSpotifyAuthUrlPayloadSchema>;
+
+export type RefreshSpotifyTokenPayloadInput = z.input<typeof refreshSpotifyTokenPayloadSchema>;
+export type RefreshSpotifyTokenPayloadParsed = z.output<typeof refreshSpotifyTokenPayloadSchema>;

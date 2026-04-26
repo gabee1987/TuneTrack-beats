@@ -53,6 +53,9 @@ function createRoomState(
       startingTtTokenCount: 0,
       targetTimelineCardCount: 10,
       ttModeEnabled: false,
+      playlistImported: false,
+      importedTrackCount: 0,
+      spotifyAuthStatus: "none",
     },
     turn: {
       activePlayerId: "player-1",

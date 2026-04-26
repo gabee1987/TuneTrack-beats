@@ -2,13 +2,33 @@ import { createHttpServer } from "./app/createHttpServer.js";
 import { createSocketServer } from "./app/createSocketServer.js";
 import { env } from "./app/env.js";
 import { logger } from "./app/logger.js";
+import { DeckService } from "./decks/DeckService.js";
+import { PlaylistImportService } from "./decks/PlaylistImportService.js";
+import { registerSpotifyRoutes } from "./http/spotifyRoutes.js";
 import { registerSocketHandlers } from "./realtime/registerSocketHandlers.js";
+import { RoomRegistry } from "./rooms/RoomRegistry.js";
 import { RoomService } from "./rooms/RoomService.js";
+import { SpotifyApiClient } from "./spotify/SpotifyApiClient.js";
+import { SpotifyAuthService } from "./spotify/SpotifyAuthService.js";
+import { SpotifyTokenStore } from "./spotify/SpotifyTokenStore.js";
 
-const { httpServer } = createHttpServer();
+const { app, httpServer } = createHttpServer();
 const io = createSocketServer(httpServer);
-const roomService = new RoomService();
 
+const spotifyTokenStore = new SpotifyTokenStore();
+const spotifyApiClient = new SpotifyApiClient();
+const spotifyAuthService = new SpotifyAuthService(spotifyApiClient, spotifyTokenStore);
+const playlistImportService = new PlaylistImportService(spotifyApiClient, spotifyTokenStore);
+const deckService = new DeckService();
+const roomRegistry = new RoomRegistry();
+const roomService = new RoomService(
+  roomRegistry,
+  deckService,
+  spotifyAuthService,
+  playlistImportService,
+);
+
+registerSpotifyRoutes(app, io, spotifyAuthService);
 registerSocketHandlers(io, roomService);
 
 httpServer.listen(env.PORT, () => {

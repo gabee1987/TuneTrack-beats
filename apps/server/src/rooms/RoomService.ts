@@ -1,14 +1,19 @@
 import { DeckService } from "../decks/DeckService.js";
+import { PlaylistImportService } from "../decks/PlaylistImportService.js";
+import { SpotifyAuthService } from "../spotify/SpotifyAuthService.js";
 import type {
   AwardTtPayloadParsed,
   BuyTimelineCardWithTtPayloadParsed,
   CloseRoomPayloadParsed,
   ClaimChallengePayloadParsed,
   ConfirmRevealPayloadParsed,
+  ImportPlaylistPayloadParsed,
   JoinRoomPayloadParsed,
   PlaceChallengePayloadParsed,
   PlaceCardPayloadParsed,
   PublicRoomState,
+  RefreshSpotifyTokenPayloadParsed,
+  RequestSpotifyAuthUrlPayloadParsed,
   ResolveChallengeWindowPayloadParsed,
   SkipTrackWithTtPayloadParsed,
   SkipTurnPayloadParsed,
@@ -18,12 +23,25 @@ import type {
   UpdatePlayerSettingsPayloadParsed,
   UpdateRoomSettingsPayloadParsed,
 } from "@tunetrack/shared";
+import type { ImportPlaylistResultPayload } from "@tunetrack/shared";
 import { type JoinRoomResult, RoomRegistry } from "./RoomRegistry.js";
+
+export interface ImportPlaylistServiceResult {
+  roomState: PublicRoomState;
+  resultPayload: ImportPlaylistResultPayload;
+}
+
+export interface RefreshTokenResult {
+  accessToken: string;
+  expiresInSeconds: number;
+}
 
 export class RoomService {
   public constructor(
-    private readonly roomRegistry = new RoomRegistry(),
-    private readonly deckService = new DeckService(),
+    private readonly roomRegistry: RoomRegistry,
+    private readonly deckService: DeckService,
+    private readonly spotifyAuthService: SpotifyAuthService,
+    private readonly playlistImportService: PlaylistImportService,
   ) {}
 
   public setRoomStateChangedListener(
@@ -107,11 +125,12 @@ export class RoomService {
     startGamePayload: StartGamePayloadParsed,
     socketId: string,
   ): PublicRoomState {
-    return this.roomRegistry.startGame(
-      socketId,
-      startGamePayload,
-      this.deckService.createShuffledDeck(),
-    );
+    const importedDeck = this.roomRegistry.getImportedDeck(startGamePayload.roomId);
+    const deck = importedDeck
+      ? this.deckService.createShuffledDeckFromCards(importedDeck)
+      : this.deckService.createShuffledDeck();
+
+    return this.roomRegistry.startGame(socketId, startGamePayload, deck);
   }
 
   public transferHost(
@@ -170,6 +189,60 @@ export class RoomService {
     closeRoomPayload: CloseRoomPayloadParsed,
     socketId: string,
   ): string {
+    this.spotifyAuthService.clearHostTokens(closeRoomPayload.roomId);
     return this.roomRegistry.closeRoom(socketId, closeRoomPayload);
+  }
+
+  public async importPlaylist(
+    payload: ImportPlaylistPayloadParsed,
+    socketId: string,
+  ): Promise<ImportPlaylistServiceResult> {
+    const outcome = await this.playlistImportService.importFromUrl(payload.playlistUrl);
+
+    if (!outcome.success) {
+      return {
+        roomState: this.roomRegistry.getRoomStateForMember(socketId, payload.roomId),
+        resultPayload: outcome.payload,
+      };
+    }
+
+    const roomState = this.roomRegistry.setImportedDeck(socketId, payload.roomId, outcome.cards);
+
+    return {
+      roomState,
+      resultPayload: {
+        success: true,
+        importedCount: outcome.importedCount,
+        filteredCount: outcome.filteredCount,
+        totalFetched: outcome.totalFetched,
+      },
+    };
+  }
+
+  public buildSpotifyAuthUrl(
+    payload: RequestSpotifyAuthUrlPayloadParsed,
+    socketId: string,
+  ): string {
+    return this.spotifyAuthService.buildAuthUrl(payload.roomId, socketId);
+  }
+
+  public async refreshSpotifyToken(
+    payload: RefreshSpotifyTokenPayloadParsed,
+    socketId: string,
+  ): Promise<RefreshTokenResult | null> {
+    void socketId;
+    return this.spotifyAuthService.refreshHostToken(payload.roomId);
+  }
+
+  public updateSpotifyAuthStatus(
+    roomId: string,
+    socketId: string,
+    connected: boolean,
+  ): PublicRoomState {
+    return this.roomRegistry.setSpotifyAuthStatus(
+      socketId,
+      roomId,
+      connected ? "connected" : "none",
+    );
   }
 }

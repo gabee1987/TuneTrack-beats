@@ -50,6 +50,7 @@ interface RoomRecord {
   gameState: GameState | null;
   roomState: PublicRoomState;
   trackCardsById: Map<string, GameTrackCard>;
+  importedDeck: GameTrackCard[] | null;
 }
 
 export interface JoinRoomResult {
@@ -121,8 +122,10 @@ export class RoomRegistry {
         startingTtTokenCount: DEFAULT_STARTING_TT_TOKEN_COUNT,
         revealConfirmMode: "host_only",
         ttModeEnabled: false,
-        challengeWindowDurationSeconds:
-          DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
+        challengeWindowDurationSeconds: DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
+        playlistImported: false,
+        importedTrackCount: 0,
+        spotifyAuthStatus: "none",
       };
 
       const roomState: PublicRoomState = {
@@ -146,6 +149,7 @@ export class RoomRegistry {
         gameState: null,
         roomState,
         trackCardsById: new Map<string, GameTrackCard>(),
+        importedDeck: null,
       });
       this.socketMemberships.set(socketId, { playerId, roomId, sessionId });
       this.sessionMemberships.set(sessionId, { playerId, roomId });
@@ -240,6 +244,7 @@ export class RoomRegistry {
           }))
         : roomRecord.roomState.players,
       settings: {
+        ...roomRecord.roomState.settings,
         targetTimelineCardCount: roomSettingsPayload.targetTimelineCardCount,
         defaultStartingTimelineCardCount:
           roomSettingsPayload.defaultStartingTimelineCardCount,
@@ -557,9 +562,76 @@ export class RoomRegistry {
       gameState,
       roomState,
       trackCardsById,
+      importedDeck: roomRecord.importedDeck,
     });
 
     return roomState;
+  }
+
+  public getRoomStateForMember(socketId: string, roomId: RoomId): PublicRoomState {
+    return this.getRoomRecordForMember(socketId, roomId).roomState;
+  }
+
+  public setImportedDeck(
+    socketId: string,
+    roomId: RoomId,
+    deck: GameTrackCard[],
+  ): PublicRoomState {
+    const roomRecord = this.getRoomRecordForMember(socketId, roomId);
+    const membership = this.getMembership(socketId);
+
+    if (roomRecord.roomState.hostId !== membership.playerId) {
+      throw new Error("ONLY_HOST_CAN_IMPORT_PLAYLIST");
+    }
+
+    const nextRoomState: PublicRoomState = {
+      ...roomRecord.roomState,
+      settings: {
+        ...roomRecord.roomState.settings,
+        playlistImported: true,
+        importedTrackCount: deck.length,
+      },
+    };
+
+    this.roomsById.set(roomId, {
+      ...roomRecord,
+      roomState: nextRoomState,
+      importedDeck: deck,
+    });
+
+    return nextRoomState;
+  }
+
+  public setSpotifyAuthStatus(
+    socketId: string,
+    roomId: RoomId,
+    status: "none" | "connected",
+  ): PublicRoomState {
+    const roomRecord = this.getRoomRecordForMember(socketId, roomId);
+    const membership = this.getMembership(socketId);
+
+    if (roomRecord.roomState.hostId !== membership.playerId) {
+      throw new Error("ONLY_HOST_CAN_SET_SPOTIFY_AUTH");
+    }
+
+    const nextRoomState: PublicRoomState = {
+      ...roomRecord.roomState,
+      settings: {
+        ...roomRecord.roomState.settings,
+        spotifyAuthStatus: status,
+      },
+    };
+
+    this.roomsById.set(roomId, {
+      ...roomRecord,
+      roomState: nextRoomState,
+    });
+
+    return nextRoomState;
+  }
+
+  public getImportedDeck(roomId: RoomId): GameTrackCard[] | null {
+    return this.roomsById.get(roomId)?.importedDeck ?? null;
   }
 
   public transferHost(

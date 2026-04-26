@@ -12,9 +12,13 @@ import { io as createSocketClient, type Socket } from "socket.io-client";
 import { createHttpServer } from "../src/app/createHttpServer.js";
 import { createSocketServer } from "../src/app/createSocketServer.js";
 import { DeckService } from "../src/decks/DeckService.js";
+import { PlaylistImportService } from "../src/decks/PlaylistImportService.js";
 import { registerSocketHandlers } from "../src/realtime/registerSocketHandlers.js";
 import { RoomRegistry } from "../src/rooms/RoomRegistry.js";
 import { RoomService } from "../src/rooms/RoomService.js";
+import { SpotifyApiClient } from "../src/spotify/SpotifyApiClient.js";
+import { SpotifyAuthService } from "../src/spotify/SpotifyAuthService.js";
+import { SpotifyTokenStore } from "../src/spotify/SpotifyTokenStore.js";
 
 interface TestServerContext {
   baseUrl: string;
@@ -643,11 +647,19 @@ describe("room flow", () => {
 
 });
 
-async function startTestServer(
-  roomService = new RoomService(
+function createTestRoomService(): RoomService {
+  const tokenStore = new SpotifyTokenStore();
+  const apiClient = new SpotifyApiClient();
+  return new RoomService(
     new RoomRegistry(undefined, 25),
     new TestDeckService(),
-  ),
+    new SpotifyAuthService(apiClient, tokenStore),
+    new PlaylistImportService(apiClient, tokenStore),
+  );
+}
+
+async function startTestServer(
+  roomService = createTestRoomService(),
 ): Promise<TestServerContext> {
   const { httpServer } = createHttpServer();
   const io = createSocketServer(httpServer);

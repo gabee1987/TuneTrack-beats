@@ -6,9 +6,12 @@ import {
   claimChallengePayloadSchema,
   closeRoomPayloadSchema,
   confirmRevealPayloadSchema,
+  importPlaylistPayloadSchema,
   joinRoomPayloadSchema,
   placeChallengePayloadSchema,
   placeCardPayloadSchema,
+  refreshSpotifyTokenPayloadSchema,
+  requestSpotifyAuthUrlPayloadSchema,
   resolveChallengeWindowPayloadSchema,
   skipTrackWithTtPayloadSchema,
   skipTurnPayloadSchema,
@@ -47,6 +50,9 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
     registerUpdateRoomSettingsHandler(io, socket, roomService);
     registerUpdatePlayerSettingsHandler(io, socket, roomService);
     registerUpdatePlayerProfileHandler(io, socket, roomService);
+    registerImportPlaylistHandler(io, socket, roomService);
+    registerRequestSpotifyAuthUrlHandler(socket, roomService);
+    registerRefreshSpotifyTokenHandler(socket, roomService);
     registerDisconnectHandler(io, socket, roomService);
   });
 }
@@ -598,6 +604,104 @@ function registerCloseRoomHandler(
         ONLY_HOST_CAN_CLOSE_ROOM: "Only the host can close the room.",
       });
     }
+  });
+}
+
+function registerImportPlaylistHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.ImportPlaylist, (payload: unknown) => {
+    const parseResult = importPlaylistPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.PlaylistImportResult, {
+        success: false,
+        code: "invalid_url",
+        message: "Playlist URL is invalid.",
+      });
+      return;
+    }
+
+    void roomService
+      .importPlaylist(parseResult.data, socket.id)
+      .then(({ roomState, resultPayload }) => {
+        socket.emit(ServerToClientEvent.PlaylistImportResult, resultPayload);
+
+        if (resultPayload.success) {
+          io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, { roomState });
+        }
+      })
+      .catch((error: unknown) => {
+        logger.error({ error }, "import_playlist handler threw unexpectedly");
+        socket.emit(ServerToClientEvent.PlaylistImportResult, {
+          success: false,
+          code: "spotify_api_error",
+          message: "An unexpected error occurred. Please try again.",
+        });
+      });
+  });
+}
+
+function registerRequestSpotifyAuthUrlHandler(
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.RequestSpotifyAuthUrl, (payload: unknown) => {
+    const parseResult = requestSpotifyAuthUrlPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_REQUEST_SPOTIFY_AUTH_URL_PAYLOAD",
+        message: "Room code is invalid.",
+      });
+      return;
+    }
+
+    try {
+      const authUrl = roomService.buildSpotifyAuthUrl(parseResult.data, socket.id);
+      socket.emit(ServerToClientEvent.SpotifyAuthUrl, { authUrl });
+    } catch (error) {
+      emitServerError(socket, error, "REQUEST_SPOTIFY_AUTH_URL_FAILED", {});
+    }
+  });
+}
+
+function registerRefreshSpotifyTokenHandler(
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.RefreshSpotifyToken, (payload: unknown) => {
+    const parseResult = refreshSpotifyTokenPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_REFRESH_SPOTIFY_TOKEN_PAYLOAD",
+        message: "Room code is invalid.",
+      });
+      return;
+    }
+
+    void roomService
+      .refreshSpotifyToken(parseResult.data, socket.id)
+      .then((result) => {
+        if (result) {
+          socket.emit(ServerToClientEvent.SpotifyTokenRefreshed, result);
+        } else {
+          socket.emit(ServerToClientEvent.Error, {
+            code: "SPOTIFY_TOKEN_REFRESH_FAILED",
+            message: "Could not refresh Spotify token. Please reconnect Spotify.",
+          });
+        }
+      })
+      .catch((error: unknown) => {
+        logger.error({ error }, "refresh_spotify_token handler threw unexpectedly");
+        socket.emit(ServerToClientEvent.Error, {
+          code: "SPOTIFY_TOKEN_REFRESH_FAILED",
+          message: "Could not refresh Spotify token.",
+        });
+      });
   });
 }
 

@@ -20,6 +20,9 @@ const baseRoomSettings: PublicRoomSettings = {
   startingTtTokenCount: 1,
   targetTimelineCardCount: 10,
   ttModeEnabled: false,
+  playlistImported: false,
+  importedTrackCount: 0,
+  spotifyAuthStatus: "none",
 };
 
 describe("lobbyPlayerSelectors", () => {

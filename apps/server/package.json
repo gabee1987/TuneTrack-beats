@@ -8,7 +8,7 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src tests --ext .ts",
-    "test": "vitest run --pool=threads --passWithNoTests"
+    "test": "vitest run --config vitest.config.ts --passWithNoTests"
   },
   "dependencies": {
     "@tunetrack/game-engine": "0.1.0",

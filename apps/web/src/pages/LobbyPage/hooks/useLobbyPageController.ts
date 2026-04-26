@@ -23,6 +23,9 @@ const fallbackRoomSettings: PublicRoomSettings = {
   startingTtTokenCount: DEFAULT_STARTING_TT_TOKEN_COUNT,
   targetTimelineCardCount: DEFAULT_TARGET_TIMELINE_CARD_COUNT,
   ttModeEnabled: false,
+  playlistImported: false,
+  importedTrackCount: 0,
+  spotifyAuthStatus: "none",
 };
 
 export function useLobbyPageController(): LobbyPageController {

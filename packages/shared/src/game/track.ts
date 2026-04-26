@@ -8,6 +8,8 @@ export interface TrackCardPublic {
   releaseYear?: number;
   genre?: string;
   artworkUrl?: string;
+  previewUrl?: string;
+  spotifyTrackUri?: string;
 }
 
 export interface TrackCardInternal extends TrackCardPublic {

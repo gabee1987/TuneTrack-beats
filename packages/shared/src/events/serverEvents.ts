@@ -1,9 +1,15 @@
 import type { PlayerId } from "../game/player.js";
 import type { PublicRoomState } from "../game/roomState.js";
+import type { ImportPlaylistResultPayload } from "../spotify/playlistImport.js";
+import type { SpotifyAuthResultPayload } from "../spotify/spotifyAuth.js";
 
 export const ServerToClientEvent = {
   PlayerIdentity: "player_identity",
+  PlaylistImportResult: "playlist_import_result",
   RoomClosed: "room_closed",
+  SpotifyAuthResult: "spotify_auth_result",
+  SpotifyAuthUrl: "spotify_auth_url",
+  SpotifyTokenRefreshed: "spotify_token_refreshed",
   StateUpdate: "state_update",
   Error: "error",
 } as const;
@@ -28,3 +34,14 @@ export interface RoomClosedPayload {
   roomId: string;
   message: string;
 }
+
+export interface SpotifyAuthUrlPayload {
+  authUrl: string;
+}
+
+export interface SpotifyTokenRefreshedPayload {
+  accessToken: string;
+  expiresInSeconds: number;
+}
+
+export type { ImportPlaylistResultPayload, SpotifyAuthResultPayload };

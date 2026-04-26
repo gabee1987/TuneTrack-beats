@@ -3,7 +3,9 @@ export interface GameTrackCard {
   title: string;
   artist: string;
   albumTitle: string;
+  releaseYear: number;
   genre?: string;
   artworkUrl?: string;
-  releaseYear: number;
+  previewUrl?: string;
+  spotifyTrackUri?: string;
 }
