@@ -904,7 +904,7 @@
   padding: 14px 22px;
   border: 0;
   border-radius: var(--radius-button);
-  background: #1db954;
+  background: var(--color-background-spotify);
   color: #000;
   font-size: 15px;
   font-weight: 800;
@@ -914,12 +914,12 @@
   transition:
     background 0.15s ease,
     box-shadow 0.15s ease;
-  box-shadow: 0 6px 20px color-mix(in srgb, #1db954 28%, transparent);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--color-background-spotify) 28%, transparent);
 }
 
 .spotifyConnectBtn:hover:not(:disabled) {
-  background: #1ed760;
-  box-shadow: 0 8px 24px color-mix(in srgb, #1db954 40%, transparent);
+  background: var(--color-background-spotify);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--color-background-spotify) 40%, transparent);
 }
 
 .spotifyConnectBtn:disabled {
@@ -1027,6 +1027,7 @@
 }
 
 .spotifyImportBtn {
+  min-height: 52px;
   padding: 14px 20px;
   border: 1px solid color-mix(in srgb, var(--color-border-spotify) 92%, transparent);
   border-radius: var(--radius-button);
@@ -1087,6 +1088,30 @@
 
 .spotifyStatusError {
   color: var(--color-status-danger-text);
+}
+
+.spotifyEditRow {
+  display: flex;
+}
+
+.spotifyEditBtn {
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 20px;
+  border: 1px solid color-mix(in srgb, var(--color-border-spotify) 92%, transparent);
+  border-radius: var(--radius-button);
+  background: color-mix(in srgb, var(--color-border-spotify) 48%, transparent);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+
+.spotifyEditBtn:hover {
+  background: color-mix(in srgb, var(--color-surface-elevated) 100%, transparent);
 }
 
 @media (max-width: 440px) {

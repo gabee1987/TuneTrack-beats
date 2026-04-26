@@ -229,3 +229,15 @@ export type RequestSpotifyAuthUrlPayloadParsed = z.output<typeof requestSpotifyA
 
 export type RefreshSpotifyTokenPayloadInput = z.input<typeof refreshSpotifyTokenPayloadSchema>;
 export type RefreshSpotifyTokenPayloadParsed = z.output<typeof refreshSpotifyTokenPayloadSchema>;
+
+export const getPlaylistTracksPayloadSchema = z.object({
+  roomId: roomIdSchema,
+});
+
+export const removePlaylistTracksPayloadSchema = z.object({
+  roomId: roomIdSchema,
+  trackIds: z.array(z.string().trim().min(1)).min(1).max(500),
+});
+
+export type GetPlaylistTracksPayloadParsed = z.output<typeof getPlaylistTracksPayloadSchema>;
+export type RemovePlaylistTracksPayloadParsed = z.output<typeof removePlaylistTracksPayloadSchema>;

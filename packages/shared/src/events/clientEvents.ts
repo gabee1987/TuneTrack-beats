@@ -8,11 +8,13 @@ export const ClientToServerEvent = {
   ClaimChallenge: "claim_challenge",
   CloseRoom: "close_room",
   ConfirmReveal: "confirm_reveal",
+  GetPlaylistTracks: "get_playlist_tracks",
   ImportPlaylist: "import_playlist",
   JoinRoom: "join_room",
   PlaceCard: "place_card",
   PlaceChallenge: "place_challenge",
   RefreshSpotifyToken: "refresh_spotify_token",
+  RemovePlaylistTracks: "remove_playlist_tracks",
   RequestSpotifyAuthUrl: "request_spotify_auth_url",
   ResolveChallengeWindow: "resolve_challenge_window",
   SkipTrackWithTt: "skip_track_with_tt",
@@ -115,4 +117,13 @@ export interface RequestSpotifyAuthUrlPayload {
 
 export interface RefreshSpotifyTokenPayload {
   roomId: RoomId;
+}
+
+export interface GetPlaylistTracksPayload {
+  roomId: RoomId;
+}
+
+export interface RemovePlaylistTracksPayload {
+  roomId: RoomId;
+  trackIds: string[];
 }

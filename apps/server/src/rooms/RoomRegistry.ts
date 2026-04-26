@@ -634,6 +634,43 @@ export class RoomRegistry {
     return this.roomsById.get(roomId)?.importedDeck ?? null;
   }
 
+  public removeTracksFromImportedDeck(
+    socketId: string,
+    roomId: RoomId,
+    trackIds: string[],
+  ): PublicRoomState {
+    const roomRecord = this.getRoomRecordForMember(socketId, roomId);
+    const membership = this.getMembership(socketId);
+
+    if (roomRecord.roomState.hostId !== membership.playerId) {
+      throw new Error("ONLY_HOST_CAN_EDIT_PLAYLIST");
+    }
+
+    if (!roomRecord.importedDeck) {
+      throw new Error("NO_PLAYLIST_IMPORTED");
+    }
+
+    const removeSet = new Set(trackIds);
+    const nextDeck = roomRecord.importedDeck.filter((card) => !removeSet.has(card.id));
+
+    const nextRoomState: PublicRoomState = {
+      ...roomRecord.roomState,
+      settings: {
+        ...roomRecord.roomState.settings,
+        importedTrackCount: nextDeck.length,
+        playlistImported: nextDeck.length > 0,
+      },
+    };
+
+    this.roomsById.set(roomId, {
+      ...roomRecord,
+      roomState: nextRoomState,
+      importedDeck: nextDeck.length > 0 ? nextDeck : null,
+    });
+
+    return nextRoomState;
+  }
+
   public transferHost(
     socketId: string,
     transferHostPayload: TransferHostPayloadParsed,

@@ -8,12 +8,15 @@ import type {
   CloseRoomPayloadParsed,
   ClaimChallengePayloadParsed,
   ConfirmRevealPayloadParsed,
+  GetPlaylistTracksPayloadParsed,
   ImportPlaylistPayloadParsed,
   JoinRoomPayloadParsed,
   PlaceChallengePayloadParsed,
   PlaceCardPayloadParsed,
   PublicRoomState,
+  PublicTrackInfo,
   RefreshSpotifyTokenPayloadParsed,
+  RemovePlaylistTracksPayloadParsed,
   RequestSpotifyAuthUrlPayloadParsed,
   ResolveChallengeWindowPayloadParsed,
   SkipTrackWithTtPayloadParsed,
@@ -270,6 +273,34 @@ export class RoomService {
     return this.spotifyAuthService.refreshHostToken(payload.roomId);
   }
 
+  public getPlaylistTracks(
+    payload: GetPlaylistTracksPayloadParsed,
+    socketId: string,
+  ): PublicTrackInfo[] {
+    this.roomRegistry.getRoomStateForMember(socketId, payload.roomId);
+    const deck = this.roomRegistry.getImportedDeck(payload.roomId);
+    if (!deck) return [];
+    return deck.map(cardToPublicTrackInfo);
+  }
+
+  public removePlaylistTracks(
+    payload: RemovePlaylistTracksPayloadParsed,
+    socketId: string,
+  ): { roomState: PublicRoomState; tracks: PublicTrackInfo[] } {
+    const roomState = this.roomRegistry.removeTracksFromImportedDeck(
+      socketId,
+      payload.roomId,
+      payload.trackIds,
+    );
+    logger.info(
+      { roomId: payload.roomId, removedCount: payload.trackIds.length, remainingCount: roomState.settings.importedTrackCount },
+      "playlist tracks removed",
+    );
+    const deck = this.roomRegistry.getImportedDeck(payload.roomId);
+    const tracks = (deck ?? []).map(cardToPublicTrackInfo);
+    return { roomState, tracks };
+  }
+
   public updateSpotifyAuthStatus(
     roomId: string,
     socketId: string,
@@ -281,4 +312,15 @@ export class RoomService {
       connected ? "connected" : "none",
     );
   }
+}
+
+function cardToPublicTrackInfo(card: { id: string; title: string; artist: string; albumTitle: string; releaseYear: number; artworkUrl?: string }): PublicTrackInfo {
+  return {
+    id: card.id,
+    title: card.title,
+    artist: card.artist,
+    albumTitle: card.albumTitle,
+    releaseYear: card.releaseYear,
+    ...(card.artworkUrl ? { artworkUrl: card.artworkUrl } : {}),
+  };
 }

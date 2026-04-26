@@ -6,6 +6,7 @@ import type { SpotifyAuthResultPayload } from "../spotify/spotifyAuth.js";
 export const ServerToClientEvent = {
   PlayerIdentity: "player_identity",
   PlaylistImportResult: "playlist_import_result",
+  PlaylistTracks: "playlist_tracks",
   RoomClosed: "room_closed",
   SpotifyAuthResult: "spotify_auth_result",
   SpotifyAuthUrl: "spotify_auth_url",
@@ -45,3 +46,4 @@ export interface SpotifyTokenRefreshedPayload {
 }
 
 export type { ImportPlaylistResultPayload, SpotifyAuthResultPayload };
+export type { PlaylistTracksPayload } from "../spotify/playlistTracks.js";

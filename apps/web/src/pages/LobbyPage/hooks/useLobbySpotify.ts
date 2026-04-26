@@ -17,12 +17,15 @@ export interface UseLobbySpotifyResult {
   accountType: SpotifyAccountType | null;
   authError: string | null;
   authPhase: AuthPhase;
+  closeEditModal: () => void;
   connectSpotify: () => void;
   importContentHeight: number;
   importContentRef: React.RefObject<HTMLDivElement>;
   importError: string | null;
   importPhase: ImportPhase;
   importPlaylist: () => void;
+  isEditModalOpen: boolean;
+  openEditModal: () => void;
   playlistUrl: string;
   setPlaylistUrl: (url: string) => void;
 }
@@ -37,6 +40,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
   const [importPhase, setImportPhase] = useState<ImportPhase>("idle");
   const [importError, setImportError] = useState<string | null>(null);
   const [playlistUrl, setPlaylistUrl] = useState("");
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const importContentRef = useRef<HTMLDivElement>(null);
   const [importContentHeight, setImportContentHeight] = useState(0);
@@ -132,12 +136,15 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     accountType,
     authError,
     authPhase,
+    closeEditModal: () => setIsEditModalOpen(false),
     connectSpotify,
     importContentHeight,
     importContentRef,
     importError,
     importPhase,
     importPlaylist,
+    isEditModalOpen,
+    openEditModal: () => setIsEditModalOpen(true),
     playlistUrl,
     setPlaylistUrl,
   };

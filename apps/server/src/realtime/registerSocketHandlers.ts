@@ -6,11 +6,13 @@ import {
   claimChallengePayloadSchema,
   closeRoomPayloadSchema,
   confirmRevealPayloadSchema,
+  getPlaylistTracksPayloadSchema,
   importPlaylistPayloadSchema,
   joinRoomPayloadSchema,
   placeChallengePayloadSchema,
   placeCardPayloadSchema,
   refreshSpotifyTokenPayloadSchema,
+  removePlaylistTracksPayloadSchema,
   requestSpotifyAuthUrlPayloadSchema,
   resolveChallengeWindowPayloadSchema,
   skipTrackWithTtPayloadSchema,
@@ -51,6 +53,8 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
     registerUpdatePlayerSettingsHandler(io, socket, roomService);
     registerUpdatePlayerProfileHandler(io, socket, roomService);
     registerImportPlaylistHandler(io, socket, roomService);
+    registerGetPlaylistTracksHandler(socket, roomService);
+    registerRemovePlaylistTracksHandler(io, socket, roomService);
     registerRequestSpotifyAuthUrlHandler(socket, roomService);
     registerRefreshSpotifyTokenHandler(socket, roomService);
     registerDisconnectHandler(io, socket, roomService);
@@ -730,6 +734,64 @@ function emitServerError(
     message:
       messageByCode[errorCode] ??
       "The requested room action could not be completed.",
+  });
+}
+
+function registerGetPlaylistTracksHandler(
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.GetPlaylistTracks, (payload: unknown) => {
+    const parseResult = getPlaylistTracksPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_GET_PLAYLIST_TRACKS_PAYLOAD",
+        message: "Room code is invalid.",
+      });
+      return;
+    }
+
+    logger.info({ socketId: socket.id, roomId: parseResult.data.roomId }, "get_playlist_tracks");
+    try {
+      const tracks = roomService.getPlaylistTracks(parseResult.data, socket.id);
+      socket.emit(ServerToClientEvent.PlaylistTracks, { tracks });
+    } catch (error) {
+      emitServerError(socket, error, "GET_PLAYLIST_TRACKS_FAILED", {});
+    }
+  });
+}
+
+function registerRemovePlaylistTracksHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.RemovePlaylistTracks, (payload: unknown) => {
+    const parseResult = removePlaylistTracksPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_REMOVE_PLAYLIST_TRACKS_PAYLOAD",
+        message: "Invalid request.",
+      });
+      return;
+    }
+
+    logger.info(
+      { socketId: socket.id, roomId: parseResult.data.roomId, count: parseResult.data.trackIds.length },
+      "remove_playlist_tracks",
+    );
+    try {
+      const { roomState, tracks } = roomService.removePlaylistTracks(parseResult.data, socket.id);
+      socket.emit(ServerToClientEvent.PlaylistTracks, { tracks });
+      io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, { roomState });
+    } catch (error) {
+      emitServerError(socket, error, "REMOVE_PLAYLIST_TRACKS_FAILED", {
+        ONLY_HOST_CAN_EDIT_PLAYLIST: "Only the host can edit the playlist.",
+        NO_PLAYLIST_IMPORTED: "No playlist has been imported.",
+      });
+    }
   });
 }
 

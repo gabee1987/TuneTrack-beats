@@ -4,6 +4,7 @@ import { createMeasuredDisclosureMotion, createStandardTransition } from "../../
 import { TextInput } from "../../../features/ui/TextInput";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { LobbySectionHeader } from "./LobbySectionHeader";
+import { PlaylistEditModal } from "./PlaylistEditModal";
 import { useLobbySpotify } from "../hooks/useLobbySpotify";
 import styles from "../LobbyPage.module.css";
 
@@ -33,12 +34,15 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
     accountType,
     authError,
     authPhase,
+    closeEditModal,
     connectSpotify,
     importContentHeight,
     importContentRef,
     importError,
     importPhase,
     importPlaylist,
+    isEditModalOpen,
+    openEditModal,
     playlistUrl,
     setPlaylistUrl,
   } = useLobbySpotify();
@@ -152,8 +156,22 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
               {importError}
             </p>
           ) : null}
+
+          {isImported && importPhase !== "error" && !isImporting ? (
+            <div className={styles.spotifyEditRow}>
+              <button
+                className={styles.spotifyEditBtn}
+                onClick={openEditModal}
+                type="button"
+              >
+                Edit playlist
+              </button>
+            </div>
+          ) : null}
         </div>
       </motion.div>
+
+      <PlaylistEditModal isOpen={isEditModalOpen} onClose={closeEditModal} />
     </SurfaceCard>
   );
 }
