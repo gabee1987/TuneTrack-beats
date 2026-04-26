@@ -278,8 +278,7 @@
   border-radius: 999px;
   overflow: hidden;
   isolation: isolate;
-  background:
-    linear-gradient(
+  background: linear-gradient(
       180deg,
       color-mix(in srgb, var(--room-action-bg-start) 78%, transparent),
       color-mix(in srgb, var(--room-action-bg-end) 84%, transparent)
@@ -875,4 +874,227 @@
 .mobileSelectOptionState {
   color: var(--color-text-secondary);
   font-size: 13px;
+}
+
+/* ── Spotify section ─────────────────────────────────────────────────── */
+
+.spotifyConnectRow {
+  padding: 4px 0;
+}
+
+/* Not-connected state */
+.spotifyConnectUnconnected {
+  display: grid;
+  gap: 10px;
+}
+
+.spotifyConnectHint {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.spotifyConnectBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  align-self: start;
+  padding: 14px 22px;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: #1db954;
+  color: #000;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+  box-shadow: 0 6px 20px color-mix(in srgb, #1db954 28%, transparent);
+}
+
+.spotifyConnectBtn:hover:not(:disabled) {
+  background: #1ed760;
+  box-shadow: 0 8px 24px color-mix(in srgb, #1db954 40%, transparent);
+}
+
+.spotifyConnectBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spotifyBtnLogo {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* Connected state */
+.spotifyConnectedState {
+  display: grid;
+  gap: 6px;
+}
+
+.spotifyBadgeRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.spotifyConnectedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 1px solid color-mix(in srgb, var(--color-border-spotify) 58%, transparent);
+  border-radius: var(--radius-pill);
+  background: var(--color-status-connected-surface);
+  color: var(--color-status-connected-text);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.spotifyConnectedDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+  animation: spotifyDotPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes spotifyDotPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.7);
+  }
+}
+
+.spotifyPremiumBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid color-mix(in srgb, var(--color-token-gold) 58%, transparent);
+  background: linear-gradient(135deg, #b8841c 0%, #f0c0407a 45%, #c9910a 100%);
+  color: #1a0e00;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow:
+    0 2px 8px color-mix(in srgb, #f0c040 30%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 22%, transparent);
+}
+
+.spotifyFreeBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-outline-soft);
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* Import area — extra padding so the input outline doesn't clip */
+.spotifyImportContent {
+  display: grid;
+  gap: 10px;
+  padding: 4px 4px 6px;
+}
+
+.spotifyImportRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.spotifyImportRow input {
+  min-height: 52px;
+}
+
+.spotifyImportBtn {
+  padding: 14px 20px;
+  border: 1px solid color-mix(in srgb, var(--color-border-spotify) 92%, transparent);
+  border-radius: var(--radius-button);
+  background: color-mix(in srgb, var(--color-border-spotify) 48%, transparent);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+
+.spotifyImportBtn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-surface-elevated) 100%, transparent);
+}
+
+.spotifyImportBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Songs ready indicator */
+.spotifySongsReady {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--color-border-spotify) 22%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--color-status-connected-surface) 55%, transparent);
+  color: var(--color-border-spotify);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.spotifySongsReadyDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+  animation: spotifyDotPulse 2.4s ease-in-out infinite;
+}
+
+.spotifySongsReady strong {
+  font-weight: 900;
+}
+
+/* Status / error lines */
+.spotifyStatusLine {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.spotifyStatusError {
+  color: var(--color-status-danger-text);
+}
+
+@media (max-width: 440px) {
+  .spotifyImportRow {
+    grid-template-columns: 1fr;
+  }
+
+  .spotifyImportBtn {
+    width: 100%;
+  }
 }

@@ -11,6 +11,7 @@ interface OAuthState {
 
 export interface SpotifyCallbackResult {
   authResult: SpotifyAuthResultPayload;
+  roomId: string | null;
   socketId: string;
 }
 
@@ -35,6 +36,7 @@ export class SpotifyAuthService {
 
     if (error || !code || !state) {
       return {
+        roomId: state?.roomId ?? null,
         socketId,
         authResult: {
           success: false,
@@ -51,6 +53,7 @@ export class SpotifyAuthService {
 
       if (!tokenResponse.refresh_token) {
         return {
+          roomId: state.roomId,
           socketId,
           authResult: {
             success: false,
@@ -74,6 +77,7 @@ export class SpotifyAuthService {
       logger.info({ roomId: state.roomId, accountType }, "Spotify host auth successful");
 
       return {
+        roomId: state.roomId,
         socketId,
         authResult: {
           success: true,
@@ -86,6 +90,7 @@ export class SpotifyAuthService {
       logger.error({ err }, "Spotify OAuth callback failed");
 
       return {
+        roomId: state.roomId,
         socketId,
         authResult: {
           success: false,

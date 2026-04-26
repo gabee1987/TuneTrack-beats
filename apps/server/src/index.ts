@@ -28,7 +28,7 @@ const roomService = new RoomService(
   playlistImportService,
 );
 
-registerSpotifyRoutes(app, io, spotifyAuthService);
+registerSpotifyRoutes(app, io, spotifyAuthService, roomService);
 registerSocketHandlers(io, roomService);
 
 httpServer.listen(env.PORT, () => {

@@ -2,15 +2,17 @@ import type { Express, Request, Response } from "express";
 import type { Server } from "socket.io";
 import { ServerToClientEvent } from "@tunetrack/shared";
 import { logger } from "../app/logger.js";
+import type { RoomService } from "../rooms/RoomService.js";
 import type { SpotifyAuthService } from "../spotify/SpotifyAuthService.js";
 
 export function registerSpotifyRoutes(
   app: Express,
   io: Server,
   spotifyAuthService: SpotifyAuthService,
+  roomService: RoomService,
 ): void {
   app.get("/api/spotify/callback", (req: Request, res: Response) => {
-    void handleSpotifyCallback(req, res, io, spotifyAuthService);
+    void handleSpotifyCallback(req, res, io, spotifyAuthService, roomService);
   });
 }
 
@@ -19,6 +21,7 @@ async function handleSpotifyCallback(
   res: Response,
   io: Server,
   spotifyAuthService: SpotifyAuthService,
+  roomService: RoomService,
 ): Promise<void> {
   const code = typeof req.query["code"] === "string" ? req.query["code"] : undefined;
   const state = typeof req.query["state"] === "string" ? req.query["state"] : undefined;
@@ -26,10 +29,19 @@ async function handleSpotifyCallback(
 
   logger.info({ hasCode: !!code, hasState: !!state, error }, "Spotify OAuth callback received");
 
-  const { authResult, socketId } = await spotifyAuthService.handleCallback(code, state, error);
+  const { authResult, roomId, socketId } = await spotifyAuthService.handleCallback(code, state, error);
 
   if (socketId) {
     io.to(socketId).emit(ServerToClientEvent.SpotifyAuthResult, authResult);
+  }
+
+  if (authResult.success && roomId && socketId) {
+    try {
+      const roomState = roomService.updateSpotifyAuthStatus(roomId, socketId, true);
+      io.to(roomId).emit(ServerToClientEvent.StateUpdate, { roomState });
+    } catch {
+      logger.warn({ roomId }, "Could not update Spotify auth status in room state");
+    }
   }
 
   res.setHeader("Content-Type", "text/html");
