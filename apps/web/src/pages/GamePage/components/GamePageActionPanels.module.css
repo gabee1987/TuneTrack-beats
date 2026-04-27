@@ -419,6 +419,66 @@
   }
 }
 
+.offlinePlayerPanel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-elevated);
+}
+
+.offlinePlayerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.offlinePlayerLabel {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+}
+
+.offlinePlayerName {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.offlinePlayerCountdown {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+@media (max-width: 720px), (hover: none) and (pointer: coarse) {
+  .offlinePlayerPanel {
+    position: fixed;
+    left: max(14px, env(safe-area-inset-left));
+    right: max(14px, env(safe-area-inset-right));
+    bottom: calc(env(safe-area-inset-bottom) + 94px);
+    z-index: 880;
+    margin: 0;
+    background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+    backdrop-filter: blur(18px) saturate(1.08);
+    -webkit-backdrop-filter: blur(18px) saturate(1.08);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 32%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .challengePulseBorder {
     animation: none;

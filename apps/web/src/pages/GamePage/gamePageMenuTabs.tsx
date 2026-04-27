@@ -27,6 +27,7 @@ interface CreateGameMenuTabsOptions {
   historyEntries: GameHistoryEntry[];
   roomState: PublicRoomState;
   onAwardTt: (playerId: string) => void;
+  onKickPlayer: (playerId: string) => void;
   onRemoveTt: (playerId: string) => void;
   onTransferHost: (playerId: string) => void;
   playback?: HostPlaybackState;
@@ -176,6 +177,7 @@ function TokenAdjustButtons({ currentTokenCount, onAwardTt, onRemoveTt }: TokenA
 interface GameMenuPlayerItemProps {
   currentPlayerId: string | null;
   onAwardTt: (playerId: string) => void;
+  onKickPlayer: (playerId: string) => void;
   onRemoveTt: (playerId: string) => void;
   onTransferHost: (playerId: string) => void;
   player: PublicPlayerState;
@@ -185,6 +187,7 @@ interface GameMenuPlayerItemProps {
 function GameMenuPlayerItem({
   currentPlayerId,
   onAwardTt,
+  onKickPlayer,
   onRemoveTt,
   onTransferHost,
   player,
@@ -193,6 +196,7 @@ function GameMenuPlayerItem({
   const reduceMotion = useReducedMotion() ?? false;
   const [isExpanded, setIsExpanded] = useState(false);
   const [isTransferConfirmOpen, setIsTransferConfirmOpen] = useState(false);
+  const [isKickConfirmOpen, setIsKickConfirmOpen] = useState(false);
   const expandedContentRef = useRef<HTMLDivElement | null>(null);
   const [expandedContentHeight, setExpandedContentHeight] = useState(0);
   const isCurrentPlayerHost = roomState.hostId === currentPlayerId;
@@ -200,6 +204,7 @@ function GameMenuPlayerItem({
   const isDisconnected = player.connectionStatus === "disconnected";
   const canTransferHost =
     isCurrentPlayerHost && !isCurrentPlayer && !player.isHost && !isDisconnected;
+  const canKickPlayer = isCurrentPlayerHost && !isCurrentPlayer;
   const hasTokenActions = roomState.settings.ttModeEnabled && isCurrentPlayerHost;
   const hasTransferAction = isCurrentPlayerHost && !isCurrentPlayer;
   const hasExpandableContent = hasTransferAction;
@@ -231,9 +236,16 @@ function GameMenuPlayerItem({
     if (!canTransferHost) {
       return;
     }
-
     onTransferHost(player.id);
     setIsTransferConfirmOpen(false);
+  }
+
+  function handleKickPlayer() {
+    if (!canKickPlayer) {
+      return;
+    }
+    onKickPlayer(player.id);
+    setIsKickConfirmOpen(false);
   }
 
   return (
@@ -341,6 +353,15 @@ function GameMenuPlayerItem({
               Transfer host
             </button>
           ) : null}
+          {canKickPlayer ? (
+            <button
+              className={`${styles.menuActionButton} ${styles.menuKickPlayerButton}`}
+              onClick={() => setIsKickConfirmOpen(true)}
+              type="button"
+            >
+              Kick player
+            </button>
+          ) : null}
         </div>
       </motion.div>
       <MotionDialogPortal
@@ -381,6 +402,46 @@ function GameMenuPlayerItem({
             type="button"
           >
             Transfer host
+          </button>
+        </div>
+      </MotionDialogPortal>
+      <MotionDialogPortal
+        cardClassName={styles.transferConfirmCard}
+        isOpen={isKickConfirmOpen}
+        label="Kick player"
+        onClose={() => setIsKickConfirmOpen(false)}
+        overlayClassName={styles.transferConfirmOverlay}
+      >
+        <div className={styles.transferConfirmHeaderRow}>
+          <p className={styles.transferConfirmEyebrow}>Remove player</p>
+          <button
+            aria-label="Close kick player confirmation"
+            className={styles.transferConfirmCloseButton}
+            onClick={() => setIsKickConfirmOpen(false)}
+            type="button"
+          >
+            x
+          </button>
+        </div>
+        <h2 className={styles.transferConfirmTitle}>Remove {player.displayName}?</h2>
+        <p className={styles.transferConfirmBody}>
+          {player.displayName} will be removed from the game. Their turns will be skipped
+          automatically and they cannot rejoin.
+        </p>
+        <div className={styles.transferConfirmActions}>
+          <button
+            className={`${styles.menuActionButton} ${styles.transferConfirmSecondaryButton}`}
+            onClick={() => setIsKickConfirmOpen(false)}
+            type="button"
+          >
+            Cancel
+          </button>
+          <button
+            className={`${styles.menuActionButton} ${styles.menuKickPlayerButton}`}
+            onClick={handleKickPlayer}
+            type="button"
+          >
+            Remove player
           </button>
         </div>
       </MotionDialogPortal>
@@ -599,6 +660,7 @@ export function createGameMenuTabs({
   historyEntries,
   roomState,
   onAwardTt,
+  onKickPlayer,
   onRemoveTt,
   onTransferHost,
   playback,
@@ -623,6 +685,7 @@ export function createGameMenuTabs({
                 currentPlayerId={currentPlayerId}
                 key={player.id}
                 onAwardTt={onAwardTt}
+                onKickPlayer={onKickPlayer}
                 onRemoveTt={onRemoveTt}
                 onTransferHost={onTransferHost}
                 player={player}

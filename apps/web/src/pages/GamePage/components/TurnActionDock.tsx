@@ -4,7 +4,7 @@ import {
   type PublicRoomState,
 } from "@tunetrack/shared";
 import { motion, useReducedMotion } from "framer-motion";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   MotionPresence,
   createActionButtonExitMotion,
@@ -16,6 +16,28 @@ import {
   SecondaryActionButton,
 } from "./ActionDock";
 import styles from "./GamePageActionPanels.module.css";
+
+function useTurnSkipCountdown(deadlineEpochMs: number | null): string | null {
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (deadlineEpochMs === null) {
+      setSecondsLeft(null);
+      return;
+    }
+
+    function update() {
+      const remaining = deadlineEpochMs! - Date.now();
+      setSecondsLeft(remaining > 0 ? Math.ceil(remaining / 1000) : null);
+    }
+
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [deadlineEpochMs]);
+
+  return secondsLeft !== null ? `${secondsLeft}s` : null;
+}
 
 interface TurnActionDockProps {
   canConfirmTurnPlacement: boolean;
@@ -49,6 +71,12 @@ export function TurnActionDock({
   const reduceMotion = useReducedMotion() ?? false;
   const skipCostBadgeRef = useRef<HTMLSpanElement | null>(null);
   const buyCostBadgeRef = useRef<HTMLSpanElement | null>(null);
+  const offlinePlayerName = canSkipOfflinePlayer
+    ? (roomState.players.find((p) => p.id === roomState.turn?.activePlayerId)?.displayName ?? "Player")
+    : null;
+  const turnSkipCountdown = useTurnSkipCountdown(
+    canSkipOfflinePlayer ? (roomState.turn?.turnSkipDeadlineEpochMs ?? null) : null,
+  );
 
   function resolveSpendOrigin(
     fallbackButton: HTMLButtonElement,
@@ -70,7 +98,21 @@ export function TurnActionDock({
   }
 
   return (
-    <ActionDock>
+    <>
+      {canSkipOfflinePlayer && offlinePlayerName ? (
+        <div className={styles.offlinePlayerPanel}>
+          <div className={styles.offlinePlayerInfo}>
+            <span className={styles.offlinePlayerLabel}>Waiting for</span>
+            <span className={styles.offlinePlayerName}>{offlinePlayerName}</span>
+          </div>
+          {turnSkipCountdown ? (
+            <span className={styles.offlinePlayerCountdown}>
+              Auto-skip in {turnSkipCountdown}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+      <ActionDock>
       <MotionPresence mode="popLayout">
         {canUseSkipTrack ? (
           <motion.span
@@ -147,10 +189,11 @@ export function TurnActionDock({
           transition={createLayoutTransition(reduceMotion)}
         >
           <SecondaryActionButton onClick={() => handleSkipOfflinePlayer()}>
-            Skip Offline Player
+            Skip Turn
           </SecondaryActionButton>
         </motion.span>
       ) : null}
     </ActionDock>
+    </>
   );
 }

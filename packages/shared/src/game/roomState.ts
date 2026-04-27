@@ -12,6 +12,7 @@ export interface PublicTurnState {
   activePlayerId: string;
   turnNumber: number;
   hasUsedSkipTrackWithTt: boolean;
+  turnSkipDeadlineEpochMs: number | null;
 }
 
 export interface PublicRevealState {

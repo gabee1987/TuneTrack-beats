@@ -119,6 +119,10 @@ export function getGamePageStatusCopyState({
   isCurrentPlayerTurn,
   roomState,
 }: GamePageStatusCopySelectorOptions): GamePageStatusCopySelectorResult {
+  const isActivePlayerOffline =
+    roomState?.status === "turn" &&
+    roomState.players.find((p) => p.id === activePlayerId)?.connectionStatus === "disconnected";
+
   const activeTimelineHint =
     roomState?.status !== "challenge"
       ? isCurrentPlayerTurn
@@ -141,7 +145,9 @@ export function getGamePageStatusCopyState({
     : roomState?.status === "turn"
       ? isCurrentPlayerTurn
         ? "Your turn"
-        : `${getPlayerName(activePlayerId)}'s turn`
+        : isActivePlayerOffline
+          ? `${getPlayerName(activePlayerId)} is offline`
+          : `${getPlayerName(activePlayerId)}'s turn`
       : roomState?.status === "challenge"
         ? roomState.challengeState?.originalPlayerId === currentPlayerId
           ? "Your placement is under Beat!"
@@ -157,7 +163,9 @@ export function getGamePageStatusCopyState({
     : roomState?.status === "turn"
       ? isCurrentPlayerTurn
         ? ""
-        : `${getPlayerName(activePlayerId)} is deciding where the current song belongs.`
+        : isActivePlayerOffline
+          ? `${getPlayerName(activePlayerId)} is offline. Waiting for them to reconnect.`
+          : `${getPlayerName(activePlayerId)} is deciding where the current song belongs.`
       : roomState?.status === "challenge"
         ? roomState.challengeState?.phase === "claimed"
           ? roomState.challengeState.challengerPlayerId === currentPlayerId

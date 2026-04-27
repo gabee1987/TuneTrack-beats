@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { AppRouteFallback } from "../../app/components/AppRouteFallback";
 import { usePageLayoutMode } from "../../hooks/usePageLayoutMode";
+import { GamePageReconnectToast } from "./components/GamePageReconnectToast";
 import type { GameRouteState, LoadedGamePageController } from "./GamePage.types";
 import { buildGamePageAssemblyModel } from "./hooks/buildGamePageAssemblyModel";
 import { useGamePageController } from "./hooks/useGamePageController";
@@ -46,12 +47,18 @@ export function GamePage() {
   const model = buildGamePageAssemblyModel(loadedController);
 
   return (
-    <Suspense fallback={<AppRouteFallback />}>
-      {layoutMode === "mobile" ? (
-        <GamePageMobile model={model} />
-      ) : (
-        <GamePageDesktop model={model} />
-      )}
-    </Suspense>
+    <>
+      <GamePageReconnectToast
+        currentPlayerId={controller.currentPlayerId}
+        roomState={controller.roomState}
+      />
+      <Suspense fallback={<AppRouteFallback />}>
+        {layoutMode === "mobile" ? (
+          <GamePageMobile model={model} />
+        ) : (
+          <GamePageDesktop model={model} />
+        )}
+      </Suspense>
+    </>
   );
 }

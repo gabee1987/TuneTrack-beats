@@ -15,6 +15,7 @@ interface UseGamePageCapabilityStateOptions {
     handleAwardTt: (playerId: string) => void;
     handleRemoveTt: (playerId: string) => void;
     handleCloseRoom: () => void;
+    handleKickPlayer: (playerId: string) => void;
     handleTransferHost: (playerId: string) => void;
   };
   roomState: PublicRoomState | null;
@@ -119,6 +120,7 @@ export function useGamePageCapabilityState({
         currentPlayerId,
         historyEntries,
         onAwardTt: handlers.handleAwardTt,
+        onKickPlayer: handlers.handleKickPlayer,
         onRemoveTt: handlers.handleRemoveTt,
         onTransferHost: handlers.handleTransferHost,
         roomState,

@@ -9,6 +9,7 @@ import {
   getPlaylistTracksPayloadSchema,
   importPlaylistPayloadSchema,
   joinRoomPayloadSchema,
+  kickPlayerPayloadSchema,
   placeChallengePayloadSchema,
   placeCardPayloadSchema,
   refreshSpotifyTokenPayloadSchema,
@@ -39,6 +40,7 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
     registerJoinRoomHandler(io, socket, roomService);
     registerStartGameHandler(io, socket, roomService);
     registerTransferHostHandler(io, socket, roomService);
+    registerKickPlayerHandler(io, socket, roomService);
     registerPlaceCardHandler(io, socket, roomService);
     registerClaimChallengeHandler(io, socket, roomService);
     registerPlaceChallengeHandler(io, socket, roomService);
@@ -129,6 +131,42 @@ function registerTransferHostHandler(
         HOST_TRANSFER_TARGET_NOT_FOUND: "That player is no longer in the room.",
         ONLY_HOST_CAN_TRANSFER_HOST:
           "Only the current host can transfer host controls.",
+      });
+    }
+  });
+}
+
+function registerKickPlayerHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.KickPlayer, (payload: unknown) => {
+    const parseResult = kickPlayerPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_KICK_PLAYER_PAYLOAD",
+        message: "Kick player request is invalid.",
+      });
+      return;
+    }
+
+    logger.info(
+      { socketId: socket.id, roomId: parseResult.data.roomId, targetPlayerId: parseResult.data.playerId },
+      "kick_player",
+    );
+    try {
+      const roomState = roomService.kickPlayer(parseResult.data, socket.id);
+
+      io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
+        roomState,
+      });
+    } catch (error) {
+      emitServerError(socket, error, "KICK_PLAYER_FAILED", {
+        CANNOT_KICK_YOURSELF: "You cannot kick yourself from the room.",
+        ONLY_HOST_CAN_KICK_PLAYER: "Only the host can kick players.",
+        PLAYER_NOT_FOUND: "That player is no longer in the room.",
       });
     }
   });
