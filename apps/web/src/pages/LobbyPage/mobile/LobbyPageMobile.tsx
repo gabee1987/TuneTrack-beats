@@ -76,6 +76,7 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
         )}`,
         { replace: true },
       );
+      return false;
     }
 
     return true;

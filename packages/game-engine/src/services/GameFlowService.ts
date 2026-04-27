@@ -243,7 +243,7 @@ export class GameFlowService {
     );
     const challengeWasSuccessful =
       !gameState.challengeState.originalWasCorrect && challengerPlacement.isCorrect;
-    const challengerTtChange = challengeWasSuccessful ? 1 : -1;
+    const challengerTtChange = -1;
     const nextPlayers = updatePlayerTokenCount(
       gameState.players,
       challengerPlayerId,
