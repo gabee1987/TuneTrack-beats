@@ -45,6 +45,10 @@ export default defineConfig({
     port: 5173,
     proxy: {
       // Forward socket.io traffic to the HTTP server so HTTPS pages avoid mixed-content
+      "/api": {
+        target: "http://localhost:3001",
+        changeOrigin: true,
+      },
       "/socket.io": {
         target: "http://localhost:3001",
         ws: true,

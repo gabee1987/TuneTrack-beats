@@ -127,6 +127,8 @@ function mapTrackCardToPublicTrackCard(trackCard: GameTrackCard): TrackCardPubli
     releaseYear: trackCard.releaseYear,
     ...(trackCard.genre ? { genre: trackCard.genre } : {}),
     ...(trackCard.artworkUrl ? { artworkUrl: trackCard.artworkUrl } : {}),
+    ...(trackCard.previewUrl ? { previewUrl: trackCard.previewUrl } : {}),
+    ...(trackCard.spotifyTrackUri ? { spotifyTrackUri: trackCard.spotifyTrackUri } : {}),
   };
 }
 
