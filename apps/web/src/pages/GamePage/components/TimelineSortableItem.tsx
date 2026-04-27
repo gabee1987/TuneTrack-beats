@@ -92,7 +92,7 @@ function TimelineSortableItemComponent({
         isDraggingPreviewCard && isPreview ? styles.timelineItemPreviewGhost : ""
       }`}
       style={style}
-      onClick={!isPreview && onCardInfoRequest ? () => onCardInfoRequest(card) : undefined}
+      onClick={(!isPreview || showCorrectionPreview) && onCardInfoRequest ? () => onCardInfoRequest(card) : undefined}
     >
       {isPreview ? (
         <PreviewCard

@@ -406,13 +406,15 @@ function PlaybackTabContent({ playback, roomState }: PlaybackTabContentProps) {
 
   return (
     <div className={styles.playbackSection}>
-      <div className={styles.playbackArtworkLarge}>
-        {hasTrack && showTrackDetails && currentTrackCard.artworkUrl ? (
-          <img alt="" className={styles.playbackArtworkImg} src={currentTrackCard.artworkUrl} />
-        ) : (
-          <PlaybackMusicNoteIcon />
-        )}
-      </div>
+      {hasTrack ? (
+        <div className={styles.playbackArtworkLarge}>
+          {showTrackDetails && currentTrackCard.artworkUrl ? (
+            <img alt="" className={styles.playbackArtworkImg} src={currentTrackCard.artworkUrl} />
+          ) : (
+            <PlaybackMusicNoteIcon />
+          )}
+        </div>
+      ) : null}
 
       <div className={styles.playbackControls}>
         <div className={styles.playbackTrackRow}>

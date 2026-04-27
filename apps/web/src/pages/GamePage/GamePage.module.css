@@ -736,7 +736,8 @@
 }
 
 .playbackArtworkLarge {
-  width: 100%;
+  width: min(100%, 220px);
+  align-self: center;
   aspect-ratio: 1;
   background: color-mix(in srgb, var(--color-surface-raised) 80%, transparent);
   display: flex;
