@@ -5,6 +5,7 @@ import {
 } from "@tunetrack/shared";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import { createGameMenuTabs } from "../gamePageMenuTabs";
+import { useGameHistory } from "./useGameHistory";
 import { useHostPlayback } from "./useHostPlayback";
 
 interface UseGamePageCapabilityStateOptions {
@@ -111,9 +112,12 @@ export function useGamePageCapabilityState({
     enabled: playbackEnabled,
   });
 
+  const historyEntries = useGameHistory(roomState);
+
   const menuTabs = roomState
     ? createGameMenuTabs({
         currentPlayerId,
+        historyEntries,
         onAwardTt: handlers.handleAwardTt,
         onRemoveTt: handlers.handleRemoveTt,
         onTransferHost: handlers.handleTransferHost,

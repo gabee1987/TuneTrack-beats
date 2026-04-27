@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 
 export type ThemeId = "dark" | "light";
 export type HiddenCardMode = "artwork" | "gradient";
-export type MenuTabId = "players" | "view" | "settings" | "dev" | "playback";
+export type MenuTabId = "players" | "view" | "settings" | "dev" | "playback" | "history";
 
 export interface ViewPreferences {
   showMiniStandings: boolean;

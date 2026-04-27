@@ -898,3 +898,121 @@
   color: var(--color-text-tertiary);
   letter-spacing: 0.02em;
 }
+
+/* History tab */
+.historySection {
+  display: flex;
+  flex-direction: column;
+}
+
+.historyList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.historyItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border-subtle) 40%, transparent);
+}
+
+.historyItem:last-child {
+  border-bottom: none;
+}
+
+.historyItemArtwork {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-surface-raised) 80%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+  overflow: hidden;
+}
+
+.historyItemArtworkImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.historyItemInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.historyItemTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.historyItemMeta {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.historyItemOutcome {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.historyItemPlayer {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  max-width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.historyOutcomeCircle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.historyOutcomeCorrect {
+  background: color-mix(in srgb, #22c55e 20%, transparent);
+  color: #4ade80;
+  outline: 1.5px solid color-mix(in srgb, #4ade80 40%, transparent);
+}
+
+.historyOutcomeWrong {
+  background: color-mix(in srgb, #ef4444 20%, transparent);
+  color: #f87171;
+  outline: 1.5px solid color-mix(in srgb, #f87171 40%, transparent);
+}
+
+.historyEmpty {
+  padding: 32px 0;
+  text-align: center;
+  color: var(--color-text-tertiary);
+  font-size: 14px;
+}
