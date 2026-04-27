@@ -83,8 +83,7 @@ export function getGamePageRevealTimelineState({
 }: GamePageRevealTimelineSelectorOptions): GamePageRevealTimelineSelectorResult {
   const isRevealWithAutoCorrection =
     roomState?.status === "reveal" &&
-    Boolean(roomState.revealState) &&
-    !roomState.settings.ttModeEnabled;
+    Boolean(roomState.revealState);
 
   const showCorrectPlacementPreview = Boolean(
     roomState?.status === "reveal" && roomState?.revealState?.wasCorrect,

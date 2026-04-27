@@ -59,12 +59,14 @@ export interface JoinRoomResult {
 
 export class RoomRegistry {
   private static readonly DEFAULT_RECONNECT_GRACE_PERIOD_MS = 30_000;
+  private static readonly DEFAULT_HOST_TRANSFER_GRACE_PERIOD_MS = 15_000;
 
   private readonly roomsById = new Map<RoomId, RoomRecord>();
   private readonly socketMemberships = new Map<string, SocketRoomMembership>();
   private readonly sessionMemberships = new Map<string, SessionRoomMembership>();
   private readonly challengeTimers = new ChallengeTimerManager();
   private readonly disconnectTimers = new DisconnectTimerManager();
+  private readonly hostTransferTimers = new DisconnectTimerManager();
   private roomStateChangedListener: ((roomState: PublicRoomState) => void) | null =
     null;
 
@@ -72,6 +74,8 @@ export class RoomRegistry {
     private readonly gameFlowService = new GameFlowService(),
     private readonly reconnectGracePeriodMs =
       RoomRegistry.DEFAULT_RECONNECT_GRACE_PERIOD_MS,
+    private readonly hostTransferGracePeriodMs =
+      RoomRegistry.DEFAULT_HOST_TRANSFER_GRACE_PERIOD_MS,
   ) {}
 
   public setRoomStateChangedListener(
@@ -889,6 +893,10 @@ export class RoomRegistry {
 
     const roomRecord = this.roomsById.get(roomId);
 
+    if (roomRecord?.roomState.hostId === playerId) {
+      this.hostTransferTimers.clear(roomId);
+    }
+
     if (!roomRecord) {
       this.sessionMemberships.delete(sessionId);
       throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
@@ -972,22 +980,38 @@ export class RoomRegistry {
       roomState: disconnectedRoomState,
     });
 
-    let nextRoomState = disconnectedRoomState;
-
     if (disconnectedRoomState.hostId === membership.playerId) {
-      const candidate = this.selectAutomaticHostCandidate(disconnectedRoomState);
-      if (candidate) {
-        nextRoomState = this.transferHostToPlayer(membership.roomId, candidate.id, {
-          requireConnectedTarget: true,
-        });
-      }
+      this.hostTransferTimers.schedule(
+        membership.roomId,
+        this.hostTransferGracePeriodMs,
+        () => {
+          const roomRecord = this.roomsById.get(membership.roomId);
+          if (!roomRecord) return;
+          const player = roomRecord.roomState.players.find(
+            (p) => p.id === membership.playerId,
+          );
+          if (
+            player?.connectionStatus !== "disconnected" ||
+            roomRecord.roomState.hostId !== membership.playerId
+          ) {
+            return;
+          }
+          const candidate = this.selectAutomaticHostCandidate(roomRecord.roomState);
+          if (candidate) {
+            const nextState = this.transferHostToPlayer(membership.roomId, candidate.id, {
+              requireConnectedTarget: true,
+            });
+            this.roomStateChangedListener?.(nextState);
+          }
+        },
+      );
     }
 
     return (
       this.advanceTurnIfDisconnectedActivePlayer(
         membership.roomId,
         membership.playerId,
-      ) ?? nextRoomState
+      ) ?? disconnectedRoomState
     );
   }
 
@@ -1016,6 +1040,12 @@ export class RoomRegistry {
     );
 
     if (currentHost?.connectionStatus !== "disconnected") {
+      return connectedRoomState;
+    }
+
+    // A grace-period timer is pending — the original host may still reconnect.
+    // Let the timer decide when to transfer rather than transferring immediately.
+    if (this.hostTransferTimers.has(roomId)) {
       return connectedRoomState;
     }
 

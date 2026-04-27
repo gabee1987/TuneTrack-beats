@@ -17,4 +17,8 @@ export class DisconnectTimerManager {
     clearTimeout(handle);
     this.timers.delete(sessionId);
   }
+
+  has(key: string): boolean {
+    return this.timers.has(key);
+  }
 }

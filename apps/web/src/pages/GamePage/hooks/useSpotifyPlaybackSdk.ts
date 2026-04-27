@@ -145,6 +145,7 @@ export function useSpotifyPlaybackSdk({
 
     return () => {
       disposed = true;
+      void player?.pause();
       player?.disconnect();
       playerRef.current = null;
       setIsReady(false);

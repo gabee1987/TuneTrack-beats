@@ -87,6 +87,9 @@ export function useHostPlayback({
   // Premium: auto-play when the track URI changes and the SDK player is ready
   const lastSdkUriRef = useRef<string | null>(null);
   useEffect(() => {
+    if (!enabled) lastSdkUriRef.current = null;
+  }, [enabled]);
+  useEffect(() => {
     if (!enabled || !isPremium || !sdkReady) return;
     const uri = roomState?.currentTrackCard?.spotifyTrackUri ?? null;
     if (uri && uri !== lastSdkUriRef.current) {
