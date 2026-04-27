@@ -71,8 +71,12 @@ export function TurnActionDock({
   const reduceMotion = useReducedMotion() ?? false;
   const skipCostBadgeRef = useRef<HTMLSpanElement | null>(null);
   const buyCostBadgeRef = useRef<HTMLSpanElement | null>(null);
+  const offlinePlayerId =
+    roomState.status === "challenge"
+      ? roomState.challengeState?.challengerPlayerId
+      : roomState.turn?.activePlayerId;
   const offlinePlayerName = canSkipOfflinePlayer
-    ? (roomState.players.find((p) => p.id === roomState.turn?.activePlayerId)?.displayName ?? "Player")
+    ? (roomState.players.find((p) => p.id === offlinePlayerId)?.displayName ?? "Player")
     : null;
   const turnSkipCountdown = useTurnSkipCountdown(
     canSkipOfflinePlayer ? (roomState.turn?.turnSkipDeadlineEpochMs ?? null) : null,
@@ -90,10 +94,11 @@ export function TurnActionDock({
     };
   }
 
-  if (
-    roomState.status !== "turn" ||
-    (!canUseSkipTrack && !canUseBuyCard && !canConfirmTurnPlacement && !canSkipOfflinePlayer)
-  ) {
+  const isChallengePhasSkip = roomState.status === "challenge" && canSkipOfflinePlayer;
+  if (roomState.status !== "turn" && !isChallengePhasSkip) {
+    return null;
+  }
+  if (roomState.status === "turn" && !canUseSkipTrack && !canUseBuyCard && !canConfirmTurnPlacement && !canSkipOfflinePlayer) {
     return null;
   }
 

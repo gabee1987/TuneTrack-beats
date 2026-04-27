@@ -40,10 +40,20 @@ export function useGamePageActionAvailability({
   const activePlayer = roomState?.turn?.activePlayerId
     ? roomState.players.find((player) => player.id === roomState.turn?.activePlayerId)
     : null;
+  const challengerPlayer =
+    roomState?.status === "challenge" &&
+    roomState.challengeState?.phase === "claimed" &&
+    roomState.challengeState.challengerPlayerId
+      ? roomState.players.find((p) => p.id === roomState.challengeState?.challengerPlayerId)
+      : null;
   const canSkipOfflinePlayer =
     isHost &&
-    roomState?.status === "turn" &&
-    activePlayer?.connectionStatus === "disconnected";
+    (
+      (roomState?.status === "turn" && activePlayer?.connectionStatus === "disconnected") ||
+      (roomState?.status === "challenge" &&
+        roomState.challengeState?.phase === "claimed" &&
+        challengerPlayer?.connectionStatus === "disconnected")
+    );
 
   return {
     canClaimChallenge,

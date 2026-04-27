@@ -359,15 +359,33 @@ export class RoomRegistry {
     const membership = this.getMembership(socketId);
     if (roomRecord.roomState.hostId !== membership.playerId) throw new Error("ONLY_HOST_CAN_SKIP_TURN");
     if (!roomRecord.gameState) throw new Error("GAME_NOT_STARTED");
-    if (roomRecord.gameState.phase !== "turn") throw new Error("GAME_NOT_IN_TURN_PHASE");
 
-    const activeSessionId = this.findSessionIdForPlayer(
-      payload.roomId,
-      roomRecord.gameState.turn?.activePlayerId ?? "",
-    );
-    if (activeSessionId) this.turnSkipTimers.clear(activeSessionId);
+    const phase = roomRecord.gameState.phase;
+    const isChallengeClaimedSkip =
+      phase === "challenge" &&
+      roomRecord.gameState.challengeState?.phase === "claimed";
 
-    const nextGameState = this.gameFlowService.skipOfflinePlayerTurn(roomRecord.gameState);
+    if (phase !== "turn" && !isChallengeClaimedSkip) throw new Error("GAME_NOT_IN_TURN_PHASE");
+
+    if (phase === "turn") {
+      const activeSessionId = this.findSessionIdForPlayer(
+        payload.roomId,
+        roomRecord.gameState.turn?.activePlayerId ?? "",
+      );
+      if (activeSessionId) this.turnSkipTimers.clear(activeSessionId);
+    }
+
+    if (isChallengeClaimedSkip) {
+      const challengerSessionId = this.findSessionIdForPlayer(
+        payload.roomId,
+        roomRecord.gameState.challengeState!.challengerPlayerId ?? "",
+      );
+      if (challengerSessionId) this.turnSkipTimers.clear(challengerSessionId);
+    }
+
+    const nextGameState = isChallengeClaimedSkip
+      ? this.gameFlowService.cancelClaimedChallengeForOfflineChallenger(roomRecord.gameState)
+      : this.gameFlowService.skipOfflinePlayerTurn(roomRecord.gameState);
     const nextRoomState = mapGameStateToPublicRoomState(
       roomRecord.roomState,
       nextGameState,
@@ -632,17 +650,32 @@ export class RoomRegistry {
       roomRecord.gameState.phase === "turn" &&
       roomRecord.gameState.turn?.activePlayerId === membership.playerId;
 
+    const isChallengeClaimedChallenger =
+      !!roomRecord.gameState &&
+      roomRecord.gameState.phase === "challenge" &&
+      roomRecord.gameState.challengeState?.phase === "claimed" &&
+      roomRecord.gameState.challengeState.challengerPlayerId === membership.playerId;
+
     let effectiveRoomState = disconnectedRoomState;
-    if (isActiveTurnPlayer && disconnectedRoomState.turn) {
+    if ((isActiveTurnPlayer || isChallengeClaimedChallenger) && disconnectedRoomState.turn) {
       const turnSkipDeadlineEpochMs = disconnectedAtEpochMs + this.turnSkipGracePeriodMs;
       effectiveRoomState = {
         ...disconnectedRoomState,
         turn: { ...disconnectedRoomState.turn, turnSkipDeadlineEpochMs },
       };
       this.roomsById.set(membership.roomId, { ...roomRecord, roomState: effectiveRoomState });
+    }
 
+    if (isActiveTurnPlayer) {
       this.turnSkipTimers.schedule(membership.sessionId, this.turnSkipGracePeriodMs, () => {
         const nextState = this.advanceTurnIfDisconnectedActivePlayer(membership.roomId, membership.playerId);
+        if (nextState) this.roomStateChangedListener?.(nextState);
+      });
+    }
+
+    if (isChallengeClaimedChallenger) {
+      this.turnSkipTimers.schedule(membership.sessionId, this.turnSkipGracePeriodMs, () => {
+        const nextState = this.cancelChallengeIfDisconnectedChallenger(membership.roomId, membership.playerId);
         if (nextState) this.roomStateChangedListener?.(nextState);
       });
     }
@@ -681,6 +714,27 @@ export class RoomRegistry {
     if (!nextActivePlayer) return null;
 
     const nextGameState = this.gameFlowService.advanceTurnToPlayer(roomRecord.gameState, nextActivePlayer.id);
+    const nextRoomState = mapGameStateToPublicRoomState(roomRecord.roomState, nextGameState, roomRecord.trackCardsById);
+    this.roomsById.set(roomId, { ...roomRecord, gameState: nextGameState, roomState: nextRoomState });
+    return nextRoomState;
+  }
+
+  private cancelChallengeIfDisconnectedChallenger(
+    roomId: RoomId,
+    disconnectedPlayerId: string,
+  ): PublicRoomState | null {
+    const roomRecord = this.roomsById.get(roomId);
+    if (
+      !roomRecord?.gameState ||
+      roomRecord.gameState.phase !== "challenge" ||
+      roomRecord.gameState.challengeState?.phase !== "claimed" ||
+      roomRecord.gameState.challengeState.challengerPlayerId !== disconnectedPlayerId
+    ) return null;
+
+    const challenger = roomRecord.roomState.players.find((p) => p.id === disconnectedPlayerId);
+    if (challenger?.connectionStatus !== "disconnected") return null;
+
+    const nextGameState = this.gameFlowService.cancelClaimedChallengeForOfflineChallenger(roomRecord.gameState);
     const nextRoomState = mapGameStateToPublicRoomState(roomRecord.roomState, nextGameState, roomRecord.trackCardsById);
     this.roomsById.set(roomId, { ...roomRecord, gameState: nextGameState, roomState: nextRoomState });
     return nextRoomState;

@@ -21,6 +21,12 @@ export function buildConnectedRoomState(
   playerId: string,
 ): PublicRoomState {
   const isActiveTurnPlayer = roomState.turn?.activePlayerId === playerId;
+  const isChallengeClaimedChallenger =
+    roomState.status === "challenge" &&
+    roomState.challengeState?.phase === "claimed" &&
+    roomState.challengeState.challengerPlayerId === playerId;
+  const shouldClearSkipDeadline = isActiveTurnPlayer || isChallengeClaimedChallenger;
+
   return {
     ...roomState,
     players: roomState.players.map((player) =>
@@ -28,7 +34,7 @@ export function buildConnectedRoomState(
         ? { ...player, connectionStatus: "connected", disconnectedAtEpochMs: null, reconnectExpiresAtEpochMs: null }
         : player,
     ),
-    ...(isActiveTurnPlayer && roomState.turn
+    ...(shouldClearSkipDeadline && roomState.turn
       ? { turn: { ...roomState.turn, turnSkipDeadlineEpochMs: null } }
       : {}),
   };

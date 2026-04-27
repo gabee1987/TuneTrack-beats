@@ -594,6 +594,34 @@ export class GameFlowService {
       currentTrackCard: drawNextCard(gameState.deck),
     };
   }
+
+  public cancelClaimedChallengeForOfflineChallenger(gameState: GameState): GameState {
+    if (
+      gameState.phase !== "challenge" ||
+      gameState.challengeState?.phase !== "claimed" ||
+      !gameState.turn
+    ) {
+      throw new Error("GAME_NOT_IN_CLAIMED_CHALLENGE_PHASE");
+    }
+
+    const nextActivePlayerId = findNextActivePlayerId(
+      gameState.players,
+      gameState.turn.activePlayerId,
+    );
+
+    return {
+      ...gameState,
+      phase: "turn",
+      turn: {
+        activePlayerId: nextActivePlayerId,
+        turnNumber: gameState.turn.turnNumber + 1,
+        hasUsedSkipTrackWithTt: false,
+      },
+      challengeState: null,
+      revealState: null,
+      currentTrackCard: drawNextCard(gameState.deck),
+    };
+  }
 }
 
 function findFirstValidSlotIndex(
