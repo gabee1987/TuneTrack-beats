@@ -27,12 +27,13 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
     statusDetailText,
     updateViewPreferences,
     visibleTimelineCardCount,
+    visibleTimelinePlayerId,
     visibleTimelineTtCount,
     visibleTimelineTitle,
   } = model;
   const showStatusTokenCount = roomState.settings.ttModeEnabled;
-  const isHost = roomState.hostId === currentPlayerId;
-  const isCurrentPlayerLeading = leadingPlayers[0]?.id === currentPlayerId;
+  const isHost = roomState.hostId === visibleTimelinePlayerId;
+  const isCurrentPlayerLeading = leadingPlayers[0]?.id === visibleTimelinePlayerId;
 
   return (
     <header className={styles.header}>
@@ -192,6 +193,7 @@ function areHeaderModelsEqual(
     previousModel.statusDetailText === nextModel.statusDetailText &&
     previousModel.updateViewPreferences === nextModel.updateViewPreferences &&
     previousModel.visibleTimelineCardCount === nextModel.visibleTimelineCardCount &&
+    previousModel.visibleTimelinePlayerId === nextModel.visibleTimelinePlayerId &&
     previousModel.visibleTimelineTtCount === nextModel.visibleTimelineTtCount &&
     previousModel.visibleTimelineTitle === nextModel.visibleTimelineTitle
   );

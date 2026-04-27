@@ -10,8 +10,6 @@ export function GamePageDesktop({ model }: GamePageAssemblyProps) {
       <section className={styles.panel}>
         <GamePageHeader model={model.header} />
 
-        {model.errorMessage ? <p className={styles.error}>{model.errorMessage}</p> : null}
-
         <div className={styles.layoutGrid}>
           <section className={styles.mainColumn}>
             <TimelinePanel model={model.timeline} />

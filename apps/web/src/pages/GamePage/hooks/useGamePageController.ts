@@ -44,6 +44,7 @@ export function useGamePageController({
 
   const {
     currentPlayerId,
+    errorKey,
     errorMessage,
     nowEpochMs,
     roomState,
@@ -215,6 +216,7 @@ export function useGamePageController({
     visibleTimelineCardCount: derivedState.visibleTimelineCardCount,
     visibleTimelineCards: derivedState.visibleTimelineCards,
     visibleTimelineHint: derivedState.visibleTimelineHint,
+    visibleTimelinePlayerId: derivedState.visibleTimelinePlayerId,
     visibleTimelineTtCount: derivedState.visibleTimelineTtCount,
     visibleTimelineTitle: derivedState.visibleTimelineTitle,
   };
@@ -234,6 +236,7 @@ export function useGamePageController({
     actionState,
     capabilityState,
     displayState,
+    errorKey,
     errorMessage,
     playerState,
     preferenceState,

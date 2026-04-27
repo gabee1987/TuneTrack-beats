@@ -7,7 +7,7 @@ import {
   type ServerErrorPayload,
   type StateUpdatePayload,
 } from "@tunetrack/shared";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { getSocketClient } from "../../../services/socket/socketClient";
 import type { GameRouteState } from "../GamePage.types";
@@ -34,6 +34,8 @@ export function useGameRoomConnection({
     routeState.roomState ?? null,
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorKey, setErrorKey] = useState(0);
+  const errorKeyRef = useRef(0);
   const [nowEpochMs, setNowEpochMs] = useState(() => Date.now());
 
   useEffect(() => {
@@ -63,6 +65,8 @@ export function useGameRoomConnection({
     }
 
     function handleError(payload: ServerErrorPayload) {
+      errorKeyRef.current += 1;
+      setErrorKey(errorKeyRef.current);
       setErrorMessage(payload.message);
     }
 
@@ -123,6 +127,7 @@ export function useGameRoomConnection({
 
   return {
     currentPlayerId,
+    errorKey,
     errorMessage,
     nowEpochMs,
     roomState,

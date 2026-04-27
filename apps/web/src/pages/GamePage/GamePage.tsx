@@ -2,10 +2,11 @@ import { lazy, Suspense } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { AppRouteFallback } from "../../app/components/AppRouteFallback";
 import { usePageLayoutMode } from "../../hooks/usePageLayoutMode";
-import { GamePageReconnectToast } from "./components/GamePageReconnectToast";
+import { GamePageToastStack } from "./components/GamePageToastStack";
 import type { GameRouteState, LoadedGamePageController } from "./GamePage.types";
 import { buildGamePageAssemblyModel } from "./hooks/buildGamePageAssemblyModel";
 import { useGamePageController } from "./hooks/useGamePageController";
+import { useGamePageToasts } from "./hooks/useGamePageToasts";
 import styles from "./GamePage.module.css";
 
 const GamePageMobile = lazy(async () => {
@@ -28,6 +29,12 @@ export function GamePage() {
     roomId,
     routeState,
   });
+  const toasts = useGamePageToasts({
+    currentPlayerId: controller.currentPlayerId,
+    errorKey: controller.errorKey,
+    errorMessage: controller.errorMessage,
+    roomState: controller.roomState,
+  });
   const layoutMode = usePageLayoutMode();
 
   if (!controller.roomState) {
@@ -48,10 +55,7 @@ export function GamePage() {
 
   return (
     <>
-      <GamePageReconnectToast
-        currentPlayerId={controller.currentPlayerId}
-        roomState={controller.roomState}
-      />
+      <GamePageToastStack toasts={toasts} />
       <Suspense fallback={<AppRouteFallback />}>
         {layoutMode === "mobile" ? (
           <GamePageMobile model={model} />

@@ -97,6 +97,34 @@ export function createDisclosurePanelMotion(
   };
 }
 
+export function createToastSlideMotion(
+  reduceMotion: boolean,
+): Record<"initial" | "animate" | "exit", TargetAndTransition> {
+  if (reduceMotion) {
+    return {
+      initial: { opacity: 0 },
+      animate: { opacity: 1 },
+      exit: { opacity: 0 },
+    };
+  }
+
+  return {
+    initial: { opacity: 0, y: -20, scale: 0.95 },
+    animate: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: { duration: 0.3, ease: motionEasings.emphasized },
+    },
+    exit: {
+      opacity: 0,
+      y: -14,
+      scale: 0.95,
+      transition: { duration: 0.2, ease: motionEasings.standard },
+    },
+  };
+}
+
 export function createFadeMotion(
   reduceMotion: boolean,
 ): Record<"initial" | "animate" | "exit", TargetAndTransition> {

@@ -36,7 +36,6 @@ export function buildGamePageAssemblyModel(
       showHelperLabels: controller.showHelperLabels,
       skipTrackSpendAnimationKey: controller.skipTrackSpendAnimationKey,
     },
-    errorMessage: controller.errorMessage,
     header: {
       currentPlayerId: controller.currentPlayerId,
       handleCloseRoom: controller.handleCloseRoom,
@@ -52,6 +51,7 @@ export function buildGamePageAssemblyModel(
       statusDetailText: controller.statusDetailText,
       updateViewPreferences: controller.updateViewPreferences,
       visibleTimelineCardCount: controller.visibleTimelineCardCount,
+      visibleTimelinePlayerId: controller.visibleTimelinePlayerId,
       visibleTimelineTtCount: controller.visibleTimelineTtCount,
       visibleTimelineTitle: controller.visibleTimelineTitle,
     },

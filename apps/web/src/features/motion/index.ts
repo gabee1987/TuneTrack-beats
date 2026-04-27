@@ -53,6 +53,7 @@ export {
   createPageTransitionVariants,
   createScreenTransition,
   createStandardTransition,
+  createToastSlideMotion,
   motionDurations,
   motionEasings,
 } from "./coreMotionTokens";

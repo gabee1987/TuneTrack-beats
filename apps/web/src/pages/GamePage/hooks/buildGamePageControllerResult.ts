@@ -54,6 +54,7 @@ interface BuildGamePageControllerResultOptions {
     | "statusBadgeText"
     | "statusDetailText"
   >;
+  errorKey: number;
   errorMessage: string | null;
   playerState: {
     currentPlayerId: string | null;
@@ -92,6 +93,7 @@ interface BuildGamePageControllerResultOptions {
     visibleTimelineCardCount: number;
     visibleTimelineCards: UseGamePageControllerResult["visibleTimelineCards"];
     visibleTimelineHint: string;
+    visibleTimelinePlayerId: string | null;
     visibleTimelineTtCount: number;
     visibleTimelineTitle: string;
   };
@@ -101,12 +103,14 @@ export function buildGamePageControllerResult({
   actionState,
   capabilityState,
   displayState,
+  errorKey,
   errorMessage,
   playerState,
   preferenceState,
   timelineState,
 }: BuildGamePageControllerResultOptions): UseGamePageControllerResult {
   return {
+    errorKey,
     errorMessage,
     ...actionState,
     ...capabilityState,
