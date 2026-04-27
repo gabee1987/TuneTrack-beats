@@ -7,6 +7,7 @@ import { TimelineSortableItem } from "./TimelineSortableItem";
 interface TimelinePanelItemsProps {
   isDraggingPreviewCard: boolean;
   model: TimelinePanelItemsModel;
+  onCardInfoRequest?: (card: GamePageCard) => void;
   orderedItemIds: string[];
   onPreviewCardRef: (node: HTMLElement | null) => void;
   timelineItemMap: Map<
@@ -25,6 +26,7 @@ interface TimelinePanelItemsProps {
 function TimelinePanelItemsComponent({
   isDraggingPreviewCard,
   model,
+  onCardInfoRequest,
   orderedItemIds,
   onPreviewCardRef,
   timelineItemMap,
@@ -51,6 +53,7 @@ function TimelinePanelItemsComponent({
           isPreview={item.isPreview}
           isPreviewDisabled={item.isPreviewDisabled}
           key={item.id}
+          {...(onCardInfoRequest ? { onCardInfoRequest } : {})}
           previewCardTransitionEvent={model.previewCardTransitionEvent}
           selectable={model.selectable}
           shouldAnimateCorrectPlacement={Boolean(

@@ -371,24 +371,22 @@
 .menuTransferHostButton {
   color: var(--color-text-primary);
   outline: 0;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-surface-elevated) 88%, transparent),
-      color-mix(in srgb, #071018 90%, transparent)
-    );
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-surface-elevated) 88%, transparent),
+    color-mix(in srgb, #071018 90%, transparent)
+  );
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, white 8%, transparent),
     0 0 0 1px color-mix(in srgb, white 22%, var(--color-border-subtle));
 }
 
 .menuTransferHostButton:not(:disabled):hover {
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-surface-elevated) 96%, transparent),
-      color-mix(in srgb, #091520 92%, transparent)
-    );
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-surface-elevated) 96%, transparent),
+    color-mix(in srgb, #091520 92%, transparent)
+  );
 }
 
 .menuTokenActionContent {
@@ -754,36 +752,92 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  margin-bottom: 8px;
 }
 
 .playbackControls {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 18px 16px 16px;
+  padding: 12px 0px;
+}
+
+.playbackTrackRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.playbackCircleBtn {
+  flex: 0 0 auto;
+  /* align-self: stretch; */
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: none;
+  background: #1db954;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    transform 0.1s;
+}
+
+.playbackCircleBtn:hover:not(:disabled) {
+  background: #1ed760;
+}
+
+.playbackCircleBtn:active:not(:disabled) {
+  transform: scale(0.93);
+}
+
+.playbackCircleBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.playbackMeta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.playbackMetaRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
 }
 
 .playbackHiddenNote {
   margin: 0;
   font-size: 13px;
   color: var(--color-text-secondary);
-  text-align: center;
   padding: 2px 0;
-}
-
-.playbackMeta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
 }
 
 .playbackTitle {
   margin: 0;
-  font-size: 18px;
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.25;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playbackAlbum {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -791,7 +845,7 @@
 
 .playbackArtist {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--color-text-secondary);
   overflow: hidden;
@@ -799,19 +853,19 @@
   white-space: nowrap;
 }
 
-.playbackAlbumLine {
-  margin: 2px 0 0;
+.playbackYear {
+  margin: 0;
+  flex-shrink: 0;
   font-size: 12px;
+  font-weight: 500;
   color: var(--color-text-tertiary);
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .playbackProgressBlock {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 12px;
 }
 
 .playbackSlider {
@@ -820,7 +874,7 @@
   width: 100%;
   height: 4px;
   border-radius: 2px;
-  background: var(--color-surface-raised);
+  /* background: var(--color-surface-raised); */
   outline: none;
   cursor: pointer;
   accent-color: #1db954;
@@ -829,8 +883,8 @@
 .playbackSlider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: #1db954;
   cursor: pointer;
@@ -842,35 +896,4 @@
   font-size: 11px;
   color: var(--color-text-tertiary);
   letter-spacing: 0.02em;
-}
-
-.playbackPlayBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 12px;
-  border-radius: 50px;
-  border: none;
-  background: #1db954;
-  color: #000;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  letter-spacing: 0.01em;
-  transition: background 0.15s, transform 0.1s;
-}
-
-.playbackPlayBtn:hover:not(:disabled) {
-  background: #1ed760;
-}
-
-.playbackPlayBtn:active:not(:disabled) {
-  transform: scale(0.97);
-}
-
-.playbackPlayBtn:disabled {
-  opacity: 0.4;
-  cursor: default;
 }

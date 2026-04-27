@@ -17,10 +17,12 @@ import {
   timelineCelebrationTransitionContract,
 } from "../../../features/motion";
 import type {
+  GamePageCard,
   TimelinePanelDragModel,
   TimelinePanelItemsModel,
   TimelinePanelModel,
 } from "../GamePage.types";
+import { SongInfoModal } from "./SongInfoModal";
 import { DRAG_ACTIVATION_DISTANCE_PX } from "../gamePage.constants";
 import { useTimelinePreviewTransition } from "../hooks/transitions/useTimelinePreviewTransition";
 import { useTimelinePanelCelebrationState } from "../hooks/useTimelinePanelCelebrationState";
@@ -79,6 +81,7 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
   const previewCard = dragModel.previewCard;
   const previewSlotIndex = dragModel.previewSlotIndex;
 
+  const [cardForInfo, setCardForInfo] = useState<GamePageCard | null>(null);
   const timelineRowRef = useRef<HTMLDivElement | null>(null);
   const previewCardElementRef = useRef<HTMLElement | null>(null);
   const lastCorrectPlacementAnimationKeyRef = useRef<number | null>(null);
@@ -198,6 +201,7 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
           <TimelinePanelItems
             isDraggingPreviewCard={isDraggingPreviewCard}
             model={itemsModel}
+            onCardInfoRequest={(card) => setCardForInfo(card)}
             orderedItemIds={orderedItemIds}
             onPreviewCardRef={(node) => {
               previewCardElementRef.current = node;
@@ -234,6 +238,7 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
         showDevGenreInfo={model.render.showDevGenreInfo}
         theme={model.render.theme}
       />
+      <SongInfoModal card={cardForInfo} onClose={() => setCardForInfo(null)} />
     </section>
   );
 }

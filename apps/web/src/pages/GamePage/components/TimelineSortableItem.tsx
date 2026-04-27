@@ -24,6 +24,7 @@ interface TimelineSortableItemProps {
   isOriginalSlot: boolean;
   isPreview: boolean;
   isPreviewDisabled: boolean;
+  onCardInfoRequest?: (card: GamePageCard) => void;
   previewCardRef?: (node: HTMLElement | null) => void;
   previewCardTransitionEvent: PreviewCardTransitionEvent | null;
   selectable: boolean;
@@ -47,6 +48,7 @@ function TimelineSortableItemComponent({
   isOriginalSlot,
   isPreview,
   isPreviewDisabled,
+  onCardInfoRequest,
   previewCardRef,
   previewCardTransitionEvent,
   selectable,
@@ -90,6 +92,7 @@ function TimelineSortableItemComponent({
         isDraggingPreviewCard && isPreview ? styles.timelineItemPreviewGhost : ""
       }`}
       style={style}
+      onClick={!isPreview && onCardInfoRequest ? () => onCardInfoRequest(card) : undefined}
     >
       {isPreview ? (
         <PreviewCard

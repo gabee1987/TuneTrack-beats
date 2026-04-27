@@ -44,11 +44,7 @@ interface TokenAdjustButtonsProps {
   onRemoveTt: () => void;
 }
 
-function TokenAdjustButtons({
-  currentTokenCount,
-  onAwardTt,
-  onRemoveTt,
-}: TokenAdjustButtonsProps) {
+function TokenAdjustButtons({ currentTokenCount, onAwardTt, onRemoveTt }: TokenAdjustButtonsProps) {
   const reduceMotion = useReducedMotion() ?? false;
   const animationKeyRef = useRef(0);
   const tokenActionsRef = useRef<HTMLDivElement | null>(null);
@@ -95,10 +91,7 @@ function TokenAdjustButtons({
       originY,
       key: animationKeyRef.current,
     };
-    setFlyAnimations((currentAnimations) => [
-      ...currentAnimations,
-      nextFlyAnimation,
-    ]);
+    setFlyAnimations((currentAnimations) => [...currentAnimations, nextFlyAnimation]);
   }
 
   function clearFlyAnimation(animationKey: number) {
@@ -122,7 +115,8 @@ function TokenAdjustButtons({
         type="button"
       >
         <span className={styles.menuTokenActionContent} ref={addButtonContentRef}>
-          +1<TtTokenIcon className={styles.menuTokenIcon} />
+          +1
+          <TtTokenIcon className={styles.menuTokenIcon} />
         </span>
       </button>
       <button
@@ -138,7 +132,8 @@ function TokenAdjustButtons({
         type="button"
       >
         <span className={styles.menuTokenActionContent} ref={removeButtonContentRef}>
-          -1<TtTokenIcon className={styles.menuTokenIcon} />
+          -1
+          <TtTokenIcon className={styles.menuTokenIcon} />
         </span>
       </button>
       {flyAnimations.map((flyAnimation) => (
@@ -157,10 +152,7 @@ function TokenAdjustButtons({
             initial="initial"
             onAnimationComplete={() => clearFlyAnimation(flyAnimation.key)}
             transition={createMenuTokenAdjustFlyoutTransition(reduceMotion)}
-            variants={createMenuTokenAdjustFlyoutVariants(
-              reduceMotion,
-              flyAnimation.direction,
-            )}
+            variants={createMenuTokenAdjustFlyoutVariants(reduceMotion, flyAnimation.direction)}
           >
             <motion.span
               animate="animate"
@@ -282,20 +274,12 @@ function GameMenuPlayerItem({
                   </Badge>
                 ) : null}
                 {isDisconnected ? (
-                  <Badge
-                    className={styles.menuPlayerBadge}
-                    size="sm"
-                    variant="mutedSurface"
-                  >
+                  <Badge className={styles.menuPlayerBadge} size="sm" variant="mutedSurface">
                     Offline
                   </Badge>
                 ) : null}
                 {player.id === roomState.turn?.activePlayerId ? (
-                  <Badge
-                    className={styles.menuPlayerBadge}
-                    size="sm"
-                    variant="mutedSurface"
-                  >
+                  <Badge className={styles.menuPlayerBadge} size="sm" variant="mutedSurface">
                     Turn
                   </Badge>
                 ) : null}
@@ -375,12 +359,10 @@ function GameMenuPlayerItem({
             x
           </button>
         </div>
-        <h2 className={styles.transferConfirmTitle}>
-          Transfer host controls?
-        </h2>
+        <h2 className={styles.transferConfirmTitle}>Transfer host controls?</h2>
         <p className={styles.transferConfirmBody}>
-          {player.displayName} will receive host controls immediately. You will
-          stay in the game as a regular player.
+          {player.displayName} will receive host controls immediately. You will stay in the game as
+          a regular player.
         </p>
         <div className={styles.transferConfirmActions}>
           <button
@@ -424,43 +406,51 @@ function PlaybackTabContent({ playback, roomState }: PlaybackTabContentProps) {
 
   return (
     <div className={styles.playbackSection}>
-      {/* Artwork area — always shown when a track is loaded, hidden when no track yet */}
       <div className={styles.playbackArtworkLarge}>
         {hasTrack && showTrackDetails && currentTrackCard.artworkUrl ? (
-          <img
-            alt=""
-            className={styles.playbackArtworkImg}
-            src={currentTrackCard.artworkUrl}
-          />
+          <img alt="" className={styles.playbackArtworkImg} src={currentTrackCard.artworkUrl} />
         ) : (
           <PlaybackMusicNoteIcon />
         )}
       </div>
 
       <div className={styles.playbackControls}>
-        {/* Metadata — visible only when there's a track and it's been revealed */}
-        {hasTrack && showTrackDetails ? (
+        <div className={styles.playbackTrackRow}>
+          {hasTrack ? (
+            <button
+              aria-label={isPlaying ? "Pause" : "Play"}
+              className={styles.playbackCircleBtn}
+              disabled={!isReady}
+              onClick={isPlaying ? pause : resume}
+              type="button"
+            >
+              {isPlaying ? <PlaybackPauseIcon /> : <PlaybackPlayIcon />}
+            </button>
+          ) : null}
           <div className={styles.playbackMeta}>
-            <p className={styles.playbackTitle}>{currentTrackCard.title}</p>
-            <p className={styles.playbackArtist}>{currentTrackCard.artist}</p>
-            {currentTrackCard.albumTitle ? (
-              <p className={styles.playbackAlbumLine}>
-                {currentTrackCard.albumTitle}
-                {currentTrackCard.releaseYear !== undefined
-                  ? ` · ${currentTrackCard.releaseYear}`
-                  : ""}
+            {hasTrack && showTrackDetails ? (
+              <>
+                <div className={styles.playbackMetaRow}>
+                  <p className={styles.playbackTitle}>{currentTrackCard.title}</p>
+                  {currentTrackCard.releaseYear !== undefined ? (
+                    <p className={styles.playbackYear}>{currentTrackCard.releaseYear}</p>
+                  ) : null}
+                </div>
+                <p className={styles.playbackArtist}>{currentTrackCard.artist}</p>
+                {currentTrackCard.albumTitle ? (
+                  <p className={styles.playbackAlbum}>{currentTrackCard.albumTitle}</p>
+                ) : null}
+              </>
+            ) : (
+              <p className={styles.playbackHiddenNote}>
+                {hasTrack
+                  ? "Song details are hidden until the card is revealed."
+                  : "No song loaded yet."}
               </p>
-            ) : null}
+            )}
           </div>
-        ) : hasTrack ? (
-          <p className={styles.playbackHiddenNote}>
-            Song details are hidden until the card is revealed.
-          </p>
-        ) : (
-          <p className={styles.playbackHiddenNote}>No song loaded yet.</p>
-        )}
+        </div>
 
-        {/* Progress slider — shown once the SDK reports duration */}
         {hasTrack && duration > 0 ? (
           <div className={styles.playbackProgressBlock}>
             <input
@@ -479,20 +469,6 @@ function PlaybackTabContent({ playback, roomState }: PlaybackTabContentProps) {
             </div>
           </div>
         ) : null}
-
-        {/* Play / pause — only shown when a track is active */}
-        {hasTrack ? (
-          <button
-            aria-label={isPlaying ? "Pause" : "Play"}
-            className={styles.playbackPlayBtn}
-            disabled={!isReady}
-            onClick={isPlaying ? pause : resume}
-            type="button"
-          >
-            {isPlaying ? <PlaybackPauseIcon /> : <PlaybackPlayIcon />}
-            <span>{isPlaying ? "Pause" : "Play"}</span>
-          </button>
-        ) : null}
       </div>
     </div>
   );
@@ -500,7 +476,7 @@ function PlaybackTabContent({ playback, roomState }: PlaybackTabContentProps) {
 
 function PlaybackPlayIcon() {
   return (
-    <svg aria-hidden="true" fill="currentColor" height={16} viewBox="0 0 24 24" width={16}>
+    <svg aria-hidden="true" fill="currentColor" height={20} viewBox="0 0 24 24" width={32}>
       <path d="M8 5v14l11-7z" />
     </svg>
   );
@@ -508,7 +484,7 @@ function PlaybackPlayIcon() {
 
 function PlaybackPauseIcon() {
   return (
-    <svg aria-hidden="true" fill="currentColor" height={16} viewBox="0 0 24 24" width={16}>
+    <svg aria-hidden="true" fill="currentColor" height={20} viewBox="0 0 24 24" width={32}>
       <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
     </svg>
   );
@@ -560,6 +536,15 @@ export function createGameMenuTabs({
         </div>
       ),
     },
+    ...(hasPlaybackTab
+      ? [
+          {
+            id: "playback" as const,
+            label: "Playback",
+            content: <PlaybackTabContent playback={playback!} roomState={roomState} />,
+          },
+        ]
+      : []),
     {
       id: "view",
       label: "View",
@@ -574,8 +559,8 @@ export function createGameMenuTabs({
       label: "Theme",
       content: (
         <p className={styles.menuPlaceholder}>
-          Theme and hidden-card preferences are available here while the final
-          game shell is being built.
+          Theme and hidden-card preferences are available here while the final game shell is being
+          built.
         </p>
       ),
     },
@@ -586,19 +571,10 @@ export function createGameMenuTabs({
             label: "Diagnostics",
             content: (
               <p className={styles.menuPlaceholder}>
-                Developer-only current-card helpers will move into this tab as
-                the main game surface gets cleaned up.
+                Developer-only current-card helpers will move into this tab as the main game surface
+                gets cleaned up.
               </p>
             ),
-          },
-        ]
-      : []),
-    ...(hasPlaybackTab
-      ? [
-          {
-            id: "playback" as const,
-            label: "Playback",
-            content: <PlaybackTabContent playback={playback!} roomState={roomState} />,
           },
         ]
       : []),
