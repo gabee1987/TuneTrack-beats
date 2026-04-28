@@ -30,8 +30,9 @@
 
 .header {
   display: flex;
-  justify-content: flex-end;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   flex-shrink: 0;
 }
 
@@ -46,6 +47,7 @@
   background: color-mix(in srgb, white 8%, transparent);
   color: var(--color-text-primary);
   cursor: pointer;
+  margin-left: auto;
 }
 
 .artwork {

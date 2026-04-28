@@ -67,6 +67,9 @@ export function SongInfoModal({ card, onClose }: SongInfoModalProps) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className={styles.header}>
+              {releaseYear !== undefined ? (
+                <span className={styles.year}>{releaseYear}</span>
+              ) : null}
               <button
                 aria-label={t("game.songInfo.close")}
                 className={styles.closeButton}
@@ -86,9 +89,6 @@ export function SongInfoModal({ card, onClose }: SongInfoModalProps) {
             <div className={styles.info}>
               <div className={styles.titleRow}>
                 <h2 className={styles.title}>{card.title}</h2>
-                {releaseYear !== undefined ? (
-                  <span className={styles.year}>{releaseYear}</span>
-                ) : null}
               </div>
               <p className={styles.artist}>{card.artist}</p>
               {card.albumTitle ? <p className={styles.album}>{card.albumTitle}</p> : null}
