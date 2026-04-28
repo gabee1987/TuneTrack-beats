@@ -33,6 +33,10 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
   const showStatusTokenCount = roomState.settings.ttModeEnabled;
   const isHost = roomState.hostId === visibleTimelinePlayerId;
   const isCurrentPlayerLeading = leadingPlayers[0]?.id === visibleTimelinePlayerId;
+  const visibleTimelineCardCountLabel = t("game.header.cardCount", {
+    count: visibleTimelineCardCount,
+    plural: visibleTimelineCardCount === 1 ? "" : "s",
+  });
 
   return (
     <header className={styles.header}>
@@ -67,40 +71,69 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
             ) : null}
             <span className={styles.statusBadgeTextGroup}>
               <span className={styles.statusBadgeDefault}>{statusBadgeText}</span>
-              <span className={styles.statusBadgeTimeline}>
-                {visibleTimelineTitle} ·{" "}
-                {t("game.header.cardCount", {
-                  count: visibleTimelineCardCount,
-                  plural: visibleTimelineCardCount === 1 ? "" : "s",
-                })}
-              </span>
+              <span className={styles.statusBadgeTimeline}>{visibleTimelineTitle}</span>
             </span>
             {isHost ? (
               <span className={styles.statusBadgeHostText}>{t("gameMenu.host")}</span>
             ) : null}
-            {showStatusTokenCount ? (
-              <span className={styles.statusBadgeTokenCount}>
-                <TtTokenAmount amount={visibleTimelineTtCount} />
+            <span className={styles.statusBadgeCounters}>
+              <span
+                aria-label={visibleTimelineCardCountLabel}
+                className={styles.statusBadgeCounter}
+              >
+                <span aria-hidden="true">{visibleTimelineCardCount}</span>
+                <img
+                  alt=""
+                  aria-hidden="true"
+                  className={styles.statusBadgeCardIcon}
+                  draggable={false}
+                  src="/card.png"
+                />
               </span>
-            ) : null}
+              {showStatusTokenCount ? (
+                <>
+                  <span aria-hidden="true" className={styles.statusBadgeCounterSeparator}>
+                    ·
+                  </span>
+                  <TtTokenAmount amount={visibleTimelineTtCount} />
+                </>
+              ) : null}
+            </span>
           </div>
           {showMiniStandings ? (
             <div className={styles.headerLeadersStrip}>
-              {leadingPlayers.map((player, index) => (
-                <article className={styles.headerLeaderChip} key={player.id}>
-                  <span className={styles.headerLeaderRank}>#{index + 1}</span>
-                  <strong className={styles.headerLeaderName}>{player.displayName}</strong>
-                  <span className={styles.headerLeaderMeta}>
-                    {roomState.timelines[player.id]?.length ?? 0}
-                    {roomState.settings.ttModeEnabled ? (
-                      <>
-                        {" · "}
-                        <TtTokenAmount amount={player.ttTokenCount} />
-                      </>
-                    ) : null}
-                  </span>
-                </article>
-              ))}
+              {leadingPlayers.map((player, index) => {
+                const cardCount = roomState.timelines[player.id]?.length ?? 0;
+                const cardCountLabel = t("game.header.cardCount", {
+                  count: cardCount,
+                  plural: cardCount === 1 ? "" : "s",
+                });
+
+                return (
+                  <article className={styles.headerLeaderChip} key={player.id}>
+                    <span className={styles.headerLeaderRank}>#{index + 1}</span>
+                    <strong className={styles.headerLeaderName}>{player.displayName}</strong>
+                    <span className={styles.headerLeaderMeta}>
+                      <span aria-label={cardCountLabel} className={styles.headerLeaderCardCount}>
+                        <span aria-hidden="true">{cardCount}</span>
+                        <img
+                          alt=""
+                          aria-hidden="true"
+                          className={styles.headerLeaderCardIcon}
+                          draggable={false}
+                          src="/card.png"
+                        />
+                      </span>
+                      {roomState.settings.ttModeEnabled ? (
+                        <>
+                          <span aria-hidden="true">·</span>
+                          <TtTokenAmount amount={player.ttTokenCount} />
+                        </>
+                      ) : null}
+                    </span>
+                  </article>
+                );
+              })}
             </div>
           ) : null}
           <button

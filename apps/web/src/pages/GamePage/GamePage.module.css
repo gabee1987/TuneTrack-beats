@@ -112,7 +112,7 @@
 }
 
 .statusBadgeLeading {
-  padding-left: 20px;
+  padding-left: 14px;
 }
 
 .statusBadgeCrown {
@@ -129,19 +129,39 @@
 }
 
 .statusBadgeTextGroup {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
-.statusBadgeTokenCount {
+.statusBadgeCounters {
   display: inline-flex;
   align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
   flex: 0 0 auto;
-  /* padding: 4px 8px; */
-  border-radius: 999px;
-  /* background: color-mix(in srgb, var(--color-surface) 46%, transparent); */
   color: var(--color-text-primary);
-  font-size: 16px;
-  /* box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent); */
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.statusBadgeCounter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1;
+}
+
+.statusBadgeCardIcon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.statusBadgeCounterSeparator {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1;
 }
 
 .statusBadgeHostText {
@@ -199,8 +219,25 @@
 }
 
 .headerLeaderMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   color: var(--color-text-secondary);
   font-size: 11px;
+}
+
+.headerLeaderCardCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1;
+}
+
+.headerLeaderCardIcon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  flex: 0 0 auto;
 }
 
 .menuInfoSection {
@@ -348,16 +385,22 @@
 
 .menuActionButton,
 .menuDangerButton {
+  container-type: inline-size;
   border: 0;
   border-radius: 999px;
   min-height: 44px;
   padding: 10px 14px;
   color: var(--color-text-primary);
+  font-size: clamp(10px, 9cqw, 14px);
   font-weight: 800;
   letter-spacing: 0.01em;
+  line-height: 1.08;
   cursor: pointer;
   outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 84%, transparent);
   box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .menuActionButton {
@@ -414,6 +457,11 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .menuActionButton:disabled {
@@ -518,6 +566,7 @@
   font-size: 18px;
   font-weight: 900;
   line-height: 1;
+  overflow: hidden;
   cursor: pointer;
 }
 
@@ -714,7 +763,7 @@
   }
 
   .statusBadgeLeading {
-    padding-left: 22px;
+    padding-left: 14px;
   }
 
   .statusBadgeTextGroup {

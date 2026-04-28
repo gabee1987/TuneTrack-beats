@@ -26,7 +26,13 @@
 .button {
   border: 0;
   border-radius: var(--radius-button);
+  min-width: 0;
+  font-size: clamp(11px, 2.8vw, 16px);
   font-weight: 800;
+  line-height: 1.08;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   cursor: pointer;
 }
 

@@ -104,6 +104,9 @@ export function TurnActionDock({
   if (roomState.status === "turn" && !canUseSkipTrack && !canUseBuyCard && !canConfirmTurnPlacement && !canSkipOfflinePlayer) {
     return null;
   }
+  const hasTurnSecondaryActions = canUseSkipTrack || canUseBuyCard;
+  const useStackedTurnActions =
+    roomState.status === "turn" && canConfirmTurnPlacement && hasTurnSecondaryActions;
 
   return (
     <>
@@ -122,88 +125,164 @@ export function TurnActionDock({
           ) : null}
         </div>
       ) : null}
-      <ActionDock>
-      <MotionPresence mode="popLayout">
-        {canUseSkipTrack ? (
-          <motion.span
-            animate="animate"
-            className={styles.actionButtonMotionWrap}
-            exit="exit"
-            initial="initial"
-            key="skip-track"
-            layout="position"
-            style={{ originX: 0.5 }}
-            transition={createLayoutTransition(reduceMotion)}
-            variants={createActionButtonExitMotion(reduceMotion)}
-          >
-            <SecondaryActionButton
-              onClick={(event) => {
-                const origin = resolveSpendOrigin(
-                  event.currentTarget,
-                  skipCostBadgeRef.current,
-                );
-                onTokenSpendAnimationStart?.({
-                  amount: -SKIP_TRACK_TT_COST,
-                  ...origin,
-                });
-                handleSkipTrackWithTt();
-              }}
-              ttCost={SKIP_TRACK_TT_COST}
-              ttCostBadgeRef={skipCostBadgeRef}
+      <ActionDock className={useStackedTurnActions ? styles.floatingActionDockStacked : ""}>
+        {useStackedTurnActions ? (
+          <>
+            <div className={styles.floatingActionSecondaryRow}>
+              <MotionPresence mode="popLayout">
+                {canUseSkipTrack ? (
+                  <motion.span
+                    animate="animate"
+                    className={styles.actionButtonMotionWrap}
+                    exit="exit"
+                    initial="initial"
+                    key="skip-track"
+                    layout="position"
+                    style={{ originX: 0.5 }}
+                    transition={createLayoutTransition(reduceMotion)}
+                    variants={createActionButtonExitMotion(reduceMotion)}
+                  >
+                    <SecondaryActionButton
+                      onClick={(event) => {
+                        const origin = resolveSpendOrigin(
+                          event.currentTarget,
+                          skipCostBadgeRef.current,
+                        );
+                        onTokenSpendAnimationStart?.({
+                          amount: -SKIP_TRACK_TT_COST,
+                          ...origin,
+                        });
+                        handleSkipTrackWithTt();
+                      }}
+                      ttCost={SKIP_TRACK_TT_COST}
+                      ttCostBadgeRef={skipCostBadgeRef}
+                    >
+                      {t("game.controls.skip")}
+                    </SecondaryActionButton>
+                  </motion.span>
+                ) : null}
+              </MotionPresence>
+              {canUseBuyCard ? (
+                <motion.span
+                  className={styles.actionButtonMotionWrap}
+                  layout="position"
+                  transition={createLayoutTransition(reduceMotion)}
+                >
+                  <SecondaryActionButton
+                    onClick={(event) => {
+                      const origin = resolveSpendOrigin(
+                        event.currentTarget,
+                        buyCostBadgeRef.current,
+                      );
+                      onTokenSpendAnimationStart?.({
+                        amount: -BUY_TIMELINE_CARD_TT_COST,
+                        ...origin,
+                      });
+                      handleBuyTimelineCardWithTt();
+                    }}
+                    ttCost={BUY_TIMELINE_CARD_TT_COST}
+                    ttCostBadgeRef={buyCostBadgeRef}
+                  >
+                    {t("game.controls.buy")}
+                  </SecondaryActionButton>
+                </motion.span>
+              ) : null}
+            </div>
+            <motion.span
+              className={`${styles.actionButtonMotionWrap} ${styles.actionButtonMotionWrapFull}`}
+              layout="position"
+              transition={createLayoutTransition(reduceMotion)}
             >
-              {t("game.controls.skip")}
-            </SecondaryActionButton>
-          </motion.span>
-        ) : null}
-      </MotionPresence>
-      {canUseBuyCard ? (
-        <motion.span
-          className={styles.actionButtonMotionWrap}
-          layout="position"
-          transition={createLayoutTransition(reduceMotion)}
-        >
-          <SecondaryActionButton
-            onClick={(event) => {
-              const origin = resolveSpendOrigin(
-                event.currentTarget,
-                buyCostBadgeRef.current,
-              );
-              onTokenSpendAnimationStart?.({
-                amount: -BUY_TIMELINE_CARD_TT_COST,
-                ...origin,
-              });
-              handleBuyTimelineCardWithTt();
-            }}
-            ttCost={BUY_TIMELINE_CARD_TT_COST}
-            ttCostBadgeRef={buyCostBadgeRef}
-          >
-            {t("game.controls.buy")}
-          </SecondaryActionButton>
-        </motion.span>
-      ) : null}
-      {canConfirmTurnPlacement ? (
-        <motion.span
-          className={styles.actionButtonMotionWrap}
-          layout="position"
-          transition={createLayoutTransition(reduceMotion)}
-        >
-          <PrimaryActionButton onClick={() => handlePlaceCard()}>
-            {t("game.controls.confirm")}
-          </PrimaryActionButton>
-        </motion.span>
-      ) : null}
-      {canSkipOfflinePlayer ? (
-        <motion.span
-          className={styles.actionButtonMotionWrap}
-          layout="position"
-          transition={createLayoutTransition(reduceMotion)}
-        >
-          <SecondaryActionButton onClick={() => handleSkipOfflinePlayer()}>
-            {t("game.controls.skipTurn")}
-          </SecondaryActionButton>
-        </motion.span>
-      ) : null}
-    </ActionDock>
+              <PrimaryActionButton onClick={() => handlePlaceCard()}>
+                {t("game.controls.confirm")}
+              </PrimaryActionButton>
+            </motion.span>
+          </>
+        ) : (
+          <>
+            <MotionPresence mode="popLayout">
+              {canUseSkipTrack ? (
+                <motion.span
+                  animate="animate"
+                  className={styles.actionButtonMotionWrap}
+                  exit="exit"
+                  initial="initial"
+                  key="skip-track"
+                  layout="position"
+                  style={{ originX: 0.5 }}
+                  transition={createLayoutTransition(reduceMotion)}
+                  variants={createActionButtonExitMotion(reduceMotion)}
+                >
+                  <SecondaryActionButton
+                    onClick={(event) => {
+                      const origin = resolveSpendOrigin(
+                        event.currentTarget,
+                        skipCostBadgeRef.current,
+                      );
+                      onTokenSpendAnimationStart?.({
+                        amount: -SKIP_TRACK_TT_COST,
+                        ...origin,
+                      });
+                      handleSkipTrackWithTt();
+                    }}
+                    ttCost={SKIP_TRACK_TT_COST}
+                    ttCostBadgeRef={skipCostBadgeRef}
+                  >
+                    {t("game.controls.skip")}
+                  </SecondaryActionButton>
+                </motion.span>
+              ) : null}
+            </MotionPresence>
+            {canUseBuyCard ? (
+              <motion.span
+                className={styles.actionButtonMotionWrap}
+                layout="position"
+                transition={createLayoutTransition(reduceMotion)}
+              >
+                <SecondaryActionButton
+                  onClick={(event) => {
+                    const origin = resolveSpendOrigin(
+                      event.currentTarget,
+                      buyCostBadgeRef.current,
+                    );
+                    onTokenSpendAnimationStart?.({
+                      amount: -BUY_TIMELINE_CARD_TT_COST,
+                      ...origin,
+                    });
+                    handleBuyTimelineCardWithTt();
+                  }}
+                  ttCost={BUY_TIMELINE_CARD_TT_COST}
+                  ttCostBadgeRef={buyCostBadgeRef}
+                >
+                  {t("game.controls.buy")}
+                </SecondaryActionButton>
+              </motion.span>
+            ) : null}
+            {canConfirmTurnPlacement ? (
+              <motion.span
+                className={styles.actionButtonMotionWrap}
+                layout="position"
+                transition={createLayoutTransition(reduceMotion)}
+              >
+                <PrimaryActionButton onClick={() => handlePlaceCard()}>
+                  {t("game.controls.confirm")}
+                </PrimaryActionButton>
+              </motion.span>
+            ) : null}
+            {canSkipOfflinePlayer ? (
+              <motion.span
+                className={styles.actionButtonMotionWrap}
+                layout="position"
+                transition={createLayoutTransition(reduceMotion)}
+              >
+                <SecondaryActionButton onClick={() => handleSkipOfflinePlayer()}>
+                  {t("game.controls.skipTurn")}
+                </SecondaryActionButton>
+              </motion.span>
+            ) : null}
+          </>
+        )}
+      </ActionDock>
     </>
   );
 }

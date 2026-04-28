@@ -10,15 +10,16 @@ import styles from "./GamePageActionPanels.module.css";
 
 interface ActionDockProps {
   children: React.ReactNode;
+  className?: string | undefined;
 }
 
-export function ActionDock({ children }: ActionDockProps) {
+export function ActionDock({ children, className }: ActionDockProps) {
   const reduceMotion = useReducedMotion() ?? false;
 
   return (
     <motion.div
       animate="animate"
-      className={styles.floatingActionDock}
+      className={`${styles.floatingActionDock}${className ? ` ${className}` : ""}`}
       exit="exit"
       initial="initial"
       layout

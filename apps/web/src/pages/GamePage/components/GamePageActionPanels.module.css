@@ -229,9 +229,23 @@
   overflow: visible;
 }
 
+.floatingActionDockStacked {
+  width: min(100%, 420px);
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.floatingActionSecondaryRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+
 .floatingPrimaryButton,
 .floatingSecondaryButton {
   position: relative;
+  container-type: inline-size;
   border: 0;
   border-radius: 999px;
   padding: 12px 12px;
@@ -241,14 +255,26 @@
   gap: 8px;
   min-width: 94px;
   color: var(--color-text-on-accent);
+  font-size: clamp(11px, 8cqw, 16px);
   font-weight: 800;
+  line-height: 1.05;
   cursor: pointer;
   box-shadow: var(--shadow-floating-action);
-  overflow: visible;
+  overflow: hidden;
 }
 
 .actionButtonMotionWrap {
   display: flex;
+  min-width: 0;
+}
+
+.actionButtonMotionWrapFull {
+  width: 100%;
+}
+
+.floatingActionDockStacked .floatingPrimaryButton,
+.floatingActionDockStacked .floatingSecondaryButton {
+  width: 100%;
   min-width: 0;
 }
 
@@ -262,7 +288,12 @@
 }
 
 .actionButtonLabel {
+  flex: 1 1 auto;
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ttCostBadge {
@@ -274,7 +305,7 @@
   border-radius: 999px;
   /* background: color-mix(in srgb, var(--color-text-on-accent) 18%, transparent); */
   color: color-mix(in srgb, var(--color-text-on-accent) 86%, transparent);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 900;
   letter-spacing: 0.04em;
   line-height: 1;
@@ -391,12 +422,21 @@
     z-index: 900;
     margin-top: 0;
     padding: 8px;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--color-surface) 62%, transparent);
-    border: 1px solid color-mix(in srgb, var(--color-border-subtle) 78%, transparent);
-    backdrop-filter: blur(18px) saturate(1.08);
-    -webkit-backdrop-filter: blur(18px) saturate(1.08);
-    box-shadow: 0 18px 44px rgb(0 0 0 / 42%);
+    /* border-radius: 999px; */
+    /* background: color-mix(in srgb, var(--color-surface) 62%, transparent); */
+    /* border: 1px solid color-mix(in srgb, var(--color-border-subtle) 78%, transparent); */
+    /* backdrop-filter: blur(18px) saturate(1.08); */
+    /* -webkit-backdrop-filter: blur(18px) saturate(1.08); */
+    /* box-shadow: 0 18px 44px rgb(0 0 0 / 42%); */
+  }
+
+  .floatingActionDockStacked {
+    width: auto;
+    border-radius: 28px;
+  }
+
+  .floatingActionSecondaryRow {
+    gap: 8px;
   }
 
   .floatingPrimaryButton,
@@ -410,12 +450,12 @@
     min-height: 54px;
     min-width: 0;
     padding: 13px 12px;
-    font-size: 18px;
+    font-size: clamp(11px, 8cqw, 18px);
   }
 
   .ttCostBadge {
     margin-left: auto;
-    font-size: 10px;
+    font-size: 12px;
   }
 }
 

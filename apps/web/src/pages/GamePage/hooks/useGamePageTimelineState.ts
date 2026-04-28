@@ -15,7 +15,6 @@ interface UseGamePageTimelineStateOptions {
   currentPlayerTtCount: number;
   currentPlayerTimeline: PublicRoomState["timelines"][string];
   activePlayerTimeline: PublicRoomState["timelines"][string];
-  getPossessivePlayerName: GamePagePlayerNameResolver;
   getPlayerName: GamePagePlayerNameResolver;
   isViewingOwnTimeline: boolean;
   locallyPlacedCard: PublicRoomState["currentTrackCard"] | null;
@@ -48,7 +47,6 @@ export function useGamePageTimelineState({
   currentPlayerTtCount,
   currentPlayerTimeline,
   activePlayerTimeline,
-  getPossessivePlayerName,
   getPlayerName,
   isViewingOwnTimeline,
   locallyPlacedCard,
@@ -88,15 +86,15 @@ export function useGamePageTimelineState({
   );
 
   function getVisibleTimelineTitle(): string {
-    return isViewingOwnTimeline || activePlayerId === currentPlayerId
-      ? t("game.timeline.yourTimeline")
+    const timelineOwnerId = isViewingOwnTimeline
+      ? currentPlayerId
       : roomState?.status === "finished"
-        ? t("game.timeline.winningTimeline", {
-            playerName: getPlayerName(roomState.winnerPlayerId),
-          })
-        : t("game.timeline.playerTimeline", {
-            playerName: getPossessivePlayerName(activePlayerId),
-          });
+        ? roomState.winnerPlayerId
+        : activePlayerId;
+    return (
+      roomState?.players.find((player) => player.id === timelineOwnerId)?.displayName ??
+      getPlayerName(timelineOwnerId)
+    );
   }
 
   function getVisibleTimelineHint(): string {

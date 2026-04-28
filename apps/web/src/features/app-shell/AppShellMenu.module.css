@@ -94,7 +94,7 @@
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
-  overflow: visible;
+  overflow: hidden;
   border: 0;
   border-radius: 14px;
   min-height: 34px;
@@ -116,10 +116,16 @@
 .tabButtonLabel {
   position: relative;
   z-index: 1;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   color: var(--color-text-secondary);
-  font-size: 14px;
+  font-size: clamp(10px, 2.8vw, 14px);
   font-weight: 800;
   letter-spacing: 0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tabButtonActiveBackground {
@@ -272,6 +278,7 @@
 }
 
 .segmentedButton {
+  container-type: inline-size;
   border: 0;
   border-radius: 15px;
   min-height: 42px;
@@ -282,10 +289,15 @@
     color-mix(in srgb, var(--color-surface-elevated) 72%, transparent)
   );
   color: var(--color-text-secondary);
+  font-size: clamp(10px, 9cqw, 14px);
   font-weight: 700;
   letter-spacing: 0.01em;
+  line-height: 1.08;
   outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 72%, white 28%);
   box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -352,14 +364,16 @@
 }
 
 .footerActionButton {
+  container-type: inline-size;
   width: 100%;
   min-height: 46px;
   border: 0;
   border-radius: 16px;
   padding: 12px 14px;
-  font-size: 14px;
+  font-size: clamp(10px, 8cqw, 14px);
   font-weight: 800;
   letter-spacing: 0.01em;
+  line-height: 1.08;
   color: var(--color-text-primary);
   background: linear-gradient(
     145deg,
@@ -368,6 +382,9 @@
   );
   outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 78%, white 22%);
   box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   cursor: pointer;
 }
 
