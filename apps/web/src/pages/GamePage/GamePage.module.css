@@ -1059,6 +1059,7 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  align-items: end;
 }
 
 .historyItemPlayer {

@@ -302,12 +302,12 @@
 }
 
 .segmentedButtonActive {
-  background: linear-gradient(
-    150deg,
-    color-mix(in srgb, var(--color-accent-primary) 90%, white 10%),
-    color-mix(in srgb, var(--color-accent-primary) 62%, black 38%)
-  );
+  border: 1px solid color-mix(in srgb, #ffb26b 58%, var(--color-border-subtle));
+  background: color-mix(in srgb, var(--color-surface-elevated) 44%, transparent);
   color: var(--color-text-on-accent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, #ffb26b 22%, transparent),
+    0 0 8px color-mix(in srgb, #ff8a3d 24%, transparent);
 }
 
 .hiddenCardPreview {
@@ -397,7 +397,7 @@
   .menuSheet {
     width: 100%;
     height: 100%;
-    padding: calc(var(--safe-area-top) + 14px) calc(var(--safe-area-right) + 14px)
+    padding: calc(var(--safe-area-top) + 22px) calc(var(--safe-area-right) + 14px)
       calc(var(--safe-area-bottom) + 14px) calc(var(--safe-area-left) + 14px);
     border-left: 0;
     background: var(--gradient-lobby-shell-background-mobile);
@@ -424,7 +424,7 @@
   }
 
   .panel {
-    padding-right: 12px;
+    padding-right: 0px;
   }
 
   .panelViewport::before,
