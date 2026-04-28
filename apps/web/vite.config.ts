@@ -13,6 +13,9 @@ export default defineConfig({
     VitePWA({
       injectRegister: "auto",
       registerType: "autoUpdate",
+      devOptions: {
+        enabled: true,
+      },
       manifest: {
         id: "tunetrack-beats",
         name: "TuneTrack Beats",
@@ -20,34 +23,30 @@ export default defineConfig({
         description:
           "TuneTrack is a mobile-friendly party game room for building music timelines together.",
         lang: "en",
-
         start_url: "/",
         scope: "/",
         display: "standalone",
-        display_override: ["standalone"],
         orientation: "any",
-
         background_color: defaultThemeColor,
         theme_color: defaultThemeColor,
-
         icons: [
           {
-            purpose: "any",
-            sizes: "192x192",
             src: "/icon-192.png",
+            sizes: "192x192",
             type: "image/png",
-          },
-          {
             purpose: "any",
-            sizes: "512x512",
-            src: "/icon-512.png",
-            type: "image/png",
           },
           {
-            purpose: "maskable",
+            src: "/icon-512.png",
             sizes: "512x512",
-            src: "/icon-512-maskable.png",
             type: "image/png",
+            purpose: "any",
+          },
+          {
+            src: "/icon-512-maskable.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
           },
         ],
       },
