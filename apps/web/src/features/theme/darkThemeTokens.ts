@@ -39,6 +39,7 @@ export const darkThemeDefinition: ThemeDefinition = {
     "color-status-connected-text": "#00a359",
     "color-status-danger-surface": "rgba(255, 94, 129, 0.16)",
     "color-status-danger-text": "#ffd9e3",
+    "color-status-danger-border": "rgba(255, 41, 88, 0.568)",
     "color-status-danger-chip-surface": "rgba(255, 95, 143, 0.14)",
     "color-status-danger-chip-text": "#ffd7e3",
     "color-badge-strong-background": "rgba(128, 126, 255, 0.38)",

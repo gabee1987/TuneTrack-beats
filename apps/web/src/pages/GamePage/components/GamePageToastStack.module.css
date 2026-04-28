@@ -15,7 +15,6 @@
 .toast {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
   padding: 12px 20px;
   border-radius: 20px;
   border: 1px solid var(--color-border-subtle);
@@ -26,24 +25,8 @@
   width: 100%;
 }
 
-.toastDot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-top: 4px;
-}
-
-.toastDot--success {
-  background: #4cde80;
-}
-
-.toastDot--info {
-  background: #60a5fa;
-}
-
-.toastDot--error {
-  background: #ff5757;
+.toast--error {
+  border-color: var(--color-status-danger-border, rgba(255, 41, 88, 0.568));
 }
 
 .toastText {

@@ -22,7 +22,6 @@ export function GamePageToastStack({ toasts }: GamePageToastStackProps) {
             key={toast.id}
             variants={createToastSlideMotion(reduceMotion)}
           >
-            <span className={`${styles.toastDot} ${styles[`toastDot--${toast.type}`]}`} aria-hidden="true" />
             <span className={styles.toastText}>{toast.message}</span>
           </motion.div>
         ))}
