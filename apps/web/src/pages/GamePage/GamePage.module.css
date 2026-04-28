@@ -780,7 +780,7 @@
 .playbackControls {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 30px;
   padding: 12px 0px;
 }
 
