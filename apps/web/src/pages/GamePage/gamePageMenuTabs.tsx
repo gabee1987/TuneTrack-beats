@@ -482,7 +482,12 @@ function PlaybackTabContent({ playback, roomState, t }: PlaybackTabContentProps)
       {hasTrack ? (
         <div className={styles.playbackArtworkLarge}>
           {showTrackDetails && currentTrackCard.artworkUrl ? (
-            <img alt="" className={styles.playbackArtworkImg} src={currentTrackCard.artworkUrl} />
+            <div className={styles.playbackArtworkWrapper}>
+              {currentTrackCard.releaseYear !== undefined ? (
+                <p className={styles.playbackYear}>{currentTrackCard.releaseYear}</p>
+              ) : null}
+              <img alt="" className={styles.playbackArtworkImg} src={currentTrackCard.artworkUrl} />
+            </div>
           ) : (
             <PlaybackMusicNoteIcon />
           )}
@@ -491,25 +496,11 @@ function PlaybackTabContent({ playback, roomState, t }: PlaybackTabContentProps)
 
       <div className={styles.playbackControls}>
         <div className={styles.playbackTrackRow}>
-          {hasTrack ? (
-            <button
-              aria-label={isPlaying ? t("gameMenu.pause") : t("gameMenu.play")}
-              className={styles.playbackCircleBtn}
-              disabled={!isReady}
-              onClick={isPlaying ? pause : resume}
-              type="button"
-            >
-              {isPlaying ? <PlaybackPauseIcon /> : <PlaybackPlayIcon />}
-            </button>
-          ) : null}
           <div className={styles.playbackMeta}>
             {hasTrack && showTrackDetails ? (
               <>
                 <div className={styles.playbackMetaRow}>
                   <p className={styles.playbackTitle}>{currentTrackCard.title}</p>
-                  {currentTrackCard.releaseYear !== undefined ? (
-                    <p className={styles.playbackYear}>{currentTrackCard.releaseYear}</p>
-                  ) : null}
                 </div>
                 <p className={styles.playbackArtist}>{currentTrackCard.artist}</p>
                 {currentTrackCard.albumTitle ? (
@@ -542,6 +533,20 @@ function PlaybackTabContent({ playback, roomState, t }: PlaybackTabContentProps)
             </div>
           </div>
         ) : null}
+
+        <div className={styles.playbackActions}>
+          {hasTrack ? (
+            <button
+              aria-label={isPlaying ? t("gameMenu.pause") : t("gameMenu.play")}
+              className={styles.playbackCircleBtn}
+              disabled={!isReady}
+              onClick={isPlaying ? pause : resume}
+              type="button"
+            >
+              {isPlaying ? <PlaybackPauseIcon /> : <PlaybackPlayIcon />}
+            </button>
+          ) : null}
+        </div>
       </div>
     </div>
   );

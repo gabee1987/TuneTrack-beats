@@ -222,7 +222,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
   font-size: 11px;
 }
 
@@ -230,7 +230,7 @@
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  line-height: 1;
+  /* line-height: 1; */
 }
 
 .headerLeaderCardIcon {
@@ -805,10 +805,16 @@
   flex-direction: column;
 }
 
+.playbackArtworkWrapper {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
 .playbackArtworkLarge {
   width: min(100%, 220px);
   align-self: center;
-  aspect-ratio: 1;
+  /* aspect-ratio: 1; */
   background: color-mix(in srgb, var(--color-surface-raised) 80%, transparent);
   display: flex;
   align-items: center;
@@ -839,9 +845,15 @@
   gap: 12px;
 }
 
+.playbackActions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
 .playbackCircleBtn {
   flex: 0 0 auto;
-  /* align-self: stretch; */
   aspect-ratio: 1;
   border-radius: 50%;
   border: none;
@@ -854,6 +866,7 @@
   transition:
     background 0.15s,
     transform 0.1s;
+  padding: 16px;
 }
 
 .playbackCircleBtn:hover:not(:disabled) {
@@ -889,6 +902,7 @@
   font-size: 13px;
   color: var(--color-text-secondary);
   padding: 2px 0;
+  text-align: center;
 }
 
 .playbackTitle {
@@ -927,8 +941,8 @@
 .playbackYear {
   margin: 0;
   flex-shrink: 0;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 20px;
+  font-weight: 700;
   color: var(--color-text-tertiary);
   white-space: nowrap;
 }
