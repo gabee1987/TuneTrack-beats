@@ -6,7 +6,11 @@ import {
   createStandardTransition,
 } from "../../motion";
 import { useI18n } from "../../i18n";
-import type { AppShellMenuPreferencesState, AppShellMenuTab } from "../AppShellMenu.types";
+import type {
+  AppShellMenuFooterAction,
+  AppShellMenuPreferencesState,
+  AppShellMenuTab,
+} from "../AppShellMenu.types";
 import { RoomDangerActionButton } from "../../ui/RoomDangerActionButton";
 import { AppShellMenuPanels } from "./AppShellMenuPanels";
 import styles from "../AppShellMenu.module.css";
@@ -14,11 +18,8 @@ import styles from "../AppShellMenu.module.css";
 interface AppShellMenuSheetProps {
   activeTab: AppShellMenuTab | null;
   activeTabId: AppShellMenuTab["id"] | undefined;
-  footerAction?: {
-    label: string;
-    onClick: () => void;
-    tone?: "danger" | "neutral";
-  };
+  footerAction?: AppShellMenuFooterAction;
+  footerActions?: AppShellMenuFooterAction[];
   isMobileSheet: boolean;
   onClose: () => void;
   preferencesState: AppShellMenuPreferencesState;
@@ -31,6 +32,7 @@ export function AppShellMenuSheet({
   activeTab,
   activeTabId,
   footerAction,
+  footerActions,
   isMobileSheet,
   onClose,
   preferencesState,
@@ -43,6 +45,7 @@ export function AppShellMenuSheet({
   const panelRef = useRef<HTMLElement | null>(null);
   const [showTopFade, setShowTopFade] = useState(false);
   const [showBottomFade, setShowBottomFade] = useState(false);
+  const resolvedFooterActions = footerActions ?? (footerAction ? [footerAction] : []);
   const menuSheetMotionTargets = createAppShellMenuSheetMotionTargets(reduceMotion, isMobileSheet);
   const updatePanelFadeState = useCallback(() => {
     const panelElement = panelRef.current;
@@ -84,14 +87,10 @@ export function AppShellMenuSheet({
     };
   }, [activeTabId, updatePanelFadeState]);
 
-  const handleFooterActionClick = useCallback(() => {
-    if (!footerAction) {
-      return;
-    }
-
+  const handleFooterActionClick = useCallback((action: AppShellMenuFooterAction) => {
     onClose();
-    footerAction.onClick();
-  }, [footerAction, onClose]);
+    action.onClick();
+  }, [onClose]);
 
   return (
     <motion.aside
@@ -167,20 +166,27 @@ export function AppShellMenuSheet({
         </section>
       </div>
 
-      {footerAction ? (
+      {resolvedFooterActions.length > 0 ? (
         <footer className={styles.menuFooter}>
-          {footerAction.tone === "danger" ? (
-            <RoomDangerActionButton onClick={handleFooterActionClick} type="button">
-              {footerAction.label}
-            </RoomDangerActionButton>
-          ) : (
-            <button
-              className={styles.footerActionButton}
-              onClick={handleFooterActionClick}
-              type="button"
-            >
-              {footerAction.label}
-            </button>
+          {resolvedFooterActions.map((action, index) =>
+            action.tone === "danger" ? (
+              <RoomDangerActionButton
+                key={`${action.label}-${index}`}
+                onClick={() => handleFooterActionClick(action)}
+                type="button"
+              >
+                {action.label}
+              </RoomDangerActionButton>
+            ) : (
+              <button
+                className={styles.footerActionButton}
+                key={`${action.label}-${index}`}
+                onClick={() => handleFooterActionClick(action)}
+                type="button"
+              >
+                {action.label}
+              </button>
+            ),
           )}
         </footer>
       ) : null}

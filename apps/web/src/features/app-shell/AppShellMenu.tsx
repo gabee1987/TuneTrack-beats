@@ -10,7 +10,13 @@ async function loadAppShellMenuDialog() {
 
 const AppShellMenuDialog = lazy(loadAppShellMenuDialog);
 
-export function AppShellMenu({ footerAction, title, subtitle, tabs }: AppShellMenuProps) {
+export function AppShellMenu({
+  footerAction,
+  footerActions,
+  title,
+  subtitle,
+  tabs,
+}: AppShellMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { t } = useI18n();
 
@@ -48,6 +54,7 @@ export function AppShellMenu({ footerAction, title, subtitle, tabs }: AppShellMe
           tabs={tabs}
           title={title}
           {...(footerAction ? { footerAction } : {})}
+          {...(footerActions ? { footerActions } : {})}
         />
       </Suspense>
     </>

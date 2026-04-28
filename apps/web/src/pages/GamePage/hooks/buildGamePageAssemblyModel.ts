@@ -39,6 +39,7 @@ export function buildGamePageAssemblyModel(
     header: {
       currentPlayerId: controller.currentPlayerId,
       handleCloseRoom: controller.handleCloseRoom,
+      handleSkipTurn: controller.handleSkipTurn,
       leadingPlayers: controller.leadingPlayers,
       menuTabs: controller.menuTabs,
       roomState: controller.roomState,

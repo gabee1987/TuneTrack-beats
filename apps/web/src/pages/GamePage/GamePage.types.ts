@@ -122,6 +122,7 @@ export interface GamePageHeaderModel
     GamePageController,
     | "currentPlayerId"
     | "handleCloseRoom"
+    | "handleSkipTurn"
     | "leadingPlayers"
     | "menuTabs"
     | "showMiniStandings"

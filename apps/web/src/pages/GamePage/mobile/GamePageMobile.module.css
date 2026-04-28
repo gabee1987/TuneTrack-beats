@@ -9,10 +9,11 @@
 }
 
 .panel {
+  --game-mobile-timeline-bottom-clearance: calc(env(safe-area-inset-bottom) + 260px);
   width: min(100%, 1180px);
   min-height: calc(100dvh - 8px);
   margin: 0 auto;
-  padding: 8px 8px calc(env(safe-area-inset-bottom) + 106px);
+  padding: 8px 8px var(--game-mobile-timeline-bottom-clearance);
   border: 0;
   border-radius: 0;
   background: transparent;

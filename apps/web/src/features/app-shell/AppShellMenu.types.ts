@@ -14,12 +14,15 @@ export interface AppShellMenuTab {
   content: ReactNode;
 }
 
+export interface AppShellMenuFooterAction {
+  label: string;
+  onClick: () => void;
+  tone?: "danger" | "neutral";
+}
+
 export interface AppShellMenuProps {
-  footerAction?: {
-    label: string;
-    onClick: () => void;
-    tone?: "danger" | "neutral";
-  };
+  footerAction?: AppShellMenuFooterAction;
+  footerActions?: AppShellMenuFooterAction[];
   title: string;
   subtitle: string;
   tabs: AppShellMenuTab[];

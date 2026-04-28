@@ -15,6 +15,7 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
   const {
     currentPlayerId,
     handleCloseRoom,
+    handleSkipTurn,
     leadingPlayers,
     menuTabs,
     roomState,
@@ -180,11 +181,22 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
             title={roomState.roomId}
             {...(roomState.hostId === currentPlayerId
               ? {
-                  footerAction: {
-                    label: t("game.header.closeRoom"),
-                    onClick: handleCloseRoom,
-                    tone: "danger" as const,
-                  },
+                  footerActions: [
+                    ...(roomState.status === "turn"
+                      ? [
+                          {
+                            label: t("game.controls.skipTurn"),
+                            onClick: handleSkipTurn,
+                            tone: "neutral" as const,
+                          },
+                        ]
+                      : []),
+                    {
+                      label: t("game.header.closeRoom"),
+                      onClick: handleCloseRoom,
+                      tone: "danger" as const,
+                    },
+                  ],
                 }
               : {})}
           />
@@ -204,6 +216,7 @@ function areHeaderModelsEqual(
   return (
     previousModel.currentPlayerId === nextModel.currentPlayerId &&
     previousModel.handleCloseRoom === nextModel.handleCloseRoom &&
+    previousModel.handleSkipTurn === nextModel.handleSkipTurn &&
     previousModel.leadingPlayers === nextModel.leadingPlayers &&
     previousModel.menuTabs === nextModel.menuTabs &&
     previousModel.roomState === nextModel.roomState &&
