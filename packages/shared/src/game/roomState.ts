@@ -30,6 +30,19 @@ export interface PublicRevealState {
   awardedSlotIndex: number | null;
 }
 
+export interface PublicGameHistoryEntry {
+  playerId: string;
+  placedCard: TimelineCardPublic;
+  selectedSlotIndex: number;
+  wasCorrect: boolean;
+  revealType: "placement" | "tt_buy";
+  challengeWasSuccessful: boolean | null;
+  challengerPlayerId: string | null;
+  challengerSelectedSlotIndex: number | null;
+  awardedPlayerId: string | null;
+  awardedSlotIndex: number | null;
+}
+
 export type ChallengePhase = "open" | "claimed";
 
 export interface PublicChallengeState {
@@ -53,5 +66,6 @@ export interface PublicRoomState {
   turn: PublicTurnState | null;
   challengeState: PublicChallengeState | null;
   revealState: PublicRevealState | null;
+  history: PublicGameHistoryEntry[];
   winnerPlayerId: string | null;
 }

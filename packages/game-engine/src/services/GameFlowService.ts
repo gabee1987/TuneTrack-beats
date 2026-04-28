@@ -62,6 +62,7 @@ export class GameFlowService {
       },
       challengeState: null,
       revealState: null,
+      history: [],
       winnerPlayerId: null,
       targetTimelineCardCount: startGameInput.targetTimelineCardCount,
     };
@@ -159,6 +160,7 @@ export class GameFlowService {
       timelines: nextTimelines,
       challengeState: null,
       revealState,
+      history: [...gameState.history, revealState],
       winnerPlayerId:
         placementResult.isCorrect &&
         nextTimeline.length >= gameState.targetTimelineCardCount
@@ -312,6 +314,7 @@ export class GameFlowService {
       timelines: nextTimelines,
       challengeState: null,
       revealState,
+      history: [...gameState.history, revealState],
       winnerPlayerId:
         challengeWasSuccessful &&
         nextChallengerTimeline.length >= gameState.targetTimelineCardCount
@@ -375,6 +378,7 @@ export class GameFlowService {
       timelines: nextTimelines,
       challengeState: null,
       revealState,
+      history: [...gameState.history, revealState],
       winnerPlayerId:
         gameState.challengeState.originalWasCorrect &&
         nextTimeline.length >= gameState.targetTimelineCardCount
@@ -565,6 +569,7 @@ export class GameFlowService {
       turn: gameState.turn,
       challengeState: null,
       revealState,
+      history: [...gameState.history, revealState],
       winnerPlayerId:
         nextTimeline.length >= gameState.targetTimelineCardCount
           ? playerId

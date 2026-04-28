@@ -66,6 +66,7 @@ function createRoomState(
     },
     challengeState: null,
     revealState: null,
+    history: [],
     winnerPlayerId: null,
     ...overrides,
   };

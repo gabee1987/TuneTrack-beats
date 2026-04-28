@@ -55,6 +55,7 @@ export function buildInitialRoomState(
     turn: null,
     challengeState: null,
     revealState: null,
+    history: [],
     winnerPlayerId: null,
   };
 }

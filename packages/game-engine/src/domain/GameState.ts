@@ -16,6 +16,7 @@ export interface GameState {
   turn: TurnState | null;
   challengeState: ChallengeState | null;
   revealState: RevealState | null;
+  history: RevealState[];
   winnerPlayerId: string | null;
   targetTimelineCardCount: number;
 }

@@ -64,6 +64,7 @@ function createRoomState(overrides: Partial<PublicRoomState> = {}): PublicRoomSt
     },
     challengeState: null,
     revealState: null,
+    history: [],
     winnerPlayerId: null,
     ...overrides,
   };
