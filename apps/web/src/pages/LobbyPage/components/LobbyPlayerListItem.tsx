@@ -7,6 +7,7 @@ import {
   type PublicRoomSettings,
 } from "@tunetrack/shared";
 import { Badge } from "../../../features/ui/Badge";
+import { useI18n } from "../../../features/i18n";
 import { RangeField } from "../../../features/ui/RangeField";
 import { TtTokenAmount } from "../../../features/ui/TtToken";
 import { getLobbyPlayerDisplayState } from "../lobbyPlayerSelectors";
@@ -15,14 +16,8 @@ import styles from "../LobbyPage.module.css";
 interface LobbyPlayerListItemProps {
   currentPlayerId: string | null;
   isHost: boolean;
-  onPlayerStartingCardCountChange: (
-    player: PublicPlayerState,
-    nextValue: number,
-  ) => void;
-  onPlayerStartingTtTokenCountChange: (
-    player: PublicPlayerState,
-    nextValue: number,
-  ) => void;
+  onPlayerStartingCardCountChange: (player: PublicPlayerState, nextValue: number) => void;
+  onPlayerStartingTtTokenCountChange: (player: PublicPlayerState, nextValue: number) => void;
   player: PublicPlayerState;
   roomSettings: PublicRoomSettings;
 }
@@ -35,10 +30,12 @@ export function LobbyPlayerListItem({
   player,
   roomSettings,
 }: LobbyPlayerListItemProps) {
+  const { t } = useI18n();
   const displayState = getLobbyPlayerDisplayState({
     currentPlayerId,
     player,
     roomSettings,
+    t,
   });
 
   return (
@@ -52,16 +49,8 @@ export function LobbyPlayerListItem({
                 const tokenMatch = /^(\d+) TT$/.exec(badge.label);
 
                 return (
-                  <Badge
-                    className={styles.playerBadge}
-                    key={badge.label}
-                    variant={badge.variant}
-                  >
-                    {tokenMatch ? (
-                      <TtTokenAmount amount={Number(tokenMatch[1])} />
-                    ) : (
-                      badge.label
-                    )}
+                  <Badge className={styles.playerBadge} key={badge.label} variant={badge.variant}>
+                    {tokenMatch ? <TtTokenAmount amount={Number(tokenMatch[1])} /> : badge.label}
                   </Badge>
                 );
               })}
@@ -83,12 +72,10 @@ export function LobbyPlayerListItem({
           {roomSettings.ttModeEnabled ? (
             <RangeField
               density="compact"
-              label="Starting tokens"
+              label={t("lobby.players.startingTokens")}
               max={MAX_STARTING_TT_TOKEN_COUNT}
               min={MIN_STARTING_TT_TOKEN_COUNT}
-              onChange={(nextValue) =>
-                onPlayerStartingTtTokenCountChange(player, nextValue)
-              }
+              onChange={(nextValue) => onPlayerStartingTtTokenCountChange(player, nextValue)}
               value={player.ttTokenCount}
             />
           ) : null}

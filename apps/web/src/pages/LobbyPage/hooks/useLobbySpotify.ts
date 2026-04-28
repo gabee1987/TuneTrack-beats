@@ -8,6 +8,7 @@ import {
 } from "@tunetrack/shared";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useI18n } from "../../../features/i18n";
 import { getSocketClient } from "../../../services/socket/socketClient";
 
 type AuthPhase = "idle" | "connecting" | "error";
@@ -31,6 +32,7 @@ export interface UseLobbySpotifyResult {
 }
 
 export function useLobbySpotify(): UseLobbySpotifyResult {
+  const { t } = useI18n();
   const { roomId } = useParams<{ roomId: string }>();
 
   const [authPhase, setAuthPhase] = useState<AuthPhase>("idle");
@@ -104,7 +106,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     const popup = window.open("about:blank", "spotify-auth", "popup,width=520,height=720");
     if (!popup) {
       setAuthPhase("error");
-      setAuthError("Popup was blocked. Please allow popups for this page and try again.");
+      setAuthError(t("lobby.spotify.popupBlocked"));
       return;
     }
 

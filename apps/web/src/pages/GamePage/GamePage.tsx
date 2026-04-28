@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { AppRouteFallback } from "../../app/components/AppRouteFallback";
+import { useI18n } from "../../features/i18n";
 import { usePageLayoutMode } from "../../hooks/usePageLayoutMode";
 import { GamePageToastStack } from "./components/GamePageToastStack";
 import type { GameRouteState, LoadedGamePageController } from "./GamePage.types";
@@ -20,6 +21,7 @@ const GamePageDesktop = lazy(async () => {
 });
 
 export function GamePage() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { roomId } = useParams<{ roomId: string }>();
   const location = useLocation();
@@ -41,7 +43,7 @@ export function GamePage() {
     return (
       <main className={styles.screen}>
         <section className={styles.panel}>
-          <h1 className={styles.title}>Loading game...</h1>
+          <h1 className={styles.title}>{t("game.loading")}</h1>
         </section>
       </main>
     );

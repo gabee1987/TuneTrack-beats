@@ -1,21 +1,24 @@
 export interface HomePageMenuTabSpec {
-  id: "settings" | "view";
-  label: string;
-  message: string;
+  id: "language" | "settings" | "view";
+  labelKey: "appShell.menu.languageTab" | "home.themeTab" | "home.viewTab";
+  messageKey?: "home.themeMessage" | "home.viewMessage";
 }
 
 export function getHomePageMenuTabSpecs(): HomePageMenuTabSpec[] {
   return [
     {
       id: "view",
-      label: "View",
-      message:
-        "Gameplay visibility controls will appear here as the final mobile shell takes shape.",
+      labelKey: "home.viewTab",
+      messageKey: "home.viewMessage",
     },
     {
       id: "settings",
-      label: "Theme",
-      message: "Theme and hidden-card preferences are ready for testing now.",
+      labelKey: "home.themeTab",
+      messageKey: "home.themeMessage",
+    },
+    {
+      id: "language",
+      labelKey: "appShell.menu.languageTab",
     },
   ];
 }

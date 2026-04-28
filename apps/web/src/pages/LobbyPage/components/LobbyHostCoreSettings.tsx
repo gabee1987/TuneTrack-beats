@@ -9,6 +9,7 @@ import {
 import { RangeField } from "../../../features/ui/RangeField";
 import { SettingField } from "../../../features/ui/SettingField";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
+import { useI18n } from "../../../features/i18n";
 import { AdaptiveSelect } from "./AdaptiveSelect";
 import type { LobbyRoomSettingsChangeHandler } from "./LobbyHostSettings.types";
 import { LobbySectionHeader } from "./LobbySectionHeader";
@@ -23,18 +24,20 @@ export function LobbyHostCoreSettings({
   currentSettings,
   onRoomSettingsChange,
 }: LobbyHostCoreSettingsProps) {
+  const { t } = useI18n();
+
   return (
     <SurfaceCard className={styles.settingsGroup}>
       <LobbySectionHeader
-        description="Win target and starting hand."
-        title="Core rules"
+        description={t("lobby.host.coreDescription")}
+        title={t("lobby.host.coreTitle")}
         titleAs="h3"
         variant="compact"
       />
 
       <RangeField
-        info="The first player to reach this many timeline cards wins the game."
-        label="Cards needed to win"
+        info={t("lobby.host.cardsNeededInfo")}
+        label={t("lobby.host.cardsNeeded")}
         max={MAX_TARGET_TIMELINE_CARD_COUNT}
         min={MIN_TARGET_TIMELINE_CARD_COUNT}
         onChange={(targetTimelineCardCount) =>
@@ -47,8 +50,8 @@ export function LobbyHostCoreSettings({
       />
 
       <RangeField
-        info="New players start with this many cards unless you override them individually."
-        label="Default starting cards"
+        info={t("lobby.host.defaultStartingCardsInfo")}
+        label={t("lobby.host.defaultStartingCards")}
         max={MAX_STARTING_TIMELINE_CARD_COUNT}
         min={MIN_STARTING_TIMELINE_CARD_COUNT}
         onChange={(defaultStartingTimelineCardCount) =>
@@ -61,11 +64,11 @@ export function LobbyHostCoreSettings({
       />
 
       <SettingField
-        info="Choose who can confirm the correct year after a song is placed."
-        label="Reveal confirmation"
+        info={t("lobby.host.revealConfirmationInfo")}
+        label={t("lobby.host.revealConfirmation")}
       >
         <AdaptiveSelect
-          label="Reveal confirmation"
+          label={t("lobby.host.revealConfirmation")}
           onChange={(nextValue) =>
             onRoomSettingsChange({
               ...currentSettings,
@@ -74,11 +77,11 @@ export function LobbyHostCoreSettings({
           }
           options={[
             {
-              label: "Host only",
+              label: t("lobby.host.revealHostOnly"),
               value: "host_only",
             },
             {
-              label: "Host or active player",
+              label: t("lobby.host.revealHostOrActivePlayer"),
               value: "host_or_active_player",
             },
           ]}

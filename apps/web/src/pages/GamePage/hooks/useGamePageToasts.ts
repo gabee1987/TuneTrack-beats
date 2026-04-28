@@ -5,6 +5,7 @@ import {
   type GamePageToast,
   type GamePageToastType,
 } from "../gamePageToast.types";
+import { useI18n } from "../../../features/i18n";
 
 interface UseGamePageToastsOptions {
   currentPlayerId: string | null;
@@ -24,6 +25,7 @@ export function useGamePageToasts({
   errorMessage,
   roomState,
 }: UseGamePageToastsOptions): GamePageToast[] {
+  const { t } = useI18n();
   const [toasts, setToasts] = useState<GamePageToast[]>([]);
   const idRef = useRef(0);
   const prevPlayersRef = useRef<PublicRoomState["players"]>([]);
@@ -57,7 +59,6 @@ export function useGamePageToasts({
     if (!errorMessage) return;
     const timer = pushToast("error", errorMessage);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [errorKey]);
 
   useEffect(() => {
@@ -73,11 +74,13 @@ export function useGamePageToasts({
       if (player.id === currentPlayerId) continue;
       const prev = prevPlayers.find((p) => p.id === player.id);
       if (prev?.connectionStatus === "disconnected" && player.connectionStatus === "connected") {
-        const timer = pushToast("success", `${player.displayName} reconnected`);
+        const timer = pushToast(
+          "success",
+          t("game.toast.reconnected", { playerName: player.displayName }),
+        );
         return () => clearTimeout(timer);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomState, currentPlayerId]);
 
   return toasts;

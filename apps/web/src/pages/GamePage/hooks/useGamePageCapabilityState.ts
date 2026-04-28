@@ -4,6 +4,7 @@ import {
   type PublicRoomState,
 } from "@tunetrack/shared";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
+import { useI18n } from "../../../features/i18n";
 import { createGameMenuTabs } from "../gamePageMenuTabs";
 import { useGameHistory } from "./useGameHistory";
 import { useHostPlayback } from "./useHostPlayback";
@@ -44,12 +45,11 @@ export function useGamePageCapabilityState({
   handlers,
   roomState,
 }: UseGamePageCapabilityStateOptions): UseGamePageCapabilityStateResult {
+  const { t } = useI18n();
   const isCurrentPlayerTurn =
-    Boolean(currentPlayerId) &&
-    roomState?.turn?.activePlayerId === currentPlayerId;
+    Boolean(currentPlayerId) && roomState?.turn?.activePlayerId === currentPlayerId;
   const isChallengeOwner =
-    Boolean(currentPlayerId) &&
-    roomState?.challengeState?.challengerPlayerId === currentPlayerId;
+    Boolean(currentPlayerId) && roomState?.challengeState?.challengerPlayerId === currentPlayerId;
   const canSelectTurnSlot = roomState?.status === "turn" && isCurrentPlayerTurn;
   const canSelectChallengeSlot =
     roomState?.status === "challenge" &&
@@ -84,11 +84,8 @@ export function useGamePageCapabilityState({
     isCurrentPlayerTurn &&
     currentPlayerTtCount >= BUY_TIMELINE_CARD_TT_COST;
   const canConfirmTurnPlacement =
-    roomState?.status === "turn" &&
-    isCurrentPlayerTurn &&
-    Boolean(roomState.currentTrackCard);
-  const canConfirmBeatPlacement =
-    roomState?.status === "challenge" && canSelectChallengeSlot;
+    roomState?.status === "turn" && isCurrentPlayerTurn && Boolean(roomState.currentTrackCard);
+  const canConfirmBeatPlacement = roomState?.status === "challenge" && canSelectChallengeSlot;
 
   const leadingPlayers =
     roomState?.players
@@ -124,6 +121,7 @@ export function useGamePageCapabilityState({
         onRemoveTt: handlers.handleRemoveTt,
         onTransferHost: handlers.handleTransferHost,
         roomState,
+        t,
         ...(playbackEnabled ? { playback } : {}),
       })
     : [];

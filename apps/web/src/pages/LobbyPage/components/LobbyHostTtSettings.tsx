@@ -1,9 +1,4 @@
-import {
-  type ReactNode,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
@@ -19,6 +14,7 @@ import {
   createToggleHintFadeMotion,
 } from "../../../features/motion";
 import { RangeField } from "../../../features/ui/RangeField";
+import { useI18n } from "../../../features/i18n";
 import { SettingField, SettingInfoButton } from "../../../features/ui/SettingField";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { ToggleSwitch } from "../../../features/ui/ToggleSwitch";
@@ -33,48 +29,6 @@ import {
 } from "../lobbySettingsSelectors";
 import styles from "../LobbyPage.module.css";
 
-const ttModeInfo: ReactNode = (
-  <span className={styles.ttInfoStack}>
-    <span>
-      <strong>What is token mode?</strong>
-      <span>
-        TuneTrack tokens add a tactical layer to the game. You can earn and spend tokens throughout
-        the game. Save them for hard songs, bold shortcuts, and well-timed challenges. Tokens will
-        be refered to as <TtTokenIcon className={styles.inlineTtTokenIcon} /> in-game.
-      </span>
-    </span>
-    <span>
-      <strong>Earn tokens</strong>
-      <span>
-        Players earn <TtTokenIcon className={styles.inlineTtTokenIcon} /> by proving they know the
-        track, such as naming the song or artist before the reveal.
-      </span>
-    </span>
-    <span>
-      <strong>Spend on your turn</strong>
-      <span>
-        Spend <TtTokenAmount amount={1} /> to skip the current song once per turn. Spend{" "}
-        <TtTokenAmount amount={3} /> to claim the song immediately without needing to know the
-        correct release year.
-      </span>
-    </span>
-    <span>
-      <strong>Challenge with Beat!</strong>
-      <span>
-        See a placement that feels wrong? Call Beat!. If you&apos;re right, you steal that card into
-        your own timeline. If you miss, you lose <TtTokenAmount amount={1} />.
-      </span>
-    </span>
-    <span>
-      <strong>Beat! timing</strong>
-      <span>
-        Beat! must be called before the challenge window closes. After a valid call, the clock stops
-        and the challenge is resolved.
-      </span>
-    </span>
-  </span>
-);
-
 interface LobbyHostTtSettingsProps {
   currentSettings: PublicRoomSettings;
   onRoomSettingsChange: LobbyRoomSettingsChangeHandler;
@@ -86,10 +40,47 @@ export function LobbyHostTtSettings({
   onRoomSettingsChange,
   onToggleTtMode,
 }: LobbyHostTtSettingsProps) {
+  const { t } = useI18n();
   const reduceMotion = useReducedMotion() ?? false;
   const challengeWindowOptionValues = getChallengeWindowOptionValueMap();
   const ttSettingsContentRef = useRef<HTMLDivElement | null>(null);
   const [ttSettingsContentHeight, setTtSettingsContentHeight] = useState(0);
+  const tokenIcon = <TtTokenIcon className={styles.inlineTtTokenIcon} />;
+  const oneToken = <TtTokenAmount amount={1} />;
+  const threeTokens = <TtTokenAmount amount={3} />;
+  const ttModeInfo: ReactNode = (
+    <span className={styles.ttInfoStack}>
+      <span>
+        <strong>{t("lobby.host.ttInfo.title")}</strong>
+        <span>{renderLocalizedNodes(t("lobby.host.ttInfo.body"), { token: tokenIcon })}</span>
+      </span>
+      <span>
+        <strong>{t("lobby.host.ttInfo.earnTitle")}</strong>
+        <span>{renderLocalizedNodes(t("lobby.host.ttInfo.earnBody"), { token: tokenIcon })}</span>
+      </span>
+      <span>
+        <strong>{t("lobby.host.ttInfo.spendTitle")}</strong>
+        <span>
+          {renderLocalizedNodes(t("lobby.host.ttInfo.spendBody"), {
+            oneToken,
+            threeTokens,
+          })}
+        </span>
+      </span>
+      <span>
+        <strong>{t("lobby.host.ttInfo.challengeTitle")}</strong>
+        <span>
+          {renderLocalizedNodes(t("lobby.host.ttInfo.challengeBody"), {
+            oneToken,
+          })}
+        </span>
+      </span>
+      <span>
+        <strong>{t("lobby.host.ttInfo.timingTitle")}</strong>
+        <span>{t("lobby.host.ttInfo.timingBody")}</span>
+      </span>
+    </span>
+  );
 
   useLayoutEffect(() => {
     const contentElement = ttSettingsContentRef.current;
@@ -117,15 +108,17 @@ export function LobbyHostTtSettings({
   return (
     <SurfaceCard className={styles.settingsGroup}>
       <LobbySectionHeader
-        description="Tokens for skips, buys, and challenges."
+        description={t("lobby.host.tokenDescription")}
         title={
           <span className={styles.ttModeTitle}>
             {/* <TtTokenIcon className={styles.ttModeTitleIcon} /> */}
 
-            <span>TuneTrack token mode</span>
+            <span>{t("lobby.host.tokenMode")}</span>
           </span>
         }
-        titleAccessory={<SettingInfoButton info={ttModeInfo} label="Token mode" />}
+        titleAccessory={
+          <SettingInfoButton info={ttModeInfo} label={t("lobby.host.tokenModeInfoLabel")} />
+        }
         titleAs="h3"
         variant="compact"
       />
@@ -134,29 +127,24 @@ export function LobbyHostTtSettings({
         <span className={styles.tokenModeToggleCopy}>
           <span className={styles.tokenModeToggleTitleRow}>
             <TtTokenIcon className={styles.tokenModeToggleIcon} />
-            <span className={styles.tokenModeToggleTitle}>Enable token mode</span>
+            <span className={styles.tokenModeToggleTitle}>{t("lobby.host.enableTokenMode")}</span>
           </span>
-          <span className={styles.tokenModeToggleHint}>
-            Adds skips, instant claims, and Beat! stakes to each round.
-          </span>
+          <span className={styles.tokenModeToggleHint}>{t("lobby.host.enableTokenModeHint")}</span>
         </span>
         <ToggleSwitch
-          ariaLabel="Enable token mode"
+          ariaLabel={t("lobby.host.enableTokenMode")}
           checked={currentSettings.ttModeEnabled}
           onChange={onToggleTtMode}
         />
       </div>
 
       <motion.p
-        animate={createToggleHintFadeMotion(
-          reduceMotion,
-          currentSettings.ttModeEnabled,
-        )}
+        animate={createToggleHintFadeMotion(reduceMotion, currentSettings.ttModeEnabled)}
         className={styles.settingsInlineHint}
         layout="position"
         transition={createStandardTransition(reduceMotion)}
       >
-        Turn this on to show token options.
+        {t("lobby.host.tokenInlineHint")}
       </motion.p>
 
       <motion.div
@@ -173,61 +161,86 @@ export function LobbyHostTtSettings({
         transition={createStandardTransition(reduceMotion)}
       >
         <div className={styles.conditionalGroup} ref={ttSettingsContentRef}>
-            <RangeField
-              info="How many tokens each player receives when the game starts."
-              label="Starting tokens for every player"
-              max={MAX_STARTING_TT_TOKEN_COUNT}
-              min={MIN_STARTING_TT_TOKEN_COUNT}
-              onChange={(startingTtTokenCount) =>
+          <RangeField
+            info={t("lobby.host.startingTokensInfo")}
+            label={t("lobby.host.startingTokens")}
+            max={MAX_STARTING_TT_TOKEN_COUNT}
+            min={MIN_STARTING_TT_TOKEN_COUNT}
+            onChange={(startingTtTokenCount) =>
+              onRoomSettingsChange({
+                ...currentSettings,
+                startingTtTokenCount,
+              })
+            }
+            value={currentSettings.startingTtTokenCount}
+          />
+
+          <SettingField
+            info={t("lobby.host.challengeWindowInfo")}
+            label={t("lobby.host.challengeWindow")}
+            value={formatChallengeWindowSettingValue(
+              currentSettings.challengeWindowDurationSeconds,
+              t("lobby.host.challengeWindowManual"),
+            )}
+          >
+            <AdaptiveSelect
+              label={t("lobby.host.challengeWindow")}
+              onChange={(nextValue) =>
                 onRoomSettingsChange({
                   ...currentSettings,
-                  startingTtTokenCount,
+                  challengeWindowDurationSeconds: nextValue === "manual" ? null : Number(nextValue),
                 })
               }
-              value={currentSettings.startingTtTokenCount}
+              options={[
+                {
+                  label: t("lobby.host.challengeWindowHostManual"),
+                  value: challengeWindowOptionValues.manual,
+                },
+                {
+                  label: t("lobby.host.challengeWindowSeconds", {
+                    seconds: DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
+                  }),
+                  value: challengeWindowOptionValues.defaultDuration,
+                },
+                {
+                  label: t("lobby.host.challengeWindowSeconds", {
+                    seconds: MIN_CHALLENGE_WINDOW_DURATION_SECONDS,
+                  }),
+                  value: challengeWindowOptionValues.minDuration,
+                },
+                {
+                  label: t("lobby.host.challengeWindowSeconds", {
+                    seconds: MAX_CHALLENGE_WINDOW_DURATION_SECONDS,
+                  }),
+                  value: challengeWindowOptionValues.maxDuration,
+                },
+              ]}
+              value={getChallengeWindowSelectValue(currentSettings.challengeWindowDurationSeconds)}
             />
-
-            <SettingField
-              info="How long players can challenge a placement before it locks in."
-              label="Challenge window"
-              value={formatChallengeWindowSettingValue(
-                currentSettings.challengeWindowDurationSeconds,
-              )}
-            >
-              <AdaptiveSelect
-                label="Challenge window"
-                onChange={(nextValue) =>
-                  onRoomSettingsChange({
-                    ...currentSettings,
-                    challengeWindowDurationSeconds:
-                      nextValue === "manual" ? null : Number(nextValue),
-                  })
-                }
-                options={[
-                  {
-                    label: "Host manual",
-                    value: challengeWindowOptionValues.manual,
-                  },
-                  {
-                    label: `${DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS} seconds`,
-                    value: challengeWindowOptionValues.defaultDuration,
-                  },
-                  {
-                    label: `${MIN_CHALLENGE_WINDOW_DURATION_SECONDS} seconds`,
-                    value: challengeWindowOptionValues.minDuration,
-                  },
-                  {
-                    label: `${MAX_CHALLENGE_WINDOW_DURATION_SECONDS} seconds`,
-                    value: challengeWindowOptionValues.maxDuration,
-                  },
-                ]}
-                value={getChallengeWindowSelectValue(
-                  currentSettings.challengeWindowDurationSeconds,
-                )}
-              />
-            </SettingField>
+          </SettingField>
         </div>
       </motion.div>
     </SurfaceCard>
   );
+}
+
+function renderLocalizedNodes(
+  template: string,
+  replacements: Record<string, ReactNode>,
+): ReactNode {
+  const parts = template.split(/(\{\{\w+\}\})/g);
+
+  return parts.map((part, index) => {
+    const match = /^\{\{(\w+)\}\}$/.exec(part);
+    if (!match) {
+      return part;
+    }
+
+    const replacementKey = match[1];
+    if (!replacementKey) {
+      return part;
+    }
+
+    return <span key={`${replacementKey}-${index}`}>{replacements[replacementKey] ?? part}</span>;
+  });
 }

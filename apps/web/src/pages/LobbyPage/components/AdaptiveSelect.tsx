@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MotionPresence } from "../../../features/motion";
+import { useI18n } from "../../../features/i18n";
 import { ActionButton } from "../../../features/ui/ActionButton";
 import { SelectInput } from "../../../features/ui/SelectInput";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
@@ -21,12 +22,8 @@ interface AdaptiveSelectProps {
 const MOBILE_SELECT_QUERY =
   "(hover: none) and (pointer: coarse) and (max-width: 960px), (hover: none) and (pointer: coarse) and (max-height: 520px)";
 
-export function AdaptiveSelect({
-  label,
-  onChange,
-  options,
-  value,
-}: AdaptiveSelectProps) {
+export function AdaptiveSelect({ label, onChange, options, value }: AdaptiveSelectProps) {
+  const { t } = useI18n();
   const isCompactTouch = useMediaQuery(MOBILE_SELECT_QUERY);
   const [isOpen, setIsOpen] = useState(false);
   const selectedOption = options.find((option) => option.value === value) ?? options[0];
@@ -57,7 +54,7 @@ export function AdaptiveSelect({
         variant="neutral"
       >
         <span className={styles.mobileSelectLabel}>{selectedOption?.label}</span>
-        <span className={styles.mobileSelectChevron}>Select</span>
+        <span className={styles.mobileSelectChevron}>{t("lobby.select.select")}</span>
       </ActionButton>
 
       <MotionPresence>

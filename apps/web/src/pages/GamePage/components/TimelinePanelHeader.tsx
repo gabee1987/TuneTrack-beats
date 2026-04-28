@@ -1,5 +1,6 @@
 import { LayoutGroup, motion, useReducedMotion } from "framer-motion";
 import { memo } from "react";
+import { useI18n } from "../../../features/i18n";
 import { createLayoutTransition } from "../../../features/motion";
 import type { TimelinePanelHeaderModel } from "../GamePage.types";
 import styles from "./TimelinePanel.module.css";
@@ -13,6 +14,7 @@ function TimelinePanelHeaderComponent({
   model,
   onMineButtonRef,
 }: TimelinePanelHeaderProps) {
+  const { t } = useI18n();
   const reduceMotion = useReducedMotion() ?? false;
   const layoutTransition = createLayoutTransition(reduceMotion);
   const {
@@ -30,7 +32,10 @@ function TimelinePanelHeaderComponent({
         <h2 className={styles.timelineHeading}>{title}</h2>
         <span className={styles.timelineCountSeparator}>/</span>
         <span className={styles.timelineCount}>
-          {cardCount} card{cardCount === 1 ? "" : "s"}
+          {t("game.timeline.cardCount", {
+            count: cardCount,
+            plural: cardCount === 1 ? "" : "s",
+          })}
         </span>
       </div>
       {canToggleView && onToggleTimelineView ? (
@@ -54,7 +59,9 @@ function TimelinePanelHeaderComponent({
                   <span className={styles.timelineViewCompactActiveGlow} />
                 </motion.span>
               ) : null}
-              <span className={styles.timelineViewCompactButtonLabel}>Active</span>
+              <span className={styles.timelineViewCompactButtonLabel}>
+                {t("game.timeline.active")}
+              </span>
             </button>
             <button
               className={styles.timelineViewCompactButton}
@@ -75,7 +82,9 @@ function TimelinePanelHeaderComponent({
                   <span className={styles.timelineViewCompactActiveGlow} />
                 </motion.span>
               ) : null}
-              <span className={styles.timelineViewCompactButtonLabel}>Mine</span>
+              <span className={styles.timelineViewCompactButtonLabel}>
+                {t("game.timeline.mine")}
+              </span>
             </button>
           </div>
         </LayoutGroup>

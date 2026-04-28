@@ -5,9 +5,7 @@ import {
   getGamePageStatusCopyState,
 } from "./gamePageStatusSelectors";
 
-function createRoomState(
-  overrides: Partial<PublicRoomState> = {},
-): PublicRoomState {
+function createRoomState(overrides: Partial<PublicRoomState> = {}): PublicRoomState {
   return {
     roomId: "ROOM1",
     status: "turn",
@@ -75,6 +73,22 @@ const getPlayerName = (playerId: string | null | undefined) =>
   playerId === "player-1" ? "Alice" : playerId === "player-2" ? "Bob" : "Unknown";
 const getPossessivePlayerName = (playerId: string | null | undefined) =>
   playerId === "player-1" ? "Alice's" : playerId === "player-2" ? "Bob's" : "Unknown player's";
+const translations: Record<string, string> = {
+  "game.status.beatAvailable": "Beat available",
+  "game.status.chooseChallengeSlot": "Choose the slot you want to challenge.",
+  "game.status.chosenSlot": "Chosen slot: {{slot}}",
+  "game.status.cleanBeat": "Clean Beat!",
+  "game.status.countdownBeat": "{{seconds}}s left to call Beat!",
+  "game.status.youCalledBeat":
+    "You called Beat! Pick the slot where the card should have gone in {{playerName}} timeline.",
+  "game.status.youClaimedBeat": "You claimed Beat! Choose the slot you believe is correct.",
+  "game.status.playerOwnsBeat": "{{playerName}} owns Beat!",
+};
+const t = (key: string, params?: Record<string, string | number>) =>
+  Object.entries(params ?? {}).reduce(
+    (message, [paramKey, value]) => message.replace(`{{${paramKey}}}`, String(value)),
+    translations[key] ?? key,
+  );
 
 describe("gamePageStatusSelectors", () => {
   it("derives open challenge action state for observers", () => {
@@ -100,6 +114,7 @@ describe("gamePageStatusSelectors", () => {
         isCurrentPlayerTurn: false,
         nowEpochMs: 11_200,
         roomState,
+        t,
       }),
     ).toEqual({
       challengeActionBody: "Chosen slot: 3",
@@ -133,6 +148,7 @@ describe("gamePageStatusSelectors", () => {
         getPossessivePlayerName,
         isCurrentPlayerTurn: false,
         roomState,
+        t,
       }),
     ).toEqual({
       activeTimelineHint:
@@ -155,6 +171,7 @@ describe("gamePageStatusSelectors", () => {
         getPossessivePlayerName,
         isCurrentPlayerTurn: true,
         roomState,
+        t,
       }),
     ).toMatchObject({
       activeTimelineHint: "",
@@ -196,6 +213,7 @@ describe("gamePageStatusSelectors", () => {
       isCurrentPlayerTurn: false,
       nowEpochMs: 0,
       roomState,
+      t,
     });
 
     expect(result.challengeMarkerTone).toBe("success");

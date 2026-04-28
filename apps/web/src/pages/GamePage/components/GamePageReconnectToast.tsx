@@ -1,6 +1,11 @@
 import type { PublicRoomState } from "@tunetrack/shared";
 import { motion, useReducedMotion } from "framer-motion";
-import { MotionPresence, createFadeMotion, createStandardTransition } from "../../../features/motion";
+import { useI18n } from "../../../features/i18n";
+import {
+  MotionPresence,
+  createFadeMotion,
+  createStandardTransition,
+} from "../../../features/motion";
 import { usePlayerReconnectToast } from "../hooks/usePlayerReconnectToast";
 import styles from "./GamePageReconnectToast.module.css";
 
@@ -13,6 +18,7 @@ export function GamePageReconnectToast({
   currentPlayerId,
   roomState,
 }: GamePageReconnectToastProps) {
+  const { t } = useI18n();
   const reduceMotion = useReducedMotion() ?? false;
   const toast = usePlayerReconnectToast(roomState, currentPlayerId);
 
@@ -31,7 +37,7 @@ export function GamePageReconnectToast({
           >
             <span className={styles.toastDot} aria-hidden="true" />
             <span className={styles.toastText}>
-              <strong>{toast.playerName}</strong> reconnected
+              {t("game.toast.reconnected", { playerName: toast.playerName })}
             </span>
           </motion.div>
         ) : null}

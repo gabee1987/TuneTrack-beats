@@ -6,6 +6,7 @@ import {
   createChallengePanelMotion,
   createStandardTransition,
 } from "../../../features/motion";
+import { useI18n } from "../../../features/i18n";
 import { TtTokenAmount } from "../../../features/ui/TtToken";
 import styles from "./GamePageActionPanels.module.css";
 import { ActionDock, PrimaryActionButton, SecondaryActionButton } from "./ActionDock";
@@ -72,6 +73,7 @@ export function ChallengeActionPanel({
   onTokenSpendAnimationStart,
   roomState,
 }: ChallengeActionPanelProps) {
+  const { t } = useI18n();
   const reduceMotion = useReducedMotion() ?? false;
   const beatCostBadgeRef = useRef<HTMLSpanElement | null>(null);
 
@@ -83,12 +85,12 @@ export function ChallengeActionPanel({
   const challengeStatusText = challengeCountdownLabel
     ? challengeCountdownLabel
     : challengeState?.phase === "claimed"
-      ? "Beat! was claimed. Waiting for the placement."
+      ? t("game.challenge.beatWasClaimed")
       : isActivePlayerChallengeView
         ? canResolveChallengeWindow
-          ? "You close this Beat window"
-          : "Host closes this Beat window"
-        : "Host closes this Beat window";
+          ? t("game.challenge.youCloseBeatWindow")
+          : t("game.challenge.hostClosesBeatWindow")
+        : t("game.challenge.hostClosesBeatWindow");
   const hasTimedChallengeWindow = isOpenChallengeWindow && Boolean(challengeCountdownLabel);
   const countdownSeconds = parseCountdownSeconds(challengeCountdownLabel);
   const countdownStageClassName = styles[getCountdownStageClassName(countdownSeconds)];
@@ -96,22 +98,22 @@ export function ChallengeActionPanel({
   const titleText =
     challengeState?.phase === "open"
       ? isActivePlayerChallengeView
-        ? "Beat Window Open"
-        : "Call Beat!"
+        ? t("game.challenge.beatWindowOpen")
+        : t("game.challenge.callBeat")
       : challengeActionTitle;
   const bodyText =
     challengeState?.phase === "open"
       ? isActivePlayerChallengeView
         ? canResolveChallengeWindow
           ? isManualChallengeWindow
-            ? "Your drop is live. You can close Beat! whenever the table is ready."
-            : "Your drop is live. Hold tight while the Beat! timer plays out."
+            ? t("game.challenge.yourDropManualCanClose")
+            : t("game.challenge.yourDropTimed")
           : isManualChallengeWindow
-            ? "Your drop is live. Other players can still call Beat! for now."
-            : "Your drop is live. Hold tight while the Beat! timer plays out."
+            ? t("game.challenge.yourDropManualOthers")
+            : t("game.challenge.yourDropTimed")
         : isManualChallengeWindow
-          ? "Spot a bad drop? Fire Beat! before the host locks it in."
-          : "Spot a bad drop? Call Beat before the timer ends."
+          ? t("game.challenge.badDropManual")
+          : t("game.challenge.badDropTimed")
       : challengeActionBody;
   function resolveSpendOrigin(
     fallbackButton: HTMLButtonElement,
@@ -144,19 +146,21 @@ export function ChallengeActionPanel({
             ttCost={1}
             ttCostBadgeRef={beatCostBadgeRef}
           >
-            Beat!
+            {t("game.controls.beat")}
           </PrimaryActionButton>
         ) : null}
         {canResolveChallengeWindow ? (
           <SecondaryActionButton onClick={handleResolveChallengeWindow}>
-            Resolve
+            {t("game.controls.resolve")}
           </SecondaryActionButton>
         ) : null}
       </ActionDock>
     ) : null
   ) : canConfirmBeatPlacement ? (
     <ActionDock>
-      <PrimaryActionButton onClick={handlePlaceChallenge}>Confirm Beat</PrimaryActionButton>
+      <PrimaryActionButton onClick={handlePlaceChallenge}>
+        {t("game.controls.confirmBeat")}
+      </PrimaryActionButton>
     </ActionDock>
   ) : null;
 
@@ -192,7 +196,8 @@ export function ChallengeActionPanel({
 
                 {roomState.settings.ttModeEnabled ? (
                   <span className={styles.challengeTokenChip}>
-                    Your tokens <TtTokenAmount amount={currentPlayerTtCount} />
+                    {t("game.challenge.yourTokens")}{" "}
+                    <TtTokenAmount amount={currentPlayerTtCount} />
                   </span>
                 ) : null}
               </div>

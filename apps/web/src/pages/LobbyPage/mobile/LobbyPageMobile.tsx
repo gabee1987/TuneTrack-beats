@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppPageShell } from "../../../features/mobile-shell/AppPageShell";
+import { useI18n } from "../../../features/i18n";
 import { MotionDialogPortal } from "../../../features/motion";
 import { rememberPlayerDisplayName } from "../../../services/session/playerSession";
 import { StatusBanner } from "../../../features/ui/StatusBanner";
@@ -22,13 +23,11 @@ type InfoContent = {
 };
 
 export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
+  const { t } = useI18n();
   const resolvedRoomId = controller.roomState?.roomId ?? controller.roomId ?? "lobby";
   const players = controller.roomState?.players ?? [];
-  const hasStartedJoinError =
-    controller.errorMessage === "This game has already started.";
-  const currentPlayer = players.find(
-    (player) => player.id === controller.currentPlayerId,
-  );
+  const hasStartedJoinError = controller.errorMessage === "This game has already started.";
+  const currentPlayer = players.find((player) => player.id === controller.currentPlayerId);
   const visibleDisplayName = currentPlayer?.displayName ?? controller.displayName;
   const navigate = useNavigate();
   const advancedSectionRef = useRef<HTMLElement | null>(null);
@@ -100,38 +99,31 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
   }
 
   return (
-    <AppPageShell
-      panelClassName={styles.panelShell}
-      screenClassName={styles.screenShell}
-    >
+    <AppPageShell panelClassName={styles.panelShell} screenClassName={styles.screenShell}>
       <div className={styles.backgroundOrbs} aria-hidden="true" />
 
-      {controller.errorMessage ? (
-        <StatusBanner>{controller.errorMessage}</StatusBanner>
-      ) : null}
+      {controller.errorMessage ? <StatusBanner>{controller.errorMessage}</StatusBanner> : null}
 
       <section className={styles.setupScreen} aria-labelledby="lobby-setup-title">
         <form className={styles.setupCard} onSubmit={handleSetupSubmit}>
           <div className={styles.setupHeader}>
-            <p className={styles.eyebrow}>Lobby setup</p>
+            <p className={styles.eyebrow}>{t("lobby.setup.eyebrow")}</p>
             <h1 className={styles.title} id="lobby-setup-title">
-              Get the room ready
+              {t("lobby.setup.title")}
             </h1>
-            <p className={styles.subtitle}>
-              Name yourself, name the room, then start when everyone is in.
-            </p>
+            <p className={styles.subtitle}>{t("lobby.setup.subtitle")}</p>
           </div>
 
           <div className={styles.requiredFields}>
             <label className={styles.field}>
               <span className={styles.labelRow}>
-                <span>Player name</span>
+                <span>{t("lobby.setup.playerName")}</span>
                 <InfoButton
-                  label="Player name info"
+                  label={t("lobby.setup.playerNameInfoLabel")}
                   onClick={() =>
                     setInfoContent({
-                      title: "Player name",
-                      body: "This is the name other players see in the lobby and during the game.",
+                      title: t("lobby.setup.playerName"),
+                      body: t("lobby.setup.playerNameInfoBody"),
                     })
                   }
                 />
@@ -141,20 +133,20 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
                 className={styles.textInput}
                 maxLength={32}
                 onChange={(event) => setDraftDisplayName(event.target.value)}
-                placeholder="Your name"
+                placeholder={t("lobby.setup.playerNamePlaceholder")}
                 value={draftDisplayName}
               />
             </label>
 
             <label className={styles.field}>
               <span className={styles.labelRow}>
-                <span>Room name</span>
+                <span>{t("lobby.setup.roomName")}</span>
                 <InfoButton
-                  label="Room name info"
+                  label={t("lobby.setup.roomNameInfoLabel")}
                   onClick={() =>
                     setInfoContent({
-                      title: "Room name",
-                      body: "Players join this exact room name. Use letters, numbers, dashes, or underscores.",
+                      title: t("lobby.setup.roomName"),
+                      body: t("lobby.setup.roomNameInfoBody"),
                     })
                   }
                 />
@@ -166,13 +158,11 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
                 inputMode="text"
                 maxLength={24}
                 onChange={(event) => setDraftRoomId(event.target.value)}
-                placeholder="party-room"
+                placeholder={t("lobby.setup.roomNamePlaceholder")}
                 value={draftRoomId}
               />
               {!isRoomIdValid && trimmedRoomId ? (
-                <span className={styles.fieldError}>
-                  Use letters, numbers, dashes, or underscores.
-                </span>
+                <span className={styles.fieldError}>{t("lobby.setup.roomNameInvalid")}</span>
               ) : null}
             </label>
           </div>
@@ -189,12 +179,12 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
               <span className={styles.primaryActionInner}>
                 <span className={styles.primaryActionLabel}>
                   {hasSetupChanges
-                    ? "Apply setup"
+                    ? t("lobby.setup.apply")
                     : hasStartedJoinError
-                      ? "Game already started"
+                      ? t("lobby.setup.gameAlreadyStarted")
                       : controller.isHost
-                        ? "Start game"
-                        : "Waiting for host"}
+                        ? t("lobby.setup.startGame")
+                        : t("lobby.setup.waitingForHost")}
                 </span>
               </span>
             </button>
@@ -204,7 +194,7 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
               onClick={scrollToAdvancedSettings}
               type="button"
             >
-              <span>More room settings</span>
+              <span>{t("lobby.setup.moreSettings")}</span>
               <span aria-hidden="true">↓</span>
             </button>
           </div>
@@ -214,13 +204,13 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
       <section
         className={styles.advancedSection}
         ref={advancedSectionRef}
-        aria-label="Advanced lobby settings"
+        aria-label={t("lobby.setup.advancedSettingsLabel")}
       >
         {hasStartedJoinError ? (
           <SurfaceCard className={styles.waitingCard}>
             <LobbySectionHeader
-              description="This match is already in progress. New players cannot join after the first song starts."
-              title="Game already started"
+              description={t("lobby.started.description")}
+              title={t("lobby.started.title")}
             />
           </SurfaceCard>
         ) : controller.isHost ? (
@@ -239,8 +229,8 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
         ) : (
           <SurfaceCard className={styles.waitingCard}>
             <LobbySectionHeader
-              description="The host is setting the room up. You will move into the game automatically when it starts."
-              title="Waiting for host"
+              description={t("lobby.waiting.description")}
+              title={t("lobby.waiting.title")}
             />
           </SurfaceCard>
         )}
@@ -248,12 +238,8 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
         <LobbyPlayerList
           currentPlayerId={controller.currentPlayerId}
           isHost={controller.isHost}
-          onPlayerStartingCardCountChange={
-            controller.handlePlayerStartingCardCountChange
-          }
-          onPlayerStartingTtTokenCountChange={
-            controller.handlePlayerStartingTtTokenCountChange
-          }
+          onPlayerStartingCardCountChange={controller.handlePlayerStartingCardCountChange}
+          onPlayerStartingTtTokenCountChange={controller.handlePlayerStartingTtTokenCountChange}
           players={players}
           roomSettings={controller.currentSettings}
         />
@@ -271,16 +257,16 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
       <MotionDialogPortal
         cardClassName={styles.infoCard}
         isOpen={Boolean(infoContent)}
-        label={infoContent?.title ?? "Lobby info"}
+        label={infoContent?.title ?? t("lobby.info.fallbackLabel")}
         onClose={() => setInfoContent(null)}
         overlayClassName={styles.infoOverlay}
       >
         {infoContent ? (
           <>
             <div className={styles.infoHeaderRow}>
-              <p className={styles.infoEyebrow}>Info</p>
+              <p className={styles.infoEyebrow}>{t("lobby.info.title")}</p>
               <button
-                aria-label="Close info"
+                aria-label={t("lobby.info.close")}
                 className={styles.infoCloseButton}
                 onClick={() => setInfoContent(null)}
                 type="button"
@@ -304,12 +290,7 @@ interface InfoButtonProps {
 
 function InfoButton({ label, onClick }: InfoButtonProps) {
   return (
-    <button
-      aria-label={label}
-      className={styles.infoButton}
-      onClick={onClick}
-      type="button"
-    >
+    <button aria-label={label} className={styles.infoButton} onClick={onClick} type="button">
       i
     </button>
   );

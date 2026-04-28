@@ -1,6 +1,7 @@
 import type { DraggableAttributes } from "@dnd-kit/core";
 import { motion, type MotionStyle } from "framer-motion";
 import { forwardRef, type CSSProperties } from "react";
+import { useI18n } from "../../../features/i18n";
 import type {
   HiddenCardMode,
   ThemeId,
@@ -50,6 +51,8 @@ function PreviewCardContent({
   showDevYearInfo,
   showRevealedContent,
 }: PreviewCardContentProps) {
+  const { t } = useI18n();
+
   return showDevCardInfo || showRevealedContent ? (
     <>
       <p className={styles.previewCardArtist}>{card.artist}</p>
@@ -72,12 +75,12 @@ function PreviewCardContent({
     </>
   ) : (
     <>
-      <p className={styles.previewCardArtist}>TuneTrack</p>
+      <p className={styles.previewCardArtist}>{t("game.preview.hiddenArtist")}</p>
       <div className={styles.previewCardCenter}>
-        <strong className={styles.previewCardYear}>TT</strong>
+        <strong className={styles.previewCardYear}>{t("game.preview.hiddenYear")}</strong>
       </div>
       <div className={styles.previewCardBottom}>
-        <h3 className={styles.previewCardTitle}>Hidden Until Reveal</h3>
+        <h3 className={styles.previewCardTitle}>{t("game.preview.hiddenTitle")}</h3>
       </div>
     </>
   );

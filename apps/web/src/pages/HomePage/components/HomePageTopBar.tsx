@@ -1,27 +1,29 @@
 import { AppShellMenu } from "../../../features/app-shell/AppShellMenu";
+import { useI18n } from "../../../features/i18n";
 import { getHomePageMenuTabSpecs } from "../homePageMenuConfig";
 import styles from "../HomePage.module.css";
 
 export function HomePageTopBar() {
+  const { t } = useI18n();
   const menuTabs = getHomePageMenuTabSpecs();
 
   return (
     <div className={styles.topBar}>
       <div className={styles.topBarCopy}>
-        <span className={styles.topBarLabel}>TuneTrack</span>
-        <span className={styles.topBarMeta}>
-          Guess tracks. Challenge friends. Build the timeline.
-        </span>
+        <span className={styles.topBarLabel}>{t("home.topBarLabel")}</span>
+        <span className={styles.topBarMeta}>{t("home.topBarMeta")}</span>
       </div>
 
       <AppShellMenu
-        subtitle="Choose your theme, view options, and local interface preferences."
+        subtitle={t("home.menuSubtitle")}
         tabs={menuTabs.map((tab) => ({
           id: tab.id,
-          label: tab.label,
-          content: <p className={styles.menuPlaceholder}>{tab.message}</p>,
+          label: t(tab.labelKey),
+          content: tab.messageKey ? (
+            <p className={styles.menuPlaceholder}>{t(tab.messageKey)}</p>
+          ) : null,
         }))}
-        title="TuneTrack"
+        title={t("home.menuTitle")}
       />
     </div>
   );

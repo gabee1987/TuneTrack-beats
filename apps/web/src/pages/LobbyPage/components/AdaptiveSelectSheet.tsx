@@ -1,5 +1,6 @@
 import { BottomSheet } from "../../../features/ui/BottomSheet";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
+import { useI18n } from "../../../features/i18n";
 import type { AdaptiveSelectOption } from "./AdaptiveSelect";
 import styles from "../LobbyPage.module.css";
 
@@ -18,6 +19,8 @@ export function AdaptiveSelectSheet({
   options,
   value,
 }: AdaptiveSelectSheetProps) {
+  const { t } = useI18n();
+
   return (
     <BottomSheet
       onClose={onClose}
@@ -27,10 +30,10 @@ export function AdaptiveSelectSheet({
       <div className={styles.mobileSelectSheetHeader}>
         <div>
           <p className={styles.mobileSelectEyebrow}>{label}</p>
-          <h4 className={styles.mobileSelectTitle}>Choose one option</h4>
+          <h4 className={styles.mobileSelectTitle}>{t("lobby.select.chooseOne")}</h4>
         </div>
         <CloseIconButton
-          ariaLabel="Close select menu"
+          ariaLabel={t("lobby.select.close")}
           className={styles.mobileSelectClose}
           onClick={onClose}
         />
@@ -54,7 +57,7 @@ export function AdaptiveSelectSheet({
             >
               <span>{option.label}</span>
               {isSelected ? (
-                <span className={styles.mobileSelectOptionState}>Selected</span>
+                <span className={styles.mobileSelectOptionState}>{t("lobby.select.selected")}</span>
               ) : null}
             </button>
           );

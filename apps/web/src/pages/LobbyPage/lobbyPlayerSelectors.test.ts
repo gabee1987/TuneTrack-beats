@@ -26,6 +26,20 @@ const baseRoomSettings: PublicRoomSettings = {
   spotifyAccountType: null,
 };
 
+const testTranslations: Record<string, string> = {
+  "lobby.players.cards": "{{count}} cards",
+  "lobby.players.host": "Host",
+  "lobby.players.startingCards": "Starting cards",
+  "lobby.players.you": "You",
+};
+
+function t(key: string, params?: Record<string, string | number>): string {
+  const template = testTranslations[key] ?? key;
+  return template.replace(/\{\{(\w+)\}\}/g, (match, paramName) =>
+    params?.[paramName] === undefined ? match : String(params[paramName]),
+  );
+}
+
 describe("lobbyPlayerSelectors", () => {
   it("formats the current player display state", () => {
     expect(
@@ -33,6 +47,7 @@ describe("lobbyPlayerSelectors", () => {
         currentPlayerId: "player-1",
         player: basePlayer,
         roomSettings: baseRoomSettings,
+        t,
       }),
     ).toEqual({
       primaryName: "You",
@@ -53,6 +68,7 @@ describe("lobbyPlayerSelectors", () => {
           ...baseRoomSettings,
           ttModeEnabled: true,
         },
+        t,
       }),
     ).toEqual({
       primaryName: "Nova",

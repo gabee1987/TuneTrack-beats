@@ -1,4 +1,5 @@
 import { ActionButton } from "../../../features/ui/ActionButton";
+import { useI18n } from "../../../features/i18n";
 import { RoomDangerActionButton } from "../../../features/ui/RoomDangerActionButton";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { LobbySectionHeader } from "./LobbySectionHeader";
@@ -17,11 +18,13 @@ export function LobbyRoomActions({
   onIntentToStartGame,
   onStartGame,
 }: LobbyRoomActionsProps) {
+  const { t } = useI18n();
+
   return (
     <SurfaceCard className={styles.roomActionsSection}>
       <LobbySectionHeader
-        description="Closing the room sends everyone back to the main menu."
-        title="Room actions"
+        description={t("lobby.actions.description")}
+        title={t("lobby.actions.title")}
       />
       {onStartGame ? (
         <ActionButton
@@ -32,7 +35,7 @@ export function LobbyRoomActions({
           onTouchStart={onIntentToStartGame}
           type="button"
         >
-          Start Game
+          {t("lobby.actions.startGame")}
         </ActionButton>
       ) : null}
       <RoomDangerActionButton
@@ -40,7 +43,7 @@ export function LobbyRoomActions({
         onClick={onCloseRoom}
         type="button"
       >
-        Close Room
+        {t("lobby.actions.closeRoom")}
       </RoomDangerActionButton>
     </SurfaceCard>
   );

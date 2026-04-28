@@ -1,5 +1,6 @@
 import { createPortal } from "react-dom";
 import { motion, useReducedMotion } from "framer-motion";
+import { useI18n } from "../../../features/i18n";
 import { MotionPresence } from "../../../features/motion";
 import type { GamePageCard } from "../GamePage.types";
 import styles from "./SongInfoModal.module.css";
@@ -36,6 +37,7 @@ function MusicNoteIcon() {
 }
 
 export function SongInfoModal({ card, onClose }: SongInfoModalProps) {
+  const { t } = useI18n();
   const reduceMotion = useReducedMotion() ?? false;
   const artworkUrl = card?.artworkUrl;
   const releaseYear = card && "revealedYear" in card ? card.revealedYear : card?.releaseYear;
@@ -66,7 +68,7 @@ export function SongInfoModal({ card, onClose }: SongInfoModalProps) {
           >
             <div className={styles.header}>
               <button
-                aria-label="Close song info"
+                aria-label={t("game.songInfo.close")}
                 className={styles.closeButton}
                 type="button"
                 onClick={onClose}

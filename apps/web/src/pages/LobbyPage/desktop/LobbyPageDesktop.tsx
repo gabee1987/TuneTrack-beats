@@ -1,6 +1,7 @@
 import { StatusBanner } from "../../../features/ui/StatusBanner";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { AppPageShell } from "../../../features/mobile-shell/AppPageShell";
+import { useI18n } from "../../../features/i18n";
 import type { LobbyPageAssemblyProps } from "../LobbyPage.types";
 import { LobbyHeader } from "../components/LobbyHeader";
 import { LobbyHostSettingsPanel } from "../components/LobbyHostSettingsPanel";
@@ -11,25 +12,20 @@ import { LobbySummaryCard } from "../components/LobbySummaryCard";
 import styles from "./LobbyPageDesktop.module.css";
 
 export function LobbyPageDesktop({ controller }: LobbyPageAssemblyProps) {
+  const { t } = useI18n();
   const resolvedRoomId = controller.roomState?.roomId ?? controller.roomId ?? "lobby";
   const players = controller.roomState?.players ?? [];
-  const hasStartedJoinError =
-    controller.errorMessage === "This game has already started.";
+  const hasStartedJoinError = controller.errorMessage === "This game has already started.";
 
   return (
-    <AppPageShell
-      panelClassName={styles.panelShell}
-      screenClassName={styles.screenShell}
-    >
+    <AppPageShell panelClassName={styles.panelShell} screenClassName={styles.screenShell}>
       <LobbyHeader
         connectionStatus={controller.connectionStatus}
         isHost={controller.isHost}
         roomId={resolvedRoomId}
       />
 
-      {controller.errorMessage ? (
-        <StatusBanner>{controller.errorMessage}</StatusBanner>
-      ) : null}
+      {controller.errorMessage ? <StatusBanner>{controller.errorMessage}</StatusBanner> : null}
 
       <div className={styles.layoutGrid}>
         <div className={styles.primaryColumn}>
@@ -43,8 +39,8 @@ export function LobbyPageDesktop({ controller }: LobbyPageAssemblyProps) {
           {hasStartedJoinError ? (
             <SurfaceCard className={styles.waitingCard}>
               <LobbySectionHeader
-                description="This match is already in progress. New players cannot join after the first song starts."
-                title="Game already started"
+                description={t("lobby.started.description")}
+                title={t("lobby.started.title")}
               />
             </SurfaceCard>
           ) : controller.isHost ? (
@@ -58,8 +54,8 @@ export function LobbyPageDesktop({ controller }: LobbyPageAssemblyProps) {
           ) : (
             <SurfaceCard className={styles.waitingCard}>
               <LobbySectionHeader
-                description="The host is setting the room up. You will move into the game automatically when it starts."
-                title="Waiting for host"
+                description={t("lobby.waiting.description")}
+                title={t("lobby.waiting.title")}
               />
             </SurfaceCard>
           )}
@@ -69,12 +65,8 @@ export function LobbyPageDesktop({ controller }: LobbyPageAssemblyProps) {
           <LobbyPlayerList
             currentPlayerId={controller.currentPlayerId}
             isHost={controller.isHost}
-            onPlayerStartingCardCountChange={
-              controller.handlePlayerStartingCardCountChange
-            }
-            onPlayerStartingTtTokenCountChange={
-              controller.handlePlayerStartingTtTokenCountChange
-            }
+            onPlayerStartingCardCountChange={controller.handlePlayerStartingCardCountChange}
+            onPlayerStartingTtTokenCountChange={controller.handlePlayerStartingTtTokenCountChange}
             players={players}
             roomSettings={controller.currentSettings}
           />

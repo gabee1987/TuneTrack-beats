@@ -1,9 +1,9 @@
 export type LobbyConnectionBadgeVariant = "connected" | "mutedSurface";
 
 export interface LobbyHeaderMenuTabSpec {
-  id: "dev" | "players" | "settings" | "view";
-  label: string;
-  message: string;
+  id: "dev" | "language" | "players" | "settings" | "view";
+  labelKey: string;
+  messageKey?: string;
 }
 
 export function getLobbyConnectionBadgeVariant(
@@ -12,31 +12,33 @@ export function getLobbyConnectionBadgeVariant(
   return connectionStatus === "Connected" ? "connected" : "mutedSurface";
 }
 
-export function getLobbyHeaderMenuTabSpecs(
-  isHost: boolean,
-): LobbyHeaderMenuTabSpec[] {
+export function getLobbyHeaderMenuTabSpecs(isHost: boolean): LobbyHeaderMenuTabSpec[] {
   return [
     {
       id: "players",
-      label: "Players",
-      message: "The player roster remains on the main screen for faster access on mobile.",
+      labelKey: "lobby.menu.players",
+      messageKey: "lobby.menu.playersMessage",
     },
     {
       id: "view",
-      label: "View",
-      message: "Local visibility toggles stay available without crowding the lobby.",
+      labelKey: "lobby.menu.view",
+      messageKey: "lobby.menu.viewMessage",
     },
     {
       id: "settings",
-      label: "Theme",
-      message: "Theme and hidden-card preferences remain device-local.",
+      labelKey: "lobby.menu.theme",
+      messageKey: "lobby.menu.themeMessage",
+    },
+    {
+      id: "language",
+      labelKey: "appShell.menu.languageTab",
     },
     ...(isHost
       ? [
           {
             id: "dev" as const,
-            label: "Diagnostics",
-            message: "Developer-only host tools continue to live behind the shared menu.",
+            labelKey: "lobby.menu.diagnostics",
+            messageKey: "lobby.menu.diagnosticsMessage",
           },
         ]
       : []),

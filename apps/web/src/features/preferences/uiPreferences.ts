@@ -3,7 +3,14 @@ import { persist } from "zustand/middleware";
 
 export type ThemeId = "dark" | "light";
 export type HiddenCardMode = "artwork" | "gradient";
-export type MenuTabId = "players" | "view" | "settings" | "dev" | "playback" | "history";
+export type MenuTabId =
+  | "players"
+  | "view"
+  | "settings"
+  | "language"
+  | "dev"
+  | "playback"
+  | "history";
 
 export interface ViewPreferences {
   showMiniStandings: boolean;
@@ -77,14 +84,10 @@ export const useUiPreferencesStore = create<UiPreferencesStore>()(
         })),
       setDevVisibility: (settings) =>
         set((state) => ({
-          showDevCardInfo:
-            settings.showDevCardInfo ?? state.showDevCardInfo,
-          showDevYearInfo:
-            settings.showDevYearInfo ?? state.showDevYearInfo,
-          showDevAlbumInfo:
-            settings.showDevAlbumInfo ?? state.showDevAlbumInfo,
-          showDevGenreInfo:
-            settings.showDevGenreInfo ?? state.showDevGenreInfo,
+          showDevCardInfo: settings.showDevCardInfo ?? state.showDevCardInfo,
+          showDevYearInfo: settings.showDevYearInfo ?? state.showDevYearInfo,
+          showDevAlbumInfo: settings.showDevAlbumInfo ?? state.showDevAlbumInfo,
+          showDevGenreInfo: settings.showDevGenreInfo ?? state.showDevGenreInfo,
         })),
     }),
     {

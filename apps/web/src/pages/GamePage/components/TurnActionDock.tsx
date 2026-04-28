@@ -10,6 +10,7 @@ import {
   createActionButtonExitMotion,
   createLayoutTransition,
 } from "../../../features/motion";
+import { useI18n } from "../../../features/i18n";
 import {
   ActionDock,
   PrimaryActionButton,
@@ -68,6 +69,7 @@ export function TurnActionDock({
   onTokenSpendAnimationStart,
   roomState,
 }: TurnActionDockProps) {
+  const { t } = useI18n();
   const reduceMotion = useReducedMotion() ?? false;
   const skipCostBadgeRef = useRef<HTMLSpanElement | null>(null);
   const buyCostBadgeRef = useRef<HTMLSpanElement | null>(null);
@@ -76,7 +78,8 @@ export function TurnActionDock({
       ? roomState.challengeState?.challengerPlayerId
       : roomState.turn?.activePlayerId;
   const offlinePlayerName = canSkipOfflinePlayer
-    ? (roomState.players.find((p) => p.id === offlinePlayerId)?.displayName ?? "Player")
+    ? (roomState.players.find((p) => p.id === offlinePlayerId)?.displayName ??
+      t("game.player.unknown"))
     : null;
   const turnSkipCountdown = useTurnSkipCountdown(
     canSkipOfflinePlayer ? (roomState.turn?.turnSkipDeadlineEpochMs ?? null) : null,
@@ -107,12 +110,14 @@ export function TurnActionDock({
       {canSkipOfflinePlayer && offlinePlayerName ? (
         <div className={styles.offlinePlayerPanel}>
           <div className={styles.offlinePlayerInfo}>
-            <span className={styles.offlinePlayerLabel}>Waiting for</span>
+            <span className={styles.offlinePlayerLabel}>
+              {t("game.controls.waitingFor")}
+            </span>
             <span className={styles.offlinePlayerName}>{offlinePlayerName}</span>
           </div>
           {turnSkipCountdown ? (
             <span className={styles.offlinePlayerCountdown}>
-              Auto-skip in {turnSkipCountdown}
+              {t("game.controls.autoSkipIn", { time: turnSkipCountdown })}
             </span>
           ) : null}
         </div>
@@ -146,7 +151,7 @@ export function TurnActionDock({
               ttCost={SKIP_TRACK_TT_COST}
               ttCostBadgeRef={skipCostBadgeRef}
             >
-              Skip
+              {t("game.controls.skip")}
             </SecondaryActionButton>
           </motion.span>
         ) : null}
@@ -172,7 +177,7 @@ export function TurnActionDock({
             ttCost={BUY_TIMELINE_CARD_TT_COST}
             ttCostBadgeRef={buyCostBadgeRef}
           >
-            Buy
+            {t("game.controls.buy")}
           </SecondaryActionButton>
         </motion.span>
       ) : null}
@@ -183,7 +188,7 @@ export function TurnActionDock({
           transition={createLayoutTransition(reduceMotion)}
         >
           <PrimaryActionButton onClick={() => handlePlaceCard()}>
-            Confirm
+            {t("game.controls.confirm")}
           </PrimaryActionButton>
         </motion.span>
       ) : null}
@@ -194,7 +199,7 @@ export function TurnActionDock({
           transition={createLayoutTransition(reduceMotion)}
         >
           <SecondaryActionButton onClick={() => handleSkipOfflinePlayer()}>
-            Skip Turn
+            {t("game.controls.skipTurn")}
           </SecondaryActionButton>
         </motion.span>
       ) : null}

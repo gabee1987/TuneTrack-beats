@@ -1,4 +1,5 @@
 import { Badge } from "../../../features/ui/Badge";
+import { useI18n } from "../../../features/i18n";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { LobbyHostCoreSettings } from "./LobbyHostCoreSettings";
 import { LobbyHostStartPanel } from "./LobbyHostStartPanel";
@@ -15,12 +16,14 @@ export function LobbyHostSettingsPanel({
   onStartGame,
   onToggleTtMode,
 }: LobbyHostSettingsPanelProps) {
+  const { t } = useI18n();
+
   return (
     <SurfaceCard className={styles.settingsPanel}>
       <LobbySectionHeader
-        badge={<Badge>Host only</Badge>}
-        description="Set the rules, then start."
-        title="Host setup"
+        badge={<Badge>{t("lobby.host.badge")}</Badge>}
+        description={t("lobby.host.description")}
+        title={t("lobby.host.title")}
       />
 
       <div className={styles.settingsGrid}>
@@ -36,10 +39,7 @@ export function LobbyHostSettingsPanel({
         <LobbySpotifySection currentSettings={currentSettings} />
       </div>
 
-      <LobbyHostStartPanel
-        onIntentToStart={onIntentToStartGame}
-        onStartGame={onStartGame}
-      />
+      <LobbyHostStartPanel onIntentToStart={onIntentToStartGame} onStartGame={onStartGame} />
     </SurfaceCard>
   );
 }

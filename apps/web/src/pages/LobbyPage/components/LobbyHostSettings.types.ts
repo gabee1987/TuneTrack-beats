@@ -1,8 +1,6 @@
 import type { PublicRoomSettings } from "@tunetrack/shared";
 
-export type LobbyRoomSettingsChangeHandler = (
-  nextSettings: PublicRoomSettings,
-) => void;
+export type LobbyRoomSettingsChangeHandler = (nextSettings: PublicRoomSettings) => void;
 
 export interface LobbyHostSettingsPanelProps {
   currentSettings: PublicRoomSettings;
