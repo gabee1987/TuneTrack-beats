@@ -1,5 +1,6 @@
 import {
   BUY_TIMELINE_CARD_TT_COST,
+  CHALLENGE_TT_COST,
   SKIP_TRACK_TT_COST,
   type PublicRoomState,
 } from "@tunetrack/shared";
@@ -60,7 +61,8 @@ export function useGamePageCapabilityState({
     roomState?.status === "challenge" &&
     roomState.challengeState?.phase === "open" &&
     !isCurrentPlayerTurn &&
-    roomState.challengeState.originalPlayerId !== currentPlayerId;
+    roomState.challengeState.originalPlayerId !== currentPlayerId &&
+    currentPlayerTtCount >= CHALLENGE_TT_COST;
   const canResolveChallengeWindow =
     roomState?.status === "challenge" &&
     roomState.challengeState?.phase === "open" &&

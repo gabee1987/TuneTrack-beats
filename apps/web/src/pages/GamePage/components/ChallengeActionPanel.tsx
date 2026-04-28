@@ -1,4 +1,4 @@
-import type { PublicRoomState } from "@tunetrack/shared";
+import { CHALLENGE_TT_COST, type PublicRoomState } from "@tunetrack/shared";
 import { motion, useReducedMotion } from "framer-motion";
 import { useRef } from "react";
 import {
@@ -138,12 +138,12 @@ export function ChallengeActionPanel({
                 beatCostBadgeRef.current,
               );
               onTokenSpendAnimationStart?.({
-                amount: -1,
+                amount: -CHALLENGE_TT_COST,
                 ...origin,
               });
               handleClaimChallenge();
             }}
-            ttCost={1}
+            ttCost={CHALLENGE_TT_COST}
             ttCostBadgeRef={beatCostBadgeRef}
           >
             {t("game.controls.beat")}

@@ -55,9 +55,12 @@ export function useGamePageController({
     playerSessionId,
     rememberedDisplayName,
   });
+  const currentPlayerTtCount =
+    roomState?.players.find((player) => player.id === currentPlayerId)?.ttTokenCount ?? 0;
 
   const actionAvailability = useGamePageActionAvailability({
     currentPlayerId,
+    currentPlayerTtCount,
     roomState,
   });
 
@@ -223,7 +226,7 @@ export function useGamePageController({
 
   const playerState = {
     currentPlayerId,
-    currentPlayerTtCount: derivedState.currentPlayer?.ttTokenCount ?? 0,
+    currentPlayerTtCount,
     getPlayerName: derivedState.getPlayerName,
     isHost: Boolean(actionAvailability.isHost),
     isViewingOwnTimeline: derivedState.isViewingOwnTimeline,
