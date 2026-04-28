@@ -10,7 +10,7 @@ import { Badge } from "../../../features/ui/Badge";
 import { CardCountAmount } from "../../../features/ui/CardCountAmount";
 import { useI18n } from "../../../features/i18n";
 import { RangeField } from "../../../features/ui/RangeField";
-import { TtTokenAmount } from "../../../features/ui/TtToken";
+import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import { getLobbyPlayerDisplayState } from "../lobbyPlayerSelectors";
 import styles from "../LobbyPage.module.css";
 
@@ -56,7 +56,7 @@ export function LobbyPlayerListItem({
                         className={styles.playerCardCount}
                       />
                     ) : badge.kind === "tokenCount" && badge.count !== undefined ? (
-                      <TtTokenAmount amount={badge.count} />
+                      <TokenCountAmount amount={badge.count} />
                     ) : (
                       badge.label
                     )}

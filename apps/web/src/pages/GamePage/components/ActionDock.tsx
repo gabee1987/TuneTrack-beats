@@ -3,9 +3,7 @@ import {
   createActionDockMotion,
   createStandardTransition,
 } from "../../../features/motion";
-import {
-  TtTokenAmount,
-} from "../../../features/ui/TtToken";
+import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import styles from "./GamePageActionPanels.module.css";
 
 interface ActionDockProps {
@@ -53,7 +51,7 @@ export function PrimaryActionButton({
       <span className={styles.actionButtonLabel}>{children}</span>
       {ttCost ? (
         <span className={styles.ttCostBadge} ref={ttCostBadgeRef}>
-          <TtTokenAmount amount={ttCost} iconClassName={styles.ttCostIcon} />
+          <TokenCountAmount amount={ttCost} iconClassName={styles.ttCostIcon} />
         </span>
       ) : null}
     </button>
@@ -75,7 +73,7 @@ export function SecondaryActionButton({
       <span className={styles.actionButtonLabel}>{children}</span>
       {ttCost ? (
         <span className={styles.ttCostBadge} ref={ttCostBadgeRef}>
-          <TtTokenAmount amount={ttCost} iconClassName={styles.ttCostIcon} />
+          <TokenCountAmount amount={ttCost} iconClassName={styles.ttCostIcon} />
         </span>
       ) : null}
     </button>

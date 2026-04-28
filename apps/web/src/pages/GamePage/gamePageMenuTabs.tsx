@@ -19,7 +19,8 @@ import type { AppShellMenuTab } from "../../features/app-shell/AppShellMenu";
 import type { Translate } from "../../features/i18n";
 import { Badge } from "../../features/ui/Badge";
 import { CardCountAmount } from "../../features/ui/CardCountAmount";
-import { TtTokenAmount, TtTokenIcon } from "../../features/ui/TtToken";
+import { TokenCountAmount } from "../../features/ui/TokenCountAmount";
+import { TtTokenIcon } from "../../features/ui/TtToken";
 import type { HostPlaybackState } from "./hooks/useHostPlayback";
 import type { GameHistoryEntry } from "./hooks/useGameHistory";
 import styles from "./GamePage.module.css";
@@ -292,7 +293,7 @@ function GameMenuPlayerItem({
                 </Badge>
                 {roomState.settings.ttModeEnabled ? (
                   <Badge className={styles.menuPlayerBadge} size="sm" variant="neutral">
-                    <TtTokenAmount amount={player.ttTokenCount} />
+                    <TokenCountAmount amount={player.ttTokenCount} />
                   </Badge>
                 ) : null}
                 {player.isHost ? (

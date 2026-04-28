@@ -2,7 +2,7 @@ import { memo } from "react";
 import { AppShellMenu } from "../../../features/app-shell/AppShellMenu";
 import { useI18n } from "../../../features/i18n";
 import { CardCountAmount } from "../../../features/ui/CardCountAmount";
-import { TtTokenAmount } from "../../../features/ui/TtToken";
+import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import type { GamePageHeaderModel } from "../GamePage.types";
 import styles from "../GamePage.module.css";
 
@@ -88,7 +88,7 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
                   <span aria-hidden="true" className={styles.statusBadgeCounterSeparator}>
                     ·
                   </span>
-                  <TtTokenAmount amount={visibleTimelineTtCount} />
+                  <TokenCountAmount amount={visibleTimelineTtCount} />
                 </>
               ) : null}
             </span>
@@ -115,7 +115,7 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
                       {roomState.settings.ttModeEnabled ? (
                         <>
                           <span aria-hidden="true">·</span>
-                          <TtTokenAmount amount={player.ttTokenCount} />
+                          <TokenCountAmount amount={player.ttTokenCount} />
                         </>
                       ) : null}
                     </span>

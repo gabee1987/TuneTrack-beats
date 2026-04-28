@@ -7,7 +7,7 @@ import {
   createStandardTransition,
 } from "../../../features/motion";
 import { useI18n } from "../../../features/i18n";
-import { TtTokenAmount } from "../../../features/ui/TtToken";
+import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import styles from "./GamePageActionPanels.module.css";
 import { ActionDock, PrimaryActionButton, SecondaryActionButton } from "./ActionDock";
 
@@ -197,7 +197,7 @@ export function ChallengeActionPanel({
                 {roomState.settings.ttModeEnabled ? (
                   <span className={styles.challengeTokenChip}>
                     {t("game.challenge.yourTokens")}{" "}
-                    <TtTokenAmount amount={currentPlayerTtCount} />
+                    <TokenCountAmount amount={currentPlayerTtCount} />
                   </span>
                 ) : null}
               </div>

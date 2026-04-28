@@ -18,7 +18,8 @@ import { useI18n } from "../../../features/i18n";
 import { SettingField, SettingInfoButton } from "../../../features/ui/SettingField";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { ToggleSwitch } from "../../../features/ui/ToggleSwitch";
-import { TtTokenAmount, TtTokenIcon } from "../../../features/ui/TtToken";
+import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
+import { TtTokenIcon } from "../../../features/ui/TtToken";
 import { AdaptiveSelect } from "./AdaptiveSelect";
 import type { LobbyRoomSettingsChangeHandler } from "./LobbyHostSettings.types";
 import { LobbySectionHeader } from "./LobbySectionHeader";
@@ -46,8 +47,8 @@ export function LobbyHostTtSettings({
   const ttSettingsContentRef = useRef<HTMLDivElement | null>(null);
   const [ttSettingsContentHeight, setTtSettingsContentHeight] = useState(0);
   const tokenIcon = <TtTokenIcon className={styles.inlineTtTokenIcon} />;
-  const oneToken = <TtTokenAmount amount={1} />;
-  const threeTokens = <TtTokenAmount amount={3} />;
+  const oneToken = <TokenCountAmount amount={1} />;
+  const threeTokens = <TokenCountAmount amount={3} />;
   const ttModeInfo: ReactNode = (
     <span className={styles.ttInfoStack}>
       <span>
