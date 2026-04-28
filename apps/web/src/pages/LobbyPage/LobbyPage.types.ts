@@ -5,6 +5,7 @@ export interface LobbyPageController {
   currentPlayerId: string | null;
   currentSettings: PublicRoomSettings;
   displayName: string;
+  errorCode: string | null;
   errorMessage: string | null;
   handleCloseRoom: () => void;
   handlePlayerStartingCardCountChange: (player: PublicPlayerState, nextValue: number) => void;

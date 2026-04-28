@@ -15,7 +15,7 @@ export function LobbyPageDesktop({ controller }: LobbyPageAssemblyProps) {
   const { t } = useI18n();
   const resolvedRoomId = controller.roomState?.roomId ?? controller.roomId ?? "lobby";
   const players = controller.roomState?.players ?? [];
-  const hasStartedJoinError = controller.errorMessage === "This game has already started.";
+  const hasStartedJoinError = controller.errorCode === "GAME_ALREADY_STARTED";
 
   return (
     <AppPageShell panelClassName={styles.panelShell} screenClassName={styles.screenShell}>

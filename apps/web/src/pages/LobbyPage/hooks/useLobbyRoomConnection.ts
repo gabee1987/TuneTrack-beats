@@ -9,6 +9,8 @@ import {
 } from "@tunetrack/shared";
 import { useEffect, useRef, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
+import { useI18n } from "../../../features/i18n";
+import { localizeServerError } from "../../../features/i18n/localizedErrors";
 import { rememberPlayerDisplayName } from "../../../services/session/playerSession";
 import { getSocketClient } from "../../../services/socket/socketClient";
 
@@ -22,6 +24,7 @@ interface UseLobbyRoomConnectionOptions {
 interface UseLobbyRoomConnectionResult {
   connectionStatus: string;
   currentPlayerId: string | null;
+  errorCode: string | null;
   errorMessage: string | null;
   roomState: PublicRoomState | null;
 }
@@ -32,11 +35,13 @@ export function useLobbyRoomConnection({
   playerSessionId,
   roomId,
 }: UseLobbyRoomConnectionOptions): UseLobbyRoomConnectionResult {
+  const { t } = useI18n();
   const [connectionStatus, setConnectionStatus] = useState("Connecting");
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
   const currentPlayerIdRef = useRef<string | null>(null);
   const hasNavigatedToGameRef = useRef(false);
   const [roomState, setRoomState] = useState<PublicRoomState | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -52,6 +57,7 @@ export function useLobbyRoomConnection({
 
     function handleConnect(socketClient: Awaited<ReturnType<typeof getSocketClient>>) {
       setConnectionStatus("Connected");
+      setErrorCode(null);
       setErrorMessage(null);
       socketClient.emit(ClientToServerEvent.JoinRoom, {
         displayName,
@@ -84,7 +90,8 @@ export function useLobbyRoomConnection({
     }
 
     function handleError(payload: ServerErrorPayload) {
-      setErrorMessage(payload.message);
+      setErrorCode(payload.code);
+      setErrorMessage(localizeServerError(t, payload));
     }
 
     function handleRoomClosed(_: RoomClosedPayload) {
@@ -125,11 +132,12 @@ export function useLobbyRoomConnection({
       isDisposed = true;
       cleanupSocketListeners?.();
     };
-  }, [displayName, navigate, playerSessionId, roomId]);
+  }, [displayName, navigate, playerSessionId, roomId, t]);
 
   return {
     connectionStatus,
     currentPlayerId,
+    errorCode,
     errorMessage,
     roomState,
   };

@@ -9,6 +9,10 @@ import {
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useI18n } from "../../../features/i18n";
+import {
+  localizePlaylistImportError,
+  localizeSpotifyAuthError,
+} from "../../../features/i18n/localizedErrors";
 import { getSocketClient } from "../../../services/socket/socketClient";
 
 type AuthPhase = "idle" | "connecting" | "error";
@@ -70,7 +74,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
           setAccountType(payload.accountType);
         } else {
           setAuthPhase("error");
-          setAuthError(payload.message);
+          setAuthError(localizeSpotifyAuthError(t, payload));
         }
       }
 
@@ -81,7 +85,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
           setPlaylistUrl("");
         } else {
           setImportPhase("error");
-          setImportError(payload.message);
+          setImportError(localizePlaylistImportError(t, payload));
         }
       }
 
@@ -95,7 +99,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     });
 
     return () => cleanup?.();
-  }, []);
+  }, [t]);
 
   function connectSpotify() {
     if (!roomId) return;

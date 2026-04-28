@@ -9,6 +9,8 @@ import {
 } from "@tunetrack/shared";
 import { useEffect, useRef, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
+import { useI18n } from "../../../features/i18n";
+import { localizeServerError } from "../../../features/i18n/localizedErrors";
 import { getSocketClient } from "../../../services/socket/socketClient";
 import type { GameRouteState } from "../GamePage.types";
 
@@ -27,6 +29,7 @@ export function useGameRoomConnection({
   playerSessionId,
   rememberedDisplayName,
 }: UseGameRoomConnectionOptions) {
+  const { t } = useI18n();
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(
     routeState.currentPlayerId ?? null,
   );
@@ -67,7 +70,7 @@ export function useGameRoomConnection({
     function handleError(payload: ServerErrorPayload) {
       errorKeyRef.current += 1;
       setErrorKey(errorKeyRef.current);
-      setErrorMessage(payload.message);
+      setErrorMessage(localizeServerError(t, payload));
     }
 
     function handleRoomClosed(_: RoomClosedPayload) {
@@ -106,7 +109,7 @@ export function useGameRoomConnection({
       isDisposed = true;
       cleanupSocketListeners?.();
     };
-  }, [navigate, playerSessionId, rememberedDisplayName, roomId]);
+  }, [navigate, playerSessionId, rememberedDisplayName, roomId, t]);
 
   useEffect(() => {
     if (

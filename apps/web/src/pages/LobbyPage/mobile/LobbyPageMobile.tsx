@@ -26,7 +26,7 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
   const { t } = useI18n();
   const resolvedRoomId = controller.roomState?.roomId ?? controller.roomId ?? "lobby";
   const players = controller.roomState?.players ?? [];
-  const hasStartedJoinError = controller.errorMessage === "This game has already started.";
+  const hasStartedJoinError = controller.errorCode === "GAME_ALREADY_STARTED";
   const currentPlayer = players.find((player) => player.id === controller.currentPlayerId);
   const visibleDisplayName = currentPlayer?.displayName ?? controller.displayName;
   const navigate = useNavigate();
