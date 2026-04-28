@@ -840,7 +840,8 @@
 
 @media (orientation: landscape) and (max-width: 1024px) {
   .timelineRow {
-    padding-bottom: 12px;
+    padding-bottom: var(--game-mobile-timeline-bottom-clearance, 92px);
+    scroll-padding-bottom: var(--game-mobile-timeline-bottom-clearance, 92px);
   }
 }
 
