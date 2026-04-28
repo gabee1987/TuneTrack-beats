@@ -1,6 +1,7 @@
 import { CHALLENGE_TT_COST, type PublicRoomState } from "@tunetrack/shared";
 import { motion, useReducedMotion } from "framer-motion";
 import { useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   MotionPresence,
   createChallengePanelMotion,
@@ -9,7 +10,12 @@ import {
 import { useI18n } from "../../../features/i18n";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import styles from "./GamePageActionPanels.module.css";
-import { ActionDock, PrimaryActionButton, SecondaryActionButton } from "./ActionDock";
+import {
+  ActionDock,
+  PrimaryActionButton,
+  SecondaryActionButton,
+  useMobileControlPortalTarget,
+} from "./ActionDock";
 
 function parseCountdownSeconds(challengeCountdownLabel: string | null): number | null {
   if (!challengeCountdownLabel) {
@@ -75,6 +81,7 @@ export function ChallengeActionPanel({
 }: ChallengeActionPanelProps) {
   const { t } = useI18n();
   const reduceMotion = useReducedMotion() ?? false;
+  const portalTarget = useMobileControlPortalTarget();
   const beatCostBadgeRef = useRef<HTMLSpanElement | null>(null);
 
   const challengeState = roomState.status === "challenge" ? roomState.challengeState : null;
@@ -164,8 +171,7 @@ export function ChallengeActionPanel({
     </ActionDock>
   ) : null;
 
-  return (
-    <>
+  const challengeCallout = (
       <MotionPresence>
         {challengeState ? (
           <motion.section
@@ -205,6 +211,11 @@ export function ChallengeActionPanel({
           </motion.section>
         ) : null}
       </MotionPresence>
+  );
+
+  return (
+    <>
+      {portalTarget ? createPortal(challengeCallout, portalTarget) : challengeCallout}
       {challengeState ? actionDock : null}
     </>
   );

@@ -54,7 +54,7 @@
   --challenge-stage-dot: #ffd166;
   position: relative;
   isolation: isolate;
-  overflow: visible;
+  overflow: hidden;
   margin-top: 14px;
   padding: 14px 14px 12px;
   border: 1px solid var(--challenge-stage-border);
@@ -409,19 +409,28 @@
     position: fixed;
     left: max(16px, env(safe-area-inset-left));
     right: max(16px, env(safe-area-inset-right));
-    bottom: calc(env(safe-area-inset-bottom) + 94px);
+    bottom: calc(var(--safe-area-bottom) + 86px);
     z-index: 880;
     margin: 0;
+    max-height: calc(100svh - var(--safe-area-top) - var(--safe-area-bottom) - 104px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .floatingActionDock {
     position: fixed;
     left: max(14px, env(safe-area-inset-left));
     right: max(14px, env(safe-area-inset-right));
-    bottom: calc(env(safe-area-inset-bottom) + 16px);
+    bottom: calc(var(--safe-area-bottom) + 10px);
     z-index: 900;
     margin-top: 0;
     padding: 8px;
+    max-height: calc(100svh - var(--safe-area-top) - var(--safe-area-bottom) - 16px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     /* border-radius: 999px; */
     /* background: color-mix(in srgb, var(--color-surface) 62%, transparent); */
     /* border: 1px solid color-mix(in srgb, var(--color-border-subtle) 78%, transparent); */
@@ -456,6 +465,92 @@
   .ttCostBadge {
     margin-left: auto;
     font-size: 12px;
+  }
+}
+
+@media (max-width: 720px) and (max-height: 700px),
+  (hover: none) and (pointer: coarse) and (max-height: 700px) {
+  .floatingActionDock {
+    bottom: calc(var(--safe-area-bottom) + 8px);
+    gap: 6px;
+    padding: 4px 6px;
+  }
+
+  .challengeCallout {
+    bottom: calc(var(--safe-area-bottom) + 68px);
+    max-height: calc(100svh - var(--safe-area-top) - var(--safe-area-bottom) - 82px);
+    padding: 12px;
+    border-radius: 22px;
+  }
+
+  .floatingActionDockStacked {
+    border-radius: 24px;
+  }
+
+  .floatingActionSecondaryRow {
+    gap: 6px;
+  }
+
+  .floatingPrimaryButton,
+  .floatingSecondaryButton {
+    min-height: 46px;
+    padding: 10px 10px;
+    font-size: clamp(10px, 7cqw, 16px);
+  }
+
+  .ttCostBadge {
+    min-width: 24px;
+    font-size: 11px;
+  }
+}
+
+@media (max-height: 420px) and (orientation: landscape) {
+  .challengeCallout {
+    left: max(10px, env(safe-area-inset-left));
+    right: max(10px, env(safe-area-inset-right));
+    bottom: calc(var(--safe-area-bottom) + 54px);
+    max-height: calc(100svh - var(--safe-area-top) - var(--safe-area-bottom) - 62px);
+    padding: 10px;
+    border-radius: 18px;
+  }
+
+  .challengeCalloutInner {
+    gap: 5px;
+  }
+
+  .challengeTitle {
+    font-size: 16px;
+  }
+
+  .challengeText {
+    font-size: 12px;
+  }
+
+  .challengeMetaRow {
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .challengeCountdownBadge,
+  .challengeTokenChip {
+    min-height: 28px;
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+
+  .floatingActionDock {
+    left: max(10px, env(safe-area-inset-left));
+    right: max(10px, env(safe-area-inset-right));
+    bottom: calc(var(--safe-area-bottom) + 4px);
+    gap: 5px;
+    padding: 2px 4px;
+  }
+
+  .floatingPrimaryButton,
+  .floatingSecondaryButton {
+    min-height: 40px;
+    padding: 8px 9px;
+    font-size: clamp(10px, 6cqw, 14px);
   }
 }
 
