@@ -8,6 +8,11 @@ import {
 } from "@tunetrack/shared";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useI18n } from "../../../features/i18n";
+import {
+  localizePlaylistImportError,
+  localizeSpotifyAuthError,
+} from "../../../features/i18n/localizedErrors";
 import { getSocketClient } from "../../../services/socket/socketClient";
 
 type AuthPhase = "idle" | "connecting" | "error";
@@ -31,6 +36,7 @@ export interface UseLobbySpotifyResult {
 }
 
 export function useLobbySpotify(): UseLobbySpotifyResult {
+  const { t } = useI18n();
   const { roomId } = useParams<{ roomId: string }>();
 
   const [authPhase, setAuthPhase] = useState<AuthPhase>("idle");
@@ -68,7 +74,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
           setAccountType(payload.accountType);
         } else {
           setAuthPhase("error");
-          setAuthError(payload.message);
+          setAuthError(localizeSpotifyAuthError(t, payload));
         }
       }
 
@@ -79,7 +85,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
           setPlaylistUrl("");
         } else {
           setImportPhase("error");
-          setImportError(payload.message);
+          setImportError(localizePlaylistImportError(t, payload));
         }
       }
 
@@ -93,7 +99,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     });
 
     return () => cleanup?.();
-  }, []);
+  }, [t]);
 
   function connectSpotify() {
     if (!roomId) return;
@@ -104,7 +110,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     const popup = window.open("about:blank", "spotify-auth", "popup,width=520,height=720");
     if (!popup) {
       setAuthPhase("error");
-      setAuthError("Popup was blocked. Please allow popups for this page and try again.");
+      setAuthError(t("lobby.spotify.popupBlocked"));
       return;
     }
 

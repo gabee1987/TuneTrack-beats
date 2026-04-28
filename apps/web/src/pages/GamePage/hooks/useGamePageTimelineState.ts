@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { PublicRoomState } from "@tunetrack/shared";
+import { useI18n } from "../../../features/i18n";
 import type { GamePageCard, GamePagePlayerNameResolver } from "../GamePage.types";
 import { useGamePageActiveTimelinePreviewState } from "./useGamePageActiveTimelinePreviewState";
 import { useGamePageRevealTimelineState } from "./useGamePageRevealTimelineState";
@@ -14,7 +15,6 @@ interface UseGamePageTimelineStateOptions {
   currentPlayerTtCount: number;
   currentPlayerTimeline: PublicRoomState["timelines"][string];
   activePlayerTimeline: PublicRoomState["timelines"][string];
-  getPossessivePlayerName: GamePagePlayerNameResolver;
   getPlayerName: GamePagePlayerNameResolver;
   isViewingOwnTimeline: boolean;
   locallyPlacedCard: PublicRoomState["currentTrackCard"] | null;
@@ -47,13 +47,13 @@ export function useGamePageTimelineState({
   currentPlayerTtCount,
   currentPlayerTimeline,
   activePlayerTimeline,
-  getPossessivePlayerName,
   getPlayerName,
   isViewingOwnTimeline,
   locallyPlacedCard,
   roomState,
   selectedSlotIndex,
 }: UseGamePageTimelineStateOptions): UseGamePageTimelineStateResult {
+  const { t } = useI18n();
   const {
     activeTimelineChallengeSlot,
     activeTimelineOriginalSlot,
@@ -86,19 +86,23 @@ export function useGamePageTimelineState({
   );
 
   function getVisibleTimelineTitle(): string {
-    return isViewingOwnTimeline
-      ? "Your timeline"
+    const timelineOwnerId = isViewingOwnTimeline
+      ? currentPlayerId
       : roomState?.status === "finished"
-        ? `${getPlayerName(roomState.winnerPlayerId)}'s winning timeline`
-      : `${getPossessivePlayerName(activePlayerId)} timeline`;
+        ? roomState.winnerPlayerId
+        : activePlayerId;
+    return (
+      roomState?.players.find((player) => player.id === timelineOwnerId)?.displayName ??
+      getPlayerName(timelineOwnerId)
+    );
   }
 
   function getVisibleTimelineHint(): string {
     return isViewingOwnTimeline
-      ? "This is your personal timeline. Switch back to the active timeline any time."
+      ? t("game.timeline.yourHint")
       : roomState?.status === "finished"
-        ? "This is the winning timeline. Switch to Mine any time to compare your run."
-      : activeTimelineHint;
+        ? t("game.timeline.winningHint")
+        : activeTimelineHint;
   }
 
   function getVisiblePreviewCard(): PublicRoomState["currentTrackCard"] | null {
@@ -132,9 +136,7 @@ export function useGamePageTimelineState({
     visibleTimelineCardCount: visibleTimelineCards.length,
     visibleTimelineCards,
     visibleTimelineHint: getVisibleTimelineHint(),
-    visibleTimelineTtCount: isViewingOwnTimeline
-      ? currentPlayerTtCount
-      : activePlayerTtCount,
+    visibleTimelineTtCount: isViewingOwnTimeline ? currentPlayerTtCount : activePlayerTtCount,
     visibleTimelineTitle: getVisibleTimelineTitle(),
   };
 }

@@ -16,8 +16,11 @@ import {
   createStandardTransition,
 } from "../../features/motion";
 import type { AppShellMenuTab } from "../../features/app-shell/AppShellMenu";
+import type { Translate } from "../../features/i18n";
 import { Badge } from "../../features/ui/Badge";
-import { TtTokenAmount, TtTokenIcon } from "../../features/ui/TtToken";
+import { CardCountAmount } from "../../features/ui/CardCountAmount";
+import { TokenCountAmount } from "../../features/ui/TokenCountAmount";
+import { TtTokenIcon } from "../../features/ui/TtToken";
 import type { HostPlaybackState } from "./hooks/useHostPlayback";
 import type { GameHistoryEntry } from "./hooks/useGameHistory";
 import styles from "./GamePage.module.css";
@@ -27,9 +30,11 @@ interface CreateGameMenuTabsOptions {
   historyEntries: GameHistoryEntry[];
   roomState: PublicRoomState;
   onAwardTt: (playerId: string) => void;
+  onKickPlayer: (playerId: string) => void;
   onRemoveTt: (playerId: string) => void;
   onTransferHost: (playerId: string) => void;
   playback?: HostPlaybackState;
+  t: Translate;
 }
 
 type TokenFlyAnimation = "add" | "remove" | null;
@@ -176,23 +181,28 @@ function TokenAdjustButtons({ currentTokenCount, onAwardTt, onRemoveTt }: TokenA
 interface GameMenuPlayerItemProps {
   currentPlayerId: string | null;
   onAwardTt: (playerId: string) => void;
+  onKickPlayer: (playerId: string) => void;
   onRemoveTt: (playerId: string) => void;
   onTransferHost: (playerId: string) => void;
   player: PublicPlayerState;
   roomState: PublicRoomState;
+  t: Translate;
 }
 
 function GameMenuPlayerItem({
   currentPlayerId,
   onAwardTt,
+  onKickPlayer,
   onRemoveTt,
   onTransferHost,
   player,
   roomState,
+  t,
 }: GameMenuPlayerItemProps) {
   const reduceMotion = useReducedMotion() ?? false;
   const [isExpanded, setIsExpanded] = useState(false);
   const [isTransferConfirmOpen, setIsTransferConfirmOpen] = useState(false);
+  const [isKickConfirmOpen, setIsKickConfirmOpen] = useState(false);
   const expandedContentRef = useRef<HTMLDivElement | null>(null);
   const [expandedContentHeight, setExpandedContentHeight] = useState(0);
   const isCurrentPlayerHost = roomState.hostId === currentPlayerId;
@@ -200,9 +210,14 @@ function GameMenuPlayerItem({
   const isDisconnected = player.connectionStatus === "disconnected";
   const canTransferHost =
     isCurrentPlayerHost && !isCurrentPlayer && !player.isHost && !isDisconnected;
+  const canKickPlayer = isCurrentPlayerHost && !isCurrentPlayer;
   const hasTokenActions = roomState.settings.ttModeEnabled && isCurrentPlayerHost;
   const hasTransferAction = isCurrentPlayerHost && !isCurrentPlayer;
   const hasExpandableContent = hasTransferAction;
+  const cardCount = roomState.timelines[player.id]?.length ?? 0;
+  const cardCountLabel = t("gameMenu.cards", {
+    count: cardCount,
+  });
 
   useLayoutEffect(() => {
     const contentElement = expandedContentRef.current;
@@ -231,9 +246,16 @@ function GameMenuPlayerItem({
     if (!canTransferHost) {
       return;
     }
-
     onTransferHost(player.id);
     setIsTransferConfirmOpen(false);
+  }
+
+  function handleKickPlayer() {
+    if (!canKickPlayer) {
+      return;
+    }
+    onKickPlayer(player.id);
+    setIsKickConfirmOpen(false);
   }
 
   return (
@@ -259,30 +281,34 @@ function GameMenuPlayerItem({
           <div className={styles.menuPlayerIdentity}>
             <div className={styles.menuPlayerNameRow}>
               <strong className={styles.menuPlayerName}>
-                {isCurrentPlayer ? "You" : player.displayName}
+                {isCurrentPlayer ? t("common.you") : player.displayName}
               </strong>
               <div className={styles.menuPlayerBadges}>
                 <Badge className={styles.menuPlayerBadge} size="sm" variant="neutral">
-                  {roomState.timelines[player.id]?.length ?? 0} cards
+                  <CardCountAmount
+                    amount={cardCount}
+                    ariaLabel={cardCountLabel}
+                    className={styles.menuPlayerCardCount}
+                  />
                 </Badge>
                 {roomState.settings.ttModeEnabled ? (
                   <Badge className={styles.menuPlayerBadge} size="sm" variant="neutral">
-                    <TtTokenAmount amount={player.ttTokenCount} />
+                    <TokenCountAmount amount={player.ttTokenCount} />
                   </Badge>
                 ) : null}
                 {player.isHost ? (
                   <Badge className={styles.menuPlayerBadge} size="sm" variant="strong">
-                    Host
+                    {t("gameMenu.host")}
                   </Badge>
                 ) : null}
                 {isDisconnected ? (
                   <Badge className={styles.menuPlayerBadge} size="sm" variant="mutedSurface">
-                    Offline
+                    {t("gameMenu.offline")}
                   </Badge>
                 ) : null}
                 {player.id === roomState.turn?.activePlayerId ? (
                   <Badge className={styles.menuPlayerBadge} size="sm" variant="mutedSurface">
-                    Turn
+                    {t("gameMenu.turn")}
                   </Badge>
                 ) : null}
               </div>
@@ -300,9 +326,12 @@ function GameMenuPlayerItem({
       {hasExpandableContent ? (
         <button
           aria-expanded={isExpanded}
-          aria-label={`${isExpanded ? "Hide" : "Show"} host transfer controls for ${
-            isCurrentPlayer ? "you" : player.displayName
-          }`}
+          aria-label={t(
+            isExpanded ? "gameMenu.hideHostTransferControls" : "gameMenu.showHostTransferControls",
+            {
+              playerName: isCurrentPlayer ? t("common.you").toLowerCase() : player.displayName,
+            },
+          )}
           className={`${styles.menuPlayerExpandIndicatorButton} ${
             hasTokenActions ? styles.menuPlayerExpandIndicatorAfterTokens : ""
           }`}
@@ -338,7 +367,16 @@ function GameMenuPlayerItem({
               onClick={() => setIsTransferConfirmOpen(true)}
               type="button"
             >
-              Transfer host
+              {t("gameMenu.transferHost")}
+            </button>
+          ) : null}
+          {canKickPlayer ? (
+            <button
+              className={`${styles.menuActionButton} ${styles.menuKickPlayerButton}`}
+              onClick={() => setIsKickConfirmOpen(true)}
+              type="button"
+            >
+              {t("gameMenu.kickPlayer")}
             </button>
           ) : null}
         </div>
@@ -346,14 +384,14 @@ function GameMenuPlayerItem({
       <MotionDialogPortal
         cardClassName={styles.transferConfirmCard}
         isOpen={isTransferConfirmOpen}
-        label="Transfer host controls"
+        label={t("gameMenu.transferHostControls")}
         onClose={() => setIsTransferConfirmOpen(false)}
         overlayClassName={styles.transferConfirmOverlay}
       >
         <div className={styles.transferConfirmHeaderRow}>
-          <p className={styles.transferConfirmEyebrow}>Host transfer</p>
+          <p className={styles.transferConfirmEyebrow}>{t("gameMenu.hostTransfer")}</p>
           <button
-            aria-label="Close host transfer confirmation"
+            aria-label={t("gameMenu.closeHostTransferConfirmation")}
             className={styles.transferConfirmCloseButton}
             onClick={() => setIsTransferConfirmOpen(false)}
             type="button"
@@ -361,10 +399,9 @@ function GameMenuPlayerItem({
             x
           </button>
         </div>
-        <h2 className={styles.transferConfirmTitle}>Transfer host controls?</h2>
+        <h2 className={styles.transferConfirmTitle}>{t("gameMenu.transferHostQuestion")}</h2>
         <p className={styles.transferConfirmBody}>
-          {player.displayName} will receive host controls immediately. You will stay in the game as
-          a regular player.
+          {t("gameMenu.transferHostBody", { playerName: player.displayName })}
         </p>
         <div className={styles.transferConfirmActions}>
           <button
@@ -372,7 +409,7 @@ function GameMenuPlayerItem({
             onClick={() => setIsTransferConfirmOpen(false)}
             type="button"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             className={`${styles.menuActionButton} ${styles.menuTransferHostButton}`}
@@ -380,7 +417,48 @@ function GameMenuPlayerItem({
             onClick={handleTransferHost}
             type="button"
           >
-            Transfer host
+            {t("gameMenu.transferHost")}
+          </button>
+        </div>
+      </MotionDialogPortal>
+      <MotionDialogPortal
+        cardClassName={styles.transferConfirmCard}
+        isOpen={isKickConfirmOpen}
+        label={t("gameMenu.kickPlayer")}
+        onClose={() => setIsKickConfirmOpen(false)}
+        overlayClassName={styles.transferConfirmOverlay}
+      >
+        <div className={styles.transferConfirmHeaderRow}>
+          <p className={styles.transferConfirmEyebrow}>{t("gameMenu.removePlayer")}</p>
+          <button
+            aria-label={t("gameMenu.closeKickPlayerConfirmation")}
+            className={styles.transferConfirmCloseButton}
+            onClick={() => setIsKickConfirmOpen(false)}
+            type="button"
+          >
+            x
+          </button>
+        </div>
+        <h2 className={styles.transferConfirmTitle}>
+          {t("gameMenu.removePlayerQuestion", { playerName: player.displayName })}
+        </h2>
+        <p className={styles.transferConfirmBody}>
+          {t("gameMenu.removePlayerBody", { playerName: player.displayName })}
+        </p>
+        <div className={styles.transferConfirmActions}>
+          <button
+            className={`${styles.menuActionButton} ${styles.transferConfirmSecondaryButton}`}
+            onClick={() => setIsKickConfirmOpen(false)}
+            type="button"
+          >
+            {t("common.cancel")}
+          </button>
+          <button
+            className={`${styles.menuActionButton} ${styles.menuKickPlayerButton}`}
+            onClick={handleKickPlayer}
+            type="button"
+          >
+            {t("gameMenu.removePlayer")}
           </button>
         </div>
       </MotionDialogPortal>
@@ -391,6 +469,7 @@ function GameMenuPlayerItem({
 interface PlaybackTabContentProps {
   playback: HostPlaybackState;
   roomState: PublicRoomState;
+  t: Translate;
 }
 
 function formatMs(ms: number): string {
@@ -400,7 +479,7 @@ function formatMs(ms: number): string {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
-function PlaybackTabContent({ playback, roomState }: PlaybackTabContentProps) {
+function PlaybackTabContent({ playback, roomState, t }: PlaybackTabContentProps) {
   const { isReady, isPlaying, position, duration, pause, resume, seek } = playback;
   const { currentTrackCard, status } = roomState;
   const showTrackDetails = status === "reveal" || status === "finished";
@@ -410,35 +489,28 @@ function PlaybackTabContent({ playback, roomState }: PlaybackTabContentProps) {
     <div className={styles.playbackSection}>
       {hasTrack ? (
         <div className={styles.playbackArtworkLarge}>
+          {showTrackDetails && currentTrackCard.releaseYear !== undefined ? (
+            <p className={styles.playbackYear}>{currentTrackCard.releaseYear}</p>
+          ) : null}
           {showTrackDetails && currentTrackCard.artworkUrl ? (
-            <img alt="" className={styles.playbackArtworkImg} src={currentTrackCard.artworkUrl} />
+            <div className={styles.playbackArtworkWrapper}>
+              <img alt="" className={styles.playbackArtworkImg} src={currentTrackCard.artworkUrl} />
+            </div>
           ) : (
-            <PlaybackMusicNoteIcon />
+            <div className={styles.playbackMusicIconBox}>
+              <PlaybackMusicNoteIcon />
+            </div>
           )}
         </div>
       ) : null}
 
       <div className={styles.playbackControls}>
         <div className={styles.playbackTrackRow}>
-          {hasTrack ? (
-            <button
-              aria-label={isPlaying ? "Pause" : "Play"}
-              className={styles.playbackCircleBtn}
-              disabled={!isReady}
-              onClick={isPlaying ? pause : resume}
-              type="button"
-            >
-              {isPlaying ? <PlaybackPauseIcon /> : <PlaybackPlayIcon />}
-            </button>
-          ) : null}
           <div className={styles.playbackMeta}>
             {hasTrack && showTrackDetails ? (
               <>
                 <div className={styles.playbackMetaRow}>
                   <p className={styles.playbackTitle}>{currentTrackCard.title}</p>
-                  {currentTrackCard.releaseYear !== undefined ? (
-                    <p className={styles.playbackYear}>{currentTrackCard.releaseYear}</p>
-                  ) : null}
                 </div>
                 <p className={styles.playbackArtist}>{currentTrackCard.artist}</p>
                 {currentTrackCard.albumTitle ? (
@@ -447,9 +519,7 @@ function PlaybackTabContent({ playback, roomState }: PlaybackTabContentProps) {
               </>
             ) : (
               <p className={styles.playbackHiddenNote}>
-                {hasTrack
-                  ? "Song details are hidden until the card is revealed."
-                  : "No song loaded yet."}
+                {hasTrack ? t("gameMenu.songDetailsHidden") : t("gameMenu.noSongLoaded")}
               </p>
             )}
           </div>
@@ -458,7 +528,7 @@ function PlaybackTabContent({ playback, roomState }: PlaybackTabContentProps) {
         {hasTrack && duration > 0 ? (
           <div className={styles.playbackProgressBlock}>
             <input
-              aria-label="Playback position"
+              aria-label={t("gameMenu.playbackPosition")}
               className={styles.playbackSlider}
               max={duration}
               min={0}
@@ -473,6 +543,20 @@ function PlaybackTabContent({ playback, roomState }: PlaybackTabContentProps) {
             </div>
           </div>
         ) : null}
+
+        <div className={styles.playbackActions}>
+          {hasTrack ? (
+            <button
+              aria-label={isPlaying ? t("gameMenu.pause") : t("gameMenu.play")}
+              className={styles.playbackCircleBtn}
+              disabled={!isReady}
+              onClick={isPlaying ? pause : resume}
+              type="button"
+            >
+              {isPlaying ? <PlaybackPauseIcon /> : <PlaybackPlayIcon />}
+            </button>
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -504,11 +588,12 @@ function PlaybackMusicNoteIcon() {
 
 interface HistoryTabContentProps {
   entries: GameHistoryEntry[];
+  t: Translate;
 }
 
-function HistoryTabContent({ entries }: HistoryTabContentProps) {
+function HistoryTabContent({ entries, t }: HistoryTabContentProps) {
   if (entries.length === 0) {
-    return <div className={styles.historyEmpty}>No cards played yet.</div>;
+    return <div className={styles.historyEmpty}>{t("gameMenu.noCardsPlayed")}</div>;
   }
 
   return (
@@ -599,9 +684,11 @@ export function createGameMenuTabs({
   historyEntries,
   roomState,
   onAwardTt,
+  onKickPlayer,
   onRemoveTt,
   onTransferHost,
   playback,
+  t,
 }: CreateGameMenuTabsOptions): AppShellMenuTab[] {
   const isHost = roomState.hostId === currentPlayerId;
   const hasPlaybackTab =
@@ -613,20 +700,22 @@ export function createGameMenuTabs({
   return [
     {
       id: "players",
-      label: "Players",
+      label: t("gameMenu.tabs.players"),
       content: (
         <div className={styles.menuInfoSection}>
-          <h3 className={styles.menuInfoTitle}>Players summary</h3>
+          <h3 className={styles.menuInfoTitle}>{t("gameMenu.playersSummary")}</h3>
           <ul className={styles.menuPlayerList}>
             {roomState.players.map((player) => (
               <GameMenuPlayerItem
                 currentPlayerId={currentPlayerId}
                 key={player.id}
                 onAwardTt={onAwardTt}
+                onKickPlayer={onKickPlayer}
                 onRemoveTt={onRemoveTt}
                 onTransferHost={onTransferHost}
                 player={player}
                 roomState={roomState}
+                t={t}
               />
             ))}
           </ul>
@@ -637,45 +726,38 @@ export function createGameMenuTabs({
       ? [
           {
             id: "playback" as const,
-            label: "Playback",
-            content: <PlaybackTabContent playback={playback!} roomState={roomState} />,
+            label: t("gameMenu.tabs.playback"),
+            content: <PlaybackTabContent playback={playback!} roomState={roomState} t={t} />,
           },
         ]
       : []),
     {
       id: "history" as const,
-      label: "History",
-      content: <HistoryTabContent entries={historyEntries} />,
+      label: t("gameMenu.tabs.history"),
+      content: <HistoryTabContent entries={historyEntries} t={t} />,
     },
     {
       id: "view",
-      label: "View",
-      content: (
-        <p className={styles.menuPlaceholder}>
-          Timeline visibility preferences now live inside the shared menu shell.
-        </p>
-      ),
+      label: t("gameMenu.tabs.view"),
+      content: <p className={styles.menuPlaceholder}>{t("gameMenu.viewPlaceholder")}</p>,
     },
     {
       id: "settings",
-      label: "Theme",
-      content: (
-        <p className={styles.menuPlaceholder}>
-          Theme and hidden-card preferences are available here while the final game shell is being
-          built.
-        </p>
-      ),
+      label: t("gameMenu.tabs.theme"),
+      content: <p className={styles.menuPlaceholder}>{t("gameMenu.themePlaceholder")}</p>,
+    },
+    {
+      id: "language",
+      label: t("appShell.menu.languageTab"),
+      content: null,
     },
     ...(isHost
       ? [
           {
             id: "dev" as const,
-            label: "Diagnostics",
+            label: t("gameMenu.tabs.diagnostics"),
             content: (
-              <p className={styles.menuPlaceholder}>
-                Developer-only current-card helpers will move into this tab as the main game surface
-                gets cleaned up.
-              </p>
+              <p className={styles.menuPlaceholder}>{t("gameMenu.diagnosticsPlaceholder")}</p>
             ),
           },
         ]

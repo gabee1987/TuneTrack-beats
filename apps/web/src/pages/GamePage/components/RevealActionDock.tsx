@@ -1,4 +1,5 @@
 import type { PublicRoomState } from "@tunetrack/shared";
+import { useI18n } from "../../../features/i18n";
 import { ActionDock, PrimaryActionButton } from "./ActionDock";
 
 interface RevealActionDockProps {
@@ -12,6 +13,8 @@ export function RevealActionDock({
   handleConfirmReveal,
   roomState,
 }: RevealActionDockProps) {
+  const { t } = useI18n();
+
   if (roomState.status !== "reveal" || !canConfirmReveal) {
     return null;
   }
@@ -19,7 +22,7 @@ export function RevealActionDock({
   return (
     <ActionDock>
       <PrimaryActionButton onClick={handleConfirmReveal}>
-        Next song
+        {t("game.controls.nextSong")}
       </PrimaryActionButton>
     </ActionDock>
   );

@@ -11,7 +11,11 @@
   padding: clamp(24px, 2vw, 32px);
   border-radius: clamp(24px, 3vw, 34px);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--color-accent-control) 14%, transparent), transparent 28%),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-accent-control) 14%, transparent),
+      transparent 28%
+    ),
     var(--gradient-lobby-shell-background);
 }
 

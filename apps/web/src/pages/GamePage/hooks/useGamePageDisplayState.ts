@@ -5,6 +5,7 @@ import type {
   GamePagePlayerNameResolver,
   TimelineCelebrationTone,
 } from "../GamePage.types";
+import { useI18n } from "../../../features/i18n";
 import { useGamePageStatusState } from "./useGamePageStatusState";
 import { useGamePageTimelineState } from "./useGamePageTimelineState";
 
@@ -74,6 +75,8 @@ export function useGamePageDisplayState({
   roomState,
   selectedSlotIndex,
 }: UseGamePageDisplayStateOptions): UseGamePageDisplayStateResult {
+  const { t } = useI18n();
+
   const revealOutcomeCard =
     roomState?.status === "reveal" && roomState.revealState?.revealType === "placement"
       ? roomState.revealState.placedCard
@@ -106,12 +109,12 @@ export function useGamePageDisplayState({
     roomState?.status !== "reveal" || !roomState.revealState
       ? null
       : roomState.revealState.challengeWasSuccessful === true
-        ? "Challenge won."
+        ? t("game.reveal.challengeWon")
         : roomState.revealState.challengeWasSuccessful === false
-          ? "Challenge failed."
+          ? t("game.reveal.challengeFailed")
           : roomState.revealState.wasCorrect
-            ? "Correct placement."
-            : "Wrong placement.";
+            ? t("game.reveal.correctPlacement")
+            : t("game.reveal.wrongPlacement");
   const shouldAnimateCelebrationCardToMine =
     roomState?.status === "reveal" &&
     roomState.revealState?.challengeWasSuccessful === true &&
@@ -141,7 +144,6 @@ export function useGamePageDisplayState({
     currentPlayerTtCount,
     currentPlayerTimeline,
     getPlayerName,
-    getPossessivePlayerName,
     isViewingOwnTimeline,
     locallyPlacedCard,
     roomState,

@@ -1,12 +1,14 @@
-import type { PublicRoomState } from "@tunetrack/shared";
+import { CHALLENGE_TT_COST, type PublicRoomState } from "@tunetrack/shared";
 
 interface UseGamePageActionAvailabilityOptions {
   currentPlayerId: string | null;
+  currentPlayerTtCount: number;
   roomState: PublicRoomState | null;
 }
 
 export function useGamePageActionAvailability({
   currentPlayerId,
+  currentPlayerTtCount,
   roomState,
 }: UseGamePageActionAvailabilityOptions) {
   const isHost = roomState?.hostId === currentPlayerId;
@@ -24,7 +26,8 @@ export function useGamePageActionAvailability({
     roomState?.status === "challenge" &&
     roomState.challengeState?.phase === "open" &&
     !isCurrentPlayerTurn &&
-    roomState.challengeState.originalPlayerId !== currentPlayerId;
+    roomState.challengeState.originalPlayerId !== currentPlayerId &&
+    currentPlayerTtCount >= CHALLENGE_TT_COST;
   const canResolveChallengeWindow =
     roomState?.status === "challenge" &&
     roomState.challengeState?.phase === "open" &&
@@ -40,10 +43,20 @@ export function useGamePageActionAvailability({
   const activePlayer = roomState?.turn?.activePlayerId
     ? roomState.players.find((player) => player.id === roomState.turn?.activePlayerId)
     : null;
+  const challengerPlayer =
+    roomState?.status === "challenge" &&
+    roomState.challengeState?.phase === "claimed" &&
+    roomState.challengeState.challengerPlayerId
+      ? roomState.players.find((p) => p.id === roomState.challengeState?.challengerPlayerId)
+      : null;
   const canSkipOfflinePlayer =
     isHost &&
-    roomState?.status === "turn" &&
-    activePlayer?.connectionStatus === "disconnected";
+    (
+      (roomState?.status === "turn" && activePlayer?.connectionStatus === "disconnected") ||
+      (roomState?.status === "challenge" &&
+        roomState.challengeState?.phase === "claimed" &&
+        challengerPlayer?.connectionStatus === "disconnected")
+    );
 
   return {
     canClaimChallenge,

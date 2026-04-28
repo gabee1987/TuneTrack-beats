@@ -11,6 +11,7 @@ export const ClientToServerEvent = {
   GetPlaylistTracks: "get_playlist_tracks",
   ImportPlaylist: "import_playlist",
   JoinRoom: "join_room",
+  KickPlayer: "kick_player",
   PlaceCard: "place_card",
   PlaceChallenge: "place_challenge",
   RefreshSpotifyToken: "refresh_spotify_token",
@@ -68,6 +69,11 @@ export interface StartGamePayload {
 }
 
 export interface TransferHostPayload {
+  roomId: RoomId;
+  playerId: PlayerId;
+}
+
+export interface KickPlayerPayload {
   roomId: RoomId;
   playerId: PlayerId;
 }

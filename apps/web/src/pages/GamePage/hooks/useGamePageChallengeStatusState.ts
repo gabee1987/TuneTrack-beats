@@ -1,8 +1,6 @@
 import type { PublicRoomState } from "@tunetrack/shared";
-import type {
-  GamePageCard,
-  GamePagePlayerNameResolver,
-} from "../GamePage.types";
+import type { GamePageCard, GamePagePlayerNameResolver } from "../GamePage.types";
+import { useI18n } from "../../../features/i18n";
 import {
   getGamePageChallengeStatusState,
   type GamePageChallengeStatusSelectorResult,
@@ -29,6 +27,8 @@ export function useGamePageChallengeStatusState({
   nowEpochMs,
   roomState,
 }: UseGamePageChallengeStatusStateOptions): GamePageChallengeStatusSelectorResult {
+  const { t } = useI18n();
+
   return getGamePageChallengeStatusState({
     canSelectChallengeSlot,
     challengeOwnerId,
@@ -38,5 +38,6 @@ export function useGamePageChallengeStatusState({
     isCurrentPlayerTurn,
     nowEpochMs,
     roomState,
+    t,
   });
 }

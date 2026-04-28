@@ -1,20 +1,21 @@
 import { memo } from "react";
-import {
-  AppShellMenu,
-} from "../../../features/app-shell/AppShellMenu";
-import { TtTokenAmount } from "../../../features/ui/TtToken";
+import { AppShellMenu } from "../../../features/app-shell/AppShellMenu";
+import { useI18n } from "../../../features/i18n";
+import { CardCountAmount } from "../../../features/ui/CardCountAmount";
+import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import type { GamePageHeaderModel } from "../GamePage.types";
 import styles from "../GamePage.module.css";
-import { formatPhaseLabel } from "../gamePage.utils";
 
 interface GamePageHeaderProps {
   model: GamePageHeaderModel;
 }
 
 function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
+  const { t } = useI18n();
   const {
     currentPlayerId,
     handleCloseRoom,
+    handleSkipTurn,
     leadingPlayers,
     menuTabs,
     roomState,
@@ -27,28 +28,35 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
     statusDetailText,
     updateViewPreferences,
     visibleTimelineCardCount,
+    visibleTimelinePlayerId,
     visibleTimelineTtCount,
     visibleTimelineTitle,
   } = model;
   const showStatusTokenCount = roomState.settings.ttModeEnabled;
-  const isHost = roomState.hostId === currentPlayerId;
-  const isCurrentPlayerLeading = leadingPlayers[0]?.id === currentPlayerId;
+  const isHost = roomState.hostId === visibleTimelinePlayerId;
+  const isCurrentPlayerLeading = leadingPlayers[0]?.id === visibleTimelinePlayerId;
+  const visibleTimelineCardCountLabel = t("game.header.cardCount", {
+    count: visibleTimelineCardCount,
+    plural: visibleTimelineCardCount === 1 ? "" : "s",
+  });
 
   return (
     <header className={styles.header}>
       <div className={styles.headerMain}>
         <div className={styles.headerChipRow}>
           {showRoomCodeChip ? (
-            <span className={styles.headerChip}>Room {roomState.roomId}</span>
+            <span className={styles.headerChip}>
+              {t("game.header.roomChip", { roomId: roomState.roomId })}
+            </span>
           ) : null}
           {showPhaseChip ? (
-            <span className={styles.headerChip}>
-              {formatPhaseLabel(roomState.status)}
-            </span>
+            <span className={styles.headerChip}>{t(`game.phase.${roomState.status}`)}</span>
           ) : null}
           {showTurnNumberChip ? (
             <span className={`${styles.headerChip} ${styles.headerChipTurn}`}>
-              Turn {roomState.turn?.turnNumber ?? "-"}
+              {t("game.header.turnChip", {
+                turnNumber: roomState.turn?.turnNumber ?? "-",
+              })}
             </span>
           ) : null}
         </div>
@@ -61,65 +69,82 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
             }`}
           >
             {isCurrentPlayerLeading ? (
-              <img
-                alt=""
-                aria-hidden="true"
-                className={styles.statusBadgeCrown}
-                src="/crown.png"
-              />
+              <img alt="" aria-hidden="true" className={styles.statusBadgeCrown} src="/crown.png" />
             ) : null}
             <span className={styles.statusBadgeTextGroup}>
               <span className={styles.statusBadgeDefault}>{statusBadgeText}</span>
-              <span className={styles.statusBadgeTimeline}>
-                {visibleTimelineTitle} · {visibleTimelineCardCount}{" "}
-                card{visibleTimelineCardCount === 1 ? "" : "s"}
-              </span>
+              <span className={styles.statusBadgeTimeline}>{visibleTimelineTitle}</span>
             </span>
-            {isHost ? <span className={styles.statusBadgeHostText}>Host</span> : null}
-            {showStatusTokenCount ? (
-              <span className={styles.statusBadgeTokenCount}>
-                <TtTokenAmount amount={visibleTimelineTtCount} />
-              </span>
+            {isHost ? (
+              <span className={styles.statusBadgeHostText}>{t("gameMenu.host")}</span>
             ) : null}
-          </div>
-            {showMiniStandings ? (
-            <div className={styles.headerLeadersStrip}>
-              {leadingPlayers.map((player, index) => (
-                <article className={styles.headerLeaderChip} key={player.id}>
-                  <span className={styles.headerLeaderRank}>#{index + 1}</span>
-                  <strong className={styles.headerLeaderName}>
-                    {player.displayName}
-                  </strong>
-                  <span className={styles.headerLeaderMeta}>
-                    {roomState.timelines[player.id]?.length ?? 0}
-                    {roomState.settings.ttModeEnabled ? (
-                      <>
-                        {" · "}
-                        <TtTokenAmount amount={player.ttTokenCount} />
-                      </>
-                    ) : null}
+            <span className={styles.statusBadgeCounters}>
+              <CardCountAmount
+                amount={visibleTimelineCardCount}
+                ariaLabel={visibleTimelineCardCountLabel}
+                className={styles.statusBadgeCounter}
+              />
+              {showStatusTokenCount ? (
+                <>
+                  <span aria-hidden="true" className={styles.statusBadgeCounterSeparator}>
+                    ·
                   </span>
-                </article>
-              ))}
+                  <TokenCountAmount amount={visibleTimelineTtCount} />
+                </>
+              ) : null}
+            </span>
+          </div>
+          {showMiniStandings ? (
+            <div className={styles.headerLeadersStrip}>
+              {leadingPlayers.map((player, index) => {
+                const cardCount = roomState.timelines[player.id]?.length ?? 0;
+                const cardCountLabel = t("game.header.cardCount", {
+                  count: cardCount,
+                  plural: cardCount === 1 ? "" : "s",
+                });
+
+                return (
+                  <article className={styles.headerLeaderChip} key={player.id}>
+                    <span className={styles.headerLeaderRank}>#{index + 1}</span>
+                    <strong className={styles.headerLeaderName}>{player.displayName}</strong>
+                    <span className={styles.headerLeaderMeta}>
+                      <CardCountAmount
+                        amount={cardCount}
+                        ariaLabel={cardCountLabel}
+                        className={styles.headerLeaderCardCount}
+                      />
+                      {roomState.settings.ttModeEnabled ? (
+                        <>
+                          <span aria-hidden="true">·</span>
+                          <TokenCountAmount amount={player.ttTokenCount} />
+                        </>
+                      ) : null}
+                    </span>
+                  </article>
+                );
+              })}
             </div>
           ) : null}
           <button
-            aria-label={showMiniStandings ? "Hide leaderboard" : "Show leaderboard"}
+            aria-label={
+              showMiniStandings
+                ? t("game.header.hideLeaderboard")
+                : t("game.header.showLeaderboard")
+            }
             className={styles.headerIconButton}
             onClick={() =>
               updateViewPreferences({
                 showMiniStandings: !showMiniStandings,
               })
             }
-            title={showMiniStandings ? "Hide leaderboard" : "Show leaderboard"}
+            title={
+              showMiniStandings
+                ? t("game.header.hideLeaderboard")
+                : t("game.header.showLeaderboard")
+            }
             type="button"
           >
-            <svg
-              aria-hidden="true"
-              className={styles.headerIcon}
-              fill="none"
-              viewBox="0 0 24 24"
-            >
+            <svg aria-hidden="true" className={styles.headerIcon} fill="none" viewBox="0 0 24 24">
               <path
                 d="M5 20H9V11H5V20Z"
                 stroke="currentColor"
@@ -151,16 +176,27 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
             </svg>
           </button>
           <AppShellMenu
-            subtitle="Game lobby name"
+            subtitle={t("gameMenu.lobbyNameSubtitle")}
             tabs={menuTabs}
             title={roomState.roomId}
             {...(roomState.hostId === currentPlayerId
               ? {
-                  footerAction: {
-                    label: "Close Room",
-                    onClick: handleCloseRoom,
-                    tone: "danger" as const,
-                  },
+                  footerActions: [
+                    ...(roomState.status === "turn"
+                      ? [
+                          {
+                            label: t("game.controls.skipTurn"),
+                            onClick: handleSkipTurn,
+                            tone: "neutral" as const,
+                          },
+                        ]
+                      : []),
+                    {
+                      label: t("game.header.closeRoom"),
+                      onClick: handleCloseRoom,
+                      tone: "danger" as const,
+                    },
+                  ],
                 }
               : {})}
           />
@@ -180,6 +216,7 @@ function areHeaderModelsEqual(
   return (
     previousModel.currentPlayerId === nextModel.currentPlayerId &&
     previousModel.handleCloseRoom === nextModel.handleCloseRoom &&
+    previousModel.handleSkipTurn === nextModel.handleSkipTurn &&
     previousModel.leadingPlayers === nextModel.leadingPlayers &&
     previousModel.menuTabs === nextModel.menuTabs &&
     previousModel.roomState === nextModel.roomState &&
@@ -192,13 +229,12 @@ function areHeaderModelsEqual(
     previousModel.statusDetailText === nextModel.statusDetailText &&
     previousModel.updateViewPreferences === nextModel.updateViewPreferences &&
     previousModel.visibleTimelineCardCount === nextModel.visibleTimelineCardCount &&
+    previousModel.visibleTimelinePlayerId === nextModel.visibleTimelinePlayerId &&
     previousModel.visibleTimelineTtCount === nextModel.visibleTimelineTtCount &&
     previousModel.visibleTimelineTitle === nextModel.visibleTimelineTitle
   );
 }
 
-export const GamePageHeader = memo(
-  GamePageHeaderComponent,
-  (previousProps, nextProps) =>
-    areHeaderModelsEqual(previousProps.model, nextProps.model),
+export const GamePageHeader = memo(GamePageHeaderComponent, (previousProps, nextProps) =>
+  areHeaderModelsEqual(previousProps.model, nextProps.model),
 );

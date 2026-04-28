@@ -44,6 +44,7 @@ export function useGamePageController({
 
   const {
     currentPlayerId,
+    errorKey,
     errorMessage,
     nowEpochMs,
     roomState,
@@ -54,9 +55,12 @@ export function useGamePageController({
     playerSessionId,
     rememberedDisplayName,
   });
+  const currentPlayerTtCount =
+    roomState?.players.find((player) => player.id === currentPlayerId)?.ttTokenCount ?? 0;
 
   const actionAvailability = useGamePageActionAvailability({
     currentPlayerId,
+    currentPlayerTtCount,
     roomState,
   });
 
@@ -97,6 +101,7 @@ export function useGamePageController({
       handleAwardTt: actions.handleAwardTt,
       handleRemoveTt: actions.handleRemoveTt,
       handleCloseRoom: actions.handleCloseRoom,
+      handleKickPlayer: actions.handleKickPlayer,
       handleTransferHost: actions.handleTransferHost,
     },
     locallyPlacedCard,
@@ -214,13 +219,14 @@ export function useGamePageController({
     visibleTimelineCardCount: derivedState.visibleTimelineCardCount,
     visibleTimelineCards: derivedState.visibleTimelineCards,
     visibleTimelineHint: derivedState.visibleTimelineHint,
+    visibleTimelinePlayerId: derivedState.visibleTimelinePlayerId,
     visibleTimelineTtCount: derivedState.visibleTimelineTtCount,
     visibleTimelineTitle: derivedState.visibleTimelineTitle,
   };
 
   const playerState = {
     currentPlayerId,
-    currentPlayerTtCount: derivedState.currentPlayer?.ttTokenCount ?? 0,
+    currentPlayerTtCount,
     getPlayerName: derivedState.getPlayerName,
     isHost: Boolean(actionAvailability.isHost),
     isViewingOwnTimeline: derivedState.isViewingOwnTimeline,
@@ -233,6 +239,7 @@ export function useGamePageController({
     actionState,
     capabilityState,
     displayState,
+    errorKey,
     errorMessage,
     playerState,
     preferenceState,

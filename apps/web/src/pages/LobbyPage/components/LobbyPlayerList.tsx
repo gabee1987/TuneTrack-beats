@@ -1,4 +1,5 @@
 import { type PublicPlayerState, type PublicRoomSettings } from "@tunetrack/shared";
+import { useI18n } from "../../../features/i18n";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { LobbyPlayerListItem } from "./LobbyPlayerListItem";
 import { LobbySectionHeader } from "./LobbySectionHeader";
@@ -9,14 +10,8 @@ interface LobbyPlayerListProps {
   isHost: boolean;
   players: PublicPlayerState[];
   roomSettings: PublicRoomSettings;
-  onPlayerStartingCardCountChange: (
-    player: PublicPlayerState,
-    nextValue: number,
-  ) => void;
-  onPlayerStartingTtTokenCountChange: (
-    player: PublicPlayerState,
-    nextValue: number,
-  ) => void;
+  onPlayerStartingCardCountChange: (player: PublicPlayerState, nextValue: number) => void;
+  onPlayerStartingTtTokenCountChange: (player: PublicPlayerState, nextValue: number) => void;
 }
 
 export function LobbyPlayerList({
@@ -27,11 +22,13 @@ export function LobbyPlayerList({
   onPlayerStartingCardCountChange,
   onPlayerStartingTtTokenCountChange,
 }: LobbyPlayerListProps) {
+  const { t } = useI18n();
+
   return (
     <SurfaceCard className={styles.rosterSection}>
       <LobbySectionHeader
-        description="Everyone currently in the room."
-        title="Players"
+        description={t("lobby.players.description")}
+        title={t("lobby.players.title")}
       />
 
       <ul className={styles.playerList}>
@@ -41,9 +38,7 @@ export function LobbyPlayerList({
             isHost={isHost}
             key={player.id}
             onPlayerStartingCardCountChange={onPlayerStartingCardCountChange}
-            onPlayerStartingTtTokenCountChange={
-              onPlayerStartingTtTokenCountChange
-            }
+            onPlayerStartingTtTokenCountChange={onPlayerStartingTtTokenCountChange}
             player={player}
             roomSettings={roomSettings}
           />

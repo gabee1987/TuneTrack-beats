@@ -84,12 +84,27 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
   const [cardForInfo, setCardForInfo] = useState<GamePageCard | null>(null);
   const timelineRowRef = useRef<HTMLDivElement | null>(null);
   const previewCardElementRef = useRef<HTMLElement | null>(null);
-  const lastCorrectPlacementAnimationKeyRef = useRef<number | null>(null);
+  const lastCorrectPlacementAnimationKeyRef = useRef<string | null>(null);
   const [activeCorrectPlacementAnimationKey, setActiveCorrectPlacementAnimationKey] =
-    useState<number | null>(null);
+    useState<string | null>(null);
+  const correctPlacementFallbackCard =
+    displayShowCorrectPlacementPreview &&
+    model.interaction.originalChosenSlotIndex !== null
+      ? model.render.timelineCards[model.interaction.originalChosenSlotIndex] ?? null
+      : null;
   const correctPlacementAnimationKey =
-    displayShowCorrectPlacementPreview && model.render.timelineCelebrationTransitionEvent
-      ? model.render.timelineCelebrationTransitionEvent.eventKey
+    displayShowCorrectPlacementPreview
+      ? (model.render.timelineCelebrationTransitionEvent?.celebrationKey ??
+        (correctPlacementFallbackCard
+          ? [
+              "correct-placement",
+              model.interaction.originalChosenSlotIndex,
+              correctPlacementFallbackCard.id,
+              "revealedYear" in correctPlacementFallbackCard
+                ? correctPlacementFallbackCard.revealedYear
+                : correctPlacementFallbackCard.releaseYear,
+            ].join(":")
+          : null))
       : null;
   const {
     activeCelebrationEvent,

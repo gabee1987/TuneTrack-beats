@@ -12,6 +12,7 @@ export interface PublicTurnState {
   activePlayerId: string;
   turnNumber: number;
   hasUsedSkipTrackWithTt: boolean;
+  turnSkipDeadlineEpochMs: number | null;
 }
 
 export interface PublicRevealState {
@@ -25,6 +26,19 @@ export interface PublicRevealState {
   challengerSelectedSlotIndex: number | null;
   challengeWasSuccessful: boolean | null;
   challengerTtChange: number;
+  awardedPlayerId: string | null;
+  awardedSlotIndex: number | null;
+}
+
+export interface PublicGameHistoryEntry {
+  playerId: string;
+  placedCard: TimelineCardPublic;
+  selectedSlotIndex: number;
+  wasCorrect: boolean;
+  revealType: "placement" | "tt_buy";
+  challengeWasSuccessful: boolean | null;
+  challengerPlayerId: string | null;
+  challengerSelectedSlotIndex: number | null;
   awardedPlayerId: string | null;
   awardedSlotIndex: number | null;
 }
@@ -52,5 +66,6 @@ export interface PublicRoomState {
   turn: PublicTurnState | null;
   challengeState: PublicChallengeState | null;
   revealState: PublicRevealState | null;
+  history: PublicGameHistoryEntry[];
   winnerPlayerId: string | null;
 }

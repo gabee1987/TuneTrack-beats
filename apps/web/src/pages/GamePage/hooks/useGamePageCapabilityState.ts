@@ -1,9 +1,11 @@
 import {
   BUY_TIMELINE_CARD_TT_COST,
+  CHALLENGE_TT_COST,
   SKIP_TRACK_TT_COST,
   type PublicRoomState,
 } from "@tunetrack/shared";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
+import { useI18n } from "../../../features/i18n";
 import { createGameMenuTabs } from "../gamePageMenuTabs";
 import { useGameHistory } from "./useGameHistory";
 import { useHostPlayback } from "./useHostPlayback";
@@ -15,6 +17,7 @@ interface UseGamePageCapabilityStateOptions {
     handleAwardTt: (playerId: string) => void;
     handleRemoveTt: (playerId: string) => void;
     handleCloseRoom: () => void;
+    handleKickPlayer: (playerId: string) => void;
     handleTransferHost: (playerId: string) => void;
   };
   roomState: PublicRoomState | null;
@@ -43,12 +46,11 @@ export function useGamePageCapabilityState({
   handlers,
   roomState,
 }: UseGamePageCapabilityStateOptions): UseGamePageCapabilityStateResult {
+  const { t } = useI18n();
   const isCurrentPlayerTurn =
-    Boolean(currentPlayerId) &&
-    roomState?.turn?.activePlayerId === currentPlayerId;
+    Boolean(currentPlayerId) && roomState?.turn?.activePlayerId === currentPlayerId;
   const isChallengeOwner =
-    Boolean(currentPlayerId) &&
-    roomState?.challengeState?.challengerPlayerId === currentPlayerId;
+    Boolean(currentPlayerId) && roomState?.challengeState?.challengerPlayerId === currentPlayerId;
   const canSelectTurnSlot = roomState?.status === "turn" && isCurrentPlayerTurn;
   const canSelectChallengeSlot =
     roomState?.status === "challenge" &&
@@ -59,7 +61,8 @@ export function useGamePageCapabilityState({
     roomState?.status === "challenge" &&
     roomState.challengeState?.phase === "open" &&
     !isCurrentPlayerTurn &&
-    roomState.challengeState.originalPlayerId !== currentPlayerId;
+    roomState.challengeState.originalPlayerId !== currentPlayerId &&
+    currentPlayerTtCount >= CHALLENGE_TT_COST;
   const canResolveChallengeWindow =
     roomState?.status === "challenge" &&
     roomState.challengeState?.phase === "open" &&
@@ -83,11 +86,8 @@ export function useGamePageCapabilityState({
     isCurrentPlayerTurn &&
     currentPlayerTtCount >= BUY_TIMELINE_CARD_TT_COST;
   const canConfirmTurnPlacement =
-    roomState?.status === "turn" &&
-    isCurrentPlayerTurn &&
-    Boolean(roomState.currentTrackCard);
-  const canConfirmBeatPlacement =
-    roomState?.status === "challenge" && canSelectChallengeSlot;
+    roomState?.status === "turn" && isCurrentPlayerTurn && Boolean(roomState.currentTrackCard);
+  const canConfirmBeatPlacement = roomState?.status === "challenge" && canSelectChallengeSlot;
 
   const leadingPlayers =
     roomState?.players
@@ -119,9 +119,11 @@ export function useGamePageCapabilityState({
         currentPlayerId,
         historyEntries,
         onAwardTt: handlers.handleAwardTt,
+        onKickPlayer: handlers.handleKickPlayer,
         onRemoveTt: handlers.handleRemoveTt,
         onTransferHost: handlers.handleTransferHost,
         roomState,
+        t,
         ...(playbackEnabled ? { playback } : {}),
       })
     : [];

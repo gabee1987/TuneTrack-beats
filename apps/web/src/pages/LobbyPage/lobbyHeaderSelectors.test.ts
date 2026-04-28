@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  getLobbyConnectionBadgeVariant,
-  getLobbyHeaderMenuTabSpecs,
-} from "./lobbyHeaderSelectors";
+import { getLobbyConnectionBadgeVariant, getLobbyHeaderMenuTabSpecs } from "./lobbyHeaderSelectors";
 
 describe("lobbyHeaderSelectors", () => {
   it("maps connected status to the connected badge variant", () => {
@@ -15,6 +12,7 @@ describe("lobbyHeaderSelectors", () => {
       "players",
       "view",
       "settings",
+      "language",
     ]);
   });
 
@@ -23,6 +21,7 @@ describe("lobbyHeaderSelectors", () => {
       "players",
       "view",
       "settings",
+      "language",
       "dev",
     ]);
   });

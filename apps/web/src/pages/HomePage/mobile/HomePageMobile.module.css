@@ -38,10 +38,25 @@
   gap: 14px;
 }
 
+.menuAnchor {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.menuPlaceholder {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .hero {
   display: grid;
   place-items: start center;
   width: 100%;
+  padding-top: 44px;
 }
 
 .brandLogo {

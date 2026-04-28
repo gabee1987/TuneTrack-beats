@@ -1,3 +1,4 @@
+import { useI18n } from "../i18n";
 import styles from "./ToggleSwitch.module.css";
 
 interface ToggleSwitchProps {
@@ -14,11 +15,15 @@ export function ToggleSwitch({
   ariaLabel,
   checked,
   className,
-  offLabel = "Off",
+  offLabel,
   onChange,
-  onLabel = "On",
+  onLabel,
   size = "regular",
 }: ToggleSwitchProps) {
+  const { t } = useI18n();
+  const resolvedOffLabel = offLabel ?? t("common.off");
+  const resolvedOnLabel = onLabel ?? t("common.on");
+
   return (
     <button
       aria-checked={checked}
@@ -30,7 +35,7 @@ export function ToggleSwitch({
       role="switch"
       type="button"
     >
-      <span className={styles.status}>{checked ? onLabel : offLabel}</span>
+      <span className={styles.status}>{checked ? resolvedOnLabel : resolvedOffLabel}</span>
       <span className={styles.thumb} />
     </button>
   );

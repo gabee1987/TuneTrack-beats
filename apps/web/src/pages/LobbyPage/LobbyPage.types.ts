@@ -1,24 +1,15 @@
-import type {
-  PublicPlayerState,
-  PublicRoomSettings,
-  PublicRoomState,
-} from "@tunetrack/shared";
+import type { PublicPlayerState, PublicRoomSettings, PublicRoomState } from "@tunetrack/shared";
 
 export interface LobbyPageController {
   connectionStatus: string;
   currentPlayerId: string | null;
   currentSettings: PublicRoomSettings;
   displayName: string;
+  errorCode: string | null;
   errorMessage: string | null;
   handleCloseRoom: () => void;
-  handlePlayerStartingCardCountChange: (
-    player: PublicPlayerState,
-    nextValue: number,
-  ) => void;
-  handlePlayerStartingTtTokenCountChange: (
-    player: PublicPlayerState,
-    nextValue: number,
-  ) => void;
+  handlePlayerStartingCardCountChange: (player: PublicPlayerState, nextValue: number) => void;
+  handlePlayerStartingTtTokenCountChange: (player: PublicPlayerState, nextValue: number) => void;
   handlePlayerProfileChange: (displayName: string) => void;
   handleRoomSettingsChange: (nextSettings: PublicRoomSettings) => void;
   handleStartGame: () => void;

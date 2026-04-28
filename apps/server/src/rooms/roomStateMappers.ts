@@ -1,9 +1,11 @@
 import {
   type GameState,
   type GameTrackCard,
+  type RevealState,
   type TimelineCard,
 } from "@tunetrack/game-engine";
 import {
+  type PublicGameHistoryEntry,
   type PublicChallengeState,
   type PublicRevealState,
   type PublicRoomState,
@@ -47,6 +49,7 @@ export function mapGameStateToPublicRoomState(
           activePlayerId: gameState.turn.activePlayerId,
           turnNumber: gameState.turn.turnNumber,
           hasUsedSkipTrackWithTt: gameState.turn.hasUsedSkipTrackWithTt,
+          turnSkipDeadlineEpochMs: null,
         }
       : null,
     challengeState: gameState.challengeState
@@ -55,6 +58,9 @@ export function mapGameStateToPublicRoomState(
     revealState: gameState.revealState
       ? mapRevealStateToPublicRevealState(gameState.revealState, trackCardsById)
       : null,
+    history: gameState.history.map((entry) =>
+      mapRevealStateToPublicGameHistoryEntry(entry, trackCardsById),
+    ),
     winnerPlayerId: gameState.winnerPlayerId,
   };
 }
@@ -100,6 +106,27 @@ function mapRevealStateToPublicRevealState(
     challengerSelectedSlotIndex: revealState.challengerSelectedSlotIndex,
     challengeWasSuccessful: revealState.challengeWasSuccessful,
     challengerTtChange: revealState.challengerTtChange,
+    awardedPlayerId: revealState.awardedPlayerId,
+    awardedSlotIndex: revealState.awardedSlotIndex,
+  };
+}
+
+function mapRevealStateToPublicGameHistoryEntry(
+  revealState: RevealState,
+  trackCardsById: Map<string, GameTrackCard>,
+): PublicGameHistoryEntry {
+  return {
+    playerId: revealState.playerId,
+    placedCard: mapTimelineCardToPublicTimelineCard(
+      revealState.placedCard,
+      trackCardsById,
+    ),
+    selectedSlotIndex: revealState.selectedSlotIndex,
+    wasCorrect: revealState.wasCorrect,
+    revealType: revealState.revealType,
+    challengeWasSuccessful: revealState.challengeWasSuccessful,
+    challengerPlayerId: revealState.challengerPlayerId,
+    challengerSelectedSlotIndex: revealState.challengerSelectedSlotIndex,
     awardedPlayerId: revealState.awardedPlayerId,
     awardedSlotIndex: revealState.awardedSlotIndex,
   };

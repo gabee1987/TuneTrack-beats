@@ -38,17 +38,13 @@ export function useLobbyPageController(): LobbyPageController {
     [searchParams],
   );
   const playerSessionId = useMemo(() => getOrCreatePlayerSessionId(), []);
-  const {
-    connectionStatus,
-    currentPlayerId,
-    errorMessage,
-    roomState,
-  } = useLobbyRoomConnection({
-    displayName,
-    navigate,
-    playerSessionId,
-    roomId,
-  });
+  const { connectionStatus, currentPlayerId, errorCode, errorMessage, roomState } =
+    useLobbyRoomConnection({
+      displayName,
+      navigate,
+      playerSessionId,
+      roomId,
+    });
 
   const isHost = roomState?.hostId === currentPlayerId;
   const currentSettings = roomState?.settings ?? fallbackRoomSettings;
@@ -69,12 +65,11 @@ export function useLobbyPageController(): LobbyPageController {
     currentPlayerId,
     currentSettings,
     displayName,
+    errorCode,
     errorMessage,
     handleCloseRoom: actions.handleCloseRoom,
-    handlePlayerStartingCardCountChange:
-      actions.handlePlayerStartingCardCountChange,
-    handlePlayerStartingTtTokenCountChange:
-      actions.handlePlayerStartingTtTokenCountChange,
+    handlePlayerStartingCardCountChange: actions.handlePlayerStartingCardCountChange,
+    handlePlayerStartingTtTokenCountChange: actions.handlePlayerStartingTtTokenCountChange,
     handlePlayerProfileChange: actions.handlePlayerProfileChange,
     handleRoomSettingsChange: actions.handleRoomSettingsChange,
     handleStartGame: actions.handleStartGame,

@@ -3,10 +3,8 @@ import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import type { PublicTrackInfo } from "@tunetrack/shared";
-import {
-  createFadeMotion,
-  createStandardTransition,
-} from "../../../features/motion";
+import { useI18n } from "../../../features/i18n";
+import { createFadeMotion, createStandardTransition } from "../../../features/motion";
 import { usePlaylistEditor } from "../hooks/usePlaylistEditor";
 import styles from "./PlaylistEditModal.module.css";
 
@@ -27,6 +25,7 @@ function createSheetMotion(reduceMotion: boolean) {
 }
 
 export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
+  const { t } = useI18n();
   const reduceMotion = useReducedMotion() ?? false;
 
   const {
@@ -66,7 +65,7 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
     >
       <motion.div
         animate={isOpen ? "animate" : "exit"}
-        aria-label="Edit playlist"
+        aria-label={t("lobby.playlist.editLabel")}
         aria-modal="true"
         className={styles.sheet}
         initial={false}
@@ -77,9 +76,11 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
       >
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <h2 className={styles.title}>Playlist</h2>
+            <h2 className={styles.title}>{t("lobby.playlist.title")}</h2>
             {!isLoading && (
-              <span className={styles.trackCount}>{tracks.length} tracks</span>
+              <span className={styles.trackCount}>
+                {t("lobby.playlist.trackCount", { count: tracks.length })}
+              </span>
             )}
           </div>
           <div className={styles.headerActions}>
@@ -91,11 +92,11 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
                 }}
                 type="button"
               >
-                {isSelectMode ? "Done" : "Select"}
+                {isSelectMode ? t("lobby.playlist.done") : t("lobby.playlist.select")}
               </button>
             )}
             <button
-              aria-label="Close playlist editor"
+              aria-label={t("lobby.playlist.close")}
               className={styles.closeBtn}
               onClick={onClose}
               type="button"
@@ -106,7 +107,7 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
         </div>
 
         <div className={styles.sortBar}>
-          <span className={styles.sortLabel}>Sort</span>
+          <span className={styles.sortLabel}>{t("lobby.playlist.sort")}</span>
           {(["title", "artist", "year"] as const).map((field) => (
             <button
               key={field}
@@ -114,7 +115,11 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
               onClick={() => toggleSort(field)}
               type="button"
             >
-              {field === "title" ? "Title" : field === "artist" ? "Artist" : "Year"}
+              {field === "title"
+                ? t("lobby.playlist.sortTitle")
+                : field === "artist"
+                  ? t("lobby.playlist.sortArtist")
+                  : t("lobby.playlist.sortYear")}
               {sortField === field && (
                 <span className={styles.sortArrow}>{sortDir === "asc" ? "↑" : "↓"}</span>
               )}
@@ -125,10 +130,10 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
         {isLoading ? (
           <div className={styles.loadingState}>
             <div className={styles.loadingSpinner} />
-            <span>Loading tracks…</span>
+            <span>{t("lobby.playlist.loading")}</span>
           </div>
         ) : tracks.length === 0 ? (
-          <div className={styles.emptyState}>No tracks in playlist</div>
+          <div className={styles.emptyState}>{t("lobby.playlist.empty")}</div>
         ) : (
           <div className={styles.listScrollArea} ref={listRef}>
             <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: "relative" }}>
@@ -165,14 +170,10 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
         {isSelectMode && selectedIds.size > 0 && (
           <div className={styles.batchToolbar}>
             <span className={styles.batchCount}>
-              {selectedIds.size} selected
+              {t("lobby.playlist.selected", { count: selectedIds.size })}
             </span>
-            <button
-              className={styles.batchDeleteBtn}
-              onClick={removeSelected}
-              type="button"
-            >
-              Remove {selectedIds.size}
+            <button className={styles.batchDeleteBtn} onClick={removeSelected} type="button">
+              {t("lobby.playlist.remove", { count: selectedIds.size })}
             </button>
           </div>
         )}
@@ -348,4 +349,3 @@ function MusicNoteIcon() {
     </svg>
   );
 }
-

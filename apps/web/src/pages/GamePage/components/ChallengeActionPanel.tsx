@@ -1,14 +1,21 @@
-import type { PublicRoomState } from "@tunetrack/shared";
+import { CHALLENGE_TT_COST, type PublicRoomState } from "@tunetrack/shared";
 import { motion, useReducedMotion } from "framer-motion";
 import { useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   MotionPresence,
   createChallengePanelMotion,
   createStandardTransition,
 } from "../../../features/motion";
-import { TtTokenAmount } from "../../../features/ui/TtToken";
+import { useI18n } from "../../../features/i18n";
+import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import styles from "./GamePageActionPanels.module.css";
-import { ActionDock, PrimaryActionButton, SecondaryActionButton } from "./ActionDock";
+import {
+  ActionDock,
+  PrimaryActionButton,
+  SecondaryActionButton,
+  useMobileControlPortalTarget,
+} from "./ActionDock";
 
 function parseCountdownSeconds(challengeCountdownLabel: string | null): number | null {
   if (!challengeCountdownLabel) {
@@ -72,7 +79,9 @@ export function ChallengeActionPanel({
   onTokenSpendAnimationStart,
   roomState,
 }: ChallengeActionPanelProps) {
+  const { t } = useI18n();
   const reduceMotion = useReducedMotion() ?? false;
+  const portalTarget = useMobileControlPortalTarget();
   const beatCostBadgeRef = useRef<HTMLSpanElement | null>(null);
 
   const challengeState = roomState.status === "challenge" ? roomState.challengeState : null;
@@ -83,12 +92,12 @@ export function ChallengeActionPanel({
   const challengeStatusText = challengeCountdownLabel
     ? challengeCountdownLabel
     : challengeState?.phase === "claimed"
-      ? "Beat! was claimed. Waiting for the placement."
+      ? t("game.challenge.beatWasClaimed")
       : isActivePlayerChallengeView
         ? canResolveChallengeWindow
-          ? "You close this Beat window"
-          : "Host closes this Beat window"
-        : "Host closes this Beat window";
+          ? t("game.challenge.youCloseBeatWindow")
+          : t("game.challenge.hostClosesBeatWindow")
+        : t("game.challenge.hostClosesBeatWindow");
   const hasTimedChallengeWindow = isOpenChallengeWindow && Boolean(challengeCountdownLabel);
   const countdownSeconds = parseCountdownSeconds(challengeCountdownLabel);
   const countdownStageClassName = styles[getCountdownStageClassName(countdownSeconds)];
@@ -96,22 +105,22 @@ export function ChallengeActionPanel({
   const titleText =
     challengeState?.phase === "open"
       ? isActivePlayerChallengeView
-        ? "Beat Window Open"
-        : "Call Beat!"
+        ? t("game.challenge.beatWindowOpen")
+        : t("game.challenge.callBeat")
       : challengeActionTitle;
   const bodyText =
     challengeState?.phase === "open"
       ? isActivePlayerChallengeView
         ? canResolveChallengeWindow
           ? isManualChallengeWindow
-            ? "Your drop is live. You can close Beat! whenever the table is ready."
-            : "Your drop is live. Hold tight while the Beat! timer plays out."
+            ? t("game.challenge.yourDropManualCanClose")
+            : t("game.challenge.yourDropTimed")
           : isManualChallengeWindow
-            ? "Your drop is live. Other players can still call Beat! for now."
-            : "Your drop is live. Hold tight while the Beat! timer plays out."
+            ? t("game.challenge.yourDropManualOthers")
+            : t("game.challenge.yourDropTimed")
         : isManualChallengeWindow
-          ? "Spot a bad drop? Fire Beat! before the host locks it in."
-          : "Spot a bad drop? Call Beat before the timer ends."
+          ? t("game.challenge.badDropManual")
+          : t("game.challenge.badDropTimed")
       : challengeActionBody;
   function resolveSpendOrigin(
     fallbackButton: HTMLButtonElement,
@@ -136,32 +145,33 @@ export function ChallengeActionPanel({
                 beatCostBadgeRef.current,
               );
               onTokenSpendAnimationStart?.({
-                amount: -1,
+                amount: -CHALLENGE_TT_COST,
                 ...origin,
               });
               handleClaimChallenge();
             }}
-            ttCost={1}
+            ttCost={CHALLENGE_TT_COST}
             ttCostBadgeRef={beatCostBadgeRef}
           >
-            Beat!
+            {t("game.controls.beat")}
           </PrimaryActionButton>
         ) : null}
         {canResolveChallengeWindow ? (
           <SecondaryActionButton onClick={handleResolveChallengeWindow}>
-            Resolve
+            {t("game.controls.resolve")}
           </SecondaryActionButton>
         ) : null}
       </ActionDock>
     ) : null
   ) : canConfirmBeatPlacement ? (
     <ActionDock>
-      <PrimaryActionButton onClick={handlePlaceChallenge}>Confirm Beat</PrimaryActionButton>
+      <PrimaryActionButton onClick={handlePlaceChallenge}>
+        {t("game.controls.confirmBeat")}
+      </PrimaryActionButton>
     </ActionDock>
   ) : null;
 
-  return (
-    <>
+  const challengeCallout = (
       <MotionPresence>
         {challengeState ? (
           <motion.section
@@ -192,7 +202,8 @@ export function ChallengeActionPanel({
 
                 {roomState.settings.ttModeEnabled ? (
                   <span className={styles.challengeTokenChip}>
-                    Your tokens <TtTokenAmount amount={currentPlayerTtCount} />
+                    {t("game.challenge.yourTokens")}{" "}
+                    <TokenCountAmount amount={currentPlayerTtCount} />
                   </span>
                 ) : null}
               </div>
@@ -200,6 +211,11 @@ export function ChallengeActionPanel({
           </motion.section>
         ) : null}
       </MotionPresence>
+  );
+
+  return (
+    <>
+      {portalTarget ? createPortal(challengeCallout, portalTarget) : challengeCallout}
       {challengeState ? actionDock : null}
     </>
   );

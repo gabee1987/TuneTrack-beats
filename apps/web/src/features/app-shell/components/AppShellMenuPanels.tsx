@@ -1,12 +1,6 @@
-import type {
-  HiddenCardMode,
-  ThemeId,
-  ViewPreferences,
-} from "../../preferences/uiPreferences";
-import type {
-  AppShellMenuPreferencesState,
-  AppShellMenuTab,
-} from "../AppShellMenu.types";
+import type { ViewPreferences } from "../../preferences/uiPreferences";
+import type { AppShellMenuPreferencesState, AppShellMenuTab } from "../AppShellMenu.types";
+import { useI18n } from "../../i18n";
 import { ToggleSwitch } from "../../ui/ToggleSwitch";
 import styles from "../AppShellMenu.module.css";
 
@@ -31,99 +25,72 @@ interface SegmentedButtonProps<TValue extends string> {
 
 const viewPreferenceFields: Array<{
   key: keyof ViewPreferences;
-  label: string;
-  hint: string;
 }> = [
-  {
-    key: "showMiniStandings",
-    label: "Mini standings strip",
-    hint: "Keep the live top-three race visible in the header.",
-  },
-  {
-    key: "showHelperLabels",
-    label: "Interface helper labels",
-    hint: "Display supporting labels for faster in-match readability.",
-  },
-  {
-    key: "showTimelineHints",
-    label: "Timeline callout hints",
-    hint: "Surface contextual timeline guidance during active play.",
-  },
-  {
-    key: "showRoomCodeChip",
-    label: "Room code chip",
-    hint: "Show a compact room identifier in the top status rail.",
-  },
-  {
-    key: "showPhaseChip",
-    label: "Phase chip",
-    hint: "Track the current phase with a compact status indicator.",
-  },
-  {
-    key: "showTurnNumberChip",
-    label: "Turn counter chip",
-    hint: "Keep the active turn number visible in the top bar.",
-  },
+  { key: "showMiniStandings" },
+  { key: "showHelperLabels" },
+  { key: "showTimelineHints" },
+  { key: "showRoomCodeChip" },
+  { key: "showPhaseChip" },
+  { key: "showTurnNumberChip" },
 ];
 
 const developerFields: Array<{
   key: keyof Pick<
     AppShellMenuPreferencesState,
-    | "showDevAlbumInfo"
-    | "showDevCardInfo"
-    | "showDevGenreInfo"
-    | "showDevYearInfo"
+    "showDevAlbumInfo" | "showDevCardInfo" | "showDevGenreInfo" | "showDevYearInfo"
   >;
-  label: string;
-  hint: string;
 }> = [
-  {
-    key: "showDevCardInfo",
-    label: "Track metadata overlay",
-    hint: "Reveal title and artist details on hidden cards for QA sessions.",
-  },
-  {
-    key: "showDevYearInfo",
-    label: "Release year tag",
-    hint: "Show the release year directly on card faces.",
-  },
-  {
-    key: "showDevAlbumInfo",
-    label: "Album tag",
-    hint: "Display album details as an additional inspection layer.",
-  },
-  {
-    key: "showDevGenreInfo",
-    label: "Genre tag",
-    hint: "Expose genre labels for balancing and content checks.",
-  },
+  { key: "showDevCardInfo" },
+  { key: "showDevYearInfo" },
+  { key: "showDevAlbumInfo" },
+  { key: "showDevGenreInfo" },
 ];
 
-export function AppShellMenuPanels({
-  activeTab,
-  preferencesState,
-}: AppShellMenuPanelsProps) {
+export function AppShellMenuPanels({ activeTab, preferencesState }: AppShellMenuPanelsProps) {
+  const { availableLanguages, languageId, setLanguage, t } = useI18n();
+
+  if (activeTab?.id === "language") {
+    return (
+      <div className={styles.section}>
+        <h3 className={styles.sectionTitle}>{t("appShell.menu.languageTitle")}</h3>
+        <p className={styles.sectionDescription}>{t("appShell.menu.languageDescription")}</p>
+        <div className={styles.segmentedRow}>
+          {availableLanguages.map((language) => (
+            <SegmentedButton
+              activeValue={languageId}
+              key={language.id}
+              label={language.nativeName}
+              onClick={setLanguage}
+              value={language.id}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (activeTab?.id === "view") {
     return (
       <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>View layout controls</h3>
-        <p className={styles.sectionDescription}>
-          Fine tune match information density for this device.
-        </p>
+        <h3 className={styles.sectionTitle}>{t("appShell.menu.viewTitle")}</h3>
+        <p className={styles.sectionDescription}>{t("appShell.menu.viewDescription")}</p>
         <div className={styles.fieldGroup}>
-          {viewPreferenceFields.map((field) => (
-            <ToggleField
-              checked={preferencesState.view[field.key]}
-              hint={field.hint}
-              key={field.key}
-              label={field.label}
-              onChange={(checked) =>
-                preferencesState.updateViewPreferences({
-                  [field.key]: checked,
-                })
-              }
-            />
-          ))}
+          {viewPreferenceFields.map((field) => {
+            const label = t(`appShell.viewPreferences.${field.key}.label`);
+            return (
+              <ToggleField
+                checked={preferencesState.view[field.key]}
+                hint={t(`appShell.viewPreferences.${field.key}.hint`)}
+                key={field.key}
+                label={label}
+                onChange={(checked) =>
+                  preferencesState.updateViewPreferences({
+                    [field.key]: checked,
+                  })
+                }
+              />
+            );
+          })}
         </div>
       </div>
     );
@@ -133,20 +100,18 @@ export function AppShellMenuPanels({
     return (
       <>
         <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Theme mode</h3>
-          <p className={styles.sectionDescription}>
-            Choose the visual identity you want to play with.
-          </p>
+          <h3 className={styles.sectionTitle}>{t("appShell.menu.themeTitle")}</h3>
+          <p className={styles.sectionDescription}>{t("appShell.menu.themeDescription")}</p>
           <div className={styles.segmentedRow}>
             <SegmentedButton
               activeValue={preferencesState.theme}
-              label="Dark"
+              label={t("appShell.menu.themeDark")}
               onClick={preferencesState.setTheme}
               value="dark"
             />
             <SegmentedButton
               activeValue={preferencesState.theme}
-              label="Light"
+              label={t("appShell.menu.themeLight")}
               onClick={preferencesState.setTheme}
               value="light"
             />
@@ -154,20 +119,18 @@ export function AppShellMenuPanels({
         </div>
 
         <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Hidden card style</h3>
-          <p className={styles.sectionDescription}>
-            Pick how unrevealed cards are rendered in-match.
-          </p>
+          <h3 className={styles.sectionTitle}>{t("appShell.menu.hiddenCardTitle")}</h3>
+          <p className={styles.sectionDescription}>{t("appShell.menu.hiddenCardDescription")}</p>
           <div className={styles.segmentedRow}>
             <SegmentedButton
               activeValue={preferencesState.hiddenCardMode}
-              label="Artwork"
+              label={t("appShell.menu.hiddenCardArtwork")}
               onClick={preferencesState.setHiddenCardMode}
               value="artwork"
             />
             <SegmentedButton
               activeValue={preferencesState.hiddenCardMode}
-              label="Gradient"
+              label={t("appShell.menu.hiddenCardGradient")}
               onClick={preferencesState.setHiddenCardMode}
               value="gradient"
             />
@@ -181,7 +144,7 @@ export function AppShellMenuPanels({
               }`}
             >
               <span className={styles.hiddenCardPreviewLabel}>
-                Hidden card preview
+                {t("appShell.menu.hiddenCardPreview")}
               </span>
             </div>
           </div>
@@ -193,24 +156,25 @@ export function AppShellMenuPanels({
   if (activeTab?.id === "dev") {
     return (
       <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Developer diagnostics</h3>
-        <p className={styles.sectionDescription}>
-          Local debug overlays for validating hidden-card and timeline states.
-        </p>
+        <h3 className={styles.sectionTitle}>{t("appShell.menu.developerTitle")}</h3>
+        <p className={styles.sectionDescription}>{t("appShell.menu.developerDescription")}</p>
         <div className={styles.fieldGroup}>
-          {developerFields.map((field) => (
-            <ToggleField
-              checked={preferencesState[field.key]}
-              hint={field.hint}
-              key={field.key}
-              label={field.label}
-              onChange={(checked) =>
-                preferencesState.setDevVisibility({
-                  [field.key]: checked,
-                })
-              }
-            />
-          ))}
+          {developerFields.map((field) => {
+            const label = t(`appShell.developerPreferences.${field.key}.label`);
+            return (
+              <ToggleField
+                checked={preferencesState[field.key]}
+                hint={t(`appShell.developerPreferences.${field.key}.hint`)}
+                key={field.key}
+                label={label}
+                onChange={(checked) =>
+                  preferencesState.setDevVisibility({
+                    [field.key]: checked,
+                  })
+                }
+              />
+            );
+          })}
         </div>
       </div>
     );
@@ -219,12 +183,9 @@ export function AppShellMenuPanels({
   return activeTab?.content ?? null;
 }
 
-function ToggleField({
-  checked,
-  hint,
-  label,
-  onChange,
-}: ToggleFieldProps) {
+function ToggleField({ checked, hint, label, onChange }: ToggleFieldProps) {
+  const { t } = useI18n();
+
   return (
     <label className={styles.toggleField}>
       <div className={styles.toggleCopy}>
@@ -236,13 +197,15 @@ function ToggleField({
         checked={checked}
         className={styles.toggleSwitch}
         onChange={onChange}
+        offLabel={t("common.off")}
+        onLabel={t("common.on")}
         size="compact"
       />
     </label>
   );
 }
 
-function SegmentedButton<TValue extends ThemeId | HiddenCardMode>({
+function SegmentedButton<TValue extends string>({
   activeValue,
   label,
   onClick,

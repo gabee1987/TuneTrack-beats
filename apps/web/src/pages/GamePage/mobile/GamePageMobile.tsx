@@ -10,8 +10,6 @@ export function GamePageMobile({ model }: GamePageAssemblyProps) {
       <section className={styles.panel}>
         <GamePageHeader model={model.header} />
 
-        {model.errorMessage ? <p className={styles.error}>{model.errorMessage}</p> : null}
-
         <TimelinePanel model={model.timeline} />
 
         <GamePageActionPanels model={model.actions} />

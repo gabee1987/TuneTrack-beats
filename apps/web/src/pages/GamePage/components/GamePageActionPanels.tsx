@@ -29,16 +29,13 @@ interface TokenSpendFlyoutState {
 function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
   const reduceMotion = useReducedMotion() ?? false;
   const animationKeyRef = useRef(0);
-  const [tokenSpendFlyouts, setTokenSpendFlyouts] = useState<
-    TokenSpendFlyoutState[]
-  >([]);
+  const [tokenSpendFlyouts, setTokenSpendFlyouts] = useState<TokenSpendFlyoutState[]>([]);
   const {
     canClaimChallenge,
     canConfirmBeatPlacement,
     canConfirmReveal,
     canConfirmTurnPlacement,
     canResolveChallengeWindow,
-    canSkipOfflinePlayer,
     canUseBuyCard,
     canUseSkipTrack,
     challengeActionBody,
@@ -97,10 +94,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
               initial="initial"
               onAnimationComplete={() => clearTokenSpendFlyout(flyout.key)}
               transition={createMenuTokenAdjustFlyoutTransition(reduceMotion)}
-              variants={createMenuTokenAdjustFlyoutVariants(
-                reduceMotion,
-                "remove",
-              )}
+              variants={createMenuTokenAdjustFlyoutVariants(reduceMotion, "remove")}
             >
               <motion.span
                 animate="animate"
@@ -109,9 +103,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
                 transition={createMenuTokenAdjustFlyoutPopTransition(reduceMotion)}
                 variants={createMenuTokenAdjustFlyoutPopVariants(reduceMotion)}
               >
-                <span className={styles.tokenSpendFlyoutAmount}>
-                  {flyout.amount}
-                </span>
+                <span className={styles.tokenSpendFlyoutAmount}>{flyout.amount}</span>
                 <TtTokenIcon className={styles.tokenSpendIcon} />
               </motion.span>
             </motion.span>
@@ -199,6 +191,5 @@ function areActionPanelModelsEqual(
 
 export const GamePageActionPanels = memo(
   GamePageActionPanelsComponent,
-  (previousProps, nextProps) =>
-    areActionPanelModelsEqual(previousProps.model, nextProps.model),
+  (previousProps, nextProps) => areActionPanelModelsEqual(previousProps.model, nextProps.model),
 );

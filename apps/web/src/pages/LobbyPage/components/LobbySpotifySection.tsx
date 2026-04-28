@@ -1,6 +1,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import type { PublicRoomSettings } from "@tunetrack/shared";
 import { createMeasuredDisclosureMotion, createStandardTransition } from "../../../features/motion";
+import { useI18n } from "../../../features/i18n";
 import { TextInput } from "../../../features/ui/TextInput";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { LobbySectionHeader } from "./LobbySectionHeader";
@@ -29,6 +30,7 @@ function SpotifyLogo() {
 }
 
 export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProps) {
+  const { t } = useI18n();
   const reduceMotion = useReducedMotion() ?? false;
   const {
     accountType,
@@ -54,17 +56,17 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
 
   const connectHint = isConnected
     ? accountType === "premium"
-      ? "Plays right here in your browser — no app needed."
-      : "Fires up the track on your Spotify app."
+      ? t("lobby.spotify.browserPlaybackHint")
+      : t("lobby.spotify.appPlaybackHint")
     : isConnecting
-      ? "A browser popup is opening for Spotify sign-in…"
+      ? t("lobby.spotify.connectingHint")
       : null;
 
   return (
     <SurfaceCard className={styles.settingsGroup}>
       <LobbySectionHeader
-        description="Give it a playlist — the game spins a new track from it every round."
-        title="Spotify music"
+        description={t("lobby.spotify.description")}
+        title={t("lobby.spotify.title")}
         titleAs="h3"
         variant="compact"
       />
@@ -75,7 +77,7 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
             <div className={styles.spotifyBadgeRow}>
               <span className={styles.spotifyConnectedBadge}>
                 <span className={styles.spotifyConnectedDot} />
-                Connected
+                {t("lobby.spotify.connected")}
               </span>
               {accountType ? (
                 <span
@@ -83,7 +85,9 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
                     accountType === "premium" ? styles.spotifyPremiumBadge : styles.spotifyFreeBadge
                   }
                 >
-                  {accountType === "premium" ? "✦ Premium" : "Free"}
+                  {accountType === "premium"
+                    ? `✦ ${t("lobby.spotify.premium")}`
+                    : t("lobby.spotify.free")}
                 </span>
               ) : null}
             </div>
@@ -92,7 +96,9 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
               <div className={styles.spotifySongsReady}>
                 <span className={styles.spotifySongsReadyDot} />
                 <span>
-                  <strong>{currentSettings.importedTrackCount}</strong> tracks queued up
+                  {t("lobby.spotify.tracksQueued", {
+                    count: currentSettings.importedTrackCount,
+                  })}
                 </span>
               </div>
             ) : null}
@@ -103,8 +109,8 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
           <div className={styles.spotifyConnectUnconnected}>
             <p className={styles.spotifyConnectHint}>
               {isConnecting
-                ? "A browser popup is opening for Spotify sign-in…"
-                : "Link your account to unlock music playback."}
+                ? t("lobby.spotify.connectingHint")
+                : t("lobby.spotify.unconnectedHint")}
             </p>
             <button
               className={styles.spotifyConnectBtn}
@@ -113,7 +119,7 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
               type="button"
             >
               <SpotifyLogo />
-              {isConnecting ? "Connecting…" : "Connect with Spotify"}
+              {isConnecting ? t("lobby.spotify.connecting") : t("lobby.spotify.connect")}
             </button>
           </div>
         )}
@@ -137,7 +143,7 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
             <TextInput
               disabled={isImporting}
               onChange={(e) => setPlaylistUrl(e.target.value)}
-              placeholder="Paste playlist link"
+              placeholder={t("lobby.spotify.playlistPlaceholder")}
               type="url"
               value={playlistUrl}
             />
@@ -147,7 +153,11 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
               onClick={importPlaylist}
               type="button"
             >
-              {isImporting ? "Loading…" : isImported ? "Reload" : "Import"}
+              {isImporting
+                ? t("lobby.spotify.loading")
+                : isImported
+                  ? t("lobby.spotify.reload")
+                  : t("lobby.spotify.import")}
             </button>
           </div>
 
@@ -159,12 +169,8 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
 
           {isImported && importPhase !== "error" && !isImporting ? (
             <div className={styles.spotifyEditRow}>
-              <button
-                className={styles.spotifyEditBtn}
-                onClick={openEditModal}
-                type="button"
-              >
-                Edit playlist
+              <button className={styles.spotifyEditBtn} onClick={openEditModal} type="button">
+                {t("lobby.spotify.editPlaylist")}
               </button>
             </div>
           ) : null}

@@ -37,6 +37,7 @@ interface UseGamePageDerivedStateOptions {
     handleAwardTt: (playerId: string) => void;
     handleRemoveTt: (playerId: string) => void;
     handleCloseRoom: () => void;
+    handleKickPlayer: (playerId: string) => void;
     handleTransferHost: (playerId: string) => void;
   };
 }
@@ -109,6 +110,7 @@ interface GamePageDerivedTimelineViewState {
   visibleTimelineCardCount: number;
   visibleTimelineCards: PublicRoomState["timelines"][string];
   visibleTimelineHint: string;
+  visibleTimelinePlayerId: string | null;
   visibleTimelineTtCount: number;
   visibleTimelineTitle: string;
 }
@@ -257,6 +259,7 @@ export function useGamePageDerivedState({
     visibleTimelineCardCount: displayState.visibleTimelineCardCount,
     visibleTimelineCards: displayState.visibleTimelineCards,
     visibleTimelineHint: displayState.visibleTimelineHint,
+    visibleTimelinePlayerId: isViewingOwnTimeline ? currentPlayerId : (activePlayer?.id ?? null),
     visibleTimelineTtCount: displayState.visibleTimelineTtCount,
     visibleTimelineTitle: displayState.visibleTimelineTitle,
   };

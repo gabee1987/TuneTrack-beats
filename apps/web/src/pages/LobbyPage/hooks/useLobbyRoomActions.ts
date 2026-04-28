@@ -16,14 +16,8 @@ interface UseLobbyRoomActionsOptions {
 
 interface UseLobbyRoomActionsResult {
   handleCloseRoom: () => void;
-  handlePlayerStartingCardCountChange: (
-    player: PublicPlayerState,
-    nextValue: number,
-  ) => void;
-  handlePlayerStartingTtTokenCountChange: (
-    player: PublicPlayerState,
-    nextValue: number,
-  ) => void;
+  handlePlayerStartingCardCountChange: (player: PublicPlayerState, nextValue: number) => void;
+  handlePlayerStartingTtTokenCountChange: (player: PublicPlayerState, nextValue: number) => void;
   handlePlayerProfileChange: (displayName: string) => void;
   handleRoomSettingsChange: (nextSettings: PublicRoomSettings) => void;
   handleStartGame: () => void;
@@ -54,10 +48,7 @@ export function useLobbyRoomActions({
     });
   }
 
-  function handlePlayerStartingCardCountChange(
-    player: PublicPlayerState,
-    nextValue: number,
-  ) {
+  function handlePlayerStartingCardCountChange(player: PublicPlayerState, nextValue: number) {
     if (!roomState || !isHost) {
       return;
     }
@@ -70,10 +61,7 @@ export function useLobbyRoomActions({
     });
   }
 
-  function handlePlayerStartingTtTokenCountChange(
-    player: PublicPlayerState,
-    nextValue: number,
-  ) {
+  function handlePlayerStartingTtTokenCountChange(player: PublicPlayerState, nextValue: number) {
     if (!roomState || !isHost) {
       return;
     }

@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { MotionDialogPortal } from "../motion";
+import { useI18n } from "../i18n";
 import { CloseIconButton } from "./CloseIconButton";
 import styles from "./SettingField.module.css";
 
@@ -11,13 +12,7 @@ interface SettingFieldProps {
   value?: ReactNode;
 }
 
-export function SettingField({
-  children,
-  className,
-  info,
-  label,
-  value,
-}: SettingFieldProps) {
+export function SettingField({ children, className, info, label, value }: SettingFieldProps) {
   return (
     <div className={`${styles.field}${className ? ` ${className}` : ""}`}>
       <div className={styles.labelRow}>
@@ -40,12 +35,13 @@ interface SettingInfoButtonProps {
 }
 
 export function SettingInfoButton({ info, label }: SettingInfoButtonProps) {
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <span className={styles.infoWrap}>
       <button
-        aria-label={`${label} info`}
+        aria-label={`${label} ${t("lobby.info.title").toLowerCase()}`}
         className={styles.infoButton}
         onClick={(event) => {
           event.preventDefault();
@@ -64,9 +60,9 @@ export function SettingInfoButton({ info, label }: SettingInfoButtonProps) {
         overlayClassName={styles.infoOverlay}
       >
         <span className={styles.infoHeaderRow}>
-          <span className={styles.infoEyebrow}>Info</span>
+          <span className={styles.infoEyebrow}>{t("lobby.info.title")}</span>
           <CloseIconButton
-            ariaLabel="Close info"
+            ariaLabel={t("lobby.info.close")}
             className={styles.infoCloseButton}
             onClick={(event) => {
               event.preventDefault();

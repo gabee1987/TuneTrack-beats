@@ -1,5 +1,6 @@
 import type { PublicRoomState } from "@tunetrack/shared";
 import type { GamePagePlayerNameResolver } from "../GamePage.types";
+import { useI18n } from "../../../features/i18n";
 import {
   getGamePageStatusCopyState,
   type GamePageStatusCopySelectorResult,
@@ -26,6 +27,8 @@ export function useGamePageStatusCopyState({
   isCurrentPlayerTurn,
   roomState,
 }: UseGamePageStatusCopyStateOptions): GamePageStatusCopySelectorResult {
+  const { t } = useI18n();
+
   return getGamePageStatusCopyState({
     activePlayerId,
     challengeOwnerId,
@@ -35,5 +38,6 @@ export function useGamePageStatusCopyState({
     getPossessivePlayerName,
     isCurrentPlayerTurn,
     roomState,
+    t,
   });
 }

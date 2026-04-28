@@ -21,9 +21,10 @@ export function getChallengeWindowSelectValue(
 
 export function formatChallengeWindowSettingValue(
   challengeWindowDurationSeconds: number | null,
+  manualLabel = "Manual",
 ): string {
   return challengeWindowDurationSeconds === null
-    ? "Manual"
+    ? manualLabel
     : `${challengeWindowDurationSeconds}s`;
 }
 

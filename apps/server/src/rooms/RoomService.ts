@@ -20,6 +20,7 @@ import type {
   RequestSpotifyAuthUrlPayloadParsed,
   ResolveChallengeWindowPayloadParsed,
   SkipTrackWithTtPayloadParsed,
+  KickPlayerPayloadParsed,
   SkipTurnPayloadParsed,
   SpotifyAccountType,
   StartGamePayloadParsed,
@@ -160,6 +161,13 @@ export class RoomService {
     socketId: string,
   ): PublicRoomState {
     return this.roomRegistry.transferHost(socketId, transferHostPayload);
+  }
+
+  public kickPlayer(
+    kickPlayerPayload: KickPlayerPayloadParsed,
+    socketId: string,
+  ): PublicRoomState {
+    return this.roomRegistry.kickPlayer(socketId, kickPlayerPayload);
   }
 
   public placeCard(

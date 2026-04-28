@@ -1,0 +1,13 @@
+.tokenCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.34em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.tokenIcon {
+  width: 1.08em;
+  height: 1.08em;
+}

@@ -14,6 +14,7 @@ interface GamePageChallengeStatusSelectorOptions {
   isCurrentPlayerTurn: boolean;
   nowEpochMs: number;
   roomState: PublicRoomState | null;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 interface GamePageStatusCopySelectorOptions {
@@ -25,6 +26,7 @@ interface GamePageStatusCopySelectorOptions {
   getPossessivePlayerName: GamePagePlayerNameResolver;
   isCurrentPlayerTurn: boolean;
   roomState: PublicRoomState | null;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 export interface GamePageChallengeStatusSelectorResult {
@@ -50,6 +52,7 @@ export function getGamePageChallengeStatusState({
   isCurrentPlayerTurn,
   nowEpochMs,
   roomState,
+  t,
 }: GamePageChallengeStatusSelectorOptions): GamePageChallengeStatusSelectorResult {
   const deadlineEpochMs = roomState?.challengeState?.challengeDeadlineEpochMs;
   const isManualChallengeWindow =
@@ -61,20 +64,24 @@ export function getGamePageChallengeStatusState({
     roomState?.status !== "challenge" ||
     roomState.challengeState?.phase !== "open"
       ? null
-      : `${Math.max(0, Math.ceil((deadlineEpochMs - nowEpochMs) / 1000))}s left to call Beat!`;
+      : t("game.status.countdownBeat", {
+          seconds: Math.max(0, Math.ceil((deadlineEpochMs - nowEpochMs) / 1000)),
+        });
 
   const challengeActionTitle =
     roomState?.status !== "challenge" || !roomState.challengeState
       ? null
       : roomState.challengeState.phase === "open"
         ? isCurrentPlayerTurn
-          ? "Challenge window open"
+          ? t("game.status.challengeWindowOpen")
           : isManualChallengeWindow
-            ? "Beat available"
-            : "Beat available"
+            ? t("game.status.beatAvailable")
+            : t("game.status.beatAvailable")
         : challengeOwnerId === currentPlayerId
-          ? "Place your Beat"
-          : `${getPlayerName(challengeOwnerId)} is placing Beat`;
+          ? t("game.status.placeYourBeat")
+          : t("game.status.playerPlacingBeat", {
+              playerName: getPlayerName(challengeOwnerId),
+            });
 
   const challengeActionBody =
     roomState?.status !== "challenge" || !roomState.challengeState
@@ -82,14 +89,16 @@ export function getGamePageChallengeStatusState({
       : roomState.challengeState.phase === "open"
         ? isCurrentPlayerTurn
           ? isManualChallengeWindow
-            ? "Other players can still call Beat on this placement."
-            : "Other players can still challenge this placement."
+            ? t("game.status.currentTurnCanBeatManual")
+            : t("game.status.currentTurnCanBeatTimed")
           : isManualChallengeWindow
-            ? "Think it's wrong? Call Beat before the host closes the window."
-            : `Chosen slot: ${roomState.challengeState.originalSelectedSlotIndex}`
+            ? t("game.status.callBeatBeforeHost")
+            : t("game.status.chosenSlot", {
+                slot: roomState.challengeState.originalSelectedSlotIndex,
+              })
         : canSelectChallengeSlot
-          ? "Choose the slot you believe is right, then confirm."
-          : "Waiting for the challenge placement.";
+          ? t("game.status.chooseChallengeSlot")
+          : t("game.status.waitingChallengePlacement");
 
   const challengeMarkerTone: ChallengeMarkerTone =
     roomState?.status !== "reveal" || !roomState.revealState?.challengerPlayerId
@@ -103,9 +112,7 @@ export function getGamePageChallengeStatusState({
     challengeActionTitle,
     challengeCountdownLabel,
     challengeMarkerTone,
-    challengeSuccessMessage: challengeSuccessCelebrationCard
-      ? "Clean Beat!"
-      : null,
+    challengeSuccessMessage: challengeSuccessCelebrationCard ? t("game.status.cleanBeat") : null,
   };
 }
 
@@ -118,65 +125,92 @@ export function getGamePageStatusCopyState({
   getPossessivePlayerName,
   isCurrentPlayerTurn,
   roomState,
+  t,
 }: GamePageStatusCopySelectorOptions): GamePageStatusCopySelectorResult {
+  const isActivePlayerOffline =
+    roomState?.status === "turn" &&
+    roomState.players.find((p) => p.id === activePlayerId)?.connectionStatus === "disconnected";
+
   const activeTimelineHint =
     roomState?.status !== "challenge"
       ? isCurrentPlayerTurn
         ? ""
-        : "This is the timeline being judged on this turn."
+        : t("game.status.activeTimelineJudged")
       : canSelectChallengeSlot
-        ? `You called Beat! Pick the slot where the card should have gone in ${getPossessivePlayerName(activePlayerId)} timeline.`
+        ? t("game.status.youCalledBeat", {
+            playerName: getPossessivePlayerName(activePlayerId),
+          })
         : isCurrentPlayerTurn
           ? roomState.challengeState?.challengeDeadlineEpochMs
-            ? "Challenge window is open. Other players can decide whether to use Beat! against your choice."
-            : "Challenge window is open. Other players can still call Beat until the host closes it."
+            ? t("game.status.challengeWindowTimed")
+            : t("game.status.challengeWindowManual")
           : roomState.challengeState?.phase === "claimed"
-            ? `${getPlayerName(challengeOwnerId)} claimed Beat! first and is choosing the challenge slot now.`
+            ? t("game.status.playerClaimedBeatChoosing", {
+                playerName: getPlayerName(challengeOwnerId),
+              })
             : roomState.challengeState?.challengeDeadlineEpochMs
-              ? `${getPlayerName(roomState.challengeState?.originalPlayerId)} chose a slot. If you think it is wrong, press Beat! before the window ends.`
-              : `${getPlayerName(roomState.challengeState?.originalPlayerId)} chose a slot. If you think it is wrong, press Beat! before the host closes the window.`;
+              ? t("game.status.playerChoseSlotTimed", {
+                  playerName: getPlayerName(roomState.challengeState?.originalPlayerId),
+                })
+              : t("game.status.playerChoseSlotManual", {
+                  playerName: getPlayerName(roomState.challengeState?.originalPlayerId),
+                });
 
   const statusBadgeText = roomState?.winnerPlayerId
-    ? "Game finished"
+    ? t("game.status.gameFinished")
     : roomState?.status === "turn"
       ? isCurrentPlayerTurn
-        ? "Your turn"
-        : `${getPlayerName(activePlayerId)}'s turn`
+        ? t("game.status.yourTurn")
+        : isActivePlayerOffline
+          ? t("game.status.playerOffline", { playerName: getPlayerName(activePlayerId) })
+          : t("game.status.playerTurn", { playerName: getPlayerName(activePlayerId) })
       : roomState?.status === "challenge"
         ? roomState.challengeState?.originalPlayerId === currentPlayerId
-          ? "Your placement is under Beat!"
+          ? t("game.status.yourPlacementUnderBeat")
           : roomState.challengeState?.phase === "claimed"
-            ? `${getPlayerName(challengeOwnerId)} owns Beat!`
-            : "Beat! window is open"
+            ? t("game.status.playerOwnsBeat", {
+                playerName: getPlayerName(challengeOwnerId),
+              })
+            : t("game.status.beatWindowOpen")
         : roomState?.status === "reveal"
-          ? "Reveal"
-          : "Game room";
+          ? t("game.status.reveal")
+          : t("game.status.gameRoom");
 
   const statusDetailText = roomState?.winnerPlayerId
-    ? `${getPlayerName(roomState.winnerPlayerId)} reached the win target first.`
+    ? t("game.status.winnerReachedTarget", {
+        playerName: getPlayerName(roomState.winnerPlayerId),
+      })
     : roomState?.status === "turn"
       ? isCurrentPlayerTurn
         ? ""
-        : `${getPlayerName(activePlayerId)} is deciding where the current song belongs.`
+        : isActivePlayerOffline
+          ? t("game.status.playerOfflineWaiting", {
+              playerName: getPlayerName(activePlayerId),
+            })
+          : t("game.status.playerDeciding", {
+              playerName: getPlayerName(activePlayerId),
+            })
       : roomState?.status === "challenge"
         ? roomState.challengeState?.phase === "claimed"
           ? roomState.challengeState.challengerPlayerId === currentPlayerId
-            ? "You claimed Beat! Choose the slot you believe is correct."
-            : `${getPlayerName(challengeOwnerId)} claimed Beat! and is placing the answer now.`
+            ? t("game.status.youClaimedBeat")
+            : t("game.status.playerClaimedBeatPlacing", {
+                playerName: getPlayerName(challengeOwnerId),
+              })
           : isCurrentPlayerTurn
             ? roomState.challengeState?.challengeDeadlineEpochMs
-              ? "Your placement is locked while other players decide whether to challenge it."
-              : "Your placement is locked while the host waits for a Beat call or closes the window."
+              ? t("game.status.yourPlacementLockedTimed")
+              : t("game.status.yourPlacementLockedManual")
             : roomState.challengeState?.challengeDeadlineEpochMs
-              ? `Beat! is open against ${getPossessivePlayerName(
-                  roomState.challengeState?.originalPlayerId,
-                )} placement.`
-              : `Beat! is open against ${getPossessivePlayerName(
-                  roomState.challengeState?.originalPlayerId,
-                )} placement until the host closes the window.`
+              ? t("game.status.beatOpenAgainst", {
+                  playerName: getPossessivePlayerName(roomState.challengeState?.originalPlayerId),
+                })
+              : t("game.status.beatOpenAgainstManual", {
+                  playerName: getPossessivePlayerName(roomState.challengeState?.originalPlayerId),
+                })
         : roomState?.status === "reveal"
-          ? "Check the result, then wait for the allowed player to confirm reveal."
-          : "The room is in sync and ready.";
+          ? t("game.status.checkResult")
+          : t("game.status.roomReady");
 
   return {
     activeTimelineHint,

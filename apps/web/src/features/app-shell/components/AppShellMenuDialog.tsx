@@ -18,6 +18,7 @@ interface AppShellMenuDialogProps extends AppShellMenuProps {
 
 export function AppShellMenuDialog({
   footerAction,
+  footerActions,
   isOpen,
   onClose,
   subtitle,
@@ -64,6 +65,7 @@ export function AppShellMenuDialog({
             tabs={availableTabs}
             title={title}
             {...(footerAction ? { footerAction } : {})}
+            {...(footerActions ? { footerActions } : {})}
           />
         </motion.div>
       ) : null}

@@ -1,16 +1,13 @@
-import {
-  AnimatePresence,
-  LayoutGroup,
-  motion,
-  useReducedMotion,
-} from "framer-motion";
+import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   createAppShellMenuSheetMotionTargets,
   createMenuTabActivationTransition,
   createStandardTransition,
 } from "../../motion";
+import { useI18n } from "../../i18n";
 import type {
+  AppShellMenuFooterAction,
   AppShellMenuPreferencesState,
   AppShellMenuTab,
 } from "../AppShellMenu.types";
@@ -21,11 +18,8 @@ import styles from "../AppShellMenu.module.css";
 interface AppShellMenuSheetProps {
   activeTab: AppShellMenuTab | null;
   activeTabId: AppShellMenuTab["id"] | undefined;
-  footerAction?: {
-    label: string;
-    onClick: () => void;
-    tone?: "danger" | "neutral";
-  };
+  footerAction?: AppShellMenuFooterAction;
+  footerActions?: AppShellMenuFooterAction[];
   isMobileSheet: boolean;
   onClose: () => void;
   preferencesState: AppShellMenuPreferencesState;
@@ -38,6 +32,7 @@ export function AppShellMenuSheet({
   activeTab,
   activeTabId,
   footerAction,
+  footerActions,
   isMobileSheet,
   onClose,
   preferencesState,
@@ -46,13 +41,12 @@ export function AppShellMenuSheet({
   title,
 }: AppShellMenuSheetProps) {
   const reduceMotion = useReducedMotion() ?? false;
+  const { t } = useI18n();
   const panelRef = useRef<HTMLElement | null>(null);
   const [showTopFade, setShowTopFade] = useState(false);
   const [showBottomFade, setShowBottomFade] = useState(false);
-  const menuSheetMotionTargets = createAppShellMenuSheetMotionTargets(
-    reduceMotion,
-    isMobileSheet,
-  );
+  const resolvedFooterActions = footerActions ?? (footerAction ? [footerAction] : []);
+  const menuSheetMotionTargets = createAppShellMenuSheetMotionTargets(reduceMotion, isMobileSheet);
   const updatePanelFadeState = useCallback(() => {
     const panelElement = panelRef.current;
     if (!panelElement) {
@@ -62,8 +56,7 @@ export function AppShellMenuSheet({
     const hasOverflow = panelElement.scrollHeight - panelElement.clientHeight > 1;
     const atTop = panelElement.scrollTop <= 1;
     const atBottom =
-      panelElement.scrollTop + panelElement.clientHeight >=
-      panelElement.scrollHeight - 1;
+      panelElement.scrollTop + panelElement.clientHeight >= panelElement.scrollHeight - 1;
 
     setShowTopFade(hasOverflow && !atTop);
     setShowBottomFade(hasOverflow && !atBottom);
@@ -94,14 +87,10 @@ export function AppShellMenuSheet({
     };
   }, [activeTabId, updatePanelFadeState]);
 
-  const handleFooterActionClick = useCallback(() => {
-    if (!footerAction) {
-      return;
-    }
-
+  const handleFooterActionClick = useCallback((action: AppShellMenuFooterAction) => {
     onClose();
-    footerAction.onClick();
-  }, [footerAction, onClose]);
+    action.onClick();
+  }, [onClose]);
 
   return (
     <motion.aside
@@ -114,16 +103,14 @@ export function AppShellMenuSheet({
     >
       <header className={styles.menuHeader}>
         <div>
-          {subtitle ? (
-            <p className={styles.menuSubtitle}>{subtitle}</p>
-          ) : null}
+          {subtitle ? <p className={styles.menuSubtitle}>{subtitle}</p> : null}
           <h2 className={styles.menuTitle}>{title}</h2>
         </div>
         <button
-          aria-label="Close menu"
+          aria-label={t("appShell.menu.close")}
           className={`${styles.menuTrigger} ${styles.menuCloseButton}`}
           onClick={onClose}
-          title="Close menu"
+          title={t("appShell.menu.close")}
           type="button"
         >
           <svg
@@ -132,18 +119,8 @@ export function AppShellMenuSheet({
             fill="none"
             viewBox="0 0 24 24"
           >
-            <path
-              d="M6 6L18 18"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeWidth="2"
-            />
-            <path
-              d="M18 6L6 18"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeWidth="2"
-            />
+            <path d="M6 6L18 18" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+            <path d="M18 6L6 18" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
           </svg>
         </button>
       </header>
@@ -185,27 +162,31 @@ export function AppShellMenuSheet({
         } ${showBottomFade ? styles.panelViewportBottomFade : ""}`}
       >
         <section className={styles.panel} ref={panelRef}>
-          <AppShellMenuPanels
-            activeTab={activeTab}
-            preferencesState={preferencesState}
-          />
+          <AppShellMenuPanels activeTab={activeTab} preferencesState={preferencesState} />
         </section>
       </div>
 
-      {footerAction ? (
+      {resolvedFooterActions.length > 0 ? (
         <footer className={styles.menuFooter}>
-          {footerAction.tone === "danger" ? (
-            <RoomDangerActionButton onClick={handleFooterActionClick} type="button">
-              {footerAction.label}
-            </RoomDangerActionButton>
-          ) : (
-            <button
-              className={styles.footerActionButton}
-              onClick={handleFooterActionClick}
-              type="button"
-            >
-              {footerAction.label}
-            </button>
+          {resolvedFooterActions.map((action, index) =>
+            action.tone === "danger" ? (
+              <RoomDangerActionButton
+                key={`${action.label}-${index}`}
+                onClick={() => handleFooterActionClick(action)}
+                type="button"
+              >
+                {action.label}
+              </RoomDangerActionButton>
+            ) : (
+              <button
+                className={styles.footerActionButton}
+                key={`${action.label}-${index}`}
+                onClick={() => handleFooterActionClick(action)}
+                type="button"
+              >
+                {action.label}
+              </button>
+            ),
           )}
         </footer>
       ) : null}

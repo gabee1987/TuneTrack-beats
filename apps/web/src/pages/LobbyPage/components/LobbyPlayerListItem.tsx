@@ -7,22 +7,18 @@ import {
   type PublicRoomSettings,
 } from "@tunetrack/shared";
 import { Badge } from "../../../features/ui/Badge";
+import { CardCountAmount } from "../../../features/ui/CardCountAmount";
+import { useI18n } from "../../../features/i18n";
 import { RangeField } from "../../../features/ui/RangeField";
-import { TtTokenAmount } from "../../../features/ui/TtToken";
+import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import { getLobbyPlayerDisplayState } from "../lobbyPlayerSelectors";
 import styles from "../LobbyPage.module.css";
 
 interface LobbyPlayerListItemProps {
   currentPlayerId: string | null;
   isHost: boolean;
-  onPlayerStartingCardCountChange: (
-    player: PublicPlayerState,
-    nextValue: number,
-  ) => void;
-  onPlayerStartingTtTokenCountChange: (
-    player: PublicPlayerState,
-    nextValue: number,
-  ) => void;
+  onPlayerStartingCardCountChange: (player: PublicPlayerState, nextValue: number) => void;
+  onPlayerStartingTtTokenCountChange: (player: PublicPlayerState, nextValue: number) => void;
   player: PublicPlayerState;
   roomSettings: PublicRoomSettings;
 }
@@ -35,10 +31,12 @@ export function LobbyPlayerListItem({
   player,
   roomSettings,
 }: LobbyPlayerListItemProps) {
+  const { t } = useI18n();
   const displayState = getLobbyPlayerDisplayState({
     currentPlayerId,
     player,
     roomSettings,
+    t,
   });
 
   return (
@@ -49,16 +47,16 @@ export function LobbyPlayerListItem({
             <strong className={styles.playerName}>{displayState.primaryName}</strong>
             <div className={styles.playerCounterBadges}>
               {displayState.counterBadges.map((badge) => {
-                const tokenMatch = /^(\d+) TT$/.exec(badge.label);
-
                 return (
-                  <Badge
-                    className={styles.playerBadge}
-                    key={badge.label}
-                    variant={badge.variant}
-                  >
-                    {tokenMatch ? (
-                      <TtTokenAmount amount={Number(tokenMatch[1])} />
+                  <Badge className={styles.playerBadge} key={badge.label} variant={badge.variant}>
+                    {badge.kind === "cardCount" && badge.count !== undefined ? (
+                      <CardCountAmount
+                        amount={badge.count}
+                        ariaLabel={badge.label}
+                        className={styles.playerCardCount}
+                      />
+                    ) : badge.kind === "tokenCount" && badge.count !== undefined ? (
+                      <TokenCountAmount amount={badge.count} />
                     ) : (
                       badge.label
                     )}
@@ -83,12 +81,10 @@ export function LobbyPlayerListItem({
           {roomSettings.ttModeEnabled ? (
             <RangeField
               density="compact"
-              label="Starting tokens"
+              label={t("lobby.players.startingTokens")}
               max={MAX_STARTING_TT_TOKEN_COUNT}
               min={MIN_STARTING_TT_TOKEN_COUNT}
-              onChange={(nextValue) =>
-                onPlayerStartingTtTokenCountChange(player, nextValue)
-              }
+              onChange={(nextValue) => onPlayerStartingTtTokenCountChange(player, nextValue)}
               value={player.ttTokenCount}
             />
           ) : null}

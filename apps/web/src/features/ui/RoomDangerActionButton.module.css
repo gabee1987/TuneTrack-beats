@@ -1,14 +1,13 @@
 .dangerAction {
   position: relative;
   width: 100%;
-  min-height: 58px;
-  padding: 16px 22px;
+  min-height: 44px;
+  padding: 12px 14px;
   border: 0;
   border-radius: 999px;
   overflow: hidden;
   isolation: isolate;
-  background:
-    linear-gradient(
+  background: linear-gradient(
       180deg,
       color-mix(in srgb, #2b1018 78%, transparent),
       color-mix(in srgb, #12060b 84%, transparent)

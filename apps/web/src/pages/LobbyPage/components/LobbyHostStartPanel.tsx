@@ -1,4 +1,5 @@
 import { ActionButton } from "../../../features/ui/ActionButton";
+import { useI18n } from "../../../features/i18n";
 import styles from "../LobbyPage.module.css";
 
 interface LobbyHostStartPanelProps {
@@ -6,17 +7,14 @@ interface LobbyHostStartPanelProps {
   onStartGame: () => void;
 }
 
-export function LobbyHostStartPanel({
-  onIntentToStart,
-  onStartGame,
-}: LobbyHostStartPanelProps) {
+export function LobbyHostStartPanel({ onIntentToStart, onStartGame }: LobbyHostStartPanelProps) {
+  const { t } = useI18n();
+
   return (
     <div className={styles.primaryActionBar}>
       <div>
-        <h3 className={styles.primaryActionTitle}>Ready to play</h3>
-        <p className={styles.primaryActionDescription}>
-          Start when the room looks right.
-        </p>
+        <h3 className={styles.primaryActionTitle}>{t("lobby.host.readyTitle")}</h3>
+        <p className={styles.primaryActionDescription}>{t("lobby.host.readyDescription")}</p>
       </div>
       <ActionButton
         className={styles.startGameButton}
@@ -26,7 +24,7 @@ export function LobbyHostStartPanel({
         onTouchStart={onIntentToStart}
         type="button"
       >
-        Start Game
+        {t("lobby.host.startGame")}
       </ActionButton>
     </div>
   );

@@ -103,6 +103,11 @@ export const transferHostPayloadSchema = z.object({
   playerId: z.string().trim().min(1),
 });
 
+export const kickPlayerPayloadSchema = z.object({
+  roomId: roomIdSchema,
+  playerId: z.string().trim().min(1),
+});
+
 export const placeCardPayloadSchema = z.object({
   roomId: roomIdSchema,
   selectedSlotIndex: z.number().int().nonnegative(),
@@ -180,6 +185,8 @@ export type StartGamePayloadInput = z.input<typeof startGamePayloadSchema>;
 export type StartGamePayloadParsed = z.output<typeof startGamePayloadSchema>;
 export type TransferHostPayloadInput = z.input<typeof transferHostPayloadSchema>;
 export type TransferHostPayloadParsed = z.output<typeof transferHostPayloadSchema>;
+export type KickPlayerPayloadInput = z.input<typeof kickPlayerPayloadSchema>;
+export type KickPlayerPayloadParsed = z.output<typeof kickPlayerPayloadSchema>;
 export type PlaceCardPayloadInput = z.input<typeof placeCardPayloadSchema>;
 export type PlaceCardPayloadParsed = z.output<typeof placeCardPayloadSchema>;
 export type ConfirmRevealPayloadInput = z.input<typeof confirmRevealPayloadSchema>;

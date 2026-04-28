@@ -62,9 +62,11 @@ function createRoomState(
       activePlayerId: "player-1",
       hasUsedSkipTrackWithTt: false,
       turnNumber: 2,
+      turnSkipDeadlineEpochMs: null,
     },
     challengeState: null,
     revealState: null,
+    history: [],
     winnerPlayerId: null,
     ...overrides,
   };

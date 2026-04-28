@@ -22,7 +22,6 @@ describe("buildGamePageAssemblyModel", () => {
       currentPlayerId: "player-1",
       currentPlayerTtCount: 2,
       disabledTimelineSlots: [1, 3],
-      errorMessage: "Room sync issue",
       getPlayerName: (playerId: string | null | undefined) =>
         playerId === "player-1" ? "You" : "Other",
       handleBuyTimelineCardWithTt: () => undefined,
@@ -84,13 +83,13 @@ describe("buildGamePageAssemblyModel", () => {
       visibleTimelineCardCount: 6,
       visibleTimelineCards: [],
       visibleTimelineHint: "Place the current track",
+      visibleTimelinePlayerId: "player-1",
       visibleTimelineTtCount: 3,
       visibleTimelineTitle: "Active timeline",
     } as unknown as LoadedGamePageController;
 
     const model = buildGamePageAssemblyModel(controller);
 
-    expect(model.errorMessage).toBe("Room sync issue");
     expect(model.header.roomState.roomId).toBe("ABCD");
     expect(model.header.statusBadgeText).toBe("Your turn");
     expect(model.header.visibleTimelineTtCount).toBe(3);

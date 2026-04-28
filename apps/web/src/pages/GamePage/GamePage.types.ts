@@ -122,6 +122,7 @@ export interface GamePageHeaderModel
     GamePageController,
     | "currentPlayerId"
     | "handleCloseRoom"
+    | "handleSkipTurn"
     | "leadingPlayers"
     | "menuTabs"
     | "showMiniStandings"
@@ -133,6 +134,7 @@ export interface GamePageHeaderModel
     | "statusDetailText"
     | "updateViewPreferences"
     | "visibleTimelineCardCount"
+    | "visibleTimelinePlayerId"
     | "visibleTimelineTtCount"
     | "visibleTimelineTitle"
   > {
@@ -174,13 +176,13 @@ export interface GamePageActionPanelsModel
 
 export interface GamePageAssemblyModel {
   actions: GamePageActionPanelsModel;
-  errorMessage: string | null;
   header: GamePageHeaderModel;
   timeline: TimelinePanelModel;
 }
 
 export type GamePageController = GamePageActionHandlers & {
   canChangeTimelineView: boolean;
+  errorKey: number;
   canConfirmBeatPlacement: boolean;
   canConfirmReveal: boolean;
   canConfirmTurnPlacement: boolean;
@@ -236,6 +238,7 @@ export type GamePageController = GamePageActionHandlers & {
   visibleTimelineCardCount: number;
   visibleTimelineCards: TimelineCardPublic[];
   visibleTimelineHint: string;
+  visibleTimelinePlayerId: string | null;
   visibleTimelineTtCount: number;
   visibleTimelineTitle: string;
 };

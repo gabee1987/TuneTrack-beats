@@ -149,6 +149,21 @@ export function useGamePageActions({
     });
   }
 
+  function handleKickPlayer(playerId: string) {
+    if (
+      !roomState ||
+      roomState.hostId !== currentPlayerId ||
+      playerId === currentPlayerId
+    ) {
+      return;
+    }
+
+    void emitRoomEvent(ClientToServerEvent.KickPlayer, {
+      roomId: roomState.roomId,
+      playerId,
+    });
+  }
+
   function handleSkipTrackWithTt() {
     if (
       !roomState ||
@@ -198,6 +213,7 @@ export function useGamePageActions({
     handleClaimChallenge,
     handleCloseRoom,
     handleConfirmReveal,
+    handleKickPlayer,
     handlePlaceCard,
     handlePlaceChallenge,
     handleResolveChallengeWindow,

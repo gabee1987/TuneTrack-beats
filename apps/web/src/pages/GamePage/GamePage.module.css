@@ -112,7 +112,7 @@
 }
 
 .statusBadgeLeading {
-  padding-left: 20px;
+  padding-left: 14px;
 }
 
 .statusBadgeCrown {
@@ -129,19 +129,32 @@
 }
 
 .statusBadgeTextGroup {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
-.statusBadgeTokenCount {
+.statusBadgeCounters {
   display: inline-flex;
   align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
   flex: 0 0 auto;
-  /* padding: 4px 8px; */
-  border-radius: 999px;
-  /* background: color-mix(in srgb, var(--color-surface) 46%, transparent); */
   color: var(--color-text-primary);
-  font-size: 16px;
-  /* box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent); */
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.statusBadgeCounter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1;
+}
+
+.statusBadgeCounterSeparator {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1;
 }
 
 .statusBadgeHostText {
@@ -199,8 +212,18 @@
 }
 
 .headerLeaderMeta {
-  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-text-primary);
   font-size: 11px;
+}
+
+.headerLeaderCardCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  /* line-height: 1; */
 }
 
 .menuInfoSection {
@@ -346,18 +369,31 @@
   white-space: nowrap;
 }
 
+.menuPlayerCardCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1;
+}
+
 .menuActionButton,
 .menuDangerButton {
+  container-type: inline-size;
   border: 0;
   border-radius: 999px;
   min-height: 44px;
   padding: 10px 14px;
   color: var(--color-text-primary);
+  font-size: clamp(10px, 9cqw, 14px);
   font-weight: 800;
   letter-spacing: 0.01em;
+  line-height: 1.08;
   cursor: pointer;
   outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 84%, transparent);
   box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .menuActionButton {
@@ -389,10 +425,36 @@
   );
 }
 
+.menuKickPlayerButton {
+  color: var(--color-text-primary);
+  outline: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #3b0d0d 88%, transparent),
+    color-mix(in srgb, #1a0404 90%, transparent)
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 8%, transparent),
+    0 0 0 1px color-mix(in srgb, #ff4444 30%, var(--color-border-subtle));
+}
+
+.menuKickPlayerButton:hover {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #4a1010 96%, transparent),
+    color-mix(in srgb, #220505 92%, transparent)
+  );
+}
+
 .menuTokenActionContent {
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .menuActionButton:disabled {
@@ -497,6 +559,7 @@
   font-size: 18px;
   font-weight: 900;
   line-height: 1;
+  overflow: hidden;
   cursor: pointer;
 }
 
@@ -693,7 +756,7 @@
   }
 
   .statusBadgeLeading {
-    padding-left: 22px;
+    padding-left: 14px;
   }
 
   .statusBadgeTextGroup {
@@ -735,17 +798,44 @@
   flex-direction: column;
 }
 
-.playbackArtworkLarge {
-  width: min(100%, 220px);
-  align-self: center;
-  aspect-ratio: 1;
-  background: color-mix(in srgb, var(--color-surface-raised) 80%, transparent);
+.playbackArtworkWrapper {
   display: flex;
+  flex-direction: column;
+  text-align: center;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.playbackArtworkLarge {
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: 12px;
+  text-align: center;
+  width: min(100%, 320px);
+  align-self: center;
+  /* aspect-ratio: 1; */
+  background: color-mix(in srgb, var(--color-surface-raised) 80%, transparent);
   justify-content: center;
   color: var(--color-text-tertiary);
   overflow: hidden;
   flex-shrink: 0;
+}
+
+.playbackMusicIconBox {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 78%, transparent);
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, white 10%, transparent), transparent 58%),
+    color-mix(in srgb, var(--color-surface-elevated) 82%, transparent);
+  color: color-mix(in srgb, var(--color-text-secondary) 86%, white 14%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 12%, transparent),
+    0 12px 28px color-mix(in srgb, black 18%, transparent);
 }
 
 .playbackArtworkImg {
@@ -753,13 +843,12 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  margin-bottom: 8px;
 }
 
 .playbackControls {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   padding: 12px 0px;
 }
 
@@ -769,9 +858,15 @@
   gap: 12px;
 }
 
+.playbackActions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
 .playbackCircleBtn {
   flex: 0 0 auto;
-  /* align-self: stretch; */
   aspect-ratio: 1;
   border-radius: 50%;
   border: none;
@@ -784,6 +879,7 @@
   transition:
     background 0.15s,
     transform 0.1s;
+  padding: 16px;
 }
 
 .playbackCircleBtn:hover:not(:disabled) {
@@ -819,6 +915,7 @@
   font-size: 13px;
   color: var(--color-text-secondary);
   padding: 2px 0;
+  text-align: center;
 }
 
 .playbackTitle {
@@ -857,9 +954,9 @@
 .playbackYear {
   margin: 0;
   flex-shrink: 0;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--color-text-tertiary);
+  font-size: 20px;
+  font-weight: 700;
+  color: color-mix(in srgb, #ffb26b 88%, var(--color-text-secondary));
   white-space: nowrap;
 }
 
@@ -872,10 +969,10 @@
 .playbackSlider {
   -webkit-appearance: none;
   appearance: none;
-  width: 100%;
+  /* width: 100%; */
   height: 4px;
   border-radius: 2px;
-  /* background: var(--color-surface-raised); */
+  /* background: color-mix(in srgb, var(--color-surface-raised) 80%, transparent); */
   outline: none;
   cursor: pointer;
   accent-color: #1db954;
@@ -975,6 +1072,7 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  align-items: end;
 }
 
 .historyItemPlayer {

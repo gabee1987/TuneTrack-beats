@@ -40,6 +40,7 @@ export const lightThemeDefinition: ThemeDefinition = {
     "color-status-connected-text": "#0d8b5a",
     "color-status-danger-surface": "rgba(255, 94, 129, 0.14)",
     "color-status-danger-text": "#9c3558",
+    "color-status-danger-border": "rgba(255, 41, 88, 0.568)",
     "color-status-danger-chip-surface": "rgba(255, 95, 143, 0.12)",
     "color-status-danger-chip-text": "#a23d63",
     "color-badge-strong-background": "rgba(123, 140, 255, 0.28)",

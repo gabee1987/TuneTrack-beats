@@ -23,15 +23,11 @@ export function LobbySectionHeader({
 
   return (
     <div
-      className={`${styles.sectionHeading}${
-        isCompact ? ` ${styles.sectionHeadingCompact}` : ""
-      }`}
+      className={`${styles.sectionHeading}${isCompact ? ` ${styles.sectionHeadingCompact}` : ""}`}
     >
       <div>
         <Title
-          className={`${styles.sectionTitle}${
-            isCompact ? ` ${styles.sectionTitleCompact}` : ""
-          }`}
+          className={`${styles.sectionTitle}${isCompact ? ` ${styles.sectionTitleCompact}` : ""}`}
         >
           <span className={styles.sectionTitleContent}>
             <span>{title}</span>
