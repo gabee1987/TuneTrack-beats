@@ -17,6 +17,7 @@ interface UseGamePageToastsOptions {
 interface ActiveToastEntry {
   id: string;
   message: string;
+  timer: number;
 }
 
 export function useGamePageToasts({
@@ -30,35 +31,53 @@ export function useGamePageToasts({
   const idRef = useRef(0);
   const prevPlayersRef = useRef<PublicRoomState["players"]>([]);
   const activeByTypeRef = useRef<Map<GamePageToastType, ActiveToastEntry>>(new Map());
+  const timersRef = useRef<Set<number>>(new Set());
 
   function removeToast(id: string, type: GamePageToastType) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
-    if (activeByTypeRef.current.get(type)?.id === id) {
+    const activeToast = activeByTypeRef.current.get(type);
+    if (activeToast?.id === id) {
+      timersRef.current.delete(activeToast.timer);
       activeByTypeRef.current.delete(type);
     }
+  }
+
+  function scheduleToastRemoval(id: string, type: GamePageToastType) {
+    const timer = window.setTimeout(() => {
+      timersRef.current.delete(timer);
+      removeToast(id, type);
+    }, TOAST_DURATIONS_MS[type]);
+
+    timersRef.current.add(timer);
+    return timer;
   }
 
   function pushToast(type: GamePageToastType, message: string) {
     const existing = activeByTypeRef.current.get(type);
 
     if (existing && existing.message === message) {
-      // Same toast already visible — reset dismiss timer silently, no visual change
-      const timer = setTimeout(() => removeToast(existing.id, type), TOAST_DURATIONS_MS[type]);
-      return timer;
+      window.clearTimeout(existing.timer);
+      timersRef.current.delete(existing.timer);
+      const timer = scheduleToastRemoval(existing.id, type);
+      activeByTypeRef.current.set(type, { ...existing, timer });
+      return;
+    }
+
+    if (existing) {
+      window.clearTimeout(existing.timer);
+      timersRef.current.delete(existing.timer);
     }
 
     idRef.current += 1;
     const id = String(idRef.current);
-    activeByTypeRef.current.set(type, { id, message });
     setToasts((prev) => [...prev.filter((t) => t.type !== type), { id, type, message }]);
-    const timer = setTimeout(() => removeToast(id, type), TOAST_DURATIONS_MS[type]);
-    return timer;
+    const timer = scheduleToastRemoval(id, type);
+    activeByTypeRef.current.set(type, { id, message, timer });
   }
 
   useEffect(() => {
     if (!errorMessage) return;
-    const timer = pushToast("error", errorMessage);
-    return () => clearTimeout(timer);
+    pushToast("error", errorMessage);
   }, [errorKey]);
 
   useEffect(() => {
@@ -74,14 +93,24 @@ export function useGamePageToasts({
       if (player.id === currentPlayerId) continue;
       const prev = prevPlayers.find((p) => p.id === player.id);
       if (prev?.connectionStatus === "disconnected" && player.connectionStatus === "connected") {
-        const timer = pushToast(
+        pushToast(
           "success",
           t("game.toast.reconnected", { playerName: player.displayName }),
         );
-        return () => clearTimeout(timer);
+        return;
       }
     }
   }, [roomState, currentPlayerId]);
+
+  useEffect(() => {
+    return () => {
+      for (const timer of timersRef.current) {
+        window.clearTimeout(timer);
+      }
+      timersRef.current.clear();
+      activeByTypeRef.current.clear();
+    };
+  }, []);
 
   return toasts;
 }
