@@ -151,13 +151,6 @@
   line-height: 1;
 }
 
-.statusBadgeCardIcon {
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
-  flex: 0 0 auto;
-}
-
 .statusBadgeCounterSeparator {
   color: var(--color-text-muted);
   font-size: 13px;
@@ -231,13 +224,6 @@
   align-items: center;
   gap: 3px;
   /* line-height: 1; */
-}
-
-.headerLeaderCardIcon {
-  width: 14px;
-  height: 14px;
-  object-fit: contain;
-  flex: 0 0 auto;
 }
 
 .menuInfoSection {
@@ -381,6 +367,13 @@
 
 .menuPlayerBadge {
   white-space: nowrap;
+}
+
+.menuPlayerCardCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1;
 }
 
 .menuActionButton,

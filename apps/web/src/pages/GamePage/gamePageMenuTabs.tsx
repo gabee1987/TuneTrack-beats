@@ -18,6 +18,7 @@ import {
 import type { AppShellMenuTab } from "../../features/app-shell/AppShellMenu";
 import type { Translate } from "../../features/i18n";
 import { Badge } from "../../features/ui/Badge";
+import { CardCountAmount } from "../../features/ui/CardCountAmount";
 import { TtTokenAmount, TtTokenIcon } from "../../features/ui/TtToken";
 import type { HostPlaybackState } from "./hooks/useHostPlayback";
 import type { GameHistoryEntry } from "./hooks/useGameHistory";
@@ -212,6 +213,10 @@ function GameMenuPlayerItem({
   const hasTokenActions = roomState.settings.ttModeEnabled && isCurrentPlayerHost;
   const hasTransferAction = isCurrentPlayerHost && !isCurrentPlayer;
   const hasExpandableContent = hasTransferAction;
+  const cardCount = roomState.timelines[player.id]?.length ?? 0;
+  const cardCountLabel = t("gameMenu.cards", {
+    count: cardCount,
+  });
 
   useLayoutEffect(() => {
     const contentElement = expandedContentRef.current;
@@ -279,9 +284,11 @@ function GameMenuPlayerItem({
               </strong>
               <div className={styles.menuPlayerBadges}>
                 <Badge className={styles.menuPlayerBadge} size="sm" variant="neutral">
-                  {t("gameMenu.cards", {
-                    count: roomState.timelines[player.id]?.length ?? 0,
-                  })}
+                  <CardCountAmount
+                    amount={cardCount}
+                    ariaLabel={cardCountLabel}
+                    className={styles.menuPlayerCardCount}
+                  />
                 </Badge>
                 {roomState.settings.ttModeEnabled ? (
                   <Badge className={styles.menuPlayerBadge} size="sm" variant="neutral">

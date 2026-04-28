@@ -7,6 +7,7 @@ import {
   type PublicRoomSettings,
 } from "@tunetrack/shared";
 import { Badge } from "../../../features/ui/Badge";
+import { CardCountAmount } from "../../../features/ui/CardCountAmount";
 import { useI18n } from "../../../features/i18n";
 import { RangeField } from "../../../features/ui/RangeField";
 import { TtTokenAmount } from "../../../features/ui/TtToken";
@@ -46,11 +47,19 @@ export function LobbyPlayerListItem({
             <strong className={styles.playerName}>{displayState.primaryName}</strong>
             <div className={styles.playerCounterBadges}>
               {displayState.counterBadges.map((badge) => {
-                const tokenMatch = /^(\d+) TT$/.exec(badge.label);
-
                 return (
                   <Badge className={styles.playerBadge} key={badge.label} variant={badge.variant}>
-                    {tokenMatch ? <TtTokenAmount amount={Number(tokenMatch[1])} /> : badge.label}
+                    {badge.kind === "cardCount" && badge.count !== undefined ? (
+                      <CardCountAmount
+                        amount={badge.count}
+                        ariaLabel={badge.label}
+                        className={styles.playerCardCount}
+                      />
+                    ) : badge.kind === "tokenCount" && badge.count !== undefined ? (
+                      <TtTokenAmount amount={badge.count} />
+                    ) : (
+                      badge.label
+                    )}
                   </Badge>
                 );
               })}

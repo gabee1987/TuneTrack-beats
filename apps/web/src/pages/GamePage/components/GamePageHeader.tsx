@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { AppShellMenu } from "../../../features/app-shell/AppShellMenu";
 import { useI18n } from "../../../features/i18n";
+import { CardCountAmount } from "../../../features/ui/CardCountAmount";
 import { TtTokenAmount } from "../../../features/ui/TtToken";
 import type { GamePageHeaderModel } from "../GamePage.types";
 import styles from "../GamePage.module.css";
@@ -77,19 +78,11 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
               <span className={styles.statusBadgeHostText}>{t("gameMenu.host")}</span>
             ) : null}
             <span className={styles.statusBadgeCounters}>
-              <span
-                aria-label={visibleTimelineCardCountLabel}
+              <CardCountAmount
+                amount={visibleTimelineCardCount}
+                ariaLabel={visibleTimelineCardCountLabel}
                 className={styles.statusBadgeCounter}
-              >
-                <span aria-hidden="true">{visibleTimelineCardCount}</span>
-                <img
-                  alt=""
-                  aria-hidden="true"
-                  className={styles.statusBadgeCardIcon}
-                  draggable={false}
-                  src="/card.png"
-                />
-              </span>
+              />
               {showStatusTokenCount ? (
                 <>
                   <span aria-hidden="true" className={styles.statusBadgeCounterSeparator}>
@@ -114,16 +107,11 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
                     <span className={styles.headerLeaderRank}>#{index + 1}</span>
                     <strong className={styles.headerLeaderName}>{player.displayName}</strong>
                     <span className={styles.headerLeaderMeta}>
-                      <span aria-label={cardCountLabel} className={styles.headerLeaderCardCount}>
-                        <span aria-hidden="true">{cardCount}</span>
-                        <img
-                          alt=""
-                          aria-hidden="true"
-                          className={styles.headerLeaderCardIcon}
-                          draggable={false}
-                          src="/card.png"
-                        />
-                      </span>
+                      <CardCountAmount
+                        amount={cardCount}
+                        ariaLabel={cardCountLabel}
+                        className={styles.headerLeaderCardCount}
+                      />
                       {roomState.settings.ttModeEnabled ? (
                         <>
                           <span aria-hidden="true">·</span>

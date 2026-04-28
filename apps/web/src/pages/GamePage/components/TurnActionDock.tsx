@@ -117,6 +117,7 @@ export function TurnActionDock({
               {t("game.controls.waitingFor")}
             </span>
             <span className={styles.offlinePlayerName}>{offlinePlayerName}</span>
+            <span className={styles.offlinePlayerStatus}>{t("gameMenu.offline")}</span>
           </div>
           {turnSkipCountdown ? (
             <span className={styles.offlinePlayerCountdown}>

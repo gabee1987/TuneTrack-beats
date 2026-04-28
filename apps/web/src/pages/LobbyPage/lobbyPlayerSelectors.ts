@@ -1,6 +1,8 @@
 import type { PublicPlayerState, PublicRoomSettings } from "@tunetrack/shared";
 
 export interface LobbyPlayerBadgeSpec {
+  count?: number | undefined;
+  kind?: "cardCount" | "tokenCount" | "text" | undefined;
   label: string;
   variant: "neutral" | "strong";
 }
@@ -29,6 +31,8 @@ export function getLobbyPlayerDisplayState({
     startingCardsLabel: t("lobby.players.startingCards"),
     counterBadges: [
       {
+        count: player.startingTimelineCardCount,
+        kind: "cardCount" as const,
         label: t("lobby.players.cards", {
           count: player.startingTimelineCardCount,
         }),
@@ -37,6 +41,8 @@ export function getLobbyPlayerDisplayState({
       ...(roomSettings.ttModeEnabled
         ? [
             {
+              count: player.ttTokenCount,
+              kind: "tokenCount" as const,
               label: `${player.ttTokenCount} TT`,
               variant: "neutral" as const,
             },
@@ -45,6 +51,7 @@ export function getLobbyPlayerDisplayState({
       ...(player.isHost
         ? [
             {
+              kind: "text" as const,
               label: t("lobby.players.host"),
               variant: "strong" as const,
             },

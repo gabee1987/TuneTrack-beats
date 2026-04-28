@@ -496,6 +496,13 @@
   text-overflow: ellipsis;
 }
 
+.offlinePlayerStatus {
+  color: var(--color-status-danger-text);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
 .offlinePlayerCountdown {
   flex-shrink: 0;
   font-size: 12px;
