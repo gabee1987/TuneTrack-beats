@@ -45,6 +45,7 @@
 
 .title {
   margin: 0;
+  color: #ffb26b;
   font-size: 26px;
   font-weight: 700;
   letter-spacing: -0.05em;
@@ -292,7 +293,7 @@
 
 .trackMeta {
   font-size: 12px;
-  color: var(--color-text-secondary);
+  color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

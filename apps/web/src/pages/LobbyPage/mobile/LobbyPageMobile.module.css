@@ -515,7 +515,7 @@
 
 .infoEyebrow {
   margin: 0;
-  color: #ffb26b;
+  color: #38c8ff;
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.18em;
@@ -524,14 +524,14 @@
 
 .infoTitle {
   margin: 8px 0 0;
-  color: white;
+  color: #ffb26b;
   font-size: 24px;
   letter-spacing: -0.04em;
 }
 
 .infoBody {
   margin: 12px 0 0;
-  color: color-mix(in srgb, white 72%, transparent);
+  color: #ffffff;
   line-height: 1.5;
 }
 
