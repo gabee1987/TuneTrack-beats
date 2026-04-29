@@ -117,7 +117,7 @@
 }
 
 .infoEyebrow {
-  color: #ffb26b;
+  color: #38c8ff;
   font-size: 14px;
   font-weight: 900;
   letter-spacing: 0.18em;
@@ -125,7 +125,7 @@
 }
 
 .infoTitle {
-  color: var(--color-text-primary);
+  color: #ffb26b;
   font-size: 24px;
   font-weight: 900;
   letter-spacing: -0.04em;
@@ -133,7 +133,7 @@
 }
 
 .infoBody {
-  color: var(--color-text-secondary);
+  color: #ffffff;
   font-size: 15px;
   font-weight: 650;
   line-height: 1.5;

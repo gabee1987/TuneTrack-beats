@@ -57,6 +57,42 @@ export function useSpotifyPlaybackSdk({
   const positionSnapshotRef = useRef(0);
   const positionSnapshotTimeRef = useRef(0);
   const durationRef = useRef(0);
+  const deviceIdRef = useRef<string | null>(null);
+
+  const resetPlaybackState = useCallback(() => {
+    setIsPlaying(false);
+    setPosition(0);
+    setDuration(0);
+    setHasActiveContext(false);
+    isPlayingRef.current = false;
+    positionSnapshotRef.current = 0;
+    positionSnapshotTimeRef.current = 0;
+    durationRef.current = 0;
+  }, []);
+
+  const pauseCurrentSpotifyDevice = useCallback(() => {
+    const token = accessTokenRef.current;
+    const deviceIdValue = deviceIdRef.current;
+
+    void playerRef.current?.pause();
+    resetPlaybackState();
+
+    if (!token) {
+      return;
+    }
+
+    const url = new URL("https://api.spotify.com/v1/me/player/pause");
+    if (deviceIdValue) {
+      url.searchParams.set("device_id", deviceIdValue);
+    }
+
+    void fetch(url, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }).catch(() => undefined);
+  }, [resetPlaybackState]);
 
   const requestToken = useCallback(async (): Promise<string | null> => {
     const socketClient = await getSocketClient();
@@ -115,6 +151,7 @@ export function useSpotifyPlaybackSdk({
       player.on("ready", ({ device_id }) => {
         if (disposed) return;
         console.info("[TuneTrack] Spotify SDK ready, device_id:", device_id);
+        deviceIdRef.current = device_id;
         setDeviceId(device_id);
         setIsReady(true);
       });
@@ -145,18 +182,39 @@ export function useSpotifyPlaybackSdk({
 
     return () => {
       disposed = true;
-      void player?.pause();
+      pauseCurrentSpotifyDevice();
       player?.disconnect();
       playerRef.current = null;
       setIsReady(false);
       setDeviceId(null);
-      setIsPlaying(false);
-      setPosition(0);
-      setDuration(0);
-      setHasActiveContext(false);
-      isPlayingRef.current = false;
+      deviceIdRef.current = null;
+      resetPlaybackState();
     };
-  }, [enabled, requestToken]);
+  }, [enabled, pauseCurrentSpotifyDevice, requestToken, resetPlaybackState]);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    let isDisposed = false;
+    let cleanup: (() => void) | null = null;
+
+    void getSocketClient().then((socketClient) => {
+      if (isDisposed) {
+        return;
+      }
+
+      socketClient.on(ServerToClientEvent.RoomClosed, pauseCurrentSpotifyDevice);
+
+      cleanup = () => {
+        socketClient.off(ServerToClientEvent.RoomClosed, pauseCurrentSpotifyDevice);
+      };
+    });
+
+    return () => {
+      isDisposed = true;
+      cleanup?.();
+    };
+  }, [enabled, pauseCurrentSpotifyDevice]);
 
   // Interpolate position while playing (between player_state_changed events)
   useEffect(() => {
@@ -229,8 +287,8 @@ export function useSpotifyPlaybackSdk({
   );
 
   const pause = useCallback(() => {
-    void playerRef.current?.pause();
-  }, []);
+    pauseCurrentSpotifyDevice();
+  }, [pauseCurrentSpotifyDevice]);
 
   const resume = useCallback(() => {
     void playerRef.current?.resume();

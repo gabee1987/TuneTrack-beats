@@ -4,6 +4,7 @@ import { useI18n } from "../../../features/i18n";
 import { CardCountAmount } from "../../../features/ui/CardCountAmount";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import type { GamePageHeaderModel } from "../GamePage.types";
+import { HeaderLeadersStrip } from "./HeaderLeadersStrip";
 import styles from "../GamePage.module.css";
 
 interface GamePageHeaderProps {
@@ -39,6 +40,11 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
     count: visibleTimelineCardCount,
     plural: visibleTimelineCardCount === 1 ? "" : "s",
   });
+  const getCardCountLabel = (count: number) =>
+    t("game.header.cardCount", {
+      count,
+      plural: count === 1 ? "" : "s",
+    });
 
   return (
     <header className={styles.header}>
@@ -94,37 +100,6 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
               ) : null}
             </span>
           </div>
-          {showMiniStandings ? (
-            <div className={styles.headerLeadersStrip}>
-              {leadingPlayers.map((player, index) => {
-                const cardCount = roomState.timelines[player.id]?.length ?? 0;
-                const cardCountLabel = t("game.header.cardCount", {
-                  count: cardCount,
-                  plural: cardCount === 1 ? "" : "s",
-                });
-
-                return (
-                  <article className={styles.headerLeaderChip} key={player.id}>
-                    <span className={styles.headerLeaderRank}>#{index + 1}</span>
-                    <strong className={styles.headerLeaderName}>{player.displayName}</strong>
-                    <span className={styles.headerLeaderMeta}>
-                      <CardCountAmount
-                        amount={cardCount}
-                        ariaLabel={cardCountLabel}
-                        className={styles.headerLeaderCardCount}
-                      />
-                      {roomState.settings.ttModeEnabled ? (
-                        <>
-                          <span aria-hidden="true">·</span>
-                          <TokenCountAmount amount={player.ttTokenCount} />
-                        </>
-                      ) : null}
-                    </span>
-                  </article>
-                );
-              })}
-            </div>
-          ) : null}
           <button
             aria-label={
               showMiniStandings
@@ -201,6 +176,12 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
               : {})}
           />
         </div>
+        <HeaderLeadersStrip
+          getCardCountLabel={getCardCountLabel}
+          leadingPlayers={leadingPlayers}
+          roomState={roomState}
+          show={showMiniStandings}
+        />
         {showTimelineHints && statusDetailText ? (
           <p className={styles.statusCaption}>{statusDetailText}</p>
         ) : null}

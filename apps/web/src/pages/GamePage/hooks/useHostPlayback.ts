@@ -1,5 +1,9 @@
-import type { PublicRoomState } from "@tunetrack/shared";
+import {
+  ServerToClientEvent,
+  type PublicRoomState,
+} from "@tunetrack/shared";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { getSocketClient } from "../../../services/socket/socketClient";
 import { useSpotifyPlaybackSdk } from "./useSpotifyPlaybackSdk";
 
 export interface HostPlaybackState {
@@ -80,7 +84,50 @@ export function useHostPlayback({
       audio.removeEventListener("play", onPlay);
       audio.removeEventListener("timeupdate", onTimeUpdate);
       audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
       audioRef.current = null;
+      setFreeIsPlaying(false);
+      setFreePosition(0);
+      setFreeDuration(0);
+    };
+  }, [enabled, isFree]);
+
+  useEffect(() => {
+    if (!enabled || !isFree) return;
+
+    let isDisposed = false;
+    let cleanup: (() => void) | null = null;
+
+    function handleRoomClosed() {
+      const audio = audioRef.current;
+      if (!audio) {
+        return;
+      }
+
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+      setFreeIsPlaying(false);
+      setFreePosition(0);
+      setFreeDuration(0);
+    }
+
+    void getSocketClient().then((socketClient) => {
+      if (isDisposed) {
+        return;
+      }
+
+      socketClient.on(ServerToClientEvent.RoomClosed, handleRoomClosed);
+
+      cleanup = () => {
+        socketClient.off(ServerToClientEvent.RoomClosed, handleRoomClosed);
+      };
+    });
+
+    return () => {
+      isDisposed = true;
+      cleanup?.();
     };
   }, [enabled, isFree]);
 

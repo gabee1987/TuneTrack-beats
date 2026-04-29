@@ -6,7 +6,7 @@ import {
   type ImportPlaylistResultPayload,
   type SpotifyAuthUrlPayload,
 } from "@tunetrack/shared";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useI18n } from "../../../features/i18n";
 import {
@@ -49,7 +49,18 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const importContentRef = useRef<HTMLDivElement>(null);
+  const authPopupRef = useRef<Window | null>(null);
   const [importContentHeight, setImportContentHeight] = useState(0);
+
+  const closeAuthPopup = useCallback(() => {
+    const popup = authPopupRef.current;
+
+    if (popup && !popup.closed) {
+      popup.close();
+    }
+
+    authPopupRef.current = null;
+  }, []);
 
   useLayoutEffect(() => {
     const el = importContentRef.current;
@@ -64,9 +75,14 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
   }, []);
 
   useEffect(() => {
+    let isDisposed = false;
     let cleanup: (() => void) | null = null;
 
     void getSocketClient().then((socket) => {
+      if (isDisposed) {
+        return;
+      }
+
       function handleAuthResult(payload: SpotifyAuthResultPayload) {
         if (payload.success) {
           setAuthPhase("idle");
@@ -89,17 +105,32 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
         }
       }
 
+      function handleRoomClosed() {
+        closeAuthPopup();
+        setAuthPhase("idle");
+        setImportPhase("idle");
+        setAuthError(null);
+        setImportError(null);
+        setIsEditModalOpen(false);
+      }
+
       socket.on(ServerToClientEvent.SpotifyAuthResult, handleAuthResult);
       socket.on(ServerToClientEvent.PlaylistImportResult, handleImportResult);
+      socket.on(ServerToClientEvent.RoomClosed, handleRoomClosed);
 
       cleanup = () => {
         socket.off(ServerToClientEvent.SpotifyAuthResult, handleAuthResult);
         socket.off(ServerToClientEvent.PlaylistImportResult, handleImportResult);
+        socket.off(ServerToClientEvent.RoomClosed, handleRoomClosed);
       };
     });
 
-    return () => cleanup?.();
-  }, [t]);
+    return () => {
+      isDisposed = true;
+      cleanup?.();
+      closeAuthPopup();
+    };
+  }, [closeAuthPopup, t]);
 
   function connectSpotify() {
     if (!roomId) return;
@@ -113,6 +144,8 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
       setAuthError(t("lobby.spotify.popupBlocked"));
       return;
     }
+
+    authPopupRef.current = popup;
 
     void getSocketClient().then((socket) => {
       socket.once(ServerToClientEvent.SpotifyAuthUrl, (payload: SpotifyAuthUrlPayload) => {
