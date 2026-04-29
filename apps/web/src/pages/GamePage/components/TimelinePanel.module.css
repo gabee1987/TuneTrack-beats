@@ -756,7 +756,7 @@
     mask-image: linear-gradient(
       180deg,
       transparent 0%,
-      var(--color-mask-solid) 10%,
+      var(--color-mask-solid) 16px,
       var(--color-mask-solid) 84%,
       transparent 100%
     );
@@ -769,7 +769,7 @@
     mask-image: linear-gradient(
       180deg,
       transparent 0%,
-      var(--color-mask-solid) 10%,
+      var(--color-mask-solid) 16px,
       var(--color-mask-solid) 84%,
       transparent 100%
     );
