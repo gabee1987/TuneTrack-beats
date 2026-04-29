@@ -653,6 +653,61 @@
   color: var(--color-game-meta-pill-text);
 }
 
+.previewCardMysteryOnly {
+  display: grid;
+  flex: 1 1 auto;
+  align-self: stretch;
+  min-height: 100%;
+  place-items: center;
+}
+
+.previewCardMysteryMark {
+  position: relative;
+  isolation: isolate;
+  display: inline-block;
+  margin: 0;
+  color: transparent;
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--color-token-orange, #ff8a3d) 92%, white),
+    color-mix(in srgb, var(--color-token-pink, #ff4d9d) 72%, white),
+    color-mix(in srgb, var(--color-token-violet, #8b5cff) 82%, white)
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  font-size: 62px;
+  font-weight: 900;
+  line-height: 1;
+  filter: drop-shadow(0 8px 16px color-mix(in srgb, #000000 26%, transparent));
+  text-shadow:
+    0 0 16px color-mix(in srgb, var(--color-token-orange, #ff8a3d) 48%, transparent),
+    0 0 30px color-mix(in srgb, var(--color-token-pink, #ff4d9d) 28%, transparent);
+}
+
+.previewCardMysteryMark::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.previewCardMysteryMark::after {
+  left: 50%;
+  top: 50%;
+  width: 1.5em;
+  height: 1.5em;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-token-orange, #ff8a3d) 34%, transparent) 0%,
+    color-mix(in srgb, var(--color-token-pink, #ff4d9d) 22%, transparent) 34%,
+    transparent 70%
+  );
+  filter: blur(10px);
+  opacity: 0.72;
+  transform: translate(-50%, -50%);
+  animation: hiddenCardMysteryGlow 3.2s ease-in-out infinite alternate;
+}
+
 @media (max-width: 720px) {
   .timelineRow {
     mask-image: none;
@@ -852,6 +907,10 @@
     font-size: clamp(20px, 6vw, 28px);
   }
 
+  .previewCardMysteryMark {
+    font-size: clamp(34px, 11vw, 50px);
+  }
+
   .previewCardMetaPill {
     margin-top: 4px;
     padding: 4px 7px;
@@ -896,6 +955,18 @@
 
   100% {
     opacity: 0.88;
+  }
+}
+
+@keyframes hiddenCardMysteryGlow {
+  0% {
+    opacity: 0.44;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+
+  100% {
+    opacity: 0.88;
+    transform: translate(-50%, -50%) scale(1.08);
   }
 }
 
@@ -993,7 +1064,8 @@
   .previewCardResolvedCorrect::before,
   .previewCardResolvedCorrect::after,
   .previewCardCurrentPick::before,
-  .previewCardCurrentPick::after {
+  .previewCardCurrentPick::after,
+  .previewCardMysteryMark::after {
     animation: none;
   }
 }

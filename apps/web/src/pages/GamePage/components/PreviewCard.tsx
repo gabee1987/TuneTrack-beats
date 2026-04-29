@@ -74,15 +74,11 @@ function PreviewCardContent({
       </div>
     </>
   ) : (
-    <>
-      <p className={styles.previewCardArtist}>{t("game.preview.hiddenArtist")}</p>
-      <div className={styles.previewCardCenter}>
-        <strong className={styles.previewCardYear}>{t("game.preview.hiddenYear")}</strong>
-      </div>
-      <div className={styles.previewCardBottom}>
-        <h3 className={styles.previewCardTitle}>{t("game.preview.hiddenTitle")}</h3>
-      </div>
-    </>
+    <div className={styles.previewCardMysteryOnly}>
+      <strong className={styles.previewCardMysteryMark} aria-label={t("game.preview.hiddenTitle")}>
+        ?
+      </strong>
+    </div>
   );
 }
 
