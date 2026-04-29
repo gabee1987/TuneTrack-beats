@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 export interface HomePageController {
   displayName: string;
   roomId: string;
+  toastMessage: string | null;
   preloadLobby: () => void;
   handleQuickStart: () => void;
   setDisplayName: (value: string) => void;

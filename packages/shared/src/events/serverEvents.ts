@@ -33,6 +33,8 @@ export interface ServerErrorPayload {
 
 export interface RoomClosedPayload {
   roomId: string;
+  reason?: "closed" | "kicked";
+  roomName?: string;
   message: string;
 }
 

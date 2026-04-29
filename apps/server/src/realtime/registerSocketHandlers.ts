@@ -129,10 +129,18 @@ function registerJoinRoomHandler(
 
     logger.info({ socketId: socket.id, roomId: parseResult.data.roomId, displayName: parseResult.data.displayName }, "join_room");
     try {
+      const previousSocketRoomIds = [...socket.rooms].filter(
+        (roomId) => roomId !== socket.id,
+      );
       const { playerId, roomState } = roomService.joinRoom(
         parseResult.data,
         socket.id,
       );
+      for (const previousSocketRoomId of previousSocketRoomIds) {
+        if (previousSocketRoomId !== roomState.roomId) {
+          socket.leave(previousSocketRoomId);
+        }
+      }
       socket.join(roomState.roomId);
       socket.emit(ServerToClientEvent.PlayerIdentity, { playerId });
 
@@ -207,7 +215,20 @@ function registerKickPlayerHandler(
       "kick_player",
     );
     try {
-      const roomState = roomService.kickPlayer(parseResult.data, socket.id);
+      const { kickedSocketIds, roomState } = roomService.kickPlayer(
+        parseResult.data,
+        socket.id,
+      );
+
+      for (const kickedSocketId of kickedSocketIds) {
+        io.to(kickedSocketId).emit(ServerToClientEvent.RoomClosed, {
+          roomId: parseResult.data.roomId,
+          reason: "kicked",
+          roomName: parseResult.data.roomId,
+          message: "You were removed from this room.",
+        });
+        io.in(kickedSocketId).socketsLeave(parseResult.data.roomId);
+      }
 
       io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
         roomState,

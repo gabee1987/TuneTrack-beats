@@ -71,6 +71,11 @@ export interface JoinRoomResult {
   roomState: PublicRoomState;
 }
 
+export interface KickPlayerResult {
+  kickedSocketIds: string[];
+  roomState: PublicRoomState;
+}
+
 export class RoomRegistry {
   private static readonly MAX_ACTIVE_ROOM_COUNT = 5;
   private static readonly DEFAULT_RECONNECT_GRACE_PERIOD_MS = 30_000;
@@ -79,6 +84,7 @@ export class RoomRegistry {
   private static readonly IN_GAME_RECONNECT_DISPLAY_MS = 180_000;
 
   private readonly roomsById = new Map<RoomId, RoomRecord>();
+  private readonly roomRedirectsById = new Map<RoomId, RoomId>();
   private readonly socketMemberships = new Map<string, SocketRoomMembership>();
   private readonly sessionMemberships = new Map<string, SessionRoomMembership>();
   private readonly challengeTimers = new ChallengeTimerManager();
@@ -120,7 +126,11 @@ export class RoomRegistry {
       );
     }
 
-    if (existingSessionMembership && !existingRoomRecord) {
+    if (
+      existingSessionMembership &&
+      !existingRoomRecord &&
+      this.roomRedirectsById.get(roomId) === existingSessionMembership.roomId
+    ) {
       const restoredExistingRoom = this.tryRestoreExistingSessionRoom(
         existingSessionMembership,
         socketId,
@@ -233,6 +243,8 @@ export class RoomRegistry {
 
     const nextRoomState = buildRenamedRoomState(roomRecord.roomState, payload.nextRoomId);
     this.roomsById.delete(payload.roomId);
+    this.retargetRoomRedirects(payload.roomId, payload.nextRoomId);
+    this.roomRedirectsById.set(payload.roomId, payload.nextRoomId);
     this.roomsById.set(payload.nextRoomId, {
       ...roomRecord,
       roomState: nextRoomState,
@@ -423,6 +435,7 @@ export class RoomRegistry {
     }
     this.challengeTimers.clear(payload.roomId);
     this.roomsById.delete(payload.roomId);
+    this.clearRoomRedirects(payload.roomId);
     return payload.roomId;
   }
 
@@ -596,7 +609,7 @@ export class RoomRegistry {
 
   // ─── Gameplay: kick player ────────────────────────────────────────────────
 
-  public kickPlayer(socketId: string, payload: { roomId: RoomId; playerId: string }): PublicRoomState {
+  public kickPlayer(socketId: string, payload: { roomId: RoomId; playerId: string }): KickPlayerResult {
     const roomRecord = this.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.getMembership(socketId);
     if (roomRecord.roomState.hostId !== membership.playerId) throw new Error("ONLY_HOST_CAN_KICK_PLAYER");
@@ -609,10 +622,11 @@ export class RoomRegistry {
       this.turnSkipTimers.clear(targetSessionId);
       this.sessionMemberships.delete(targetSessionId);
     }
+    const kickedSocketIds: string[] = [];
     for (const [sid, m] of this.socketMemberships) {
       if (m.roomId === payload.roomId && m.playerId === payload.playerId) {
+        kickedSocketIds.push(sid);
         this.socketMemberships.delete(sid);
-        break;
       }
     }
 
@@ -638,7 +652,7 @@ export class RoomRegistry {
       : baseRoomState;
 
     this.roomsById.set(payload.roomId, { ...roomRecord, gameState, roomState: nextRoomState });
-    return nextRoomState;
+    return { kickedSocketIds, roomState: nextRoomState };
   }
 
   // ─── Private: session management ─────────────────────────────────────────
@@ -700,11 +714,28 @@ export class RoomRegistry {
     if (!nextRoomState) {
       this.challengeTimers.clear(membership.roomId);
       this.roomsById.delete(membership.roomId);
+      this.clearRoomRedirects(membership.roomId);
       return null;
     }
 
     this.roomsById.set(membership.roomId, { ...roomRecord, roomState: nextRoomState });
     return nextRoomState;
+  }
+
+  private retargetRoomRedirects(previousRoomId: RoomId, nextRoomId: RoomId): void {
+    for (const [sourceRoomId, targetRoomId] of this.roomRedirectsById) {
+      if (targetRoomId === previousRoomId) {
+        this.roomRedirectsById.set(sourceRoomId, nextRoomId);
+      }
+    }
+  }
+
+  private clearRoomRedirects(roomId: RoomId): void {
+    for (const [sourceRoomId, targetRoomId] of this.roomRedirectsById) {
+      if (sourceRoomId === roomId || targetRoomId === roomId) {
+        this.roomRedirectsById.delete(sourceRoomId);
+      }
+    }
   }
 
   // ─── Private: player connection ───────────────────────────────────────────
@@ -727,7 +758,10 @@ export class RoomRegistry {
     );
     this.roomsById.set(membership.roomId, { ...roomRecord, roomState: disconnectedRoomState });
 
-    if (disconnectedRoomState.hostId === membership.playerId) {
+    if (
+      disconnectedRoomState.status !== "lobby" &&
+      disconnectedRoomState.hostId === membership.playerId
+    ) {
       this.hostTransferTimers.schedule(membership.roomId, this.hostTransferGracePeriodMs, () => {
         const current = this.roomsById.get(membership.roomId);
         if (!current) return;
@@ -788,6 +822,7 @@ export class RoomRegistry {
 
     const currentHost = connectedRoomState.players.find((p) => p.id === connectedRoomState.hostId);
     if (currentHost?.connectionStatus !== "disconnected") return connectedRoomState;
+    if (connectedRoomState.status === "lobby") return connectedRoomState;
     if (this.hostTransferTimers.has(roomId)) return connectedRoomState;
 
     const candidate = selectAutomaticHostCandidate(connectedRoomState);

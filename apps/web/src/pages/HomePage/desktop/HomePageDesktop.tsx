@@ -1,4 +1,5 @@
 import { AppPageShell } from "../../../features/mobile-shell/AppPageShell";
+import { StatusBanner } from "../../../features/ui/StatusBanner";
 import type { HomePageAssemblyProps } from "../HomePage.types";
 import { HomePageHero } from "../components/HomePageHero";
 import { JoinRoomForm } from "../components/JoinRoomForm";
@@ -12,6 +13,10 @@ export function HomePageDesktop({ controller }: HomePageAssemblyProps) {
       screenClassName={styles.screenShell}
     >
       <HomePageTopBar />
+
+      {controller.toastMessage ? (
+        <StatusBanner className={styles.toast}>{controller.toastMessage}</StatusBanner>
+      ) : null}
 
       <div className={styles.contentGrid}>
         <section className={styles.heroColumn}>

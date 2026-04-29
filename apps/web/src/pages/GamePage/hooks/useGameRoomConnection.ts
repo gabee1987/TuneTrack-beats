@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useI18n } from "../../../features/i18n";
 import { localizeServerError } from "../../../features/i18n/localizedErrors";
+import { rememberRoomEventToast } from "../../../services/session/roomEventToast";
 import { getSocketClient } from "../../../services/socket/socketClient";
 import type { GameRouteState } from "../GamePage.types";
 
@@ -73,8 +74,25 @@ export function useGameRoomConnection({
       setErrorMessage(localizeServerError(t, payload));
     }
 
-    function handleRoomClosed(_: RoomClosedPayload) {
-      navigate("/");
+    function handleRoomClosed(payload: RoomClosedPayload) {
+      if (payload.reason === "kicked") {
+        rememberRoomEventToast({
+          reason: payload.reason,
+          roomName: payload.roomName ?? payload.roomId,
+        });
+      }
+
+      navigate("/", {
+        state:
+          payload.reason === "kicked"
+            ? {
+                roomEventToast: {
+                  reason: payload.reason,
+                  roomName: payload.roomName ?? payload.roomId,
+                },
+              }
+            : null,
+      });
     }
 
     void getSocketClient().then((socketClient) => {

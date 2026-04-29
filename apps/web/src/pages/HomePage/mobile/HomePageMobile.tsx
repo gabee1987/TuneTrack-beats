@@ -1,6 +1,7 @@
 import { AppPageShell } from "../../../features/mobile-shell/AppPageShell";
 import { AppShellMenu } from "../../../features/app-shell/AppShellMenu";
 import { useI18n } from "../../../features/i18n";
+import { StatusBanner } from "../../../features/ui/StatusBanner";
 import type { HomePageAssemblyProps } from "../HomePage.types";
 import { getHomePageMenuTabSpecs } from "../homePageMenuConfig";
 import { AnimatedMenuBackground } from "./AnimatedMenuBackground";
@@ -15,6 +16,10 @@ export function HomePageMobile({ controller }: HomePageAssemblyProps) {
       <AnimatedMenuBackground />
 
       <div className={styles.content}>
+        {controller.toastMessage ? (
+          <StatusBanner className={styles.toast}>{controller.toastMessage}</StatusBanner>
+        ) : null}
+
         <div className={styles.menuAnchor}>
           <AppShellMenu
             subtitle={t("home.menuSubtitle")}

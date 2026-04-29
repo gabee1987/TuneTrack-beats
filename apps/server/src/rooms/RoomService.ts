@@ -31,7 +31,7 @@ import type {
   UpdateRoomSettingsPayloadParsed,
 } from "@tunetrack/shared";
 import type { ImportPlaylistResultPayload } from "@tunetrack/shared";
-import { type JoinRoomResult, RoomRegistry } from "./RoomRegistry.js";
+import { type JoinRoomResult, type KickPlayerResult, RoomRegistry } from "./RoomRegistry.js";
 
 export interface ImportPlaylistServiceResult {
   roomState: PublicRoomState;
@@ -188,7 +188,7 @@ export class RoomService {
   public kickPlayer(
     kickPlayerPayload: KickPlayerPayloadParsed,
     socketId: string,
-  ): PublicRoomState {
+  ): KickPlayerResult {
     return this.roomRegistry.kickPlayer(socketId, kickPlayerPayload);
   }
 

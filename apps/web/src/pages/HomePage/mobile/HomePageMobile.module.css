@@ -38,6 +38,12 @@
   gap: 14px;
 }
 
+.toast {
+  position: relative;
+  z-index: 12;
+  margin: 0 54px 0 0;
+}
+
 .menuAnchor {
   position: absolute;
   top: 0;

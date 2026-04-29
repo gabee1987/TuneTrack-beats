@@ -3,6 +3,43 @@ import { describe, expect, it } from "vitest";
 import { RoomRegistry } from "../src/rooms/RoomRegistry.js";
 
 describe("host transfer", () => {
+  it("does not automatically transfer lobby host while they are reconnecting", async () => {
+    const roomRegistry = new RoomRegistry(undefined, 1_000, 10);
+    const changedRoomStates: string[] = [];
+    const hostJoin = roomRegistry.addPlayerToRoom(
+      "lobby-host-room",
+      "Host Player",
+      "host-socket",
+      "host-session",
+    );
+    const guestJoin = roomRegistry.addPlayerToRoom(
+      "lobby-host-room",
+      "Guest Player",
+      "guest-socket",
+      "guest-session",
+    );
+    roomRegistry.setRoomStateChangedListener((roomState) => {
+      changedRoomStates.push(roomState.hostId);
+    });
+
+    const roomAfterDisconnect =
+      roomRegistry.removePlayerBySocketId("host-socket");
+
+    await new Promise((resolve) => setTimeout(resolve, 25));
+
+    const roomAfterGuestReconnect = roomRegistry.addPlayerToRoom(
+      "lobby-host-room",
+      "Guest Player",
+      "refreshed-guest-socket",
+      "guest-session",
+    );
+
+    expect(roomAfterDisconnect?.hostId).toBe(hostJoin.playerId);
+    expect(roomAfterGuestReconnect.roomState.hostId).toBe(hostJoin.playerId);
+    expect(roomAfterGuestReconnect.playerId).toBe(guestJoin.playerId);
+    expect(changedRoomStates).not.toContain(guestJoin.playerId);
+  });
+
   it("keeps an active-game host player reserved during the transfer grace period", () => {
     const roomRegistry = new RoomRegistry();
     const hostJoin = roomRegistry.addPlayerToRoom(

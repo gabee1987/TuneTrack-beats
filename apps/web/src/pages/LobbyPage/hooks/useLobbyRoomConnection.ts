@@ -12,6 +12,7 @@ import type { NavigateFunction } from "react-router-dom";
 import { useI18n } from "../../../features/i18n";
 import { localizeServerError } from "../../../features/i18n/localizedErrors";
 import { rememberPlayerDisplayName } from "../../../services/session/playerSession";
+import { rememberRoomEventToast } from "../../../services/session/roomEventToast";
 import { getSocketClient } from "../../../services/socket/socketClient";
 
 interface UseLobbyRoomConnectionOptions {
@@ -29,6 +30,34 @@ interface UseLobbyRoomConnectionResult {
   roomState: PublicRoomState | null;
 }
 
+interface LobbyRoomStateUpdateDecisionOptions {
+  joinedRoomId: string | null;
+  nextRoomId: string;
+  nextStatus: PublicRoomState["status"];
+  requestedRoomId: string | undefined;
+}
+
+export function getLobbyRoomStateUpdateDecision({
+  joinedRoomId,
+  nextRoomId,
+  nextStatus,
+  requestedRoomId,
+}: LobbyRoomStateUpdateDecisionOptions): {
+  accept: boolean;
+  shouldNavigateToRoom: boolean;
+} {
+  const isStateForRequestedRoom = nextRoomId === requestedRoomId;
+  const isRenameFromJoinedRoom =
+    nextStatus === "lobby" &&
+    joinedRoomId === requestedRoomId &&
+    !isStateForRequestedRoom;
+
+  return {
+    accept: isStateForRequestedRoom || isRenameFromJoinedRoom,
+    shouldNavigateToRoom: isRenameFromJoinedRoom,
+  };
+}
+
 export function useLobbyRoomConnection({
   displayName,
   navigate,
@@ -40,6 +69,7 @@ export function useLobbyRoomConnection({
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
   const currentPlayerIdRef = useRef<string | null>(null);
   const hasNavigatedToGameRef = useRef(false);
+  const joinedRoomIdRef = useRef<string | null>(null);
   const [roomState, setRoomState] = useState<PublicRoomState | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -71,9 +101,21 @@ export function useLobbyRoomConnection({
     }
 
     function handleStateUpdate(payload: StateUpdatePayload) {
+      const updateDecision = getLobbyRoomStateUpdateDecision({
+        joinedRoomId: joinedRoomIdRef.current,
+        nextRoomId: payload.roomState.roomId,
+        nextStatus: payload.roomState.status,
+        requestedRoomId: roomId,
+      });
+
+      if (!updateDecision.accept) {
+        return;
+      }
+
+      joinedRoomIdRef.current = payload.roomState.roomId;
       setRoomState(payload.roomState);
 
-      if (payload.roomState.status === "lobby" && payload.roomState.roomId !== roomId) {
+      if (updateDecision.shouldNavigateToRoom) {
         navigate(
           `/lobby/${encodeURIComponent(payload.roomState.roomId)}?playerName=${encodeURIComponent(
             displayName,
@@ -104,8 +146,25 @@ export function useLobbyRoomConnection({
       setErrorMessage(localizeServerError(t, payload));
     }
 
-    function handleRoomClosed(_: RoomClosedPayload) {
-      navigate("/");
+    function handleRoomClosed(payload: RoomClosedPayload) {
+      if (payload.reason === "kicked") {
+        rememberRoomEventToast({
+          reason: payload.reason,
+          roomName: payload.roomName ?? payload.roomId,
+        });
+      }
+
+      navigate("/", {
+        state:
+          payload.reason === "kicked"
+            ? {
+                roomEventToast: {
+                  reason: payload.reason,
+                  roomName: payload.roomName ?? payload.roomId,
+                },
+              }
+            : null,
+      });
     }
 
     void getSocketClient().then((socketClient) => {

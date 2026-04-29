@@ -40,7 +40,7 @@ afterEach(async () => {
 });
 
 describe("room flow", () => {
-  it("lets two clients join one room, updates settings as host, and transfers host on disconnect", async () => {
+  it("lets two clients join one room, updates settings as host, and preserves lobby host while reconnecting", async () => {
     const serverContext = await startTestServer();
     const hostSocket = createClient(serverContext.baseUrl);
     const guestSocket = createClient(serverContext.baseUrl);
@@ -125,16 +125,22 @@ describe("room flow", () => {
     const updatedRoomState = await updatedRoomPromise;
     expect(updatedRoomState.targetTimelineCardCount).toBe(12);
 
-    const hostTransferPromise = waitForStateUpdate(
+    const hostDisconnectedPromise = waitForStateUpdate(
       guestSocket,
-      (roomState) => roomState.hostId === guestIdentity.playerId,
+      (roomState) =>
+        roomState.hostId === hostIdentity.playerId &&
+        roomState.players.some(
+          (player) =>
+            player.id === hostIdentity.playerId &&
+            player.connectionStatus === "disconnected",
+        ),
     );
 
     hostSocket.disconnect();
 
-    const roomAfterHostDisconnect = await hostTransferPromise;
+    const roomAfterHostDisconnect = await hostDisconnectedPromise;
     expect(roomAfterHostDisconnect.players).toHaveLength(2);
-    expect(roomAfterHostDisconnect.hostId).toBe(guestIdentity.playerId);
+    expect(roomAfterHostDisconnect.hostId).toBe(hostIdentity.playerId);
     expect(
       roomAfterHostDisconnect.players.find(
         (player) => player.id === hostIdentity.playerId,
@@ -142,7 +148,7 @@ describe("room flow", () => {
     ).toEqual(
       expect.objectContaining({
         connectionStatus: "disconnected",
-        isHost: false,
+        isHost: true,
       }),
     );
     expect(
@@ -153,7 +159,7 @@ describe("room flow", () => {
       expect.objectContaining({
         id: guestIdentity.playerId,
         connectionStatus: "connected",
-        isHost: true,
+        isHost: false,
       }),
     );
   });
@@ -249,6 +255,61 @@ describe("room flow", () => {
     await expect(refreshedIdentityPromise).resolves.toEqual(guestIdentity);
     await expect(refreshedStatePromise).resolves.toEqual(
       expect.objectContaining({ roomId: "renamed-room" }),
+    );
+  });
+
+  it("moves an existing lobby session to a newly requested room when it is not a rename redirect", () => {
+    const roomRegistry = new RoomRegistry();
+    const changedRoomStates: PublicRoomState[] = [];
+    roomRegistry.setRoomStateChangedListener((roomState) => {
+      changedRoomStates.push(roomState);
+    });
+
+    const hostJoin = roomRegistry.addPlayerToRoom(
+      "room-a",
+      "Host Player",
+      "host-socket",
+      "host-session",
+    );
+    const guestJoin = roomRegistry.addPlayerToRoom(
+      "room-a",
+      "Guest Player",
+      "guest-socket",
+      "guest-session",
+    );
+
+    const movedGuestJoin = roomRegistry.addPlayerToRoom(
+      "room-b",
+      "Guest Player",
+      "guest-socket",
+      "guest-session",
+    );
+
+    expect(movedGuestJoin.roomState).toEqual(
+      expect.objectContaining({
+        roomId: "room-b",
+        hostId: movedGuestJoin.playerId,
+      }),
+    );
+    expect(movedGuestJoin.playerId).not.toBe(guestJoin.playerId);
+    expect(movedGuestJoin.roomState.players).toHaveLength(1);
+    expect(
+      roomRegistry.getRoomStateForMember("host-socket", "room-a").players,
+    ).toEqual([
+      expect.objectContaining({
+        id: hostJoin.playerId,
+        displayName: "Host Player",
+      }),
+    ]);
+    expect(changedRoomStates.at(-1)).toEqual(
+      expect.objectContaining({
+        roomId: "room-a",
+        players: [
+          expect.objectContaining({
+            id: hostJoin.playerId,
+          }),
+        ],
+      }),
     );
   });
 
@@ -715,6 +776,63 @@ describe("room flow", () => {
       roomId: "close-room",
       message: "The host closed this room.",
     });
+  });
+
+  it("notifies a kicked player so their client can leave the room", async () => {
+    const serverContext = await startTestServer();
+    const hostSocket = createClient(serverContext.baseUrl);
+    const guestSocket = createClient(serverContext.baseUrl);
+
+    hostSocket.connect();
+    guestSocket.connect();
+
+    await Promise.all([
+      waitForEvent(hostSocket, "connect"),
+      waitForEvent(guestSocket, "connect"),
+    ]);
+
+    const guestIdentityPromise = waitForEvent<PlayerIdentityPayload>(
+      guestSocket,
+      ServerToClientEvent.PlayerIdentity,
+    );
+    hostSocket.emit(ClientToServerEvent.JoinRoom, {
+      roomId: "kick-room",
+      displayName: "Host Player",
+      sessionId: "host-session",
+    });
+    guestSocket.emit(ClientToServerEvent.JoinRoom, {
+      roomId: "kick-room",
+      displayName: "Guest Player",
+      sessionId: "guest-session",
+    });
+
+    const guestIdentity = await guestIdentityPromise;
+
+    const kickedPromise = waitForEvent<{ roomId: string; message: string }>(
+      guestSocket,
+      ServerToClientEvent.RoomClosed,
+    );
+    const hostStatePromise = waitForStateUpdate(
+      hostSocket,
+      (roomState) =>
+        roomState.roomId === "kick-room" &&
+        !roomState.players.some((player) => player.id === guestIdentity.playerId),
+    );
+
+    hostSocket.emit(ClientToServerEvent.KickPlayer, {
+      roomId: "kick-room",
+      playerId: guestIdentity.playerId,
+    });
+
+    await expect(kickedPromise).resolves.toEqual({
+      roomId: "kick-room",
+      reason: "kicked",
+      roomName: "kick-room",
+      message: "You were removed from this room.",
+    });
+    await expect(hostStatePromise).resolves.toEqual(
+      expect.objectContaining({ roomId: "kick-room" }),
+    );
   });
 
   it("lets the host award TT during a game", async () => {
