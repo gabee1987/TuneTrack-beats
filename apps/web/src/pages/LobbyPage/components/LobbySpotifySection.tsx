@@ -1,7 +1,9 @@
 import { motion, useReducedMotion } from "framer-motion";
+import type { ReactNode } from "react";
 import type { PublicRoomSettings } from "@tunetrack/shared";
 import { createMeasuredDisclosureMotion, createStandardTransition } from "../../../features/motion";
 import { useI18n } from "../../../features/i18n";
+import { SettingInfoButton } from "../../../features/ui/SettingField";
 import { TextInput } from "../../../features/ui/TextInput";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { LobbySectionHeader } from "./LobbySectionHeader";
@@ -53,6 +55,34 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
   const isImported = currentSettings.playlistImported;
   const isConnecting = authPhase === "connecting";
   const isImporting = importPhase === "importing";
+  const spotifyInfo: ReactNode = (
+    <span className={styles.ttInfoStack}>
+      <span>
+        <strong>{t("lobby.spotify.info.overviewTitle")}</strong>
+        <span>{t("lobby.spotify.info.overviewBody")}</span>
+      </span>
+      <span>
+        <strong>{t("lobby.spotify.info.connectTitle")}</strong>
+        <span>{t("lobby.spotify.info.connectBody")}</span>
+      </span>
+      <span>
+        <strong>{t("lobby.spotify.info.playbackTitle")}</strong>
+        <span>{t("lobby.spotify.info.playbackBody")}</span>
+      </span>
+      <span>
+        <strong>{t("lobby.spotify.info.playlistTitle")}</strong>
+        <span>{t("lobby.spotify.info.playlistBody")}</span>
+      </span>
+      <span>
+        <strong>{t("lobby.spotify.info.editTitle")}</strong>
+        <span>{t("lobby.spotify.info.editBody")}</span>
+      </span>
+      <span>
+        <strong>{t("lobby.spotify.info.playersTitle")}</strong>
+        <span>{t("lobby.spotify.info.playersBody")}</span>
+      </span>
+    </span>
+  );
 
   const connectHint = isConnected
     ? accountType === "premium"
@@ -67,6 +97,9 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
       <LobbySectionHeader
         description={t("lobby.spotify.description")}
         title={t("lobby.spotify.title")}
+        titleAccessory={
+          <SettingInfoButton info={spotifyInfo} label={t("lobby.spotify.infoLabel")} />
+        }
         titleAs="h3"
         variant="compact"
       />

@@ -25,6 +25,7 @@
   --color-badge-strong-background: rgba(255, 138, 95, 0.18);
   --color-status-danger-surface: rgba(255, 76, 126, 0.12);
   --color-status-danger-text: #ffd7e4;
+  --color-status-danger-border: rgba(255, 41, 88, 0.568);
   --color-token-orange: #ff8a3d;
   --color-token-gold: #ffbf62;
   --color-token-pink: #ff4d9d;
@@ -515,7 +516,7 @@
 
 .infoEyebrow {
   margin: 0;
-  color: #38c8ff;
+  color: #ffb26b;
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.18em;
@@ -524,14 +525,14 @@
 
 .infoTitle {
   margin: 8px 0 0;
-  color: #ffb26b;
+  color: white;
   font-size: 24px;
   letter-spacing: -0.04em;
 }
 
 .infoBody {
   margin: 12px 0 0;
-  color: #ffffff;
+  color: color-mix(in srgb, white 72%, transparent);
   line-height: 1.5;
 }
 
