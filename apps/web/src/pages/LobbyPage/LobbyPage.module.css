@@ -511,7 +511,7 @@
   .settingsGroup,
   .rosterSection,
   .roomActionsSection {
-    gap: 18px;
+    gap: 20px;
     padding: 18px;
     border: 1px solid color-mix(in srgb, var(--color-border-subtle) 96%, transparent);
     border-radius: 28px;

@@ -183,8 +183,13 @@
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  max-width: min(44vw, 360px);
+  max-width: 100%;
   scrollbar-width: none;
+}
+
+.headerLeadersDisclosure {
+  width: min(44vw, 360px);
+  overflow: hidden;
 }
 
 .headerLeadersStrip::-webkit-scrollbar {
@@ -724,7 +729,10 @@
 
   .headerLeadersStrip {
     max-width: 100%;
-    order: 3;
+    width: 100%;
+  }
+
+  .headerLeadersDisclosure {
     width: 100%;
   }
 

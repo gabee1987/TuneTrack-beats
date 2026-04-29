@@ -413,7 +413,7 @@
     z-index: 880;
     margin: 0;
     max-height: calc(100svh - var(--safe-area-top) - var(--safe-area-bottom) - 104px);
-    overflow-y: auto;
+    /* overflow-y: auto; */
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
   }
