@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import { AppRoutes } from "./AppRoutes";
+import { loadLazyRoute } from "./lazyRoute";
 
 export const router = createBrowserRouter([
   {
@@ -9,7 +10,9 @@ export const router = createBrowserRouter([
       {
         index: true,
         lazy: async () => {
-          const { HomePage } = await import("../pages/HomePage/HomePage");
+          const { HomePage } = await loadLazyRoute(() =>
+            import("../pages/HomePage/HomePage"),
+          );
 
           return {
             Component: HomePage,
@@ -19,7 +22,9 @@ export const router = createBrowserRouter([
       {
         path: "lobby/:roomId",
         lazy: async () => {
-          const { LobbyPage } = await import("../pages/LobbyPage/LobbyPage");
+          const { LobbyPage } = await loadLazyRoute(() =>
+            import("../pages/LobbyPage/LobbyPage"),
+          );
 
           return {
             Component: LobbyPage,
@@ -29,7 +34,9 @@ export const router = createBrowserRouter([
       {
         path: "game/:roomId",
         lazy: async () => {
-          const { GamePage } = await import("../pages/GamePage/GamePage");
+          const { GamePage } = await loadLazyRoute(() =>
+            import("../pages/GamePage/GamePage"),
+          );
 
           return {
             Component: GamePage,
