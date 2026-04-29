@@ -19,6 +19,8 @@ interface UseLobbyRoomActionsResult {
   handlePlayerStartingCardCountChange: (player: PublicPlayerState, nextValue: number) => void;
   handlePlayerStartingTtTokenCountChange: (player: PublicPlayerState, nextValue: number) => void;
   handlePlayerProfileChange: (displayName: string) => void;
+  handlePlayerKick: (player: PublicPlayerState) => void;
+  handleRoomRename: (nextRoomId: string) => void;
   handleRoomSettingsChange: (nextSettings: PublicRoomSettings) => void;
   handleStartGame: () => void;
   toggleTtMode: (enabled: boolean) => void;
@@ -45,6 +47,17 @@ export function useLobbyRoomActions({
     void emitRoomEvent(ClientToServerEvent.UpdateRoomSettings, {
       roomId: roomState.roomId,
       ...nextSettings,
+    });
+  }
+
+  function handleRoomRename(nextRoomId: string) {
+    if (!roomState || !isHost) {
+      return;
+    }
+
+    void emitRoomEvent(ClientToServerEvent.RenameRoom, {
+      nextRoomId,
+      roomId: roomState.roomId,
     });
   }
 
@@ -81,6 +94,17 @@ export function useLobbyRoomActions({
 
     void emitRoomEvent(ClientToServerEvent.UpdatePlayerProfile, {
       displayName,
+      roomId: roomState.roomId,
+    });
+  }
+
+  function handlePlayerKick(player: PublicPlayerState) {
+    if (!roomState || !isHost || player.id === roomState.hostId) {
+      return;
+    }
+
+    void emitRoomEvent(ClientToServerEvent.KickPlayer, {
+      playerId: player.id,
       roomId: roomState.roomId,
     });
   }
@@ -126,7 +150,9 @@ export function useLobbyRoomActions({
     handleCloseRoom,
     handlePlayerStartingCardCountChange,
     handlePlayerStartingTtTokenCountChange,
+    handlePlayerKick,
     handlePlayerProfileChange,
+    handleRoomRename,
     handleRoomSettingsChange,
     handleStartGame,
     toggleTtMode,

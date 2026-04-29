@@ -8,9 +8,11 @@ export interface LobbyPageController {
   errorCode: string | null;
   errorMessage: string | null;
   handleCloseRoom: () => void;
+  handlePlayerKick: (player: PublicPlayerState) => void;
   handlePlayerStartingCardCountChange: (player: PublicPlayerState, nextValue: number) => void;
   handlePlayerStartingTtTokenCountChange: (player: PublicPlayerState, nextValue: number) => void;
   handlePlayerProfileChange: (displayName: string) => void;
+  handleRoomRename: (nextRoomId: string) => void;
   handleRoomSettingsChange: (nextSettings: PublicRoomSettings) => void;
   handleStartGame: () => void;
   isHost: boolean;

@@ -13,6 +13,7 @@ import {
   placeChallengePayloadSchema,
   placeCardPayloadSchema,
   refreshSpotifyTokenPayloadSchema,
+  renameRoomPayloadSchema,
   removePlaylistTracksPayloadSchema,
   requestSpotifyAuthUrlPayloadSchema,
   resolveChallengeWindowPayloadSchema,
@@ -51,6 +52,7 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
     registerBuyTimelineCardWithTtHandler(io, socket, roomService);
     registerConfirmRevealHandler(io, socket, roomService);
     registerCloseRoomHandler(io, socket, roomService);
+    registerRenameRoomHandler(io, socket, roomService);
     registerUpdateRoomSettingsHandler(io, socket, roomService);
     registerUpdatePlayerSettingsHandler(io, socket, roomService);
     registerUpdatePlayerProfileHandler(io, socket, roomService);
@@ -60,6 +62,52 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
     registerRequestSpotifyAuthUrlHandler(socket, roomService);
     registerRefreshSpotifyTokenHandler(socket, roomService);
     registerDisconnectHandler(io, socket, roomService);
+  });
+}
+
+function registerRenameRoomHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.RenameRoom, (payload: unknown) => {
+    const parseResult = renameRoomPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_RENAME_ROOM_PAYLOAD",
+        message: "Room code is invalid.",
+      });
+      return;
+    }
+
+    logger.info(
+      {
+        nextRoomId: parseResult.data.nextRoomId,
+        previousRoomId: parseResult.data.roomId,
+        socketId: socket.id,
+      },
+      "rename_room",
+    );
+
+    try {
+      const { previousRoomId, roomState } = roomService.renameRoom(
+        parseResult.data,
+        socket.id,
+      );
+
+      io.in(previousRoomId).socketsJoin(roomState.roomId);
+      io.in(previousRoomId).socketsLeave(previousRoomId);
+      io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
+        roomState,
+      });
+    } catch (error) {
+      emitServerError(socket, error, "RENAME_ROOM_FAILED", {
+        GAME_ALREADY_STARTED: "Room names can only be changed before the game starts.",
+        ONLY_HOST_CAN_RENAME_ROOM: "Only the host can rename the room.",
+        ROOM_ALREADY_EXISTS: "A room with that name already exists.",
+      });
+    }
   });
 }
 
@@ -94,6 +142,8 @@ function registerJoinRoomHandler(
     } catch (error) {
       emitServerError(socket, error, "JOIN_ROOM_FAILED", {
         GAME_ALREADY_STARTED: "This game has already started.",
+        ROOM_LIMIT_REACHED:
+          "The room limit has been reached. Close a room before creating a new one.",
       });
     }
   });

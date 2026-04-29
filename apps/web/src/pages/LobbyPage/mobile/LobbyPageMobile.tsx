@@ -58,6 +58,15 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
 
     rememberPlayerDisplayName(trimmedDisplayName);
 
+    if (hasNameChange) {
+      controller.handlePlayerProfileChange(trimmedDisplayName);
+    }
+
+    if (hasRoomChange && controller.isHost) {
+      controller.handleRoomRename(trimmedRoomId);
+      return false;
+    }
+
     if (hasRoomChange) {
       navigate(
         `/lobby/${encodeURIComponent(trimmedRoomId)}?playerName=${encodeURIComponent(
@@ -68,7 +77,6 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
     }
 
     if (hasNameChange) {
-      controller.handlePlayerProfileChange(trimmedDisplayName);
       navigate(
         `/lobby/${encodeURIComponent(resolvedRoomId)}?playerName=${encodeURIComponent(
           trimmedDisplayName,
@@ -238,6 +246,7 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
         <LobbyPlayerList
           currentPlayerId={controller.currentPlayerId}
           isHost={controller.isHost}
+          onPlayerKick={controller.handlePlayerKick}
           onPlayerStartingCardCountChange={controller.handlePlayerStartingCardCountChange}
           onPlayerStartingTtTokenCountChange={controller.handlePlayerStartingTtTokenCountChange}
           players={players}

@@ -153,6 +153,16 @@ export function buildUpdatedProfileRoomState(
   };
 }
 
+export function buildRenamedRoomState(
+  roomState: PublicRoomState,
+  nextRoomId: RoomId,
+): PublicRoomState {
+  return {
+    ...roomState,
+    roomId: nextRoomId,
+  };
+}
+
 export function buildAwardedTtLobbyRoomState(
   roomState: PublicRoomState,
   playerId: string,

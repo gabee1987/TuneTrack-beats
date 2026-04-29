@@ -10,6 +10,7 @@ interface LobbyPlayerListProps {
   isHost: boolean;
   players: PublicPlayerState[];
   roomSettings: PublicRoomSettings;
+  onPlayerKick: (player: PublicPlayerState) => void;
   onPlayerStartingCardCountChange: (player: PublicPlayerState, nextValue: number) => void;
   onPlayerStartingTtTokenCountChange: (player: PublicPlayerState, nextValue: number) => void;
 }
@@ -19,6 +20,7 @@ export function LobbyPlayerList({
   isHost,
   players,
   roomSettings,
+  onPlayerKick,
   onPlayerStartingCardCountChange,
   onPlayerStartingTtTokenCountChange,
 }: LobbyPlayerListProps) {
@@ -36,6 +38,7 @@ export function LobbyPlayerList({
           <LobbyPlayerListItem
             currentPlayerId={currentPlayerId}
             isHost={isHost}
+            onPlayerKick={onPlayerKick}
             key={player.id}
             onPlayerStartingCardCountChange={onPlayerStartingCardCountChange}
             onPlayerStartingTtTokenCountChange={onPlayerStartingTtTokenCountChange}

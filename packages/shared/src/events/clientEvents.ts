@@ -16,6 +16,7 @@ export const ClientToServerEvent = {
   PlaceChallenge: "place_challenge",
   RefreshSpotifyToken: "refresh_spotify_token",
   RemovePlaylistTracks: "remove_playlist_tracks",
+  RenameRoom: "rename_room",
   RequestSpotifyAuthUrl: "request_spotify_auth_url",
   ResolveChallengeWindow: "resolve_challenge_window",
   SkipTrackWithTt: "skip_track_with_tt",
@@ -44,6 +45,11 @@ export interface UpdateRoomSettingsPayload {
   revealConfirmMode: RevealConfirmMode;
   ttModeEnabled: boolean;
   challengeWindowDurationSeconds: number | null;
+}
+
+export interface RenameRoomPayload {
+  roomId: RoomId;
+  nextRoomId: RoomId;
 }
 
 export interface UpdatePlayerSettingsPayload {

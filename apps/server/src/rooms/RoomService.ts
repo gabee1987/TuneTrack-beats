@@ -16,6 +16,7 @@ import type {
   PublicRoomState,
   PublicTrackInfo,
   RefreshSpotifyTokenPayloadParsed,
+  RenameRoomPayloadParsed,
   RemovePlaylistTracksPayloadParsed,
   RequestSpotifyAuthUrlPayloadParsed,
   ResolveChallengeWindowPayloadParsed,
@@ -40,6 +41,11 @@ export interface ImportPlaylistServiceResult {
 export interface RefreshTokenResult {
   accessToken: string;
   expiresInSeconds: number;
+}
+
+export interface RenameRoomResult {
+  previousRoomId: string;
+  roomState: PublicRoomState;
 }
 
 export class RoomService {
@@ -82,6 +88,22 @@ export class RoomService {
       updateRoomSettingsPayload.roomId,
       updateRoomSettingsPayload,
     );
+  }
+
+  public renameRoom(
+    renameRoomPayload: RenameRoomPayloadParsed,
+    socketId: string,
+  ): RenameRoomResult {
+    const result = this.roomRegistry.renameRoom(socketId, renameRoomPayload);
+    logger.info(
+      {
+        nextRoomId: result.roomState.roomId,
+        previousRoomId: result.previousRoomId,
+        socketId,
+      },
+      "room renamed",
+    );
+    return result;
   }
 
   public updatePlayerSettings(

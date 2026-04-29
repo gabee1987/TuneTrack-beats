@@ -17,6 +17,7 @@ import styles from "../LobbyPage.module.css";
 interface LobbyPlayerListItemProps {
   currentPlayerId: string | null;
   isHost: boolean;
+  onPlayerKick: (player: PublicPlayerState) => void;
   onPlayerStartingCardCountChange: (player: PublicPlayerState, nextValue: number) => void;
   onPlayerStartingTtTokenCountChange: (player: PublicPlayerState, nextValue: number) => void;
   player: PublicPlayerState;
@@ -26,6 +27,7 @@ interface LobbyPlayerListItemProps {
 export function LobbyPlayerListItem({
   currentPlayerId,
   isHost,
+  onPlayerKick,
   onPlayerStartingCardCountChange,
   onPlayerStartingTtTokenCountChange,
   player,
@@ -38,6 +40,7 @@ export function LobbyPlayerListItem({
     roomSettings,
     t,
   });
+  const canKickPlayer = isHost && player.id !== currentPlayerId;
 
   return (
     <li className={styles.playerItem}>
@@ -88,6 +91,19 @@ export function LobbyPlayerListItem({
               value={player.ttTokenCount}
             />
           ) : null}
+        </div>
+      ) : null}
+
+      {canKickPlayer ? (
+        <div className={styles.playerActionRow}>
+          <button
+            aria-label={t("lobby.players.kickPlayer", { playerName: displayState.primaryName })}
+            className={styles.playerKickButton}
+            onClick={() => onPlayerKick(player)}
+            type="button"
+          >
+            {t("lobby.players.kick")}
+          </button>
         </div>
       ) : null}
     </li>

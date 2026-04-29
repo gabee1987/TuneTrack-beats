@@ -158,6 +158,144 @@ describe("room flow", () => {
     );
   });
 
+  it("renames a lobby room for all members and restores stale-route reconnects into the renamed room", async () => {
+    const serverContext = await startTestServer();
+    const hostSocket = createClient(serverContext.baseUrl);
+    const guestSocket = createClient(serverContext.baseUrl);
+
+    hostSocket.connect();
+    guestSocket.connect();
+
+    await Promise.all([
+      waitForEvent(hostSocket, "connect"),
+      waitForEvent(guestSocket, "connect"),
+    ]);
+
+    const hostIdentityPromise = waitForEvent<PlayerIdentityPayload>(
+      hostSocket,
+      ServerToClientEvent.PlayerIdentity,
+    );
+    const guestIdentityPromise = waitForEvent<PlayerIdentityPayload>(
+      guestSocket,
+      ServerToClientEvent.PlayerIdentity,
+    );
+    hostSocket.emit(ClientToServerEvent.JoinRoom, {
+      roomId: "party-room",
+      displayName: "Host Player",
+      sessionId: "host-session",
+    });
+    guestSocket.emit(ClientToServerEvent.JoinRoom, {
+      roomId: "party-room",
+      displayName: "Guest Player",
+      sessionId: "guest-session",
+    });
+
+    const [hostIdentity, guestIdentity] = await Promise.all([
+      hostIdentityPromise,
+      guestIdentityPromise,
+    ]);
+
+    const hostRenamedPromise = waitForStateUpdate(
+      hostSocket,
+      (roomState) => roomState.roomId === "renamed-room",
+    );
+    const guestRenamedPromise = waitForStateUpdate(
+      guestSocket,
+      (roomState) => roomState.roomId === "renamed-room",
+    );
+
+    hostSocket.emit(ClientToServerEvent.RenameRoom, {
+      roomId: "party-room",
+      nextRoomId: "renamed-room",
+    });
+
+    const [hostRenamedState, guestRenamedState] = await Promise.all([
+      hostRenamedPromise,
+      guestRenamedPromise,
+    ]);
+
+    expect(hostRenamedState.hostId).toBe(hostIdentity.playerId);
+    expect(guestRenamedState.players.map((player) => player.id)).toContain(
+      guestIdentity.playerId,
+    );
+
+    guestSocket.disconnect();
+
+    const refreshedGuestSocket = createClient(serverContext.baseUrl);
+    refreshedGuestSocket.connect();
+    await waitForEvent(refreshedGuestSocket, "connect");
+
+    const refreshedIdentityPromise = waitForEvent<PlayerIdentityPayload>(
+      refreshedGuestSocket,
+      ServerToClientEvent.PlayerIdentity,
+    );
+    const refreshedStatePromise = waitForStateUpdate(
+      refreshedGuestSocket,
+      (roomState) =>
+        roomState.roomId === "renamed-room" &&
+        roomState.players.some(
+          (player) =>
+            player.id === guestIdentity.playerId &&
+            player.connectionStatus === "connected",
+        ),
+    );
+
+    refreshedGuestSocket.emit(ClientToServerEvent.JoinRoom, {
+      roomId: "party-room",
+      displayName: "Guest Player",
+      sessionId: "guest-session",
+    });
+
+    await expect(refreshedIdentityPromise).resolves.toEqual(guestIdentity);
+    await expect(refreshedStatePromise).resolves.toEqual(
+      expect.objectContaining({ roomId: "renamed-room" }),
+    );
+  });
+
+  it("rejects new room creation once the active room limit is reached", async () => {
+    const serverContext = await startTestServer();
+
+    for (let index = 1; index <= 5; index += 1) {
+      const socket = createClient(serverContext.baseUrl);
+      socket.connect();
+      await waitForEvent(socket, "connect");
+
+      const identityPromise = waitForEvent<PlayerIdentityPayload>(
+        socket,
+        ServerToClientEvent.PlayerIdentity,
+      );
+
+      socket.emit(ClientToServerEvent.JoinRoom, {
+        roomId: `room-${index}`,
+        displayName: `Player ${index}`,
+        sessionId: `session-${index}`,
+      });
+
+      await identityPromise;
+    }
+
+    const extraSocket = createClient(serverContext.baseUrl);
+    extraSocket.connect();
+    await waitForEvent(extraSocket, "connect");
+
+    const errorPromise = waitForEvent<ServerErrorPayload>(
+      extraSocket,
+      ServerToClientEvent.Error,
+    );
+
+    extraSocket.emit(ClientToServerEvent.JoinRoom, {
+      roomId: "room-6",
+      displayName: "Extra Player",
+      sessionId: "session-6",
+    });
+
+    await expect(errorPromise).resolves.toEqual({
+      code: "ROOM_LIMIT_REACHED",
+      message:
+        "The room limit has been reached. Close a room before creating a new one.",
+    });
+  });
+
   it("lets the host manually transfer host controls to another connected player", async () => {
     const serverContext = await startTestServer();
     const hostSocket = createClient(serverContext.baseUrl);

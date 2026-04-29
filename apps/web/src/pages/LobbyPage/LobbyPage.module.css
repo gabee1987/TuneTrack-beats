@@ -346,6 +346,28 @@
   align-items: center;
 }
 
+.playerActionRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.playerKickButton {
+  min-height: 34px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--color-status-danger-border) 72%, transparent);
+  border-radius: 999px;
+  background: var(--color-status-danger-surface);
+  color: var(--color-status-danger-text);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.playerKickButton:hover {
+  background: color-mix(in srgb, var(--color-status-danger-surface) 70%, white 8%);
+}
+
 .playerIdentity {
   display: block;
   flex: 1 1 auto;

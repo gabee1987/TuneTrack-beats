@@ -73,6 +73,16 @@ export function useLobbyRoomConnection({
     function handleStateUpdate(payload: StateUpdatePayload) {
       setRoomState(payload.roomState);
 
+      if (payload.roomState.status === "lobby" && payload.roomState.roomId !== roomId) {
+        navigate(
+          `/lobby/${encodeURIComponent(payload.roomState.roomId)}?playerName=${encodeURIComponent(
+            displayName,
+          )}`,
+          { replace: true },
+        );
+        return;
+      }
+
       if (payload.roomState.status !== "lobby" && !hasNavigatedToGameRef.current) {
         hasNavigatedToGameRef.current = true;
         navigate(`/game/${encodeURIComponent(payload.roomState.roomId)}`, {

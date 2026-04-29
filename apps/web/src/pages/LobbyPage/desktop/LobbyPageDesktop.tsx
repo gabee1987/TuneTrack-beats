@@ -65,6 +65,7 @@ export function LobbyPageDesktop({ controller }: LobbyPageAssemblyProps) {
           <LobbyPlayerList
             currentPlayerId={controller.currentPlayerId}
             isHost={controller.isHost}
+            onPlayerKick={controller.handlePlayerKick}
             onPlayerStartingCardCountChange={controller.handlePlayerStartingCardCountChange}
             onPlayerStartingTtTokenCountChange={controller.handlePlayerStartingTtTokenCountChange}
             players={players}

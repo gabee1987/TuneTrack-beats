@@ -68,6 +68,11 @@ export const updateRoomSettingsPayloadSchema = z.object({
     .default(DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS),
 });
 
+export const renameRoomPayloadSchema = z.object({
+  roomId: roomIdSchema,
+  nextRoomId: roomIdSchema,
+});
+
 export const updatePlayerSettingsPayloadSchema = z.object({
   roomId: roomIdSchema,
   playerId: z.string().trim().min(1),
@@ -167,6 +172,7 @@ export type UpdateRoomSettingsPayloadInput = z.input<
 export type UpdateRoomSettingsPayloadParsed = z.output<
   typeof updateRoomSettingsPayloadSchema
 >;
+export type RenameRoomPayloadParsed = z.output<typeof renameRoomPayloadSchema>;
 export type UpdatePlayerSettingsPayloadInput = z.input<
   typeof updatePlayerSettingsPayloadSchema
 >;

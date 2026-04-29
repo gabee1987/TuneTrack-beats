@@ -13,6 +13,7 @@ import {
   type PlaceChallengePayloadParsed,
   type PlaceCardPayloadParsed,
   type PublicRoomState,
+  type RenameRoomPayloadParsed,
   type ResolveChallengeWindowPayloadParsed,
   type RoomId,
   type SkipTrackWithTtPayloadParsed,
@@ -38,6 +39,7 @@ import {
   buildImportedDeckRoomState,
   buildInitialRoomState,
   buildPlayerJoinedRoomState,
+  buildRenamedRoomState,
   buildRemovedTracksRoomState,
   buildSpotifyAuthRoomState,
   buildUpdatedPlayerSettingsRoomState,
@@ -70,6 +72,7 @@ export interface JoinRoomResult {
 }
 
 export class RoomRegistry {
+  private static readonly MAX_ACTIVE_ROOM_COUNT = 5;
   private static readonly DEFAULT_RECONNECT_GRACE_PERIOD_MS = 30_000;
   private static readonly DEFAULT_HOST_TRANSFER_GRACE_PERIOD_MS = 15_000;
   private static readonly DEFAULT_TURN_SKIP_GRACE_PERIOD_MS = 60_000;
@@ -117,9 +120,29 @@ export class RoomRegistry {
       );
     }
 
+    if (existingSessionMembership && !existingRoomRecord) {
+      const restoredExistingRoom = this.tryRestoreExistingSessionRoom(
+        existingSessionMembership,
+        socketId,
+        sessionId,
+      );
+      if (restoredExistingRoom) return restoredExistingRoom;
+    }
+
+    if (existingSessionMembership) {
+      const previousRoomState = this.removePlayerBySessionId(sessionId);
+      if (previousRoomState) {
+        this.roomStateChangedListener?.(previousRoomState);
+      }
+    }
+
     const playerId = randomUUID();
 
     if (!existingRoomRecord) {
+      if (this.roomsById.size >= RoomRegistry.MAX_ACTIVE_ROOM_COUNT) {
+        throw new Error("ROOM_LIMIT_REACHED");
+      }
+
       const roomState = buildInitialRoomState(roomId, playerId, displayName);
       this.roomsById.set(roomId, {
         gameState: null,
@@ -182,6 +205,57 @@ export class RoomRegistry {
     const nextRoomState = buildUpdatedSettingsRoomState(roomRecord.roomState, payload);
     this.roomsById.set(roomId, { ...roomRecord, roomState: nextRoomState });
     return nextRoomState;
+  }
+
+  public renameRoom(
+    socketId: string,
+    payload: RenameRoomPayloadParsed,
+  ): { previousRoomId: RoomId; roomState: PublicRoomState } {
+    if (payload.roomId === payload.nextRoomId) {
+      return {
+        previousRoomId: payload.roomId,
+        roomState: this.getRoomRecordForMember(socketId, payload.roomId).roomState,
+      };
+    }
+
+    if (this.roomsById.has(payload.nextRoomId)) {
+      throw new Error("ROOM_ALREADY_EXISTS");
+    }
+
+    const roomRecord = this.getRoomRecordForMember(socketId, payload.roomId);
+    const membership = this.getMembership(socketId);
+    if (roomRecord.roomState.hostId !== membership.playerId) {
+      throw new Error("ONLY_HOST_CAN_RENAME_ROOM");
+    }
+    if (roomRecord.roomState.status !== "lobby") {
+      throw new Error("GAME_ALREADY_STARTED");
+    }
+
+    const nextRoomState = buildRenamedRoomState(roomRecord.roomState, payload.nextRoomId);
+    this.roomsById.delete(payload.roomId);
+    this.roomsById.set(payload.nextRoomId, {
+      ...roomRecord,
+      roomState: nextRoomState,
+    });
+
+    for (const [memberSocketId, socketMembership] of this.socketMemberships) {
+      if (socketMembership.roomId === payload.roomId) {
+        this.socketMemberships.set(memberSocketId, {
+          ...socketMembership,
+          roomId: payload.nextRoomId,
+        });
+      }
+    }
+    for (const [sessionId, sessionMembership] of this.sessionMemberships) {
+      if (sessionMembership.roomId === payload.roomId) {
+        this.sessionMemberships.set(sessionId, {
+          ...sessionMembership,
+          roomId: payload.nextRoomId,
+        });
+      }
+    }
+
+    return { previousRoomId: payload.roomId, roomState: nextRoomState };
   }
 
   public updatePlayerSettings(
@@ -590,6 +664,28 @@ export class RoomRegistry {
     const connectedRoomState = this.markPlayerConnected(roomId, playerId);
     this.socketMemberships.set(socketId, { playerId, roomId, sessionId });
     return { playerId, roomState: connectedRoomState };
+  }
+
+  private tryRestoreExistingSessionRoom(
+    membership: SessionRoomMembership,
+    socketId: string,
+    sessionId: string,
+  ): JoinRoomResult | null {
+    const roomRecord = this.roomsById.get(membership.roomId);
+    if (
+      !roomRecord ||
+      roomRecord.roomState.status !== "lobby" ||
+      !roomRecord.roomState.players.some((player) => player.id === membership.playerId)
+    ) {
+      return null;
+    }
+
+    return this.restorePlayerSession(
+      membership.roomId,
+      membership.playerId,
+      socketId,
+      sessionId,
+    );
   }
 
   private removePlayerBySessionId(sessionId: string): PublicRoomState | null {
