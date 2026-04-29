@@ -11,7 +11,7 @@
 }
 
 .panel {
-  --game-mobile-timeline-bottom-clearance: calc(env(safe-area-inset-bottom) + 154px);
+  --game-mobile-timeline-bottom-clearance: calc(env(safe-area-inset-bottom) + 232px);
   width: min(100%, 1180px);
   height: calc(100svh - 8px);
   min-height: 0;
@@ -44,7 +44,13 @@
 
 @media (orientation: landscape) {
   .panel {
-    --game-mobile-timeline-bottom-clearance: calc(env(safe-area-inset-bottom) + 92px);
+    --game-mobile-timeline-bottom-clearance: calc(env(safe-area-inset-bottom) + 112px);
+  }
+}
+
+@media (orientation: portrait) and (max-height: 700px) {
+  .panel {
+    --game-mobile-timeline-bottom-clearance: calc(env(safe-area-inset-bottom) + 214px);
   }
 }
 
