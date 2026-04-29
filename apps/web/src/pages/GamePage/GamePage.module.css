@@ -839,7 +839,7 @@
   align-items: center;
   gap: 12px;
   text-align: center;
-  width: min(100%, 320px);
+  width: min(100%, 220px);
   align-self: center;
   /* aspect-ratio: 1; */
   background: color-mix(in srgb, var(--color-surface-raised) 80%, transparent);
