@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { RoomRegistry } from "../src/rooms/RoomRegistry.js";
 
 describe("host transfer", () => {
-  it("keeps an active-game host player reserved and transfers host to a connected player on disconnect", () => {
+  it("keeps an active-game host player reserved during the transfer grace period", () => {
     const roomRegistry = new RoomRegistry();
     const hostJoin = roomRegistry.addPlayerToRoom(
       "active-transfer-room",
@@ -27,7 +27,7 @@ describe("host transfer", () => {
     const roomAfterDisconnect =
       roomRegistry.removePlayerBySocketId("host-socket");
 
-    expect(roomAfterDisconnect?.hostId).toBe(guestJoin.playerId);
+    expect(roomAfterDisconnect?.hostId).toBe(hostJoin.playerId);
     expect(roomAfterDisconnect?.players).toHaveLength(2);
     expect(
       roomAfterDisconnect?.players.find(
@@ -36,7 +36,7 @@ describe("host transfer", () => {
     ).toEqual(
       expect.objectContaining({
         connectionStatus: "disconnected",
-        isHost: false,
+        isHost: true,
       }),
     );
     expect(
@@ -46,12 +46,12 @@ describe("host transfer", () => {
     ).toEqual(
       expect.objectContaining({
         connectionStatus: "connected",
-        isHost: true,
+        isHost: false,
       }),
     );
   });
 
-  it("restores a former host as the same non-host player after automatic transfer", () => {
+  it("restores a disconnected host as the same host player during the transfer grace period", () => {
     const roomRegistry = new RoomRegistry();
     const hostJoin = roomRegistry.addPlayerToRoom(
       "former-host-room",
@@ -81,7 +81,7 @@ describe("host transfer", () => {
     );
 
     expect(restoredHostJoin.playerId).toBe(hostJoin.playerId);
-    expect(restoredHostJoin.roomState.hostId).toBe(guestJoin.playerId);
+    expect(restoredHostJoin.roomState.hostId).toBe(hostJoin.playerId);
     expect(
       restoredHostJoin.roomState.players.find(
         (player) => player.id === hostJoin.playerId,
@@ -89,7 +89,7 @@ describe("host transfer", () => {
     ).toEqual(
       expect.objectContaining({
         connectionStatus: "connected",
-        isHost: false,
+        isHost: true,
       }),
     );
   });
@@ -118,11 +118,14 @@ describe("host transfer", () => {
       roomRegistry.removePlayerBySocketId("host-socket");
 
     expect(startedRoom.turn?.activePlayerId).toBe(hostJoin.playerId);
-    expect(roomAfterDisconnect?.turn).toEqual({
-      activePlayerId: guestJoin.playerId,
-      turnNumber: 2,
-      hasUsedSkipTrackWithTt: false,
-    });
+    expect(roomAfterDisconnect?.turn).toEqual(
+      expect.objectContaining({
+        activePlayerId: hostJoin.playerId,
+        turnNumber: 1,
+        hasUsedSkipTrackWithTt: false,
+        turnSkipDeadlineEpochMs: expect.any(Number),
+      }),
+    );
     expect(roomAfterDisconnect?.currentTrackCard?.id).toBe(
       startedRoom.currentTrackCard?.id,
     );

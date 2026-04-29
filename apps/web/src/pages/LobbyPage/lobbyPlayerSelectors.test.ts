@@ -52,7 +52,7 @@ describe("lobbyPlayerSelectors", () => {
     ).toEqual({
       primaryName: "You",
       startingCardsLabel: "Starting cards",
-      counterBadges: [{ label: "4 cards", variant: "neutral" }],
+      counterBadges: [{ count: 4, kind: "cardCount", label: "4 cards", variant: "neutral" }],
     });
   });
 
@@ -74,9 +74,9 @@ describe("lobbyPlayerSelectors", () => {
       primaryName: "Nova",
       startingCardsLabel: "Starting cards",
       counterBadges: [
-        { label: "4 cards", variant: "neutral" },
-        { label: "2 TT", variant: "neutral" },
-        { label: "Host", variant: "strong" },
+        { count: 4, kind: "cardCount", label: "4 cards", variant: "neutral" },
+        { count: 2, kind: "tokenCount", label: "2 TT", variant: "neutral" },
+        { kind: "text", label: "Host", variant: "strong" },
       ],
     });
   });

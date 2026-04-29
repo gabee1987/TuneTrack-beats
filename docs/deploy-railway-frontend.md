@@ -2,18 +2,19 @@
 
 ## Why this combination?
 
-| Service | Hosts | Free tier behaviour |
+| Service | Hosts | Cost / free-tier behaviour |
 |---------|-------|---------------------|
-| **Railway** | Node.js + Socket.IO backend | **Never sleeps** — $5 credit/month, resets monthly |
-| **Render Static Site** | React SPA (frontend) | **Always on** — static files, zero spin-down |
+| **Railway** | Node.js + Socket.IO backend | No idle spin-down. New accounts get a 30-day $5 trial; after that Free includes $1/month of usage, while Hobby is $5/month with $5 included usage |
+| **Render Static Site** | React SPA (frontend) | Static sites are free to deploy, served over CDN, and do not have web-service cold starts |
 
 Render's free web service spins down after 15 minutes of inactivity. For a party game
-where players connect at the start of a session, a 30–60 second cold start causes
-failed socket connections and a confusing experience. Railway's free tier does not have
-this restriction — the server stays alive between sessions.
+where players connect at the start of a session, a cold start causes failed socket
+connections and a confusing experience. Railway is a better fit for the Socket.IO
+backend because it does not use Render Free Web Service idle spin-down behaviour.
 
-Railway's $5/month free credit covers roughly 500 hours of active compute at the smallest
-instance size. For occasional family game nights this will never be exceeded.
+Railway's always-on backend can exceed the post-trial Free plan's $1/month credit even
+when idle. For broader testing, treat Railway Hobby as the practical baseline: it costs
+$5/month and includes $5 of usage before extra usage charges.
 
 ---
 
@@ -107,7 +108,7 @@ After the project is created you will see a canvas with a service card in it.
 |-----|-------|-------|
 | `NODE_ENV` | `production` | Enables production logging behaviour |
 | `PORT` | `3001` | Railway injects a `PORT` env var automatically, but setting it explicitly makes it visible in the dashboard |
-| `CLIENT_ORIGIN` | *(leave empty for now)* | You will fill this in after the frontend is deployed |
+| `CLIENT_ORIGIN` | `https://placeholder.example` | Temporary valid URL. You will replace this after the frontend is deployed |
 | `SPOTIFY_CLIENT_ID` | *(your client ID)* | Copy from the Spotify developer dashboard |
 | `SPOTIFY_CLIENT_SECRET` | *(your client secret)* | Copy from the Spotify developer dashboard |
 | `SPOTIFY_REDIRECT_URI` | `https://YOUR-RAILWAY-DOMAIN/api/spotify/callback` | Replace with the domain you generated in A2 |
@@ -126,14 +127,15 @@ SPOTIFY_REDIRECT_URI = https://tunetrack-abc123.up.railway.app/api/spotify/callb
 3. Scroll to the bottom of the log. You should see output similar to:
    ```
    Server listening on port 3001
-   CLIENT_ORIGIN: (empty — will be set after frontend deploys)
+   clientOrigin: "https://placeholder.example"
    ```
 4. Open `https://YOUR-RAILWAY-DOMAIN/health` in your browser — it should return a JSON health response confirming the server is up
 
 > **If the build fails:** click the failed deployment and read the log from the top.
-> The most common causes are a missing env variable (the Zod env validator will tell you
-> exactly which one) or a TypeScript error. Fix the issue, push to `main`, and Railway
-> will redeploy automatically.
+> The most common causes are a missing or invalid env variable (the Zod env validator
+> will tell you exactly which one) or a TypeScript error. Do not set `CLIENT_ORIGIN`
+> to an empty string; use a temporary valid URL until your Render URL exists. Fix the
+> issue, push to `main`, and Railway will redeploy automatically.
 
 ---
 
@@ -155,10 +157,10 @@ SPOTIFY_REDIRECT_URI = https://tunetrack-abc123.up.railway.app/api/spotify/callb
 | **Publish Directory** | `apps/web/dist` |
 
 > **Why `npm -w @tunetrack/web run build`?**
-> This runs the build script only for the `@tunetrack/web` workspace package. It is
-> slightly more efficient than `npm run build` (which also builds the server), but
-> both work. The `-w` flag targets the workspace by its package name from
-> `apps/web/package.json`.
+> This runs the build script only for the `@tunetrack/web` workspace package. The web
+> package's prebuild step compiles the shared workspace package first, so the static
+> bundle has its local dependencies available without also building the server. The
+> `-w` flag targets the workspace by its package name from `apps/web/package.json`.
 
 ### B2 — Add the environment variable
 
@@ -378,16 +380,19 @@ Both services watch your `main` branch and redeploy automatically when you push.
 
 ## Cost estimate
 
-Railway charges against your $5 monthly free credit based on resource usage:
+Railway charges based on resource usage. New accounts currently receive a 30-day trial
+with a one-time $5 credit. After that, the Free plan includes $1/month of usage; the
+Hobby plan is $5/month and includes $5/month of usage.
 
-| Resource | Rate | Estimated monthly cost (game nights only) |
-|----------|------|------------------------------------------|
-| Shared CPU (1×) | ~$0.000463/min | ~$0.03/hr active |
-| 512 MB RAM | ~$0.000231/min | included in above |
+| Resource | Current public rate | Notes |
+|----------|---------------------|-------|
+| RAM | $10 / GB / month | Billed by usage |
+| CPU | $20 / vCPU / month | Billed by usage |
+| Network egress | $0.05 / GB | Usually tiny for family testing |
 
 An idle Node.js + Socket.IO server uses very little CPU and stays well under
-512 MB RAM. Even with several hours of active play per week, you will be far
-under the $5 threshold. Railway shows your current usage in **Account → Billing**.
+512 MB RAM, but always-on memory still has a monthly cost. Railway shows your current
+usage in **Account → Billing**. Set a spend limit before inviting testers.
 
 ---
 

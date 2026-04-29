@@ -318,6 +318,7 @@ describe("room flow", () => {
       activePlayerId: hostIdentity.playerId,
       turnNumber: 1,
       hasUsedSkipTrackWithTt: false,
+      turnSkipDeadlineEpochMs: null,
     });
     expect(firstTurnState.currentTrackCard).toEqual({
       id: "test-track-3",
@@ -418,6 +419,7 @@ describe("room flow", () => {
       activePlayerId: guestIdentity.playerId,
       turnNumber: 2,
       hasUsedSkipTrackWithTt: false,
+      turnSkipDeadlineEpochMs: null,
     });
     expect(secondTurnState.currentTrackCard?.id).toBe("test-track-4");
     expect(secondTurnState.revealState).toBeNull();
@@ -651,7 +653,7 @@ function createTestRoomService(): RoomService {
   const tokenStore = new SpotifyTokenStore();
   const apiClient = new SpotifyApiClient();
   return new RoomService(
-    new RoomRegistry(undefined, 25),
+    new RoomRegistry(undefined, 500, 25, 25),
     new TestDeckService(),
     new SpotifyAuthService(apiClient, tokenStore),
     new PlaylistImportService(apiClient, tokenStore),

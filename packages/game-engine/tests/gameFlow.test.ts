@@ -401,7 +401,7 @@ describe("GameFlowService", () => {
       challengerPlayerId: "player-2",
       challengerSelectedSlotIndex: 1,
       challengeWasSuccessful: true,
-      challengerTtChange: 1,
+      challengerTtChange: -1,
       awardedPlayerId: "player-2",
       awardedSlotIndex: 1,
     });
@@ -428,7 +428,7 @@ describe("GameFlowService", () => {
     expect(
       revealGameState.players.find((player) => player.id === "player-2")
         ?.ttTokenCount,
-    ).toBe(2);
+    ).toBe(0);
   });
 
   it("resolves a failed challenge and deducts TT from the challenger", () => {

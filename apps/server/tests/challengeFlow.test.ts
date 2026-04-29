@@ -251,14 +251,14 @@ describe("challenge flow", () => {
       challengerPlayerId: guestJoin.playerId,
       challengerSelectedSlotIndex: 1,
       challengeWasSuccessful: true,
-      challengerTtChange: 1,
+      challengerTtChange: -1,
       awardedPlayerId: guestJoin.playerId,
       awardedSlotIndex: 0,
     });
     expect(
       revealState.players.find((player) => player.id === guestJoin.playerId)
         ?.ttTokenCount,
-    ).toBe(2);
+    ).toBe(0);
     expect(revealState.timelines[hostJoin.playerId]).toEqual([
       {
         id: "test-track-1",
