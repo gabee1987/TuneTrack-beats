@@ -37,6 +37,12 @@ export const joinRoomPayloadSchema = z.object({
   sessionId: z.string().trim().min(1),
 });
 
+export const createRoomPayloadSchema = joinRoomPayloadSchema;
+
+export const getRoomPreviewPayloadSchema = z.object({
+  roomId: roomIdSchema,
+});
+
 export const updateRoomSettingsPayloadSchema = z.object({
   roomId: roomIdSchema,
   targetTimelineCardCount: z
@@ -166,6 +172,10 @@ export const refreshSpotifyTokenPayloadSchema = z.object({
 
 export type JoinRoomPayloadInput = z.input<typeof joinRoomPayloadSchema>;
 export type JoinRoomPayloadParsed = z.output<typeof joinRoomPayloadSchema>;
+export type CreateRoomPayloadInput = z.input<typeof createRoomPayloadSchema>;
+export type CreateRoomPayloadParsed = z.output<typeof createRoomPayloadSchema>;
+export type GetRoomPreviewPayloadInput = z.input<typeof getRoomPreviewPayloadSchema>;
+export type GetRoomPreviewPayloadParsed = z.output<typeof getRoomPreviewPayloadSchema>;
 export type UpdateRoomSettingsPayloadInput = z.input<
   typeof updateRoomSettingsPayloadSchema
 >;

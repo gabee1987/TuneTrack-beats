@@ -1,26 +1,18 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useI18n } from "../../../features/i18n";
 import { preloadLobbyRuntime } from "../../../app/preloadRoutes";
-import { rememberPlayerDisplayName } from "../../../services/session/playerSession";
 import {
   ROOM_EVENT_TOAST_EVENT,
   consumeRoomEventToast,
   type RoomEventToast,
 } from "../../../services/session/roomEventToast";
 import type { HomePageController } from "../HomePage.types";
-import {
-  DEFAULT_DISPLAY_NAME,
-  DEFAULT_ROOM_ID,
-  buildHomePageNavigationTarget,
-} from "../homePageNavigation";
 
 export function useHomePageController(): HomePageController {
   const { t } = useI18n();
   const location = useLocation();
   const navigate = useNavigate();
-  const [roomId, setRoomId] = useState(DEFAULT_ROOM_ID);
-  const [displayName, setDisplayName] = useState(DEFAULT_DISPLAY_NAME);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showRoomEventToast = useCallback(
@@ -73,36 +65,15 @@ export function useHomePageController(): HomePageController {
     };
   }, [showRoomEventToast]);
 
-  function openLobby() {
+  function handleStart() {
     preloadLobbyRuntime();
-
-    const navigationTarget = buildHomePageNavigationTarget({
-      displayName,
-      roomId,
-    });
-
-    if (navigationTarget === null) {
-      return;
-    }
-
-    rememberPlayerDisplayName(navigationTarget.displayName);
-    navigate(navigationTarget.path);
-  }
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    openLobby();
+    navigate("/play");
   }
 
   return {
-    displayName,
-    handleQuickStart: openLobby,
+    handleStart,
     preloadLobby: preloadLobbyRuntime,
-    roomId,
-    setDisplayName,
-    setRoomId,
     toastMessage,
-    handleSubmit,
   };
 }
 

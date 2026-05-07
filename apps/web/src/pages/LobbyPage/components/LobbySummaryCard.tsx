@@ -17,6 +17,14 @@ export function LobbySummaryCard({
   roomId,
 }: LobbySummaryCardProps) {
   const { t } = useI18n();
+  const inviteUrl =
+    typeof window === "undefined"
+      ? `/join/${encodeURIComponent(roomId)}`
+      : `${window.location.origin}/join/${encodeURIComponent(roomId)}`;
+
+  function handleCopyInvite() {
+    void navigator.clipboard?.writeText(inviteUrl);
+  }
 
   return (
     <SurfaceCard className={styles.summaryCard}>
@@ -38,6 +46,10 @@ export function LobbySummaryCard({
           <strong className={styles.summaryValue}>{playerCount}</strong>
         </div>
       </div>
+
+      <button className={styles.copyInviteButton} onClick={handleCopyInvite} type="button">
+        {t("lobby.summary.copyInvite")}
+      </button>
     </SurfaceCard>
   );
 }

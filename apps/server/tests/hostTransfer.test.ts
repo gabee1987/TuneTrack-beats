@@ -6,7 +6,7 @@ describe("host transfer", () => {
   it("does not automatically transfer lobby host while they are reconnecting", async () => {
     const roomRegistry = new RoomRegistry(undefined, 1_000, 10);
     const changedRoomStates: string[] = [];
-    const hostJoin = roomRegistry.addPlayerToRoom(
+    const hostJoin = roomRegistry.createRoom(
       "lobby-host-room",
       "Host Player",
       "host-socket",
@@ -42,7 +42,7 @@ describe("host transfer", () => {
 
   it("keeps an active-game host player reserved during the transfer grace period", () => {
     const roomRegistry = new RoomRegistry();
-    const hostJoin = roomRegistry.addPlayerToRoom(
+    const hostJoin = roomRegistry.createRoom(
       "active-transfer-room",
       "Host Player",
       "host-socket",
@@ -90,7 +90,7 @@ describe("host transfer", () => {
 
   it("restores a disconnected host as the same host player during the transfer grace period", () => {
     const roomRegistry = new RoomRegistry();
-    const hostJoin = roomRegistry.addPlayerToRoom(
+    const hostJoin = roomRegistry.createRoom(
       "former-host-room",
       "Host Player",
       "host-socket",
@@ -133,7 +133,7 @@ describe("host transfer", () => {
 
   it("passes the turn to the next connected player when the active player disconnects", () => {
     const roomRegistry = new RoomRegistry();
-    const hostJoin = roomRegistry.addPlayerToRoom(
+    const hostJoin = roomRegistry.createRoom(
       "active-turn-room",
       "Host Player",
       "host-socket",
@@ -171,7 +171,7 @@ describe("host transfer", () => {
 
   it("does not pass the turn when no connected replacement player exists", () => {
     const roomRegistry = new RoomRegistry();
-    const hostJoin = roomRegistry.addPlayerToRoom(
+    const hostJoin = roomRegistry.createRoom(
       "solo-turn-room",
       "Host Player",
       "host-socket",
@@ -199,7 +199,7 @@ describe("host transfer", () => {
 
   it("rejects manual host transfer to a disconnected player", () => {
     const roomRegistry = new RoomRegistry(undefined, 10_000);
-    roomRegistry.addPlayerToRoom(
+    roomRegistry.createRoom(
       "disconnected-target-room",
       "Host Player",
       "host-socket",
@@ -224,7 +224,7 @@ describe("host transfer", () => {
 
   it("rejects manual host transfer by a non-host", () => {
     const roomRegistry = new RoomRegistry();
-    const hostJoin = roomRegistry.addPlayerToRoom(
+    const hostJoin = roomRegistry.createRoom(
       "non-host-transfer-room",
       "Host Player",
       "host-socket",
@@ -278,3 +278,4 @@ function getHostTransferDeck(): GameTrackCard[] {
     },
   ];
 }
+

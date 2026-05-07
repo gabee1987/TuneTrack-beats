@@ -67,7 +67,7 @@ describe("room flow", () => {
 
     await Promise.all(connectionPromises);
 
-    hostSocket.emit(ClientToServerEvent.JoinRoom, {
+    hostSocket.emit(ClientToServerEvent.CreateRoom, {
       roomId: "party-room",
       displayName: "Host Player",
       sessionId: "host-session",
@@ -185,7 +185,7 @@ describe("room flow", () => {
       guestSocket,
       ServerToClientEvent.PlayerIdentity,
     );
-    hostSocket.emit(ClientToServerEvent.JoinRoom, {
+    hostSocket.emit(ClientToServerEvent.CreateRoom, {
       roomId: "party-room",
       displayName: "Host Player",
       sessionId: "host-session",
@@ -265,7 +265,7 @@ describe("room flow", () => {
       changedRoomStates.push(roomState);
     });
 
-    const hostJoin = roomRegistry.addPlayerToRoom(
+    const hostJoin = roomRegistry.createRoom(
       "room-a",
       "Host Player",
       "host-socket",
@@ -278,7 +278,7 @@ describe("room flow", () => {
       "guest-session",
     );
 
-    const movedGuestJoin = roomRegistry.addPlayerToRoom(
+    const movedGuestJoin = roomRegistry.createRoom(
       "room-b",
       "Guest Player",
       "guest-socket",
@@ -326,7 +326,7 @@ describe("room flow", () => {
         ServerToClientEvent.PlayerIdentity,
       );
 
-      socket.emit(ClientToServerEvent.JoinRoom, {
+      socket.emit(ClientToServerEvent.CreateRoom, {
         roomId: `room-${index}`,
         displayName: `Player ${index}`,
         sessionId: `session-${index}`,
@@ -344,7 +344,7 @@ describe("room flow", () => {
       ServerToClientEvent.Error,
     );
 
-    extraSocket.emit(ClientToServerEvent.JoinRoom, {
+    extraSocket.emit(ClientToServerEvent.CreateRoom, {
       roomId: "room-6",
       displayName: "Extra Player",
       sessionId: "session-6",
@@ -385,7 +385,7 @@ describe("room flow", () => {
         roomState.status === "lobby" && roomState.players.length === 2,
     );
 
-    hostSocket.emit(ClientToServerEvent.JoinRoom, {
+    hostSocket.emit(ClientToServerEvent.CreateRoom, {
       roomId: "xfer-room",
       displayName: "Host Player",
       sessionId: "host-session",
@@ -485,7 +485,7 @@ describe("room flow", () => {
 
     await Promise.all(connectionPromises);
 
-    hostSocket.emit(ClientToServerEvent.JoinRoom, {
+    hostSocket.emit(ClientToServerEvent.CreateRoom, {
       roomId: "game-room",
       displayName: "Host Player",
       sessionId: "host-session",
@@ -647,7 +647,7 @@ describe("room flow", () => {
 
     await Promise.all(connectionPromises);
 
-    hostSocket.emit(ClientToServerEvent.JoinRoom, {
+    hostSocket.emit(ClientToServerEvent.CreateRoom, {
       roomId: "rejoin-room",
       displayName: "Host Player",
       sessionId: "host-session",
@@ -747,7 +747,7 @@ describe("room flow", () => {
       waitForEvent(guestSocket, "connect"),
     ]);
 
-    hostSocket.emit(ClientToServerEvent.JoinRoom, {
+    hostSocket.emit(ClientToServerEvent.CreateRoom, {
       roomId: "close-room",
       displayName: "Host Player",
       sessionId: "host-session",
@@ -795,7 +795,7 @@ describe("room flow", () => {
       guestSocket,
       ServerToClientEvent.PlayerIdentity,
     );
-    hostSocket.emit(ClientToServerEvent.JoinRoom, {
+    hostSocket.emit(ClientToServerEvent.CreateRoom, {
       roomId: "kick-room",
       displayName: "Host Player",
       sessionId: "host-session",
@@ -848,7 +848,7 @@ describe("room flow", () => {
       waitForEvent(guestSocket, "connect"),
     ]);
 
-    hostSocket.emit(ClientToServerEvent.JoinRoom, {
+    hostSocket.emit(ClientToServerEvent.CreateRoom, {
       roomId: "award-room",
       displayName: "Host Player",
       sessionId: "host-session",
@@ -1029,3 +1029,4 @@ async function waitForStateUpdate(
     }
   }
 }
+

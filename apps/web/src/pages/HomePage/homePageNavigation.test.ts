@@ -7,7 +7,7 @@ import {
 
 describe("homePageNavigation", () => {
   it("exports stable defaults for the initial join form", () => {
-    expect(DEFAULT_ROOM_ID).toBe("party-room");
+    expect(DEFAULT_ROOM_ID).toBe("");
     expect(DEFAULT_DISPLAY_NAME).toBe("Player 1");
   });
 
@@ -36,6 +36,19 @@ describe("homePageNavigation", () => {
     ).toEqual({
       displayName: "DJ Nova",
       path: "/lobby/room%20%2F%2042?playerName=DJ%20Nova",
+    });
+  });
+
+  it("adds the create intent when creating a room", () => {
+    expect(
+      buildHomePageNavigationTarget({
+        displayName: "Host",
+        intent: "create",
+        roomId: "host-room",
+      }),
+    ).toEqual({
+      displayName: "Host",
+      path: "/lobby/host-room?playerName=Host&intent=create",
     });
   });
 });

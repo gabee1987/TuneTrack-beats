@@ -105,6 +105,18 @@
   letter-spacing: -0.03em;
 }
 
+.copyInviteButton {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 14px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 90%, transparent);
+  border-radius: 999px;
+  background: var(--color-surface-soft);
+  color: var(--color-text-primary);
+  font-weight: 900;
+  cursor: pointer;
+}
+
 .sectionTitle {
   margin: 0;
   font-size: 22px;

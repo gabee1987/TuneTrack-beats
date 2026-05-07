@@ -8,10 +8,13 @@ export const ClientToServerEvent = {
   ClaimChallenge: "claim_challenge",
   CloseRoom: "close_room",
   ConfirmReveal: "confirm_reveal",
+  CreateRoom: "create_room",
+  GetRoomPreview: "get_room_preview",
   GetPlaylistTracks: "get_playlist_tracks",
   ImportPlaylist: "import_playlist",
   JoinRoom: "join_room",
   KickPlayer: "kick_player",
+  ListRooms: "list_rooms",
   PlaceCard: "place_card",
   PlaceChallenge: "place_challenge",
   RefreshSpotifyToken: "refresh_spotify_token",
@@ -35,6 +38,16 @@ export interface JoinRoomPayload {
   roomId: RoomId;
   displayName: string;
   sessionId: string;
+}
+
+export interface CreateRoomPayload {
+  roomId: RoomId;
+  displayName: string;
+  sessionId: string;
+}
+
+export interface GetRoomPreviewPayload {
+  roomId: RoomId;
 }
 
 export interface UpdateRoomSettingsPayload {

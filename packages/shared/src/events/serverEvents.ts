@@ -7,6 +7,8 @@ export const ServerToClientEvent = {
   PlayerIdentity: "player_identity",
   PlaylistImportResult: "playlist_import_result",
   PlaylistTracks: "playlist_tracks",
+  RoomList: "room_list",
+  RoomPreview: "room_preview",
   RoomClosed: "room_closed",
   SpotifyAuthResult: "spotify_auth_result",
   SpotifyAuthUrl: "spotify_auth_url",
@@ -36,6 +38,22 @@ export interface RoomClosedPayload {
   reason?: "closed" | "kicked";
   roomName?: string;
   message: string;
+}
+
+export interface PublicRoomSummary {
+  roomId: string;
+  hostName: string;
+  playerCount: number;
+  status: "lobby" | "turn" | "challenge" | "reveal" | "finished";
+}
+
+export interface RoomListPayload {
+  rooms: PublicRoomSummary[];
+}
+
+export interface RoomPreviewPayload {
+  room: PublicRoomSummary | null;
+  requestedRoomId: string;
 }
 
 export interface SpotifyAuthUrlPayload {

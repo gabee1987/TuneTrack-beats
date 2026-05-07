@@ -17,6 +17,7 @@ import { getSocketClient } from "../../../services/socket/socketClient";
 
 interface UseLobbyRoomConnectionOptions {
   displayName: string;
+  intent: "create" | "join";
   navigate: NavigateFunction;
   playerSessionId: string;
   roomId: string | undefined;
@@ -60,6 +61,7 @@ export function getLobbyRoomStateUpdateDecision({
 
 export function useLobbyRoomConnection({
   displayName,
+  intent,
   navigate,
   playerSessionId,
   roomId,
@@ -89,7 +91,7 @@ export function useLobbyRoomConnection({
       setConnectionStatus("Connected");
       setErrorCode(null);
       setErrorMessage(null);
-      socketClient.emit(ClientToServerEvent.JoinRoom, {
+      socketClient.emit(intent === "create" ? ClientToServerEvent.CreateRoom : ClientToServerEvent.JoinRoom, {
         displayName,
         roomId,
         sessionId: playerSessionId,
@@ -201,7 +203,7 @@ export function useLobbyRoomConnection({
       isDisposed = true;
       cleanupSocketListeners?.();
     };
-  }, [displayName, navigate, playerSessionId, roomId, t]);
+  }, [displayName, intent, navigate, playerSessionId, roomId, t]);
 
   return {
     connectionStatus,

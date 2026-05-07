@@ -8,12 +8,15 @@ import type {
   CloseRoomPayloadParsed,
   ClaimChallengePayloadParsed,
   ConfirmRevealPayloadParsed,
+  CreateRoomPayloadParsed,
+  GetRoomPreviewPayloadParsed,
   GetPlaylistTracksPayloadParsed,
   ImportPlaylistPayloadParsed,
   JoinRoomPayloadParsed,
   PlaceChallengePayloadParsed,
   PlaceCardPayloadParsed,
   PublicRoomState,
+  PublicRoomSummary,
   PublicTrackInfo,
   RefreshSpotifyTokenPayloadParsed,
   RenameRoomPayloadParsed,
@@ -77,6 +80,33 @@ export class RoomService {
       "player joined room",
     );
     return result;
+  }
+
+  public createRoom(
+    createRoomPayload: CreateRoomPayloadParsed,
+    socketId: string,
+  ): JoinRoomResult {
+    const result = this.roomRegistry.createRoom(
+      createRoomPayload.roomId,
+      createRoomPayload.displayName,
+      socketId,
+      createRoomPayload.sessionId,
+    );
+    logger.info(
+      { roomId: result.roomState.roomId, playerId: result.playerId, displayName: createRoomPayload.displayName },
+      "room created",
+    );
+    return result;
+  }
+
+  public listRooms(): PublicRoomSummary[] {
+    return this.roomRegistry.listRoomSummaries();
+  }
+
+  public getRoomPreview(
+    payload: GetRoomPreviewPayloadParsed,
+  ): PublicRoomSummary | null {
+    return this.roomRegistry.getRoomSummary(payload.roomId);
   }
 
   public updateRoomSettings(

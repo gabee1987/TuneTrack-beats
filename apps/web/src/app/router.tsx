@@ -20,6 +20,30 @@ export const router = createBrowserRouter([
         },
       },
       {
+        path: "play",
+        lazy: async () => {
+          const { PlayPage } = await loadLazyRoute(() =>
+            import("../pages/PlayPage/PlayPage"),
+          );
+
+          return {
+            Component: PlayPage,
+          };
+        },
+      },
+      {
+        path: "join/:roomId",
+        lazy: async () => {
+          const { JoinRoomPage } = await loadLazyRoute(() =>
+            import("../pages/JoinRoomPage/JoinRoomPage"),
+          );
+
+          return {
+            Component: JoinRoomPage,
+          };
+        },
+      },
+      {
         path: "lobby/:roomId",
         lazy: async () => {
           const { LobbyPage } = await loadLazyRoute(() =>

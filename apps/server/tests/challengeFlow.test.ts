@@ -47,7 +47,7 @@ describe("challenge flow", () => {
 
   it("opens a challenge window and lets the host manually resolve it when nobody claims Beat!", () => {
     const roomRegistry = new RoomRegistry();
-    const hostJoin = roomRegistry.addPlayerToRoom(
+    const hostJoin = roomRegistry.createRoom(
       "challenge-room",
       "Host Player",
       "host-socket",
@@ -122,7 +122,7 @@ describe("challenge flow", () => {
 
   it("lets the active player resolve the challenge window when reveal confirmation allows it", () => {
     const roomRegistry = new RoomRegistry();
-    roomRegistry.addPlayerToRoom(
+    roomRegistry.createRoom(
       "active-resolve-room",
       "Host Player",
       "host-socket",
@@ -175,7 +175,7 @@ describe("challenge flow", () => {
 
   it("lets a guest with TT claim Beat! and resolve a successful challenge", () => {
     const roomRegistry = new RoomRegistry();
-    const hostJoin = roomRegistry.addPlayerToRoom(
+    const hostJoin = roomRegistry.createRoom(
       "challenge-claim-room",
       "Host Player",
       "host-socket",
@@ -298,14 +298,14 @@ describe("challenge flow", () => {
 
     const roomRegistry = new RoomRegistry();
     let latestRoomState = null as ReturnType<
-      typeof roomRegistry["addPlayerToRoom"]
+      typeof roomRegistry["createRoom"]
     >["roomState"] | null;
 
     roomRegistry.setRoomStateChangedListener((roomState) => {
       latestRoomState = roomState;
     });
 
-    roomRegistry.addPlayerToRoom(
+    roomRegistry.createRoom(
       "timed-room",
       "Host Player",
       "host-socket",
@@ -353,7 +353,7 @@ describe("challenge flow", () => {
     vi.setSystemTime(new Date("2026-04-07T12:00:00.000Z"));
 
     const roomRegistry = new RoomRegistry();
-    roomRegistry.addPlayerToRoom(
+    roomRegistry.createRoom(
       "claimed-timed-room",
       "Host Player",
       "host-socket",
@@ -405,3 +405,4 @@ describe("challenge flow", () => {
     );
   });
 });
+

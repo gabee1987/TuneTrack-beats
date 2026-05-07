@@ -1,8 +1,8 @@
 import { AppPageShell } from "../../../features/mobile-shell/AppPageShell";
+import { ActionButton } from "../../../features/ui/ActionButton";
 import { StatusBanner } from "../../../features/ui/StatusBanner";
 import type { HomePageAssemblyProps } from "../HomePage.types";
 import { HomePageHero } from "../components/HomePageHero";
-import { JoinRoomForm } from "../components/JoinRoomForm";
 import { HomePageTopBar } from "../components/HomePageTopBar";
 import styles from "./HomePageDesktop.module.css";
 
@@ -24,14 +24,22 @@ export function HomePageDesktop({ controller }: HomePageAssemblyProps) {
         </section>
 
         <aside className={styles.formColumn}>
-          <JoinRoomForm
-            displayName={controller.displayName}
-            onIntentToSubmit={controller.preloadLobby}
-            onDisplayNameChange={controller.setDisplayName}
-            onRoomIdChange={controller.setRoomId}
-            onSubmit={controller.handleSubmit}
-            roomId={controller.roomId}
-          />
+          <section className={styles.startPanel}>
+            <h2 className={styles.startTitle}>Play TuneTrack</h2>
+            <p className={styles.startCopy}>
+              Create a room as host or join an open room on the next screen.
+            </p>
+            <ActionButton
+              className={styles.startButton}
+              onClick={controller.handleStart}
+              onFocus={controller.preloadLobby}
+              onMouseEnter={controller.preloadLobby}
+              onTouchStart={controller.preloadLobby}
+              type="button"
+            >
+              Start
+            </ActionButton>
+          </section>
         </aside>
       </div>
     </AppPageShell>

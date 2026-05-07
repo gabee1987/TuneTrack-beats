@@ -64,7 +64,7 @@ export function HomePageMobile({ controller }: HomePageAssemblyProps) {
         <div className={styles.actionZone}>
           <button
             className={styles.primaryAction}
-            onClick={controller.handleQuickStart}
+            onClick={controller.handleStart}
             onFocus={controller.preloadLobby}
             onMouseEnter={controller.preloadLobby}
             onTouchStart={controller.preloadLobby}

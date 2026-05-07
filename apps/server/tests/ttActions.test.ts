@@ -6,7 +6,7 @@ describe("tt actions", () => {
   it("lets the active player skip and buy with TT when TT mode is enabled", () => {
     const roomRegistry = new RoomRegistry();
 
-    const hostJoin = roomRegistry.addPlayerToRoom(
+    const hostJoin = roomRegistry.createRoom(
       "tt-room",
       "Host Player",
       "host-socket",
@@ -151,3 +151,4 @@ function getTtActionDeck(): GameTrackCard[] {
     },
   ];
 }
+

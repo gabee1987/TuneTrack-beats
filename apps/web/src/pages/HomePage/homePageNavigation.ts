@@ -1,9 +1,10 @@
-export const DEFAULT_ROOM_ID = "party-room";
+export const DEFAULT_ROOM_ID = "";
 export const DEFAULT_DISPLAY_NAME = "Player 1";
 
 interface HomePageNavigationInput {
   displayName: string;
   roomId: string;
+  intent?: "create" | "join";
 }
 
 export interface HomePageNavigationResult {
@@ -13,6 +14,7 @@ export interface HomePageNavigationResult {
 
 export function buildHomePageNavigationTarget({
   displayName,
+  intent = "join",
   roomId,
 }: HomePageNavigationInput): HomePageNavigationResult | null {
   const trimmedRoomId = roomId.trim();
@@ -26,6 +28,10 @@ export function buildHomePageNavigationTarget({
     displayName: trimmedDisplayName,
     path: `/lobby/${encodeURIComponent(trimmedRoomId)}?playerName=${encodeURIComponent(
       trimmedDisplayName,
-    )}`,
+    )}${intent === "create" ? "&intent=create" : ""}`,
   };
+}
+
+export function buildInviteJoinPath(roomId: string, displayName: string): string | null {
+  return buildHomePageNavigationTarget({ displayName, roomId, intent: "join" })?.path ?? null;
 }

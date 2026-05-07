@@ -12,6 +12,7 @@ import {
   type ConfirmRevealPayloadParsed,
   type PlaceChallengePayloadParsed,
   type PlaceCardPayloadParsed,
+  type PublicRoomSummary,
   type PublicRoomState,
   type RenameRoomPayloadParsed,
   type ResolveChallengeWindowPayloadParsed,
@@ -106,7 +107,57 @@ export class RoomRegistry {
     this.roomStateChangedListener = listener;
   }
 
+  public listRoomSummaries(): PublicRoomSummary[] {
+    return [...this.roomsById.values()]
+      .map((roomRecord) => mapRoomStateToSummary(roomRecord.roomState))
+      .filter((roomSummary) => roomSummary.status === "lobby");
+  }
+
+  public getRoomSummary(roomId: RoomId): PublicRoomSummary | null {
+    const roomRecord = this.roomsById.get(roomId);
+    if (!roomRecord || roomRecord.roomState.status !== "lobby") {
+      return null;
+    }
+
+    return mapRoomStateToSummary(roomRecord.roomState);
+  }
+
   // ─── Lobby: join & leave ──────────────────────────────────────────────────
+
+  public createRoom(
+    roomId: RoomId,
+    displayName: string,
+    socketId: string,
+    sessionId: string,
+  ): JoinRoomResult {
+    if (this.roomsById.has(roomId)) {
+      throw new Error("ROOM_ALREADY_EXISTS");
+    }
+
+    const existingSessionMembership = this.sessionMemberships.get(sessionId);
+    if (existingSessionMembership) {
+      const previousRoomState = this.removePlayerBySessionId(sessionId);
+      if (previousRoomState) {
+        this.roomStateChangedListener?.(previousRoomState);
+      }
+    }
+
+    if (this.roomsById.size >= RoomRegistry.MAX_ACTIVE_ROOM_COUNT) {
+      throw new Error("ROOM_LIMIT_REACHED");
+    }
+
+    const playerId = randomUUID();
+    const roomState = buildInitialRoomState(roomId, playerId, displayName);
+    this.roomsById.set(roomId, {
+      gameState: null,
+      roomState,
+      trackCardsById: new Map<string, GameTrackCard>(),
+      importedDeck: null,
+    });
+    this.socketMemberships.set(socketId, { playerId, roomId, sessionId });
+    this.sessionMemberships.set(sessionId, { playerId, roomId });
+    return { playerId, roomState };
+  }
 
   public addPlayerToRoom(
     roomId: RoomId,
@@ -149,20 +200,7 @@ export class RoomRegistry {
     const playerId = randomUUID();
 
     if (!existingRoomRecord) {
-      if (this.roomsById.size >= RoomRegistry.MAX_ACTIVE_ROOM_COUNT) {
-        throw new Error("ROOM_LIMIT_REACHED");
-      }
-
-      const roomState = buildInitialRoomState(roomId, playerId, displayName);
-      this.roomsById.set(roomId, {
-        gameState: null,
-        roomState,
-        trackCardsById: new Map<string, GameTrackCard>(),
-        importedDeck: null,
-      });
-      this.socketMemberships.set(socketId, { playerId, roomId, sessionId });
-      this.sessionMemberships.set(sessionId, { playerId, roomId });
-      return { playerId, roomState };
+      throw new Error("ROOM_NOT_FOUND");
     }
 
     if (existingRoomRecord.roomState.status !== "lobby") {
@@ -953,4 +991,15 @@ export class RoomRegistry {
     if (membership.roomId !== roomId || !roomRecord) throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
     return roomRecord;
   }
+}
+
+function mapRoomStateToSummary(roomState: PublicRoomState): PublicRoomSummary {
+  const hostPlayer = roomState.players.find((player) => player.id === roomState.hostId);
+
+  return {
+    hostName: hostPlayer?.displayName ?? "Host",
+    playerCount: roomState.players.length,
+    roomId: roomState.roomId,
+    status: roomState.status,
+  };
 }

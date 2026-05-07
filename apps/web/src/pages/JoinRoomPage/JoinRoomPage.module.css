@@ -1,0 +1,86 @@
+.screenShell {
+  min-height: var(--app-height);
+  padding: calc(var(--safe-area-top) + 16px) calc(var(--safe-area-right) + 14px)
+    calc(var(--safe-area-bottom) + 24px) calc(var(--safe-area-left) + 14px);
+}
+
+.panelShell {
+  width: min(100%, 560px);
+  min-height: calc(var(--app-height) - var(--safe-area-top) - var(--safe-area-bottom) - 40px);
+  margin: 0 auto;
+  padding: clamp(18px, 4vw, 30px);
+  border-radius: 30px;
+  background: var(--gradient-lobby-shell-background);
+  display: grid;
+  place-items: center;
+}
+
+.card {
+  display: grid;
+  gap: 18px;
+  width: 100%;
+  padding: clamp(18px, 4vw, 28px);
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 90%, transparent);
+  border-radius: 24px;
+  background: var(--color-surface-strong);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(34px, 8vw, 56px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.roomFacts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.roomFacts span {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--color-surface-soft);
+  color: var(--color-text-muted);
+}
+
+.roomFacts strong {
+  color: var(--color-text-primary);
+  font-size: 18px;
+}
+
+.form,
+.field {
+  display: grid;
+  gap: 12px;
+}
+
+.field span {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+@media (max-width: 560px) {
+  .screenShell,
+  .panelShell {
+    padding: 12px;
+  }
+
+  .panelShell {
+    min-height: var(--app-height);
+    border-radius: 0;
+  }
+}

@@ -6,6 +6,8 @@ import {
   claimChallengePayloadSchema,
   closeRoomPayloadSchema,
   confirmRevealPayloadSchema,
+  createRoomPayloadSchema,
+  getRoomPreviewPayloadSchema,
   getPlaylistTracksPayloadSchema,
   importPlaylistPayloadSchema,
   joinRoomPayloadSchema,
@@ -38,7 +40,10 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
 
   io.on("connection", (socket) => {
     logger.info({ socketId: socket.id }, "socket connected");
+    registerCreateRoomHandler(io, socket, roomService);
     registerJoinRoomHandler(io, socket, roomService);
+    registerListRoomsHandler(socket, roomService);
+    registerGetRoomPreviewHandler(socket, roomService);
     registerStartGameHandler(io, socket, roomService);
     registerTransferHostHandler(io, socket, roomService);
     registerKickPlayerHandler(io, socket, roomService);
@@ -150,10 +155,88 @@ function registerJoinRoomHandler(
     } catch (error) {
       emitServerError(socket, error, "JOIN_ROOM_FAILED", {
         GAME_ALREADY_STARTED: "This game has already started.",
+        ROOM_NOT_FOUND: "That room is no longer available.",
+      });
+    }
+  });
+}
+
+function registerCreateRoomHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.CreateRoom, (payload: unknown) => {
+    const parseResult = createRoomPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_CREATE_ROOM_PAYLOAD",
+        message: "Room code or display name is invalid.",
+      });
+      return;
+    }
+
+    logger.info({ socketId: socket.id, roomId: parseResult.data.roomId, displayName: parseResult.data.displayName }, "create_room");
+    try {
+      const previousSocketRoomIds = [...socket.rooms].filter(
+        (roomId) => roomId !== socket.id,
+      );
+      const { playerId, roomState } = roomService.createRoom(
+        parseResult.data,
+        socket.id,
+      );
+      for (const previousSocketRoomId of previousSocketRoomIds) {
+        if (previousSocketRoomId !== roomState.roomId) {
+          socket.leave(previousSocketRoomId);
+        }
+      }
+      socket.join(roomState.roomId);
+      socket.emit(ServerToClientEvent.PlayerIdentity, { playerId });
+
+      io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
+        roomState,
+      });
+    } catch (error) {
+      emitServerError(socket, error, "CREATE_ROOM_FAILED", {
+        ROOM_ALREADY_EXISTS: "A room with that name already exists.",
         ROOM_LIMIT_REACHED:
           "The room limit has been reached. Close a room before creating a new one.",
       });
     }
+  });
+}
+
+function registerListRoomsHandler(
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.ListRooms, () => {
+    socket.emit(ServerToClientEvent.RoomList, {
+      rooms: roomService.listRooms(),
+    });
+  });
+}
+
+function registerGetRoomPreviewHandler(
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.GetRoomPreview, (payload: unknown) => {
+    const parseResult = getRoomPreviewPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_ROOM_PREVIEW_PAYLOAD",
+        message: "Room code is invalid.",
+      });
+      return;
+    }
+
+    socket.emit(ServerToClientEvent.RoomPreview, {
+      requestedRoomId: parseResult.data.roomId,
+      room: roomService.getRoomPreview(parseResult.data),
+    });
   });
 }
 

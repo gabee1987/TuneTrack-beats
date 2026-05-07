@@ -53,3 +53,30 @@
   display: grid;
   align-content: center;
 }
+
+.startPanel {
+  display: grid;
+  gap: 16px;
+  padding: clamp(20px, 3vw, 30px);
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 90%, transparent);
+  border-radius: 28px;
+  background: color-mix(in srgb, var(--color-surface-strong) 88%, transparent);
+  box-shadow: var(--shadow-form-card);
+}
+
+.startTitle {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: -0.04em;
+}
+
+.startCopy {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.startButton {
+  width: 100%;
+  min-height: 56px;
+}

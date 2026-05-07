@@ -37,10 +37,12 @@ export function useLobbyPageController(): LobbyPageController {
     () => searchParams.get("playerName")?.trim() ?? getRememberedPlayerDisplayName(),
     [searchParams],
   );
+  const intent = searchParams.get("intent") === "create" ? "create" : "join";
   const playerSessionId = useMemo(() => getOrCreatePlayerSessionId(), []);
   const { connectionStatus, currentPlayerId, errorCode, errorMessage, roomState } =
     useLobbyRoomConnection({
       displayName,
+      intent,
       navigate,
       playerSessionId,
       roomId,
