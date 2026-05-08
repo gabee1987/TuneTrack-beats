@@ -58,20 +58,24 @@ function scheduleFlush(): void {
 }
 
 async function sendAxiomBatch(events: AxiomLogEvent[]): Promise<void> {
-  const response = await postAxiomBatch(buildEdgeDatasetIngestUrl(), events);
+  const edgeDatasetIngestUrl = buildEdgeDatasetIngestUrl();
+  const edgeIngestUrl = buildEdgeIngestUrl();
+  const globalDatasetIngestUrl = buildGlobalDatasetIngestUrl();
+
+  const response = await postAxiomBatch(edgeDatasetIngestUrl, events);
   if (response.ok) return;
 
-  const edgeFallbackResponse = await postAxiomBatch(buildEdgeIngestUrl(), events);
+  const edgeFallbackResponse = await postAxiomBatch(edgeIngestUrl, events);
   if (edgeFallbackResponse.ok) return;
 
-  const globalFallbackResponse = await postAxiomBatch(buildGlobalDatasetIngestUrl(), events);
+  const globalFallbackResponse = await postAxiomBatch(globalDatasetIngestUrl, events);
   if (globalFallbackResponse.ok) return;
 
   const responseBody = await readResponseBody(response);
   const edgeFallbackResponseBody = await readResponseBody(edgeFallbackResponse);
   const globalFallbackResponseBody = await readResponseBody(globalFallbackResponse);
   throw new Error(
-    `Axiom ingest failed with ${response.status} ${response.statusText}: ${responseBody}; edge fallback failed with ${edgeFallbackResponse.status} ${edgeFallbackResponse.statusText}: ${edgeFallbackResponseBody}; global fallback failed with ${globalFallbackResponse.status} ${globalFallbackResponse.statusText}: ${globalFallbackResponseBody}`,
+    `Axiom ingest failed at ${edgeDatasetIngestUrl} with ${response.status} ${response.statusText}: ${responseBody}; edge fallback failed at ${edgeIngestUrl} with ${edgeFallbackResponse.status} ${edgeFallbackResponse.statusText}: ${edgeFallbackResponseBody}; global fallback failed at ${globalDatasetIngestUrl} with ${globalFallbackResponse.status} ${globalFallbackResponse.statusText}: ${globalFallbackResponseBody}`,
   );
 }
 

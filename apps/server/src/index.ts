@@ -46,6 +46,8 @@ httpServer.listen(env.PORT, () => {
     outcome: "succeeded",
     meta: {
       axiomConfigured: Boolean(env.AXIOM_TOKEN && env.AXIOM_DATASET),
+      axiomDataset: env.AXIOM_DATASET,
+      axiomDomain: env.AXIOM_DOMAIN,
       eventAuditEnabled: env.ENABLE_EVENT_AUDIT,
       logLevel: env.LOG_LEVEL ?? (env.NODE_ENV === "development" ? "debug" : "info"),
     },
