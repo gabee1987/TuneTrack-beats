@@ -31,6 +31,8 @@ describe("mapSpotifyTrackToGameCard", () => {
       artist: "Queen",
       albumTitle: "A Night at the Opera",
       releaseYear: 1975,
+      sourceReleaseYear: 1975,
+      metadataStatus: "imported",
       artworkUrl: "https://example.com/large.jpg",
       previewUrl: "https://p.scdn.co/mp3-preview/abc123",
       spotifyTrackUri: "spotify:track:4uLU6hMCjMI75M1A2tKUQC",
@@ -72,9 +74,7 @@ describe("mapSpotifyTrackToGameCard", () => {
   });
 
   it("omits previewUrl when preview_url is null", () => {
-    const result = mapSpotifyTrackToGameCard(
-      buildTrack({ preview_url: null }),
-    );
+    const result = mapSpotifyTrackToGameCard(buildTrack({ preview_url: null }));
 
     expect(result).not.toBeNull();
     expect(result?.previewUrl).toBeUndefined();

@@ -3,6 +3,7 @@ import {
   ServerToClientEvent,
   type PlaylistTracksPayload,
   type PublicTrackInfo,
+  type TrackMetadataStatus,
 } from "@tunetrack/shared";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -24,6 +25,15 @@ export interface UsePlaylistEditorResult {
   toggleSort: (field: SortField) => void;
   toggleSelection: (trackId: string) => void;
   tracks: PublicTrackInfo[];
+  updateTrack: (trackId: string, patch: PlaylistTrackUpdatePatch) => void;
+}
+
+export interface PlaylistTrackUpdatePatch {
+  title?: string;
+  artist?: string;
+  albumTitle?: string;
+  releaseYear?: number;
+  metadataStatus?: TrackMetadataStatus;
 }
 
 export function usePlaylistEditor(isOpen: boolean): UsePlaylistEditorResult {
@@ -130,6 +140,34 @@ export function usePlaylistEditor(isOpen: boolean): UsePlaylistEditorResult {
     });
   }, [roomId, selectedIds]);
 
+  const updateTrack = useCallback(
+    (trackId: string, patch: PlaylistTrackUpdatePatch) => {
+      if (!roomId) return;
+
+      setRawTracks((prev) =>
+        prev.map((track) =>
+          track.id === trackId
+            ? {
+                ...track,
+                ...patch,
+                sourceReleaseYear: track.sourceReleaseYear ?? track.releaseYear,
+                metadataStatus: patch.metadataStatus ?? track.metadataStatus,
+              }
+            : track,
+        ),
+      );
+
+      void getSocketClient().then((socket) => {
+        socket.emit(ClientToServerEvent.UpdatePlaylistTrack, {
+          roomId,
+          trackId,
+          ...patch,
+        });
+      });
+    },
+    [roomId],
+  );
+
   return {
     error,
     isLoading,
@@ -143,5 +181,6 @@ export function usePlaylistEditor(isOpen: boolean): UsePlaylistEditorResult {
     toggleSort,
     toggleSelection,
     tracks,
+    updateTrack,
   };
 }

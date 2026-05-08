@@ -23,6 +23,7 @@ import {
   skipTurnPayloadSchema,
   startGamePayloadSchema,
   transferHostPayloadSchema,
+  updatePlaylistTrackPayloadSchema,
   updatePlayerProfilePayloadSchema,
   updatePlayerSettingsPayloadSchema,
   updateRoomSettingsPayloadSchema,
@@ -64,17 +65,14 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
     registerImportPlaylistHandler(io, socket, roomService);
     registerGetPlaylistTracksHandler(socket, roomService);
     registerRemovePlaylistTracksHandler(io, socket, roomService);
+    registerUpdatePlaylistTrackHandler(io, socket, roomService);
     registerRequestSpotifyAuthUrlHandler(socket, roomService);
     registerRefreshSpotifyTokenHandler(socket, roomService);
     registerDisconnectHandler(io, socket, roomService);
   });
 }
 
-function registerRenameRoomHandler(
-  io: Server,
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerRenameRoomHandler(io: Server, socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.RenameRoom, (payload: unknown) => {
     const parseResult = renameRoomPayloadSchema.safeParse(payload);
 
@@ -96,10 +94,7 @@ function registerRenameRoomHandler(
     );
 
     try {
-      const { previousRoomId, roomState } = roomService.renameRoom(
-        parseResult.data,
-        socket.id,
-      );
+      const { previousRoomId, roomState } = roomService.renameRoom(parseResult.data, socket.id);
 
       io.in(previousRoomId).socketsJoin(roomState.roomId);
       io.in(previousRoomId).socketsLeave(previousRoomId);
@@ -116,11 +111,7 @@ function registerRenameRoomHandler(
   });
 }
 
-function registerJoinRoomHandler(
-  io: Server,
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerJoinRoomHandler(io: Server, socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.JoinRoom, (payload: unknown) => {
     const parseResult = joinRoomPayloadSchema.safeParse(payload);
 
@@ -132,15 +123,17 @@ function registerJoinRoomHandler(
       return;
     }
 
-    logger.info({ socketId: socket.id, roomId: parseResult.data.roomId, displayName: parseResult.data.displayName }, "join_room");
+    logger.info(
+      {
+        socketId: socket.id,
+        roomId: parseResult.data.roomId,
+        displayName: parseResult.data.displayName,
+      },
+      "join_room",
+    );
     try {
-      const previousSocketRoomIds = [...socket.rooms].filter(
-        (roomId) => roomId !== socket.id,
-      );
-      const { playerId, roomState } = roomService.joinRoom(
-        parseResult.data,
-        socket.id,
-      );
+      const previousSocketRoomIds = [...socket.rooms].filter((roomId) => roomId !== socket.id);
+      const { playerId, roomState } = roomService.joinRoom(parseResult.data, socket.id);
       for (const previousSocketRoomId of previousSocketRoomIds) {
         if (previousSocketRoomId !== roomState.roomId) {
           socket.leave(previousSocketRoomId);
@@ -161,11 +154,7 @@ function registerJoinRoomHandler(
   });
 }
 
-function registerCreateRoomHandler(
-  io: Server,
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerCreateRoomHandler(io: Server, socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.CreateRoom, (payload: unknown) => {
     const parseResult = createRoomPayloadSchema.safeParse(payload);
 
@@ -177,15 +166,17 @@ function registerCreateRoomHandler(
       return;
     }
 
-    logger.info({ socketId: socket.id, roomId: parseResult.data.roomId, displayName: parseResult.data.displayName }, "create_room");
+    logger.info(
+      {
+        socketId: socket.id,
+        roomId: parseResult.data.roomId,
+        displayName: parseResult.data.displayName,
+      },
+      "create_room",
+    );
     try {
-      const previousSocketRoomIds = [...socket.rooms].filter(
-        (roomId) => roomId !== socket.id,
-      );
-      const { playerId, roomState } = roomService.createRoom(
-        parseResult.data,
-        socket.id,
-      );
+      const previousSocketRoomIds = [...socket.rooms].filter((roomId) => roomId !== socket.id);
+      const { playerId, roomState } = roomService.createRoom(parseResult.data, socket.id);
       for (const previousSocketRoomId of previousSocketRoomIds) {
         if (previousSocketRoomId !== roomState.roomId) {
           socket.leave(previousSocketRoomId);
@@ -207,10 +198,7 @@ function registerCreateRoomHandler(
   });
 }
 
-function registerListRoomsHandler(
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerListRoomsHandler(socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.ListRooms, () => {
     socket.emit(ServerToClientEvent.RoomList, {
       rooms: roomService.listRooms(),
@@ -218,10 +206,7 @@ function registerListRoomsHandler(
   });
 }
 
-function registerGetRoomPreviewHandler(
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerGetRoomPreviewHandler(socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.GetRoomPreview, (payload: unknown) => {
     const parseResult = getRoomPreviewPayloadSchema.safeParse(payload);
 
@@ -240,11 +225,7 @@ function registerGetRoomPreviewHandler(
   });
 }
 
-function registerTransferHostHandler(
-  io: Server,
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerTransferHostHandler(io: Server, socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.TransferHost, (payload: unknown) => {
     const parseResult = transferHostPayloadSchema.safeParse(payload);
 
@@ -256,7 +237,14 @@ function registerTransferHostHandler(
       return;
     }
 
-    logger.info({ socketId: socket.id, roomId: parseResult.data.roomId, targetPlayerId: parseResult.data.playerId }, "transfer_host");
+    logger.info(
+      {
+        socketId: socket.id,
+        roomId: parseResult.data.roomId,
+        targetPlayerId: parseResult.data.playerId,
+      },
+      "transfer_host",
+    );
     try {
       const roomState = roomService.transferHost(parseResult.data, socket.id);
 
@@ -267,21 +255,15 @@ function registerTransferHostHandler(
       emitServerError(socket, error, "TRANSFER_HOST_FAILED", {
         HOST_TRANSFER_TARGET_DISCONNECTED:
           "Host controls can only be transferred to a connected player.",
-        HOST_TRANSFER_TARGET_IS_ALREADY_HOST:
-          "That player already has host controls.",
+        HOST_TRANSFER_TARGET_IS_ALREADY_HOST: "That player already has host controls.",
         HOST_TRANSFER_TARGET_NOT_FOUND: "That player is no longer in the room.",
-        ONLY_HOST_CAN_TRANSFER_HOST:
-          "Only the current host can transfer host controls.",
+        ONLY_HOST_CAN_TRANSFER_HOST: "Only the current host can transfer host controls.",
       });
     }
   });
 }
 
-function registerKickPlayerHandler(
-  io: Server,
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerKickPlayerHandler(io: Server, socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.KickPlayer, (payload: unknown) => {
     const parseResult = kickPlayerPayloadSchema.safeParse(payload);
 
@@ -294,14 +276,15 @@ function registerKickPlayerHandler(
     }
 
     logger.info(
-      { socketId: socket.id, roomId: parseResult.data.roomId, targetPlayerId: parseResult.data.playerId },
+      {
+        socketId: socket.id,
+        roomId: parseResult.data.roomId,
+        targetPlayerId: parseResult.data.playerId,
+      },
       "kick_player",
     );
     try {
-      const { kickedSocketIds, roomState } = roomService.kickPlayer(
-        parseResult.data,
-        socket.id,
-      );
+      const { kickedSocketIds, roomState } = roomService.kickPlayer(parseResult.data, socket.id);
 
       for (const kickedSocketId of kickedSocketIds) {
         io.to(kickedSocketId).emit(ServerToClientEvent.RoomClosed, {
@@ -326,11 +309,7 @@ function registerKickPlayerHandler(
   });
 }
 
-function registerStartGameHandler(
-  io: Server,
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerStartGameHandler(io: Server, socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.StartGame, (payload: unknown) => {
     const parseResult = startGamePayloadSchema.safeParse(payload);
 
@@ -359,11 +338,7 @@ function registerStartGameHandler(
   });
 }
 
-function registerPlaceCardHandler(
-  io: Server,
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerPlaceCardHandler(io: Server, socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.PlaceCard, (payload: unknown) => {
     const parseResult = placeCardPayloadSchema.safeParse(payload);
 
@@ -375,7 +350,14 @@ function registerPlaceCardHandler(
       return;
     }
 
-    logger.info({ socketId: socket.id, roomId: parseResult.data.roomId, selectedSlotIndex: parseResult.data.selectedSlotIndex }, "place_card");
+    logger.info(
+      {
+        socketId: socket.id,
+        roomId: parseResult.data.roomId,
+        selectedSlotIndex: parseResult.data.selectedSlotIndex,
+      },
+      "place_card",
+    );
     try {
       const roomState = roomService.placeCard(parseResult.data, socket.id);
 
@@ -393,11 +375,7 @@ function registerPlaceCardHandler(
   });
 }
 
-function registerConfirmRevealHandler(
-  io: Server,
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerConfirmRevealHandler(io: Server, socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.ConfirmReveal, (payload: unknown) => {
     const parseResult = confirmRevealPayloadSchema.safeParse(payload);
 
@@ -428,11 +406,7 @@ function registerConfirmRevealHandler(
   });
 }
 
-function registerClaimChallengeHandler(
-  io: Server,
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerClaimChallengeHandler(io: Server, socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.ClaimChallenge, (payload: unknown) => {
     const parseResult = claimChallengePayloadSchema.safeParse(payload);
 
@@ -463,11 +437,7 @@ function registerClaimChallengeHandler(
   });
 }
 
-function registerPlaceChallengeHandler(
-  io: Server,
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerPlaceChallengeHandler(io: Server, socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.PlaceChallenge, (payload: unknown) => {
     const parseResult = placeChallengePayloadSchema.safeParse(payload);
 
@@ -479,7 +449,14 @@ function registerPlaceChallengeHandler(
       return;
     }
 
-    logger.info({ socketId: socket.id, roomId: parseResult.data.roomId, selectedSlotIndex: parseResult.data.selectedSlotIndex }, "place_challenge");
+    logger.info(
+      {
+        socketId: socket.id,
+        roomId: parseResult.data.roomId,
+        selectedSlotIndex: parseResult.data.selectedSlotIndex,
+      },
+      "place_challenge",
+    );
     try {
       const roomState = roomService.placeChallenge(parseResult.data, socket.id);
 
@@ -488,9 +465,9 @@ function registerPlaceChallengeHandler(
       });
     } catch (error) {
       emitServerError(socket, error, "PLACE_CHALLENGE_FAILED", {
-        CHALLENGE_WINDOW_EXPIRED:
-          "The Beat! window already expired.",
-        GAME_NOT_IN_CHALLENGE_PHASE: "Challenge placement is only available during the challenge window.",
+        CHALLENGE_WINDOW_EXPIRED: "The Beat! window already expired.",
+        GAME_NOT_IN_CHALLENGE_PHASE:
+          "Challenge placement is only available during the challenge window.",
         INVALID_SLOT_INDEX: "Selected timeline slot is invalid.",
         CHALLENGE_SLOT_MUST_DIFFER:
           "Beat! must point to a different slot than the original choice.",
@@ -518,10 +495,7 @@ function registerResolveChallengeWindowHandler(
     }
 
     try {
-      const roomState = roomService.resolveChallengeWindow(
-        parseResult.data,
-        socket.id,
-      );
+      const roomState = roomService.resolveChallengeWindow(parseResult.data, socket.id);
 
       io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
         roomState,
@@ -530,7 +504,8 @@ function registerResolveChallengeWindowHandler(
       emitServerError(socket, error, "RESOLVE_CHALLENGE_WINDOW_FAILED", {
         CHALLENGE_ALREADY_CLAIMED:
           "The challenge window is already claimed and cannot be resolved yet.",
-        GAME_NOT_IN_CHALLENGE_PHASE: "Challenge resolution is only available during the challenge window.",
+        GAME_NOT_IN_CHALLENGE_PHASE:
+          "Challenge resolution is only available during the challenge window.",
         ONLY_HOST_CAN_RESOLVE_CHALLENGE_WINDOW:
           "Only the host can manually resolve the challenge window.",
         ONLY_HOST_OR_ACTIVE_PLAYER_CAN_RESOLVE_CHALLENGE_WINDOW:
@@ -557,18 +532,14 @@ function registerUpdatePlayerSettingsHandler(
     }
 
     try {
-      const roomState = roomService.updatePlayerSettings(
-        parseResult.data,
-        socket.id,
-      );
+      const roomState = roomService.updatePlayerSettings(parseResult.data, socket.id);
 
       io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
         roomState,
       });
     } catch (error) {
       emitServerError(socket, error, "PLAYER_SETTINGS_UPDATE_FAILED", {
-        ONLY_HOST_CAN_UPDATE_PLAYER_SETTINGS:
-          "Only the host can change player settings.",
+        ONLY_HOST_CAN_UPDATE_PLAYER_SETTINGS: "Only the host can change player settings.",
       });
     }
   });
@@ -591,10 +562,7 @@ function registerUpdatePlayerProfileHandler(
     }
 
     try {
-      const roomState = roomService.updatePlayerProfile(
-        parseResult.data,
-        socket.id,
-      );
+      const roomState = roomService.updatePlayerProfile(parseResult.data, socket.id);
 
       io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
         roomState,
@@ -607,11 +575,7 @@ function registerUpdatePlayerProfileHandler(
   });
 }
 
-function registerAwardTtHandler(
-  io: Server,
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerAwardTtHandler(io: Server, socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.AwardTt, (payload: unknown) => {
     const parseResult = awardTtPayloadSchema.safeParse(payload);
 
@@ -623,7 +587,15 @@ function registerAwardTtHandler(
       return;
     }
 
-    logger.info({ socketId: socket.id, roomId: parseResult.data.roomId, targetPlayerId: parseResult.data.playerId, amount: parseResult.data.amount }, "award_tt");
+    logger.info(
+      {
+        socketId: socket.id,
+        roomId: parseResult.data.roomId,
+        targetPlayerId: parseResult.data.playerId,
+        amount: parseResult.data.amount,
+      },
+      "award_tt",
+    );
     try {
       const roomState = roomService.awardTt(parseResult.data, socket.id);
 
@@ -670,19 +642,14 @@ function registerSkipTrackWithTtHandler(
         INSUFFICIENT_TT: "You need at least 1 TT to skip.",
         NOT_ENOUGH_CARDS: "The deck is empty, so this track cannot be skipped.",
         NOT_ACTIVE_PLAYER: "Only the active player can skip the current track.",
-        SKIP_ALREADY_USED_THIS_TURN:
-          "You already used your one allowed skip on this turn.",
+        SKIP_ALREADY_USED_THIS_TURN: "You already used your one allowed skip on this turn.",
         TT_MODE_DISABLED: "TT mode is disabled in this room.",
       });
     }
   });
 }
 
-function registerSkipTurnHandler(
-  io: Server,
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerSkipTurnHandler(io: Server, socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.SkipTurn, (payload: unknown) => {
     const parseResult = skipTurnPayloadSchema.safeParse(payload);
 
@@ -703,8 +670,7 @@ function registerSkipTurnHandler(
       });
     } catch (error) {
       emitServerError(socket, error, "SKIP_TURN_FAILED", {
-        GAME_NOT_IN_TURN_PHASE:
-          "The game must be in turn phase to skip a turn.",
+        GAME_NOT_IN_TURN_PHASE: "The game must be in turn phase to skip a turn.",
         GAME_NOT_STARTED: "The game has not started yet.",
         ONLY_HOST_CAN_SKIP_TURN: "Only the host can skip a turn.",
       });
@@ -729,10 +695,7 @@ function registerBuyTimelineCardWithTtHandler(
     }
 
     try {
-      const roomState = roomService.buyTimelineCardWithTt(
-        parseResult.data,
-        socket.id,
-      );
+      const roomState = roomService.buyTimelineCardWithTt(parseResult.data, socket.id);
 
       io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
         roomState,
@@ -774,18 +737,13 @@ function registerUpdateRoomSettingsHandler(
       });
     } catch (error) {
       emitServerError(socket, error, "ROOM_SETTINGS_UPDATE_FAILED", {
-        ONLY_HOST_CAN_UPDATE_ROOM_SETTINGS:
-          "Only the host can change room settings.",
+        ONLY_HOST_CAN_UPDATE_ROOM_SETTINGS: "Only the host can change room settings.",
       });
     }
   });
 }
 
-function registerCloseRoomHandler(
-  io: Server,
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerCloseRoomHandler(io: Server, socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.CloseRoom, (payload: unknown) => {
     const parseResult = closeRoomPayloadSchema.safeParse(payload);
 
@@ -814,11 +772,7 @@ function registerCloseRoomHandler(
   });
 }
 
-function registerImportPlaylistHandler(
-  io: Server,
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerImportPlaylistHandler(io: Server, socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.ImportPlaylist, (payload: unknown) => {
     const parseResult = importPlaylistPayloadSchema.safeParse(payload);
 
@@ -851,10 +805,7 @@ function registerImportPlaylistHandler(
   });
 }
 
-function registerRequestSpotifyAuthUrlHandler(
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerRequestSpotifyAuthUrlHandler(socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.RequestSpotifyAuthUrl, (payload: unknown) => {
     const parseResult = requestSpotifyAuthUrlPayloadSchema.safeParse(payload);
 
@@ -875,10 +826,7 @@ function registerRequestSpotifyAuthUrlHandler(
   });
 }
 
-function registerRefreshSpotifyTokenHandler(
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerRefreshSpotifyTokenHandler(socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.RefreshSpotifyToken, (payload: unknown) => {
     const parseResult = refreshSpotifyTokenPayloadSchema.safeParse(payload);
 
@@ -923,16 +871,11 @@ function emitServerError(
 
   socket.emit(ServerToClientEvent.Error, {
     code: errorCode,
-    message:
-      messageByCode[errorCode] ??
-      "The requested room action could not be completed.",
+    message: messageByCode[errorCode] ?? "The requested room action could not be completed.",
   });
 }
 
-function registerGetPlaylistTracksHandler(
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerGetPlaylistTracksHandler(socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.GetPlaylistTracks, (payload: unknown) => {
     const parseResult = getPlaylistTracksPayloadSchema.safeParse(payload);
 
@@ -971,7 +914,11 @@ function registerRemovePlaylistTracksHandler(
     }
 
     logger.info(
-      { socketId: socket.id, roomId: parseResult.data.roomId, count: parseResult.data.trackIds.length },
+      {
+        socketId: socket.id,
+        roomId: parseResult.data.roomId,
+        count: parseResult.data.trackIds.length,
+      },
       "remove_playlist_tracks",
     );
     try {
@@ -987,11 +934,41 @@ function registerRemovePlaylistTracksHandler(
   });
 }
 
-function registerDisconnectHandler(
+function registerUpdatePlaylistTrackHandler(
   io: Server,
   socket: Socket,
   roomService: RoomService,
 ): void {
+  socket.on(ClientToServerEvent.UpdatePlaylistTrack, (payload: unknown) => {
+    const parseResult = updatePlaylistTrackPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_UPDATE_PLAYLIST_TRACK_PAYLOAD",
+        message: "Track metadata is invalid.",
+      });
+      return;
+    }
+
+    logger.info(
+      { socketId: socket.id, roomId: parseResult.data.roomId, trackId: parseResult.data.trackId },
+      "update_playlist_track",
+    );
+    try {
+      const { roomState, tracks } = roomService.updatePlaylistTrack(parseResult.data, socket.id);
+      socket.emit(ServerToClientEvent.PlaylistTracks, { tracks });
+      io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, { roomState });
+    } catch (error) {
+      emitServerError(socket, error, "UPDATE_PLAYLIST_TRACK_FAILED", {
+        ONLY_HOST_CAN_EDIT_PLAYLIST: "Only the host can edit the playlist.",
+        NO_PLAYLIST_IMPORTED: "No playlist has been imported.",
+        PLAYLIST_TRACK_NOT_FOUND: "That playlist track is no longer available.",
+      });
+    }
+  });
+}
+
+function registerDisconnectHandler(io: Server, socket: Socket, roomService: RoomService): void {
   socket.on("disconnect", () => {
     logger.info({ socketId: socket.id }, "socket disconnected");
 

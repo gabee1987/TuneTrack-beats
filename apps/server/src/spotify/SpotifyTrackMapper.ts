@@ -1,9 +1,7 @@
 import type { GameTrackCard } from "@tunetrack/game-engine";
 import type { SpotifyApiTrack } from "./SpotifyApiClient.js";
 
-export function mapSpotifyTrackToGameCard(
-  track: SpotifyApiTrack,
-): GameTrackCard | null {
+export function mapSpotifyTrackToGameCard(track: SpotifyApiTrack): GameTrackCard | null {
   if (!track.id || !track.name || !track.album?.release_date) {
     return null;
   }
@@ -26,6 +24,8 @@ export function mapSpotifyTrackToGameCard(
     artist: primaryArtist,
     albumTitle: track.album.name,
     releaseYear,
+    sourceReleaseYear: releaseYear,
+    metadataStatus: "imported",
     ...(artworkUrl ? { artworkUrl } : {}),
     ...(track.preview_url ? { previewUrl: track.preview_url } : {}),
     spotifyTrackUri: track.uri,

@@ -29,6 +29,7 @@ import type {
   SpotifyAccountType,
   StartGamePayloadParsed,
   TransferHostPayloadParsed,
+  UpdatePlaylistTrackPayloadParsed,
   UpdatePlayerProfilePayloadParsed,
   UpdatePlayerSettingsPayloadParsed,
   UpdateRoomSettingsPayloadParsed,
@@ -59,16 +60,11 @@ export class RoomService {
     private readonly playlistImportService: PlaylistImportService,
   ) {}
 
-  public setRoomStateChangedListener(
-    listener: (roomState: PublicRoomState) => void,
-  ): void {
+  public setRoomStateChangedListener(listener: (roomState: PublicRoomState) => void): void {
     this.roomRegistry.setRoomStateChangedListener(listener);
   }
 
-  public joinRoom(
-    joinRoomPayload: JoinRoomPayloadParsed,
-    socketId: string,
-  ): JoinRoomResult {
+  public joinRoom(joinRoomPayload: JoinRoomPayloadParsed, socketId: string): JoinRoomResult {
     const result = this.roomRegistry.addPlayerToRoom(
       joinRoomPayload.roomId,
       joinRoomPayload.displayName,
@@ -76,16 +72,18 @@ export class RoomService {
       joinRoomPayload.sessionId,
     );
     logger.info(
-      { roomId: result.roomState.roomId, playerId: result.playerId, displayName: joinRoomPayload.displayName, playerCount: result.roomState.players.length },
+      {
+        roomId: result.roomState.roomId,
+        playerId: result.playerId,
+        displayName: joinRoomPayload.displayName,
+        playerCount: result.roomState.players.length,
+      },
       "player joined room",
     );
     return result;
   }
 
-  public createRoom(
-    createRoomPayload: CreateRoomPayloadParsed,
-    socketId: string,
-  ): JoinRoomResult {
+  public createRoom(createRoomPayload: CreateRoomPayloadParsed, socketId: string): JoinRoomResult {
     const result = this.roomRegistry.createRoom(
       createRoomPayload.roomId,
       createRoomPayload.displayName,
@@ -93,7 +91,11 @@ export class RoomService {
       createRoomPayload.sessionId,
     );
     logger.info(
-      { roomId: result.roomState.roomId, playerId: result.playerId, displayName: createRoomPayload.displayName },
+      {
+        roomId: result.roomState.roomId,
+        playerId: result.playerId,
+        displayName: createRoomPayload.displayName,
+      },
       "room created",
     );
     return result;
@@ -103,9 +105,7 @@ export class RoomService {
     return this.roomRegistry.listRoomSummaries();
   }
 
-  public getRoomPreview(
-    payload: GetRoomPreviewPayloadParsed,
-  ): PublicRoomSummary | null {
+  public getRoomPreview(payload: GetRoomPreviewPayloadParsed): PublicRoomSummary | null {
     return this.roomRegistry.getRoomSummary(payload.roomId);
   }
 
@@ -140,26 +140,17 @@ export class RoomService {
     updatePlayerSettingsPayload: UpdatePlayerSettingsPayloadParsed,
     socketId: string,
   ): PublicRoomState {
-    return this.roomRegistry.updatePlayerSettings(
-      socketId,
-      updatePlayerSettingsPayload,
-    );
+    return this.roomRegistry.updatePlayerSettings(socketId, updatePlayerSettingsPayload);
   }
 
   public updatePlayerProfile(
     updatePlayerProfilePayload: UpdatePlayerProfilePayloadParsed,
     socketId: string,
   ): PublicRoomState {
-    return this.roomRegistry.updatePlayerProfile(
-      socketId,
-      updatePlayerProfilePayload,
-    );
+    return this.roomRegistry.updatePlayerProfile(socketId, updatePlayerProfilePayload);
   }
 
-  public awardTt(
-    awardTtPayload: AwardTtPayloadParsed,
-    socketId: string,
-  ): PublicRoomState {
+  public awardTt(awardTtPayload: AwardTtPayloadParsed, socketId: string): PublicRoomState {
     return this.roomRegistry.awardTt(socketId, awardTtPayload);
   }
 
@@ -174,27 +165,26 @@ export class RoomService {
     buyTimelineCardWithTtPayload: BuyTimelineCardWithTtPayloadParsed,
     socketId: string,
   ): PublicRoomState {
-    return this.roomRegistry.buyTimelineCardWithTt(
-      socketId,
-      buyTimelineCardWithTtPayload,
-    );
+    return this.roomRegistry.buyTimelineCardWithTt(socketId, buyTimelineCardWithTtPayload);
   }
 
   public removePlayer(socketId: string): PublicRoomState | null {
     const roomState = this.roomRegistry.removePlayerBySocketId(socketId);
     if (roomState) {
       logger.info(
-        { socketId, roomId: roomState.roomId, playerCount: roomState.players.length, gameStatus: roomState.status },
+        {
+          socketId,
+          roomId: roomState.roomId,
+          playerCount: roomState.players.length,
+          gameStatus: roomState.status,
+        },
         "player left room",
       );
     }
     return roomState;
   }
 
-  public startGame(
-    startGamePayload: StartGamePayloadParsed,
-    socketId: string,
-  ): PublicRoomState {
+  public startGame(startGamePayload: StartGamePayloadParsed, socketId: string): PublicRoomState {
     const importedDeck = this.roomRegistry.getImportedDeck(startGamePayload.roomId);
     const deck = importedDeck
       ? this.deckService.createShuffledDeckFromCards(importedDeck)
@@ -202,7 +192,12 @@ export class RoomService {
 
     const roomState = this.roomRegistry.startGame(socketId, startGamePayload, deck);
     logger.info(
-      { roomId: startGamePayload.roomId, deckSize: deck.length, usingImportedDeck: !!importedDeck, playerCount: roomState.players.length },
+      {
+        roomId: startGamePayload.roomId,
+        deckSize: deck.length,
+        usingImportedDeck: !!importedDeck,
+        playerCount: roomState.players.length,
+      },
       "game started",
     );
     return roomState;
@@ -222,14 +217,15 @@ export class RoomService {
     return this.roomRegistry.kickPlayer(socketId, kickPlayerPayload);
   }
 
-  public placeCard(
-    placeCardPayload: PlaceCardPayloadParsed,
-    socketId: string,
-  ): PublicRoomState {
+  public placeCard(placeCardPayload: PlaceCardPayloadParsed, socketId: string): PublicRoomState {
     const roomState = this.roomRegistry.placeCard(socketId, placeCardPayload);
     if (roomState.status === "challenge") {
       logger.info(
-        { roomId: roomState.roomId, turnNumber: roomState.turn?.turnNumber, activePlayerId: roomState.turn?.activePlayerId },
+        {
+          roomId: roomState.roomId,
+          turnNumber: roomState.turn?.turnNumber,
+          activePlayerId: roomState.turn?.activePlayerId,
+        },
         "challenge window opened",
       );
     }
@@ -254,10 +250,7 @@ export class RoomService {
     resolveChallengeWindowPayload: ResolveChallengeWindowPayloadParsed,
     socketId: string,
   ): PublicRoomState {
-    return this.roomRegistry.resolveChallengeWindow(
-      socketId,
-      resolveChallengeWindowPayload,
-    );
+    return this.roomRegistry.resolveChallengeWindow(socketId, resolveChallengeWindowPayload);
   }
 
   public confirmReveal(
@@ -266,27 +259,28 @@ export class RoomService {
   ): PublicRoomState {
     const roomState = this.roomRegistry.confirmReveal(socketId, confirmRevealPayload);
     if (roomState.winnerPlayerId) {
-      logger.info({ roomId: roomState.roomId, winnerPlayerId: roomState.winnerPlayerId }, "game won");
+      logger.info(
+        { roomId: roomState.roomId, winnerPlayerId: roomState.winnerPlayerId },
+        "game won",
+      );
     } else if (roomState.status === "turn") {
       logger.info(
-        { roomId: roomState.roomId, turnNumber: roomState.turn?.turnNumber, activePlayerId: roomState.turn?.activePlayerId },
+        {
+          roomId: roomState.roomId,
+          turnNumber: roomState.turn?.turnNumber,
+          activePlayerId: roomState.turn?.activePlayerId,
+        },
         "next turn",
       );
     }
     return roomState;
   }
 
-  public skipTurn(
-    skipTurnPayload: SkipTurnPayloadParsed,
-    socketId: string,
-  ): PublicRoomState {
+  public skipTurn(skipTurnPayload: SkipTurnPayloadParsed, socketId: string): PublicRoomState {
     return this.roomRegistry.skipTurn(socketId, skipTurnPayload);
   }
 
-  public closeRoom(
-    closeRoomPayload: CloseRoomPayloadParsed,
-    socketId: string,
-  ): string {
+  public closeRoom(closeRoomPayload: CloseRoomPayloadParsed, socketId: string): string {
     this.spotifyAuthService.clearHostTokens(closeRoomPayload.roomId);
     const roomId = this.roomRegistry.closeRoom(socketId, closeRoomPayload);
     logger.info({ roomId, socketId }, "room closed");
@@ -354,9 +348,24 @@ export class RoomService {
       payload.trackIds,
     );
     logger.info(
-      { roomId: payload.roomId, removedCount: payload.trackIds.length, remainingCount: roomState.settings.importedTrackCount },
+      {
+        roomId: payload.roomId,
+        removedCount: payload.trackIds.length,
+        remainingCount: roomState.settings.importedTrackCount,
+      },
       "playlist tracks removed",
     );
+    const deck = this.roomRegistry.getImportedDeck(payload.roomId);
+    const tracks = (deck ?? []).map(cardToPublicTrackInfo);
+    return { roomState, tracks };
+  }
+
+  public updatePlaylistTrack(
+    payload: UpdatePlaylistTrackPayloadParsed,
+    socketId: string,
+  ): { roomState: PublicRoomState; tracks: PublicTrackInfo[] } {
+    const roomState = this.roomRegistry.updateImportedDeckTrack(socketId, payload);
+    logger.info({ roomId: payload.roomId, trackId: payload.trackId }, "playlist track updated");
     const deck = this.roomRegistry.getImportedDeck(payload.roomId);
     const tracks = (deck ?? []).map(cardToPublicTrackInfo);
     return { roomState, tracks };
@@ -377,13 +386,24 @@ export class RoomService {
   }
 }
 
-function cardToPublicTrackInfo(card: { id: string; title: string; artist: string; albumTitle: string; releaseYear: number; artworkUrl?: string }): PublicTrackInfo {
+function cardToPublicTrackInfo(card: {
+  id: string;
+  title: string;
+  artist: string;
+  albumTitle: string;
+  releaseYear: number;
+  sourceReleaseYear?: number;
+  metadataStatus?: "imported" | "edited" | "verified";
+  artworkUrl?: string;
+}): PublicTrackInfo {
   return {
     id: card.id,
     title: card.title,
     artist: card.artist,
     albumTitle: card.albumTitle,
     releaseYear: card.releaseYear,
+    sourceReleaseYear: card.sourceReleaseYear ?? card.releaseYear,
+    metadataStatus: card.metadataStatus ?? "imported",
     ...(card.artworkUrl ? { artworkUrl: card.artworkUrl } : {}),
   };
 }

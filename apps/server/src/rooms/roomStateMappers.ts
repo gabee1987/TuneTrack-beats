@@ -22,9 +22,7 @@ export function mapGameStateToPublicRoomState(
     ...currentRoomState,
     status: gameState.phase,
     players: currentRoomState.players.map((player) => {
-      const nextPlayer = gameState.players.find(
-        (gamePlayer) => gamePlayer.id === player.id,
-      );
+      const nextPlayer = gameState.players.find((gamePlayer) => gamePlayer.id === player.id);
 
       return nextPlayer
         ? {
@@ -65,9 +63,7 @@ export function mapGameStateToPublicRoomState(
   };
 }
 
-export function createTrackCardMap(
-  deckCards: GameTrackCard[],
-): Map<string, GameTrackCard> {
+export function createTrackCardMap(deckCards: GameTrackCard[]): Map<string, GameTrackCard> {
   return new Map(deckCards.map((card) => [card.id, { ...card }]));
 }
 
@@ -94,10 +90,7 @@ function mapRevealStateToPublicRevealState(
 
   return {
     playerId: revealState.playerId,
-    placedCard: mapTimelineCardToPublicTimelineCard(
-      revealState.placedCard,
-      trackCardsById,
-    ),
+    placedCard: mapTimelineCardToPublicTimelineCard(revealState.placedCard, trackCardsById),
     selectedSlotIndex: revealState.selectedSlotIndex,
     wasCorrect: revealState.wasCorrect,
     revealType: revealState.revealType,
@@ -117,10 +110,7 @@ function mapRevealStateToPublicGameHistoryEntry(
 ): PublicGameHistoryEntry {
   return {
     playerId: revealState.playerId,
-    placedCard: mapTimelineCardToPublicTimelineCard(
-      revealState.placedCard,
-      trackCardsById,
-    ),
+    placedCard: mapTimelineCardToPublicTimelineCard(revealState.placedCard, trackCardsById),
     selectedSlotIndex: revealState.selectedSlotIndex,
     wasCorrect: revealState.wasCorrect,
     revealType: revealState.revealType,
@@ -152,10 +142,13 @@ function mapTrackCardToPublicTrackCard(trackCard: GameTrackCard): TrackCardPubli
     artist: trackCard.artist,
     albumTitle: trackCard.albumTitle,
     releaseYear: trackCard.releaseYear,
+    ...(trackCard.sourceReleaseYear !== undefined
+      ? { sourceReleaseYear: trackCard.sourceReleaseYear }
+      : {}),
+    ...(trackCard.metadataStatus ? { metadataStatus: trackCard.metadataStatus } : {}),
     ...(trackCard.genre ? { genre: trackCard.genre } : {}),
     ...(trackCard.artworkUrl ? { artworkUrl: trackCard.artworkUrl } : {}),
     ...(trackCard.previewUrl ? { previewUrl: trackCard.previewUrl } : {}),
     ...(trackCard.spotifyTrackUri ? { spotifyTrackUri: trackCard.spotifyTrackUri } : {}),
   };
 }
-

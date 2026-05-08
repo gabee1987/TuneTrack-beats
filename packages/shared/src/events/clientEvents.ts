@@ -1,6 +1,7 @@
 import type { RevealConfirmMode } from "../game/roomSettings.js";
 import type { RoomId } from "../game/roomState.js";
 import type { PlayerId } from "../game/player.js";
+import type { TrackMetadataStatus } from "../game/track.js";
 
 export const ClientToServerEvent = {
   AwardTt: "award_tt",
@@ -28,6 +29,7 @@ export const ClientToServerEvent = {
   TransferHost: "transfer_host",
   UpdatePlayerProfile: "update_player_profile",
   UpdatePlayerSettings: "update_player_settings",
+  UpdatePlaylistTrack: "update_playlist_track",
   UpdateRoomSettings: "update_room_settings",
 } as const;
 
@@ -151,4 +153,14 @@ export interface GetPlaylistTracksPayload {
 export interface RemovePlaylistTracksPayload {
   roomId: RoomId;
   trackIds: string[];
+}
+
+export interface UpdatePlaylistTrackPayload {
+  roomId: RoomId;
+  trackId: string;
+  title?: string;
+  artist?: string;
+  albumTitle?: string;
+  releaseYear?: number;
+  metadataStatus?: TrackMetadataStatus;
 }

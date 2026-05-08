@@ -1,17 +1,22 @@
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
-import { useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
 import type { PublicTrackInfo } from "@tunetrack/shared";
+import { motion, useReducedMotion } from "framer-motion";
+import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useI18n } from "../../../features/i18n";
 import { createFadeMotion, createStandardTransition } from "../../../features/motion";
-import { usePlaylistEditor } from "../hooks/usePlaylistEditor";
+import { ActionButton } from "../../../features/ui/ActionButton";
+import { CloseIconButton } from "../../../features/ui/CloseIconButton";
+import { usePlaylistEditor, type SortField } from "../hooks/usePlaylistEditor";
+import { PlaylistTrackDetailsSheet } from "./PlaylistTrackDetailsSheet";
+import { PlaylistTrackList } from "./PlaylistTrackList";
 import styles from "./PlaylistEditModal.module.css";
 
 interface PlaylistEditModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+const SORT_FIELDS: SortField[] = ["title", "artist", "year"];
 
 function createSheetMotion(reduceMotion: boolean) {
   if (reduceMotion) {
@@ -27,6 +32,7 @@ function createSheetMotion(reduceMotion: boolean) {
 export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
   const { t } = useI18n();
   const reduceMotion = useReducedMotion() ?? false;
+  const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
 
   const {
     isLoading,
@@ -40,15 +46,13 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
     toggleSort,
     toggleSelection,
     tracks,
+    updateTrack,
   } = usePlaylistEditor(isOpen);
 
-  const listRef = useRef<HTMLDivElement>(null);
-  const rowVirtualizer = useVirtualizer({
-    count: tracks.length,
-    getScrollElement: () => listRef.current,
-    estimateSize: () => 68,
-    overscan: 10,
-  });
+  const selectedTrack = useMemo(
+    () => tracks.find((track) => track.id === selectedTrackId) ?? null,
+    [selectedTrackId, tracks],
+  );
 
   const portalTarget = typeof document !== "undefined" ? document.body : null;
   if (!portalTarget) return null;
@@ -69,7 +73,7 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
         aria-modal="true"
         className={styles.sheet}
         initial={false}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
         role="dialog"
         transition={createStandardTransition(reduceMotion)}
         variants={createSheetMotion(reduceMotion)}
@@ -85,47 +89,23 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
           </div>
           <div className={styles.headerActions}>
             {tracks.length > 0 && (
-              <button
+              <ActionButton
                 className={`${styles.selectBtn} ${isSelectMode ? styles.selectBtnActive : ""}`}
                 onClick={() => {
+                  setSelectedTrackId(null);
                   setSelectMode(!isSelectMode);
                 }}
                 type="button"
+                variant="neutral"
               >
                 {isSelectMode ? t("lobby.playlist.done") : t("lobby.playlist.select")}
-              </button>
+              </ActionButton>
             )}
-            <button
-              aria-label={t("lobby.playlist.close")}
-              className={styles.closeBtn}
-              onClick={onClose}
-              type="button"
-            >
-              <CloseIcon />
-            </button>
+            <CloseIconButton ariaLabel={t("lobby.playlist.close")} onClick={onClose} />
           </div>
         </div>
 
-        <div className={styles.sortBar}>
-          <span className={styles.sortLabel}>{t("lobby.playlist.sort")}</span>
-          {(["title", "artist", "year"] as const).map((field) => (
-            <button
-              key={field}
-              className={`${styles.sortChip} ${sortField === field ? styles.sortChipActive : ""}`}
-              onClick={() => toggleSort(field)}
-              type="button"
-            >
-              {field === "title"
-                ? t("lobby.playlist.sortTitle")
-                : field === "artist"
-                  ? t("lobby.playlist.sortArtist")
-                  : t("lobby.playlist.sortYear")}
-              {sortField === field && (
-                <span className={styles.sortArrow}>{sortDir === "asc" ? "↑" : "↓"}</span>
-              )}
-            </button>
-          ))}
-        </div>
+        <PlaylistSortBar activeField={sortField} direction={sortDir} onToggleSort={toggleSort} />
 
         {isLoading ? (
           <div className={styles.loadingState}>
@@ -135,36 +115,14 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
         ) : tracks.length === 0 ? (
           <div className={styles.emptyState}>{t("lobby.playlist.empty")}</div>
         ) : (
-          <div className={styles.listScrollArea} ref={listRef}>
-            <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: "relative" }}>
-              {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-                const track = tracks[virtualItem.index];
-                if (!track) return null;
-                return (
-                  <div
-                    key={virtualItem.key}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      height: `${virtualItem.size}px`,
-                      transform: `translateY(${virtualItem.start}px)`,
-                    }}
-                  >
-                    <TrackRow
-                      key={track.id}
-                      isSelectMode={isSelectMode}
-                      isSelected={selectedIds.has(track.id)}
-                      onRemove={removeTrack}
-                      onToggleSelect={toggleSelection}
-                      track={track}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <PlaylistTrackList
+            isSelectMode={isSelectMode}
+            onOpenTrack={(track) => setSelectedTrackId(track.id)}
+            onRemoveTrack={removeTrack}
+            onToggleSelection={toggleSelection}
+            selectedIds={selectedIds}
+            tracks={tracks}
+          />
         )}
 
         {isSelectMode && selectedIds.size > 0 && (
@@ -172,180 +130,62 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
             <span className={styles.batchCount}>
               {t("lobby.playlist.selected", { count: selectedIds.size })}
             </span>
-            <button className={styles.batchDeleteBtn} onClick={removeSelected} type="button">
+            <ActionButton
+              className={styles.batchDeleteBtn}
+              onClick={removeSelected}
+              type="button"
+              variant="danger"
+            >
               {t("lobby.playlist.remove", { count: selectedIds.size })}
-            </button>
+            </ActionButton>
           </div>
         )}
+
+        <PlaylistTrackDetailsSheet
+          onClose={() => setSelectedTrackId(null)}
+          onSave={updateTrack}
+          track={selectedTrack}
+        />
       </motion.div>
     </motion.div>,
     portalTarget,
   );
 }
 
-const SWIPE_THRESHOLD = 68;
-const SWIPE_REVEAL_WIDTH = 80;
-
-interface TrackRowProps {
-  isSelectMode: boolean;
-  isSelected: boolean;
-  onRemove: (trackId: string) => void;
-  onToggleSelect: (trackId: string) => void;
-  track: PublicTrackInfo;
+interface PlaylistSortBarProps {
+  activeField: SortField | null;
+  direction: "asc" | "desc";
+  onToggleSort: (field: SortField) => void;
 }
 
-function TrackRow({ isSelectMode, isSelected, onRemove, onToggleSelect, track }: TrackRowProps) {
-  const x = useMotionValue(0);
-  // Zone width grows as you swipe: right edge pinned, left edge extends leftward
-  const zoneWidth = useMotionValue(0);
-  const zoneOpacity = useMotionValue(1);
-  // Icon fades in + scales up once the zone is wide enough to show it
-  const iconOpacity = useTransform(zoneWidth, [0, 40, SWIPE_REVEAL_WIDTH], [0, 0, 1]);
-  const iconScale = useTransform(zoneWidth, [40, SWIPE_REVEAL_WIDTH], [0.6, 1]);
-  const isRemoving = useRef(false);
-
-  // Keep zone width in sync with drag position
-  useEffect(() => {
-    return x.on("change", (v) => {
-      if (!isRemoving.current) {
-        zoneWidth.set(Math.max(0, -v));
-      }
-    });
-  }, [x, zoneWidth]);
-
-  async function handleDragEnd(_: unknown, info: { offset: { x: number } }) {
-    if (isRemoving.current) return;
-    if (info.offset.x < -SWIPE_THRESHOLD) {
-      isRemoving.current = true;
-      await Promise.all([
-        animate(x, -600, { duration: 0.2, ease: [0.4, 0, 1, 1] }),
-        animate(zoneOpacity, 0, { duration: 0.18 }),
-      ]);
-      onRemove(track.id);
-    } else {
-      void animate(x, 0, { type: "spring", stiffness: 500, damping: 38 });
-    }
-  }
-
-  if (isSelectMode) {
-    return (
-      <button
-        className={`${styles.trackSelectRow} ${isSelected ? styles.trackRowSelected : ""}`}
-        onClick={() => onToggleSelect(track.id)}
-        type="button"
-      >
-        <div className={`${styles.checkbox} ${isSelected ? styles.checkboxChecked : ""}`}>
-          {isSelected && <CheckIcon />}
-        </div>
-        <TrackContent track={track} />
-      </button>
-    );
-  }
+function PlaylistSortBar({ activeField, direction, onToggleSort }: PlaylistSortBarProps) {
+  const { t } = useI18n();
 
   return (
-    <div className={styles.trackRowWrapper}>
-      <motion.div className={styles.deleteZone} style={{ width: zoneWidth, opacity: zoneOpacity }}>
-        <motion.div style={{ opacity: iconOpacity, scale: iconScale }}>
-          <TrashIcon />
-        </motion.div>
-      </motion.div>
-      <motion.div
-        className={styles.trackRow}
-        drag="x"
-        dragConstraints={{ left: -SWIPE_REVEAL_WIDTH, right: 0 }}
-        dragElastic={{ left: 0.18, right: 0 }}
-        onDragEnd={handleDragEnd}
-        style={{ x, cursor: "grab" }}
-        whileTap={{ cursor: "grabbing" }}
-      >
-        <TrackContent track={track} />
-      </motion.div>
+    <div className={styles.sortBar}>
+      <span className={styles.sortLabel}>{t("lobby.playlist.sort")}</span>
+      {SORT_FIELDS.map((field) => (
+        <button
+          key={field}
+          className={`${styles.sortChip} ${activeField === field ? styles.sortChipActive : ""}`}
+          onClick={() => onToggleSort(field)}
+          type="button"
+        >
+          {getSortLabel(t, field)}
+          {activeField === field && (
+            <span className={styles.sortArrow}>{direction === "asc" ? "↑" : "↓"}</span>
+          )}
+        </button>
+      ))}
     </div>
   );
 }
 
-function TrackContent({ track }: { track: PublicTrackInfo }) {
-  return (
-    <>
-      <div className={styles.trackArtwork}>
-        {track.artworkUrl ? (
-          <img alt="" className={styles.trackArtworkImg} src={track.artworkUrl} />
-        ) : (
-          <MusicNoteIcon />
-        )}
-      </div>
-      <div className={styles.trackInfo}>
-        <span className={styles.trackTitle}>{track.title}</span>
-        <span className={styles.trackMeta}>
-          {track.artist}
-          {" · "}
-          {track.releaseYear}
-        </span>
-      </div>
-    </>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      height={18}
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2.5}
-      viewBox="0 0 24 24"
-      width={18}
-    >
-      <path d="M18 6 6 18M6 6l12 12" />
-    </svg>
-  );
-}
-
-function TrashIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      height={20}
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      viewBox="0 0 24 24"
-      width={20}
-    >
-      <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      height={13}
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={3}
-      viewBox="0 0 24 24"
-      width={13}
-    >
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  );
-}
-
-function MusicNoteIcon() {
-  return (
-    <svg aria-hidden="true" fill="currentColor" height={18} viewBox="0 0 24 24" width={18}>
-      <path d="M9 18V5l12-2v13" />
-      <circle cx="6" cy="18" r="3" />
-      <circle cx="18" cy="16" r="3" />
-    </svg>
-  );
+function getSortLabel(
+  t: (key: string, params?: Record<string, string | number>) => string,
+  field: SortField,
+): string {
+  if (field === "artist") return t("lobby.playlist.sortArtist");
+  if (field === "year") return t("lobby.playlist.sortYear");
+  return t("lobby.playlist.sortTitle");
 }

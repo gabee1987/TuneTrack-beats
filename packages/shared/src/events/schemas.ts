@@ -18,6 +18,7 @@ import {
   ROOM_CODE_MIN_LENGTH,
 } from "../constants/gameplay.js";
 import type { RevealConfirmMode } from "../game/roomSettings.js";
+import type { TrackMetadataStatus } from "../game/track.js";
 
 const roomIdSchema = z
   .string()
@@ -30,6 +31,12 @@ const revealConfirmModeSchema = z.enum([
   "host_only",
   "host_or_active_player",
 ]) satisfies z.ZodType<RevealConfirmMode>;
+
+const trackMetadataStatusSchema = z.enum([
+  "imported",
+  "edited",
+  "verified",
+]) satisfies z.ZodType<TrackMetadataStatus>;
 
 export const joinRoomPayloadSchema = z.object({
   roomId: roomIdSchema,
@@ -102,7 +109,12 @@ export const updatePlayerProfilePayloadSchema = z.object({
 export const awardTtPayloadSchema = z.object({
   roomId: roomIdSchema,
   playerId: z.string().trim().min(1),
-  amount: z.number().int().min(-5).max(5).refine((amount) => amount !== 0),
+  amount: z
+    .number()
+    .int()
+    .min(-5)
+    .max(5)
+    .refine((amount) => amount !== 0),
 });
 
 export const startGamePayloadSchema = z.object({
@@ -176,25 +188,13 @@ export type CreateRoomPayloadInput = z.input<typeof createRoomPayloadSchema>;
 export type CreateRoomPayloadParsed = z.output<typeof createRoomPayloadSchema>;
 export type GetRoomPreviewPayloadInput = z.input<typeof getRoomPreviewPayloadSchema>;
 export type GetRoomPreviewPayloadParsed = z.output<typeof getRoomPreviewPayloadSchema>;
-export type UpdateRoomSettingsPayloadInput = z.input<
-  typeof updateRoomSettingsPayloadSchema
->;
-export type UpdateRoomSettingsPayloadParsed = z.output<
-  typeof updateRoomSettingsPayloadSchema
->;
+export type UpdateRoomSettingsPayloadInput = z.input<typeof updateRoomSettingsPayloadSchema>;
+export type UpdateRoomSettingsPayloadParsed = z.output<typeof updateRoomSettingsPayloadSchema>;
 export type RenameRoomPayloadParsed = z.output<typeof renameRoomPayloadSchema>;
-export type UpdatePlayerSettingsPayloadInput = z.input<
-  typeof updatePlayerSettingsPayloadSchema
->;
-export type UpdatePlayerSettingsPayloadParsed = z.output<
-  typeof updatePlayerSettingsPayloadSchema
->;
-export type UpdatePlayerProfilePayloadInput = z.input<
-  typeof updatePlayerProfilePayloadSchema
->;
-export type UpdatePlayerProfilePayloadParsed = z.output<
-  typeof updatePlayerProfilePayloadSchema
->;
+export type UpdatePlayerSettingsPayloadInput = z.input<typeof updatePlayerSettingsPayloadSchema>;
+export type UpdatePlayerSettingsPayloadParsed = z.output<typeof updatePlayerSettingsPayloadSchema>;
+export type UpdatePlayerProfilePayloadInput = z.input<typeof updatePlayerProfilePayloadSchema>;
+export type UpdatePlayerProfilePayloadParsed = z.output<typeof updatePlayerProfilePayloadSchema>;
 export type AwardTtPayloadInput = z.input<typeof awardTtPayloadSchema>;
 export type AwardTtPayloadParsed = z.output<typeof awardTtPayloadSchema>;
 export type StartGamePayloadInput = z.input<typeof startGamePayloadSchema>;
@@ -206,38 +206,22 @@ export type KickPlayerPayloadParsed = z.output<typeof kickPlayerPayloadSchema>;
 export type PlaceCardPayloadInput = z.input<typeof placeCardPayloadSchema>;
 export type PlaceCardPayloadParsed = z.output<typeof placeCardPayloadSchema>;
 export type ConfirmRevealPayloadInput = z.input<typeof confirmRevealPayloadSchema>;
-export type ConfirmRevealPayloadParsed = z.output<
-  typeof confirmRevealPayloadSchema
->;
+export type ConfirmRevealPayloadParsed = z.output<typeof confirmRevealPayloadSchema>;
 export type CloseRoomPayloadInput = z.input<typeof closeRoomPayloadSchema>;
 export type CloseRoomPayloadParsed = z.output<typeof closeRoomPayloadSchema>;
-export type ClaimChallengePayloadInput = z.input<
-  typeof claimChallengePayloadSchema
->;
-export type ClaimChallengePayloadParsed = z.output<
-  typeof claimChallengePayloadSchema
->;
-export type PlaceChallengePayloadInput = z.input<
-  typeof placeChallengePayloadSchema
->;
-export type PlaceChallengePayloadParsed = z.output<
-  typeof placeChallengePayloadSchema
->;
+export type ClaimChallengePayloadInput = z.input<typeof claimChallengePayloadSchema>;
+export type ClaimChallengePayloadParsed = z.output<typeof claimChallengePayloadSchema>;
+export type PlaceChallengePayloadInput = z.input<typeof placeChallengePayloadSchema>;
+export type PlaceChallengePayloadParsed = z.output<typeof placeChallengePayloadSchema>;
 export type ResolveChallengeWindowPayloadInput = z.input<
   typeof resolveChallengeWindowPayloadSchema
 >;
 export type ResolveChallengeWindowPayloadParsed = z.output<
   typeof resolveChallengeWindowPayloadSchema
 >;
-export type SkipTrackWithTtPayloadInput = z.input<
-  typeof skipTrackWithTtPayloadSchema
->;
-export type SkipTrackWithTtPayloadParsed = z.output<
-  typeof skipTrackWithTtPayloadSchema
->;
-export type BuyTimelineCardWithTtPayloadInput = z.input<
-  typeof buyTimelineCardWithTtPayloadSchema
->;
+export type SkipTrackWithTtPayloadInput = z.input<typeof skipTrackWithTtPayloadSchema>;
+export type SkipTrackWithTtPayloadParsed = z.output<typeof skipTrackWithTtPayloadSchema>;
+export type BuyTimelineCardWithTtPayloadInput = z.input<typeof buyTimelineCardWithTtPayloadSchema>;
 export type BuyTimelineCardWithTtPayloadParsed = z.output<
   typeof buyTimelineCardWithTtPayloadSchema
 >;
@@ -248,7 +232,9 @@ export type ImportPlaylistPayloadInput = z.input<typeof importPlaylistPayloadSch
 export type ImportPlaylistPayloadParsed = z.output<typeof importPlaylistPayloadSchema>;
 
 export type RequestSpotifyAuthUrlPayloadInput = z.input<typeof requestSpotifyAuthUrlPayloadSchema>;
-export type RequestSpotifyAuthUrlPayloadParsed = z.output<typeof requestSpotifyAuthUrlPayloadSchema>;
+export type RequestSpotifyAuthUrlPayloadParsed = z.output<
+  typeof requestSpotifyAuthUrlPayloadSchema
+>;
 
 export type RefreshSpotifyTokenPayloadInput = z.input<typeof refreshSpotifyTokenPayloadSchema>;
 export type RefreshSpotifyTokenPayloadParsed = z.output<typeof refreshSpotifyTokenPayloadSchema>;
@@ -262,5 +248,30 @@ export const removePlaylistTracksPayloadSchema = z.object({
   trackIds: z.array(z.string().trim().min(1)).min(1).max(500),
 });
 
+export const updatePlaylistTrackPayloadSchema = z
+  .object({
+    roomId: roomIdSchema,
+    trackId: z.string().trim().min(1),
+    title: z.string().trim().min(1).max(200).optional(),
+    artist: z.string().trim().min(1).max(200).optional(),
+    albumTitle: z.string().trim().min(1).max(200).optional(),
+    releaseYear: z
+      .number()
+      .int()
+      .min(1900)
+      .max(new Date().getFullYear() + 1)
+      .optional(),
+    metadataStatus: trackMetadataStatusSchema.optional(),
+  })
+  .refine(
+    (payload) =>
+      payload.title !== undefined ||
+      payload.artist !== undefined ||
+      payload.albumTitle !== undefined ||
+      payload.releaseYear !== undefined ||
+      payload.metadataStatus !== undefined,
+  );
+
 export type GetPlaylistTracksPayloadParsed = z.output<typeof getPlaylistTracksPayloadSchema>;
 export type RemovePlaylistTracksPayloadParsed = z.output<typeof removePlaylistTracksPayloadSchema>;
+export type UpdatePlaylistTrackPayloadParsed = z.output<typeof updatePlaylistTrackPayloadSchema>;

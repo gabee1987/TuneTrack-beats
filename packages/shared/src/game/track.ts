@@ -1,4 +1,5 @@
 export type TrackId = string;
+export type TrackMetadataStatus = "imported" | "edited" | "verified";
 
 export interface TrackCardPublic {
   id: TrackId;
@@ -6,6 +7,8 @@ export interface TrackCardPublic {
   artist: string;
   albumTitle: string;
   releaseYear?: number;
+  sourceReleaseYear?: number;
+  metadataStatus?: TrackMetadataStatus;
   genre?: string;
   artworkUrl?: string;
   previewUrl?: string;
