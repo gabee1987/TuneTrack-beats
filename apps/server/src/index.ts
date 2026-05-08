@@ -1,5 +1,6 @@
 import { createHttpServer } from "./app/createHttpServer.js";
 import { createSocketServer } from "./app/createSocketServer.js";
+import { logAuditEvent } from "./app/auditLogger.js";
 import { env } from "./app/env.js";
 import { logger } from "./app/logger.js";
 import { DeckService } from "./decks/DeckService.js";
@@ -39,4 +40,14 @@ httpServer.listen(env.PORT, () => {
     },
     "TuneTrack server is running",
   );
+  logAuditEvent({
+    auditKind: "server",
+    action: "server_started",
+    outcome: "succeeded",
+    meta: {
+      axiomConfigured: Boolean(env.AXIOM_TOKEN && env.AXIOM_DATASET),
+      eventAuditEnabled: env.ENABLE_EVENT_AUDIT,
+      logLevel: env.LOG_LEVEL ?? (env.NODE_ENV === "development" ? "debug" : "info"),
+    },
+  });
 });

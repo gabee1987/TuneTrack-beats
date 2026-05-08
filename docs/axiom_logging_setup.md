@@ -26,7 +26,7 @@ Useful fields:
 - `service`: `tunetrack-server`
 - `testRunId`: manually configured test session label
 - `time`: ISO timestamp
-- `auditKind`: `realtime`, `spotify_auth`, or `spotify_import`
+- `auditKind`: `server`, `realtime`, `spotify_auth`, or `spotify_import`
 - `eventName`: socket event name
 - `action`: backend audit action name
 - `outcome`: `received`, `emitted`, `broadcast`, or `rejected`
@@ -64,6 +64,12 @@ tunetrack-server
 6. Copy the token. You will add it to Railway as `AXIOM_TOKEN`.
 
 The backend sends events to:
+
+```text
+https://api.axiom.co/v1/datasets/<AXIOM_DATASET>/ingest
+```
+
+If that endpoint fails, the backend also tries the edge ingest endpoint:
 
 ```text
 https://api.axiom.co/v1/ingest/<AXIOM_DATASET>
@@ -144,6 +150,23 @@ Full test session:
 ['tunetrack-server']
 | where testRunId == "family-test-2026-05-09"
 | sort by time asc
+```
+
+Newest events without filters:
+
+```apl
+['tunetrack-server']
+| sort by _time desc
+| limit 100
+```
+
+Server startup check:
+
+```apl
+['tunetrack-server']
+| where auditKind == "server"
+| sort by _time desc
+| limit 20
 ```
 
 Single room:
@@ -238,6 +261,7 @@ No logs in Axiom:
 3. Confirm the backend was redeployed after changing variables.
 4. Check Railway logs for `axiom_ingest_error`.
 5. Confirm the Axiom token has ingest permission for the configured dataset.
+6. Confirm the latest deployed backend includes `apps/server/src/app/axiomLogSink.ts`.
 
 Audit logs are visible in Railway but not Axiom:
 

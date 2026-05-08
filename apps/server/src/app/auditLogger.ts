@@ -5,7 +5,7 @@ import { logger } from "./logger.js";
 type AuditOutcome = "failed" | "received" | "succeeded";
 
 interface AuditEventInput {
-  auditKind: "realtime" | "spotify_auth" | "spotify_import";
+  auditKind: "realtime" | "server" | "spotify_auth" | "spotify_import";
   action: string;
   outcome: AuditOutcome;
   roomId?: string | undefined;
