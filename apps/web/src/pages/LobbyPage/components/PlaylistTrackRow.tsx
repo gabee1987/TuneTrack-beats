@@ -2,7 +2,7 @@ import type { PublicTrackInfo } from "@tunetrack/shared";
 import { animate, motion, useMotionValue, useTransform } from "framer-motion";
 import { useEffect, useRef } from "react";
 import { useI18n } from "../../../features/i18n";
-import { getPlaylistTrackCurationFlags, shouldShowSourceYear } from "../playlistMetadataFlags";
+import { getPlaylistTrackCurationFlags } from "../playlistMetadataFlags";
 import styles from "./PlaylistEditModal.module.css";
 
 const SWIPE_THRESHOLD = 68;
@@ -96,7 +96,6 @@ export function PlaylistTrackRow({
 function PlaylistTrackContent({ track }: { track: PublicTrackInfo }) {
   const { t } = useI18n();
   const flags = getPlaylistTrackCurationFlags(track);
-  const showSourceYear = shouldShowSourceYear(track);
 
   return (
     <>
@@ -113,9 +112,6 @@ function PlaylistTrackContent({ track }: { track: PublicTrackInfo }) {
           {track.artist}
           {" · "}
           {track.releaseYear}
-          {showSourceYear && track.sourceReleaseYear !== undefined
-            ? ` · ${t("lobby.playlist.sourceYearShort", { year: track.sourceReleaseYear })}`
-            : ""}
         </span>
       </div>
       <div className={styles.trackBadges}>

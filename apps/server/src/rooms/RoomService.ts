@@ -2,6 +2,7 @@ import { logger } from "../app/logger.js";
 import { DeckService } from "../decks/DeckService.js";
 import { PlaylistImportService } from "../decks/PlaylistImportService.js";
 import { SpotifyAuthService } from "../spotify/SpotifyAuthService.js";
+import type { GameTrackCard } from "@tunetrack/game-engine";
 import type {
   AwardTtPayloadParsed,
   BuyTimelineCardWithTtPayloadParsed,
@@ -13,6 +14,7 @@ import type {
   GetPlaylistTracksPayloadParsed,
   ImportPlaylistPayloadParsed,
   JoinRoomPayloadParsed,
+  LoadCuratedPlaylistPayloadParsed,
   PlaceChallengePayloadParsed,
   PlaceCardPayloadParsed,
   PublicRoomState,
@@ -309,8 +311,34 @@ export class RoomService {
         importedCount: outcome.importedCount,
         filteredCount: outcome.filteredCount,
         totalFetched: outcome.totalFetched,
+        ...(outcome.playlistName ? { playlistName: outcome.playlistName } : {}),
       },
     };
+  }
+
+  public loadCuratedPlaylist(
+    payload: LoadCuratedPlaylistPayloadParsed,
+    socketId: string,
+  ): { roomState: PublicRoomState; tracks: PublicTrackInfo[] } {
+    const deck: GameTrackCard[] = payload.tracks.map((track) => ({
+      id: track.id,
+      title: track.title,
+      artist: track.artist,
+      albumTitle: track.albumTitle,
+      releaseYear: track.releaseYear,
+      sourceReleaseYear: track.sourceReleaseYear ?? track.releaseYear,
+      metadataStatus: track.metadataStatus,
+      ...(track.artworkUrl ? { artworkUrl: track.artworkUrl } : {}),
+      ...(track.previewUrl ? { previewUrl: track.previewUrl } : {}),
+      ...(track.spotifyTrackUri ? { spotifyTrackUri: track.spotifyTrackUri } : {}),
+    }));
+
+    const roomState = this.roomRegistry.setImportedDeck(socketId, payload.roomId, deck);
+    logger.info(
+      { roomId: payload.roomId, trackCount: deck.length },
+      "curated playlist loaded",
+    );
+    return { roomState, tracks: deck.map(cardToPublicTrackInfo) };
   }
 
   public buildSpotifyAuthUrl(
@@ -395,6 +423,8 @@ function cardToPublicTrackInfo(card: {
   sourceReleaseYear?: number;
   metadataStatus?: "imported" | "edited" | "verified";
   artworkUrl?: string;
+  previewUrl?: string;
+  spotifyTrackUri?: string;
 }): PublicTrackInfo {
   return {
     id: card.id,
@@ -405,5 +435,7 @@ function cardToPublicTrackInfo(card: {
     sourceReleaseYear: card.sourceReleaseYear ?? card.releaseYear,
     metadataStatus: card.metadataStatus ?? "imported",
     ...(card.artworkUrl ? { artworkUrl: card.artworkUrl } : {}),
+    ...(card.previewUrl ? { previewUrl: card.previewUrl } : {}),
+    ...(card.spotifyTrackUri ? { spotifyTrackUri: card.spotifyTrackUri } : {}),
   };
 }

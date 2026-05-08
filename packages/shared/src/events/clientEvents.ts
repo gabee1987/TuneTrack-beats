@@ -16,6 +16,7 @@ export const ClientToServerEvent = {
   JoinRoom: "join_room",
   KickPlayer: "kick_player",
   ListRooms: "list_rooms",
+  LoadCuratedPlaylist: "load_curated_playlist",
   PlaceCard: "place_card",
   PlaceChallenge: "place_challenge",
   RefreshSpotifyToken: "refresh_spotify_token",
@@ -136,6 +137,24 @@ export interface BuyTimelineCardWithTtPayload {
 export interface ImportPlaylistPayload {
   roomId: RoomId;
   playlistUrl: string;
+}
+
+export interface CuratedPlaylistTrackPayload {
+  id: string;
+  title: string;
+  artist: string;
+  albumTitle: string;
+  releaseYear: number;
+  sourceReleaseYear?: number;
+  metadataStatus?: TrackMetadataStatus;
+  artworkUrl?: string;
+  previewUrl?: string;
+  spotifyTrackUri?: string;
+}
+
+export interface LoadCuratedPlaylistPayload {
+  roomId: RoomId;
+  tracks: CuratedPlaylistTrackPayload[];
 }
 
 export interface RequestSpotifyAuthUrlPayload {

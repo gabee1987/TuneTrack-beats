@@ -33,6 +33,7 @@ function createMockApiClient(
       token_type: "Bearer",
     }),
     getAllPlaylistTracks: vi.fn().mockResolvedValue(buildTracks(15)),
+    getPlaylistName: vi.fn().mockResolvedValue("Test Playlist"),
     exchangeCodeForTokens: vi.fn(),
     refreshAccessToken: vi.fn(),
     getUserProfile: vi.fn(),
@@ -95,6 +96,7 @@ describe("PlaylistImportService", () => {
         expect(result.importedCount).toBe(14);
         expect(result.filteredCount).toBe(1);
         expect(result.totalFetched).toBe(15);
+        expect(result.playlistName).toBe("Test Playlist");
         expect(result.cards).toHaveLength(14);
       }
     });

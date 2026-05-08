@@ -32,6 +32,10 @@ interface SpotifyPlaylistTracksPage {
   total: number;
 }
 
+interface SpotifyPlaylistMetadata {
+  name: string;
+}
+
 export class SpotifyApiError extends Error {
   public constructor(
     public readonly code: "not_found" | "forbidden" | "unauthorized" | "api_error",
@@ -140,6 +144,20 @@ export class SpotifyApiClient {
     }
 
     return response.json() as Promise<SpotifyUserProfile>;
+  }
+
+  public async getPlaylistName(playlistId: string, accessToken: string): Promise<string> {
+    const response = await fetch(
+      `${SpotifyApiClient.BASE_URL}/playlists/${playlistId}?fields=name`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+
+    if (!response.ok) {
+      throw new SpotifyApiError("api_error", "Failed to fetch playlist metadata", response.status);
+    }
+
+    const data = await response.json() as SpotifyPlaylistMetadata;
+    return data.name;
   }
 
   public async getAllPlaylistTracks(

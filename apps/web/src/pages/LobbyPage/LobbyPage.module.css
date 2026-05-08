@@ -1133,6 +1133,7 @@
 
 .spotifyEditRow {
   display: flex;
+  gap: 10px;
 }
 
 .spotifyEditBtn {
@@ -1155,12 +1156,105 @@
   background: color-mix(in srgb, var(--color-surface-elevated) 100%, transparent);
 }
 
+.savedPlaylistPanel {
+  display: grid;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.savedPlaylistField {
+  display: grid;
+  gap: 8px;
+}
+
+.savedPlaylistLabel {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.savedPlaylistActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.savedPlaylistActions button {
+  min-height: 52px;
+  padding: 14px 18px;
+}
+
+.savedPlaylistOverwriteRow {
+  display: grid;
+  gap: 8px;
+}
+
+.savedPlaylistOverwriteHint {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.savedPlaylistOverwriteActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.savedPlaylistOverwriteActions button {
+  min-height: 52px;
+  padding: 14px 18px;
+}
+
+.savedPlaylistNameGroup {
+  display: grid;
+  gap: 6px;
+}
+
+.savedPlaylistNameRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.savedPlaylistNameRow input {
+  min-height: 52px;
+}
+
+.savedPlaylistNameConfirm,
+.savedPlaylistNameCancel {
+  min-height: 52px;
+  padding: 14px 16px;
+  white-space: nowrap;
+}
+
 @media (max-width: 440px) {
   .spotifyImportRow {
     grid-template-columns: 1fr;
   }
 
-  .spotifyImportBtn {
+  .spotifyImportBtn,
+  .spotifyEditBtn {
     width: 100%;
+  }
+
+  .spotifyEditRow {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .savedPlaylistActions {
+    flex-direction: column;
+  }
+
+  .savedPlaylistActions button {
+    width: 100%;
+  }
+
+  .savedPlaylistNameRow {
+    grid-template-columns: 1fr;
   }
 }

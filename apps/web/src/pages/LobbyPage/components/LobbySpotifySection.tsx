@@ -3,11 +3,13 @@ import type { ReactNode } from "react";
 import type { PublicRoomSettings } from "@tunetrack/shared";
 import { createMeasuredDisclosureMotion, createStandardTransition } from "../../../features/motion";
 import { useI18n } from "../../../features/i18n";
+import { ActionButton } from "../../../features/ui/ActionButton";
 import { SettingInfoButton } from "../../../features/ui/SettingField";
 import { TextInput } from "../../../features/ui/TextInput";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { LobbySectionHeader } from "./LobbySectionHeader";
 import { PlaylistEditModal } from "./PlaylistEditModal";
+import { AdaptiveSelect } from "./AdaptiveSelect";
 import { useLobbySpotify } from "../hooks/useLobbySpotify";
 import styles from "../LobbyPage.module.css";
 
@@ -38,7 +40,11 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
     accountType,
     authError,
     authPhase,
+    cancelRenamePlaylist,
+    cancelSavePlaylist,
     closeEditModal,
+    confirmRenamePlaylist,
+    confirmSavePlaylist,
     connectSpotify,
     importContentHeight,
     importContentRef,
@@ -46,9 +52,28 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
     importPhase,
     importPlaylist,
     isEditModalOpen,
+    isOverwritePromptActive,
+    isSavingWithName,
+    loadedSavedPlaylistId,
     openEditModal,
     playlistUrl,
+    renameError,
+    renameInputValue,
+    renamingPlaylistId,
+    saveNameError,
+    saveName,
+    savedPlaylistMessage,
+    savedPlaylists,
+    selectedSavedPlaylistId,
+    confirmOverwrite,
+    deleteSelectedSavedPlaylist,
+    saveCurrentPlaylist,
+    setRenameInputValue,
+    setSaveName,
+    setSelectedSavedPlaylistId,
     setPlaylistUrl,
+    startRenamePlaylist,
+    switchToSaveAsNew,
   } = useLobbySpotify();
 
   const isConnected = currentSettings.spotifyAuthStatus === "connected";
@@ -91,6 +116,11 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
     : isConnecting
       ? t("lobby.spotify.connectingHint")
       : null;
+
+  const savedPlaylistOptions = [
+    { label: t("lobby.spotify.savedPlaylistSelectPlaceholder"), value: "" },
+    ...savedPlaylists.map((playlist) => ({ label: playlist.name, value: playlist.id })),
+  ];
 
   return (
     <SurfaceCard className={styles.settingsGroup}>
@@ -145,15 +175,16 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
                 ? t("lobby.spotify.connectingHint")
                 : t("lobby.spotify.unconnectedHint")}
             </p>
-            <button
+            <ActionButton
               className={styles.spotifyConnectBtn}
               disabled={isConnecting}
               onClick={connectSpotify}
               type="button"
+              variant="neutral"
             >
               <SpotifyLogo />
               {isConnecting ? t("lobby.spotify.connecting") : t("lobby.spotify.connect")}
-            </button>
+            </ActionButton>
           </div>
         )}
       </div>
@@ -180,18 +211,19 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
               type="url"
               value={playlistUrl}
             />
-            <button
+            <ActionButton
               className={styles.spotifyImportBtn}
               disabled={!playlistUrl.trim() || isImporting}
               onClick={importPlaylist}
               type="button"
+              variant="neutral"
             >
               {isImporting
                 ? t("lobby.spotify.loading")
                 : isImported
                   ? t("lobby.spotify.reload")
                   : t("lobby.spotify.import")}
-            </button>
+            </ActionButton>
           </div>
 
           {importPhase === "error" && importError ? (
@@ -201,11 +233,173 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
           ) : null}
 
           {isImported && importPhase !== "error" && !isImporting ? (
-            <div className={styles.spotifyEditRow}>
-              <button className={styles.spotifyEditBtn} onClick={openEditModal} type="button">
-                {t("lobby.spotify.editPlaylist")}
-              </button>
+            isOverwritePromptActive ? (
+              <div className={styles.savedPlaylistOverwriteRow}>
+                <p className={styles.savedPlaylistOverwriteHint}>
+                  {t("lobby.spotify.overwriteHint", {
+                    name: savedPlaylists.find((p) => p.id === loadedSavedPlaylistId)?.name ?? "",
+                  })}
+                </p>
+                <div className={styles.savedPlaylistOverwriteActions}>
+                  <ActionButton
+                    className={styles.spotifyEditBtn}
+                    onClick={confirmOverwrite}
+                    type="button"
+                    variant="neutral"
+                  >
+                    {t("lobby.spotify.overwritePlaylist")}
+                  </ActionButton>
+                  <ActionButton
+                    className={styles.spotifyEditBtn}
+                    onClick={switchToSaveAsNew}
+                    type="button"
+                    variant="neutral"
+                  >
+                    {t("lobby.spotify.saveAsNew")}
+                  </ActionButton>
+                  <ActionButton
+                    className={styles.spotifyEditBtn}
+                    onClick={cancelSavePlaylist}
+                    type="button"
+                    variant="neutral"
+                  >
+                    {t("common.cancel")}
+                  </ActionButton>
+                </div>
+              </div>
+            ) : isSavingWithName ? (
+              <div className={styles.savedPlaylistNameGroup}>
+                <div className={styles.savedPlaylistNameRow}>
+                  <TextInput
+                    autoFocus
+                    onChange={(e) => setSaveName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") confirmSavePlaylist();
+                      if (e.key === "Escape") cancelSavePlaylist();
+                    }}
+                    placeholder={t("lobby.spotify.savePlaylistNameLabel")}
+                    value={saveName}
+                  />
+                  <ActionButton
+                    className={styles.savedPlaylistNameConfirm}
+                    onClick={confirmSavePlaylist}
+                    type="button"
+                    variant="neutral"
+                  >
+                    {t("lobby.spotify.confirmSave")}
+                  </ActionButton>
+                  <ActionButton
+                    className={styles.savedPlaylistNameCancel}
+                    onClick={cancelSavePlaylist}
+                    type="button"
+                    variant="neutral"
+                  >
+                    {t("common.cancel")}
+                  </ActionButton>
+                </div>
+                {saveNameError ? (
+                  <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
+                    {saveNameError}
+                  </p>
+                ) : null}
+              </div>
+            ) : (
+              <div className={styles.spotifyEditRow}>
+                <ActionButton
+                  className={styles.spotifyEditBtn}
+                  onClick={openEditModal}
+                  type="button"
+                  variant="neutral"
+                >
+                  {t("lobby.spotify.editPlaylist")}
+                </ActionButton>
+                <ActionButton
+                  className={styles.spotifyEditBtn}
+                  onClick={saveCurrentPlaylist}
+                  type="button"
+                  variant="neutral"
+                >
+                  {t("lobby.spotify.savePlaylist")}
+                </ActionButton>
+              </div>
+            )
+          ) : null}
+
+          {savedPlaylists.length > 0 ? (
+            <div className={styles.savedPlaylistPanel}>
+              <div className={styles.savedPlaylistField}>
+                <span className={styles.savedPlaylistLabel}>
+                  {t("lobby.spotify.savedPlaylistSelectLabel")}
+                </span>
+                <AdaptiveSelect
+                  label={t("lobby.spotify.savedPlaylistSelectLabel")}
+                  onChange={(value) => setSelectedSavedPlaylistId(value)}
+                  options={savedPlaylistOptions}
+                  value={selectedSavedPlaylistId}
+                />
+              </div>
+
+              {selectedSavedPlaylistId ? (
+                renamingPlaylistId === selectedSavedPlaylistId ? (
+                  <div className={styles.savedPlaylistNameGroup}>
+                    <div className={styles.savedPlaylistNameRow}>
+                      <TextInput
+                        autoFocus
+                        onChange={(e) => setRenameInputValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") confirmRenamePlaylist();
+                          if (e.key === "Escape") cancelRenamePlaylist();
+                        }}
+                        placeholder={t("lobby.spotify.renamePlaylistLabel")}
+                        value={renameInputValue}
+                      />
+                      <ActionButton
+                        className={styles.savedPlaylistNameConfirm}
+                        onClick={confirmRenamePlaylist}
+                        type="button"
+                        variant="neutral"
+                      >
+                        {t("lobby.spotify.confirmRename")}
+                      </ActionButton>
+                      <ActionButton
+                        className={styles.savedPlaylistNameCancel}
+                        onClick={cancelRenamePlaylist}
+                        type="button"
+                        variant="neutral"
+                      >
+                        {t("common.cancel")}
+                      </ActionButton>
+                    </div>
+                    {renameError ? (
+                      <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
+                        {renameError}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className={styles.savedPlaylistActions}>
+                    <ActionButton
+                      onClick={() => startRenamePlaylist(selectedSavedPlaylistId)}
+                      type="button"
+                      variant="neutral"
+                    >
+                      {t("lobby.spotify.renamePlaylist")}
+                    </ActionButton>
+                    <ActionButton
+                      onClick={deleteSelectedSavedPlaylist}
+                      type="button"
+                      variant="danger"
+                    >
+                      {t("lobby.spotify.deleteSavedPlaylist")}
+                    </ActionButton>
+                  </div>
+                )
+              ) : null}
             </div>
+          ) : null}
+
+          {savedPlaylistMessage ? (
+            <p className={styles.spotifyStatusLine}>{savedPlaylistMessage}</p>
           ) : null}
         </div>
       </motion.div>

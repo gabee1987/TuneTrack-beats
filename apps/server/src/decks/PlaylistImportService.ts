@@ -14,6 +14,7 @@ export interface PlaylistImportSuccess {
   importedCount: number;
   filteredCount: number;
   totalFetched: number;
+  playlistName?: string;
 }
 
 export type PlaylistImportOutcome =
@@ -55,7 +56,10 @@ export class PlaylistImportService {
     }
 
     try {
-      const rawTracks = await this.apiClient.getAllPlaylistTracks(playlistId, accessToken);
+      const [rawTracks, playlistName] = await Promise.all([
+        this.apiClient.getAllPlaylistTracks(playlistId, accessToken),
+        this.apiClient.getPlaylistName(playlistId, accessToken).catch(() => undefined),
+      ]);
 
       const cards: GameTrackCard[] = [];
       let filteredCount = 0;
@@ -91,6 +95,7 @@ export class PlaylistImportService {
         importedCount: cards.length,
         filteredCount,
         totalFetched: rawTracks.length,
+        ...(playlistName ? { playlistName } : {}),
       };
     } catch (err) {
       if (err instanceof SpotifyApiError) {

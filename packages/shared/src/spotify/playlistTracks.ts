@@ -9,6 +9,8 @@ export interface PublicTrackInfo {
   sourceReleaseYear?: number;
   metadataStatus: TrackMetadataStatus;
   artworkUrl?: string;
+  previewUrl?: string;
+  spotifyTrackUri?: string;
 }
 
 export interface PlaylistTracksPayload {

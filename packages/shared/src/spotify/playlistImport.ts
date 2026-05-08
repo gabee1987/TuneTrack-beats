@@ -9,6 +9,7 @@ export interface ImportPlaylistSuccessPayload {
   importedCount: number;
   filteredCount: number;
   totalFetched: number;
+  playlistName?: string;
 }
 
 export interface ImportPlaylistErrorPayload {

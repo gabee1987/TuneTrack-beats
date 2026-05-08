@@ -3,6 +3,7 @@ import {
   ClientToServerEvent,
   ServerToClientEvent,
   type PlayerIdentityPayload,
+  type PlaylistTracksPayload,
   type PublicRoomState,
   type ServerErrorPayload,
   type StateUpdatePayload,
@@ -961,6 +962,73 @@ describe("room flow", () => {
       awardState.players.find((player) => player.id === guestIdentity.playerId)
         ?.ttTokenCount,
     ).toBe(1);
+  });
+
+  it("loads a curated playlist into the lobby deck", async () => {
+    const serverContext = await startTestServer();
+    const hostSocket = createClient(serverContext.baseUrl);
+
+    hostSocket.connect();
+    await waitForEvent(hostSocket, "connect");
+
+    const identityPromise = waitForEvent<PlayerIdentityPayload>(
+      hostSocket,
+      ServerToClientEvent.PlayerIdentity,
+    );
+    hostSocket.emit(ClientToServerEvent.CreateRoom, {
+      roomId: "curated-room",
+      displayName: "Host Player",
+      sessionId: "host-session",
+    });
+    await identityPromise;
+
+    const loadedTracksPromise = waitForEvent<PlaylistTracksPayload>(
+      hostSocket,
+      ServerToClientEvent.PlaylistTracks,
+    );
+    const importedStatePromise = waitForStateUpdate(
+      hostSocket,
+      (roomState) => roomState.settings.importedTrackCount === 659,
+    );
+
+    const largeCuratedPlaylist = Array.from({ length: 659 }, (_, index) => ({
+      id: `curated-track-${index + 1}`,
+      title: `Curated Song ${index + 1}`,
+      artist: "Curated Artist",
+      albumTitle: "Original Album",
+      releaseYear: 1986,
+      sourceReleaseYear: 2000,
+      metadataStatus: "edited",
+      spotifyTrackUri: `spotify:track:curated-track-${index + 1}`,
+    }));
+
+    hostSocket.emit(ClientToServerEvent.LoadCuratedPlaylist, {
+      roomId: "curated-room",
+      tracks: largeCuratedPlaylist,
+    });
+
+    await expect(importedStatePromise).resolves.toEqual(
+      expect.objectContaining({
+        settings: expect.objectContaining({ importedTrackCount: 659 }),
+      }),
+    );
+    const loadedTracks = await loadedTracksPromise;
+    expect(loadedTracks.tracks).toHaveLength(659);
+    expect(loadedTracks.tracks[0]).toEqual(
+      expect.objectContaining({
+        id: "curated-track-1",
+        releaseYear: 1986,
+        sourceReleaseYear: 2000,
+        metadataStatus: "edited",
+        spotifyTrackUri: "spotify:track:curated-track-1",
+      }),
+    );
+    expect(loadedTracks.tracks[658]).toEqual(
+      expect.objectContaining({
+        id: "curated-track-659",
+        spotifyTrackUri: "spotify:track:curated-track-659",
+      }),
+    );
   });
 
 });

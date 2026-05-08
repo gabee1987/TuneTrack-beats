@@ -1,4 +1,3 @@
-import type { PublicTrackInfo } from "@tunetrack/shared";
 import { motion, useReducedMotion } from "framer-motion";
 import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";

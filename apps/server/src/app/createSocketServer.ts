@@ -10,5 +10,6 @@ export function createSocketServer(httpServer: HttpServerInstance): Server {
     cors: {
       origin: createCorsOriginValidator(env.CLIENT_ORIGIN, env.NODE_ENV),
     },
+    maxHttpBufferSize: 5 * 1024 * 1024,
   });
 }

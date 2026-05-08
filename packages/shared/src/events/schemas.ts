@@ -38,6 +38,27 @@ const trackMetadataStatusSchema = z.enum([
   "verified",
 ]) satisfies z.ZodType<TrackMetadataStatus>;
 
+const releaseYearSchema = z
+  .number()
+  .int()
+  .min(1900)
+  .max(new Date().getFullYear() + 1);
+
+const MAX_CURATED_PLAYLIST_TRACK_COUNT = 1_000;
+
+const curatedPlaylistTrackSchema = z.object({
+  id: z.string().trim().min(1).max(200),
+  title: z.string().trim().min(1).max(200),
+  artist: z.string().trim().min(1).max(200),
+  albumTitle: z.string().trim().min(1).max(200),
+  releaseYear: releaseYearSchema,
+  sourceReleaseYear: releaseYearSchema.optional(),
+  metadataStatus: trackMetadataStatusSchema.default("imported"),
+  artworkUrl: z.string().trim().url().max(1_000).optional(),
+  previewUrl: z.string().trim().url().max(1_000).optional(),
+  spotifyTrackUri: z.string().trim().min(1).max(300).optional(),
+});
+
 export const joinRoomPayloadSchema = z.object({
   roomId: roomIdSchema,
   displayName: z.string().trim().min(PLAYER_NAME_MIN_LENGTH).max(PLAYER_NAME_MAX_LENGTH),
@@ -174,6 +195,11 @@ export const importPlaylistPayloadSchema = z.object({
   playlistUrl: z.string().trim().min(1).max(500),
 });
 
+export const loadCuratedPlaylistPayloadSchema = z.object({
+  roomId: roomIdSchema,
+  tracks: z.array(curatedPlaylistTrackSchema).min(1).max(MAX_CURATED_PLAYLIST_TRACK_COUNT),
+});
+
 export const requestSpotifyAuthUrlPayloadSchema = z.object({
   roomId: roomIdSchema,
 });
@@ -231,6 +257,13 @@ export type SkipTurnPayloadParsed = z.output<typeof skipTurnPayloadSchema>;
 export type ImportPlaylistPayloadInput = z.input<typeof importPlaylistPayloadSchema>;
 export type ImportPlaylistPayloadParsed = z.output<typeof importPlaylistPayloadSchema>;
 
+export type LoadCuratedPlaylistPayloadInput = z.input<
+  typeof loadCuratedPlaylistPayloadSchema
+>;
+export type LoadCuratedPlaylistPayloadParsed = z.output<
+  typeof loadCuratedPlaylistPayloadSchema
+>;
+
 export type RequestSpotifyAuthUrlPayloadInput = z.input<typeof requestSpotifyAuthUrlPayloadSchema>;
 export type RequestSpotifyAuthUrlPayloadParsed = z.output<
   typeof requestSpotifyAuthUrlPayloadSchema
@@ -255,12 +288,7 @@ export const updatePlaylistTrackPayloadSchema = z
     title: z.string().trim().min(1).max(200).optional(),
     artist: z.string().trim().min(1).max(200).optional(),
     albumTitle: z.string().trim().min(1).max(200).optional(),
-    releaseYear: z
-      .number()
-      .int()
-      .min(1900)
-      .max(new Date().getFullYear() + 1)
-      .optional(),
+    releaseYear: releaseYearSchema.optional(),
     metadataStatus: trackMetadataStatusSchema.optional(),
   })
   .refine(

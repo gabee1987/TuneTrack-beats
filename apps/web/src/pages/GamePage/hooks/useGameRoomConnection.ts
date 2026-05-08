@@ -14,7 +14,7 @@ import { localizeServerError } from "../../../features/i18n/localizedErrors";
 import { resetPlayerSession } from "../../../services/session/playerSession";
 import { rememberRoomEventToast } from "../../../services/session/roomEventToast";
 import {
-  disconnectSocketClient,
+
   getSocketClient,
   resetSocketClient,
 } from "../../../services/socket/socketClient";
@@ -103,7 +103,7 @@ export function useGameRoomConnection({
         });
       }
 
-      disconnectSocketClient();
+      resetSocketClient();
       navigate("/", {
         state:
           payload.reason === "kicked"

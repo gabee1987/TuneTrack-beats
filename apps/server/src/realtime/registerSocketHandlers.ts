@@ -12,6 +12,7 @@ import {
   importPlaylistPayloadSchema,
   joinRoomPayloadSchema,
   kickPlayerPayloadSchema,
+  loadCuratedPlaylistPayloadSchema,
   placeChallengePayloadSchema,
   placeCardPayloadSchema,
   refreshSpotifyTokenPayloadSchema,
@@ -63,6 +64,7 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
     registerUpdatePlayerSettingsHandler(io, socket, roomService);
     registerUpdatePlayerProfileHandler(io, socket, roomService);
     registerImportPlaylistHandler(io, socket, roomService);
+    registerLoadCuratedPlaylistHandler(io, socket, roomService);
     registerGetPlaylistTracksHandler(socket, roomService);
     registerRemovePlaylistTracksHandler(io, socket, roomService);
     registerUpdatePlaylistTrackHandler(io, socket, roomService);
@@ -802,6 +804,45 @@ function registerImportPlaylistHandler(io: Server, socket: Socket, roomService: 
           message: "An unexpected error occurred. Please try again.",
         });
       });
+  });
+}
+
+function registerLoadCuratedPlaylistHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.LoadCuratedPlaylist, (payload: unknown) => {
+    const parseResult = loadCuratedPlaylistPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.Error, {
+        code: "INVALID_LOAD_CURATED_PLAYLIST_PAYLOAD",
+        message: "Saved playlist data is invalid.",
+      });
+      return;
+    }
+
+    logger.info(
+      {
+        socketId: socket.id,
+        roomId: parseResult.data.roomId,
+        count: parseResult.data.tracks.length,
+      },
+      "load_curated_playlist",
+    );
+    try {
+      const { roomState, tracks } = roomService.loadCuratedPlaylist(
+        parseResult.data,
+        socket.id,
+      );
+      socket.emit(ServerToClientEvent.PlaylistTracks, { tracks });
+      io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, { roomState });
+    } catch (error) {
+      emitServerError(socket, error, "LOAD_CURATED_PLAYLIST_FAILED", {
+        ONLY_HOST_CAN_IMPORT_PLAYLIST: "Only the host can load a saved playlist.",
+      });
+    }
   });
 }
 
