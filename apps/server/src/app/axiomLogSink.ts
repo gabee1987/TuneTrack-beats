@@ -64,8 +64,10 @@ async function sendAxiomBatch(events: AxiomLogEvent[]): Promise<void> {
   const fallbackResponse = await postAxiomBatch(buildEdgeIngestUrl(), events);
   if (fallbackResponse.ok) return;
 
+  const responseBody = await readResponseBody(response);
+  const fallbackResponseBody = await readResponseBody(fallbackResponse);
   throw new Error(
-    `Axiom ingest failed with ${response.status} ${response.statusText}; fallback failed with ${fallbackResponse.status} ${fallbackResponse.statusText}`,
+    `Axiom ingest failed with ${response.status} ${response.statusText}: ${responseBody}; fallback failed with ${fallbackResponse.status} ${fallbackResponse.statusText}: ${fallbackResponseBody}`,
   );
 }
 
@@ -74,9 +76,9 @@ function postAxiomBatch(url: string, events: AxiomLogEvent[]): Promise<Response>
     method: "POST",
     headers: {
       Authorization: `Bearer ${env.AXIOM_TOKEN}`,
-      "Content-Type": "application/json",
+      "Content-Type": "application/x-ndjson",
     },
-    body: JSON.stringify(events),
+    body: events.map((event) => JSON.stringify(event)).join("\n"),
   });
 }
 
@@ -91,6 +93,15 @@ function buildEdgeIngestUrl(): string {
 
 function isAxiomConfigured(): boolean {
   return Boolean(env.AXIOM_TOKEN && env.AXIOM_DATASET);
+}
+
+async function readResponseBody(response: Response): Promise<string> {
+  try {
+    const body = await response.text();
+    return body.length > 500 ? `${body.slice(0, 500)}...` : body;
+  } catch {
+    return "[response body unavailable]";
+  }
 }
 
 function reportAxiomFailure(error: unknown): void {

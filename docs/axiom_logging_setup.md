@@ -63,7 +63,7 @@ tunetrack-server
 5. Create an API token with ingest permission for that dataset.
 6. Copy the token. You will add it to Railway as `AXIOM_TOKEN`.
 
-The backend sends events to:
+The backend sends events as NDJSON to:
 
 ```text
 https://api.axiom.co/v1/datasets/<AXIOM_DATASET>/ingest
