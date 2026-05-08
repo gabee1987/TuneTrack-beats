@@ -17,19 +17,24 @@ Logged events include:
 - outgoing socket events from the server
 - room state broadcasts
 - rejected socket actions and their error codes
+- Spotify OAuth callback results
+- Spotify token exchange and refresh results
+- Spotify playlist import successes and failures
 
 Useful fields:
 
-- `type`: always `realtime_audit` for these logs
 - `service`: `tunetrack-server`
 - `testRunId`: manually configured test session label
 - `time`: ISO timestamp
+- `auditKind`: `realtime`, `spotify_auth`, or `spotify_import`
 - `eventName`: socket event name
+- `action`: backend audit action name
 - `outcome`: `received`, `emitted`, `broadcast`, or `rejected`
 - `direction`: `client_to_server` or `server_to_client`
 - `socketId`: current socket connection id
 - `roomId`: room id when available
-- `errorCode`: rejection reason when an action fails
+- `errorCode`: realtime rejection reason when an action fails
+- `code`: Spotify/auth/import result code when available
 - `room`: compact room state summary for room broadcasts
 - `payload`: optional compact payload summary when payload logging is enabled
 
@@ -137,7 +142,6 @@ Full test session:
 
 ```apl
 ['tunetrack-server']
-| where type == "realtime_audit"
 | where testRunId == "family-test-2026-05-09"
 | sort by time asc
 ```
@@ -146,7 +150,6 @@ Single room:
 
 ```apl
 ['tunetrack-server']
-| where type == "realtime_audit"
 | where testRunId == "family-test-2026-05-09"
 | where roomId == "ROOM_ID"
 | sort by time asc
@@ -156,7 +159,6 @@ Rejected actions:
 
 ```apl
 ['tunetrack-server']
-| where type == "realtime_audit"
 | where testRunId == "family-test-2026-05-09"
 | where outcome == "rejected" or errorCode != ""
 | sort by time desc
@@ -166,7 +168,6 @@ One socket connection:
 
 ```apl
 ['tunetrack-server']
-| where type == "realtime_audit"
 | where socketId == "SOCKET_ID"
 | sort by time asc
 ```
@@ -175,7 +176,6 @@ Gameplay state updates:
 
 ```apl
 ['tunetrack-server']
-| where type == "realtime_audit"
 | where eventName == "state_update"
 | where room.status != ""
 | sort by time asc
@@ -185,10 +185,26 @@ Large imported playlist checks:
 
 ```apl
 ['tunetrack-server']
-| where type == "realtime_audit"
 | where room.importedTrackCount > 0
 | project time, testRunId, roomId, eventName, outcome, room.importedTrackCount, room.status
 | sort by time asc
+```
+
+Spotify login failures:
+
+```apl
+['tunetrack-server']
+| where auditKind == "spotify_auth"
+| where outcome == "failed"
+| sort by time desc
+```
+
+Spotify playlist imports:
+
+```apl
+['tunetrack-server']
+| where auditKind == "spotify_import"
+| sort by time desc
 ```
 
 ## Reading A Session

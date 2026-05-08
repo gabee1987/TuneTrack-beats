@@ -1,5 +1,6 @@
 import type { GameTrackCard } from "@tunetrack/game-engine";
 import type { ImportPlaylistResultPayload } from "@tunetrack/shared";
+import { logAuditEvent } from "../app/auditLogger.js";
 import { logger } from "../app/logger.js";
 import { SpotifyApiClient, SpotifyApiError } from "../spotify/SpotifyApiClient.js";
 import { SpotifyTokenStore } from "../spotify/SpotifyTokenStore.js";
@@ -31,6 +32,12 @@ export class PlaylistImportService {
     const playlistId = extractSpotifyPlaylistId(playlistUrl);
 
     if (!playlistId) {
+      logAuditEvent({
+        auditKind: "spotify_import",
+        action: "playlist_import_rejected",
+        outcome: "failed",
+        code: "invalid_url",
+      });
       return {
         success: false,
         payload: {
@@ -45,6 +52,15 @@ export class PlaylistImportService {
     try {
       accessToken = await this.getOrRefreshClientCredentialsToken();
     } catch {
+      logAuditEvent({
+        auditKind: "spotify_import",
+        action: "client_credentials_failed",
+        outcome: "failed",
+        code: "spotify_api_error",
+        meta: {
+          playlistId,
+        },
+      });
       return {
         success: false,
         payload: {
@@ -74,6 +90,18 @@ export class PlaylistImportService {
       }
 
       if (cards.length < MIN_IMPORTABLE_TRACK_COUNT) {
+        logAuditEvent({
+          auditKind: "spotify_import",
+          action: "playlist_import_rejected",
+          outcome: "failed",
+          code: "too_few_tracks",
+          meta: {
+            playlistId,
+            importedCount: cards.length,
+            filteredCount,
+            totalFetched: rawTracks.length,
+          },
+        });
         return {
           success: false,
           payload: {
@@ -88,6 +116,18 @@ export class PlaylistImportService {
         { playlistId, imported: cards.length, filtered: filteredCount },
         "Playlist imported successfully",
       );
+      logAuditEvent({
+        auditKind: "spotify_import",
+        action: "playlist_import_succeeded",
+        outcome: "succeeded",
+        meta: {
+          playlistId,
+          playlistName,
+          importedCount: cards.length,
+          filteredCount,
+          totalFetched: rawTracks.length,
+        },
+      });
 
       return {
         success: true,
@@ -100,6 +140,16 @@ export class PlaylistImportService {
     } catch (err) {
       if (err instanceof SpotifyApiError) {
         if (err.code === "not_found") {
+          logAuditEvent({
+            auditKind: "spotify_import",
+            action: "playlist_import_failed",
+            outcome: "failed",
+            code: "playlist_not_found",
+            meta: {
+              playlistId,
+              status: err.statusCode,
+            },
+          });
           return {
             success: false,
             payload: {
@@ -111,6 +161,16 @@ export class PlaylistImportService {
         }
 
         if (err.code === "forbidden") {
+          logAuditEvent({
+            auditKind: "spotify_import",
+            action: "playlist_import_failed",
+            outcome: "failed",
+            code: "playlist_private",
+            meta: {
+              playlistId,
+              status: err.statusCode,
+            },
+          });
           return {
             success: false,
             payload: {
@@ -123,6 +183,16 @@ export class PlaylistImportService {
       }
 
       logger.error({ err, playlistId }, "Playlist import failed");
+      logAuditEvent({
+        auditKind: "spotify_import",
+        action: "playlist_import_failed",
+        outcome: "failed",
+        code: err instanceof SpotifyApiError ? err.code : "spotify_api_error",
+        meta: {
+          playlistId,
+          status: err instanceof SpotifyApiError ? err.statusCode : undefined,
+        },
+      });
 
       return {
         success: false,

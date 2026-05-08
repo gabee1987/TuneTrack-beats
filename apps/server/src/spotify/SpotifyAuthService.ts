@@ -1,4 +1,5 @@
 import type { SpotifyAccountType, SpotifyAuthResultPayload } from "@tunetrack/shared";
+import { logAuditEvent } from "../app/auditLogger.js";
 import { logger } from "../app/logger.js";
 import { SpotifyApiClient, SpotifyApiError } from "./SpotifyApiClient.js";
 import { SpotifyTokenStore } from "./SpotifyTokenStore.js";
@@ -35,6 +36,19 @@ export class SpotifyAuthService {
     const socketId = state?.socketId ?? "";
 
     if (error || !code || !state) {
+      logAuditEvent({
+        auditKind: "spotify_auth",
+        action: "oauth_callback_rejected",
+        outcome: "failed",
+        roomId: state?.roomId,
+        socketId,
+        code: error === "access_denied" ? "auth_denied" : "unknown",
+        meta: {
+          spotifyError: error,
+          hasCode: !!code,
+          hasState: !!state,
+        },
+      });
       return {
         roomId: state?.roomId ?? null,
         socketId,
@@ -52,6 +66,13 @@ export class SpotifyAuthService {
       const tokenResponse = await this.apiClient.exchangeCodeForTokens(code);
 
       if (!tokenResponse.refresh_token) {
+        logAuditEvent({
+          auditKind: "spotify_auth",
+          action: "token_exchange_missing_refresh_token",
+          outcome: "failed",
+          roomId: state.roomId,
+          socketId,
+        });
         return {
           roomId: state.roomId,
           socketId,
@@ -75,6 +96,17 @@ export class SpotifyAuthService {
       );
 
       logger.info({ roomId: state.roomId, accountType }, "Spotify host auth successful");
+      logAuditEvent({
+        auditKind: "spotify_auth",
+        action: "host_auth_succeeded",
+        outcome: "succeeded",
+        roomId: state.roomId,
+        socketId,
+        meta: {
+          accountType,
+          expiresInSeconds: tokenResponse.expires_in,
+        },
+      });
 
       return {
         roomId: state.roomId,
@@ -88,6 +120,17 @@ export class SpotifyAuthService {
       };
     } catch (err) {
       logger.error({ err }, "Spotify OAuth callback failed");
+      logAuditEvent({
+        auditKind: "spotify_auth",
+        action: "token_exchange_failed",
+        outcome: "failed",
+        roomId: state.roomId,
+        socketId,
+        code: err instanceof SpotifyApiError ? err.code : "unknown",
+        meta: {
+          status: err instanceof SpotifyApiError ? err.statusCode : undefined,
+        },
+      });
 
       return {
         roomId: state.roomId,
@@ -115,6 +158,15 @@ export class SpotifyAuthService {
         tokenResponse.access_token,
         tokenResponse.expires_in,
       );
+      logAuditEvent({
+        auditKind: "spotify_auth",
+        action: "host_token_refresh_succeeded",
+        outcome: "succeeded",
+        roomId,
+        meta: {
+          expiresInSeconds: tokenResponse.expires_in,
+        },
+      });
 
       return {
         accessToken: tokenResponse.access_token,
@@ -124,6 +176,16 @@ export class SpotifyAuthService {
       if (err instanceof SpotifyApiError) {
         logger.warn({ roomId, code: err.code }, "Failed to refresh Spotify host token");
       }
+      logAuditEvent({
+        auditKind: "spotify_auth",
+        action: "host_token_refresh_failed",
+        outcome: "failed",
+        roomId,
+        code: err instanceof SpotifyApiError ? err.code : "unknown",
+        meta: {
+          status: err instanceof SpotifyApiError ? err.statusCode : undefined,
+        },
+      });
       return null;
     }
   }

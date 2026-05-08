@@ -120,10 +120,10 @@ function logRealtimeAudit(input: AuditLogInput): void {
   if (!env.ENABLE_EVENT_AUDIT) return;
 
   const auditEvent = {
-    type: "realtime_audit",
     service: "tunetrack-server",
     time: new Date().toISOString(),
     testRunId: env.TEST_RUN_ID,
+    auditKind: "realtime",
     eventId: input.eventId,
     direction:
       input.outcome === "broadcast" || input.outcome === "emitted"

@@ -1,6 +1,7 @@
 import type { Express, Request, Response } from "express";
 import type { Server } from "socket.io";
 import { ServerToClientEvent } from "@tunetrack/shared";
+import { logAuditEvent } from "../app/auditLogger.js";
 import { logger } from "../app/logger.js";
 import type { RoomService } from "../rooms/RoomService.js";
 import type { SpotifyAuthService } from "../spotify/SpotifyAuthService.js";
@@ -28,8 +29,28 @@ async function handleSpotifyCallback(
   const error = typeof req.query["error"] === "string" ? req.query["error"] : undefined;
 
   logger.info({ hasCode: !!code, hasState: !!state, error }, "Spotify OAuth callback received");
+  logAuditEvent({
+    auditKind: "spotify_auth",
+    action: "oauth_callback_received",
+    outcome: "received",
+    code: error,
+    meta: {
+      hasCode: !!code,
+      hasState: !!state,
+    },
+  });
 
   const { authResult, roomId, socketId } = await spotifyAuthService.handleCallback(code, state, error);
+  logAuditEvent({
+    auditKind: "spotify_auth",
+    action: "oauth_callback_completed",
+    outcome: authResult.success ? "succeeded" : "failed",
+    roomId: roomId ?? undefined,
+    socketId,
+    code: authResult.success ? undefined : authResult.code,
+    message: authResult.success ? undefined : authResult.message,
+    meta: authResult.success ? { accountType: authResult.accountType } : undefined,
+  });
 
   if (socketId) {
     io.to(socketId).emit(ServerToClientEvent.SpotifyAuthResult, authResult);
