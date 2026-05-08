@@ -58,16 +58,20 @@ function scheduleFlush(): void {
 }
 
 async function sendAxiomBatch(events: AxiomLogEvent[]): Promise<void> {
-  const response = await postAxiomBatch(buildEdgeIngestUrl(), events);
+  const response = await postAxiomBatch(buildEdgeDatasetIngestUrl(), events);
   if (response.ok) return;
 
-  const fallbackResponse = await postAxiomBatch(buildGlobalDatasetIngestUrl(), events);
-  if (fallbackResponse.ok) return;
+  const edgeFallbackResponse = await postAxiomBatch(buildEdgeIngestUrl(), events);
+  if (edgeFallbackResponse.ok) return;
+
+  const globalFallbackResponse = await postAxiomBatch(buildGlobalDatasetIngestUrl(), events);
+  if (globalFallbackResponse.ok) return;
 
   const responseBody = await readResponseBody(response);
-  const fallbackResponseBody = await readResponseBody(fallbackResponse);
+  const edgeFallbackResponseBody = await readResponseBody(edgeFallbackResponse);
+  const globalFallbackResponseBody = await readResponseBody(globalFallbackResponse);
   throw new Error(
-    `Axiom ingest failed with ${response.status} ${response.statusText}: ${responseBody}; fallback failed with ${fallbackResponse.status} ${fallbackResponse.statusText}: ${fallbackResponseBody}`,
+    `Axiom ingest failed with ${response.status} ${response.statusText}: ${responseBody}; edge fallback failed with ${edgeFallbackResponse.status} ${edgeFallbackResponse.statusText}: ${edgeFallbackResponseBody}; global fallback failed with ${globalFallbackResponse.status} ${globalFallbackResponse.statusText}: ${globalFallbackResponseBody}`,
   );
 }
 
@@ -82,13 +86,18 @@ function postAxiomBatch(url: string, events: AxiomLogEvent[]): Promise<Response>
   });
 }
 
-function buildEdgeIngestUrl(): string {
+function buildEdgeDatasetIngestUrl(): string {
   const baseUrl = env.AXIOM_DOMAIN.replace(/\/$/, "");
-  return `${baseUrl}/v1/ingest/${encodeURIComponent(env.AXIOM_DATASET ?? "")}`;
+  return `${baseUrl}/v1/datasets/${encodeURIComponent(env.AXIOM_DATASET ?? "")}/ingest`;
 }
 
 function buildGlobalDatasetIngestUrl(): string {
   return `https://api.axiom.co/v1/datasets/${encodeURIComponent(env.AXIOM_DATASET ?? "")}/ingest`;
+}
+
+function buildEdgeIngestUrl(): string {
+  const baseUrl = env.AXIOM_DOMAIN.replace(/\/$/, "");
+  return `${baseUrl}/v1/ingest/${encodeURIComponent(env.AXIOM_DATASET ?? "")}`;
 }
 
 function isAxiomConfigured(): boolean {

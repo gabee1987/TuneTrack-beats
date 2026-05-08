@@ -66,7 +66,7 @@ tunetrack-server
 The backend sends events as NDJSON to the configured Axiom edge deployment:
 
 ```text
-<AXIOM_DOMAIN>/v1/ingest/<AXIOM_DATASET>
+<AXIOM_DOMAIN>/v1/datasets/<AXIOM_DATASET>/ingest
 ```
 
 Available Axiom edge deployment domains:
@@ -81,6 +81,13 @@ Your dataset region must match `AXIOM_DOMAIN`. If Axiom says the dataset is in
 
 ```text
 https://eu-central-1.aws.edge.axiom.co
+```
+
+If that endpoint fails, the backend also tries:
+
+```text
+<AXIOM_DOMAIN>/v1/ingest/<AXIOM_DATASET>
+https://api.axiom.co/v1/datasets/<AXIOM_DATASET>/ingest
 ```
 
 ## Railway Setup
