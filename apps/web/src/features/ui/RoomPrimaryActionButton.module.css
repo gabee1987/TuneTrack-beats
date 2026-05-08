@@ -1,0 +1,74 @@
+.button {
+  --room-action-bg-start: #10281d;
+  --room-action-bg-end: #07140f;
+  --room-action-border: #55f2a7;
+  --room-action-glow: #30dc8c;
+  --room-action-text: #caffdf;
+  position: relative;
+  min-width: 0;
+  min-height: 58px;
+  padding: 16px 22px;
+  border: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  isolation: isolate;
+  background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--room-action-bg-start) 78%, transparent),
+      color-mix(in srgb, var(--room-action-bg-end) 84%, transparent)
+    )
+    padding-box;
+  color: var(--room-action-text);
+  outline: 0;
+  box-shadow:
+    0 14px 32px color-mix(in srgb, var(--room-action-glow) 14%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 12%, transparent);
+  font-size: clamp(13px, 3.8vw, 16px);
+  font-weight: 900;
+  line-height: 1.08;
+  cursor: pointer;
+}
+
+.button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background:
+    linear-gradient(135deg, transparent 14%, var(--room-action-border), transparent 86%),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--room-action-border) 36%, transparent),
+      color-mix(in srgb, white 14%, transparent),
+      color-mix(in srgb, var(--room-action-border) 44%, transparent)
+    );
+  pointer-events: none;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fullWidth {
+  width: 100%;
+}

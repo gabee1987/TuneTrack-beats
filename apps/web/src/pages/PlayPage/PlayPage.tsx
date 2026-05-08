@@ -1,5 +1,6 @@
 import { AppPageShell } from "../../features/mobile-shell/AppPageShell";
 import { useI18n } from "../../features/i18n";
+import { RoomPrimaryActionButton } from "../../features/ui/RoomPrimaryActionButton";
 import { usePlayPageController } from "./hooks/usePlayPageController";
 import styles from "./PlayPage.module.css";
 
@@ -51,17 +52,16 @@ export function PlayPage() {
               />
             </label>
 
-            <button
+            <RoomPrimaryActionButton
+              fullWidth
               className={styles.primaryAction}
               onFocus={controller.preloadLobby}
               onMouseEnter={controller.preloadLobby}
               onTouchStart={controller.preloadLobby}
               type="submit"
             >
-              <span className={styles.primaryActionInner}>
-                <span className={styles.primaryActionLabel}>{t("home.createRoomAction")}</span>
-              </span>
-            </button>
+              {t("home.createRoomAction")}
+            </RoomPrimaryActionButton>
           </form>
 
           <div className={styles.roomDivider}>{t("home.orJoinRoom")}</div>

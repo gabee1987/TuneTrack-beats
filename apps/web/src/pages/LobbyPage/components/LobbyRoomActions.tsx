@@ -1,5 +1,5 @@
-import { ActionButton } from "../../../features/ui/ActionButton";
 import { useI18n } from "../../../features/i18n";
+import { RoomPrimaryActionButton } from "../../../features/ui/RoomPrimaryActionButton";
 import { RoomDangerActionButton } from "../../../features/ui/RoomDangerActionButton";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { LobbySectionHeader } from "./LobbySectionHeader";
@@ -27,8 +27,8 @@ export function LobbyRoomActions({
         title={t("lobby.actions.title")}
       />
       {onStartGame ? (
-        <ActionButton
-          className={styles.roomStartGameButton}
+        <RoomPrimaryActionButton
+          fullWidth
           onClick={onStartGame}
           onFocus={onIntentToStartGame}
           onMouseEnter={onIntentToStartGame}
@@ -36,7 +36,7 @@ export function LobbyRoomActions({
           type="button"
         >
           {t("lobby.actions.startGame")}
-        </ActionButton>
+        </RoomPrimaryActionButton>
       ) : null}
       <RoomDangerActionButton
         className={`${styles.cancelRoomButton}${buttonClassName ? ` ${buttonClassName}` : ""}`}

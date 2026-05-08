@@ -2,6 +2,7 @@ import type { PublicRoomSummary } from "@tunetrack/shared";
 import type { FormEvent } from "react";
 import { useI18n } from "../../../features/i18n";
 import { ActionButton } from "../../../features/ui/ActionButton";
+import { RoomPrimaryActionButton } from "../../../features/ui/RoomPrimaryActionButton";
 import { TextInput } from "../../../features/ui/TextInput";
 import styles from "../HomePage.module.css";
 
@@ -72,7 +73,8 @@ export function JoinRoomForm({
           />
         </label>
 
-        <ActionButton
+        <RoomPrimaryActionButton
+          fullWidth
           className={styles.primaryButton}
           onFocus={onIntentToSubmit}
           onMouseEnter={onIntentToSubmit}
@@ -80,7 +82,7 @@ export function JoinRoomForm({
           type="submit"
         >
           {t("home.createRoomAction")}
-        </ActionButton>
+        </RoomPrimaryActionButton>
       </form>
 
       <div className={styles.roomDivider}>{t("home.orJoinRoom")}</div>

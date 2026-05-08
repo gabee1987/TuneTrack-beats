@@ -1,5 +1,5 @@
-import { ActionButton } from "../../../features/ui/ActionButton";
 import { useI18n } from "../../../features/i18n";
+import { RoomPrimaryActionButton } from "../../../features/ui/RoomPrimaryActionButton";
 import styles from "../LobbyPage.module.css";
 
 interface LobbyHostStartPanelProps {
@@ -16,7 +16,7 @@ export function LobbyHostStartPanel({ onIntentToStart, onStartGame }: LobbyHostS
         <h3 className={styles.primaryActionTitle}>{t("lobby.host.readyTitle")}</h3>
         <p className={styles.primaryActionDescription}>{t("lobby.host.readyDescription")}</p>
       </div>
-      <ActionButton
+      <RoomPrimaryActionButton
         className={styles.startGameButton}
         onFocus={onIntentToStart}
         onClick={onStartGame}
@@ -25,7 +25,7 @@ export function LobbyHostStartPanel({ onIntentToStart, onStartGame }: LobbyHostS
         type="button"
       >
         {t("lobby.host.startGame")}
-      </ActionButton>
+      </RoomPrimaryActionButton>
     </div>
   );
 }

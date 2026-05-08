@@ -249,92 +249,7 @@
 }
 
 .primaryAction {
-  --button-border-angle: 0turn;
-  --button-border-width: 1px;
-  position: relative;
-  width: 100%;
   min-height: 62px;
-  padding: var(--button-border-width);
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: white;
-  cursor: pointer;
-  overflow: hidden;
-  isolation: isolate;
-}
-
-.primaryAction::before,
-.primaryAction::after {
-  content: "";
-  position: absolute;
-  border-radius: inherit;
-  pointer-events: none;
-  animation: buttonBorderSpin 5.5s linear infinite;
-}
-
-.primaryAction::before {
-  inset: 0;
-  z-index: 1;
-  padding: var(--button-border-width);
-  background: conic-gradient(
-    from var(--button-border-angle),
-    color-mix(in srgb, #ff8a3d 90%, transparent) 0%,
-    color-mix(in srgb, #ff8a3d 90%, transparent) 58%,
-    #38c8ff 68%,
-    #8b5cff 76%,
-    #ff4d9d 86%,
-    #ffb26b 94%,
-    color-mix(in srgb, #ff8a3d 90%, transparent) 100%
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-}
-
-.primaryAction::after {
-  inset: -7px;
-  z-index: 0;
-  background: conic-gradient(
-    from var(--button-border-angle),
-    color-mix(in srgb, #ff8a3d 58%, transparent),
-    color-mix(in srgb, #38c8ff 70%, transparent),
-    color-mix(in srgb, #ff4d9d 58%, transparent),
-    color-mix(in srgb, #ff8a3d 58%, transparent)
-  );
-  filter: blur(12px);
-  opacity: 0.3;
-}
-
-.primaryActionInner {
-  position: relative;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  min-height: 60px;
-  border-radius: inherit;
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, #8b5cff 18%, transparent),
-      transparent 44%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, #17203a 42%, transparent),
-      color-mix(in srgb, #050914 28%, transparent)
-    );
-}
-
-.primaryActionLabel {
-  font-size: 16px;
-  font-weight: 900;
-  letter-spacing: 0.12em;
 }
 
 .secondaryAction,
@@ -426,18 +341,6 @@
   line-height: 1.45;
 }
 
-@keyframes buttonBorderSpin {
-  to {
-    --button-border-angle: 1turn;
-  }
-}
-
-@property --button-border-angle {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0turn;
-}
-
 @media (min-width: 900px) {
   .panelShell {
     padding: calc(var(--safe-area-top) + 22px) calc(var(--safe-area-right) + 22px)
@@ -479,9 +382,3 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .primaryAction::before,
-  .primaryAction::after {
-    animation: none;
-  }
-}
