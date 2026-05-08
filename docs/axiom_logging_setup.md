@@ -63,22 +63,24 @@ tunetrack-server
 5. Create an API token with ingest permission for that dataset.
 6. Copy the token. You will add it to Railway as `AXIOM_TOKEN`.
 
-The backend sends events as NDJSON to:
+The backend sends events as NDJSON to the configured Axiom edge deployment:
 
 ```text
-https://api.axiom.co/v1/datasets/<AXIOM_DATASET>/ingest
+<AXIOM_DOMAIN>/v1/ingest/<AXIOM_DATASET>
 ```
 
-If that endpoint fails, the backend also tries the edge ingest endpoint:
+Available Axiom edge deployment domains:
 
 ```text
-https://api.axiom.co/v1/ingest/<AXIOM_DATASET>
+US East 1 (AWS): https://us-east-1.aws.edge.axiom.co
+EU Central 1 (AWS): https://eu-central-1.aws.edge.axiom.co
 ```
 
-For the normal Axiom cloud setup, leave `AXIOM_DOMAIN` as:
+Your dataset region must match `AXIOM_DOMAIN`. If Axiom says the dataset is in
+`cloud.eu-central-1.aws`, use:
 
 ```text
-https://api.axiom.co
+https://eu-central-1.aws.edge.axiom.co
 ```
 
 ## Railway Setup
@@ -98,7 +100,7 @@ Required for Axiom ingestion:
 ```text
 AXIOM_TOKEN=<axiom ingest api token>
 AXIOM_DATASET=tunetrack-server
-AXIOM_DOMAIN=https://api.axiom.co
+AXIOM_DOMAIN=https://eu-central-1.aws.edge.axiom.co
 ```
 
 Optional payload summaries:
@@ -266,7 +268,7 @@ No logs in Axiom:
 Audit logs are visible in Railway but not Axiom:
 
 1. Search Railway logs for `axiom_ingest_error`.
-2. Confirm `AXIOM_DOMAIN=https://api.axiom.co`.
+2. Confirm `AXIOM_DOMAIN` matches the dataset region. For EU Central, use `https://eu-central-1.aws.edge.axiom.co`.
 3. Confirm `AXIOM_DATASET` exactly matches the dataset name in Axiom.
 4. Create a new Axiom token and replace `AXIOM_TOKEN` if the old token may be invalid.
 

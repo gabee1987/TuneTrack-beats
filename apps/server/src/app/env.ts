@@ -20,7 +20,7 @@ const envSchema = z.object({
   TEST_RUN_ID: z.string().trim().min(1).optional(),
   AXIOM_TOKEN: z.string().trim().min(1).optional(),
   AXIOM_DATASET: z.string().trim().min(1).optional(),
-  AXIOM_DOMAIN: z.string().url().default("https://api.axiom.co"),
+  AXIOM_DOMAIN: z.string().url().default("https://us-east-1.aws.edge.axiom.co"),
 }).superRefine((value, ctx) => {
   if (Boolean(value.AXIOM_TOKEN) === Boolean(value.AXIOM_DATASET)) return;
 

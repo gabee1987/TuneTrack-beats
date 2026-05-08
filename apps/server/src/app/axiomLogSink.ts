@@ -58,10 +58,10 @@ function scheduleFlush(): void {
 }
 
 async function sendAxiomBatch(events: AxiomLogEvent[]): Promise<void> {
-  const response = await postAxiomBatch(buildDatasetIngestUrl(), events);
+  const response = await postAxiomBatch(buildEdgeIngestUrl(), events);
   if (response.ok) return;
 
-  const fallbackResponse = await postAxiomBatch(buildEdgeIngestUrl(), events);
+  const fallbackResponse = await postAxiomBatch(buildGlobalDatasetIngestUrl(), events);
   if (fallbackResponse.ok) return;
 
   const responseBody = await readResponseBody(response);
@@ -82,13 +82,13 @@ function postAxiomBatch(url: string, events: AxiomLogEvent[]): Promise<Response>
   });
 }
 
-function buildDatasetIngestUrl(): string {
-  return `https://api.axiom.co/v1/datasets/${encodeURIComponent(env.AXIOM_DATASET ?? "")}/ingest`;
-}
-
 function buildEdgeIngestUrl(): string {
   const baseUrl = env.AXIOM_DOMAIN.replace(/\/$/, "");
   return `${baseUrl}/v1/ingest/${encodeURIComponent(env.AXIOM_DATASET ?? "")}`;
+}
+
+function buildGlobalDatasetIngestUrl(): string {
+  return `https://api.axiom.co/v1/datasets/${encodeURIComponent(env.AXIOM_DATASET ?? "")}/ingest`;
 }
 
 function isAxiomConfigured(): boolean {
