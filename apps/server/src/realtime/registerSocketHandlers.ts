@@ -32,9 +32,15 @@ import {
 import type { Server, Socket } from "socket.io";
 import { logger } from "../app/logger.js";
 import type { RoomService } from "../rooms/RoomService.js";
+import {
+  logRejectedCurrentSocketEvent,
+  logRoomStateBroadcast,
+  registerSocketAuditMiddleware,
+} from "./realtimeAuditLogger.js";
 
 export function registerSocketHandlers(io: Server, roomService: RoomService): void {
   roomService.setRoomStateChangedListener((roomState) => {
+    logRoomStateBroadcast(ServerToClientEvent.StateUpdate, roomState);
     io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
       roomState,
     });
@@ -42,6 +48,7 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
 
   io.on("connection", (socket) => {
     logger.info({ socketId: socket.id }, "socket connected");
+    registerSocketAuditMiddleware(socket);
     registerCreateRoomHandler(io, socket, roomService);
     registerJoinRoomHandler(io, socket, roomService);
     registerListRoomsHandler(socket, roomService);
@@ -909,6 +916,7 @@ function emitServerError(
 ): void {
   const errorCode = error instanceof Error ? error.message : fallbackCode;
   logger.warn({ socketId: socket.id, code: errorCode }, "socket action rejected");
+  logRejectedCurrentSocketEvent(socket, errorCode);
 
   socket.emit(ServerToClientEvent.Error, {
     code: errorCode,
