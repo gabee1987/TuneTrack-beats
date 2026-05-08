@@ -578,6 +578,22 @@ describe("GameFlowService", () => {
     ).toBe(1);
   });
 
+  it("removes a player from engine turn order and timelines", () => {
+    const gameState = gameFlowService.startGame({
+      players,
+      deck,
+      targetTimelineCardCount: 4,
+    });
+
+    const updatedGameState = gameFlowService.removePlayer(gameState, "player-2");
+
+    expect(updatedGameState.players.map((player) => player.id)).toEqual([
+      "player-1",
+    ]);
+    expect(updatedGameState.timelines["player-2"]).toBeUndefined();
+    expect(updatedGameState.turn?.activePlayerId).toBe("player-1");
+  });
+
   it("never lets a player go above 5 TT", () => {
     const gameState = gameFlowService.startGame({
       players: [

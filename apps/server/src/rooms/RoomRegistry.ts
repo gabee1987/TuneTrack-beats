@@ -677,6 +677,9 @@ export class RoomRegistry {
     if (isActivePlayer && gameState) {
       gameState = this.gameFlowService.skipOfflinePlayerTurn(gameState);
     }
+    if (gameState) {
+      gameState = removePlayerFromGameState(gameState, payload.playerId);
+    }
 
     const { nextRoomState: baseRoomState } = buildPlayerRemovedRoomState(roomRecord.roomState, payload.playerId);
     if (!baseRoomState) {
@@ -1001,5 +1004,17 @@ function mapRoomStateToSummary(roomState: PublicRoomState): PublicRoomSummary {
     playerCount: roomState.players.length,
     roomId: roomState.roomId,
     status: roomState.status,
+  };
+}
+
+function removePlayerFromGameState(gameState: GameState, playerId: string): GameState {
+  const players = gameState.players.filter((player) => player.id !== playerId);
+  const timelines = { ...gameState.timelines };
+  delete timelines[playerId];
+
+  return {
+    ...gameState,
+    players,
+    timelines,
   };
 }

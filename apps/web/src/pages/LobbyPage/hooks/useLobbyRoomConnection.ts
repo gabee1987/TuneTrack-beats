@@ -13,7 +13,10 @@ import { useI18n } from "../../../features/i18n";
 import { localizeServerError } from "../../../features/i18n/localizedErrors";
 import { rememberPlayerDisplayName } from "../../../services/session/playerSession";
 import { rememberRoomEventToast } from "../../../services/session/roomEventToast";
-import { getSocketClient } from "../../../services/socket/socketClient";
+import {
+  disconnectSocketClient,
+  getSocketClient,
+} from "../../../services/socket/socketClient";
 
 interface UseLobbyRoomConnectionOptions {
   displayName: string;
@@ -156,6 +159,7 @@ export function useLobbyRoomConnection({
         });
       }
 
+      disconnectSocketClient();
       navigate("/", {
         state:
           payload.reason === "kicked"

@@ -462,6 +462,22 @@ export class GameFlowService {
     };
   }
 
+  public removePlayer(gameState: GameState, playerId: string): GameState {
+    if (!gameState.players.some((player) => player.id === playerId)) {
+      throw new Error("PLAYER_NOT_FOUND");
+    }
+
+    const players = gameState.players.filter((player) => player.id !== playerId);
+    const timelines = { ...gameState.timelines };
+    delete timelines[playerId];
+
+    return {
+      ...gameState,
+      players,
+      timelines,
+    };
+  }
+
   public skipCurrentTrackWithTt(
     gameState: GameState,
     playerId: string,

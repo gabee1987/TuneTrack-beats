@@ -37,3 +37,7 @@ export function getSocketClient(): Promise<Socket> {
 export function preloadSocketClient(): void {
   void getSocketClient();
 }
+
+export function disconnectSocketClient(): void {
+  socketClientInstance?.disconnect();
+}

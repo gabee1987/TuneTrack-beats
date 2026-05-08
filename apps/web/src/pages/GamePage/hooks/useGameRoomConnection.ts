@@ -12,7 +12,10 @@ import type { NavigateFunction } from "react-router-dom";
 import { useI18n } from "../../../features/i18n";
 import { localizeServerError } from "../../../features/i18n/localizedErrors";
 import { rememberRoomEventToast } from "../../../services/session/roomEventToast";
-import { getSocketClient } from "../../../services/socket/socketClient";
+import {
+  disconnectSocketClient,
+  getSocketClient,
+} from "../../../services/socket/socketClient";
 import type { GameRouteState } from "../GamePage.types";
 
 interface UseGameRoomConnectionOptions {
@@ -82,6 +85,7 @@ export function useGameRoomConnection({
         });
       }
 
+      disconnectSocketClient();
       navigate("/", {
         state:
           payload.reason === "kicked"

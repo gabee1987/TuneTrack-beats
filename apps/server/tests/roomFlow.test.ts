@@ -835,6 +835,66 @@ describe("room flow", () => {
     );
   });
 
+  it("removes kicked players from future turn order during a game", () => {
+    const roomRegistry = new RoomRegistry();
+    const hostJoin = roomRegistry.createRoom(
+      "kick-turn-room",
+      "Host Player",
+      "host-socket",
+      "host-session",
+    );
+    const guestJoin = roomRegistry.addPlayerToRoom(
+      "kick-turn-room",
+      "Guest Player",
+      "guest-socket",
+      "guest-session",
+    );
+    const kickedGuestJoin = roomRegistry.addPlayerToRoom(
+      "kick-turn-room",
+      "Kicked Guest",
+      "kicked-guest-socket",
+      "kicked-guest-session",
+    );
+
+    roomRegistry.startGame(
+      "host-socket",
+      { roomId: "kick-turn-room" },
+      getTurnOrderDeck(),
+    );
+
+    roomRegistry.placeCard("host-socket", {
+      roomId: "kick-turn-room",
+      selectedSlotIndex: 1,
+    });
+    const secondTurnState = roomRegistry.confirmReveal("host-socket", {
+      roomId: "kick-turn-room",
+    });
+    expect(secondTurnState.turn?.activePlayerId).toBe(guestJoin.playerId);
+
+    const stateAfterKick = roomRegistry.kickPlayer("host-socket", {
+      roomId: "kick-turn-room",
+      playerId: kickedGuestJoin.playerId,
+    }).roomState;
+
+    expect(stateAfterKick.turn?.activePlayerId).toBe(guestJoin.playerId);
+    expect(stateAfterKick.players.map((player) => player.id)).not.toContain(
+      kickedGuestJoin.playerId,
+    );
+
+    roomRegistry.placeCard("guest-socket", {
+      roomId: "kick-turn-room",
+      selectedSlotIndex: 0,
+    });
+    const hostTurnState = roomRegistry.confirmReveal("host-socket", {
+      roomId: "kick-turn-room",
+    });
+
+    expect(hostTurnState.turn?.activePlayerId).toBe(hostJoin.playerId);
+    expect(hostTurnState.players.map((player) => player.id)).not.toContain(
+      kickedGuestJoin.playerId,
+    );
+  });
+
   it("lets the host award TT during a game", async () => {
     const serverContext = await startTestServer();
     const hostSocket = createClient(serverContext.baseUrl);
@@ -953,7 +1013,12 @@ async function startTestServer(
 
 class TestDeckService extends DeckService {
   public override createShuffledDeck(): GameTrackCard[] {
-    return [
+    return getTurnOrderDeck();
+  }
+}
+
+function getTurnOrderDeck(): GameTrackCard[] {
+  return [
       {
         id: "test-track-1",
         title: "Older Song",
@@ -986,8 +1051,23 @@ class TestDeckService extends DeckService {
         genre: "Disco",
         releaseYear: 2010,
       },
+      {
+        id: "test-track-5",
+        title: "Oldest Song",
+        artist: "Test Artist 5",
+        albumTitle: "Test Album 5",
+        genre: "Funk",
+        releaseYear: 1970,
+      },
+      {
+        id: "test-track-6",
+        title: "Future Song",
+        artist: "Test Artist 6",
+        albumTitle: "Test Album 6",
+        genre: "House",
+        releaseYear: 2020,
+      },
     ];
-  }
 }
 
 function createClient(baseUrl: string): Socket {
