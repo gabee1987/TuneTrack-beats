@@ -11,11 +11,15 @@ import { useEffect, useRef, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useI18n } from "../../../features/i18n";
 import { localizeServerError } from "../../../features/i18n/localizedErrors";
-import { rememberPlayerDisplayName } from "../../../services/session/playerSession";
+import {
+  rememberPlayerDisplayName,
+  resetPlayerSession,
+} from "../../../services/session/playerSession";
 import { rememberRoomEventToast } from "../../../services/session/roomEventToast";
 import {
   disconnectSocketClient,
   getSocketClient,
+  resetSocketClient,
 } from "../../../services/socket/socketClient";
 
 interface UseLobbyRoomConnectionOptions {
@@ -27,10 +31,12 @@ interface UseLobbyRoomConnectionOptions {
 }
 
 interface UseLobbyRoomConnectionResult {
+  hasClosedRoomReset: boolean;
   connectionStatus: string;
   currentPlayerId: string | null;
   errorCode: string | null;
   errorMessage: string | null;
+  handleClosedRoomReset: () => void;
   roomState: PublicRoomState | null;
 }
 
@@ -78,6 +84,17 @@ export function useLobbyRoomConnection({
   const [roomState, setRoomState] = useState<PublicRoomState | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [hasClosedRoomReset, setHasClosedRoomReset] = useState(false);
+
+  function handleClosedRoomReset() {
+    setHasClosedRoomReset(false);
+    resetSocketClient();
+    resetPlayerSession();
+    setRoomState(null);
+    setCurrentPlayerId(null);
+    currentPlayerIdRef.current = null;
+    navigate("/", { replace: true, state: null });
+  }
 
   useEffect(() => {
     let isDisposed = false;
@@ -147,6 +164,13 @@ export function useLobbyRoomConnection({
     }
 
     function handleError(payload: ServerErrorPayload) {
+      if (isClosedRoomError(payload.code)) {
+        setHasClosedRoomReset(true);
+        setErrorCode(null);
+        setErrorMessage(null);
+        return;
+      }
+
       setErrorCode(payload.code);
       setErrorMessage(localizeServerError(t, payload));
     }
@@ -210,10 +234,16 @@ export function useLobbyRoomConnection({
   }, [displayName, intent, navigate, playerSessionId, roomId, t]);
 
   return {
+    hasClosedRoomReset,
     connectionStatus,
     currentPlayerId,
     errorCode,
     errorMessage,
+    handleClosedRoomReset,
     roomState,
   };
+}
+
+function isClosedRoomError(errorCode: string): boolean {
+  return errorCode === "ROOM_NOT_FOUND" || errorCode === "ROOM_MEMBERSHIP_NOT_FOUND";
 }

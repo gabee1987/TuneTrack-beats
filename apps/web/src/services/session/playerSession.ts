@@ -62,3 +62,8 @@ export function getRememberedPlayerDisplayName(): string {
 
   return existingTabDisplayName;
 }
+
+export function resetPlayerSession(): void {
+  window.sessionStorage.removeItem(PLAYER_SESSION_ID_STORAGE_KEY);
+  window.localStorage.removeItem(PLAYER_SESSION_ID_STORAGE_KEY);
+}

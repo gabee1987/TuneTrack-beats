@@ -1,0 +1,60 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--safe-area-top) + 18px) calc(var(--safe-area-right) + 18px)
+    calc(var(--safe-area-bottom) + 18px) calc(var(--safe-area-left) + 18px);
+  background: color-mix(in srgb, var(--color-overlay) 86%, black 14%);
+  backdrop-filter: blur(18px) saturate(0.92);
+  -webkit-backdrop-filter: blur(18px) saturate(0.92);
+}
+
+.card {
+  width: min(100%, 430px);
+  padding: 24px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 88%, white 12%);
+  border-radius: 22px;
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, var(--color-accent-primary) 14%, transparent),
+      transparent 42%
+    ),
+    color-mix(in srgb, var(--color-surface-strong) 96%, black 4%);
+  box-shadow:
+    0 22px 70px color-mix(in srgb, black 42%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: color-mix(in srgb, #ffb26b 86%, var(--color-text-secondary));
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 24px;
+  line-height: 1.08;
+}
+
+.body {
+  margin: 12px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  line-height: 1.48;
+}
+
+.action {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 22px;
+}

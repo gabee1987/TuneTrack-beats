@@ -42,6 +42,16 @@ export function useGamePageToasts({
     }
   }
 
+  function removeActiveToastByType(type: GamePageToastType) {
+    const activeToast = activeByTypeRef.current.get(type);
+    if (!activeToast) return;
+
+    window.clearTimeout(activeToast.timer);
+    timersRef.current.delete(activeToast.timer);
+    activeByTypeRef.current.delete(type);
+    setToasts((prev) => prev.filter((toast) => toast.id !== activeToast.id));
+  }
+
   function scheduleToastRemoval(id: string, type: GamePageToastType) {
     const timer = window.setTimeout(() => {
       timersRef.current.delete(timer);
@@ -92,7 +102,16 @@ export function useGamePageToasts({
     for (const player of roomState.players) {
       if (player.id === currentPlayerId) continue;
       const prev = prevPlayers.find((p) => p.id === player.id);
+      if (prev?.connectionStatus === "connected" && player.connectionStatus === "disconnected") {
+        pushToast(
+          "info",
+          t("game.toast.disconnected", { playerName: player.displayName }),
+        );
+        return;
+      }
+
       if (prev?.connectionStatus === "disconnected" && player.connectionStatus === "connected") {
+        removeActiveToastByType("info");
         pushToast(
           "success",
           t("game.toast.reconnected", { playerName: player.displayName }),

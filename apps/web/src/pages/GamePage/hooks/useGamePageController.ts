@@ -46,6 +46,8 @@ export function useGamePageController({
     currentPlayerId,
     errorKey,
     errorMessage,
+    handleClosedRoomReset,
+    hasClosedRoomReset,
     nowEpochMs,
     roomState,
   } = useGameRoomConnection({
@@ -241,6 +243,8 @@ export function useGamePageController({
     displayState,
     errorKey,
     errorMessage,
+    handleClosedRoomReset,
+    hasClosedRoomReset,
     playerState,
     preferenceState,
     timelineState,

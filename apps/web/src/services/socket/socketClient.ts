@@ -3,6 +3,7 @@ import { resolveServerUrl } from "./resolveServerUrl";
 
 let socketClientInstance: Socket | null = null;
 let socketClientPromise: Promise<Socket> | null = null;
+let socketClientGeneration = 0;
 
 function resolveSocketServerUrl(): string {
   return resolveServerUrl({
@@ -13,10 +14,17 @@ function resolveSocketServerUrl(): string {
 }
 
 async function createSocketClient(): Promise<Socket> {
+  const generation = socketClientGeneration;
   const { io } = await import("socket.io-client");
   const nextSocketClient = io(resolveSocketServerUrl(), {
     autoConnect: false,
   });
+
+  if (generation !== socketClientGeneration) {
+    nextSocketClient.removeAllListeners();
+    nextSocketClient.disconnect();
+    return nextSocketClient;
+  }
 
   socketClientInstance = nextSocketClient;
   return nextSocketClient;
@@ -40,4 +48,12 @@ export function preloadSocketClient(): void {
 
 export function disconnectSocketClient(): void {
   socketClientInstance?.disconnect();
+}
+
+export function resetSocketClient(): void {
+  socketClientGeneration += 1;
+  socketClientInstance?.removeAllListeners();
+  socketClientInstance?.disconnect();
+  socketClientInstance = null;
+  socketClientPromise = null;
 }

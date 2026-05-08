@@ -56,6 +56,8 @@ interface BuildGamePageControllerResultOptions {
   >;
   errorKey: number;
   errorMessage: string | null;
+  handleClosedRoomReset: () => void;
+  hasClosedRoomReset: boolean;
   playerState: {
     currentPlayerId: string | null;
     currentPlayerTtCount: number;
@@ -105,6 +107,8 @@ export function buildGamePageControllerResult({
   displayState,
   errorKey,
   errorMessage,
+  handleClosedRoomReset,
+  hasClosedRoomReset,
   playerState,
   preferenceState,
   timelineState,
@@ -112,6 +116,8 @@ export function buildGamePageControllerResult({
   return {
     errorKey,
     errorMessage,
+    handleClosedRoomReset,
+    hasClosedRoomReset,
     ...actionState,
     ...capabilityState,
     ...displayState,

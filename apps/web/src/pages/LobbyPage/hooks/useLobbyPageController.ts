@@ -39,7 +39,15 @@ export function useLobbyPageController(): LobbyPageController {
   );
   const intent = searchParams.get("intent") === "create" ? "create" : "join";
   const playerSessionId = useMemo(() => getOrCreatePlayerSessionId(), []);
-  const { connectionStatus, currentPlayerId, errorCode, errorMessage, roomState } =
+  const {
+    connectionStatus,
+    currentPlayerId,
+    errorCode,
+    errorMessage,
+    handleClosedRoomReset,
+    hasClosedRoomReset,
+    roomState,
+  } =
     useLobbyRoomConnection({
       displayName,
       intent,
@@ -69,7 +77,9 @@ export function useLobbyPageController(): LobbyPageController {
     displayName,
     errorCode,
     errorMessage,
+    handleClosedRoomReset,
     handleCloseRoom: actions.handleCloseRoom,
+    hasClosedRoomReset,
     handlePlayerKick: actions.handlePlayerKick,
     handlePlayerStartingCardCountChange: actions.handlePlayerStartingCardCountChange,
     handlePlayerStartingTtTokenCountChange: actions.handlePlayerStartingTtTokenCountChange,

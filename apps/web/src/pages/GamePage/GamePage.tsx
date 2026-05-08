@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { AppRouteFallback } from "../../app/components/AppRouteFallback";
 import { useI18n } from "../../features/i18n";
+import { RoomResetModal } from "../../features/ui/RoomResetModal";
 import { usePageLayoutMode } from "../../hooks/usePageLayoutMode";
 import { GamePageToastStack } from "./components/GamePageToastStack";
 import type { GameRouteState, LoadedGamePageController } from "./GamePage.types";
@@ -38,14 +39,23 @@ export function GamePage() {
     roomState: controller.roomState,
   });
   const layoutMode = usePageLayoutMode();
+  const roomResetModal = (
+    <RoomResetModal
+      isOpen={controller.hasClosedRoomReset}
+      onReset={controller.handleClosedRoomReset}
+    />
+  );
 
   if (!controller.roomState) {
     return (
-      <main className={styles.screen}>
-        <section className={styles.panel}>
-          <h1 className={styles.title}>{t("game.loading")}</h1>
-        </section>
-      </main>
+      <>
+        {roomResetModal}
+        <main className={styles.screen}>
+          <section className={styles.panel}>
+            <h1 className={styles.title}>{t("game.loading")}</h1>
+          </section>
+        </main>
+      </>
     );
   }
 
@@ -57,6 +67,7 @@ export function GamePage() {
 
   return (
     <>
+      {roomResetModal}
       <GamePageToastStack toasts={toasts} />
       <Suspense fallback={<AppRouteFallback />}>
         {layoutMode === "mobile" ? (

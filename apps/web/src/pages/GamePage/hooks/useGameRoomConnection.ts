@@ -11,10 +11,12 @@ import { useEffect, useRef, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useI18n } from "../../../features/i18n";
 import { localizeServerError } from "../../../features/i18n/localizedErrors";
+import { resetPlayerSession } from "../../../services/session/playerSession";
 import { rememberRoomEventToast } from "../../../services/session/roomEventToast";
 import {
   disconnectSocketClient,
   getSocketClient,
+  resetSocketClient,
 } from "../../../services/socket/socketClient";
 import type { GameRouteState } from "../GamePage.types";
 
@@ -44,6 +46,16 @@ export function useGameRoomConnection({
   const [errorKey, setErrorKey] = useState(0);
   const errorKeyRef = useRef(0);
   const [nowEpochMs, setNowEpochMs] = useState(() => Date.now());
+  const [hasClosedRoomReset, setHasClosedRoomReset] = useState(false);
+
+  function handleClosedRoomReset() {
+    setHasClosedRoomReset(false);
+    resetSocketClient();
+    resetPlayerSession();
+    setRoomState(null);
+    setCurrentPlayerId(null);
+    navigate("/", { replace: true, state: null });
+  }
 
   useEffect(() => {
     let isDisposed = false;
@@ -72,6 +84,12 @@ export function useGameRoomConnection({
     }
 
     function handleError(payload: ServerErrorPayload) {
+      if (isClosedRoomError(payload.code)) {
+        setHasClosedRoomReset(true);
+        setErrorMessage(null);
+        return;
+      }
+
       errorKeyRef.current += 1;
       setErrorKey(errorKeyRef.current);
       setErrorMessage(localizeServerError(t, payload));
@@ -154,8 +172,14 @@ export function useGameRoomConnection({
     currentPlayerId,
     errorKey,
     errorMessage,
+    handleClosedRoomReset,
+    hasClosedRoomReset,
     nowEpochMs,
     roomState,
     setErrorMessage,
   };
+}
+
+function isClosedRoomError(errorCode: string): boolean {
+  return errorCode === "ROOM_NOT_FOUND" || errorCode === "ROOM_MEMBERSHIP_NOT_FOUND";
 }

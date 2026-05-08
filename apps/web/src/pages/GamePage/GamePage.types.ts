@@ -183,6 +183,8 @@ export interface GamePageAssemblyModel {
 export type GamePageController = GamePageActionHandlers & {
   canChangeTimelineView: boolean;
   errorKey: number;
+  handleClosedRoomReset: () => void;
+  hasClosedRoomReset: boolean;
   canConfirmBeatPlacement: boolean;
   canConfirmReveal: boolean;
   canConfirmTurnPlacement: boolean;

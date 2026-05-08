@@ -7,7 +7,9 @@ export interface LobbyPageController {
   displayName: string;
   errorCode: string | null;
   errorMessage: string | null;
+  handleClosedRoomReset: () => void;
   handleCloseRoom: () => void;
+  hasClosedRoomReset: boolean;
   handlePlayerKick: (player: PublicPlayerState) => void;
   handlePlayerStartingCardCountChange: (player: PublicPlayerState, nextValue: number) => void;
   handlePlayerStartingTtTokenCountChange: (player: PublicPlayerState, nextValue: number) => void;

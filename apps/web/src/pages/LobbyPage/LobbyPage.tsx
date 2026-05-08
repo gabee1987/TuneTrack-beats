@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { AppRouteFallback } from "../../app/components/AppRouteFallback";
+import { RoomResetModal } from "../../features/ui/RoomResetModal";
 import { usePageLayoutMode } from "../../hooks/usePageLayoutMode";
 import { useLobbyPageController } from "./hooks/useLobbyPageController";
 
@@ -18,12 +19,18 @@ export function LobbyPage() {
   const layoutMode = usePageLayoutMode();
 
   return (
-    <Suspense fallback={<AppRouteFallback />}>
-      {layoutMode === "mobile" ? (
-        <LobbyPageMobile controller={controller} />
-      ) : (
-        <LobbyPageDesktop controller={controller} />
-      )}
-    </Suspense>
+    <>
+      <RoomResetModal
+        isOpen={controller.hasClosedRoomReset}
+        onReset={controller.handleClosedRoomReset}
+      />
+      <Suspense fallback={<AppRouteFallback />}>
+        {layoutMode === "mobile" ? (
+          <LobbyPageMobile controller={controller} />
+        ) : (
+          <LobbyPageDesktop controller={controller} />
+        )}
+      </Suspense>
+    </>
   );
 }
