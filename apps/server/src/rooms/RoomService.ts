@@ -45,8 +45,8 @@ export interface ImportPlaylistServiceResult {
 }
 
 export interface RefreshTokenResult {
-  accessToken: string;
-  expiresInSeconds: number;
+  result: { accessToken: string; expiresInSeconds: number } | null;
+  roomState: PublicRoomState | null;
 }
 
 export interface RenameRoomResult {
@@ -334,10 +334,7 @@ export class RoomService {
     }));
 
     const roomState = this.roomRegistry.setImportedDeck(socketId, payload.roomId, deck);
-    logger.info(
-      { roomId: payload.roomId, trackCount: deck.length },
-      "curated playlist loaded",
-    );
+    logger.info({ roomId: payload.roomId, trackCount: deck.length }, "curated playlist loaded");
     return { roomState, tracks: deck.map(cardToPublicTrackInfo) };
   }
 
@@ -351,9 +348,27 @@ export class RoomService {
   public async refreshSpotifyToken(
     payload: RefreshSpotifyTokenPayloadParsed,
     socketId: string,
-  ): Promise<RefreshTokenResult | null> {
-    void socketId;
-    return this.spotifyAuthService.refreshHostToken(payload.roomId);
+  ): Promise<RefreshTokenResult> {
+    const result = await this.spotifyAuthService.refreshHostToken(payload.roomId);
+
+    if (result.success) {
+      return {
+        result: {
+          accessToken: result.accessToken,
+          expiresInSeconds: result.expiresInSeconds,
+        },
+        roomState: null,
+      };
+    }
+
+    if (result.reason === "invalid_grant") {
+      return {
+        result: null,
+        roomState: this.updateSpotifyAuthStatus(payload.roomId, socketId, false, null),
+      };
+    }
+
+    return { result: null, roomState: null };
   }
 
   public getPlaylistTracks(

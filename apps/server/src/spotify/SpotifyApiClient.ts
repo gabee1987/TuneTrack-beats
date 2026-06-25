@@ -38,7 +38,12 @@ interface SpotifyPlaylistMetadata {
 
 export class SpotifyApiError extends Error {
   public constructor(
-    public readonly code: "not_found" | "forbidden" | "unauthorized" | "api_error",
+    public readonly code:
+      | "not_found"
+      | "forbidden"
+      | "unauthorized"
+      | "invalid_grant"
+      | "api_error",
     message: string,
     public readonly statusCode?: number,
   ) {
@@ -56,20 +61,21 @@ export class SpotifyApiClient {
       `${env.SPOTIFY_CLIENT_ID}:${env.SPOTIFY_CLIENT_SECRET}`,
     ).toString("base64");
 
-    const response = await fetch(
-      `${SpotifyApiClient.ACCOUNTS_URL}/api/token`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Basic ${credentials}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: "grant_type=client_credentials",
+    const response = await fetch(`${SpotifyApiClient.ACCOUNTS_URL}/api/token`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${credentials}`,
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-    );
+      body: "grant_type=client_credentials",
+    });
 
     if (!response.ok) {
-      throw new SpotifyApiError("api_error", "Failed to obtain client credentials token", response.status);
+      throw new SpotifyApiError(
+        "api_error",
+        "Failed to obtain client credentials token",
+        response.status,
+      );
     }
 
     return response.json() as Promise<SpotifyTokenResponse>;
@@ -86,20 +92,21 @@ export class SpotifyApiClient {
       redirect_uri: env.SPOTIFY_REDIRECT_URI,
     });
 
-    const response = await fetch(
-      `${SpotifyApiClient.ACCOUNTS_URL}/api/token`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Basic ${credentials}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: body.toString(),
+    const response = await fetch(`${SpotifyApiClient.ACCOUNTS_URL}/api/token`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${credentials}`,
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-    );
+      body: body.toString(),
+    });
 
     if (!response.ok) {
-      throw new SpotifyApiError("api_error", "Failed to exchange authorization code for tokens", response.status);
+      throw new SpotifyApiError(
+        "api_error",
+        "Failed to exchange authorization code for tokens",
+        response.status,
+      );
     }
 
     return response.json() as Promise<SpotifyTokenResponse>;
@@ -115,20 +122,22 @@ export class SpotifyApiClient {
       refresh_token: refreshToken,
     });
 
-    const response = await fetch(
-      `${SpotifyApiClient.ACCOUNTS_URL}/api/token`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Basic ${credentials}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: body.toString(),
+    const response = await fetch(`${SpotifyApiClient.ACCOUNTS_URL}/api/token`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${credentials}`,
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-    );
+      body: body.toString(),
+    });
 
     if (!response.ok) {
-      throw new SpotifyApiError("api_error", "Failed to refresh access token", response.status);
+      const tokenError = await parseSpotifyTokenError(response);
+      throw new SpotifyApiError(
+        tokenError === "invalid_grant" ? "invalid_grant" : "api_error",
+        "Failed to refresh access token",
+        response.status,
+      );
     }
 
     return response.json() as Promise<SpotifyTokenResponse>;
@@ -156,7 +165,7 @@ export class SpotifyApiClient {
       throw new SpotifyApiError("api_error", "Failed to fetch playlist metadata", response.status);
     }
 
-    const data = await response.json() as SpotifyPlaylistMetadata;
+    const data = (await response.json()) as SpotifyPlaylistMetadata;
     return data.name;
   }
 
@@ -189,7 +198,7 @@ export class SpotifyApiClient {
         throw new SpotifyApiError("api_error", "Failed to fetch playlist tracks", response.status);
       }
 
-      const page = await response.json() as SpotifyPlaylistTracksPage;
+      const page = (await response.json()) as SpotifyPlaylistTracksPage;
 
       for (const item of page.items) {
         if (item.track) {
@@ -220,5 +229,14 @@ export class SpotifyApiClient {
     });
 
     return `${SpotifyApiClient.ACCOUNTS_URL}/authorize?${params.toString()}`;
+  }
+}
+
+async function parseSpotifyTokenError(response: Response): Promise<string | null> {
+  try {
+    const body = (await response.json()) as { error?: unknown };
+    return typeof body.error === "string" ? body.error : null;
+  } catch {
+    return null;
   }
 }

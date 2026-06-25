@@ -16,6 +16,10 @@ export interface SpotifyCallbackResult {
   socketId: string;
 }
 
+export type SpotifyRefreshHostTokenResult =
+  | { success: true; accessToken: string; expiresInSeconds: number }
+  | { success: false; reason: "invalid_grant" | "failed" };
+
 export class SpotifyAuthService {
   public constructor(
     private readonly apiClient: SpotifyApiClient,
@@ -55,9 +59,10 @@ export class SpotifyAuthService {
         authResult: {
           success: false,
           code: error === "access_denied" ? "auth_denied" : "unknown",
-          message: error === "access_denied"
-            ? "Spotify login was cancelled."
-            : "Spotify authorization failed.",
+          message:
+            error === "access_denied"
+              ? "Spotify login was cancelled."
+              : "Spotify authorization failed.",
         },
       };
     }
@@ -144,11 +149,9 @@ export class SpotifyAuthService {
     }
   }
 
-  public async refreshHostToken(
-    roomId: RoomId,
-  ): Promise<{ accessToken: string; expiresInSeconds: number } | null> {
+  public async refreshHostToken(roomId: RoomId): Promise<SpotifyRefreshHostTokenResult> {
     const record = this.tokenStore.getHostTokenRecord(roomId);
-    if (!record) return null;
+    if (!record) return { success: false, reason: "failed" };
 
     try {
       const tokenResponse = await this.apiClient.refreshAccessToken(record.refreshToken);
@@ -169,12 +172,16 @@ export class SpotifyAuthService {
       });
 
       return {
+        success: true,
         accessToken: tokenResponse.access_token,
         expiresInSeconds: tokenResponse.expires_in,
       };
     } catch (err) {
       if (err instanceof SpotifyApiError) {
         logger.warn({ roomId, code: err.code }, "Failed to refresh Spotify host token");
+      }
+      if (err instanceof SpotifyApiError && err.code === "invalid_grant") {
+        this.tokenStore.clearHostTokens(roomId);
       }
       logAuditEvent({
         auditKind: "spotify_auth",
@@ -186,7 +193,13 @@ export class SpotifyAuthService {
           status: err instanceof SpotifyApiError ? err.statusCode : undefined,
         },
       });
-      return null;
+      return {
+        success: false,
+        reason:
+          err instanceof SpotifyApiError && err.code === "invalid_grant"
+            ? "invalid_grant"
+            : "failed",
+      };
     }
   }
 

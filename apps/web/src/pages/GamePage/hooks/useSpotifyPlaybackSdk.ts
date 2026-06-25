@@ -1,6 +1,7 @@
 import {
   ClientToServerEvent,
   ServerToClientEvent,
+  type ServerErrorPayload,
   type SpotifyTokenRefreshedPayload,
 } from "@tunetrack/shared";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -97,12 +98,26 @@ export function useSpotifyPlaybackSdk({
   const requestToken = useCallback(async (): Promise<string | null> => {
     const socketClient = await getSocketClient();
     return new Promise((resolve) => {
-      function handler(payload: SpotifyTokenRefreshedPayload) {
-        socketClient.off(ServerToClientEvent.SpotifyTokenRefreshed, handler);
+      function cleanup() {
+        socketClient.off(ServerToClientEvent.SpotifyTokenRefreshed, handleTokenRefreshed);
+        socketClient.off(ServerToClientEvent.Error, handleRefreshError);
+      }
+
+      function handleTokenRefreshed(payload: SpotifyTokenRefreshedPayload) {
+        cleanup();
         accessTokenRef.current = payload.accessToken;
         resolve(payload.accessToken);
       }
-      socketClient.once(ServerToClientEvent.SpotifyTokenRefreshed, handler);
+
+      function handleRefreshError(payload: ServerErrorPayload) {
+        if (payload.code !== "SPOTIFY_TOKEN_REFRESH_FAILED") return;
+        cleanup();
+        accessTokenRef.current = null;
+        resolve(null);
+      }
+
+      socketClient.on(ServerToClientEvent.SpotifyTokenRefreshed, handleTokenRefreshed);
+      socketClient.on(ServerToClientEvent.Error, handleRefreshError);
       socketClient.emit(ClientToServerEvent.RefreshSpotifyToken, { roomId });
     });
   }, [roomId]);
@@ -222,10 +237,7 @@ export function useSpotifyPlaybackSdk({
     const intervalId = window.setInterval(() => {
       if (!isPlayingRef.current) return;
       const elapsed = Date.now() - positionSnapshotTimeRef.current;
-      const interpolated = Math.min(
-        positionSnapshotRef.current + elapsed,
-        durationRef.current,
-      );
+      const interpolated = Math.min(positionSnapshotRef.current + elapsed, durationRef.current);
       setPosition(interpolated);
     }, 1000);
     return () => window.clearInterval(intervalId);
@@ -242,9 +254,12 @@ export function useSpotifyPlaybackSdk({
 
     void refresh();
 
-    const intervalId = window.setInterval(() => {
-      void refresh();
-    }, 55 * 60 * 1000);
+    const intervalId = window.setInterval(
+      () => {
+        void refresh();
+      },
+      55 * 60 * 1000,
+    );
 
     return () => window.clearInterval(intervalId);
   }, [enabled, requestToken]);

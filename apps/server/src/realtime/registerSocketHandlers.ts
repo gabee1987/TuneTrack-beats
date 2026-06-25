@@ -76,7 +76,7 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
     registerRemovePlaylistTracksHandler(io, socket, roomService);
     registerUpdatePlaylistTrackHandler(io, socket, roomService);
     registerRequestSpotifyAuthUrlHandler(socket, roomService);
-    registerRefreshSpotifyTokenHandler(socket, roomService);
+    registerRefreshSpotifyTokenHandler(io, socket, roomService);
     registerDisconnectHandler(io, socket, roomService);
   });
 }
@@ -839,10 +839,7 @@ function registerLoadCuratedPlaylistHandler(
       "load_curated_playlist",
     );
     try {
-      const { roomState, tracks } = roomService.loadCuratedPlaylist(
-        parseResult.data,
-        socket.id,
-      );
+      const { roomState, tracks } = roomService.loadCuratedPlaylist(parseResult.data, socket.id);
       socket.emit(ServerToClientEvent.PlaylistTracks, { tracks });
       io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, { roomState });
     } catch (error) {
@@ -874,7 +871,11 @@ function registerRequestSpotifyAuthUrlHandler(socket: Socket, roomService: RoomS
   });
 }
 
-function registerRefreshSpotifyTokenHandler(socket: Socket, roomService: RoomService): void {
+function registerRefreshSpotifyTokenHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
   socket.on(ClientToServerEvent.RefreshSpotifyToken, (payload: unknown) => {
     const parseResult = refreshSpotifyTokenPayloadSchema.safeParse(payload);
 
@@ -889,9 +890,14 @@ function registerRefreshSpotifyTokenHandler(socket: Socket, roomService: RoomSer
     void roomService
       .refreshSpotifyToken(parseResult.data, socket.id)
       .then((result) => {
-        if (result) {
-          socket.emit(ServerToClientEvent.SpotifyTokenRefreshed, result);
+        if (result.result) {
+          socket.emit(ServerToClientEvent.SpotifyTokenRefreshed, result.result);
         } else {
+          if (result.roomState) {
+            io.to(result.roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
+              roomState: result.roomState,
+            });
+          }
           socket.emit(ServerToClientEvent.Error, {
             code: "SPOTIFY_TOKEN_REFRESH_FAILED",
             message: "Could not refresh Spotify token. Please reconnect Spotify.",
