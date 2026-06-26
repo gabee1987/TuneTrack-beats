@@ -66,6 +66,7 @@ export interface UseLobbySpotifyResult {
   saveNameError: string | null;
   saveName: string;
   savedPlaylistMessage: string | null;
+  generatedPlaylistMessage: string | null;
   savedPlaylists: SavedPlaylist[];
   selectedSavedPlaylistId: string;
   selectedSpotifyPlaylistIds: Set<string>;
@@ -119,6 +120,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
   const [savedPlaylists, setSavedPlaylists] = useState<SavedPlaylist[]>(() => listSavedPlaylists());
   const [selectedSavedPlaylistId, setSelectedSavedPlaylistId] = useState("");
   const [savedPlaylistMessage, setSavedPlaylistMessage] = useState<string | null>(null);
+  const [generatedPlaylistMessage, setGeneratedPlaylistMessage] = useState<string | null>(null);
   const [loadedSavedPlaylistId, setLoadedSavedPlaylistId] = useState<string | null>(null);
 
   const [isSavingWithName, setIsSavingWithName] = useState(false);
@@ -135,6 +137,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
   const pendingSaveTracksRef = useRef<PublicTrackInfo[] | null>(null);
   const currentPlaylistNameRef = useRef<string | undefined>(undefined);
   const pendingLoadConfirmCleanupRef = useRef<(() => void) | null>(null);
+  const generatedPlaylistMessageTimerRef = useRef<number | null>(null);
   const [importContentHeight, setImportContentHeight] = useState(0);
   const [currentPlaylistSourceUrl, setCurrentPlaylistSourceUrl] = useState("");
 
@@ -142,6 +145,18 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     const popup = authPopupRef.current;
     if (popup && !popup.closed) popup.close();
     authPopupRef.current = null;
+  }, []);
+
+  const showGeneratedPlaylistMessage = useCallback((message: string) => {
+    if (generatedPlaylistMessageTimerRef.current) {
+      window.clearTimeout(generatedPlaylistMessageTimerRef.current);
+    }
+
+    setGeneratedPlaylistMessage(message);
+    generatedPlaylistMessageTimerRef.current = window.setTimeout(() => {
+      setGeneratedPlaylistMessage(null);
+      generatedPlaylistMessageTimerRef.current = null;
+    }, 4200);
   }, []);
 
   useLayoutEffect(() => {
@@ -205,6 +220,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
         setCandidateSessionId(null);
         setCandidateSourceSummary(null);
         setCandidateTracks([]);
+        setGeneratedPlaylistMessage(null);
         setIsEditModalOpen(false);
         setIsSavingWithName(false);
         setIsOverwritePromptActive(false);
@@ -232,6 +248,10 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
       isDisposed = true;
       cleanup?.();
       closeAuthPopup();
+      if (generatedPlaylistMessageTimerRef.current) {
+        window.clearTimeout(generatedPlaylistMessageTimerRef.current);
+        generatedPlaylistMessageTimerRef.current = null;
+      }
     };
   }, [closeAuthPopup, t]);
 
@@ -278,6 +298,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
 
     setPlaylistSearchPhase("searching");
     setPlaylistSearchError(null);
+    setGeneratedPlaylistMessage(null);
 
     void getSocketClient().then((socket) => {
       function handleResult(payload: SpotifyPlaylistSearchResultPayload) {
@@ -320,6 +341,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
 
     setCandidatePhase("generating");
     setCandidateError(null);
+    setGeneratedPlaylistMessage(null);
 
     void getSocketClient().then((socket) => {
       function handleResult(payload: SpotifyCandidatesGeneratedPayload) {
@@ -371,6 +393,9 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
           setCandidateTracks([]);
           currentPlaylistNameRef.current = candidateSourceSummary ?? undefined;
           setSavedPlaylistMessage(
+            t("lobby.spotify.generatedPlaylistApplied", { count: payload.importedCount }),
+          );
+          showGeneratedPlaylistMessage(
             t("lobby.spotify.generatedPlaylistApplied", { count: payload.importedCount }),
           );
         } else {
@@ -600,6 +625,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     saveNameError,
     saveName,
     savedPlaylistMessage,
+    generatedPlaylistMessage,
     savedPlaylists,
     selectedSavedPlaylistId,
     selectedSpotifyPlaylistIds,
