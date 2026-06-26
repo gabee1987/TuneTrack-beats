@@ -1,9 +1,11 @@
 import { motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 import type { PublicRoomSettings } from "@tunetrack/shared";
 import { createMeasuredDisclosureMotion, createStandardTransition } from "../../../features/motion";
 import { useI18n } from "../../../features/i18n";
 import { ActionButton } from "../../../features/ui/ActionButton";
+import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { SettingInfoButton } from "../../../features/ui/SettingField";
 import { TextInput } from "../../../features/ui/TextInput";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
@@ -11,11 +13,14 @@ import { LobbySectionHeader } from "./LobbySectionHeader";
 import { PlaylistEditModal } from "./PlaylistEditModal";
 import { AdaptiveSelect } from "./AdaptiveSelect";
 import { useLobbySpotify } from "../hooks/useLobbySpotify";
-import styles from "../LobbyPage.module.css";
+import lobbyStyles from "../LobbyPage.module.css";
+import styles from "./LobbySpotifySection.module.css";
 
 interface LobbySpotifySectionProps {
   currentSettings: PublicRoomSettings;
 }
+
+type LobbySpotifyState = ReturnType<typeof useLobbySpotify>;
 
 function SpotifyLogo() {
   return (
@@ -35,53 +40,100 @@ function SpotifyLogo() {
 
 export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProps) {
   const { t } = useI18n();
-  const reduceMotion = useReducedMotion() ?? false;
-  const {
-    accountType,
-    authError,
-    authPhase,
-    cancelRenamePlaylist,
-    cancelSavePlaylist,
-    closeEditModal,
-    confirmRenamePlaylist,
-    confirmSavePlaylist,
-    connectSpotify,
-    importContentHeight,
-    importContentRef,
-    importError,
-    importPhase,
-    importPlaylist,
-    isEditModalOpen,
-    isOverwritePromptActive,
-    isSavingWithName,
-    loadedSavedPlaylistId,
-    openEditModal,
-    playlistUrl,
-    renameError,
-    renameInputValue,
-    renamingPlaylistId,
-    saveNameError,
-    saveName,
-    savedPlaylistMessage,
-    savedPlaylists,
-    selectedSavedPlaylistId,
-    confirmOverwrite,
-    deleteSelectedSavedPlaylist,
-    saveCurrentPlaylist,
-    setRenameInputValue,
-    setSaveName,
-    setSelectedSavedPlaylistId,
-    setPlaylistUrl,
-    startRenamePlaylist,
-    switchToSaveAsNew,
-  } = useLobbySpotify();
-
+  const [isSetupOpen, setIsSetupOpen] = useState(false);
+  const spotifyState = useLobbySpotify();
   const isConnected = currentSettings.spotifyAuthStatus === "connected";
   const isImported = currentSettings.playlistImported;
-  const isConnecting = authPhase === "connecting";
-  const isImporting = importPhase === "importing";
+  const accountType = spotifyState.accountType ?? currentSettings.spotifyAccountType;
+  const isConnecting = spotifyState.authPhase === "connecting";
+
+  const connectHint = isConnected
+    ? accountType === "premium"
+      ? t("lobby.spotify.browserPlaybackHint")
+      : t("lobby.spotify.previewPlaybackHint")
+    : isConnecting
+      ? t("lobby.spotify.connectingHint")
+      : t("lobby.spotify.unconnectedHint");
+
+  return (
+    <>
+      <SurfaceCard className={lobbyStyles.settingsGroup}>
+        <LobbySectionHeader
+          description={t("lobby.spotify.description")}
+          title={t("lobby.spotify.title")}
+          titleAccessory={<SpotifyInfoButton />}
+          titleAs="h3"
+          variant="compact"
+        />
+
+        <div className={styles.spotifySetupSummary}>
+          <div className={styles.spotifyConnectRow}>
+            {isConnected ? (
+              <div className={styles.spotifyConnectedState}>
+                <div className={styles.spotifyBadgeRow}>
+                  <span className={styles.spotifyConnectedBadge}>
+                    <span className={styles.spotifyConnectedDot} />
+                    {t("lobby.spotify.connected")}
+                  </span>
+                  {accountType ? <SpotifyAccountBadge accountType={accountType} /> : null}
+                </div>
+
+                {isImported ? (
+                  <div className={styles.spotifySongsReady}>
+                    <span className={styles.spotifySongsReadyDot} />
+                    <span>
+                      {t("lobby.spotify.tracksQueued", {
+                        count: currentSettings.importedTrackCount,
+                      })}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <div className={styles.spotifyConnectUnconnected}>
+                <p className={styles.spotifyConnectHint}>{connectHint}</p>
+              </div>
+            )}
+          </div>
+
+          {isConnected ? <p className={styles.spotifyConnectHint}>{connectHint}</p> : null}
+
+          {spotifyState.authPhase === "error" && spotifyState.authError ? (
+            <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
+              {spotifyState.authError}
+            </p>
+          ) : null}
+
+          <ActionButton
+            className={styles.spotifySetupOpenBtn}
+            onClick={() => setIsSetupOpen(true)}
+            type="button"
+            variant="neutral"
+          >
+            <SpotifyLogo />
+            {isImported ? t("lobby.spotify.openSetupReady") : t("lobby.spotify.openSetup")}
+          </ActionButton>
+        </div>
+      </SurfaceCard>
+
+      <SpotifySetupModal
+        currentSettings={currentSettings}
+        isOpen={isSetupOpen}
+        onClose={() => setIsSetupOpen(false)}
+        spotifyState={spotifyState}
+      />
+      <PlaylistEditModal
+        isOpen={spotifyState.isEditModalOpen}
+        onClose={spotifyState.closeEditModal}
+      />
+    </>
+  );
+}
+
+function SpotifyInfoButton() {
+  const { t } = useI18n();
   const spotifyInfo: ReactNode = (
-    <span className={styles.ttInfoStack}>
+    <span className={lobbyStyles.ttInfoStack}>
       <span>
         <strong>{t("lobby.spotify.info.overviewTitle")}</strong>
         <span>{t("lobby.spotify.info.overviewBody")}</span>
@@ -109,10 +161,201 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
     </span>
   );
 
+  return <SettingInfoButton info={spotifyInfo} label={t("lobby.spotify.infoLabel")} />;
+}
+
+function SpotifyAccountBadge({ accountType }: { accountType: "free" | "premium" }) {
+  const { t } = useI18n();
+
+  return (
+    <span
+      className={accountType === "premium" ? styles.spotifyPremiumBadge : styles.spotifyFreeBadge}
+    >
+      {accountType === "premium" ? `✦ ${t("lobby.spotify.premium")}` : t("lobby.spotify.free")}
+    </span>
+  );
+}
+
+interface SpotifySetupModalProps {
+  currentSettings: PublicRoomSettings;
+  isOpen: boolean;
+  onClose: () => void;
+  spotifyState: LobbySpotifyState;
+}
+
+function SpotifySetupModal({
+  currentSettings,
+  isOpen,
+  onClose,
+  spotifyState,
+}: SpotifySetupModalProps) {
+  const { t } = useI18n();
+  const reduceMotion = useReducedMotion() ?? false;
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <motion.div
+      animate="animate"
+      className={styles.spotifySetupOverlay}
+      initial="exit"
+      onClick={onClose}
+      transition={createStandardTransition(reduceMotion)}
+      variants={{
+        animate: { opacity: 1 },
+        exit: { opacity: 0 },
+      }}
+    >
+      <motion.div
+        animate="animate"
+        aria-label={t("lobby.spotify.setupLabel")}
+        aria-modal="true"
+        className={styles.spotifySetupSheet}
+        initial="exit"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        transition={createStandardTransition(reduceMotion)}
+        variants={
+          reduceMotion
+            ? {
+                animate: { opacity: 1 },
+                exit: { opacity: 0 },
+              }
+            : {
+                animate: { opacity: 1, y: 0 },
+                exit: { opacity: 0, y: 24 },
+              }
+        }
+      >
+        <div className={styles.spotifySetupHeader}>
+          <div className={styles.spotifySetupHeaderText}>
+            <span className={styles.spotifySetupEyebrow}>{t("lobby.spotify.setupEyebrow")}</span>
+            <h2 className={styles.spotifySetupTitle}>{t("lobby.spotify.setupTitle")}</h2>
+            <p className={styles.spotifySetupSubtitle}>{t("lobby.spotify.setupSubtitle")}</p>
+          </div>
+          <div className={styles.spotifySetupHeaderActions}>
+            {currentSettings.spotifyAuthStatus === "connected" ? (
+              <span className={styles.spotifyConnectedBadge}>
+                <span className={styles.spotifyConnectedDot} />
+                {t("lobby.spotify.connected")}
+              </span>
+            ) : null}
+            <CloseIconButton ariaLabel={t("lobby.spotify.closeSetup")} onClick={onClose} />
+          </div>
+        </div>
+
+        <div className={styles.spotifySourceTabs} role="tablist">
+          <button
+            aria-selected="true"
+            className={`${styles.spotifySourceTab} ${styles.spotifySourceTabActive}`}
+            type="button"
+          >
+            {t("lobby.spotify.source.playlistUrl")}
+          </button>
+          <button className={styles.spotifySourceTab} disabled type="button">
+            {t("lobby.spotify.source.findPlaylists")}
+          </button>
+          <button className={styles.spotifySourceTab} disabled type="button">
+            {t("lobby.spotify.source.filters")}
+          </button>
+          <button className={styles.spotifySourceTab} disabled type="button">
+            {t("lobby.spotify.source.quickPicks")}
+          </button>
+        </div>
+
+        <div className={styles.spotifySetupBody}>
+          <SpotifySetupContent currentSettings={currentSettings} spotifyState={spotifyState} />
+        </div>
+
+        <div className={styles.spotifySetupFooter}>
+          <span className={styles.spotifySetupFooterStatus}>
+            {currentSettings.playlistImported
+              ? t("lobby.spotify.setupFooterReady", {
+                  count: currentSettings.importedTrackCount,
+                })
+              : t("lobby.spotify.setupFooterEmpty")}
+          </span>
+          <ActionButton
+            className={styles.spotifySetupDoneBtn}
+            onClick={onClose}
+            type="button"
+            variant="neutral"
+          >
+            {t("lobby.spotify.doneSetup")}
+          </ActionButton>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+interface SpotifySetupContentProps {
+  currentSettings: PublicRoomSettings;
+  spotifyState: LobbySpotifyState;
+}
+
+function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySetupContentProps) {
+  const { t } = useI18n();
+  const reduceMotion = useReducedMotion() ?? false;
+  const {
+    accountType,
+    authError,
+    authPhase,
+    cancelRenamePlaylist,
+    cancelSavePlaylist,
+    confirmRenamePlaylist,
+    confirmSavePlaylist,
+    connectSpotify,
+    importContentHeight,
+    importContentRef,
+    importError,
+    importPhase,
+    importPlaylist,
+    isOverwritePromptActive,
+    isSavingWithName,
+    loadedSavedPlaylistId,
+    openEditModal,
+    playlistUrl,
+    renameError,
+    renameInputValue,
+    renamingPlaylistId,
+    saveNameError,
+    saveName,
+    savedPlaylistMessage,
+    savedPlaylists,
+    selectedSavedPlaylistId,
+    confirmOverwrite,
+    deleteSelectedSavedPlaylist,
+    saveCurrentPlaylist,
+    setRenameInputValue,
+    setSaveName,
+    setSelectedSavedPlaylistId,
+    setPlaylistUrl,
+    startRenamePlaylist,
+    switchToSaveAsNew,
+  } = spotifyState;
+
+  const isConnected = currentSettings.spotifyAuthStatus === "connected";
+  const isImported = currentSettings.playlistImported;
+  const resolvedAccountType = accountType ?? currentSettings.spotifyAccountType;
+  const isConnecting = authPhase === "connecting";
+  const isImporting = importPhase === "importing";
+
   const connectHint = isConnected
-    ? accountType === "premium"
+    ? resolvedAccountType === "premium"
       ? t("lobby.spotify.browserPlaybackHint")
-      : t("lobby.spotify.appPlaybackHint")
+      : t("lobby.spotify.previewPlaybackHint")
     : isConnecting
       ? t("lobby.spotify.connectingHint")
       : null;
@@ -123,17 +366,7 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
   ];
 
   return (
-    <SurfaceCard className={styles.settingsGroup}>
-      <LobbySectionHeader
-        description={t("lobby.spotify.description")}
-        title={t("lobby.spotify.title")}
-        titleAccessory={
-          <SettingInfoButton info={spotifyInfo} label={t("lobby.spotify.infoLabel")} />
-        }
-        titleAs="h3"
-        variant="compact"
-      />
-
+    <div className={styles.spotifySetupContent}>
       <div className={styles.spotifyConnectRow}>
         {isConnected ? (
           <div className={styles.spotifyConnectedState}>
@@ -142,16 +375,8 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
                 <span className={styles.spotifyConnectedDot} />
                 {t("lobby.spotify.connected")}
               </span>
-              {accountType ? (
-                <span
-                  className={
-                    accountType === "premium" ? styles.spotifyPremiumBadge : styles.spotifyFreeBadge
-                  }
-                >
-                  {accountType === "premium"
-                    ? `✦ ${t("lobby.spotify.premium")}`
-                    : t("lobby.spotify.free")}
-                </span>
+              {resolvedAccountType ? (
+                <SpotifyAccountBadge accountType={resolvedAccountType} />
               ) : null}
             </div>
 
@@ -403,8 +628,6 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
           ) : null}
         </div>
       </motion.div>
-
-      <PlaylistEditModal isOpen={isEditModalOpen} onClose={closeEditModal} />
-    </SurfaceCard>
+    </div>
   );
 }
