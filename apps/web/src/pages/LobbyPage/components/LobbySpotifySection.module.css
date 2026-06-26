@@ -465,6 +465,240 @@
   white-space: nowrap;
 }
 
+.spotifyDiscoveryPanel {
+  display: grid;
+  gap: 18px;
+  max-width: 980px;
+}
+
+.spotifyDiscoverySearch,
+.spotifyCandidateReview {
+  display: grid;
+  gap: 14px;
+}
+
+.spotifyPanelHeader {
+  display: grid;
+  gap: 5px;
+}
+
+.spotifyPanelHeader h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.spotifyPanelHeader p {
+  max-width: 720px;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.spotifySearchRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.spotifySearchRow input {
+  min-height: 52px;
+}
+
+.spotifySearchBtn {
+  min-height: 52px;
+  padding: 14px 18px;
+  white-space: nowrap;
+}
+
+.spotifyPlaylistGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.spotifyPlaylistCard {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 90px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 78%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-surface-soft) 78%, transparent);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    transform 0.12s ease;
+}
+
+.spotifyPlaylistCard:hover {
+  border-color: color-mix(in srgb, var(--color-border-spotify) 58%, transparent);
+  background: color-mix(in srgb, var(--color-surface-elevated) 96%, transparent);
+  transform: translateY(-1px);
+}
+
+.spotifyPlaylistCardSelected {
+  border-color: color-mix(in srgb, var(--color-border-spotify) 88%, transparent);
+  background: color-mix(in srgb, var(--color-border-spotify) 22%, transparent);
+}
+
+.spotifyPlaylistImage,
+.spotifyPlaylistImageFallback {
+  width: 64px;
+  height: 64px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.spotifyPlaylistImageFallback {
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--color-border-spotify) 20%, black 80%);
+  color: var(--color-border-spotify);
+}
+
+.spotifyPlaylistMeta {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.spotifyPlaylistMeta strong {
+  overflow: hidden;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 850;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spotifyPlaylistMeta span {
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spotifyPlaylistSelectState {
+  align-self: center;
+  padding: 7px 10px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 70%, transparent);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-primary);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.spotifyEmptyState {
+  margin: 0;
+  padding: 14px;
+  border: 1px dashed color-mix(in srgb, var(--color-border-subtle) 76%, transparent);
+  border-radius: 8px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.spotifyDiscoveryActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 2px;
+}
+
+.spotifyCandidateReview {
+  padding-top: 4px;
+}
+
+.spotifyCandidateList {
+  display: grid;
+  gap: 8px;
+  max-height: 360px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.spotifyCandidateRow {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 64px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 70%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-surface-soft) 60%, transparent);
+}
+
+.spotifyCandidateArtwork,
+.spotifyCandidateArtworkFallback {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.spotifyCandidateArtworkFallback {
+  background: color-mix(in srgb, var(--color-border-subtle) 30%, black 70%);
+}
+
+.spotifyCandidateText {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.spotifyCandidateText strong,
+.spotifyCandidateText span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spotifyCandidateText strong {
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.spotifyCandidateText span {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.spotifyCandidateRemoveBtn {
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--color-status-danger-text) 35%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-status-danger-text) 12%, transparent);
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.spotifyCandidateRemoveBtn:hover {
+  background: color-mix(in srgb, var(--color-status-danger-text) 20%, transparent);
+}
+
 @media (max-width: 440px) {
   .spotifySetupOverlay {
     padding: 0;
@@ -524,6 +758,29 @@
   .spotifyImportBtn,
   .spotifyEditBtn {
     width: 100%;
+  }
+
+  .spotifySearchRow,
+  .spotifyPlaylistCard,
+  .spotifyCandidateRow {
+    grid-template-columns: 1fr;
+  }
+
+  .spotifySearchBtn,
+  .spotifyCandidateRemoveBtn {
+    width: 100%;
+  }
+
+  .spotifyPlaylistImage,
+  .spotifyPlaylistImageFallback {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+
+  .spotifyDiscoveryActions {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .spotifyEditRow {

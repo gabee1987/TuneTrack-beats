@@ -8,6 +8,7 @@
     "packages/*"
   ],
   "scripts": {
+    "predev": "npm run build -w @tunetrack/shared && npm run build -w @tunetrack/game-engine",
     "dev": "concurrently \"npm run dev -w apps/server\" \"npm run dev -w apps/web\"",
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",

@@ -45,6 +45,9 @@ const releaseYearSchema = z
   .max(new Date().getFullYear() + 1);
 
 const MAX_CURATED_PLAYLIST_TRACK_COUNT = 1_000;
+const MAX_SPOTIFY_PLAYLIST_SEARCH_LIMIT = 20;
+const MAX_SPOTIFY_CANDIDATE_PLAYLIST_COUNT = 8;
+const MAX_SPOTIFY_CANDIDATE_TARGET_COUNT = 120;
 
 const curatedPlaylistTrackSchema = z.object({
   id: z.string().trim().min(1).max(200),
@@ -208,6 +211,30 @@ export const refreshSpotifyTokenPayloadSchema = z.object({
   roomId: roomIdSchema,
 });
 
+export const searchSpotifyPlaylistsPayloadSchema = z.object({
+  roomId: roomIdSchema,
+  query: z.string().trim().min(2).max(100),
+  limit: z.number().int().min(1).max(MAX_SPOTIFY_PLAYLIST_SEARCH_LIMIT).default(10),
+});
+
+export const generateSpotifyCandidatesPayloadSchema = z.object({
+  roomId: roomIdSchema,
+  source: z.object({
+    type: z.literal("playlists"),
+    playlistIds: z
+      .array(z.string().trim().min(1).max(100))
+      .min(1)
+      .max(MAX_SPOTIFY_CANDIDATE_PLAYLIST_COUNT),
+    targetCount: z.number().int().min(10).max(MAX_SPOTIFY_CANDIDATE_TARGET_COUNT).default(50),
+  }),
+});
+
+export const useSpotifyCandidatesPayloadSchema = z.object({
+  roomId: roomIdSchema,
+  candidateSessionId: z.string().trim().min(1).max(120),
+  trackIds: z.array(z.string().trim().min(1).max(200)).min(10).max(500),
+});
+
 export type JoinRoomPayloadInput = z.input<typeof joinRoomPayloadSchema>;
 export type JoinRoomPayloadParsed = z.output<typeof joinRoomPayloadSchema>;
 export type CreateRoomPayloadInput = z.input<typeof createRoomPayloadSchema>;
@@ -257,12 +284,8 @@ export type SkipTurnPayloadParsed = z.output<typeof skipTurnPayloadSchema>;
 export type ImportPlaylistPayloadInput = z.input<typeof importPlaylistPayloadSchema>;
 export type ImportPlaylistPayloadParsed = z.output<typeof importPlaylistPayloadSchema>;
 
-export type LoadCuratedPlaylistPayloadInput = z.input<
-  typeof loadCuratedPlaylistPayloadSchema
->;
-export type LoadCuratedPlaylistPayloadParsed = z.output<
-  typeof loadCuratedPlaylistPayloadSchema
->;
+export type LoadCuratedPlaylistPayloadInput = z.input<typeof loadCuratedPlaylistPayloadSchema>;
+export type LoadCuratedPlaylistPayloadParsed = z.output<typeof loadCuratedPlaylistPayloadSchema>;
 
 export type RequestSpotifyAuthUrlPayloadInput = z.input<typeof requestSpotifyAuthUrlPayloadSchema>;
 export type RequestSpotifyAuthUrlPayloadParsed = z.output<
@@ -271,6 +294,13 @@ export type RequestSpotifyAuthUrlPayloadParsed = z.output<
 
 export type RefreshSpotifyTokenPayloadInput = z.input<typeof refreshSpotifyTokenPayloadSchema>;
 export type RefreshSpotifyTokenPayloadParsed = z.output<typeof refreshSpotifyTokenPayloadSchema>;
+export type SearchSpotifyPlaylistsPayloadParsed = z.output<
+  typeof searchSpotifyPlaylistsPayloadSchema
+>;
+export type GenerateSpotifyCandidatesPayloadParsed = z.output<
+  typeof generateSpotifyCandidatesPayloadSchema
+>;
+export type UseSpotifyCandidatesPayloadParsed = z.output<typeof useSpotifyCandidatesPayloadSchema>;
 
 export const getPlaylistTracksPayloadSchema = z.object({
   roomId: roomIdSchema,

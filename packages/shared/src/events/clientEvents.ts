@@ -12,6 +12,7 @@ export const ClientToServerEvent = {
   CreateRoom: "create_room",
   GetRoomPreview: "get_room_preview",
   GetPlaylistTracks: "get_playlist_tracks",
+  GenerateSpotifyCandidates: "generate_spotify_candidates",
   ImportPlaylist: "import_playlist",
   JoinRoom: "join_room",
   KickPlayer: "kick_player",
@@ -24,6 +25,7 @@ export const ClientToServerEvent = {
   RenameRoom: "rename_room",
   RequestSpotifyAuthUrl: "request_spotify_auth_url",
   ResolveChallengeWindow: "resolve_challenge_window",
+  SearchSpotifyPlaylists: "search_spotify_playlists",
   SkipTrackWithTt: "skip_track_with_tt",
   SkipTurn: "skip_turn",
   StartGame: "start_game",
@@ -32,6 +34,7 @@ export const ClientToServerEvent = {
   UpdatePlayerSettings: "update_player_settings",
   UpdatePlaylistTrack: "update_playlist_track",
   UpdateRoomSettings: "update_room_settings",
+  UseSpotifyCandidates: "use_spotify_candidates",
 } as const;
 
 export type ClientToServerEventName =
@@ -163,6 +166,27 @@ export interface RequestSpotifyAuthUrlPayload {
 
 export interface RefreshSpotifyTokenPayload {
   roomId: RoomId;
+}
+
+export interface SearchSpotifyPlaylistsPayload {
+  roomId: RoomId;
+  query: string;
+  limit: number;
+}
+
+export interface GenerateSpotifyCandidatesPayload {
+  roomId: RoomId;
+  source: {
+    type: "playlists";
+    playlistIds: string[];
+    targetCount: number;
+  };
+}
+
+export interface UseSpotifyCandidatesPayload {
+  roomId: RoomId;
+  candidateSessionId: string;
+  trackIds: string[];
 }
 
 export interface GetPlaylistTracksPayload {

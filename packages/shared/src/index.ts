@@ -9,4 +9,5 @@ export * from "./game/timeline.js";
 export * from "./game/track.js";
 export * from "./spotify/playlistImport.js";
 export * from "./spotify/playlistTracks.js";
+export * from "./spotify/spotifyDiscovery.js";
 export * from "./spotify/spotifyAuth.js";

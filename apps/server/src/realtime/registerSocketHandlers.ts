@@ -9,6 +9,7 @@ import {
   createRoomPayloadSchema,
   getRoomPreviewPayloadSchema,
   getPlaylistTracksPayloadSchema,
+  generateSpotifyCandidatesPayloadSchema,
   importPlaylistPayloadSchema,
   joinRoomPayloadSchema,
   kickPlayerPayloadSchema,
@@ -20,6 +21,7 @@ import {
   removePlaylistTracksPayloadSchema,
   requestSpotifyAuthUrlPayloadSchema,
   resolveChallengeWindowPayloadSchema,
+  searchSpotifyPlaylistsPayloadSchema,
   skipTrackWithTtPayloadSchema,
   skipTurnPayloadSchema,
   startGamePayloadSchema,
@@ -28,6 +30,7 @@ import {
   updatePlayerProfilePayloadSchema,
   updatePlayerSettingsPayloadSchema,
   updateRoomSettingsPayloadSchema,
+  useSpotifyCandidatesPayloadSchema,
 } from "@tunetrack/shared";
 import type { Server, Socket } from "socket.io";
 import { logger } from "../app/logger.js";
@@ -76,6 +79,9 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
     registerRemovePlaylistTracksHandler(io, socket, roomService);
     registerUpdatePlaylistTrackHandler(io, socket, roomService);
     registerRequestSpotifyAuthUrlHandler(socket, roomService);
+    registerSearchSpotifyPlaylistsHandler(socket, roomService);
+    registerGenerateSpotifyCandidatesHandler(socket, roomService);
+    registerUseSpotifyCandidatesHandler(io, socket, roomService);
     registerRefreshSpotifyTokenHandler(io, socket, roomService);
     registerDisconnectHandler(io, socket, roomService);
   });
@@ -867,6 +873,99 @@ function registerRequestSpotifyAuthUrlHandler(socket: Socket, roomService: RoomS
       socket.emit(ServerToClientEvent.SpotifyAuthUrl, { authUrl });
     } catch (error) {
       emitServerError(socket, error, "REQUEST_SPOTIFY_AUTH_URL_FAILED", {});
+    }
+  });
+}
+
+function registerSearchSpotifyPlaylistsHandler(socket: Socket, roomService: RoomService): void {
+  socket.on(ClientToServerEvent.SearchSpotifyPlaylists, (payload: unknown) => {
+    const parseResult = searchSpotifyPlaylistsPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.SpotifyPlaylistSearchResult, {
+        success: false,
+        code: "invalid_query",
+        message: "Search query is invalid.",
+      });
+      return;
+    }
+
+    void Promise.resolve()
+      .then(() => roomService.searchSpotifyPlaylists(parseResult.data, socket.id))
+      .then((result) => {
+        socket.emit(ServerToClientEvent.SpotifyPlaylistSearchResult, result);
+      })
+      .catch((error: unknown) => {
+        logger.error({ error }, "search_spotify_playlists handler threw unexpectedly");
+        socket.emit(ServerToClientEvent.SpotifyPlaylistSearchResult, {
+          success: false,
+          code: "spotify_api_error",
+          message: "Spotify playlist search failed. Please try again.",
+        });
+      });
+  });
+}
+
+function registerGenerateSpotifyCandidatesHandler(socket: Socket, roomService: RoomService): void {
+  socket.on(ClientToServerEvent.GenerateSpotifyCandidates, (payload: unknown) => {
+    const parseResult = generateSpotifyCandidatesPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.SpotifyCandidatesGenerated, {
+        success: false,
+        code: "invalid_source",
+        message: "Choose at least one Spotify playlist.",
+      });
+      return;
+    }
+
+    void Promise.resolve()
+      .then(() => roomService.generateSpotifyCandidates(parseResult.data, socket.id))
+      .then((result) => {
+        socket.emit(ServerToClientEvent.SpotifyCandidatesGenerated, result);
+      })
+      .catch((error: unknown) => {
+        logger.error({ error }, "generate_spotify_candidates handler threw unexpectedly");
+        socket.emit(ServerToClientEvent.SpotifyCandidatesGenerated, {
+          success: false,
+          code: "spotify_api_error",
+          message: "Could not generate tracks from those playlists. Please try again.",
+        });
+      });
+  });
+}
+
+function registerUseSpotifyCandidatesHandler(
+  io: Server,
+  socket: Socket,
+  roomService: RoomService,
+): void {
+  socket.on(ClientToServerEvent.UseSpotifyCandidates, (payload: unknown) => {
+    const parseResult = useSpotifyCandidatesPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.SpotifyCandidatesApplied, {
+        success: false,
+        code: "too_few_tracks",
+        message: "Keep at least 10 tracks before using this playlist.",
+      });
+      return;
+    }
+
+    try {
+      const result = roomService.useSpotifyCandidates(parseResult.data, socket.id);
+      socket.emit(ServerToClientEvent.SpotifyCandidatesApplied, result.payload);
+
+      if (result.roomState && result.tracks) {
+        socket.emit(ServerToClientEvent.PlaylistTracks, { tracks: result.tracks });
+        io.to(result.roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
+          roomState: result.roomState,
+        });
+      }
+    } catch (error) {
+      emitServerError(socket, error, "USE_SPOTIFY_CANDIDATES_FAILED", {
+        ONLY_HOST_CAN_IMPORT_PLAYLIST: "Only the host can use generated playlists.",
+      });
     }
   });
 }

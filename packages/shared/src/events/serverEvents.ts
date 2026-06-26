@@ -1,6 +1,11 @@
 import type { PlayerId } from "../game/player.js";
 import type { PublicRoomState } from "../game/roomState.js";
 import type { ImportPlaylistResultPayload } from "../spotify/playlistImport.js";
+import type {
+  SpotifyCandidatesAppliedPayload,
+  SpotifyCandidatesGeneratedPayload,
+  SpotifyPlaylistSearchResultPayload,
+} from "../spotify/spotifyDiscovery.js";
 import type { SpotifyAuthResultPayload } from "../spotify/spotifyAuth.js";
 
 export const ServerToClientEvent = {
@@ -11,6 +16,9 @@ export const ServerToClientEvent = {
   RoomPreview: "room_preview",
   RoomClosed: "room_closed",
   SpotifyAuthResult: "spotify_auth_result",
+  SpotifyCandidatesApplied: "spotify_candidates_applied",
+  SpotifyCandidatesGenerated: "spotify_candidates_generated",
+  SpotifyPlaylistSearchResult: "spotify_playlist_search_result",
   SpotifyAuthUrl: "spotify_auth_url",
   SpotifyTokenRefreshed: "spotify_token_refreshed",
   StateUpdate: "state_update",
@@ -67,3 +75,8 @@ export interface SpotifyTokenRefreshedPayload {
 
 export type { ImportPlaylistResultPayload, SpotifyAuthResultPayload };
 export type { PlaylistTracksPayload } from "../spotify/playlistTracks.js";
+export type {
+  SpotifyCandidatesAppliedPayload,
+  SpotifyCandidatesGeneratedPayload,
+  SpotifyPlaylistSearchResultPayload,
+};

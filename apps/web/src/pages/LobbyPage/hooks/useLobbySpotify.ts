@@ -5,6 +5,10 @@ import {
   type SpotifyAuthResultPayload,
   type ImportPlaylistResultPayload,
   type PlaylistTracksPayload,
+  type SpotifyCandidatesAppliedPayload,
+  type SpotifyCandidatesGeneratedPayload,
+  type SpotifyPlaylistSearchItem,
+  type SpotifyPlaylistSearchResultPayload,
   type SpotifyAuthUrlPayload,
 } from "@tunetrack/shared";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -27,6 +31,8 @@ import type { PublicTrackInfo } from "@tunetrack/shared";
 
 type AuthPhase = "idle" | "connecting" | "error";
 type ImportPhase = "idle" | "importing" | "error";
+type PlaylistSearchPhase = "idle" | "searching" | "error";
+type CandidatePhase = "idle" | "generating" | "ready" | "applying" | "error";
 
 export interface UseLobbySpotifyResult {
   accountType: SpotifyAccountType | null;
@@ -50,6 +56,10 @@ export interface UseLobbySpotifyResult {
   loadedSavedPlaylistId: string | null;
   openEditModal: () => void;
   playlistUrl: string;
+  playlistSearchError: string | null;
+  playlistSearchPhase: PlaylistSearchPhase;
+  playlistSearchQuery: string;
+  playlistSearchResults: SpotifyPlaylistSearchItem[];
   renameError: string | null;
   renameInputValue: string;
   renamingPlaylistId: string | null;
@@ -58,14 +68,26 @@ export interface UseLobbySpotifyResult {
   savedPlaylistMessage: string | null;
   savedPlaylists: SavedPlaylist[];
   selectedSavedPlaylistId: string;
+  selectedSpotifyPlaylistIds: Set<string>;
+  candidateError: string | null;
+  candidatePhase: CandidatePhase;
+  candidateSessionId: string | null;
+  candidateSourceSummary: string | null;
+  candidateTracks: PublicTrackInfo[];
   deleteSelectedSavedPlaylist: () => void;
+  generateCandidatesFromSelectedPlaylists: () => void;
+  removeCandidateTrack: (trackId: string) => void;
   saveCurrentPlaylist: () => void;
+  searchSpotifyPlaylists: () => void;
+  setPlaylistSearchQuery: (query: string) => void;
   setRenameInputValue: (name: string) => void;
   setSaveName: (name: string) => void;
   setSelectedSavedPlaylistId: (playlistId: string) => void;
   setPlaylistUrl: (url: string) => void;
   startRenamePlaylist: (playlistId: string) => void;
   switchToSaveAsNew: () => void;
+  toggleSpotifyPlaylistSelection: (playlistId: string) => void;
+  useGeneratedCandidates: () => void;
 }
 
 export function useLobbySpotify(): UseLobbySpotifyResult {
@@ -79,10 +101,22 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
   const [importPhase, setImportPhase] = useState<ImportPhase>("idle");
   const [importError, setImportError] = useState<string | null>(null);
   const [playlistUrl, setPlaylistUrl] = useState("");
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [savedPlaylists, setSavedPlaylists] = useState<SavedPlaylist[]>(() =>
-    listSavedPlaylists(),
+  const [playlistSearchPhase, setPlaylistSearchPhase] = useState<PlaylistSearchPhase>("idle");
+  const [playlistSearchError, setPlaylistSearchError] = useState<string | null>(null);
+  const [playlistSearchQuery, setPlaylistSearchQuery] = useState("");
+  const [playlistSearchResults, setPlaylistSearchResults] = useState<SpotifyPlaylistSearchItem[]>(
+    [],
   );
+  const [selectedSpotifyPlaylistIds, setSelectedSpotifyPlaylistIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [candidatePhase, setCandidatePhase] = useState<CandidatePhase>("idle");
+  const [candidateError, setCandidateError] = useState<string | null>(null);
+  const [candidateSessionId, setCandidateSessionId] = useState<string | null>(null);
+  const [candidateSourceSummary, setCandidateSourceSummary] = useState<string | null>(null);
+  const [candidateTracks, setCandidateTracks] = useState<PublicTrackInfo[]>([]);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [savedPlaylists, setSavedPlaylists] = useState<SavedPlaylist[]>(() => listSavedPlaylists());
   const [selectedSavedPlaylistId, setSelectedSavedPlaylistId] = useState("");
   const [savedPlaylistMessage, setSavedPlaylistMessage] = useState<string | null>(null);
   const [loadedSavedPlaylistId, setLoadedSavedPlaylistId] = useState<string | null>(null);
@@ -162,6 +196,15 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
         setImportPhase("idle");
         setAuthError(null);
         setImportError(null);
+        setPlaylistSearchPhase("idle");
+        setPlaylistSearchError(null);
+        setPlaylistSearchResults([]);
+        setSelectedSpotifyPlaylistIds(new Set());
+        setCandidatePhase("idle");
+        setCandidateError(null);
+        setCandidateSessionId(null);
+        setCandidateSourceSummary(null);
+        setCandidateTracks([]);
         setIsEditModalOpen(false);
         setIsSavingWithName(false);
         setIsOverwritePromptActive(false);
@@ -226,6 +269,121 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
       socket.emit(ClientToServerEvent.ImportPlaylist, {
         roomId,
         playlistUrl: pendingImportPlaylistUrlRef.current,
+      });
+    });
+  }
+
+  function searchSpotifyPlaylists() {
+    if (!roomId || playlistSearchQuery.trim().length < 2) return;
+
+    setPlaylistSearchPhase("searching");
+    setPlaylistSearchError(null);
+
+    void getSocketClient().then((socket) => {
+      function handleResult(payload: SpotifyPlaylistSearchResultPayload) {
+        socket.off(ServerToClientEvent.SpotifyPlaylistSearchResult, handleResult);
+
+        if (payload.success) {
+          setPlaylistSearchPhase("idle");
+          setPlaylistSearchResults(payload.playlists);
+          setSelectedSpotifyPlaylistIds(new Set());
+          setCandidateError(null);
+        } else {
+          setPlaylistSearchPhase("error");
+          setPlaylistSearchError(payload.message);
+        }
+      }
+
+      socket.on(ServerToClientEvent.SpotifyPlaylistSearchResult, handleResult);
+      socket.emit(ClientToServerEvent.SearchSpotifyPlaylists, {
+        roomId,
+        query: playlistSearchQuery.trim(),
+        limit: 10,
+      });
+    });
+  }
+
+  function toggleSpotifyPlaylistSelection(playlistId: string) {
+    setSelectedSpotifyPlaylistIds((current) => {
+      const next = new Set(current);
+      if (next.has(playlistId)) {
+        next.delete(playlistId);
+      } else {
+        next.add(playlistId);
+      }
+      return next;
+    });
+  }
+
+  function generateCandidatesFromSelectedPlaylists() {
+    if (!roomId || selectedSpotifyPlaylistIds.size === 0) return;
+
+    setCandidatePhase("generating");
+    setCandidateError(null);
+
+    void getSocketClient().then((socket) => {
+      function handleResult(payload: SpotifyCandidatesGeneratedPayload) {
+        socket.off(ServerToClientEvent.SpotifyCandidatesGenerated, handleResult);
+
+        if (payload.success) {
+          setCandidatePhase("ready");
+          setCandidateError(null);
+          setCandidateSessionId(payload.candidateSessionId);
+          setCandidateSourceSummary(payload.sourceSummary);
+          setCandidateTracks(payload.tracks);
+        } else {
+          setCandidatePhase("error");
+          setCandidateError(payload.message);
+        }
+      }
+
+      socket.on(ServerToClientEvent.SpotifyCandidatesGenerated, handleResult);
+      socket.emit(ClientToServerEvent.GenerateSpotifyCandidates, {
+        roomId,
+        source: {
+          type: "playlists",
+          playlistIds: Array.from(selectedSpotifyPlaylistIds),
+          targetCount: 50,
+        },
+      });
+    });
+  }
+
+  function removeCandidateTrack(trackId: string) {
+    setCandidateTracks((tracks) => tracks.filter((track) => track.id !== trackId));
+  }
+
+  function useGeneratedCandidates() {
+    if (!roomId || !candidateSessionId || candidateTracks.length === 0) return;
+
+    setCandidatePhase("applying");
+    setCandidateError(null);
+
+    void getSocketClient().then((socket) => {
+      function handleApplied(payload: SpotifyCandidatesAppliedPayload) {
+        socket.off(ServerToClientEvent.SpotifyCandidatesApplied, handleApplied);
+
+        if (payload.success) {
+          setCandidatePhase("idle");
+          setCandidateError(null);
+          setCandidateSessionId(null);
+          setCandidateSourceSummary(null);
+          setCandidateTracks([]);
+          currentPlaylistNameRef.current = candidateSourceSummary ?? undefined;
+          setSavedPlaylistMessage(
+            t("lobby.spotify.generatedPlaylistApplied", { count: payload.importedCount }),
+          );
+        } else {
+          setCandidatePhase("error");
+          setCandidateError(payload.message);
+        }
+      }
+
+      socket.on(ServerToClientEvent.SpotifyCandidatesApplied, handleApplied);
+      socket.emit(ClientToServerEvent.UseSpotifyCandidates, {
+        roomId,
+        candidateSessionId,
+        trackIds: candidateTracks.map((track) => track.id),
       });
     });
   }
@@ -432,6 +590,10 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     loadedSavedPlaylistId,
     openEditModal: () => setIsEditModalOpen(true),
     playlistUrl,
+    playlistSearchError,
+    playlistSearchPhase,
+    playlistSearchQuery,
+    playlistSearchResults,
     renameError,
     renameInputValue,
     renamingPlaylistId,
@@ -440,14 +602,26 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     savedPlaylistMessage,
     savedPlaylists,
     selectedSavedPlaylistId,
+    selectedSpotifyPlaylistIds,
+    candidateError,
+    candidatePhase,
+    candidateSessionId,
+    candidateSourceSummary,
+    candidateTracks,
     deleteSelectedSavedPlaylist,
+    generateCandidatesFromSelectedPlaylists,
+    removeCandidateTrack,
     saveCurrentPlaylist,
+    searchSpotifyPlaylists,
+    setPlaylistSearchQuery,
     setRenameInputValue: handleSetRenameInputValue,
     setSaveName: handleSetSaveName,
     setSelectedSavedPlaylistId: handleSelectSavedPlaylist,
     setPlaylistUrl,
     startRenamePlaylist,
     switchToSaveAsNew,
+    toggleSpotifyPlaylistSelection,
+    useGeneratedCandidates,
   };
 }
 

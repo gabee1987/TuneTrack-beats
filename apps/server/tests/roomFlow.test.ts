@@ -19,6 +19,7 @@ import { RoomRegistry } from "../src/rooms/RoomRegistry.js";
 import { RoomService } from "../src/rooms/RoomService.js";
 import { SpotifyApiClient } from "../src/spotify/SpotifyApiClient.js";
 import { SpotifyAuthService } from "../src/spotify/SpotifyAuthService.js";
+import { SpotifyDiscoveryService } from "../src/spotify/SpotifyDiscoveryService.js";
 import { SpotifyTokenStore } from "../src/spotify/SpotifyTokenStore.js";
 
 interface TestServerContext {
@@ -132,8 +133,7 @@ describe("room flow", () => {
         roomState.hostId === hostIdentity.playerId &&
         roomState.players.some(
           (player) =>
-            player.id === hostIdentity.playerId &&
-            player.connectionStatus === "disconnected",
+            player.id === hostIdentity.playerId && player.connectionStatus === "disconnected",
         ),
     );
 
@@ -143,9 +143,7 @@ describe("room flow", () => {
     expect(roomAfterHostDisconnect.players).toHaveLength(2);
     expect(roomAfterHostDisconnect.hostId).toBe(hostIdentity.playerId);
     expect(
-      roomAfterHostDisconnect.players.find(
-        (player) => player.id === hostIdentity.playerId,
-      ),
+      roomAfterHostDisconnect.players.find((player) => player.id === hostIdentity.playerId),
     ).toEqual(
       expect.objectContaining({
         connectionStatus: "disconnected",
@@ -153,9 +151,7 @@ describe("room flow", () => {
       }),
     );
     expect(
-      roomAfterHostDisconnect.players.find(
-        (player) => player.id === guestIdentity.playerId,
-      ),
+      roomAfterHostDisconnect.players.find((player) => player.id === guestIdentity.playerId),
     ).toEqual(
       expect.objectContaining({
         id: guestIdentity.playerId,
@@ -173,10 +169,7 @@ describe("room flow", () => {
     hostSocket.connect();
     guestSocket.connect();
 
-    await Promise.all([
-      waitForEvent(hostSocket, "connect"),
-      waitForEvent(guestSocket, "connect"),
-    ]);
+    await Promise.all([waitForEvent(hostSocket, "connect"), waitForEvent(guestSocket, "connect")]);
 
     const hostIdentityPromise = waitForEvent<PlayerIdentityPayload>(
       hostSocket,
@@ -222,9 +215,7 @@ describe("room flow", () => {
     ]);
 
     expect(hostRenamedState.hostId).toBe(hostIdentity.playerId);
-    expect(guestRenamedState.players.map((player) => player.id)).toContain(
-      guestIdentity.playerId,
-    );
+    expect(guestRenamedState.players.map((player) => player.id)).toContain(guestIdentity.playerId);
 
     guestSocket.disconnect();
 
@@ -242,8 +233,7 @@ describe("room flow", () => {
         roomState.roomId === "renamed-room" &&
         roomState.players.some(
           (player) =>
-            player.id === guestIdentity.playerId &&
-            player.connectionStatus === "connected",
+            player.id === guestIdentity.playerId && player.connectionStatus === "connected",
         ),
     );
 
@@ -294,9 +284,7 @@ describe("room flow", () => {
     );
     expect(movedGuestJoin.playerId).not.toBe(guestJoin.playerId);
     expect(movedGuestJoin.roomState.players).toHaveLength(1);
-    expect(
-      roomRegistry.getRoomStateForMember("host-socket", "room-a").players,
-    ).toEqual([
+    expect(roomRegistry.getRoomStateForMember("host-socket", "room-a").players).toEqual([
       expect.objectContaining({
         id: hostJoin.playerId,
         displayName: "Host Player",
@@ -340,10 +328,7 @@ describe("room flow", () => {
     extraSocket.connect();
     await waitForEvent(extraSocket, "connect");
 
-    const errorPromise = waitForEvent<ServerErrorPayload>(
-      extraSocket,
-      ServerToClientEvent.Error,
-    );
+    const errorPromise = waitForEvent<ServerErrorPayload>(extraSocket, ServerToClientEvent.Error);
 
     extraSocket.emit(ClientToServerEvent.CreateRoom, {
       roomId: "room-6",
@@ -353,8 +338,7 @@ describe("room flow", () => {
 
     await expect(errorPromise).resolves.toEqual({
       code: "ROOM_LIMIT_REACHED",
-      message:
-        "The room limit has been reached. Close a room before creating a new one.",
+      message: "The room limit has been reached. Close a room before creating a new one.",
     });
   });
 
@@ -375,15 +359,11 @@ describe("room flow", () => {
     hostSocket.connect();
     guestSocket.connect();
 
-    await Promise.all([
-      waitForEvent(hostSocket, "connect"),
-      waitForEvent(guestSocket, "connect"),
-    ]);
+    await Promise.all([waitForEvent(hostSocket, "connect"), waitForEvent(guestSocket, "connect")]);
 
     const twoPlayerLobbyPromise = waitForStateUpdate(
       guestSocket,
-      (roomState) =>
-        roomState.status === "lobby" && roomState.players.length === 2,
+      (roomState) => roomState.status === "lobby" && roomState.players.length === 2,
     );
 
     hostSocket.emit(ClientToServerEvent.CreateRoom, {
@@ -664,8 +644,7 @@ describe("room flow", () => {
       guestIdentityPromise,
       waitForStateUpdate(
         guestSocket,
-        (roomState) =>
-          roomState.status === "lobby" && roomState.players.length === 2,
+        (roomState) => roomState.status === "lobby" && roomState.players.length === 2,
       ),
     ]);
 
@@ -688,9 +667,7 @@ describe("room flow", () => {
     );
     expect(transferredHostState.players).toHaveLength(2);
     expect(
-      transferredHostState.players.find(
-        (player) => player.id === hostIdentity.playerId,
-      ),
+      transferredHostState.players.find((player) => player.id === hostIdentity.playerId),
     ).toEqual(
       expect.objectContaining({
         connectionStatus: "disconnected",
@@ -724,9 +701,7 @@ describe("room flow", () => {
     expect(refreshedIdentity.playerId).toBe(hostIdentity.playerId);
     expect(refreshedState.players).toHaveLength(2);
     expect(refreshedState.hostId).toBe(guestIdentity.playerId);
-    expect(
-      refreshedState.players.find((player) => player.id === hostIdentity.playerId),
-    ).toEqual(
+    expect(refreshedState.players.find((player) => player.id === hostIdentity.playerId)).toEqual(
       expect.objectContaining({
         connectionStatus: "connected",
         isHost: false,
@@ -743,10 +718,7 @@ describe("room flow", () => {
     hostSocket.connect();
     guestSocket.connect();
 
-    await Promise.all([
-      waitForEvent(hostSocket, "connect"),
-      waitForEvent(guestSocket, "connect"),
-    ]);
+    await Promise.all([waitForEvent(hostSocket, "connect"), waitForEvent(guestSocket, "connect")]);
 
     hostSocket.emit(ClientToServerEvent.CreateRoom, {
       roomId: "close-room",
@@ -787,10 +759,7 @@ describe("room flow", () => {
     hostSocket.connect();
     guestSocket.connect();
 
-    await Promise.all([
-      waitForEvent(hostSocket, "connect"),
-      waitForEvent(guestSocket, "connect"),
-    ]);
+    await Promise.all([waitForEvent(hostSocket, "connect"), waitForEvent(guestSocket, "connect")]);
 
     const guestIdentityPromise = waitForEvent<PlayerIdentityPayload>(
       guestSocket,
@@ -857,11 +826,7 @@ describe("room flow", () => {
       "kicked-guest-session",
     );
 
-    roomRegistry.startGame(
-      "host-socket",
-      { roomId: "kick-turn-room" },
-      getTurnOrderDeck(),
-    );
+    roomRegistry.startGame("host-socket", { roomId: "kick-turn-room" }, getTurnOrderDeck());
 
     roomRegistry.placeCard("host-socket", {
       roomId: "kick-turn-room",
@@ -904,10 +869,7 @@ describe("room flow", () => {
     hostSocket.connect();
     guestSocket.connect();
 
-    await Promise.all([
-      waitForEvent(hostSocket, "connect"),
-      waitForEvent(guestSocket, "connect"),
-    ]);
+    await Promise.all([waitForEvent(hostSocket, "connect"), waitForEvent(guestSocket, "connect")]);
 
     hostSocket.emit(ClientToServerEvent.CreateRoom, {
       roomId: "award-room",
@@ -946,8 +908,8 @@ describe("room flow", () => {
     const awardStatePromise = waitForStateUpdate(
       guestSocket,
       (roomState) =>
-        roomState.players.find((player) => player.id === guestIdentity.playerId)
-          ?.ttTokenCount === 1,
+        roomState.players.find((player) => player.id === guestIdentity.playerId)?.ttTokenCount ===
+        1,
     );
 
     hostSocket.emit(ClientToServerEvent.AwardTt, {
@@ -959,8 +921,7 @@ describe("room flow", () => {
     const awardState = await awardStatePromise;
 
     expect(
-      awardState.players.find((player) => player.id === guestIdentity.playerId)
-        ?.ttTokenCount,
+      awardState.players.find((player) => player.id === guestIdentity.playerId)?.ttTokenCount,
     ).toBe(1);
   });
 
@@ -1030,7 +991,6 @@ describe("room flow", () => {
       }),
     );
   });
-
 });
 
 function createTestRoomService(): RoomService {
@@ -1041,12 +1001,11 @@ function createTestRoomService(): RoomService {
     new TestDeckService(),
     new SpotifyAuthService(apiClient, tokenStore),
     new PlaylistImportService(apiClient, tokenStore),
+    new SpotifyDiscoveryService(apiClient, tokenStore),
   );
 }
 
-async function startTestServer(
-  roomService = createTestRoomService(),
-): Promise<TestServerContext> {
+async function startTestServer(roomService = createTestRoomService()): Promise<TestServerContext> {
   const { httpServer } = createHttpServer();
   const io = createSocketServer(httpServer);
 
@@ -1078,7 +1037,6 @@ async function startTestServer(
   };
 }
 
-
 class TestDeckService extends DeckService {
   public override createShuffledDeck(): GameTrackCard[] {
     return getTurnOrderDeck();
@@ -1087,55 +1045,55 @@ class TestDeckService extends DeckService {
 
 function getTurnOrderDeck(): GameTrackCard[] {
   return [
-      {
-        id: "test-track-1",
-        title: "Older Song",
-        artist: "Test Artist 1",
-        albumTitle: "Test Album 1",
-        genre: "Rock",
-        releaseYear: 1980,
-      },
-      {
-        id: "test-track-2",
-        title: "Newer Song",
-        artist: "Test Artist 2",
-        albumTitle: "Test Album 2",
-        genre: "Soul",
-        releaseYear: 2000,
-      },
-      {
-        id: "test-track-3",
-        title: "Middle Song",
-        artist: "Test Artist 3",
-        albumTitle: "Test Album 3",
-        genre: "Pop",
-        releaseYear: 1990,
-      },
-      {
-        id: "test-track-4",
-        title: "Newest Song",
-        artist: "Test Artist 4",
-        albumTitle: "Test Album 4",
-        genre: "Disco",
-        releaseYear: 2010,
-      },
-      {
-        id: "test-track-5",
-        title: "Oldest Song",
-        artist: "Test Artist 5",
-        albumTitle: "Test Album 5",
-        genre: "Funk",
-        releaseYear: 1970,
-      },
-      {
-        id: "test-track-6",
-        title: "Future Song",
-        artist: "Test Artist 6",
-        albumTitle: "Test Album 6",
-        genre: "House",
-        releaseYear: 2020,
-      },
-    ];
+    {
+      id: "test-track-1",
+      title: "Older Song",
+      artist: "Test Artist 1",
+      albumTitle: "Test Album 1",
+      genre: "Rock",
+      releaseYear: 1980,
+    },
+    {
+      id: "test-track-2",
+      title: "Newer Song",
+      artist: "Test Artist 2",
+      albumTitle: "Test Album 2",
+      genre: "Soul",
+      releaseYear: 2000,
+    },
+    {
+      id: "test-track-3",
+      title: "Middle Song",
+      artist: "Test Artist 3",
+      albumTitle: "Test Album 3",
+      genre: "Pop",
+      releaseYear: 1990,
+    },
+    {
+      id: "test-track-4",
+      title: "Newest Song",
+      artist: "Test Artist 4",
+      albumTitle: "Test Album 4",
+      genre: "Disco",
+      releaseYear: 2010,
+    },
+    {
+      id: "test-track-5",
+      title: "Oldest Song",
+      artist: "Test Artist 5",
+      albumTitle: "Test Album 5",
+      genre: "Funk",
+      releaseYear: 1970,
+    },
+    {
+      id: "test-track-6",
+      title: "Future Song",
+      artist: "Test Artist 6",
+      albumTitle: "Test Album 6",
+      genre: "House",
+      releaseYear: 2020,
+    },
+  ];
 }
 
 function createClient(baseUrl: string): Socket {
@@ -1151,10 +1109,7 @@ function createClient(baseUrl: string): Socket {
   return socket;
 }
 
-function waitForEvent<TPayload>(
-  socket: Socket,
-  eventName: string,
-): Promise<TPayload> {
+function waitForEvent<TPayload>(socket: Socket, eventName: string): Promise<TPayload> {
   return new Promise((resolve) => {
     socket.once(eventName, (payload: TPayload) => {
       resolve(payload);
@@ -1167,14 +1122,10 @@ async function waitForStateUpdate(
   isTargetState: (roomState: PublicRoomState) => boolean,
 ): Promise<PublicRoomState> {
   while (true) {
-    const payload = await waitForEvent<StateUpdatePayload>(
-      socket,
-      ServerToClientEvent.StateUpdate,
-    );
+    const payload = await waitForEvent<StateUpdatePayload>(socket, ServerToClientEvent.StateUpdate);
 
     if (isTargetState(payload.roomState)) {
       return payload.roomState;
     }
   }
 }
-

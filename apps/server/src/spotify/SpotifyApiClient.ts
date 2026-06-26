@@ -32,6 +32,24 @@ interface SpotifyPlaylistTracksPage {
   total: number;
 }
 
+export interface SpotifyPlaylistSearchItem {
+  id: string;
+  name: string;
+  owner: {
+    display_name: string | null;
+  };
+  images: Array<{ url: string; width: number | null; height: number | null }>;
+  tracks: {
+    total: number;
+  };
+}
+
+interface SpotifyPlaylistSearchResponse {
+  playlists: {
+    items: Array<SpotifyPlaylistSearchItem | null>;
+  };
+}
+
 interface SpotifyPlaylistMetadata {
   name: string;
 }
@@ -169,6 +187,33 @@ export class SpotifyApiClient {
     return data.name;
   }
 
+  public async searchPlaylists(
+    query: string,
+    accessToken: string,
+    limit: number,
+  ): Promise<SpotifyPlaylistSearchItem[]> {
+    const params = new URLSearchParams({
+      q: query,
+      type: "playlist",
+      limit: String(limit),
+    });
+
+    const response = await fetch(`${SpotifyApiClient.BASE_URL}/search?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (response.status === 401) {
+      throw new SpotifyApiError("unauthorized", "Access token is invalid or expired", 401);
+    }
+
+    if (!response.ok) {
+      throw new SpotifyApiError("api_error", "Failed to search Spotify playlists", response.status);
+    }
+
+    const data = (await response.json()) as SpotifyPlaylistSearchResponse;
+    return data.playlists.items.filter(isSpotifyPlaylistSearchItem);
+  }
+
   public async getAllPlaylistTracks(
     playlistId: string,
     accessToken: string,
@@ -230,6 +275,18 @@ export class SpotifyApiClient {
 
     return `${SpotifyApiClient.ACCOUNTS_URL}/authorize?${params.toString()}`;
   }
+}
+
+function isSpotifyPlaylistSearchItem(
+  item: SpotifyPlaylistSearchItem | null,
+): item is SpotifyPlaylistSearchItem {
+  return Boolean(
+    item?.id &&
+    item.name &&
+    item.owner &&
+    Array.isArray(item.images) &&
+    typeof item.tracks?.total === "number",
+  );
 }
 
 async function parseSpotifyTokenError(response: Response): Promise<string | null> {

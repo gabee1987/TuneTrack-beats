@@ -415,18 +415,20 @@ Acceptance criteria:
 
 ### Phase 2 - Playlist Search Generation
 
+Status: implemented.
+
 Goal: let hosts find public Spotify playlists by search term and import from
 selected playlists.
 
 Tasks:
 
-- Add Spotify playlist search API client method.
-- Add server socket event for playlist search.
-- Build playlist search panel with query input and playlist result cards.
-- Add multi-select playlist import/generate flow.
-- Merge selected playlist tracks, dedupe, and return candidate session.
-- Add candidate review panel.
-- Confirm candidates into active imported deck.
+- Done: add Spotify playlist search API client method.
+- Done: add server socket events for playlist search, generation, and apply.
+- Done: build playlist search panel with query input and playlist result cards.
+- Done: add multi-select playlist import/generate flow.
+- Done: merge selected playlist tracks, dedupe, and return candidate session.
+- Done: add candidate review panel.
+- Done: confirm candidates into active imported deck.
 
 Acceptance criteria:
 

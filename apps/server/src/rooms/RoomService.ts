@@ -2,6 +2,7 @@ import { logger } from "../app/logger.js";
 import { DeckService } from "../decks/DeckService.js";
 import { PlaylistImportService } from "../decks/PlaylistImportService.js";
 import { SpotifyAuthService } from "../spotify/SpotifyAuthService.js";
+import { SpotifyDiscoveryService } from "../spotify/SpotifyDiscoveryService.js";
 import type { GameTrackCard } from "@tunetrack/game-engine";
 import type {
   AwardTtPayloadParsed,
@@ -30,11 +31,17 @@ import type {
   SkipTurnPayloadParsed,
   SpotifyAccountType,
   StartGamePayloadParsed,
+  GenerateSpotifyCandidatesPayloadParsed,
+  SearchSpotifyPlaylistsPayloadParsed,
+  SpotifyCandidatesAppliedPayload,
+  SpotifyCandidatesGeneratedPayload,
+  SpotifyPlaylistSearchResultPayload,
   TransferHostPayloadParsed,
   UpdatePlaylistTrackPayloadParsed,
   UpdatePlayerProfilePayloadParsed,
   UpdatePlayerSettingsPayloadParsed,
   UpdateRoomSettingsPayloadParsed,
+  UseSpotifyCandidatesPayloadParsed,
 } from "@tunetrack/shared";
 import type { ImportPlaylistResultPayload } from "@tunetrack/shared";
 import { type JoinRoomResult, type KickPlayerResult, RoomRegistry } from "./RoomRegistry.js";
@@ -49,6 +56,12 @@ export interface RefreshTokenResult {
   roomState: PublicRoomState | null;
 }
 
+export interface UseSpotifyCandidatesResult {
+  payload: SpotifyCandidatesAppliedPayload;
+  roomState: PublicRoomState | null;
+  tracks: PublicTrackInfo[] | null;
+}
+
 export interface RenameRoomResult {
   previousRoomId: string;
   roomState: PublicRoomState;
@@ -60,6 +73,7 @@ export class RoomService {
     private readonly deckService: DeckService,
     private readonly spotifyAuthService: SpotifyAuthService,
     private readonly playlistImportService: PlaylistImportService,
+    private readonly spotifyDiscoveryService: SpotifyDiscoveryService,
   ) {}
 
   public setRoomStateChangedListener(listener: (roomState: PublicRoomState) => void): void {
@@ -343,6 +357,55 @@ export class RoomService {
     socketId: string,
   ): string {
     return this.spotifyAuthService.buildAuthUrl(payload.roomId, socketId);
+  }
+
+  public searchSpotifyPlaylists(
+    payload: SearchSpotifyPlaylistsPayloadParsed,
+    socketId: string,
+  ): Promise<SpotifyPlaylistSearchResultPayload> {
+    this.roomRegistry.getRoomStateForMember(socketId, payload.roomId);
+    return this.spotifyDiscoveryService.searchPlaylists(
+      payload.roomId,
+      payload.query,
+      payload.limit,
+    );
+  }
+
+  public generateSpotifyCandidates(
+    payload: GenerateSpotifyCandidatesPayloadParsed,
+    socketId: string,
+  ): Promise<SpotifyCandidatesGeneratedPayload> {
+    this.roomRegistry.getRoomStateForMember(socketId, payload.roomId);
+    return this.spotifyDiscoveryService
+      .generateFromPlaylists(payload.roomId, payload.source.playlistIds, payload.source.targetCount)
+      .then((result) => result.payload);
+  }
+
+  public useSpotifyCandidates(
+    payload: UseSpotifyCandidatesPayloadParsed,
+    socketId: string,
+  ): UseSpotifyCandidatesResult {
+    const result = this.spotifyDiscoveryService.applyCandidates(
+      payload.roomId,
+      payload.candidateSessionId,
+      payload.trackIds,
+    );
+
+    if (!result.cards) {
+      return {
+        payload: result.payload,
+        roomState: null,
+        tracks: null,
+      };
+    }
+
+    const roomState = this.roomRegistry.setImportedDeck(socketId, payload.roomId, result.cards);
+
+    return {
+      payload: result.payload,
+      roomState,
+      tracks: result.cards.map(cardToPublicTrackInfo),
+    };
   }
 
   public async refreshSpotifyToken(

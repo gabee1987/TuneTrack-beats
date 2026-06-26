@@ -21,6 +21,7 @@ interface LobbySpotifySectionProps {
 }
 
 type LobbySpotifyState = ReturnType<typeof useLobbySpotify>;
+type SpotifySetupSource = "playlistUrl" | "findPlaylists" | "filters" | "quickPicks";
 
 function SpotifyLogo() {
   return (
@@ -41,6 +42,7 @@ function SpotifyLogo() {
 export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProps) {
   const { t } = useI18n();
   const [isSetupOpen, setIsSetupOpen] = useState(false);
+  const [activeSource, setActiveSource] = useState<SpotifySetupSource>("playlistUrl");
   const spotifyState = useLobbySpotify();
   const isConnected = currentSettings.spotifyAuthStatus === "connected";
   const isImported = currentSettings.playlistImported;
@@ -117,9 +119,11 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
       </SurfaceCard>
 
       <SpotifySetupModal
+        activeSource={activeSource}
         currentSettings={currentSettings}
         isOpen={isSetupOpen}
         onClose={() => setIsSetupOpen(false)}
+        onSourceChange={setActiveSource}
         spotifyState={spotifyState}
       />
       <PlaylistEditModal
@@ -177,16 +181,20 @@ function SpotifyAccountBadge({ accountType }: { accountType: "free" | "premium" 
 }
 
 interface SpotifySetupModalProps {
+  activeSource: SpotifySetupSource;
   currentSettings: PublicRoomSettings;
   isOpen: boolean;
   onClose: () => void;
+  onSourceChange: (source: SpotifySetupSource) => void;
   spotifyState: LobbySpotifyState;
 }
 
 function SpotifySetupModal({
+  activeSource,
   currentSettings,
   isOpen,
   onClose,
+  onSourceChange,
   spotifyState,
 }: SpotifySetupModalProps) {
   const { t } = useI18n();
@@ -256,26 +264,36 @@ function SpotifySetupModal({
         </div>
 
         <div className={styles.spotifySourceTabs} role="tablist">
-          <button
-            aria-selected="true"
-            className={`${styles.spotifySourceTab} ${styles.spotifySourceTabActive}`}
-            type="button"
-          >
-            {t("lobby.spotify.source.playlistUrl")}
-          </button>
-          <button className={styles.spotifySourceTab} disabled type="button">
-            {t("lobby.spotify.source.findPlaylists")}
-          </button>
-          <button className={styles.spotifySourceTab} disabled type="button">
-            {t("lobby.spotify.source.filters")}
-          </button>
-          <button className={styles.spotifySourceTab} disabled type="button">
-            {t("lobby.spotify.source.quickPicks")}
-          </button>
+          <SpotifySourceTab
+            isActive={activeSource === "playlistUrl"}
+            label={t("lobby.spotify.source.playlistUrl")}
+            onClick={() => onSourceChange("playlistUrl")}
+          />
+          <SpotifySourceTab
+            isActive={activeSource === "findPlaylists"}
+            label={t("lobby.spotify.source.findPlaylists")}
+            onClick={() => onSourceChange("findPlaylists")}
+          />
+          <SpotifySourceTab
+            disabled
+            isActive={activeSource === "filters"}
+            label={t("lobby.spotify.source.filters")}
+            onClick={() => onSourceChange("filters")}
+          />
+          <SpotifySourceTab
+            disabled
+            isActive={activeSource === "quickPicks"}
+            label={t("lobby.spotify.source.quickPicks")}
+            onClick={() => onSourceChange("quickPicks")}
+          />
         </div>
 
         <div className={styles.spotifySetupBody}>
-          <SpotifySetupContent currentSettings={currentSettings} spotifyState={spotifyState} />
+          {activeSource === "findPlaylists" ? (
+            <SpotifyPlaylistSearchPanel spotifyState={spotifyState} />
+          ) : (
+            <SpotifySetupContent currentSettings={currentSettings} spotifyState={spotifyState} />
+          )}
         </div>
 
         <div className={styles.spotifySetupFooter}>
@@ -297,6 +315,208 @@ function SpotifySetupModal({
         </div>
       </motion.div>
     </motion.div>
+  );
+}
+
+interface SpotifySourceTabProps {
+  disabled?: boolean;
+  isActive: boolean;
+  label: string;
+  onClick: () => void;
+}
+
+function SpotifySourceTab({ disabled, isActive, label, onClick }: SpotifySourceTabProps) {
+  return (
+    <button
+      aria-selected={isActive}
+      className={`${styles.spotifySourceTab} ${isActive ? styles.spotifySourceTabActive : ""}`}
+      disabled={disabled}
+      onClick={onClick}
+      type="button"
+    >
+      {label}
+    </button>
+  );
+}
+
+function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpotifyState }) {
+  const { t } = useI18n();
+  const {
+    candidateError,
+    candidatePhase,
+    candidateSourceSummary,
+    candidateTracks,
+    generateCandidatesFromSelectedPlaylists,
+    playlistSearchError,
+    playlistSearchPhase,
+    playlistSearchQuery,
+    playlistSearchResults,
+    removeCandidateTrack,
+    searchSpotifyPlaylists,
+    selectedSpotifyPlaylistIds,
+    setPlaylistSearchQuery,
+    toggleSpotifyPlaylistSelection,
+    useGeneratedCandidates,
+  } = spotifyState;
+
+  const isSearching = playlistSearchPhase === "searching";
+  const isGenerating = candidatePhase === "generating";
+  const isApplying = candidatePhase === "applying";
+
+  return (
+    <div className={styles.spotifyDiscoveryPanel}>
+      <section className={styles.spotifyDiscoverySearch}>
+        <div className={styles.spotifyPanelHeader}>
+          <h3>{t("lobby.spotify.find.title")}</h3>
+          <p>{t("lobby.spotify.find.description")}</p>
+        </div>
+
+        <div className={styles.spotifySearchRow}>
+          <TextInput
+            disabled={isSearching}
+            onChange={(event) => setPlaylistSearchQuery(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") searchSpotifyPlaylists();
+            }}
+            placeholder={t("lobby.spotify.find.placeholder")}
+            value={playlistSearchQuery}
+          />
+          <ActionButton
+            className={styles.spotifySearchBtn}
+            disabled={playlistSearchQuery.trim().length < 2 || isSearching}
+            onClick={searchSpotifyPlaylists}
+            type="button"
+            variant="neutral"
+          >
+            {isSearching ? t("lobby.spotify.find.searching") : t("lobby.spotify.find.search")}
+          </ActionButton>
+        </div>
+
+        {playlistSearchPhase === "error" && playlistSearchError ? (
+          <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
+            {playlistSearchError}
+          </p>
+        ) : null}
+
+        {playlistSearchResults.length > 0 ? (
+          <div className={styles.spotifyPlaylistGrid}>
+            {playlistSearchResults.map((playlist) => {
+              const isSelected = selectedSpotifyPlaylistIds.has(playlist.id);
+              return (
+                <button
+                  key={playlist.id}
+                  className={`${styles.spotifyPlaylistCard} ${
+                    isSelected ? styles.spotifyPlaylistCardSelected : ""
+                  }`}
+                  onClick={() => toggleSpotifyPlaylistSelection(playlist.id)}
+                  type="button"
+                >
+                  {playlist.imageUrl ? (
+                    <img alt="" className={styles.spotifyPlaylistImage} src={playlist.imageUrl} />
+                  ) : (
+                    <span className={styles.spotifyPlaylistImageFallback}>
+                      <SpotifyLogo />
+                    </span>
+                  )}
+                  <span className={styles.spotifyPlaylistMeta}>
+                    <strong>{playlist.name}</strong>
+                    <span>{playlist.ownerName}</span>
+                    <span>
+                      {t("lobby.spotify.find.trackCount", { count: playlist.trackCount })}
+                    </span>
+                  </span>
+                  <span className={styles.spotifyPlaylistSelectState}>
+                    {isSelected ? t("common.selected") : t("common.select")}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        ) : playlistSearchPhase === "idle" && playlistSearchQuery.trim().length >= 2 ? (
+          <p className={styles.spotifyEmptyState}>{t("lobby.spotify.find.empty")}</p>
+        ) : null}
+
+        <div className={styles.spotifyDiscoveryActions}>
+          <span className={styles.spotifySetupFooterStatus}>
+            {t("lobby.spotify.find.selectedCount", {
+              count: selectedSpotifyPlaylistIds.size,
+            })}
+          </span>
+          <ActionButton
+            className={styles.spotifySearchBtn}
+            disabled={selectedSpotifyPlaylistIds.size === 0 || isGenerating}
+            onClick={generateCandidatesFromSelectedPlaylists}
+            type="button"
+            variant="neutral"
+          >
+            {isGenerating ? t("lobby.spotify.find.generating") : t("lobby.spotify.find.generate")}
+          </ActionButton>
+        </div>
+      </section>
+
+      {candidatePhase === "error" && candidateError ? (
+        <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
+          {candidateError}
+        </p>
+      ) : null}
+
+      {candidateTracks.length > 0 ? (
+        <section className={styles.spotifyCandidateReview}>
+          <div className={styles.spotifyPanelHeader}>
+            <h3>{t("lobby.spotify.review.title")}</h3>
+            <p>
+              {candidateSourceSummary
+                ? t("lobby.spotify.review.descriptionWithSource", {
+                    source: candidateSourceSummary,
+                  })
+                : t("lobby.spotify.review.description")}
+            </p>
+          </div>
+
+          <div className={styles.spotifyCandidateList}>
+            {candidateTracks.map((track) => (
+              <div className={styles.spotifyCandidateRow} key={track.id}>
+                {track.artworkUrl ? (
+                  <img alt="" className={styles.spotifyCandidateArtwork} src={track.artworkUrl} />
+                ) : (
+                  <span className={styles.spotifyCandidateArtworkFallback} />
+                )}
+                <span className={styles.spotifyCandidateText}>
+                  <strong>{track.title}</strong>
+                  <span>
+                    {track.artist} · {track.releaseYear}
+                  </span>
+                </span>
+                <button
+                  className={styles.spotifyCandidateRemoveBtn}
+                  onClick={() => removeCandidateTrack(track.id)}
+                  type="button"
+                >
+                  {t("common.remove")}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className={styles.spotifyDiscoveryActions}>
+            <span className={styles.spotifySetupFooterStatus}>
+              {t("lobby.spotify.review.readyCount", { count: candidateTracks.length })}
+            </span>
+            <ActionButton
+              className={styles.spotifySearchBtn}
+              disabled={candidateTracks.length < 10 || isApplying}
+              onClick={useGeneratedCandidates}
+              type="button"
+              variant="neutral"
+            >
+              {isApplying
+                ? t("lobby.spotify.review.applying")
+                : t("lobby.spotify.review.useTracks")}
+            </ActionButton>
+          </div>
+        </section>
+      ) : null}
+    </div>
   );
 }
 
