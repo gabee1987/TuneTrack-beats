@@ -2,6 +2,7 @@ import type { RevealConfirmMode } from "../game/roomSettings.js";
 import type { RoomId } from "../game/roomState.js";
 import type { PlayerId } from "../game/player.js";
 import type { TrackMetadataStatus } from "../game/track.js";
+import type { PublicTrackInfo } from "../spotify/playlistTracks.js";
 
 export const ClientToServerEvent = {
   AwardTt: "award_tt",
@@ -187,6 +188,7 @@ export interface UseSpotifyCandidatesPayload {
   roomId: RoomId;
   candidateSessionId: string;
   trackIds: string[];
+  tracks?: PublicTrackInfo[];
 }
 
 export interface GetPlaylistTracksPayload {

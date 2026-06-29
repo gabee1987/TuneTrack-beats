@@ -11,9 +11,13 @@ import { logger } from "../app/logger.js";
 import { SpotifyApiClient, SpotifyApiError } from "./SpotifyApiClient.js";
 import { mapSpotifyTrackToGameCard } from "./SpotifyTrackMapper.js";
 import { SpotifyTokenStore } from "./SpotifyTokenStore.js";
+import { extractSpotifyPlaylistId } from "./spotifyUrlParser.js";
 
 const CANDIDATE_SESSION_TTL_MS = 30 * 60 * 1000;
 const MIN_CANDIDATE_TRACK_COUNT = 10;
+const SPOTIFY_PLAYLIST_SEARCH_PAGE_SIZE = 50;
+const SPOTIFY_PLAYLIST_SEARCH_MAX_PAGES = 4;
+const SPOTIFY_PLAYLIST_ID_REGEX = /^[a-zA-Z0-9]{22}$/;
 
 interface CandidateSession {
   id: string;
@@ -21,6 +25,19 @@ interface CandidateSession {
   createdAtMs: number;
   sourceSummary: string;
   tracks: GameTrackCard[];
+}
+
+interface EditedCandidateTrack {
+  id: string;
+  title: string;
+  artist: string;
+  albumTitle: string;
+  releaseYear: number;
+  metadataStatus: PublicTrackInfo["metadataStatus"];
+  sourceReleaseYear?: number | undefined;
+  artworkUrl?: string | undefined;
+  previewUrl?: string | undefined;
+  spotifyTrackUri?: string | undefined;
 }
 
 export interface GenerateFromPlaylistsResult {
@@ -56,7 +73,10 @@ export class SpotifyDiscoveryService {
 
     try {
       const accessToken = await this.getOrRefreshClientCredentialsToken();
-      const playlists = await this.apiClient.searchPlaylists(trimmedQuery, accessToken, limit);
+      const directPlaylistId = extractPlaylistIdFromSearchQuery(trimmedQuery);
+      const playlists = directPlaylistId
+        ? [await this.apiClient.getPlaylistSearchItem(directPlaylistId, accessToken)]
+        : await this.searchUsablePlaylists(trimmedQuery, accessToken, limit);
 
       logAuditEvent({
         auditKind: "spotify_import",
@@ -142,7 +162,7 @@ export class SpotifyDiscoveryService {
       }
 
       const { dedupedCards, duplicateCount } = dedupeCards(cards);
-      const selectedCards = shuffle(dedupedCards).slice(0, targetCount);
+      const selectedCards = dedupedCards.slice(0, targetCount);
 
       if (selectedCards.length < MIN_CANDIDATE_TRACK_COUNT) {
         return {
@@ -221,6 +241,7 @@ export class SpotifyDiscoveryService {
     roomId: string,
     candidateSessionId: string,
     trackIds: string[],
+    editedTracks?: EditedCandidateTrack[],
   ): ApplyCandidatesResult {
     this.pruneExpiredSessions();
 
@@ -237,7 +258,10 @@ export class SpotifyDiscoveryService {
     }
 
     const selectedIds = new Set(trackIds);
-    const selectedCards = session.tracks.filter((track) => selectedIds.has(track.id));
+    const editedTracksById = new Map((editedTracks ?? []).map((track) => [track.id, track]));
+    const selectedCards = session.tracks
+      .filter((track) => selectedIds.has(track.id))
+      .map((track) => applyCandidateTrackEdits(track, editedTracksById.get(track.id)));
 
     if (selectedCards.length < MIN_CANDIDATE_TRACK_COUNT) {
       return {
@@ -271,6 +295,43 @@ export class SpotifyDiscoveryService {
     return tokenResponse.access_token;
   }
 
+  private async searchUsablePlaylists(
+    query: string,
+    accessToken: string,
+    limit: number,
+  ): Promise<Awaited<ReturnType<SpotifyApiClient["searchPlaylists"]>>> {
+    const targetCount = Math.min(Math.max(limit, 1), SPOTIFY_PLAYLIST_SEARCH_PAGE_SIZE);
+    const playlists: Awaited<ReturnType<SpotifyApiClient["searchPlaylists"]>> = [];
+    const seenPlaylistIds = new Set<string>();
+    const queries = buildPlaylistSearchQueries(query);
+
+    for (const searchQuery of queries) {
+      for (
+        let pageIndex = 0;
+        playlists.length < targetCount && pageIndex < SPOTIFY_PLAYLIST_SEARCH_MAX_PAGES;
+        pageIndex++
+      ) {
+        const page = await this.apiClient.searchPlaylists(
+          searchQuery,
+          accessToken,
+          SPOTIFY_PLAYLIST_SEARCH_PAGE_SIZE,
+          pageIndex * SPOTIFY_PLAYLIST_SEARCH_PAGE_SIZE,
+        );
+
+        if (page.length === 0) continue;
+
+        for (const playlist of page) {
+          if (seenPlaylistIds.has(playlist.id)) continue;
+          seenPlaylistIds.add(playlist.id);
+          playlists.push(playlist);
+          if (playlists.length >= targetCount) break;
+        }
+      }
+    }
+
+    return playlists;
+  }
+
   private pruneExpiredSessions(): void {
     const cutoffMs = Date.now() - CANDIDATE_SESSION_TTL_MS;
     for (const [id, session] of this.sessionsById) {
@@ -279,6 +340,25 @@ export class SpotifyDiscoveryService {
       }
     }
   }
+}
+
+function extractPlaylistIdFromSearchQuery(query: string): string | null {
+  const playlistId = extractSpotifyPlaylistId(query);
+  if (playlistId) return playlistId;
+
+  const trimmedQuery = query.trim();
+  return SPOTIFY_PLAYLIST_ID_REGEX.test(trimmedQuery) ? trimmedQuery : null;
+}
+
+function buildPlaylistSearchQueries(query: string): string[] {
+  const trimmedQuery = query.trim();
+  const queries = [trimmedQuery];
+
+  if (/\s/.test(trimmedQuery) && !/^".*"$/.test(trimmedQuery)) {
+    queries.push(`"${trimmedQuery}"`);
+  }
+
+  return queries;
 }
 
 function dedupeCards(cards: GameTrackCard[]): {
@@ -305,15 +385,6 @@ function normalize(value: string): string {
   return value.trim().toLocaleLowerCase().replace(/\s+/g, " ");
 }
 
-function shuffle<T>(items: T[]): T[] {
-  const shuffled = [...items];
-  for (let index = shuffled.length - 1; index > 0; index--) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
-    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex] as T, shuffled[index] as T];
-  }
-  return shuffled;
-}
-
 function cardToPublicTrackInfo(card: GameTrackCard): PublicTrackInfo {
   return {
     id: card.id,
@@ -326,5 +397,25 @@ function cardToPublicTrackInfo(card: GameTrackCard): PublicTrackInfo {
     ...(card.artworkUrl ? { artworkUrl: card.artworkUrl } : {}),
     ...(card.previewUrl ? { previewUrl: card.previewUrl } : {}),
     ...(card.spotifyTrackUri ? { spotifyTrackUri: card.spotifyTrackUri } : {}),
+  };
+}
+
+function applyCandidateTrackEdits(
+  card: GameTrackCard,
+  editedTrack?: EditedCandidateTrack,
+): GameTrackCard {
+  if (!editedTrack) return card;
+
+  return {
+    ...card,
+    title: editedTrack.title,
+    artist: editedTrack.artist,
+    albumTitle: editedTrack.albumTitle,
+    releaseYear: editedTrack.releaseYear,
+    sourceReleaseYear: editedTrack.sourceReleaseYear ?? card.sourceReleaseYear ?? card.releaseYear,
+    metadataStatus: editedTrack.metadataStatus,
+    ...(editedTrack.artworkUrl ? { artworkUrl: editedTrack.artworkUrl } : {}),
+    ...(editedTrack.previewUrl ? { previewUrl: editedTrack.previewUrl } : {}),
+    ...(editedTrack.spotifyTrackUri ? { spotifyTrackUri: editedTrack.spotifyTrackUri } : {}),
   };
 }

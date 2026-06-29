@@ -45,9 +45,9 @@ const releaseYearSchema = z
   .max(new Date().getFullYear() + 1);
 
 const MAX_CURATED_PLAYLIST_TRACK_COUNT = 1_000;
-const MAX_SPOTIFY_PLAYLIST_SEARCH_LIMIT = 20;
+const MAX_SPOTIFY_PLAYLIST_SEARCH_LIMIT = 50;
 const MAX_SPOTIFY_CANDIDATE_PLAYLIST_COUNT = 8;
-const MAX_SPOTIFY_CANDIDATE_TARGET_COUNT = 120;
+const MAX_SPOTIFY_CANDIDATE_TARGET_COUNT = 500;
 
 const curatedPlaylistTrackSchema = z.object({
   id: z.string().trim().min(1).max(200),
@@ -214,7 +214,7 @@ export const refreshSpotifyTokenPayloadSchema = z.object({
 export const searchSpotifyPlaylistsPayloadSchema = z.object({
   roomId: roomIdSchema,
   query: z.string().trim().min(2).max(100),
-  limit: z.number().int().min(1).max(MAX_SPOTIFY_PLAYLIST_SEARCH_LIMIT).default(10),
+  limit: z.number().int().min(1).max(MAX_SPOTIFY_PLAYLIST_SEARCH_LIMIT).default(30),
 });
 
 export const generateSpotifyCandidatesPayloadSchema = z.object({
@@ -225,7 +225,7 @@ export const generateSpotifyCandidatesPayloadSchema = z.object({
       .array(z.string().trim().min(1).max(100))
       .min(1)
       .max(MAX_SPOTIFY_CANDIDATE_PLAYLIST_COUNT),
-    targetCount: z.number().int().min(10).max(MAX_SPOTIFY_CANDIDATE_TARGET_COUNT).default(50),
+    targetCount: z.number().int().min(10).max(MAX_SPOTIFY_CANDIDATE_TARGET_COUNT).default(500),
   }),
 });
 
@@ -233,6 +233,7 @@ export const useSpotifyCandidatesPayloadSchema = z.object({
   roomId: roomIdSchema,
   candidateSessionId: z.string().trim().min(1).max(120),
   trackIds: z.array(z.string().trim().min(1).max(200)).min(10).max(500),
+  tracks: z.array(curatedPlaylistTrackSchema).min(10).max(500).optional(),
 });
 
 export type JoinRoomPayloadInput = z.input<typeof joinRoomPayloadSchema>;

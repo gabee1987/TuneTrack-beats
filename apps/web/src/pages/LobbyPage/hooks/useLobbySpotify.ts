@@ -88,7 +88,16 @@ export interface UseLobbySpotifyResult {
   startRenamePlaylist: (playlistId: string) => void;
   switchToSaveAsNew: () => void;
   toggleSpotifyPlaylistSelection: (playlistId: string) => void;
+  updateCandidateTrack: (trackId: string, patch: CandidateTrackUpdatePatch) => void;
   useGeneratedCandidates: () => void;
+}
+
+interface CandidateTrackUpdatePatch {
+  title?: string;
+  artist?: string;
+  albumTitle?: string;
+  releaseYear?: number;
+  metadataStatus?: PublicTrackInfo["metadataStatus"];
 }
 
 export function useLobbySpotify(): UseLobbySpotifyResult {
@@ -319,7 +328,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
       socket.emit(ClientToServerEvent.SearchSpotifyPlaylists, {
         roomId,
         query: playlistSearchQuery.trim(),
-        limit: 10,
+        limit: 30,
       });
     });
   }
@@ -365,7 +374,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
         source: {
           type: "playlists",
           playlistIds: Array.from(selectedSpotifyPlaylistIds),
-          targetCount: 50,
+          targetCount: 500,
         },
       });
     });
@@ -373,6 +382,21 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
 
   function removeCandidateTrack(trackId: string) {
     setCandidateTracks((tracks) => tracks.filter((track) => track.id !== trackId));
+  }
+
+  function updateCandidateTrack(trackId: string, patch: CandidateTrackUpdatePatch) {
+    setCandidateTracks((tracks) =>
+      tracks.map((track) =>
+        track.id === trackId
+          ? {
+              ...track,
+              ...patch,
+              sourceReleaseYear: track.sourceReleaseYear ?? track.releaseYear,
+              metadataStatus: patch.metadataStatus ?? track.metadataStatus,
+            }
+          : track,
+      ),
+    );
   }
 
   function useGeneratedCandidates() {
@@ -409,6 +433,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
         roomId,
         candidateSessionId,
         trackIds: candidateTracks.map((track) => track.id),
+        tracks: candidateTracks,
       });
     });
   }
@@ -647,6 +672,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     startRenamePlaylist,
     switchToSaveAsNew,
     toggleSpotifyPlaylistSelection,
+    updateCandidateTrack,
     useGeneratedCandidates,
   };
 }

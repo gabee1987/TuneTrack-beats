@@ -11,6 +11,7 @@ import { TextInput } from "../../../features/ui/TextInput";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { LobbySectionHeader } from "./LobbySectionHeader";
 import { PlaylistEditModal } from "./PlaylistEditModal";
+import { PlaylistTrackDetailsSheet } from "./PlaylistTrackDetailsSheet";
 import { PlaylistTrackList } from "./PlaylistTrackList";
 import { SelectableArtwork, SelectableArtworkImage } from "./SelectableArtwork";
 import { AdaptiveSelect } from "./AdaptiveSelect";
@@ -329,6 +330,7 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
     selectedSpotifyPlaylistIds,
     setPlaylistSearchQuery,
     toggleSpotifyPlaylistSelection,
+    updateCandidateTrack,
     useGeneratedCandidates,
     openEditModal,
   } = spotifyState;
@@ -341,6 +343,9 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
   const [selectedCandidateTrackIds, setSelectedCandidateTrackIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [activeCandidateTrackId, setActiveCandidateTrackId] = useState<string | null>(null);
+  const activeCandidateTrack =
+    candidateTracks.find((track) => track.id === activeCandidateTrackId) ?? null;
 
   useEffect(() => {
     setSelectedCandidateTrackIds((prev) => {
@@ -349,6 +354,9 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
       const next = new Set([...prev].filter((trackId) => availableIds.has(trackId)));
       return next.size === prev.size ? prev : next;
     });
+    setActiveCandidateTrackId((trackId) =>
+      trackId && candidateTracks.some((track) => track.id === trackId) ? trackId : null,
+    );
   }, [candidateTracks]);
 
   function toggleCandidateTrackSelection(trackId: string) {
@@ -477,7 +485,7 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
           </div>
 
           <PlaylistTrackList
-            onOpenTrack={() => undefined}
+            onOpenTrack={(track) => setActiveCandidateTrackId(track.id)}
             onRemoveTrack={removeCandidateTrack}
             onToggleSelection={toggleCandidateTrackSelection}
             selectedIds={selectedCandidateTrackIds}
@@ -518,6 +526,12 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
                 : t("lobby.spotify.review.useTracks")}
             </ActionButton>
           </motion.div>
+
+          <PlaylistTrackDetailsSheet
+            onClose={() => setActiveCandidateTrackId(null)}
+            onSave={updateCandidateTrack}
+            track={activeCandidateTrack}
+          />
         </section>
       ) : null}
 

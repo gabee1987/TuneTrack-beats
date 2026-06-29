@@ -187,15 +187,50 @@ export class SpotifyApiClient {
     return data.name;
   }
 
+  public async getPlaylistSearchItem(
+    playlistId: string,
+    accessToken: string,
+  ): Promise<SpotifyPlaylistSearchItem> {
+    const response = await fetch(
+      `${SpotifyApiClient.BASE_URL}/playlists/${playlistId}?fields=id,name,owner(display_name),images,tracks(total)`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+
+    if (response.status === 404) {
+      throw new SpotifyApiError("not_found", "Playlist not found", 404);
+    }
+
+    if (response.status === 403) {
+      throw new SpotifyApiError("forbidden", "Playlist is private or access is forbidden", 403);
+    }
+
+    if (response.status === 401) {
+      throw new SpotifyApiError("unauthorized", "Access token is invalid or expired", 401);
+    }
+
+    if (!response.ok) {
+      throw new SpotifyApiError("api_error", "Failed to fetch playlist metadata", response.status);
+    }
+
+    const item = (await response.json()) as SpotifyPlaylistSearchItem | null;
+    if (!isSpotifyPlaylistSearchItem(item)) {
+      throw new SpotifyApiError("api_error", "Playlist metadata response is invalid");
+    }
+
+    return item;
+  }
+
   public async searchPlaylists(
     query: string,
     accessToken: string,
     limit: number,
+    offset = 0,
   ): Promise<SpotifyPlaylistSearchItem[]> {
     const params = new URLSearchParams({
       q: query,
       type: "playlist",
       limit: String(limit),
+      offset: String(offset),
     });
 
     const response = await fetch(`${SpotifyApiClient.BASE_URL}/search?${params.toString()}`, {

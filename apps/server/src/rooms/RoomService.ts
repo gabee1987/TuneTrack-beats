@@ -389,6 +389,7 @@ export class RoomService {
       payload.roomId,
       payload.candidateSessionId,
       payload.trackIds,
+      payload.tracks,
     );
 
     if (!result.cards) {

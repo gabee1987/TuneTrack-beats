@@ -39,5 +39,57 @@ describe("SpotifyApiClient", () => {
         }),
       ]);
     });
+
+    it("passes limit and offset to Spotify search", async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(
+          new Response(JSON.stringify({ playlists: { items: [] } }), { status: 200 }),
+        );
+      vi.stubGlobal("fetch", fetchMock);
+
+      const client = new SpotifyApiClient();
+      await client.searchPlaylists("metal", "access-token", 50, 100);
+
+      const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
+      const searchParams = new URL(url).searchParams;
+      expect(searchParams.get("q")).toBe("metal");
+      expect(searchParams.get("type")).toBe("playlist");
+      expect(searchParams.get("limit")).toBe("50");
+      expect(searchParams.get("offset")).toBe("100");
+    });
+  });
+
+  describe("getPlaylistSearchItem", () => {
+    it("fetches playlist metadata for direct playlist lookup", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            id: "5gDErv7bMFuCFL8HO5TCdm",
+            name: "Kawaii Overdrive",
+            owner: { display_name: "Gabee" },
+            images: [{ url: "https://example.com/kawaii.jpg", width: 300, height: 300 }],
+            tracks: { total: 86 },
+          }),
+          { status: 200 },
+        ),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+
+      const client = new SpotifyApiClient();
+      const playlist = await client.getPlaylistSearchItem("5gDErv7bMFuCFL8HO5TCdm", "access-token");
+
+      expect(playlist).toEqual(
+        expect.objectContaining({
+          id: "5gDErv7bMFuCFL8HO5TCdm",
+          name: "Kawaii Overdrive",
+          tracks: { total: 86 },
+        }),
+      );
+
+      const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toContain("/playlists/5gDErv7bMFuCFL8HO5TCdm");
+      expect(url).toContain("fields=");
+    });
   });
 });
