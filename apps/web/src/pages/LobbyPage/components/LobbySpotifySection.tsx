@@ -275,12 +275,6 @@ function SpotifySetupModal({
           </div>
 
           <div className={styles.spotifySetupHeaderActions}>
-            {currentSettings.spotifyAuthStatus === "connected" ? (
-              <span className={styles.spotifyConnectedBadge}>
-                <span className={styles.spotifyConnectedDot} />
-                {t("lobby.spotify.connected")}
-              </span>
-            ) : null}
             <CloseIconButton ariaLabel={t("lobby.spotify.closeSetup")} onClick={onClose} />
           </div>
         </div>
@@ -344,6 +338,33 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
   const isApplying = candidatePhase === "applying";
   const hasSelectedPlaylists = selectedSpotifyPlaylistIds.size > 0;
   const hasGeneratedTracks = candidateTracks.length > 0;
+  const [selectedCandidateTrackIds, setSelectedCandidateTrackIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+
+  useEffect(() => {
+    setSelectedCandidateTrackIds((prev) => {
+      if (prev.size === 0) return prev;
+      const availableIds = new Set(candidateTracks.map((track) => track.id));
+      const next = new Set([...prev].filter((trackId) => availableIds.has(trackId)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [candidateTracks]);
+
+  function toggleCandidateTrackSelection(trackId: string) {
+    setSelectedCandidateTrackIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(trackId)) next.delete(trackId);
+      else next.add(trackId);
+      return next;
+    });
+  }
+
+  function removeSelectedCandidateTracks() {
+    if (selectedCandidateTrackIds.size === 0) return;
+    selectedCandidateTrackIds.forEach((trackId) => removeCandidateTrack(trackId));
+    setSelectedCandidateTrackIds(new Set());
+  }
 
   return (
     <div className={styles.spotifyDiscoveryPanel}>
@@ -456,13 +477,28 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
           </div>
 
           <PlaylistTrackList
-            canSelect={false}
             onOpenTrack={() => undefined}
             onRemoveTrack={removeCandidateTrack}
-            onToggleSelection={() => undefined}
-            selectedIds={new Set()}
+            onToggleSelection={toggleCandidateTrackSelection}
+            selectedIds={selectedCandidateTrackIds}
             tracks={candidateTracks}
           />
+
+          {selectedCandidateTrackIds.size > 0 ? (
+            <div className={styles.spotifyBatchToolbar}>
+              <span className={styles.spotifyBatchCount}>
+                {t("lobby.playlist.selected", { count: selectedCandidateTrackIds.size })}
+              </span>
+              <ActionButton
+                className={styles.spotifyBatchDeleteBtn}
+                onClick={removeSelectedCandidateTracks}
+                type="button"
+                variant="danger"
+              >
+                {t("lobby.playlist.remove", { count: selectedCandidateTrackIds.size })}
+              </ActionButton>
+            </div>
+          ) : null}
 
           <motion.div
             animate={{ opacity: 1, y: 0 }}

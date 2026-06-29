@@ -718,6 +718,39 @@
   font-weight: 800;
 }
 
+.spotifyBatchToolbar {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 78px;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 86%, white 8%);
+  border-radius: 16px;
+  background: #111722;
+  box-shadow: 0 14px 38px color-mix(in srgb, black 42%, transparent);
+}
+
+.spotifyBatchCount {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spotifyBatchDeleteBtn {
+  min-height: 38px;
+  padding: 9px 14px;
+  font-size: 13px;
+}
+
 .spotifyFloatingAction {
   position: absolute;
   right: 14px;
@@ -764,7 +797,7 @@
   padding: 10px 12px;
   border: 1px solid var(--color-border-subtle);
   border-radius: 18px;
-  background: color-mix(in srgb, var(--color-surface-elevated) 94%, transparent);
+  background: #111722;
   box-shadow: 0 8px 24px rgb(0 0 0 / 32%);
 }
 
