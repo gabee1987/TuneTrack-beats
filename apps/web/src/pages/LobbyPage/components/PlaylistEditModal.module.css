@@ -344,6 +344,15 @@
   justify-content: flex-end;
 }
 
+.detailsOverlayFullscreen {
+  position: fixed;
+  z-index: 1400;
+}
+
+.detailsOverlayFullscreen .detailsSheet {
+  width: min(100%, 520px);
+}
+
 .detailsSheet {
   width: min(100%, 430px);
   height: 100%;
@@ -399,7 +408,6 @@
   overflow: hidden;
   background: color-mix(in srgb, var(--color-surface-elevated) 70%, transparent);
   display: flex;
-  align-items: center;
   justify-content: center;
   color: var(--color-text-secondary);
 }

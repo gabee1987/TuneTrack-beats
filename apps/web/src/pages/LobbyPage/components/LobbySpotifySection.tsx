@@ -9,6 +9,8 @@ import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { SettingInfoButton } from "../../../features/ui/SettingField";
 import { TextInput } from "../../../features/ui/TextInput";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
+import { GamePageToastStack } from "../../GamePage/components/GamePageToastStack";
+import type { GamePageToast } from "../../GamePage/gamePageToast.types";
 import { LobbySectionHeader } from "./LobbySectionHeader";
 import { PlaylistEditModal } from "./PlaylistEditModal";
 import { PlaylistTrackDetailsSheet } from "./PlaylistTrackDetailsSheet";
@@ -332,7 +334,6 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
     toggleSpotifyPlaylistSelection,
     updateCandidateTrack,
     useGeneratedCandidates,
-    openEditModal,
   } = spotifyState;
 
   const isSearching = playlistSearchPhase === "searching";
@@ -340,6 +341,9 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
   const isApplying = candidatePhase === "applying";
   const hasSelectedPlaylists = selectedSpotifyPlaylistIds.size > 0;
   const hasGeneratedTracks = candidateTracks.length > 0;
+  const generatedPlaylistToasts: GamePageToast[] = generatedPlaylistMessage
+    ? [{ id: "spotify-generated-playlist", type: "success", message: generatedPlaylistMessage }]
+    : [];
   const [selectedCandidateTrackIds, setSelectedCandidateTrackIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -530,47 +534,14 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
           <PlaylistTrackDetailsSheet
             onClose={() => setActiveCandidateTrackId(null)}
             onSave={updateCandidateTrack}
+            presentation="fullscreen"
             track={activeCandidateTrack}
           />
         </section>
       ) : null}
 
-      {generatedPlaylistMessage ? (
-        <motion.div
-          animate={{ opacity: 1, y: 0 }}
-          className={styles.spotifyToast}
-          initial={{ opacity: 0, y: -12 }}
-          transition={createStandardTransition(false)}
-        >
-          <span className={styles.spotifyToastIcon}>
-            <CheckCircleIcon />
-          </span>
-          <span>{generatedPlaylistMessage}</span>
-          <ActionButton
-            className={styles.spotifyToastAction}
-            onClick={openEditModal}
-            type="button"
-            variant="neutral"
-          >
-            {t("lobby.spotify.editPlaylist")}
-          </ActionButton>
-        </motion.div>
-      ) : null}
+      <GamePageToastStack toasts={generatedPlaylistToasts} />
     </div>
-  );
-}
-
-function CheckCircleIcon() {
-  return (
-    <svg aria-hidden="true" fill="none" height={16} viewBox="0 0 24 24" width={16}>
-      <path
-        d="m20 6-11 11-5-5"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2.8}
-      />
-    </svg>
   );
 }
 

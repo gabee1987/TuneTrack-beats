@@ -1,6 +1,7 @@
 import type { PublicTrackInfo, TrackMetadataStatus } from "@tunetrack/shared";
 import { motion, useReducedMotion } from "framer-motion";
 import { type FormEvent, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useI18n } from "../../../features/i18n";
 import { MotionPresence } from "../../../features/motion";
 import { ActionButton } from "../../../features/ui/ActionButton";
@@ -13,6 +14,7 @@ import styles from "./PlaylistEditModal.module.css";
 interface PlaylistTrackDetailsSheetProps {
   onClose: () => void;
   onSave: (trackId: string, patch: PlaylistTrackUpdatePatch) => void;
+  presentation?: "contained" | "fullscreen";
   track: PublicTrackInfo | null;
 }
 
@@ -21,6 +23,7 @@ const METADATA_STATUS_OPTIONS: TrackMetadataStatus[] = ["imported", "edited", "v
 export function PlaylistTrackDetailsSheet({
   onClose,
   onSave,
+  presentation = "contained",
   track,
 }: PlaylistTrackDetailsSheetProps) {
   const { t } = useI18n();
@@ -64,12 +67,14 @@ export function PlaylistTrackDetailsSheet({
 
   const flags = track ? getPlaylistTrackCurationFlags(track) : [];
 
-  return (
+  const detailsSheet = (
     <MotionPresence>
       {track ? (
         <motion.div
           animate={{ opacity: 1 }}
-          className={styles.detailsOverlay}
+          className={`${styles.detailsOverlay} ${
+            presentation === "fullscreen" ? styles.detailsOverlayFullscreen : ""
+          }`}
           exit={{ opacity: 0 }}
           initial={{ opacity: 0 }}
           onClick={onClose}
@@ -210,6 +215,12 @@ export function PlaylistTrackDetailsSheet({
       ) : null}
     </MotionPresence>
   );
+
+  if (presentation === "fullscreen" && typeof document !== "undefined") {
+    return createPortal(detailsSheet, document.body);
+  }
+
+  return detailsSheet;
 }
 
 interface EditableTrackFields {
