@@ -318,6 +318,52 @@
   min-height: 52px;
 }
 
+.spotifyPlaylistEditorEntry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-surface-outline-soft);
+}
+
+.spotifyPlaylistEditorSummary {
+  min-width: 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.spotifyPlaylistEditorActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.spotifyPlaylistEditorBtn {
+  min-height: 40px;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--color-border-spotify) 78%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-border-spotify) 32%, transparent);
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s;
+}
+
+.spotifyPlaylistEditorBtn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-surface-elevated) 100%, transparent);
+}
+
+.spotifyPlaylistEditorBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .spotifyImportBtn {
   min-height: 52px;
   padding: 14px 20px;
@@ -582,6 +628,7 @@
   cursor: pointer;
   text-align: left;
   transition: color 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .spotifyPlaylistRow + .spotifyPlaylistRow {
@@ -592,9 +639,8 @@
   background: transparent;
 }
 
-.spotifyPlaylistRow:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--color-border-spotify) 68%, white 12%);
-  outline-offset: -2px;
+.spotifyPlaylistRow:active {
+  background: transparent;
 }
 
 .spotifyPlaylistRowSelected {
@@ -602,22 +648,9 @@
   color: var(--color-text-primary);
 }
 
-.spotifyPlaylistArtworkSlot {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  overflow: hidden;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--color-surface-elevated) 70%, transparent);
-}
-
-.spotifyPlaylistImage,
 .spotifyPlaylistImageFallback {
   width: 42px;
   height: 42px;
-  object-fit: cover;
 }
 
 .spotifyPlaylistImageFallback {
@@ -625,20 +658,6 @@
   place-items: center;
   background: color-mix(in srgb, var(--color-border-spotify) 20%, black 80%);
   color: var(--color-border-spotify);
-}
-
-.spotifyPlaylistArtworkCheck {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: var(--color-background-spotify);
-  color: #06100a;
-}
-
-.spotifyPlaylistArtworkCheck svg {
-  width: 20px;
-  height: 20px;
 }
 
 .spotifyPlaylistMeta {
@@ -816,9 +835,20 @@
     grid-template-columns: 1fr;
   }
 
+  .spotifyPlaylistEditorEntry {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .spotifyPlaylistEditorActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
   .spotifyImportBtn,
   .spotifyConnectBtn,
-  .spotifyEditBtn {
+  .spotifyEditBtn,
+  .spotifyPlaylistEditorBtn {
     width: 100%;
   }
 
@@ -837,7 +867,6 @@
     padding: 8px 10px;
   }
 
-  .spotifyPlaylistImage,
   .spotifyPlaylistImageFallback {
     width: 42px;
     height: 42px;

@@ -5,7 +5,7 @@ import { PlaylistTrackRow } from "./PlaylistTrackRow";
 import styles from "./PlaylistEditModal.module.css";
 
 interface PlaylistTrackListProps {
-  isSelectMode: boolean;
+  canSelect?: boolean;
   onOpenTrack: (track: PublicTrackInfo) => void;
   onRemoveTrack: (trackId: string) => void;
   onToggleSelection: (trackId: string) => void;
@@ -14,7 +14,7 @@ interface PlaylistTrackListProps {
 }
 
 export function PlaylistTrackList({
-  isSelectMode,
+  canSelect = true,
   onOpenTrack,
   onRemoveTrack,
   onToggleSelection,
@@ -48,8 +48,8 @@ export function PlaylistTrackList({
               }}
             >
               <PlaylistTrackRow
+                canSelect={canSelect}
                 key={track.id}
-                isSelectMode={isSelectMode}
                 isSelected={selectedIds.has(track.id)}
                 onOpen={onOpenTrack}
                 onRemove={onRemoveTrack}

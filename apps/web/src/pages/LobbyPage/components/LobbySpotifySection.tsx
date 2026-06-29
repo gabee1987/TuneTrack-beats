@@ -2,7 +2,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import type { PublicRoomSettings } from "@tunetrack/shared";
-import { createMeasuredDisclosureMotion, createStandardTransition } from "../../../features/motion";
+import { createStandardTransition } from "../../../features/motion";
 import { useI18n } from "../../../features/i18n";
 import { ActionButton } from "../../../features/ui/ActionButton";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
@@ -12,6 +12,7 @@ import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { LobbySectionHeader } from "./LobbySectionHeader";
 import { PlaylistEditModal } from "./PlaylistEditModal";
 import { PlaylistTrackList } from "./PlaylistTrackList";
+import { SelectableArtwork, SelectableArtworkImage } from "./SelectableArtwork";
 import { AdaptiveSelect } from "./AdaptiveSelect";
 import { useLobbySpotify } from "../hooks/useLobbySpotify";
 import lobbyStyles from "../LobbyPage.module.css";
@@ -383,33 +384,27 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
               {playlistSearchResults.map((playlist) => {
                 const isSelected = selectedSpotifyPlaylistIds.has(playlist.id);
                 return (
-                  <button
+                  <div
                     key={playlist.id}
-                    aria-pressed={isSelected}
                     className={`${styles.spotifyPlaylistRow} ${
                       isSelected ? styles.spotifyPlaylistRowSelected : ""
                     }`}
-                    onClick={() => toggleSpotifyPlaylistSelection(playlist.id)}
-                    type="button"
                   >
-                    <span className={styles.spotifyPlaylistArtworkSlot}>
+                    <SelectableArtwork
+                      ariaLabel={t("lobby.spotify.find.toggleSelection", {
+                        name: playlist.name,
+                      })}
+                      isSelected={isSelected}
+                      onToggle={() => toggleSpotifyPlaylistSelection(playlist.id)}
+                    >
                       {playlist.imageUrl ? (
-                        <img
-                          alt=""
-                          className={styles.spotifyPlaylistImage}
-                          src={playlist.imageUrl}
-                        />
+                        <SelectableArtworkImage src={playlist.imageUrl} />
                       ) : (
                         <span className={styles.spotifyPlaylistImageFallback}>
                           <SpotifyLogo />
                         </span>
                       )}
-                      {isSelected ? (
-                        <span className={styles.spotifyPlaylistArtworkCheck}>
-                          <CheckCircleIcon />
-                        </span>
-                      ) : null}
-                    </span>
+                    </SelectableArtwork>
                     <span className={styles.spotifyPlaylistMeta}>
                       <strong>{playlist.name}</strong>
                       <span>
@@ -417,7 +412,7 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
                         {t("lobby.spotify.find.trackCount", { count: playlist.trackCount })}
                       </span>
                     </span>
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -461,7 +456,7 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
           </div>
 
           <PlaylistTrackList
-            isSelectMode={false}
+            canSelect={false}
             onOpenTrack={() => undefined}
             onRemoveTrack={removeCandidateTrack}
             onToggleSelection={() => undefined}
@@ -536,7 +531,6 @@ interface SpotifySetupContentProps {
 
 function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySetupContentProps) {
   const { t } = useI18n();
-  const reduceMotion = useReducedMotion() ?? false;
   const {
     accountType,
     authError,
@@ -546,8 +540,6 @@ function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySetupCont
     confirmRenamePlaylist,
     confirmSavePlaylist,
     connectSpotify,
-    importContentHeight,
-    importContentRef,
     importError,
     importPhase,
     importPlaylist,
@@ -647,16 +639,38 @@ function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySetupCont
         <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>{authError}</p>
       ) : null}
 
-      <motion.div
-        animate={createMeasuredDisclosureMotion(reduceMotion, isConnected, importContentHeight)}
-        initial={false}
-        style={{
-          overflow: "hidden",
-          pointerEvents: isConnected ? "auto" : "none",
-        }}
-        transition={createStandardTransition(reduceMotion)}
-      >
-        <div className={styles.spotifyImportContent} ref={importContentRef}>
+      {isConnected ? (
+        <div className={styles.spotifyImportContent}>
+          {isImported && importPhase !== "error" ? (
+            <div className={styles.spotifyPlaylistEditorEntry}>
+              <span className={styles.spotifyPlaylistEditorSummary}>
+                {t("lobby.spotify.tracksQueued", {
+                  count: currentSettings.importedTrackCount,
+                })}
+              </span>
+              <div className={styles.spotifyPlaylistEditorActions}>
+                <ActionButton
+                  className={styles.spotifyPlaylistEditorBtn}
+                  disabled={isImporting}
+                  onClick={openEditModal}
+                  type="button"
+                  variant="neutral"
+                >
+                  {t("lobby.spotify.editPlaylist")}
+                </ActionButton>
+                <ActionButton
+                  className={styles.spotifyPlaylistEditorBtn}
+                  disabled={isImporting}
+                  onClick={saveCurrentPlaylist}
+                  type="button"
+                  variant="neutral"
+                >
+                  {t("lobby.spotify.savePlaylist")}
+                </ActionButton>
+              </div>
+            </div>
+          ) : null}
+
           <div className={styles.spotifyImportRow}>
             <TextInput
               disabled={isImporting}
@@ -757,26 +771,7 @@ function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySetupCont
                   </p>
                 ) : null}
               </div>
-            ) : (
-              <div className={styles.spotifyEditRow}>
-                <ActionButton
-                  className={styles.spotifyEditBtn}
-                  onClick={openEditModal}
-                  type="button"
-                  variant="neutral"
-                >
-                  {t("lobby.spotify.editPlaylist")}
-                </ActionButton>
-                <ActionButton
-                  className={styles.spotifyEditBtn}
-                  onClick={saveCurrentPlaylist}
-                  type="button"
-                  variant="neutral"
-                >
-                  {t("lobby.spotify.savePlaylist")}
-                </ActionButton>
-              </div>
-            )
+            ) : null
           ) : null}
 
           {savedPlaylists.length > 0 ? (
@@ -856,7 +851,7 @@ function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySetupCont
             <p className={styles.spotifyStatusLine}>{savedPlaylistMessage}</p>
           ) : null}
         </div>
-      </motion.div>
+      ) : null}
     </div>
   );
 }

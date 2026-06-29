@@ -35,11 +35,9 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
 
   const {
     isLoading,
-    isSelectMode,
     removeSelected,
     removeTrack,
     selectedIds,
-    setSelectMode,
     sortDir,
     sortField,
     toggleSort,
@@ -87,19 +85,6 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
             )}
           </div>
           <div className={styles.headerActions}>
-            {tracks.length > 0 && (
-              <ActionButton
-                className={`${styles.selectBtn} ${isSelectMode ? styles.selectBtnActive : ""}`}
-                onClick={() => {
-                  setSelectedTrackId(null);
-                  setSelectMode(!isSelectMode);
-                }}
-                type="button"
-                variant="neutral"
-              >
-                {isSelectMode ? t("lobby.playlist.done") : t("lobby.playlist.select")}
-              </ActionButton>
-            )}
             <CloseIconButton ariaLabel={t("lobby.playlist.close")} onClick={onClose} />
           </div>
         </div>
@@ -115,7 +100,6 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
           <div className={styles.emptyState}>{t("lobby.playlist.empty")}</div>
         ) : (
           <PlaylistTrackList
-            isSelectMode={isSelectMode}
             onOpenTrack={(track) => setSelectedTrackId(track.id)}
             onRemoveTrack={removeTrack}
             onToggleSelection={toggleSelection}
@@ -124,7 +108,7 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
           />
         )}
 
-        {isSelectMode && selectedIds.size > 0 && (
+        {selectedIds.size > 0 && (
           <div className={styles.batchToolbar}>
             <span className={styles.batchCount}>
               {t("lobby.playlist.selected", { count: selectedIds.size })}
