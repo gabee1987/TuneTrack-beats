@@ -1,5 +1,7 @@
 import type { PublicTrackInfo } from "./playlistTracks.js";
 
+export const SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT = 500;
+
 export interface SpotifyPlaylistSearchItem {
   id: string;
   name: string;

@@ -19,6 +19,7 @@ import {
 } from "../constants/gameplay.js";
 import type { RevealConfirmMode } from "../game/roomSettings.js";
 import type { TrackMetadataStatus } from "../game/track.js";
+import { SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT } from "../spotify/spotifyDiscovery.js";
 
 const roomIdSchema = z
   .string()
@@ -47,7 +48,6 @@ const releaseYearSchema = z
 const MAX_CURATED_PLAYLIST_TRACK_COUNT = 1_000;
 const MAX_SPOTIFY_PLAYLIST_SEARCH_LIMIT = 50;
 const MAX_SPOTIFY_CANDIDATE_PLAYLIST_COUNT = 8;
-const MAX_SPOTIFY_CANDIDATE_TARGET_COUNT = 500;
 
 const curatedPlaylistTrackSchema = z.object({
   id: z.string().trim().min(1).max(200),
@@ -225,15 +225,27 @@ export const generateSpotifyCandidatesPayloadSchema = z.object({
       .array(z.string().trim().min(1).max(100))
       .min(1)
       .max(MAX_SPOTIFY_CANDIDATE_PLAYLIST_COUNT),
-    targetCount: z.number().int().min(10).max(MAX_SPOTIFY_CANDIDATE_TARGET_COUNT).default(500),
+    targetCount: z
+      .number()
+      .int()
+      .min(10)
+      .max(SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT)
+      .default(SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT),
   }),
 });
 
 export const useSpotifyCandidatesPayloadSchema = z.object({
   roomId: roomIdSchema,
   candidateSessionId: z.string().trim().min(1).max(120),
-  trackIds: z.array(z.string().trim().min(1).max(200)).min(10).max(500),
-  tracks: z.array(curatedPlaylistTrackSchema).min(10).max(500).optional(),
+  trackIds: z
+    .array(z.string().trim().min(1).max(200))
+    .min(10)
+    .max(SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT),
+  tracks: z
+    .array(curatedPlaylistTrackSchema)
+    .min(10)
+    .max(SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT)
+    .optional(),
 });
 
 export type JoinRoomPayloadInput = z.input<typeof joinRoomPayloadSchema>;

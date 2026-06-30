@@ -1,6 +1,7 @@
 import {
   ClientToServerEvent,
   ServerToClientEvent,
+  SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT,
   type SpotifyAccountType,
   type SpotifyAuthResultPayload,
   type ImportPlaylistResultPayload,
@@ -374,7 +375,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
         source: {
           type: "playlists",
           playlistIds: Array.from(selectedSpotifyPlaylistIds),
-          targetCount: 500,
+          targetCount: SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT,
         },
       });
     });

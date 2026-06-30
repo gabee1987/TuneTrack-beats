@@ -54,6 +54,12 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
   const accountType = spotifyState.accountType ?? currentSettings.spotifyAccountType;
   const isConnecting = spotifyState.authPhase === "connecting";
 
+  useEffect(() => {
+    if (isSetupOpen && spotifyState.generatedPlaylistMessage) {
+      setActiveSource("playlistUrl");
+    }
+  }, [isSetupOpen, spotifyState.generatedPlaylistMessage]);
+
   const connectHint = isConnected
     ? accountType === "premium"
       ? t("lobby.spotify.browserPlaybackHint")
@@ -419,9 +425,19 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
                 return (
                   <div
                     key={playlist.id}
+                    aria-pressed={isSelected}
                     className={`${styles.spotifyPlaylistRow} ${
                       isSelected ? styles.spotifyPlaylistRowSelected : ""
                     }`}
+                    onClick={() => toggleSpotifyPlaylistSelection(playlist.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        toggleSpotifyPlaylistSelection(playlist.id);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
                   >
                     <SelectableArtwork
                       ariaLabel={t("lobby.spotify.find.toggleSelection", {
