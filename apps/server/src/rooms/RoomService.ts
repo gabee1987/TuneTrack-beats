@@ -377,7 +377,7 @@ export class RoomService {
   ): Promise<SpotifyCandidatesGeneratedPayload> {
     this.roomRegistry.getRoomStateForMember(socketId, payload.roomId);
     return this.spotifyDiscoveryService
-      .generateFromPlaylists(payload.roomId, payload.source.playlistIds, payload.source.targetCount)
+      .generateCandidates(payload.roomId, payload.source)
       .then((result) => result.payload);
   }
 

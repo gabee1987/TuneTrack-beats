@@ -1,7 +1,11 @@
 import { motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import type { PublicRoomSettings } from "@tunetrack/shared";
+import {
+  SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT,
+  SPOTIFY_QUICK_PICK_PRESETS,
+  type PublicRoomSettings,
+} from "@tunetrack/shared";
 import { createStandardTransition } from "../../../features/motion";
 import { useI18n } from "../../../features/i18n";
 import { ActionButton } from "../../../features/ui/ActionButton";
@@ -276,7 +280,6 @@ function SpotifySetupModal({
               onClick={() => onSourceChange("filters")}
             />
             <SpotifySourceTab
-              disabled
               isActive={activeSource === "quickPicks"}
               label={t("lobby.spotify.source.quickPicks")}
               onClick={() => onSourceChange("quickPicks")}
@@ -291,6 +294,8 @@ function SpotifySetupModal({
         <div className={styles.spotifySetupBody}>
           {activeSource === "findPlaylists" ? (
             <SpotifyPlaylistSearchPanel spotifyState={spotifyState} />
+          ) : activeSource === "quickPicks" ? (
+            <SpotifyQuickPicksPanel spotifyState={spotifyState} />
           ) : (
             <SpotifySetupContent currentSettings={currentSettings} spotifyState={spotifyState} />
           )}
@@ -324,65 +329,23 @@ function SpotifySourceTab({ disabled, isActive, label, onClick }: SpotifySourceT
 function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpotifyState }) {
   const { t } = useI18n();
   const {
-    candidateError,
     candidatePhase,
     candidateTracks,
     generateCandidatesFromSelectedPlaylists,
-    generatedPlaylistMessage,
     playlistSearchError,
     playlistSearchPhase,
     playlistSearchQuery,
     playlistSearchResults,
-    removeCandidateTrack,
     searchSpotifyPlaylists,
     selectedSpotifyPlaylistIds,
     setPlaylistSearchQuery,
     toggleSpotifyPlaylistSelection,
-    updateCandidateTrack,
-    useGeneratedCandidates,
   } = spotifyState;
 
   const isSearching = playlistSearchPhase === "searching";
   const isGenerating = candidatePhase === "generating";
-  const isApplying = candidatePhase === "applying";
   const hasSelectedPlaylists = selectedSpotifyPlaylistIds.size > 0;
   const hasGeneratedTracks = candidateTracks.length > 0;
-  const generatedPlaylistToasts: GamePageToast[] = generatedPlaylistMessage
-    ? [{ id: "spotify-generated-playlist", type: "success", message: generatedPlaylistMessage }]
-    : [];
-  const [selectedCandidateTrackIds, setSelectedCandidateTrackIds] = useState<Set<string>>(
-    () => new Set(),
-  );
-  const [activeCandidateTrackId, setActiveCandidateTrackId] = useState<string | null>(null);
-  const activeCandidateTrack =
-    candidateTracks.find((track) => track.id === activeCandidateTrackId) ?? null;
-
-  useEffect(() => {
-    setSelectedCandidateTrackIds((prev) => {
-      if (prev.size === 0) return prev;
-      const availableIds = new Set(candidateTracks.map((track) => track.id));
-      const next = new Set([...prev].filter((trackId) => availableIds.has(trackId)));
-      return next.size === prev.size ? prev : next;
-    });
-    setActiveCandidateTrackId((trackId) =>
-      trackId && candidateTracks.some((track) => track.id === trackId) ? trackId : null,
-    );
-  }, [candidateTracks]);
-
-  function toggleCandidateTrackSelection(trackId: string) {
-    setSelectedCandidateTrackIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(trackId)) next.delete(trackId);
-      else next.add(trackId);
-      return next;
-    });
-  }
-
-  function removeSelectedCandidateTracks() {
-    if (selectedCandidateTrackIds.size === 0) return;
-    selectedCandidateTrackIds.forEach((trackId) => removeCandidateTrack(trackId));
-    setSelectedCandidateTrackIds(new Set());
-  }
 
   return (
     <div className={styles.spotifyDiscoveryPanel}>
@@ -492,6 +455,132 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
         </section>
       ) : null}
 
+      <SpotifyCandidateReviewPanel
+        backLabel={t("lobby.spotify.quickPicks.back")}
+        onBack={spotifyState.discardGeneratedCandidates}
+        spotifyState={spotifyState}
+      />
+    </div>
+  );
+}
+
+function SpotifyQuickPicksPanel({ spotifyState }: { spotifyState: LobbySpotifyState }) {
+  const { t } = useI18n();
+  const { candidatePhase, candidateTracks, generateCandidatesFromPreset } = spotifyState;
+  const [targetCountInput, setTargetCountInput] = useState("250");
+  const isGenerating = candidatePhase === "generating";
+  const hasGeneratedTracks = candidateTracks.length > 0;
+  const targetCount = clampQuickPickTargetCount(targetCountInput);
+
+  return (
+    <div className={styles.spotifyDiscoveryPanel}>
+      {!hasGeneratedTracks ? (
+        <section className={styles.spotifyQuickPicksPanel}>
+          <label className={styles.spotifyQuickPickLimitField}>
+            <span>{t("lobby.spotify.quickPicks.limitLabel")}</span>
+            <TextInput
+              inputMode="numeric"
+              max={SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT}
+              min={10}
+              onChange={(event) => setTargetCountInput(event.target.value)}
+              type="number"
+              value={targetCountInput}
+            />
+          </label>
+          <div className={styles.spotifyQuickPickGrid}>
+            {SPOTIFY_QUICK_PICK_PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                className={styles.spotifyQuickPickCard}
+                disabled={isGenerating}
+                onClick={() => generateCandidatesFromPreset(preset.id, targetCount)}
+                type="button"
+              >
+                <span className={styles.spotifyQuickPickTitle}>
+                  {t(`lobby.spotify.quickPicks.${preset.id}.title`)}
+                </span>
+                <span className={styles.spotifyQuickPickDescription}>
+                  {t(`lobby.spotify.quickPicks.${preset.id}.description`)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <SpotifyCandidateReviewPanel spotifyState={spotifyState} />
+    </div>
+  );
+}
+
+function clampQuickPickTargetCount(value: string): number {
+  const parsedValue = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsedValue)) return 250;
+  return Math.min(Math.max(parsedValue, 10), SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT);
+}
+
+interface SpotifyCandidateReviewPanelProps {
+  backLabel?: string;
+  onBack?: () => void;
+  spotifyState: LobbySpotifyState;
+}
+
+function SpotifyCandidateReviewPanel({
+  backLabel,
+  onBack,
+  spotifyState,
+}: SpotifyCandidateReviewPanelProps) {
+  const { t } = useI18n();
+  const {
+    candidateError,
+    candidatePhase,
+    candidateTracks,
+    generatedPlaylistMessage,
+    removeCandidateTrack,
+    updateCandidateTrack,
+    useGeneratedCandidates,
+  } = spotifyState;
+  const isApplying = candidatePhase === "applying";
+  const hasGeneratedTracks = candidateTracks.length > 0;
+  const generatedPlaylistToasts: GamePageToast[] = generatedPlaylistMessage
+    ? [{ id: "spotify-generated-playlist", type: "success", message: generatedPlaylistMessage }]
+    : [];
+  const [selectedCandidateTrackIds, setSelectedCandidateTrackIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [activeCandidateTrackId, setActiveCandidateTrackId] = useState<string | null>(null);
+  const activeCandidateTrack =
+    candidateTracks.find((track) => track.id === activeCandidateTrackId) ?? null;
+
+  useEffect(() => {
+    setSelectedCandidateTrackIds((prev) => {
+      if (prev.size === 0) return prev;
+      const availableIds = new Set(candidateTracks.map((track) => track.id));
+      const next = new Set([...prev].filter((trackId) => availableIds.has(trackId)));
+      return next.size === prev.size ? prev : next;
+    });
+    setActiveCandidateTrackId((trackId) =>
+      trackId && candidateTracks.some((track) => track.id === trackId) ? trackId : null,
+    );
+  }, [candidateTracks]);
+
+  function toggleCandidateTrackSelection(trackId: string) {
+    setSelectedCandidateTrackIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(trackId)) next.delete(trackId);
+      else next.add(trackId);
+      return next;
+    });
+  }
+
+  function removeSelectedCandidateTracks() {
+    if (selectedCandidateTrackIds.size === 0) return;
+    selectedCandidateTrackIds.forEach((trackId) => removeCandidateTrack(trackId));
+    setSelectedCandidateTrackIds(new Set());
+  }
+
+  return (
+    <>
       {candidatePhase === "error" && candidateError ? (
         <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
           {candidateError}
@@ -502,6 +591,11 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
         <section className={styles.spotifyCandidateReview}>
           <div className={styles.spotifyReviewHeader}>
             <span>{t("lobby.spotify.review.readyCount", { count: candidateTracks.length })}</span>
+            {onBack && backLabel ? (
+              <button className={styles.spotifyReviewBackBtn} onClick={onBack} type="button">
+                {backLabel}
+              </button>
+            ) : null}
           </div>
 
           <PlaylistTrackList
@@ -557,7 +651,7 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
       ) : null}
 
       <GamePageToastStack toasts={generatedPlaylistToasts} />
-    </div>
+    </>
   );
 }
 

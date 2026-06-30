@@ -7,10 +7,13 @@ import {
   type ImportPlaylistResultPayload,
   type PlaylistTracksPayload,
   type SpotifyCandidatesAppliedPayload,
+  type SpotifyCandidateSource,
   type SpotifyCandidatesGeneratedPayload,
   type SpotifyPlaylistSearchItem,
   type SpotifyPlaylistSearchResultPayload,
   type SpotifyAuthUrlPayload,
+  type SpotifyQuickPickPresetId,
+  type PublicTrackInfo,
 } from "@tunetrack/shared";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -28,7 +31,6 @@ import {
   type SavedPlaylist,
 } from "../../../services/savedPlaylists/savedPlaylists";
 import { getSocketClient } from "../../../services/socket/socketClient";
-import type { PublicTrackInfo } from "@tunetrack/shared";
 
 type AuthPhase = "idle" | "connecting" | "error";
 type ImportPhase = "idle" | "importing" | "error";
@@ -46,6 +48,7 @@ export interface UseLobbySpotifyResult {
   confirmRenamePlaylist: () => void;
   confirmSavePlaylist: () => void;
   connectSpotify: () => void;
+  discardGeneratedCandidates: () => void;
   importContentHeight: number;
   importContentRef: React.RefObject<HTMLDivElement>;
   importError: string | null;
@@ -78,6 +81,10 @@ export interface UseLobbySpotifyResult {
   candidateTracks: PublicTrackInfo[];
   deleteSelectedSavedPlaylist: () => void;
   generateCandidatesFromSelectedPlaylists: () => void;
+  generateCandidatesFromPreset: (
+    presetId: SpotifyQuickPickPresetId,
+    targetCount?: number,
+  ) => void;
   removeCandidateTrack: (trackId: string) => void;
   saveCurrentPlaylist: () => void;
   searchSpotifyPlaylists: () => void;
@@ -346,8 +353,8 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     });
   }
 
-  function generateCandidatesFromSelectedPlaylists() {
-    if (!roomId || selectedSpotifyPlaylistIds.size === 0) return;
+  function requestSpotifyCandidateGeneration(source: SpotifyCandidateSource) {
+    if (!roomId) return;
 
     setCandidatePhase("generating");
     setCandidateError(null);
@@ -372,13 +379,38 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
       socket.on(ServerToClientEvent.SpotifyCandidatesGenerated, handleResult);
       socket.emit(ClientToServerEvent.GenerateSpotifyCandidates, {
         roomId,
-        source: {
-          type: "playlists",
-          playlistIds: Array.from(selectedSpotifyPlaylistIds),
-          targetCount: SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT,
-        },
+        source,
       });
     });
+  }
+
+  function generateCandidatesFromSelectedPlaylists() {
+    if (selectedSpotifyPlaylistIds.size === 0) return;
+
+    requestSpotifyCandidateGeneration({
+      type: "playlists",
+      playlistIds: Array.from(selectedSpotifyPlaylistIds),
+      targetCount: SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT,
+    });
+  }
+
+  function generateCandidatesFromPreset(
+    presetId: SpotifyQuickPickPresetId,
+    targetCount = SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT,
+  ) {
+    requestSpotifyCandidateGeneration({
+      type: "preset",
+      presetId,
+      targetCount,
+    });
+  }
+
+  function discardGeneratedCandidates() {
+    setCandidatePhase("idle");
+    setCandidateError(null);
+    setCandidateSessionId(null);
+    setCandidateSourceSummary(null);
+    setCandidateTracks([]);
   }
 
   function removeCandidateTrack(trackId: string) {
@@ -630,6 +662,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     confirmRenamePlaylist,
     confirmSavePlaylist,
     connectSpotify,
+    discardGeneratedCandidates,
     importContentHeight,
     importContentRef,
     importError,
@@ -662,6 +695,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     candidateTracks,
     deleteSelectedSavedPlaylist,
     generateCandidatesFromSelectedPlaylists,
+    generateCandidatesFromPreset,
     removeCandidateTrack,
     saveCurrentPlaylist,
     searchSpotifyPlaylists,

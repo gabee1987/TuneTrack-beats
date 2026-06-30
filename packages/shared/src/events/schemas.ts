@@ -20,6 +20,7 @@ import {
 import type { RevealConfirmMode } from "../game/roomSettings.js";
 import type { TrackMetadataStatus } from "../game/track.js";
 import { SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT } from "../spotify/spotifyDiscovery.js";
+import { SPOTIFY_QUICK_PICK_PRESET_IDS } from "../spotify/spotifyQuickPicks.js";
 
 const roomIdSchema = z
   .string()
@@ -219,19 +220,31 @@ export const searchSpotifyPlaylistsPayloadSchema = z.object({
 
 export const generateSpotifyCandidatesPayloadSchema = z.object({
   roomId: roomIdSchema,
-  source: z.object({
-    type: z.literal("playlists"),
-    playlistIds: z
-      .array(z.string().trim().min(1).max(100))
-      .min(1)
-      .max(MAX_SPOTIFY_CANDIDATE_PLAYLIST_COUNT),
-    targetCount: z
-      .number()
-      .int()
-      .min(10)
-      .max(SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT)
-      .default(SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT),
-  }),
+  source: z.discriminatedUnion("type", [
+    z.object({
+      type: z.literal("playlists"),
+      playlistIds: z
+        .array(z.string().trim().min(1).max(100))
+        .min(1)
+        .max(MAX_SPOTIFY_CANDIDATE_PLAYLIST_COUNT),
+      targetCount: z
+        .number()
+        .int()
+        .min(10)
+        .max(SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT)
+        .default(SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT),
+    }),
+    z.object({
+      type: z.literal("preset"),
+      presetId: z.enum(SPOTIFY_QUICK_PICK_PRESET_IDS),
+      targetCount: z
+        .number()
+        .int()
+        .min(10)
+        .max(SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT)
+        .default(SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT),
+    }),
+  ]),
 });
 
 export const useSpotifyCandidatesPayloadSchema = z.object({

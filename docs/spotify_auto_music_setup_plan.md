@@ -171,6 +171,9 @@ Initial presets:
 - `Hungarian Favorites` if locale-specific presets are desired later.
 
 Each preset maps to one or more playlist-search or track-search templates.
+Presets also carry tuning rules such as allowed year ranges and balanced
+year selection, so "classic" presets do not accidentally produce mostly modern
+remasters or same-year tracks.
 
 The UI should show that Quick Picks are editable: after generating, the host can
 remove tracks and still review the deck before starting.
@@ -440,6 +443,8 @@ Acceptance criteria:
 
 ### Phase 3 - Quick Picks
 
+Status: implemented.
+
 Goal: provide one-tap starting points.
 
 Tasks:
@@ -447,6 +452,8 @@ Tasks:
 - Define preset catalog in shared/server code.
 - Map presets to playlist-search and/or track-search templates.
 - Add Quick Picks panel.
+- Add max song count input for Quick Pick generation.
+- Add preset year filtering and year-balanced selection.
 - Generate candidates through the same session/review/apply path as Phase 2.
 
 Acceptance criteria:
@@ -455,6 +462,8 @@ Acceptance criteria:
 - Host can review and edit before applying.
 - Preset source summary is shown in lobby/review.
 - No duplicated generation logic outside the discovery service.
+- Classic presets avoid out-of-range modern releases where Spotify metadata
+  makes that possible.
 
 ### Phase 4 - Filter Builder MVP
 

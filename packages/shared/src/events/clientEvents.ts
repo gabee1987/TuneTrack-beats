@@ -3,6 +3,7 @@ import type { RoomId } from "../game/roomState.js";
 import type { PlayerId } from "../game/player.js";
 import type { TrackMetadataStatus } from "../game/track.js";
 import type { PublicTrackInfo } from "../spotify/playlistTracks.js";
+import type { SpotifyCandidateSource } from "../spotify/spotifyDiscovery.js";
 
 export const ClientToServerEvent = {
   AwardTt: "award_tt",
@@ -177,11 +178,7 @@ export interface SearchSpotifyPlaylistsPayload {
 
 export interface GenerateSpotifyCandidatesPayload {
   roomId: RoomId;
-  source: {
-    type: "playlists";
-    playlistIds: string[];
-    targetCount: number;
-  };
+  source: SpotifyCandidateSource;
 }
 
 export interface UseSpotifyCandidatesPayload {

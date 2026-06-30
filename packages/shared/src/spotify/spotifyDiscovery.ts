@@ -1,4 +1,5 @@
 import type { PublicTrackInfo } from "./playlistTracks.js";
+import type { SpotifyQuickPickPresetId } from "./spotifyQuickPicks.js";
 
 export const SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT = 500;
 
@@ -22,11 +23,17 @@ export type SpotifyPlaylistSearchResultPayload =
       message: string;
     };
 
-export type SpotifyCandidateSource = {
-  type: "playlists";
-  playlistIds: string[];
-  targetCount: number;
-};
+export type SpotifyCandidateSource =
+  | {
+      type: "playlists";
+      playlistIds: string[];
+      targetCount: number;
+    }
+  | {
+      type: "preset";
+      presetId: SpotifyQuickPickPresetId;
+      targetCount: number;
+    };
 
 export interface SpotifyCandidatesGeneratedSuccessPayload {
   success: true;
