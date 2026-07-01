@@ -5,6 +5,7 @@ import {
   SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT,
   SPOTIFY_QUICK_PICK_PRESETS,
   type PublicRoomSettings,
+  type SpotifyPlaylistSearchItem,
   type SpotifySmartSearchResult,
 } from "@tunetrack/shared";
 import { createStandardTransition } from "../../../features/motion";
@@ -342,6 +343,7 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
     openedPlaylistError,
     openedPlaylistPhase,
     removeOpenedPlaylistTrack,
+    removeSmartSearchTracksFromQueue,
     savedPlaylistMessage,
     searchSpotifyMusic,
     setSmartSearchQuery,
@@ -351,6 +353,7 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
     smartSearchLoadMorePhase,
     smartSearchPhase,
     smartSearchQuery,
+    smartSearchQueuedTrackIds,
     smartSearchResults,
     updateOpenedPlaylistTrack,
   } = spotifyState;
@@ -360,9 +363,14 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
   const [selectedSearchTrackIds, setSelectedSearchTrackIds] = useState<Set<string>>(
     () => new Set(),
   );
-  const [addedSearchTrackIds, setAddedSearchTrackIds] = useState<Set<string>>(() => new Set());
   const selectedSearchTracks = smartSearchResults.filter(
     (result) => result.type === "track" && selectedSearchTrackIds.has(result.id),
+  );
+  const selectedUnqueuedSearchTracks = selectedSearchTracks.filter(
+    (track) => !smartSearchQueuedTrackIds.has(track.id),
+  );
+  const selectedQueuedSearchTracks = selectedSearchTracks.filter((track) =>
+    smartSearchQueuedTrackIds.has(track.id),
   );
 
   useEffect(() => {
@@ -386,24 +394,40 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
   }
 
   function handleAddTrack(result: SpotifySmartSearchResult) {
+    if (smartSearchQueuedTrackIds.has(result.id)) return;
     addSmartSearchTrackToQueue(result);
-    setAddedSearchTrackIds((prev) => new Set(prev).add(result.id));
     showSearchToast(t("lobby.spotify.builder.trackAdded"));
   }
 
   function handleAddSelectedTracks() {
     if (selectedSearchTracks.length === 0) return;
 
-    addSmartSearchTracksToQueue(selectedSearchTracks);
-    setAddedSearchTrackIds((prev) => {
-      const next = new Set(prev);
-      selectedSearchTracks.forEach((track) => next.add(track.id));
-      return next;
-    });
+    const tracksToAdd = selectedUnqueuedSearchTracks;
+    if (tracksToAdd.length === 0) return;
+
+    addSmartSearchTracksToQueue(tracksToAdd);
+    setSelectedSearchTrackIds(new Set());
+    showSearchToast(t("lobby.spotify.builder.playlistTracksAdded", { count: tracksToAdd.length }));
+  }
+
+  function handleRemoveSelectedTracks() {
+    if (selectedSearchTracks.length === 0) return;
+    if (selectedQueuedSearchTracks.length === 0) return;
+
+    removeSmartSearchTracksFromQueue(selectedQueuedSearchTracks);
     setSelectedSearchTrackIds(new Set());
     showSearchToast(
-      t("lobby.spotify.builder.playlistTracksAdded", { count: selectedSearchTracks.length }),
+      t("lobby.spotify.builder.playlistTracksRemoved", {
+        count: selectedQueuedSearchTracks.length,
+      }),
     );
+  }
+
+  function handleRemoveTrack(result: SpotifySmartSearchResult) {
+    if (!smartSearchQueuedTrackIds.has(result.id)) return;
+
+    removeSmartSearchTracksFromQueue([result]);
+    showSearchToast(t("lobby.spotify.builder.playlistTracksRemoved", { count: 1 }));
   }
 
   function showSearchToast(message: string) {
@@ -477,10 +501,11 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
               {smartSearchResults.map((result) => (
                 <SpotifySmartSearchResultRow
                   key={`${result.type}-${result.id}`}
-                  isAdded={addedSearchTrackIds.has(result.id)}
+                  isAdded={smartSearchQueuedTrackIds.has(result.id)}
                   isSelected={selectedSearchTrackIds.has(result.id)}
                   onAdd={() => handleAddTrack(result)}
                   onOpenPlaylist={() => openSmartSearchPlaylist(result)}
+                  onRemove={() => handleRemoveTrack(result)}
                   onToggleSelection={() => toggleSearchTrackSelection(result.id)}
                   result={result}
                 />
@@ -509,16 +534,30 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
               initial={{ opacity: 0, y: 18 }}
               transition={createStandardTransition(false)}
             >
-              <ActionButton
-                className={styles.spotifySearchAddSelectedBtn}
-                onClick={handleAddSelectedTracks}
-                type="button"
-                variant="neutral"
-              >
-                {t("lobby.spotify.builder.addSelected", {
-                  count: selectedSearchTracks.length,
-                })}
-              </ActionButton>
+              {selectedUnqueuedSearchTracks.length > 0 ? (
+                <ActionButton
+                  className={styles.spotifySearchAddSelectedBtn}
+                  onClick={handleAddSelectedTracks}
+                  type="button"
+                  variant="neutral"
+                >
+                  {t("lobby.spotify.builder.addSelected", {
+                    count: selectedUnqueuedSearchTracks.length,
+                  })}
+                </ActionButton>
+              ) : null}
+              {selectedQueuedSearchTracks.length > 0 ? (
+                <ActionButton
+                  className={`${styles.spotifySearchAddSelectedBtn} ${styles.spotifySearchRemoveSelectedBtn}`}
+                  onClick={handleRemoveSelectedTracks}
+                  type="button"
+                  variant="danger"
+                >
+                  {t("lobby.spotify.builder.removeSelected", {
+                    count: selectedQueuedSearchTracks.length,
+                  })}
+                </ActionButton>
+              ) : null}
             </motion.div>
           ) : null}
         </section>
@@ -532,6 +571,7 @@ interface SpotifySmartSearchResultRowProps {
   isSelected: boolean;
   onAdd: () => void;
   onOpenPlaylist: () => void;
+  onRemove: () => void;
   onToggleSelection: () => void;
   result: SpotifySmartSearchResult;
 }
@@ -541,36 +581,69 @@ function SpotifySmartSearchResultRow({
   isSelected,
   onAdd,
   onOpenPlaylist,
+  onRemove,
   onToggleSelection,
   result,
 }: SpotifySmartSearchResultRowProps) {
   const { t } = useI18n();
   const x = useMotionValue(0);
-  const zoneWidth = useMotionValue(0);
-  const iconOpacity = useTransform(zoneWidth, [0, 40, SMART_SEARCH_SWIPE_REVEAL_WIDTH], [0, 0, 1]);
-  const iconScale = useTransform(zoneWidth, [40, SMART_SEARCH_SWIPE_REVEAL_WIDTH], [0.6, 1]);
-  const isAdding = useRef(false);
+  const addZoneWidth = useMotionValue(0);
+  const removeZoneWidth = useMotionValue(0);
+  const addIconOpacity = useTransform(
+    addZoneWidth,
+    [0, 40, SMART_SEARCH_SWIPE_REVEAL_WIDTH],
+    [0, 0, 1],
+  );
+  const addIconScale = useTransform(addZoneWidth, [40, SMART_SEARCH_SWIPE_REVEAL_WIDTH], [0.6, 1]);
+  const removeIconOpacity = useTransform(
+    removeZoneWidth,
+    [0, 40, SMART_SEARCH_SWIPE_REVEAL_WIDTH],
+    [0, 0, 1],
+  );
+  const removeIconScale = useTransform(
+    removeZoneWidth,
+    [40, SMART_SEARCH_SWIPE_REVEAL_WIDTH],
+    [0.6, 1],
+  );
+  const isActing = useRef(false);
   const isTrack = result.type === "track";
 
   useEffect(() => {
     return x.on("change", (value) => {
-      if (!isAdding.current) zoneWidth.set(Math.max(0, value));
+      if (isActing.current) return;
+      addZoneWidth.set(Math.max(0, value));
+      removeZoneWidth.set(Math.max(0, -value));
     });
-  }, [x, zoneWidth]);
+  }, [addZoneWidth, removeZoneWidth, x]);
 
   async function handleDragEnd(_: unknown, info: { offset: { x: number } }) {
-    if (!isTrack || isAdding.current) return;
+    if (!isTrack || isActing.current) return;
 
     if (!isAdded && info.offset.x > SMART_SEARCH_SWIPE_THRESHOLD) {
-      isAdding.current = true;
+      isActing.current = true;
       await animate(x, SMART_SEARCH_SWIPE_REVEAL_WIDTH, {
         duration: 0.14,
         ease: [0.2, 0, 0, 1],
       });
       onAdd();
       await animate(x, 0, { type: "spring", stiffness: 520, damping: 38 });
-      zoneWidth.set(0);
-      isAdding.current = false;
+      addZoneWidth.set(0);
+      removeZoneWidth.set(0);
+      isActing.current = false;
+      return;
+    }
+
+    if (isAdded && info.offset.x < -SMART_SEARCH_SWIPE_THRESHOLD) {
+      isActing.current = true;
+      await animate(x, -SMART_SEARCH_SWIPE_REVEAL_WIDTH, {
+        duration: 0.14,
+        ease: [0.2, 0, 0, 1],
+      });
+      onRemove();
+      await animate(x, 0, { type: "spring", stiffness: 520, damping: 38 });
+      addZoneWidth.set(0);
+      removeZoneWidth.set(0);
+      isActing.current = false;
       return;
     }
 
@@ -580,17 +653,27 @@ function SpotifySmartSearchResultRow({
   return (
     <div className={styles.spotifySmartResultRowWrapper}>
       {isTrack ? (
-        <motion.div className={styles.spotifySmartAddZone} style={{ width: zoneWidth }}>
-          <motion.div style={{ opacity: iconOpacity, scale: iconScale }}>
+        <motion.div className={styles.spotifySmartAddZone} style={{ width: addZoneWidth }}>
+          <motion.div style={{ opacity: addIconOpacity, scale: addIconScale }}>
             <PlusIcon />
+          </motion.div>
+        </motion.div>
+      ) : null}
+      {isTrack ? (
+        <motion.div className={styles.spotifySmartRemoveZone} style={{ width: removeZoneWidth }}>
+          <motion.div style={{ opacity: removeIconOpacity, scale: removeIconScale }}>
+            <TrashIcon />
           </motion.div>
         </motion.div>
       ) : null}
       <motion.div
         className={styles.spotifySmartResultRow}
         drag={isTrack ? "x" : false}
-        dragConstraints={{ left: 0, right: SMART_SEARCH_SWIPE_REVEAL_WIDTH }}
-        dragElastic={{ left: 0, right: 0.18 }}
+        dragConstraints={{
+          left: isAdded ? -SMART_SEARCH_SWIPE_REVEAL_WIDTH : 0,
+          right: isAdded ? 0 : SMART_SEARCH_SWIPE_REVEAL_WIDTH,
+        }}
+        dragElastic={{ left: isAdded ? 0.18 : 0, right: isAdded ? 0 : 0.18 }}
         onDragEnd={handleDragEnd}
         style={{ x }}
       >
@@ -672,6 +755,24 @@ function CheckIcon() {
         strokeLinejoin="round"
         strokeWidth={2.8}
       />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height={20}
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      viewBox="0 0 24 24"
+      width={20}
+    >
+      <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
     </svg>
   );
 }
@@ -1064,17 +1165,22 @@ function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySetupCont
     authPhase,
     cancelRenamePlaylist,
     cancelSavePlaylist,
+    clearCurrentPlaylist,
     confirmRenamePlaylist,
     confirmSavePlaylist,
     connectSpotify,
     importError,
     importPhase,
     importPlaylist,
+    importPlaylistSearchResult,
     isOverwritePromptActive,
     isSavingWithName,
     loadedSavedPlaylistId,
     openEditModal,
     playlistUrl,
+    playlistSearchError,
+    playlistSearchPhase,
+    playlistSearchResults,
     renameError,
     renameInputValue,
     renamingPlaylistId,
@@ -1086,9 +1192,11 @@ function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySetupCont
     confirmOverwrite,
     deleteSelectedSavedPlaylist,
     saveCurrentPlaylist,
+    searchSpotifyPlaylists,
     setRenameInputValue,
     setSaveName,
     setSelectedSavedPlaylistId,
+    setPlaylistSearchQuery,
     setPlaylistUrl,
     startRenamePlaylist,
     switchToSaveAsNew,
@@ -1098,6 +1206,8 @@ function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySetupCont
   const isImported = currentSettings.playlistImported;
   const isConnecting = authPhase === "connecting";
   const isImporting = importPhase === "importing";
+  const isPlaylistSearching = playlistSearchPhase === "searching";
+  const playlistImportAction = getPlaylistImportAction(playlistUrl);
 
   const savedPlaylistOptions = [
     { label: t("lobby.spotify.savedPlaylistSelectPlaceholder"), value: "" },
@@ -1161,6 +1271,15 @@ function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySetupCont
               >
                 {t("lobby.spotify.savePlaylist")}
               </ActionButton>
+              <ActionButton
+                className={`${styles.spotifyPlaylistEditorBtn} ${styles.spotifyPlaylistClearBtn}`}
+                disabled={!isImported || isImporting}
+                onClick={clearCurrentPlaylist}
+                type="button"
+                variant="danger"
+              >
+                {t("lobby.spotify.clearPlaylist")}
+              </ActionButton>
             </div>
           </div>
 
@@ -1177,26 +1296,54 @@ function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySetupCont
 
           <div className={styles.spotifyImportRow}>
             <TextInput
-              disabled={isImporting}
-              onChange={(e) => setPlaylistUrl(e.target.value)}
+              disabled={isImporting || isPlaylistSearching}
+              onChange={(e) => {
+                setPlaylistUrl(e.target.value);
+                setPlaylistSearchQuery(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== "Enter") return;
+                if (playlistImportAction === "import") importPlaylist();
+                else searchSpotifyPlaylists();
+              }}
               placeholder={t("lobby.spotify.playlistPlaceholder")}
-              type="url"
+              type="search"
               value={playlistUrl}
             />
             <ActionButton
               className={styles.spotifyImportBtn}
-              disabled={!playlistUrl.trim() || isImporting}
-              onClick={importPlaylist}
+              disabled={!playlistUrl.trim() || isImporting || isPlaylistSearching}
+              onClick={playlistImportAction === "import" ? importPlaylist : searchSpotifyPlaylists}
               type="button"
               variant="neutral"
             >
-              {isImporting
+              {isImporting || isPlaylistSearching
                 ? t("lobby.spotify.loading")
-                : isImported
-                  ? t("lobby.spotify.reload")
-                  : t("lobby.spotify.import")}
+                : playlistImportAction === "import"
+                  ? isImported
+                    ? t("lobby.spotify.reload")
+                    : t("lobby.spotify.import")
+                  : t("lobby.spotify.searchPlaylists")}
             </ActionButton>
           </div>
+
+          {playlistSearchPhase === "error" && playlistSearchError ? (
+            <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
+              {playlistSearchError}
+            </p>
+          ) : null}
+
+          {playlistSearchResults.length > 0 ? (
+            <div className={styles.spotifyImportSearchResults}>
+              {playlistSearchResults.map((playlist) => (
+                <SpotifyImportPlaylistResultRow
+                  key={playlist.id}
+                  onImport={() => importPlaylistSearchResult(playlist)}
+                  playlist={playlist}
+                />
+              ))}
+            </div>
+          ) : null}
 
           {importPhase === "error" && importError ? (
             <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
@@ -1357,5 +1504,49 @@ function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySetupCont
         </div>
       ) : null}
     </div>
+  );
+}
+
+type PlaylistImportAction = "import" | "search";
+
+function getPlaylistImportAction(value: string): PlaylistImportAction {
+  const trimmedValue = value.trim();
+  if (!trimmedValue) return "search";
+  if (/^spotify:playlist:/i.test(trimmedValue)) return "import";
+  if (/open\.spotify\.com\/playlist\//i.test(trimmedValue)) return "import";
+  if (/^[a-zA-Z0-9]{22}$/.test(trimmedValue)) return "import";
+  return "search";
+}
+
+interface SpotifyImportPlaylistResultRowProps {
+  onImport: () => void;
+  playlist: SpotifyPlaylistSearchItem;
+}
+
+function SpotifyImportPlaylistResultRow({
+  onImport,
+  playlist,
+}: SpotifyImportPlaylistResultRowProps) {
+  return (
+    <button className={styles.spotifyImportSearchResultRow} onClick={onImport} type="button">
+      {playlist.imageUrl ? (
+        <img
+          alt=""
+          className={styles.spotifySmartResultImage}
+          loading="lazy"
+          src={playlist.imageUrl}
+        />
+      ) : (
+        <span className={styles.spotifyPlaylistImageFallback}>
+          <SpotifyLogo />
+        </span>
+      )}
+      <span className={styles.spotifyPlaylistMeta}>
+        <strong>{playlist.name}</strong>
+        <span>
+          {playlist.ownerName} · {playlist.trackCount} tracks
+        </span>
+      </span>
+    </button>
   );
 }
