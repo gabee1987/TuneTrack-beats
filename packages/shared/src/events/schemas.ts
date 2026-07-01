@@ -49,6 +49,9 @@ const releaseYearSchema = z
 const MAX_CURATED_PLAYLIST_TRACK_COUNT = 1_000;
 const MAX_SPOTIFY_PLAYLIST_SEARCH_LIMIT = 50;
 const MAX_SPOTIFY_CANDIDATE_PLAYLIST_COUNT = 8;
+const MAX_SPOTIFY_SMART_SEARCH_OFFSET = 950;
+
+const playlistQueueUpdateModeSchema = z.enum(["append", "replace"]);
 
 const curatedPlaylistTrackSchema = z.object({
   id: z.string().trim().min(1).max(200),
@@ -202,6 +205,7 @@ export const importPlaylistPayloadSchema = z.object({
 export const loadCuratedPlaylistPayloadSchema = z.object({
   roomId: roomIdSchema,
   tracks: z.array(curatedPlaylistTrackSchema).min(1).max(MAX_CURATED_PLAYLIST_TRACK_COUNT),
+  mode: playlistQueueUpdateModeSchema.default("replace"),
 });
 
 export const requestSpotifyAuthUrlPayloadSchema = z.object({
@@ -216,6 +220,18 @@ export const searchSpotifyPlaylistsPayloadSchema = z.object({
   roomId: roomIdSchema,
   query: z.string().trim().min(2).max(100),
   limit: z.number().int().min(1).max(MAX_SPOTIFY_PLAYLIST_SEARCH_LIMIT).default(30),
+});
+
+export const searchSpotifyMusicPayloadSchema = z.object({
+  roomId: roomIdSchema,
+  query: z.string().trim().min(2).max(120),
+  limit: z.number().int().min(1).max(50).default(20),
+  offset: z.number().int().min(0).max(MAX_SPOTIFY_SMART_SEARCH_OFFSET).default(0),
+});
+
+export const openSpotifyPlaylistPayloadSchema = z.object({
+  roomId: roomIdSchema,
+  playlistId: z.string().trim().min(1).max(120),
 });
 
 export const generateSpotifyCandidatesPayloadSchema = z.object({
@@ -259,6 +275,7 @@ export const useSpotifyCandidatesPayloadSchema = z.object({
     .min(10)
     .max(SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT)
     .optional(),
+  mode: playlistQueueUpdateModeSchema.default("replace"),
 });
 
 export type JoinRoomPayloadInput = z.input<typeof joinRoomPayloadSchema>;
@@ -323,6 +340,8 @@ export type RefreshSpotifyTokenPayloadParsed = z.output<typeof refreshSpotifyTok
 export type SearchSpotifyPlaylistsPayloadParsed = z.output<
   typeof searchSpotifyPlaylistsPayloadSchema
 >;
+export type SearchSpotifyMusicPayloadParsed = z.output<typeof searchSpotifyMusicPayloadSchema>;
+export type OpenSpotifyPlaylistPayloadParsed = z.output<typeof openSpotifyPlaylistPayloadSchema>;
 export type GenerateSpotifyCandidatesPayloadParsed = z.output<
   typeof generateSpotifyCandidatesPayloadSchema
 >;

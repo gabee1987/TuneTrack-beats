@@ -14,6 +14,7 @@ import {
   joinRoomPayloadSchema,
   kickPlayerPayloadSchema,
   loadCuratedPlaylistPayloadSchema,
+  openSpotifyPlaylistPayloadSchema,
   placeChallengePayloadSchema,
   placeCardPayloadSchema,
   refreshSpotifyTokenPayloadSchema,
@@ -21,6 +22,7 @@ import {
   removePlaylistTracksPayloadSchema,
   requestSpotifyAuthUrlPayloadSchema,
   resolveChallengeWindowPayloadSchema,
+  searchSpotifyMusicPayloadSchema,
   searchSpotifyPlaylistsPayloadSchema,
   skipTrackWithTtPayloadSchema,
   skipTurnPayloadSchema,
@@ -79,6 +81,8 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
     registerRemovePlaylistTracksHandler(io, socket, roomService);
     registerUpdatePlaylistTrackHandler(io, socket, roomService);
     registerRequestSpotifyAuthUrlHandler(socket, roomService);
+    registerSearchSpotifyMusicHandler(socket, roomService);
+    registerOpenSpotifyPlaylistHandler(socket, roomService);
     registerSearchSpotifyPlaylistsHandler(socket, roomService);
     registerGenerateSpotifyCandidatesHandler(socket, roomService);
     registerUseSpotifyCandidatesHandler(io, socket, roomService);
@@ -874,6 +878,64 @@ function registerRequestSpotifyAuthUrlHandler(socket: Socket, roomService: RoomS
     } catch (error) {
       emitServerError(socket, error, "REQUEST_SPOTIFY_AUTH_URL_FAILED", {});
     }
+  });
+}
+
+function registerSearchSpotifyMusicHandler(socket: Socket, roomService: RoomService): void {
+  socket.on(ClientToServerEvent.SearchSpotifyMusic, (payload: unknown) => {
+    const parseResult = searchSpotifyMusicPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.SpotifySmartSearchResult, {
+        success: false,
+        code: "invalid_query",
+        message: "Search query is invalid.",
+      });
+      return;
+    }
+
+    void Promise.resolve()
+      .then(() => roomService.searchSpotifyMusic(parseResult.data, socket.id))
+      .then((result) => {
+        socket.emit(ServerToClientEvent.SpotifySmartSearchResult, result);
+      })
+      .catch((error: unknown) => {
+        logger.error({ error }, "search_spotify_music handler threw unexpectedly");
+        socket.emit(ServerToClientEvent.SpotifySmartSearchResult, {
+          success: false,
+          code: "spotify_api_error",
+          message: "Spotify search failed. Please try again.",
+        });
+      });
+  });
+}
+
+function registerOpenSpotifyPlaylistHandler(socket: Socket, roomService: RoomService): void {
+  socket.on(ClientToServerEvent.OpenSpotifyPlaylist, (payload: unknown) => {
+    const parseResult = openSpotifyPlaylistPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.SpotifyPlaylistDetail, {
+        success: false,
+        code: "invalid_playlist",
+        message: "Playlist selection is invalid.",
+      });
+      return;
+    }
+
+    void Promise.resolve()
+      .then(() => roomService.openSpotifyPlaylist(parseResult.data, socket.id))
+      .then((result) => {
+        socket.emit(ServerToClientEvent.SpotifyPlaylistDetail, result);
+      })
+      .catch((error: unknown) => {
+        logger.error({ error }, "open_spotify_playlist handler threw unexpectedly");
+        socket.emit(ServerToClientEvent.SpotifyPlaylistDetail, {
+          success: false,
+          code: "spotify_api_error",
+          message: "Spotify playlist could not be opened. Please try again.",
+        });
+      });
   });
 }
 

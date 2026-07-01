@@ -12,6 +12,7 @@ import { RoomService } from "./rooms/RoomService.js";
 import { SpotifyApiClient } from "./spotify/SpotifyApiClient.js";
 import { SpotifyAuthService } from "./spotify/SpotifyAuthService.js";
 import { SpotifyDiscoveryService } from "./spotify/SpotifyDiscoveryService.js";
+import { SpotifyMusicSearchService } from "./spotify/SpotifyMusicSearchService.js";
 import { SpotifyTokenStore } from "./spotify/SpotifyTokenStore.js";
 
 const { app, httpServer } = createHttpServer();
@@ -22,6 +23,10 @@ const spotifyApiClient = new SpotifyApiClient();
 const spotifyAuthService = new SpotifyAuthService(spotifyApiClient, spotifyTokenStore);
 const playlistImportService = new PlaylistImportService(spotifyApiClient, spotifyTokenStore);
 const spotifyDiscoveryService = new SpotifyDiscoveryService(spotifyApiClient, spotifyTokenStore);
+const spotifyMusicSearchService = new SpotifyMusicSearchService(
+  spotifyApiClient,
+  spotifyTokenStore,
+);
 const deckService = new DeckService();
 const roomRegistry = new RoomRegistry();
 const roomService = new RoomService(
@@ -30,6 +35,7 @@ const roomService = new RoomService(
   spotifyAuthService,
   playlistImportService,
   spotifyDiscoveryService,
+  spotifyMusicSearchService,
 );
 
 registerSpotifyRoutes(app, io, spotifyAuthService, roomService);

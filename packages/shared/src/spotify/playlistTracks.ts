@@ -1,5 +1,7 @@
 import type { TrackMetadataStatus } from "../game/track.js";
 
+export type PlaylistQueueUpdateMode = "append" | "replace";
+
 export interface PublicTrackInfo {
   id: string;
   title: string;

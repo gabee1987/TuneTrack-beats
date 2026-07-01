@@ -8,6 +8,7 @@ import {
   type ConfirmRevealPayloadParsed,
   type PlaceChallengePayloadParsed,
   type PlaceCardPayloadParsed,
+  type PlaylistQueueUpdateMode,
   type PublicRoomSummary,
   type PublicRoomState,
   type RenameRoomPayloadParsed,
@@ -369,14 +370,29 @@ export class RoomRegistry {
   }
 
   public setImportedDeck(socketId: string, roomId: RoomId, deck: GameTrackCard[]): PublicRoomState {
+    return this.updateImportedDeck(socketId, roomId, deck, "replace").roomState;
+  }
+
+  public updateImportedDeck(
+    socketId: string,
+    roomId: RoomId,
+    deck: GameTrackCard[],
+    mode: PlaylistQueueUpdateMode,
+  ): { roomState: PublicRoomState; deck: GameTrackCard[] } {
     const roomRecord = this.getRoomRecordForMember(socketId, roomId);
     const membership = this.getMembership(socketId);
     if (roomRecord.roomState.hostId !== membership.playerId)
       throw new Error("ONLY_HOST_CAN_IMPORT_PLAYLIST");
 
-    const nextRoomState = buildImportedDeckRoomState(roomRecord.roomState, deck);
-    this.roomsById.set(roomId, { ...roomRecord, roomState: nextRoomState, importedDeck: deck });
-    return nextRoomState;
+    const nextDeck =
+      mode === "append" ? dedupeImportedDeck([...(roomRecord.importedDeck ?? []), ...deck]) : deck;
+    const nextRoomState = buildImportedDeckRoomState(roomRecord.roomState, nextDeck);
+    this.roomsById.set(roomId, {
+      ...roomRecord,
+      roomState: nextRoomState,
+      importedDeck: nextDeck,
+    });
+    return { roomState: nextRoomState, deck: nextDeck };
   }
 
   public setSpotifyAuthStatus(
@@ -1192,4 +1208,22 @@ function removePlayerFromGameState(gameState: GameState, playerId: string): Game
     players,
     timelines,
   };
+}
+
+function dedupeImportedDeck(deck: GameTrackCard[]): GameTrackCard[] {
+  const seen = new Set<string>();
+  const dedupedDeck: GameTrackCard[] = [];
+
+  for (const card of deck) {
+    const key = card.spotifyTrackUri ?? `${normalize(card.title)}:${normalize(card.artist)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    dedupedDeck.push(card);
+  }
+
+  return dedupedDeck;
+}
+
+function normalize(value: string): string {
+  return value.trim().toLocaleLowerCase().replace(/\s+/g, " ");
 }

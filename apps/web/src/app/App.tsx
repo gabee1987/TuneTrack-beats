@@ -3,6 +3,7 @@ import { RouterProvider } from "react-router-dom";
 import { I18nProvider } from "../features/i18n";
 import { useUiPreferencesStore } from "../features/preferences/uiPreferences";
 import { applyTheme } from "../features/theme/themeRegistry";
+import { AppToastProvider } from "../features/toast";
 import { AppRouteFallback } from "./components/AppRouteFallback";
 import { router } from "./router";
 
@@ -15,7 +16,9 @@ export function App() {
 
   return (
     <I18nProvider>
-      <RouterProvider fallbackElement={<AppRouteFallback />} router={router} />
+      <AppToastProvider>
+        <RouterProvider fallbackElement={<AppRouteFallback />} router={router} />
+      </AppToastProvider>
     </I18nProvider>
   );
 }

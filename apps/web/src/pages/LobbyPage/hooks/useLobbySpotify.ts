@@ -11,9 +11,13 @@ import {
   type SpotifyCandidatesGeneratedPayload,
   type SpotifyPlaylistSearchItem,
   type SpotifyPlaylistSearchResultPayload,
+  type SpotifyPlaylistDetailPayload,
+  type SpotifySmartSearchResult,
+  type SpotifySmartSearchResultPayload,
   type SpotifyAuthUrlPayload,
   type SpotifyQuickPickPresetId,
   type PublicTrackInfo,
+  type PlaylistQueueUpdateMode,
 } from "@tunetrack/shared";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -35,7 +39,20 @@ import { getSocketClient } from "../../../services/socket/socketClient";
 type AuthPhase = "idle" | "connecting" | "error";
 type ImportPhase = "idle" | "importing" | "error";
 type PlaylistSearchPhase = "idle" | "searching" | "error";
+type SmartSearchPhase = "idle" | "searching" | "error";
+type SmartSearchLoadMorePhase = "idle" | "loading";
+type OpenedPlaylistPhase = "idle" | "loading" | "ready" | "applying" | "error";
 type CandidatePhase = "idle" | "generating" | "ready" | "applying" | "error";
+
+interface OpenedSpotifyPlaylist {
+  id: string;
+  title: string;
+  subtitle: string;
+  imageUrl?: string;
+  totalFetched: number;
+  filteredCount: number;
+  tracks: PublicTrackInfo[];
+}
 
 export interface UseLobbySpotifyResult {
   accountType: SpotifyAccountType | null;
@@ -64,6 +81,16 @@ export interface UseLobbySpotifyResult {
   playlistSearchPhase: PlaylistSearchPhase;
   playlistSearchQuery: string;
   playlistSearchResults: SpotifyPlaylistSearchItem[];
+  smartSearchError: string | null;
+  smartSearchHasSearched: boolean;
+  smartSearchHasMore: boolean;
+  smartSearchLoadMorePhase: SmartSearchLoadMorePhase;
+  smartSearchPhase: SmartSearchPhase;
+  smartSearchQuery: string;
+  smartSearchResults: SpotifySmartSearchResult[];
+  openedPlaylist: OpenedSpotifyPlaylist | null;
+  openedPlaylistError: string | null;
+  openedPlaylistPhase: OpenedPlaylistPhase;
   renameError: string | null;
   renameInputValue: string;
   renamingPlaylistId: string | null;
@@ -81,14 +108,23 @@ export interface UseLobbySpotifyResult {
   candidateTracks: PublicTrackInfo[];
   deleteSelectedSavedPlaylist: () => void;
   generateCandidatesFromSelectedPlaylists: () => void;
-  generateCandidatesFromPreset: (
-    presetId: SpotifyQuickPickPresetId,
-    targetCount?: number,
-  ) => void;
+  generateCandidatesFromPreset: (presetId: SpotifyQuickPickPresetId, targetCount?: number) => void;
   removeCandidateTrack: (trackId: string) => void;
+  closeOpenedPlaylist: () => void;
   saveCurrentPlaylist: () => void;
+  addSmartSearchTrackToQueue: (result: SpotifySmartSearchResult) => void;
+  addSmartSearchTracksToQueue: (results: SpotifySmartSearchResult[]) => void;
+  applyOpenedPlaylistTracks: (
+    mode: PlaylistQueueUpdateMode,
+    trackIds?: ReadonlySet<string>,
+  ) => void;
+  openSmartSearchPlaylist: (result: SpotifySmartSearchResult) => void;
+  removeOpenedPlaylistTrack: (trackId: string) => void;
+  loadMoreSpotifyMusic: () => void;
+  searchSpotifyMusic: () => void;
   searchSpotifyPlaylists: () => void;
   setPlaylistSearchQuery: (query: string) => void;
+  setSmartSearchQuery: (query: string) => void;
   setRenameInputValue: (name: string) => void;
   setSaveName: (name: string) => void;
   setSelectedSavedPlaylistId: (playlistId: string) => void;
@@ -97,6 +133,7 @@ export interface UseLobbySpotifyResult {
   switchToSaveAsNew: () => void;
   toggleSpotifyPlaylistSelection: (playlistId: string) => void;
   updateCandidateTrack: (trackId: string, patch: CandidateTrackUpdatePatch) => void;
+  updateOpenedPlaylistTrack: (trackId: string, patch: CandidateTrackUpdatePatch) => void;
   useGeneratedCandidates: () => void;
 }
 
@@ -125,6 +162,18 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
   const [playlistSearchResults, setPlaylistSearchResults] = useState<SpotifyPlaylistSearchItem[]>(
     [],
   );
+  const [smartSearchPhase, setSmartSearchPhase] = useState<SmartSearchPhase>("idle");
+  const [smartSearchLoadMorePhase, setSmartSearchLoadMorePhase] =
+    useState<SmartSearchLoadMorePhase>("idle");
+  const [smartSearchError, setSmartSearchError] = useState<string | null>(null);
+  const [smartSearchHasSearched, setSmartSearchHasSearched] = useState(false);
+  const [smartSearchHasMore, setSmartSearchHasMore] = useState(false);
+  const [smartSearchNextOffset, setSmartSearchNextOffset] = useState(0);
+  const [smartSearchQuery, setSmartSearchQuery] = useState("");
+  const [smartSearchResults, setSmartSearchResults] = useState<SpotifySmartSearchResult[]>([]);
+  const [openedPlaylistPhase, setOpenedPlaylistPhase] = useState<OpenedPlaylistPhase>("idle");
+  const [openedPlaylistError, setOpenedPlaylistError] = useState<string | null>(null);
+  const [openedPlaylist, setOpenedPlaylist] = useState<OpenedSpotifyPlaylist | null>(null);
   const [selectedSpotifyPlaylistIds, setSelectedSpotifyPlaylistIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -231,6 +280,16 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
         setPlaylistSearchPhase("idle");
         setPlaylistSearchError(null);
         setPlaylistSearchResults([]);
+        setSmartSearchPhase("idle");
+        setSmartSearchLoadMorePhase("idle");
+        setSmartSearchError(null);
+        setSmartSearchHasSearched(false);
+        setSmartSearchHasMore(false);
+        setSmartSearchNextOffset(0);
+        setSmartSearchResults([]);
+        setOpenedPlaylistPhase("idle");
+        setOpenedPlaylistError(null);
+        setOpenedPlaylist(null);
         setSelectedSpotifyPlaylistIds(new Set());
         setCandidatePhase("idle");
         setCandidateError(null);
@@ -339,6 +398,223 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
         limit: 30,
       });
     });
+  }
+
+  function searchSpotifyMusic() {
+    if (!roomId || smartSearchQuery.trim().length < 2) return;
+
+    setSmartSearchPhase("searching");
+    setSmartSearchLoadMorePhase("idle");
+    setSmartSearchError(null);
+    setSmartSearchHasSearched(false);
+    setSmartSearchHasMore(false);
+    setSmartSearchNextOffset(0);
+    setSavedPlaylistMessage(null);
+    requestSpotifyMusicSearch(0, "replace");
+  }
+
+  function loadMoreSpotifyMusic() {
+    if (
+      !roomId ||
+      smartSearchQuery.trim().length < 2 ||
+      !smartSearchHasMore ||
+      smartSearchLoadMorePhase === "loading"
+    ) {
+      return;
+    }
+
+    setSmartSearchLoadMorePhase("loading");
+    setSmartSearchError(null);
+    requestSpotifyMusicSearch(smartSearchNextOffset, "append");
+  }
+
+  function requestSpotifyMusicSearch(offset: number, mode: "replace" | "append") {
+    if (!roomId) return;
+
+    const activeRoomId = roomId;
+    const query = smartSearchQuery.trim();
+
+    void getSocketClient().then((socket) => {
+      function handleResult(payload: SpotifySmartSearchResultPayload) {
+        socket.off(ServerToClientEvent.SpotifySmartSearchResult, handleResult);
+
+        if (payload.success) {
+          setSmartSearchPhase("idle");
+          setSmartSearchLoadMorePhase("idle");
+          setSmartSearchHasSearched(true);
+          setSmartSearchHasMore(payload.hasMore);
+          setSmartSearchNextOffset(payload.nextOffset ?? payload.offset + payload.limit);
+          setSmartSearchResults((current) =>
+            mode === "append"
+              ? appendUniqueSmartSearchResults(current, payload.results)
+              : payload.results,
+          );
+        } else {
+          setSmartSearchPhase("error");
+          setSmartSearchLoadMorePhase("idle");
+          setSmartSearchError(payload.message);
+        }
+      }
+
+      socket.on(ServerToClientEvent.SpotifySmartSearchResult, handleResult);
+      socket.emit(ClientToServerEvent.SearchSpotifyMusic, {
+        roomId: activeRoomId,
+        query,
+        limit: 20,
+        offset,
+      });
+    });
+  }
+
+  function addSmartSearchTrackToQueue(result: SpotifySmartSearchResult) {
+    addSmartSearchTracksToQueue([result]);
+  }
+
+  function addSmartSearchTracksToQueue(results: SpotifySmartSearchResult[]) {
+    if (!roomId) return;
+
+    const tracks = results.flatMap(mapSmartSearchResultToTrack);
+    if (tracks.length === 0) return;
+
+    void getSocketClient().then((socket) => {
+      function handleLoadConfirmed() {
+        socket.off(ServerToClientEvent.PlaylistTracks, handleLoadConfirmed);
+        setSavedPlaylistMessage(
+          tracks.length === 1
+            ? t("lobby.spotify.builder.trackAdded")
+            : t("lobby.spotify.builder.playlistTracksAdded", { count: tracks.length }),
+        );
+      }
+
+      socket.once(ServerToClientEvent.PlaylistTracks, handleLoadConfirmed);
+      socket.emit(ClientToServerEvent.LoadCuratedPlaylist, {
+        roomId,
+        mode: "append",
+        tracks,
+      });
+    });
+  }
+
+  function openSmartSearchPlaylist(result: SpotifySmartSearchResult) {
+    if (!roomId || result.type !== "playlist") return;
+
+    setOpenedPlaylistPhase("loading");
+    setOpenedPlaylistError(null);
+
+    void getSocketClient().then((socket) => {
+      function handleResult(payload: SpotifyPlaylistDetailPayload) {
+        socket.off(ServerToClientEvent.SpotifyPlaylistDetail, handleResult);
+
+        if (payload.success) {
+          setOpenedPlaylistPhase("ready");
+          setOpenedPlaylist({
+            id: payload.playlistId,
+            title: payload.title,
+            subtitle: payload.subtitle,
+            ...(payload.imageUrl ? { imageUrl: payload.imageUrl } : {}),
+            totalFetched: payload.totalFetched,
+            filteredCount: payload.filteredCount,
+            tracks: payload.tracks,
+          });
+        } else {
+          setOpenedPlaylistPhase("error");
+          setOpenedPlaylistError(payload.message);
+        }
+      }
+
+      socket.on(ServerToClientEvent.SpotifyPlaylistDetail, handleResult);
+      socket.emit(ClientToServerEvent.OpenSpotifyPlaylist, {
+        roomId,
+        playlistId: result.id,
+      });
+    });
+  }
+
+  function closeOpenedPlaylist() {
+    setOpenedPlaylistPhase("idle");
+    setOpenedPlaylistError(null);
+    setOpenedPlaylist(null);
+  }
+
+  function removeOpenedPlaylistTrack(trackId: string) {
+    setOpenedPlaylist((playlist) =>
+      playlist
+        ? {
+            ...playlist,
+            tracks: playlist.tracks.filter((track) => track.id !== trackId),
+          }
+        : playlist,
+    );
+  }
+
+  function updateOpenedPlaylistTrack(trackId: string, patch: CandidateTrackUpdatePatch) {
+    setOpenedPlaylist((playlist) =>
+      playlist
+        ? {
+            ...playlist,
+            tracks: playlist.tracks.map((track) =>
+              track.id === trackId
+                ? {
+                    ...track,
+                    ...patch,
+                    sourceReleaseYear: track.sourceReleaseYear ?? track.releaseYear,
+                    metadataStatus: patch.metadataStatus ?? track.metadataStatus,
+                  }
+                : track,
+            ),
+          }
+        : playlist,
+    );
+  }
+
+  function applyOpenedPlaylistTracks(
+    mode: PlaylistQueueUpdateMode,
+    trackIds?: ReadonlySet<string>,
+  ) {
+    if (!roomId || !openedPlaylist) return;
+
+    const playlist = openedPlaylist;
+    const tracks =
+      trackIds && trackIds.size > 0
+        ? playlist.tracks.filter((track) => trackIds.has(track.id))
+        : playlist.tracks;
+    if (tracks.length === 0) return;
+
+    setOpenedPlaylistPhase("applying");
+    setOpenedPlaylistError(null);
+
+    void getSocketClient().then((socket) => {
+      function handleLoadConfirmed() {
+        socket.off(ServerToClientEvent.PlaylistTracks, handleLoadConfirmed);
+        setOpenedPlaylistPhase("ready");
+        currentPlaylistNameRef.current = playlist.title;
+        setSavedPlaylistMessage(
+          t(
+            mode === "append"
+              ? "lobby.spotify.builder.playlistTracksAdded"
+              : "lobby.spotify.builder.playlistTracksReplaced",
+            { count: tracks.length },
+          ),
+        );
+      }
+
+      socket.once(ServerToClientEvent.PlaylistTracks, handleLoadConfirmed);
+      socket.emit(ClientToServerEvent.LoadCuratedPlaylist, {
+        roomId,
+        mode,
+        tracks,
+      });
+    });
+  }
+
+  function handleSetSmartSearchQuery(query: string) {
+    setSmartSearchQuery(query);
+    setSmartSearchError(null);
+    setSmartSearchHasSearched(false);
+    setSmartSearchHasMore(false);
+    setSmartSearchNextOffset(0);
+    setSmartSearchResults([]);
+    closeOpenedPlaylist();
   }
 
   function toggleSpotifyPlaylistSelection(playlistId: string) {
@@ -678,6 +954,16 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     playlistSearchPhase,
     playlistSearchQuery,
     playlistSearchResults,
+    smartSearchError,
+    smartSearchHasSearched,
+    smartSearchHasMore,
+    smartSearchLoadMorePhase,
+    smartSearchPhase,
+    smartSearchQuery,
+    smartSearchResults,
+    openedPlaylist,
+    openedPlaylistError,
+    openedPlaylistPhase,
     renameError,
     renameInputValue,
     renamingPlaylistId,
@@ -697,9 +983,18 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     generateCandidatesFromSelectedPlaylists,
     generateCandidatesFromPreset,
     removeCandidateTrack,
+    closeOpenedPlaylist,
     saveCurrentPlaylist,
+    addSmartSearchTrackToQueue,
+    addSmartSearchTracksToQueue,
+    applyOpenedPlaylistTracks,
+    openSmartSearchPlaylist,
+    removeOpenedPlaylistTrack,
+    loadMoreSpotifyMusic,
+    searchSpotifyMusic,
     searchSpotifyPlaylists,
     setPlaylistSearchQuery,
+    setSmartSearchQuery: handleSetSmartSearchQuery,
     setRenameInputValue: handleSetRenameInputValue,
     setSaveName: handleSetSaveName,
     setSelectedSavedPlaylistId: handleSelectSavedPlaylist,
@@ -708,6 +1003,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     switchToSaveAsNew,
     toggleSpotifyPlaylistSelection,
     updateCandidateTrack,
+    updateOpenedPlaylistTrack,
     useGeneratedCandidates,
   };
 }
@@ -721,4 +1017,41 @@ async function getCurrentPlaylistTracks(roomId: string) {
     });
     socket.emit(ClientToServerEvent.GetPlaylistTracks, { roomId });
   });
+}
+
+function appendUniqueSmartSearchResults(
+  current: SpotifySmartSearchResult[],
+  incoming: SpotifySmartSearchResult[],
+): SpotifySmartSearchResult[] {
+  const seenIds = new Set(current.map((result) => `${result.type}:${result.id}`));
+  const nextResults = [...current];
+
+  incoming.forEach((result) => {
+    const key = `${result.type}:${result.id}`;
+    if (seenIds.has(key)) return;
+    seenIds.add(key);
+    nextResults.push(result);
+  });
+
+  return nextResults;
+}
+
+function mapSmartSearchResultToTrack(result: SpotifySmartSearchResult): PublicTrackInfo[] {
+  if (result.type !== "track" || !result.spotifyUri) return [];
+
+  const releaseYear = result.releaseYear ?? new Date().getFullYear();
+  return [
+    {
+      id: `spotify-search-${result.id}`,
+      title: result.title,
+      artist: result.artist ?? result.subtitle,
+      albumTitle: result.albumTitle ?? result.title,
+      releaseYear,
+      sourceReleaseYear: releaseYear,
+      metadataStatus: "imported",
+      spotifyTrackUri: result.spotifyUri,
+      ...(result.imageUrl ? { artworkUrl: result.imageUrl } : {}),
+      ...(result.previewUrl ? { previewUrl: result.previewUrl } : {}),
+    },
+  ];
 }

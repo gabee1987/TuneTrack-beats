@@ -50,6 +50,12 @@ interface SpotifyPlaylistSearchResponse {
   };
 }
 
+interface SpotifyTrackSearchResponse {
+  tracks: {
+    items: Array<SpotifyApiTrack | null>;
+  };
+}
+
 interface SpotifyPlaylistMetadata {
   name: string;
 }
@@ -249,6 +255,35 @@ export class SpotifyApiClient {
     return data.playlists.items.filter(isSpotifyPlaylistSearchItem);
   }
 
+  public async searchTracks(
+    query: string,
+    accessToken: string,
+    limit: number,
+    offset = 0,
+  ): Promise<SpotifyApiTrack[]> {
+    const params = new URLSearchParams({
+      q: query,
+      type: "track",
+      limit: String(limit),
+      offset: String(offset),
+    });
+
+    const response = await fetch(`${SpotifyApiClient.BASE_URL}/search?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (response.status === 401) {
+      throw new SpotifyApiError("unauthorized", "Access token is invalid or expired", 401);
+    }
+
+    if (!response.ok) {
+      throw new SpotifyApiError("api_error", "Failed to search Spotify tracks", response.status);
+    }
+
+    const data = (await response.json()) as SpotifyTrackSearchResponse;
+    return data.tracks.items.filter(isSpotifyApiTrack);
+  }
+
   public async getAllPlaylistTracks(
     playlistId: string,
     accessToken: string,
@@ -321,6 +356,17 @@ function isSpotifyPlaylistSearchItem(
     item.owner &&
     Array.isArray(item.images) &&
     typeof item.tracks?.total === "number",
+  );
+}
+
+function isSpotifyApiTrack(track: SpotifyApiTrack | null): track is SpotifyApiTrack {
+  return Boolean(
+    track?.id &&
+      track.name &&
+      Array.isArray(track.artists) &&
+      track.album &&
+      Array.isArray(track.album.images) &&
+      track.uri,
   );
 }
 

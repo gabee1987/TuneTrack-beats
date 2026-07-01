@@ -2,7 +2,7 @@ import type { RevealConfirmMode } from "../game/roomSettings.js";
 import type { RoomId } from "../game/roomState.js";
 import type { PlayerId } from "../game/player.js";
 import type { TrackMetadataStatus } from "../game/track.js";
-import type { PublicTrackInfo } from "../spotify/playlistTracks.js";
+import type { PlaylistQueueUpdateMode, PublicTrackInfo } from "../spotify/playlistTracks.js";
 import type { SpotifyCandidateSource } from "../spotify/spotifyDiscovery.js";
 
 export const ClientToServerEvent = {
@@ -20,6 +20,7 @@ export const ClientToServerEvent = {
   KickPlayer: "kick_player",
   ListRooms: "list_rooms",
   LoadCuratedPlaylist: "load_curated_playlist",
+  OpenSpotifyPlaylist: "open_spotify_playlist",
   PlaceCard: "place_card",
   PlaceChallenge: "place_challenge",
   RefreshSpotifyToken: "refresh_spotify_token",
@@ -28,6 +29,7 @@ export const ClientToServerEvent = {
   RequestSpotifyAuthUrl: "request_spotify_auth_url",
   ResolveChallengeWindow: "resolve_challenge_window",
   SearchSpotifyPlaylists: "search_spotify_playlists",
+  SearchSpotifyMusic: "search_spotify_music",
   SkipTrackWithTt: "skip_track_with_tt",
   SkipTurn: "skip_turn",
   StartGame: "start_game",
@@ -160,6 +162,7 @@ export interface CuratedPlaylistTrackPayload {
 export interface LoadCuratedPlaylistPayload {
   roomId: RoomId;
   tracks: CuratedPlaylistTrackPayload[];
+  mode?: PlaylistQueueUpdateMode;
 }
 
 export interface RequestSpotifyAuthUrlPayload {
@@ -176,6 +179,18 @@ export interface SearchSpotifyPlaylistsPayload {
   limit: number;
 }
 
+export interface SearchSpotifyMusicPayload {
+  roomId: RoomId;
+  query: string;
+  limit: number;
+  offset?: number;
+}
+
+export interface OpenSpotifyPlaylistPayload {
+  roomId: RoomId;
+  playlistId: string;
+}
+
 export interface GenerateSpotifyCandidatesPayload {
   roomId: RoomId;
   source: SpotifyCandidateSource;
@@ -186,6 +201,7 @@ export interface UseSpotifyCandidatesPayload {
   candidateSessionId: string;
   trackIds: string[];
   tracks?: PublicTrackInfo[];
+  mode?: PlaylistQueueUpdateMode;
 }
 
 export interface GetPlaylistTracksPayload {

@@ -3,6 +3,7 @@ import { DeckService } from "../decks/DeckService.js";
 import { PlaylistImportService } from "../decks/PlaylistImportService.js";
 import { SpotifyAuthService } from "../spotify/SpotifyAuthService.js";
 import { SpotifyDiscoveryService } from "../spotify/SpotifyDiscoveryService.js";
+import { SpotifyMusicSearchService } from "../spotify/SpotifyMusicSearchService.js";
 import type { GameTrackCard } from "@tunetrack/game-engine";
 import type {
   AwardTtPayloadParsed,
@@ -16,6 +17,7 @@ import type {
   ImportPlaylistPayloadParsed,
   JoinRoomPayloadParsed,
   LoadCuratedPlaylistPayloadParsed,
+  OpenSpotifyPlaylistPayloadParsed,
   PlaceChallengePayloadParsed,
   PlaceCardPayloadParsed,
   PublicRoomState,
@@ -32,10 +34,13 @@ import type {
   SpotifyAccountType,
   StartGamePayloadParsed,
   GenerateSpotifyCandidatesPayloadParsed,
+  SearchSpotifyMusicPayloadParsed,
   SearchSpotifyPlaylistsPayloadParsed,
   SpotifyCandidatesAppliedPayload,
   SpotifyCandidatesGeneratedPayload,
+  SpotifyPlaylistDetailPayload,
   SpotifyPlaylistSearchResultPayload,
+  SpotifySmartSearchResultPayload,
   TransferHostPayloadParsed,
   UpdatePlaylistTrackPayloadParsed,
   UpdatePlayerProfilePayloadParsed,
@@ -74,6 +79,7 @@ export class RoomService {
     private readonly spotifyAuthService: SpotifyAuthService,
     private readonly playlistImportService: PlaylistImportService,
     private readonly spotifyDiscoveryService: SpotifyDiscoveryService,
+    private readonly spotifyMusicSearchService: SpotifyMusicSearchService,
   ) {}
 
   public setRoomStateChangedListener(listener: (roomState: PublicRoomState) => void): void {
@@ -347,9 +353,17 @@ export class RoomService {
       ...(track.spotifyTrackUri ? { spotifyTrackUri: track.spotifyTrackUri } : {}),
     }));
 
-    const roomState = this.roomRegistry.setImportedDeck(socketId, payload.roomId, deck);
-    logger.info({ roomId: payload.roomId, trackCount: deck.length }, "curated playlist loaded");
-    return { roomState, tracks: deck.map(cardToPublicTrackInfo) };
+    const { roomState, deck: nextDeck } = this.roomRegistry.updateImportedDeck(
+      socketId,
+      payload.roomId,
+      deck,
+      payload.mode,
+    );
+    logger.info(
+      { roomId: payload.roomId, mode: payload.mode, trackCount: nextDeck.length },
+      "curated playlist loaded",
+    );
+    return { roomState, tracks: nextDeck.map(cardToPublicTrackInfo) };
   }
 
   public buildSpotifyAuthUrl(
@@ -369,6 +383,27 @@ export class RoomService {
       payload.query,
       payload.limit,
     );
+  }
+
+  public searchSpotifyMusic(
+    payload: SearchSpotifyMusicPayloadParsed,
+    socketId: string,
+  ): Promise<SpotifySmartSearchResultPayload> {
+    this.roomRegistry.getRoomStateForMember(socketId, payload.roomId);
+    return this.spotifyMusicSearchService.search(
+      payload.roomId,
+      payload.query,
+      payload.limit,
+      payload.offset,
+    );
+  }
+
+  public openSpotifyPlaylist(
+    payload: OpenSpotifyPlaylistPayloadParsed,
+    socketId: string,
+  ): Promise<SpotifyPlaylistDetailPayload> {
+    this.roomRegistry.getRoomStateForMember(socketId, payload.roomId);
+    return this.spotifyMusicSearchService.getPlaylistDetail(payload.roomId, payload.playlistId);
   }
 
   public generateSpotifyCandidates(
@@ -400,12 +435,19 @@ export class RoomService {
       };
     }
 
-    const roomState = this.roomRegistry.setImportedDeck(socketId, payload.roomId, result.cards);
+    const { roomState, deck } = this.roomRegistry.updateImportedDeck(
+      socketId,
+      payload.roomId,
+      result.cards,
+      payload.mode,
+    );
 
     return {
-      payload: result.payload,
+      payload: result.payload.success
+        ? { ...result.payload, importedCount: deck.length }
+        : result.payload,
       roomState,
-      tracks: result.cards.map(cardToPublicTrackInfo),
+      tracks: deck.map(cardToPublicTrackInfo),
     };
   }
 

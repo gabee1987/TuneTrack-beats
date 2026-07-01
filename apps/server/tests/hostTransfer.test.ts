@@ -22,8 +22,7 @@ describe("host transfer", () => {
       changedRoomStates.push(roomState.hostId);
     });
 
-    const roomAfterDisconnect =
-      roomRegistry.removePlayerBySocketId("host-socket");
+    const roomAfterDisconnect = roomRegistry.removePlayerBySocketId("host-socket");
 
     await new Promise((resolve) => setTimeout(resolve, 25));
 
@@ -61,26 +60,17 @@ describe("host transfer", () => {
       getHostTransferDeck(),
     );
 
-    const roomAfterDisconnect =
-      roomRegistry.removePlayerBySocketId("host-socket");
+    const roomAfterDisconnect = roomRegistry.removePlayerBySocketId("host-socket");
 
     expect(roomAfterDisconnect?.hostId).toBe(hostJoin.playerId);
     expect(roomAfterDisconnect?.players).toHaveLength(2);
-    expect(
-      roomAfterDisconnect?.players.find(
-        (player) => player.id === hostJoin.playerId,
-      ),
-    ).toEqual(
+    expect(roomAfterDisconnect?.players.find((player) => player.id === hostJoin.playerId)).toEqual(
       expect.objectContaining({
         connectionStatus: "disconnected",
         isHost: true,
       }),
     );
-    expect(
-      roomAfterDisconnect?.players.find(
-        (player) => player.id === guestJoin.playerId,
-      ),
-    ).toEqual(
+    expect(roomAfterDisconnect?.players.find((player) => player.id === guestJoin.playerId)).toEqual(
       expect.objectContaining({
         connectionStatus: "connected",
         isHost: false,
@@ -96,18 +86,14 @@ describe("host transfer", () => {
       "host-socket",
       "host-session",
     );
-    const guestJoin = roomRegistry.addPlayerToRoom(
+    roomRegistry.addPlayerToRoom(
       "former-host-room",
       "Guest Player",
       "guest-socket",
       "guest-session",
     );
 
-    roomRegistry.startGame(
-      "host-socket",
-      { roomId: "former-host-room" },
-      getHostTransferDeck(),
-    );
+    roomRegistry.startGame("host-socket", { roomId: "former-host-room" }, getHostTransferDeck());
 
     roomRegistry.removePlayerBySocketId("host-socket");
     const restoredHostJoin = roomRegistry.addPlayerToRoom(
@@ -120,9 +106,7 @@ describe("host transfer", () => {
     expect(restoredHostJoin.playerId).toBe(hostJoin.playerId);
     expect(restoredHostJoin.roomState.hostId).toBe(hostJoin.playerId);
     expect(
-      restoredHostJoin.roomState.players.find(
-        (player) => player.id === hostJoin.playerId,
-      ),
+      restoredHostJoin.roomState.players.find((player) => player.id === hostJoin.playerId),
     ).toEqual(
       expect.objectContaining({
         connectionStatus: "connected",
@@ -139,7 +123,7 @@ describe("host transfer", () => {
       "host-socket",
       "host-session",
     );
-    const guestJoin = roomRegistry.addPlayerToRoom(
+    roomRegistry.addPlayerToRoom(
       "active-turn-room",
       "Guest Player",
       "guest-socket",
@@ -151,8 +135,7 @@ describe("host transfer", () => {
       getHostTransferDeck(),
     );
 
-    const roomAfterDisconnect =
-      roomRegistry.removePlayerBySocketId("host-socket");
+    const roomAfterDisconnect = roomRegistry.removePlayerBySocketId("host-socket");
 
     expect(startedRoom.turn?.activePlayerId).toBe(hostJoin.playerId);
     expect(roomAfterDisconnect?.turn).toEqual(
@@ -163,9 +146,7 @@ describe("host transfer", () => {
         turnSkipDeadlineEpochMs: expect.any(Number),
       }),
     );
-    expect(roomAfterDisconnect?.currentTrackCard?.id).toBe(
-      startedRoom.currentTrackCard?.id,
-    );
+    expect(roomAfterDisconnect?.currentTrackCard?.id).toBe(startedRoom.currentTrackCard?.id);
     expect(roomAfterDisconnect?.timelines[hostJoin.playerId]).toBeDefined();
   });
 
@@ -177,14 +158,9 @@ describe("host transfer", () => {
       "host-socket",
       "host-session",
     );
-    roomRegistry.startGame(
-      "host-socket",
-      { roomId: "solo-turn-room" },
-      getHostTransferDeck(),
-    );
+    roomRegistry.startGame("host-socket", { roomId: "solo-turn-room" }, getHostTransferDeck());
 
-    const roomAfterDisconnect =
-      roomRegistry.removePlayerBySocketId("host-socket");
+    const roomAfterDisconnect = roomRegistry.removePlayerBySocketId("host-socket");
 
     expect(roomAfterDisconnect?.hostId).toBe(hostJoin.playerId);
     expect(roomAfterDisconnect?.turn?.activePlayerId).toBe(hostJoin.playerId);
@@ -278,4 +254,3 @@ function getHostTransferDeck(): GameTrackCard[] {
     },
   ];
 }
-

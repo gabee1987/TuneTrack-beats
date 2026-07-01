@@ -7,6 +7,10 @@ import type {
   SpotifyPlaylistSearchResultPayload,
 } from "../spotify/spotifyDiscovery.js";
 import type { SpotifyAuthResultPayload } from "../spotify/spotifyAuth.js";
+import type {
+  SpotifyPlaylistDetailPayload,
+  SpotifySmartSearchResultPayload,
+} from "../spotify/spotifySmartSearch.js";
 
 export const ServerToClientEvent = {
   PlayerIdentity: "player_identity",
@@ -19,6 +23,8 @@ export const ServerToClientEvent = {
   SpotifyCandidatesApplied: "spotify_candidates_applied",
   SpotifyCandidatesGenerated: "spotify_candidates_generated",
   SpotifyPlaylistSearchResult: "spotify_playlist_search_result",
+  SpotifyPlaylistDetail: "spotify_playlist_detail",
+  SpotifySmartSearchResult: "spotify_smart_search_result",
   SpotifyAuthUrl: "spotify_auth_url",
   SpotifyTokenRefreshed: "spotify_token_refreshed",
   StateUpdate: "state_update",
@@ -79,4 +85,6 @@ export type {
   SpotifyCandidatesAppliedPayload,
   SpotifyCandidatesGeneratedPayload,
   SpotifyPlaylistSearchResultPayload,
+  SpotifyPlaylistDetailPayload,
+  SpotifySmartSearchResultPayload,
 };

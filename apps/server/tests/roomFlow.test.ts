@@ -20,6 +20,7 @@ import { RoomService } from "../src/rooms/RoomService.js";
 import { SpotifyApiClient } from "../src/spotify/SpotifyApiClient.js";
 import { SpotifyAuthService } from "../src/spotify/SpotifyAuthService.js";
 import { SpotifyDiscoveryService } from "../src/spotify/SpotifyDiscoveryService.js";
+import { SpotifyMusicSearchService } from "../src/spotify/SpotifyMusicSearchService.js";
 import { SpotifyTokenStore } from "../src/spotify/SpotifyTokenStore.js";
 
 interface TestServerContext {
@@ -991,7 +992,89 @@ describe("room flow", () => {
       }),
     );
   });
+
+  it("appends curated tracks to the current lobby deck and dedupes duplicates", async () => {
+    const serverContext = await startTestServer();
+    const hostSocket = createClient(serverContext.baseUrl);
+
+    hostSocket.connect();
+    await waitForEvent(hostSocket, "connect");
+
+    const identityPromise = waitForEvent<PlayerIdentityPayload>(
+      hostSocket,
+      ServerToClientEvent.PlayerIdentity,
+    );
+    hostSocket.emit(ClientToServerEvent.CreateRoom, {
+      roomId: "append-room",
+      displayName: "Host Player",
+      sessionId: "host-session",
+    });
+    await identityPromise;
+
+    const firstTracksPromise = waitForEvent<PlaylistTracksPayload>(
+      hostSocket,
+      ServerToClientEvent.PlaylistTracks,
+    );
+
+    hostSocket.emit(ClientToServerEvent.LoadCuratedPlaylist, {
+      roomId: "append-room",
+      tracks: [
+        buildCuratedTrack("track-1", "First Song", "spotify:track:one"),
+        buildCuratedTrack("track-2", "Second Song", "spotify:track:two"),
+      ],
+      mode: "replace",
+    });
+
+    await expect(firstTracksPromise).resolves.toEqual({
+      tracks: [
+        expect.objectContaining({ id: "track-1", spotifyTrackUri: "spotify:track:one" }),
+        expect.objectContaining({ id: "track-2", spotifyTrackUri: "spotify:track:two" }),
+      ],
+    });
+
+    const appendedTracksPromise = waitForEvent<PlaylistTracksPayload>(
+      hostSocket,
+      ServerToClientEvent.PlaylistTracks,
+    );
+    const appendedStatePromise = waitForStateUpdate(
+      hostSocket,
+      (roomState) => roomState.settings.importedTrackCount === 3,
+    );
+
+    hostSocket.emit(ClientToServerEvent.LoadCuratedPlaylist, {
+      roomId: "append-room",
+      tracks: [
+        buildCuratedTrack("track-2-copy", "Second Song", "spotify:track:two"),
+        buildCuratedTrack("track-3", "Third Song", "spotify:track:three"),
+      ],
+      mode: "append",
+    });
+
+    await expect(appendedStatePromise).resolves.toEqual(
+      expect.objectContaining({
+        settings: expect.objectContaining({ importedTrackCount: 3 }),
+      }),
+    );
+    const appendedTracks = await appendedTracksPromise;
+    expect(appendedTracks.tracks.map((track) => track.spotifyTrackUri)).toEqual([
+      "spotify:track:one",
+      "spotify:track:two",
+      "spotify:track:three",
+    ]);
+  });
 });
+
+function buildCuratedTrack(id: string, title: string, spotifyTrackUri: string) {
+  return {
+    id,
+    title,
+    artist: "Curated Artist",
+    albumTitle: "Original Album",
+    releaseYear: 1986,
+    metadataStatus: "imported",
+    spotifyTrackUri,
+  };
+}
 
 function createTestRoomService(): RoomService {
   const tokenStore = new SpotifyTokenStore();
@@ -1002,6 +1085,7 @@ function createTestRoomService(): RoomService {
     new SpotifyAuthService(apiClient, tokenStore),
     new PlaylistImportService(apiClient, tokenStore),
     new SpotifyDiscoveryService(apiClient, tokenStore),
+    new SpotifyMusicSearchService(apiClient, tokenStore),
   );
 }
 

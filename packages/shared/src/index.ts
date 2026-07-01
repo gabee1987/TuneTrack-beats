@@ -12,3 +12,4 @@ export * from "./spotify/playlistTracks.js";
 export * from "./spotify/spotifyDiscovery.js";
 export * from "./spotify/spotifyQuickPicks.js";
 export * from "./spotify/spotifyAuth.js";
+export * from "./spotify/spotifySmartSearch.js";
