@@ -8,7 +8,12 @@ import {
   type SpotifyPlaylistSearchItem,
   type SpotifySmartSearchResult,
 } from "@tunetrack/shared";
-import { createStandardTransition } from "../../../features/motion";
+import {
+  MotionPresence,
+  createModalOverlayMotionTargets,
+  createModalSheetMotionTargets,
+  createStandardTransition,
+} from "../../../features/motion";
 import { useI18n } from "../../../features/i18n";
 import { ActionButton } from "../../../features/ui/ActionButton";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
@@ -229,82 +234,76 @@ function SpotifySetupModal({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
-
   return (
-    <motion.div
-      animate="animate"
-      className={styles.spotifySetupOverlay}
-      initial="exit"
-      onClick={onClose}
-      transition={createStandardTransition(reduceMotion)}
-      variants={{
-        animate: { opacity: 1 },
-        exit: { opacity: 0 },
-      }}
-    >
-      <motion.div
-        animate="animate"
-        aria-label={t("lobby.spotify.setupLabel")}
-        aria-modal="true"
-        className={styles.spotifySetupSheet}
-        initial="exit"
-        onClick={(event) => event.stopPropagation()}
-        role="dialog"
-        transition={createStandardTransition(reduceMotion)}
-        variants={
-          reduceMotion
-            ? {
-                animate: { opacity: 1 },
-                exit: { opacity: 0 },
-              }
-            : {
-                animate: { opacity: 1, y: 0 },
-                exit: { opacity: 0, y: 24 },
-              }
-        }
-      >
-        <div className={styles.spotifySetupHeader}>
-          <div className={styles.spotifySourceTabs} role="tablist">
-            <SpotifySourceTab
-              isActive={activeSource === "playlistUrl"}
-              label={t("lobby.spotify.source.playlistUrl")}
-              onClick={() => onSourceChange("playlistUrl")}
-            />
-            <SpotifySourceTab
-              isActive={activeSource === "findPlaylists"}
-              label={t("lobby.spotify.source.findPlaylists")}
-              onClick={() => onSourceChange("findPlaylists")}
-            />
-            <SpotifySourceTab
-              disabled
-              isActive={activeSource === "filters"}
-              label={t("lobby.spotify.source.filters")}
-              onClick={() => onSourceChange("filters")}
-            />
-            <SpotifySourceTab
-              isActive={activeSource === "quickPicks"}
-              label={t("lobby.spotify.source.quickPicks")}
-              onClick={() => onSourceChange("quickPicks")}
-            />
-          </div>
+    <MotionPresence>
+      {isOpen ? (
+        <motion.div
+          animate="animate"
+          className={styles.spotifySetupOverlay}
+          exit="exit"
+          initial="initial"
+          onClick={onClose}
+          transition={createStandardTransition(reduceMotion)}
+          variants={createModalOverlayMotionTargets(reduceMotion)}
+        >
+          <motion.div
+            animate="animate"
+            aria-label={t("lobby.spotify.setupLabel")}
+            aria-modal="true"
+            className={styles.spotifySetupSheet}
+            exit="exit"
+            initial="initial"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            transition={createStandardTransition(reduceMotion)}
+            variants={createModalSheetMotionTargets(reduceMotion)}
+          >
+            <div className={styles.spotifySetupHeader}>
+              <div className={styles.spotifySourceTabs} role="tablist">
+                <SpotifySourceTab
+                  isActive={activeSource === "playlistUrl"}
+                  label={t("lobby.spotify.source.playlistUrl")}
+                  onClick={() => onSourceChange("playlistUrl")}
+                />
+                <SpotifySourceTab
+                  isActive={activeSource === "findPlaylists"}
+                  label={t("lobby.spotify.source.findPlaylists")}
+                  onClick={() => onSourceChange("findPlaylists")}
+                />
+                <SpotifySourceTab
+                  disabled
+                  isActive={activeSource === "filters"}
+                  label={t("lobby.spotify.source.filters")}
+                  onClick={() => onSourceChange("filters")}
+                />
+                <SpotifySourceTab
+                  isActive={activeSource === "quickPicks"}
+                  label={t("lobby.spotify.source.quickPicks")}
+                  onClick={() => onSourceChange("quickPicks")}
+                />
+              </div>
 
-          <div className={styles.spotifySetupHeaderActions}>
-            <CloseIconButton ariaLabel={t("lobby.spotify.closeSetup")} onClick={onClose} />
-          </div>
-        </div>
+              <div className={styles.spotifySetupHeaderActions}>
+                <CloseIconButton ariaLabel={t("lobby.spotify.closeSetup")} onClick={onClose} />
+              </div>
+            </div>
 
-        <div className={styles.spotifySetupBody}>
-          {activeSource === "findPlaylists" ? (
-            <SpotifyPlaylistSearchPanel spotifyState={spotifyState} />
-          ) : activeSource === "quickPicks" ? (
-            <SpotifyQuickPicksPanel spotifyState={spotifyState} />
-          ) : (
-            <SpotifySetupContent currentSettings={currentSettings} spotifyState={spotifyState} />
-          )}
-        </div>
-      </motion.div>
-    </motion.div>
+            <div className={styles.spotifySetupBody}>
+              {activeSource === "findPlaylists" ? (
+                <SpotifyPlaylistSearchPanel spotifyState={spotifyState} />
+              ) : activeSource === "quickPicks" ? (
+                <SpotifyQuickPicksPanel spotifyState={spotifyState} />
+              ) : (
+                <SpotifySetupContent
+                  currentSettings={currentSettings}
+                  spotifyState={spotifyState}
+                />
+              )}
+            </div>
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </MotionPresence>
   );
 }
 

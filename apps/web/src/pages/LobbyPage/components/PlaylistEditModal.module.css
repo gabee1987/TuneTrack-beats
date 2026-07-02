@@ -547,6 +547,14 @@
 
 .primaryButton {
   flex: 1;
+  background: var(--color-background-spotify, #1ed760);
+  color: #06100a;
+  outline-color: color-mix(in srgb, var(--color-background-spotify, #1ed760) 70%, white 12%);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--color-background-spotify, #1ed760) 18%, transparent);
+}
+
+.primaryButton:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-background-spotify, #1ed760) 88%, white 12%);
 }
 
 @media (max-width: 520px) {

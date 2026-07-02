@@ -7,9 +7,10 @@ export {
   createMenuTabActivationTransition,
 } from "./appShellMotionTokens";
 export {
-  createToggleHintFadeMotion,
-  createMeasuredDisclosureMotion,
-} from "./lobbyMotionTokens";
+  createModalOverlayMotionTargets,
+  createModalSheetMotionTargets,
+} from "./modalMotionTokens";
+export { createToggleHintFadeMotion, createMeasuredDisclosureMotion } from "./lobbyMotionTokens";
 export {
   createPreviewCardReplaceEnterInitial,
   createPreviewCardReplaceEnterMotion,
