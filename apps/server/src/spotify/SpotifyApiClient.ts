@@ -50,9 +50,50 @@ interface SpotifyPlaylistSearchResponse {
   };
 }
 
+export interface SpotifyApiAlbum {
+  id: string;
+  name: string;
+  artists: Array<{ name: string }>;
+  images: Array<{ url: string; width: number | null; height: number | null }>;
+  release_date: string;
+  uri: string;
+  total_tracks: number;
+}
+
+export interface SpotifyApiArtist {
+  id: string;
+  name: string;
+  images: Array<{ url: string; width: number | null; height: number | null }>;
+  uri: string;
+}
+
 interface SpotifyTrackSearchResponse {
   tracks: {
     items: Array<SpotifyApiTrack | null>;
+  };
+}
+
+interface SpotifyAlbumSearchResponse {
+  albums: {
+    items: Array<SpotifyApiAlbum | null>;
+  };
+}
+
+interface SpotifyArtistSearchResponse {
+  artists: {
+    items: Array<SpotifyApiArtist | null>;
+  };
+}
+
+interface SpotifyAlbumResponse extends SpotifyApiAlbum {
+  tracks: {
+    items: Array<{
+      id: string;
+      name: string;
+      artists: Array<{ name: string }>;
+      preview_url: string | null;
+      uri: string;
+    } | null>;
   };
 }
 
@@ -284,6 +325,137 @@ export class SpotifyApiClient {
     return data.tracks.items.filter(isSpotifyApiTrack);
   }
 
+  public async searchAlbums(
+    query: string,
+    accessToken: string,
+    limit: number,
+    offset = 0,
+  ): Promise<SpotifyApiAlbum[]> {
+    const params = new URLSearchParams({
+      q: query,
+      type: "album",
+      limit: String(limit),
+      offset: String(offset),
+    });
+
+    const response = await fetch(`${SpotifyApiClient.BASE_URL}/search?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (response.status === 401) {
+      throw new SpotifyApiError("unauthorized", "Access token is invalid or expired", 401);
+    }
+
+    if (!response.ok) {
+      throw new SpotifyApiError("api_error", "Failed to search Spotify albums", response.status);
+    }
+
+    const data = (await response.json()) as SpotifyAlbumSearchResponse;
+    return data.albums.items.filter(isSpotifyApiAlbum);
+  }
+
+  public async searchArtists(
+    query: string,
+    accessToken: string,
+    limit: number,
+    offset = 0,
+  ): Promise<SpotifyApiArtist[]> {
+    const params = new URLSearchParams({
+      q: query,
+      type: "artist",
+      limit: String(limit),
+      offset: String(offset),
+    });
+
+    const response = await fetch(`${SpotifyApiClient.BASE_URL}/search?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (response.status === 401) {
+      throw new SpotifyApiError("unauthorized", "Access token is invalid or expired", 401);
+    }
+
+    if (!response.ok) {
+      throw new SpotifyApiError("api_error", "Failed to search Spotify artists", response.status);
+    }
+
+    const data = (await response.json()) as SpotifyArtistSearchResponse;
+    return data.artists.items.filter(isSpotifyApiArtist);
+  }
+
+  public async getAlbumTracks(albumId: string, accessToken: string): Promise<SpotifyApiTrack[]> {
+    const response = await fetch(
+      `${SpotifyApiClient.BASE_URL}/albums/${albumId}?fields=id,name,artists,images,release_date,uri,total_tracks,tracks(items(id,name,artists,preview_url,uri))`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+
+    if (response.status === 404) {
+      throw new SpotifyApiError("not_found", "Album not found", 404);
+    }
+
+    if (response.status === 401) {
+      throw new SpotifyApiError("unauthorized", "Access token is invalid or expired", 401);
+    }
+
+    if (!response.ok) {
+      throw new SpotifyApiError("api_error", "Failed to fetch Spotify album", response.status);
+    }
+
+    const album = (await response.json()) as SpotifyAlbumResponse;
+    if (!isSpotifyApiAlbum(album)) {
+      throw new SpotifyApiError("api_error", "Album response is invalid");
+    }
+
+    return album.tracks.items.flatMap((track) =>
+      track?.id && track.name && Array.isArray(track.artists) && track.uri
+        ? [
+            {
+              ...track,
+              album: {
+                name: album.name,
+                release_date: album.release_date,
+                images: album.images.map((image) => ({
+                  url: image.url,
+                  width: image.width ?? 0,
+                  height: image.height ?? 0,
+                })),
+              },
+            },
+          ]
+        : [],
+    );
+  }
+
+  public async getArtistTopTracks(
+    artistId: string,
+    accessToken: string,
+  ): Promise<SpotifyApiTrack[]> {
+    const params = new URLSearchParams({ market: "US" });
+    const response = await fetch(
+      `${SpotifyApiClient.BASE_URL}/artists/${artistId}/top-tracks?${params.toString()}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+
+    if (response.status === 404) {
+      throw new SpotifyApiError("not_found", "Artist not found", 404);
+    }
+
+    if (response.status === 401) {
+      throw new SpotifyApiError("unauthorized", "Access token is invalid or expired", 401);
+    }
+
+    if (!response.ok) {
+      throw new SpotifyApiError(
+        "api_error",
+        "Failed to fetch Spotify artist tracks",
+        response.status,
+      );
+    }
+
+    const data = (await response.json()) as { tracks: Array<SpotifyApiTrack | null> };
+    return data.tracks.filter(isSpotifyApiTrack);
+  }
+
   public async getAllPlaylistTracks(
     playlistId: string,
     accessToken: string,
@@ -367,6 +539,24 @@ function isSpotifyApiTrack(track: SpotifyApiTrack | null): track is SpotifyApiTr
       track.album &&
       Array.isArray(track.album.images) &&
       track.uri,
+  );
+}
+
+function isSpotifyApiAlbum(album: SpotifyApiAlbum | null): album is SpotifyApiAlbum {
+  return Boolean(
+    album?.id &&
+      album.name &&
+      Array.isArray(album.artists) &&
+      Array.isArray(album.images) &&
+      album.release_date &&
+      album.uri &&
+      typeof album.total_tracks === "number",
+  );
+}
+
+function isSpotifyApiArtist(artist: SpotifyApiArtist | null): artist is SpotifyApiArtist {
+  return Boolean(
+    artist?.id && artist.name && Array.isArray(artist.images) && artist.uri,
   );
 }
 

@@ -395,6 +395,7 @@ export class RoomService {
       payload.query,
       payload.limit,
       payload.offset,
+      payload.types,
     );
   }
 
@@ -403,7 +404,11 @@ export class RoomService {
     socketId: string,
   ): Promise<SpotifyPlaylistDetailPayload> {
     this.roomRegistry.getRoomStateForMember(socketId, payload.roomId);
-    return this.spotifyMusicSearchService.getPlaylistDetail(payload.roomId, payload.playlistId);
+    return this.spotifyMusicSearchService.getPlaylistDetail(
+      payload.roomId,
+      payload.playlistId,
+      payload.sourceType,
+    );
   }
 
   public generateSpotifyCandidates(

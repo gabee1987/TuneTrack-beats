@@ -4,6 +4,7 @@ import type { PlayerId } from "../game/player.js";
 import type { TrackMetadataStatus } from "../game/track.js";
 import type { PlaylistQueueUpdateMode, PublicTrackInfo } from "../spotify/playlistTracks.js";
 import type { SpotifyCandidateSource } from "../spotify/spotifyDiscovery.js";
+import type { SpotifySmartSearchTypeFilter } from "../spotify/spotifySmartSearch.js";
 
 export const ClientToServerEvent = {
   AwardTt: "award_tt",
@@ -184,11 +185,13 @@ export interface SearchSpotifyMusicPayload {
   query: string;
   limit: number;
   offset?: number;
+  types?: SpotifySmartSearchTypeFilter[];
 }
 
 export interface OpenSpotifyPlaylistPayload {
   roomId: RoomId;
   playlistId: string;
+  sourceType?: "playlist" | "album" | "artist";
 }
 
 export interface GenerateSpotifyCandidatesPayload {

@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import {
   SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT,
   SPOTIFY_QUICK_PICK_PRESETS,
+  type PublicTrackInfo,
   type PublicRoomSettings,
   type SpotifyPlaylistSearchItem,
   type SpotifySmartSearchResult,
+  type SpotifySmartSearchTypeFilter,
 } from "@tunetrack/shared";
 import {
   MotionPresence,
@@ -39,6 +41,11 @@ type LobbySpotifyState = ReturnType<typeof useLobbySpotify>;
 type SpotifySetupSource = "playlistUrl" | "findPlaylists" | "filters" | "quickPicks";
 const SMART_SEARCH_SWIPE_THRESHOLD = 68;
 const SMART_SEARCH_SWIPE_REVEAL_WIDTH = 82;
+const SMART_SEARCH_TYPES: Array<{ labelKey: string; value: SpotifySmartSearchTypeFilter }> = [
+  { labelKey: "lobby.spotify.searchType.songs", value: "track" },
+  { labelKey: "lobby.spotify.searchType.albums", value: "album" },
+  { labelKey: "lobby.spotify.searchType.artists", value: "artist" },
+];
 
 function SpotifyLogo() {
   return (
@@ -341,11 +348,13 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
     openedPlaylist,
     openedPlaylistError,
     openedPlaylistPhase,
-    removeOpenedPlaylistTrack,
+    queuedTrackIds,
+    removeOpenedPlaylistTracksFromQueue,
     removeSmartSearchTracksFromQueue,
-    savedPlaylistMessage,
     searchSpotifyMusic,
+    searchSpotifyMusicByType,
     setSmartSearchQuery,
+    setSmartSearchType,
     smartSearchError,
     smartSearchHasSearched,
     smartSearchHasMore,
@@ -354,6 +363,7 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
     smartSearchQuery,
     smartSearchQueuedTrackIds,
     smartSearchResults,
+    smartSearchType,
     updateOpenedPlaylistTrack,
   } = spotifyState;
 
@@ -429,6 +439,46 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
     showSearchToast(t("lobby.spotify.builder.playlistTracksRemoved", { count: 1 }));
   }
 
+  function handleOpenedAddAll() {
+    if (!openedPlaylist || openedPlaylist.tracks.length === 0) return;
+    applyOpenedPlaylistTracks("append");
+    showSearchToast(getAddedTracksMessage(openedPlaylist.tracks.length));
+  }
+
+  function handleOpenedAddSelected(trackIds: ReadonlySet<string>) {
+    if (trackIds.size === 0) return;
+    applyOpenedPlaylistTracks("append", trackIds);
+    showSearchToast(getAddedTracksMessage(trackIds.size));
+  }
+
+  function handleOpenedRemoveSelected(trackIds: ReadonlySet<string>) {
+    if (trackIds.size === 0) return;
+    removeOpenedPlaylistTracksFromQueue(trackIds);
+    showSearchToast(getRemovedTracksMessage(trackIds.size));
+  }
+
+  function handleOpenedReplace() {
+    if (!openedPlaylist || openedPlaylist.tracks.length === 0) return;
+    applyOpenedPlaylistTracks("replace");
+    showSearchToast(
+      t("lobby.spotify.builder.playlistTracksReplaced", {
+        count: openedPlaylist.tracks.length,
+      }),
+    );
+  }
+
+  function getAddedTracksMessage(count: number) {
+    return count === 1
+      ? t("lobby.spotify.builder.trackAdded")
+      : t("lobby.spotify.builder.playlistTracksAdded", { count });
+  }
+
+  function getRemovedTracksMessage(count: number) {
+    return count === 1
+      ? t("lobby.spotify.builder.trackRemoved")
+      : t("lobby.spotify.builder.playlistTracksRemoved", { count });
+  }
+
   function showSearchToast(message: string) {
     showToast({
       durationMs: 1100,
@@ -438,25 +488,30 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
     });
   }
 
+  function handleSearchTypeChange(type: SpotifySmartSearchTypeFilter) {
+    if (type === smartSearchType) return;
+    if (smartSearchQuery.trim().length >= 2) {
+      searchSpotifyMusicByType(type);
+    } else {
+      setSmartSearchType(type);
+    }
+  }
+
   return (
     <div className={styles.spotifyDiscoveryPanel}>
       {openedPlaylistPhase !== "idle" ? (
-        <>
-          <SpotifyOpenedPlaylistPanel
-            onAddAll={() => applyOpenedPlaylistTracks("append")}
-            onAddSelected={(trackIds) => applyOpenedPlaylistTracks("append", trackIds)}
-            onBack={closeOpenedPlaylist}
-            onRemoveTrack={removeOpenedPlaylistTrack}
-            onReplace={() => applyOpenedPlaylistTracks("replace")}
-            onUpdateTrack={updateOpenedPlaylistTrack}
-            phase={openedPlaylistPhase}
-            playlist={openedPlaylist}
-            playlistError={openedPlaylistError}
-          />
-          {savedPlaylistMessage ? (
-            <p className={styles.spotifyStatusLine}>{savedPlaylistMessage}</p>
-          ) : null}
-        </>
+        <SpotifyOpenedPlaylistPanel
+          onAddAll={handleOpenedAddAll}
+          onAddSelected={handleOpenedAddSelected}
+          onBack={closeOpenedPlaylist}
+          onRemoveSelected={handleOpenedRemoveSelected}
+          onReplace={handleOpenedReplace}
+          onUpdateTrack={updateOpenedPlaylistTrack}
+          phase={openedPlaylistPhase}
+          playlist={openedPlaylist}
+          playlistError={openedPlaylistError}
+          queuedTrackIds={queuedTrackIds}
+        />
       ) : (
         <section className={styles.spotifyDiscoverySearch}>
           <div className={styles.spotifyDiscoveryToolbar}>
@@ -482,6 +537,23 @@ function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpoti
               >
                 <SearchIcon />
               </button>
+            </div>
+            <div className={styles.spotifySearchTypeChips} role="tablist">
+              {SMART_SEARCH_TYPES.map((type) => (
+                <button
+                  aria-selected={smartSearchType === type.value}
+                  className={`${styles.spotifySearchTypeChip} ${
+                    smartSearchType === type.value ? styles.spotifySearchTypeChipActive : ""
+                  }`}
+                  disabled={isSearching}
+                  key={type.value}
+                  onClick={() => handleSearchTypeChange(type.value)}
+                  role="tab"
+                  type="button"
+                >
+                  {t(type.labelKey)}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -718,22 +790,41 @@ function SpotifySmartSearchResultRow({
         )}
 
         <span className={styles.spotifySmartResultType}>
-          {isTrack ? t("lobby.spotify.builder.trackType") : t("lobby.spotify.builder.playlistType")}
+          {getSmartSearchResultTypeLabel(t, result.type)}
         </span>
 
-        {isAdded ? (
-          <span
-            aria-label={t("lobby.spotify.builder.addedTrack")}
-            className={styles.spotifySmartAddedMark}
-            role="img"
-            title={t("lobby.spotify.builder.addedTrack")}
+        {isTrack ? (
+          <button
+            aria-label={
+              isAdded ? t("lobby.spotify.builder.addedTrack") : t("lobby.spotify.builder.addTrack")
+            }
+            className={`${styles.spotifySmartQueueButton} ${
+              isAdded ? styles.spotifySmartQueueButtonAdded : ""
+            }`}
+            onClick={isAdded ? onRemove : onAdd}
+            title={
+              isAdded ? t("lobby.spotify.builder.addedTrack") : t("lobby.spotify.builder.addTrack")
+            }
+            type="button"
           >
-            <CheckIcon />
-          </span>
+            <span className={styles.spotifySmartQueueButtonFace}>
+              {isAdded ? <CheckIcon /> : <PlusIcon />}
+            </span>
+          </button>
         ) : null}
       </motion.div>
     </div>
   );
+}
+
+function getSmartSearchResultTypeLabel(
+  t: ReturnType<typeof useI18n>["t"],
+  type: SpotifySmartSearchResult["type"],
+) {
+  if (type === "track") return t("lobby.spotify.builder.trackType");
+  if (type === "album") return t("lobby.spotify.builder.albumType");
+  if (type === "artist") return t("lobby.spotify.builder.artistType");
+  return t("lobby.spotify.builder.playlistType");
 }
 
 function PlusIcon() {
@@ -785,6 +876,41 @@ function SearchIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={2.4}
+      />
+    </svg>
+  );
+}
+
+function BackIcon() {
+  return (
+    <svg aria-hidden="true" fill="none" height={18} viewBox="0 0 24 24" width={18}>
+      <path
+        d="M15 18 9 12l6-6"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2.6}
+      />
+    </svg>
+  );
+}
+
+function ReplaceIcon() {
+  return (
+    <svg aria-hidden="true" fill="none" height={18} viewBox="0 0 24 24" width={18}>
+      <path
+        d="M4 7h11a4 4 0 0 1 0 8H8"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2.2}
+      />
+      <path
+        d="m8 11-4 4 4 4"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2.2}
       />
     </svg>
   );
@@ -990,7 +1116,7 @@ interface SpotifyOpenedPlaylistPanelProps {
   onAddAll: () => void;
   onAddSelected: (trackIds: ReadonlySet<string>) => void;
   onBack: () => void;
-  onRemoveTrack: (trackId: string) => void;
+  onRemoveSelected: (trackIds: ReadonlySet<string>) => void;
   onReplace: () => void;
   onUpdateTrack: (
     trackId: string,
@@ -1005,18 +1131,20 @@ interface SpotifyOpenedPlaylistPanelProps {
   phase: "idle" | "loading" | "ready" | "applying" | "error";
   playlist: LobbySpotifyState["openedPlaylist"];
   playlistError: string | null;
+  queuedTrackIds: ReadonlySet<string>;
 }
 
 function SpotifyOpenedPlaylistPanel({
   onAddAll,
   onAddSelected,
   onBack,
-  onRemoveTrack,
+  onRemoveSelected,
   onReplace,
   onUpdateTrack,
   phase,
   playlist,
   playlistError,
+  queuedTrackIds,
 }: SpotifyOpenedPlaylistPanelProps) {
   const { t } = useI18n();
   const [selectedTrackIds, setSelectedTrackIds] = useState<Set<string>>(() => new Set());
@@ -1024,6 +1152,9 @@ function SpotifyOpenedPlaylistPanel({
   const tracks = playlist?.tracks ?? [];
   const isApplying = phase === "applying";
   const activeTrack = tracks.find((track) => track.id === activeTrackId) ?? null;
+  const selectedTracks = tracks.filter((track) => selectedTrackIds.has(track.id));
+  const selectedUnqueuedTracks = selectedTracks.filter((track) => !queuedTrackIds.has(track.id));
+  const selectedQueuedTracks = selectedTracks.filter((track) => queuedTrackIds.has(track.id));
 
   useEffect(() => {
     setSelectedTrackIds((prev) => {
@@ -1047,8 +1178,21 @@ function SpotifyOpenedPlaylistPanel({
   }
 
   function handleAddSelected() {
-    onAddSelected(selectedTrackIds);
+    onAddSelected(new Set(selectedUnqueuedTracks.map((track) => track.id)));
     setSelectedTrackIds(new Set());
+  }
+
+  function handleRemoveSelected() {
+    onRemoveSelected(new Set(selectedQueuedTracks.map((track) => track.id)));
+    setSelectedTrackIds(new Set());
+  }
+
+  function handleAddTrack(trackId: string) {
+    onAddSelected(new Set([trackId]));
+  }
+
+  function handleRemoveTrackFromQueue(trackId: string) {
+    onRemoveSelected(new Set([trackId]));
   }
 
   if (phase === "loading") {
@@ -1082,6 +1226,14 @@ function SpotifyOpenedPlaylistPanel({
   return (
     <section className={styles.spotifyOpenedPlaylistPanel}>
       <div className={styles.spotifyOpenedPlaylistHeader}>
+        <button
+          aria-label={t("lobby.spotify.builder.backToSearch")}
+          className={styles.spotifyOpenedPlaylistIconBtn}
+          onClick={onBack}
+          type="button"
+        >
+          <BackIcon />
+        </button>
         {playlist.imageUrl ? (
           <img alt="" className={styles.spotifyOpenedPlaylistImage} src={playlist.imageUrl} />
         ) : (
@@ -1098,49 +1250,88 @@ function SpotifyOpenedPlaylistPanel({
             </span>
           ) : null}
         </span>
-        <button className={styles.spotifyReviewBackBtn} onClick={onBack} type="button">
-          {t("lobby.spotify.builder.backToSearch")}
-        </button>
+        <div className={styles.spotifyOpenedPlaylistHeaderActions}>
+          <button
+            aria-label={t("lobby.spotify.builder.addAll")}
+            className={styles.spotifyOpenedPlaylistIconBtn}
+            disabled={tracks.length === 0 || isApplying}
+            onClick={onAddAll}
+            title={t("lobby.spotify.builder.addAll")}
+            type="button"
+          >
+            <PlusIcon />
+          </button>
+          <button
+            aria-label={t("lobby.spotify.builder.replaceQueue")}
+            className={styles.spotifyOpenedPlaylistIconBtn}
+            disabled={tracks.length === 0 || isApplying}
+            onClick={onReplace}
+            title={t("lobby.spotify.builder.replaceQueue")}
+            type="button"
+          >
+            <ReplaceIcon />
+          </button>
+        </div>
       </div>
 
       {tracks.length > 0 ? (
-        <PlaylistTrackList
-          onOpenTrack={(track) => setActiveTrackId(track.id)}
-          onRemoveTrack={onRemoveTrack}
-          onToggleSelection={toggleTrackSelection}
-          selectedIds={selectedTrackIds}
-          tracks={tracks}
-        />
+        <div
+          className={`${styles.spotifyOpenedTrackList} ${
+            selectedTrackIds.size > 0 ? styles.spotifySmartResultListWithAction : ""
+          }`}
+        >
+          {tracks.map((track) => (
+            <SpotifyOpenedTrackRow
+              isAdded={queuedTrackIds.has(track.id)}
+              isSelected={selectedTrackIds.has(track.id)}
+              key={track.id}
+              onAdd={() => handleAddTrack(track.id)}
+              onOpen={() => setActiveTrackId(track.id)}
+              onRemoveFromQueue={() => handleRemoveTrackFromQueue(track.id)}
+              onToggleSelection={() => toggleTrackSelection(track.id)}
+              track={track}
+            />
+          ))}
+        </div>
       ) : (
         <p className={styles.spotifyEmptyState}>{t("lobby.spotify.builder.playlistNoTracks")}</p>
       )}
 
-      <div className={styles.spotifyOpenedPlaylistActions}>
-        <ActionButton
-          disabled={selectedTrackIds.size === 0 || isApplying}
-          onClick={handleAddSelected}
-          type="button"
-          variant="neutral"
+      {selectedTrackIds.size > 0 ? (
+        <motion.div
+          animate={{ opacity: 1, y: 0 }}
+          className={styles.spotifySearchSelectedAction}
+          initial={{ opacity: 0, y: 18 }}
+          transition={createStandardTransition(false)}
         >
-          {t("lobby.spotify.builder.addSelected", { count: selectedTrackIds.size })}
-        </ActionButton>
-        <ActionButton
-          disabled={tracks.length === 0 || isApplying}
-          onClick={onAddAll}
-          type="button"
-          variant="neutral"
-        >
-          {t("lobby.spotify.builder.addAll")}
-        </ActionButton>
-        <ActionButton
-          disabled={tracks.length === 0 || isApplying}
-          onClick={onReplace}
-          type="button"
-          variant="neutral"
-        >
-          {t("lobby.spotify.builder.replaceQueue")}
-        </ActionButton>
-      </div>
+          {selectedUnqueuedTracks.length > 0 ? (
+            <ActionButton
+              className={styles.spotifySearchAddSelectedBtn}
+              disabled={isApplying}
+              onClick={handleAddSelected}
+              type="button"
+              variant="neutral"
+            >
+              {t("lobby.spotify.builder.addSelected", {
+                count: selectedUnqueuedTracks.length,
+              })}
+            </ActionButton>
+          ) : null}
+          {selectedQueuedTracks.length > 0 ? (
+            <ActionButton
+              className={`${styles.spotifySearchAddSelectedBtn} ${styles.spotifySearchRemoveSelectedBtn}`}
+              disabled={isApplying}
+              onClick={handleRemoveSelected}
+              type="button"
+              variant="danger"
+            >
+              {t("lobby.spotify.builder.removeSelected", {
+                count: selectedQueuedTracks.length,
+              })}
+            </ActionButton>
+          ) : null}
+        </motion.div>
+      ) : null}
 
       <PlaylistTrackDetailsSheet
         onClose={() => setActiveTrackId(null)}
@@ -1149,6 +1340,157 @@ function SpotifyOpenedPlaylistPanel({
         track={activeTrack}
       />
     </section>
+  );
+}
+
+interface SpotifyOpenedTrackRowProps {
+  isAdded: boolean;
+  isSelected: boolean;
+  onAdd: () => void;
+  onOpen: () => void;
+  onRemoveFromQueue: () => void;
+  onToggleSelection: () => void;
+  track: PublicTrackInfo;
+}
+
+function SpotifyOpenedTrackRow({
+  isAdded,
+  isSelected,
+  onAdd,
+  onOpen,
+  onRemoveFromQueue,
+  onToggleSelection,
+  track,
+}: SpotifyOpenedTrackRowProps) {
+  const { t } = useI18n();
+  const x = useMotionValue(0);
+  const addZoneWidth = useMotionValue(0);
+  const removeZoneWidth = useMotionValue(0);
+  const addIconOpacity = useTransform(
+    addZoneWidth,
+    [0, 40, SMART_SEARCH_SWIPE_REVEAL_WIDTH],
+    [0, 0, 1],
+  );
+  const addIconScale = useTransform(addZoneWidth, [40, SMART_SEARCH_SWIPE_REVEAL_WIDTH], [0.6, 1]);
+  const removeIconOpacity = useTransform(
+    removeZoneWidth,
+    [0, 40, SMART_SEARCH_SWIPE_REVEAL_WIDTH],
+    [0, 0, 1],
+  );
+  const removeIconScale = useTransform(
+    removeZoneWidth,
+    [40, SMART_SEARCH_SWIPE_REVEAL_WIDTH],
+    [0.6, 1],
+  );
+  const isActing = useRef(false);
+
+  useEffect(() => {
+    return x.on("change", (value) => {
+      if (isActing.current) return;
+      addZoneWidth.set(Math.max(0, value));
+      removeZoneWidth.set(Math.max(0, -value));
+    });
+  }, [addZoneWidth, removeZoneWidth, x]);
+
+  async function handleDragEnd(_: unknown, info: { offset: { x: number } }) {
+    if (isActing.current) return;
+
+    if (!isAdded && info.offset.x > SMART_SEARCH_SWIPE_THRESHOLD) {
+      isActing.current = true;
+      await animate(x, SMART_SEARCH_SWIPE_REVEAL_WIDTH, {
+        duration: 0.14,
+        ease: [0.2, 0, 0, 1],
+      });
+      onAdd();
+      await animate(x, 0, { type: "spring", stiffness: 520, damping: 38 });
+      addZoneWidth.set(0);
+      removeZoneWidth.set(0);
+      isActing.current = false;
+      return;
+    }
+
+    if (isAdded && info.offset.x < -SMART_SEARCH_SWIPE_THRESHOLD) {
+      isActing.current = true;
+      await animate(x, -SMART_SEARCH_SWIPE_REVEAL_WIDTH, {
+        duration: 0.14,
+        ease: [0.2, 0, 0, 1],
+      });
+      onRemoveFromQueue();
+      await animate(x, 0, { type: "spring", stiffness: 520, damping: 38 });
+      addZoneWidth.set(0);
+      removeZoneWidth.set(0);
+      isActing.current = false;
+      return;
+    }
+
+    void animate(x, 0, { type: "spring", stiffness: 500, damping: 38 });
+  }
+
+  return (
+    <div className={styles.spotifySmartResultRowWrapper}>
+      {!isAdded ? (
+        <motion.div className={styles.spotifySmartAddZone} style={{ width: addZoneWidth }}>
+          <motion.div style={{ opacity: addIconOpacity, scale: addIconScale }}>
+            <PlusIcon />
+          </motion.div>
+        </motion.div>
+      ) : null}
+      {isAdded ? (
+        <motion.div className={styles.spotifySmartRemoveZone} style={{ width: removeZoneWidth }}>
+          <motion.div style={{ opacity: removeIconOpacity, scale: removeIconScale }}>
+            <TrashIcon />
+          </motion.div>
+        </motion.div>
+      ) : null}
+      <motion.div
+        className={styles.spotifyOpenedTrackRow}
+        drag="x"
+        dragConstraints={{
+          left: isAdded ? -SMART_SEARCH_SWIPE_REVEAL_WIDTH : 0,
+          right: isAdded ? 0 : SMART_SEARCH_SWIPE_REVEAL_WIDTH,
+        }}
+        dragElastic={{ left: isAdded ? 0.18 : 0, right: isAdded ? 0 : 0.18 }}
+        onDragEnd={handleDragEnd}
+        style={{ x }}
+      >
+        <SelectableArtwork
+          ariaLabel={t("lobby.spotify.builder.toggleTrackSelection", {
+            title: track.title,
+          })}
+          isSelected={isSelected}
+          onToggle={onToggleSelection}
+        >
+          {track.artworkUrl ? <SelectableArtworkImage src={track.artworkUrl} /> : <SpotifyLogo />}
+        </SelectableArtwork>
+
+        <button className={styles.spotifySmartResultOpenButton} onClick={onOpen} type="button">
+          <span className={styles.spotifySmartResultMeta}>
+            <strong>{track.title}</strong>
+            <span>
+              {track.artist} · {track.releaseYear}
+            </span>
+          </span>
+        </button>
+
+        <button
+          aria-label={
+            isAdded ? t("lobby.spotify.builder.addedTrack") : t("lobby.spotify.builder.addTrack")
+          }
+          className={`${styles.spotifySmartQueueButton} ${
+            isAdded ? styles.spotifySmartQueueButtonAdded : ""
+          }`}
+          onClick={isAdded ? onRemoveFromQueue : onAdd}
+          title={
+            isAdded ? t("lobby.spotify.builder.addedTrack") : t("lobby.spotify.builder.addTrack")
+          }
+          type="button"
+        >
+          <span className={styles.spotifySmartQueueButtonFace}>
+            {isAdded ? <CheckIcon /> : <PlusIcon />}
+          </span>
+        </button>
+      </motion.div>
+    </div>
   );
 }
 

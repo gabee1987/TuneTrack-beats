@@ -52,6 +52,7 @@ const MAX_SPOTIFY_CANDIDATE_PLAYLIST_COUNT = 8;
 const MAX_SPOTIFY_SMART_SEARCH_OFFSET = 950;
 
 const playlistQueueUpdateModeSchema = z.enum(["append", "replace"]);
+const spotifySmartSearchTypeSchema = z.enum(["track", "album", "artist"]);
 
 const curatedPlaylistTrackSchema = z.object({
   id: z.string().trim().min(1).max(200),
@@ -227,11 +228,13 @@ export const searchSpotifyMusicPayloadSchema = z.object({
   query: z.string().trim().min(2).max(120),
   limit: z.number().int().min(1).max(50).default(20),
   offset: z.number().int().min(0).max(MAX_SPOTIFY_SMART_SEARCH_OFFSET).default(0),
+  types: z.array(spotifySmartSearchTypeSchema).min(1).max(3).default(["track"]),
 });
 
 export const openSpotifyPlaylistPayloadSchema = z.object({
   roomId: roomIdSchema,
   playlistId: z.string().trim().min(1).max(120),
+  sourceType: z.enum(["playlist", "album", "artist"]).default("playlist"),
 });
 
 export const generateSpotifyCandidatesPayloadSchema = z.object({

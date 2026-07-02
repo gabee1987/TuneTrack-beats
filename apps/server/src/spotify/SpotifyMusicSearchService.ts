@@ -4,9 +4,10 @@ import type {
   SpotifySmartSearchIntent,
   SpotifySmartSearchResult,
   SpotifySmartSearchResultPayload,
+  SpotifySmartSearchTypeFilter,
 } from "@tunetrack/shared";
 import { logger } from "../app/logger.js";
-import type { SpotifyApiTrack } from "./SpotifyApiClient.js";
+import type { SpotifyApiAlbum, SpotifyApiArtist, SpotifyApiTrack } from "./SpotifyApiClient.js";
 import { SpotifyApiClient, SpotifyApiError } from "./SpotifyApiClient.js";
 import { mapSpotifyTrackToGameCard } from "./SpotifyTrackMapper.js";
 import { SpotifyTokenStore } from "./SpotifyTokenStore.js";
@@ -23,6 +24,7 @@ export class SpotifyMusicSearchService {
     query: string,
     limit: number,
     offset: number,
+    types: SpotifySmartSearchTypeFilter[],
   ): Promise<SpotifySmartSearchResultPayload> {
     const parsed = parseSpotifySmartSearchQuery(query);
     if (!parsed) {
@@ -38,7 +40,7 @@ export class SpotifyMusicSearchService {
       const searchResult =
         parsed.kind === "playlist_url"
           ? await this.searchPlaylistUrl(parsed, accessToken)
-          : await this.searchMixed(parsed, accessToken, limit, offset);
+          : await this.searchMixed(parsed, accessToken, limit, offset, types);
 
       return {
         success: true,
@@ -63,6 +65,7 @@ export class SpotifyMusicSearchService {
   public async getPlaylistDetail(
     roomId: string,
     playlistId: string,
+    sourceType: "playlist" | "album" | "artist" = "playlist",
   ): Promise<SpotifyPlaylistDetailPayload> {
     const normalizedPlaylistId = playlistId.trim();
     if (!normalizedPlaylistId) {
@@ -75,24 +78,22 @@ export class SpotifyMusicSearchService {
 
     try {
       const accessToken = await this.getOrRefreshClientCredentialsToken();
-      const [playlist, rawTracks] = await Promise.all([
-        this.apiClient.getPlaylistSearchItem(normalizedPlaylistId, accessToken),
-        this.apiClient.getAllPlaylistTracks(normalizedPlaylistId, accessToken),
-      ]);
+      const source = await this.getSourceTracks(normalizedPlaylistId, sourceType, accessToken);
 
-      const tracks = rawTracks.flatMap((track) => {
+      const tracks = source.rawTracks.flatMap((track) => {
         const card = mapSpotifyTrackToGameCard(track);
         return card ? [{ ...card, metadataStatus: card.metadataStatus ?? "imported" }] : [];
       });
 
       return {
         success: true,
-        playlistId: playlist.id,
-        title: playlist.name,
-        subtitle: `${playlist.owner.display_name ?? "Spotify"} · ${playlist.tracks.total} tracks`,
-        ...(playlist.images[0]?.url ? { imageUrl: playlist.images[0].url } : {}),
-        totalFetched: rawTracks.length,
-        filteredCount: rawTracks.length - tracks.length,
+        playlistId: normalizedPlaylistId,
+        sourceType,
+        title: source.title,
+        subtitle: source.subtitle,
+        ...(source.imageUrl ? { imageUrl: source.imageUrl } : {}),
+        totalFetched: source.rawTracks.length,
+        filteredCount: source.rawTracks.length - tracks.length,
         tracks: tracks satisfies PublicTrackInfo[],
       };
     } catch (err) {
@@ -136,44 +137,72 @@ export class SpotifyMusicSearchService {
     accessToken: string,
     limit: number,
     offset: number,
+    types: SpotifySmartSearchTypeFilter[],
   ): Promise<SpotifySearchPage> {
     const perTypeLimit = Math.max(1, Math.min(limit, 20));
     const trackQuery = buildTrackSearchQuery(parsed);
-    const playlistQuery = parsed.queryWithoutQualifiers;
-    const [tracks, playlists] = await Promise.all([
-      this.apiClient.searchTracks(trackQuery, accessToken, perTypeLimit, offset),
-      offset === 0
-        ? this.apiClient.searchPlaylists(playlistQuery, accessToken, perTypeLimit)
+    const [tracks, albums, artists] = await Promise.all([
+      types.includes("track")
+        ? this.apiClient.searchTracks(trackQuery, accessToken, perTypeLimit, offset)
+        : Promise.resolve([]),
+      types.includes("album")
+        ? this.apiClient.searchAlbums(parsed.queryWithoutQualifiers, accessToken, perTypeLimit, offset)
+        : Promise.resolve([]),
+      types.includes("artist")
+        ? this.apiClient.searchArtists(parsed.queryWithoutQualifiers, accessToken, perTypeLimit, offset)
         : Promise.resolve([]),
     ]);
 
     const trackResults = tracks
       .filter((track) => !parsed.year || getTrackReleaseYear(track) === parsed.year)
       .map(mapTrackResult);
-    const playlistResults = playlists
-      .filter(
-        (playlist) =>
-          !parsed.ownerHint ||
-          (playlist.owner.display_name ?? "")
-            .toLocaleLowerCase()
-            .includes(parsed.ownerHint.toLocaleLowerCase()),
-      )
-      .map(
-        (playlist): SpotifySmartSearchResult => ({
-          id: playlist.id,
-          type: "playlist",
-          title: playlist.name,
-          subtitle: `${playlist.owner.display_name ?? "Spotify"} · ${playlist.tracks.total} tracks`,
-          trackCount: playlist.tracks.total,
-          ownerName: playlist.owner.display_name ?? "Spotify",
-          ...(playlist.images[0]?.url ? { imageUrl: playlist.images[0].url } : {}),
-        }),
-      );
+    const albumResults = albums.map(mapAlbumResult);
+    const artistResults = artists.map(mapArtistResult);
 
     return {
-      results: [...trackResults, ...playlistResults].slice(0, limit),
-      hasMore: tracks.length >= perTypeLimit,
+      results: [...trackResults, ...albumResults, ...artistResults].slice(0, limit),
+      hasMore: Math.max(tracks.length, albums.length, artists.length) >= perTypeLimit,
       nextOffset: offset + perTypeLimit,
+    };
+  }
+
+  private async getSourceTracks(
+    sourceId: string,
+    sourceType: "playlist" | "album" | "artist",
+    accessToken: string,
+  ): Promise<SpotifySourceTracks> {
+    if (sourceType === "album") {
+      const rawTracks = await this.apiClient.getAlbumTracks(sourceId, accessToken);
+      const firstTrack = rawTracks[0];
+      return {
+        title: firstTrack?.album.name ?? "Spotify album",
+        subtitle: `${rawTracks.length} tracks`,
+        ...(firstTrack?.album.images[0]?.url ? { imageUrl: firstTrack.album.images[0].url } : {}),
+        rawTracks,
+      };
+    }
+
+    if (sourceType === "artist") {
+      const rawTracks = await this.apiClient.getArtistTopTracks(sourceId, accessToken);
+      const firstArtist = rawTracks[0]?.artists[0]?.name ?? "Spotify artist";
+      return {
+        title: firstArtist,
+        subtitle: `${rawTracks.length} top tracks`,
+        ...(rawTracks[0]?.album.images[0]?.url ? { imageUrl: rawTracks[0].album.images[0].url } : {}),
+        rawTracks,
+      };
+    }
+
+    const [playlist, rawTracks] = await Promise.all([
+      this.apiClient.getPlaylistSearchItem(sourceId, accessToken),
+      this.apiClient.getAllPlaylistTracks(sourceId, accessToken),
+    ]);
+
+    return {
+      title: playlist.name,
+      subtitle: `${playlist.owner.display_name ?? "Spotify"} · ${playlist.tracks.total} tracks`,
+      ...(playlist.images[0]?.url ? { imageUrl: playlist.images[0].url } : {}),
+      rawTracks,
     };
   }
 
@@ -200,6 +229,13 @@ interface SpotifySearchPage {
   nextOffset?: number;
 }
 
+interface SpotifySourceTracks {
+  imageUrl?: string;
+  rawTracks: SpotifyApiTrack[];
+  subtitle: string;
+  title: string;
+}
+
 function buildTrackSearchQuery(parsed: SpotifySmartSearchIntent): string {
   if (!parsed.year) return parsed.queryWithoutQualifiers;
   return `${parsed.queryWithoutQualifiers} year:${parsed.year}`;
@@ -221,6 +257,35 @@ function mapTrackResult(track: SpotifyApiTrack): SpotifySmartSearchResult {
     ...(track.preview_url ? { previewUrl: track.preview_url } : {}),
     spotifyUri: track.uri,
     ...(track.album.images[0]?.url ? { imageUrl: track.album.images[0].url } : {}),
+  };
+}
+
+function mapAlbumResult(album: SpotifyApiAlbum): SpotifySmartSearchResult {
+  const artist = album.artists.map((item) => item.name).join(", ");
+  const releaseYear = Number.parseInt(album.release_date.slice(0, 4), 10);
+  return {
+    id: album.id,
+    type: "album",
+    title: album.name,
+    subtitle: [artist, Number.isFinite(releaseYear) ? String(releaseYear) : null]
+      .filter(Boolean)
+      .join(" · "),
+    artist,
+    trackCount: album.total_tracks,
+    ...(Number.isFinite(releaseYear) ? { releaseYear } : {}),
+    spotifyUri: album.uri,
+    ...(album.images[0]?.url ? { imageUrl: album.images[0].url } : {}),
+  };
+}
+
+function mapArtistResult(artist: SpotifyApiArtist): SpotifySmartSearchResult {
+  return {
+    id: artist.id,
+    type: "artist",
+    title: artist.name,
+    subtitle: "Artist",
+    spotifyUri: artist.uri,
+    ...(artist.images[0]?.url ? { imageUrl: artist.images[0].url } : {}),
   };
 }
 

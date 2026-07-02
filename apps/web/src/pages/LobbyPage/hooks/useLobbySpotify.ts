@@ -14,6 +14,7 @@ import {
   type SpotifyPlaylistDetailPayload,
   type SpotifySmartSearchResult,
   type SpotifySmartSearchResultPayload,
+  type SpotifySmartSearchTypeFilter,
   type SpotifyAuthUrlPayload,
   type SpotifyQuickPickPresetId,
   type PublicTrackInfo,
@@ -89,8 +90,10 @@ export interface UseLobbySpotifyResult {
   smartSearchLoadMorePhase: SmartSearchLoadMorePhase;
   smartSearchPhase: SmartSearchPhase;
   smartSearchQuery: string;
+  queuedTrackIds: ReadonlySet<string>;
   smartSearchQueuedTrackIds: ReadonlySet<string>;
   smartSearchResults: SpotifySmartSearchResult[];
+  smartSearchType: SpotifySmartSearchTypeFilter;
   openedPlaylist: OpenedSpotifyPlaylist | null;
   openedPlaylistError: string | null;
   openedPlaylistPhase: OpenedPlaylistPhase;
@@ -123,12 +126,15 @@ export interface UseLobbySpotifyResult {
   ) => void;
   openSmartSearchPlaylist: (result: SpotifySmartSearchResult) => void;
   removeOpenedPlaylistTrack: (trackId: string) => void;
+  removeOpenedPlaylistTracksFromQueue: (trackIds: ReadonlySet<string>) => void;
   removeSmartSearchTracksFromQueue: (results: SpotifySmartSearchResult[]) => void;
   loadMoreSpotifyMusic: () => void;
   searchSpotifyMusic: () => void;
+  searchSpotifyMusicByType: (type: SpotifySmartSearchTypeFilter) => void;
   searchSpotifyPlaylists: () => void;
   setPlaylistSearchQuery: (query: string) => void;
   setSmartSearchQuery: (query: string) => void;
+  setSmartSearchType: (type: SpotifySmartSearchTypeFilter) => void;
   setRenameInputValue: (name: string) => void;
   setSaveName: (name: string) => void;
   setSelectedSavedPlaylistId: (playlistId: string) => void;
@@ -174,7 +180,9 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
   const [smartSearchHasMore, setSmartSearchHasMore] = useState(false);
   const [smartSearchNextOffset, setSmartSearchNextOffset] = useState(0);
   const [smartSearchQuery, setSmartSearchQuery] = useState("");
+  const [smartSearchType, setSmartSearchType] = useState<SpotifySmartSearchTypeFilter>("track");
   const [smartSearchResults, setSmartSearchResults] = useState<SpotifySmartSearchResult[]>([]);
+  const [queuedTrackIds, setQueuedTrackIds] = useState<Set<string>>(() => new Set());
   const [smartSearchQueuedTrackIds, setSmartSearchQueuedTrackIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -295,6 +303,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
         setSmartSearchHasMore(false);
         setSmartSearchNextOffset(0);
         setSmartSearchResults([]);
+        setQueuedTrackIds(new Set());
         setSmartSearchQueuedTrackIds(new Set());
         setOpenedPlaylistPhase("idle");
         setOpenedPlaylistError(null);
@@ -319,6 +328,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
       }
 
       function handlePlaylistTracks(payload: PlaylistTracksPayload) {
+        setQueuedTrackIds(getQueuedTrackIdsFromPlaylistTracks(payload.tracks));
         setSmartSearchQueuedTrackIds(getSmartSearchIdsFromPlaylistTracks(payload.tracks));
       }
 
@@ -406,6 +416,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
       void getSocketClient().then((socket) => {
         function handleClearConfirmed(payload: PlaylistTracksPayload) {
           socket.off(ServerToClientEvent.PlaylistTracks, handleClearConfirmed);
+          setQueuedTrackIds(getQueuedTrackIdsFromPlaylistTracks(payload.tracks));
           setSmartSearchQueuedTrackIds(getSmartSearchIdsFromPlaylistTracks(payload.tracks));
           setLoadedSavedPlaylistId(null);
           setCurrentPlaylistSourceUrl("");
@@ -454,8 +465,13 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
   }
 
   function searchSpotifyMusic() {
+    searchSpotifyMusicByType(smartSearchType);
+  }
+
+  function searchSpotifyMusicByType(type: SpotifySmartSearchTypeFilter) {
     if (!roomId || smartSearchQuery.trim().length < 2) return;
 
+    setSmartSearchType(type);
     setSmartSearchPhase("searching");
     setSmartSearchLoadMorePhase("idle");
     setSmartSearchError(null);
@@ -463,7 +479,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     setSmartSearchHasMore(false);
     setSmartSearchNextOffset(0);
     setSavedPlaylistMessage(null);
-    requestSpotifyMusicSearch(0, "replace");
+    requestSpotifyMusicSearch(0, "replace", type);
   }
 
   function loadMoreSpotifyMusic() {
@@ -478,10 +494,14 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
 
     setSmartSearchLoadMorePhase("loading");
     setSmartSearchError(null);
-    requestSpotifyMusicSearch(smartSearchNextOffset, "append");
+    requestSpotifyMusicSearch(smartSearchNextOffset, "append", smartSearchType);
   }
 
-  function requestSpotifyMusicSearch(offset: number, mode: "replace" | "append") {
+  function requestSpotifyMusicSearch(
+    offset: number,
+    mode: "replace" | "append",
+    type: SpotifySmartSearchTypeFilter,
+  ) {
     if (!roomId) return;
 
     const activeRoomId = roomId;
@@ -515,6 +535,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
         query,
         limit: 20,
         offset,
+        types: [type],
       });
     });
   }
@@ -532,8 +553,10 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     if (tracks.length === 0) return;
 
     void getSocketClient().then((socket) => {
-      function handleLoadConfirmed() {
+      function handleLoadConfirmed(payload: PlaylistTracksPayload) {
         socket.off(ServerToClientEvent.PlaylistTracks, handleLoadConfirmed);
+        setQueuedTrackIds(getQueuedTrackIdsFromPlaylistTracks(payload.tracks));
+        setSmartSearchQueuedTrackIds(getSmartSearchIdsFromPlaylistTracks(payload.tracks));
         setSavedPlaylistMessage(
           tracks.length === 1
             ? t("lobby.spotify.builder.trackAdded")
@@ -546,6 +569,27 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
         roomId,
         mode: "append",
         tracks,
+      });
+    });
+  }
+
+  function removeOpenedPlaylistTracksFromQueue(trackIds: ReadonlySet<string>) {
+    if (!roomId || trackIds.size === 0) return;
+
+    void getSocketClient().then((socket) => {
+      function handleRemoveConfirmed(payload: PlaylistTracksPayload) {
+        socket.off(ServerToClientEvent.PlaylistTracks, handleRemoveConfirmed);
+        setQueuedTrackIds(getQueuedTrackIdsFromPlaylistTracks(payload.tracks));
+        setSmartSearchQueuedTrackIds(getSmartSearchIdsFromPlaylistTracks(payload.tracks));
+        setSavedPlaylistMessage(
+          t("lobby.spotify.builder.playlistTracksRemoved", { count: trackIds.size }),
+        );
+      }
+
+      socket.once(ServerToClientEvent.PlaylistTracks, handleRemoveConfirmed);
+      socket.emit(ClientToServerEvent.RemovePlaylistTracks, {
+        roomId,
+        trackIds: Array.from(trackIds),
       });
     });
   }
@@ -576,7 +620,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
   }
 
   function openSmartSearchPlaylist(result: SpotifySmartSearchResult) {
-    if (!roomId || result.type !== "playlist") return;
+    if (!roomId || result.type === "track") return;
 
     setOpenedPlaylistPhase("loading");
     setOpenedPlaylistError(null);
@@ -606,6 +650,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
       socket.emit(ClientToServerEvent.OpenSpotifyPlaylist, {
         roomId,
         playlistId: result.id,
+        sourceType: result.type,
       });
     });
   }
@@ -664,8 +709,10 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     setOpenedPlaylistError(null);
 
     void getSocketClient().then((socket) => {
-      function handleLoadConfirmed() {
+      function handleLoadConfirmed(payload: PlaylistTracksPayload) {
         socket.off(ServerToClientEvent.PlaylistTracks, handleLoadConfirmed);
+        setQueuedTrackIds(getQueuedTrackIdsFromPlaylistTracks(payload.tracks));
+        setSmartSearchQueuedTrackIds(getSmartSearchIdsFromPlaylistTracks(payload.tracks));
         setOpenedPlaylistPhase("ready");
         currentPlaylistNameRef.current = playlist.title;
         setSavedPlaylistMessage(
@@ -689,6 +736,16 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
 
   function handleSetSmartSearchQuery(query: string) {
     setSmartSearchQuery(query);
+    setSmartSearchError(null);
+    setSmartSearchHasSearched(false);
+    setSmartSearchHasMore(false);
+    setSmartSearchNextOffset(0);
+    setSmartSearchResults([]);
+    closeOpenedPlaylist();
+  }
+
+  function handleSetSmartSearchType(type: SpotifySmartSearchTypeFilter) {
+    setSmartSearchType(type);
     setSmartSearchError(null);
     setSmartSearchHasSearched(false);
     setSmartSearchHasMore(false);
@@ -1042,8 +1099,10 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     smartSearchLoadMorePhase,
     smartSearchPhase,
     smartSearchQuery,
+    queuedTrackIds,
     smartSearchQueuedTrackIds,
     smartSearchResults,
+    smartSearchType,
     openedPlaylist,
     openedPlaylistError,
     openedPlaylistPhase,
@@ -1073,12 +1132,15 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     applyOpenedPlaylistTracks,
     openSmartSearchPlaylist,
     removeOpenedPlaylistTrack,
+    removeOpenedPlaylistTracksFromQueue,
     removeSmartSearchTracksFromQueue,
     loadMoreSpotifyMusic,
     searchSpotifyMusic,
+    searchSpotifyMusicByType,
     searchSpotifyPlaylists,
     setPlaylistSearchQuery,
     setSmartSearchQuery: handleSetSmartSearchQuery,
+    setSmartSearchType: handleSetSmartSearchType,
     setRenameInputValue: handleSetRenameInputValue,
     setSaveName: handleSetSaveName,
     setSelectedSavedPlaylistId: handleSelectSavedPlaylist,
@@ -1152,4 +1214,8 @@ function getSmartSearchIdsFromPlaylistTracks(tracks: PublicTrackInfo[]): Set<str
     ids.add(track.id.slice("spotify-search-".length));
   });
   return ids;
+}
+
+function getQueuedTrackIdsFromPlaylistTracks(tracks: PublicTrackInfo[]): Set<string> {
+  return new Set(tracks.map((track) => track.id));
 }

@@ -1,7 +1,8 @@
 import type { RoomId } from "../game/roomState.js";
 import type { PublicTrackInfo } from "./playlistTracks.js";
 
-export type SpotifySmartSearchResultType = "track" | "playlist";
+export type SpotifySmartSearchResultType = "track" | "playlist" | "album" | "artist";
+export type SpotifySmartSearchTypeFilter = "track" | "album" | "artist";
 
 export interface SpotifySmartSearchIntent {
   rawQuery: string;
@@ -33,6 +34,7 @@ export interface SpotifySmartSearchPayload {
   query: string;
   limit: number;
   offset?: number;
+  types?: SpotifySmartSearchTypeFilter[];
 }
 
 export type SpotifySmartSearchResultPayload =
@@ -56,6 +58,7 @@ export type SpotifyPlaylistDetailPayload =
   | {
       success: true;
       playlistId: string;
+      sourceType?: Exclude<SpotifySmartSearchResultType, "track">;
       title: string;
       subtitle: string;
       imageUrl?: string;
