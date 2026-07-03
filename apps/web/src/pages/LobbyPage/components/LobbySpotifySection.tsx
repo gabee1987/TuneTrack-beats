@@ -299,7 +299,10 @@ function SpotifySetupModal({
               {activeSource === "findPlaylists" ? (
                 <SpotifyPlaylistSearchPanel spotifyState={spotifyState} />
               ) : activeSource === "quickPicks" ? (
-                <SpotifyQuickPicksPanel spotifyState={spotifyState} />
+                <SpotifyQuickPicksPanel
+                  currentSettings={currentSettings}
+                  spotifyState={spotifyState}
+                />
               ) : (
                 <SpotifySetupContent
                   currentSettings={currentSettings}
@@ -916,7 +919,13 @@ function ReplaceIcon() {
   );
 }
 
-function SpotifyQuickPicksPanel({ spotifyState }: { spotifyState: LobbySpotifyState }) {
+function SpotifyQuickPicksPanel({
+  currentSettings,
+  spotifyState,
+}: {
+  currentSettings: PublicRoomSettings;
+  spotifyState: LobbySpotifyState;
+}) {
   const { t } = useI18n();
   const { candidatePhase, candidateTracks, generateCandidatesFromPreset } = spotifyState;
   const [targetCountInput, setTargetCountInput] = useState("250");
@@ -960,7 +969,10 @@ function SpotifyQuickPicksPanel({ spotifyState }: { spotifyState: LobbySpotifySt
         </section>
       ) : null}
 
-      <SpotifyCandidateReviewPanel spotifyState={spotifyState} />
+      <SpotifyCandidateReviewPanel
+        currentQueueCount={currentSettings.importedTrackCount}
+        spotifyState={spotifyState}
+      />
     </div>
   );
 }
@@ -973,12 +985,14 @@ function clampQuickPickTargetCount(value: string): number {
 
 interface SpotifyCandidateReviewPanelProps {
   backLabel?: string;
+  currentQueueCount?: number;
   onBack?: () => void;
   spotifyState: LobbySpotifyState;
 }
 
 function SpotifyCandidateReviewPanel({
   backLabel,
+  currentQueueCount = 0,
   onBack,
   spotifyState,
 }: SpotifyCandidateReviewPanelProps) {
@@ -999,6 +1013,7 @@ function SpotifyCandidateReviewPanel({
     () => new Set(),
   );
   const [activeCandidateTrackId, setActiveCandidateTrackId] = useState<string | null>(null);
+  const [isApplyChoiceOpen, setIsApplyChoiceOpen] = useState(false);
   const activeCandidateTrack =
     candidateTracks.find((track) => track.id === activeCandidateTrackId) ?? null;
 
@@ -1036,6 +1051,20 @@ function SpotifyCandidateReviewPanel({
     if (selectedCandidateTrackIds.size === 0) return;
     selectedCandidateTrackIds.forEach((trackId) => removeCandidateTrack(trackId));
     setSelectedCandidateTrackIds(new Set());
+  }
+
+  function handleUseTracks() {
+    if (currentQueueCount > 0) {
+      setIsApplyChoiceOpen(true);
+      return;
+    }
+
+    useGeneratedCandidates("replace");
+  }
+
+  function handleApplyChoice(mode: "append" | "replace") {
+    setIsApplyChoiceOpen(false);
+    useGeneratedCandidates(mode);
   }
 
   return (
@@ -1090,7 +1119,7 @@ function SpotifyCandidateReviewPanel({
             <ActionButton
               className={styles.spotifyFloatingActionBtn}
               disabled={candidateTracks.length < 10 || isApplying}
-              onClick={useGeneratedCandidates}
+              onClick={handleUseTracks}
               type="button"
               variant="primary"
             >
@@ -1099,6 +1128,52 @@ function SpotifyCandidateReviewPanel({
                 : t("lobby.spotify.review.useTracks")}
             </ActionButton>
           </motion.div>
+
+          {isApplyChoiceOpen ? (
+            <motion.div
+              animate={{ opacity: 1, y: 0 }}
+              className={styles.spotifyApplyChoice}
+              initial={{ opacity: 0, y: 12 }}
+              transition={createStandardTransition(false)}
+            >
+              <div className={styles.spotifyApplyChoicePanel}>
+                <div className={styles.spotifyApplyChoiceCopy}>
+                  <strong>{t("lobby.spotify.quickPicks.applyChoiceTitle")}</strong>
+                  <span>
+                    {t("lobby.spotify.quickPicks.applyChoiceDescription", {
+                      count: currentQueueCount,
+                    })}
+                  </span>
+                </div>
+                <div className={styles.spotifyApplyChoiceActions}>
+                  <ActionButton
+                    disabled={isApplying}
+                    onClick={() => handleApplyChoice("append")}
+                    type="button"
+                    variant="neutral"
+                  >
+                    {t("lobby.spotify.quickPicks.appendToQueue")}
+                  </ActionButton>
+                  <ActionButton
+                    disabled={isApplying}
+                    onClick={() => handleApplyChoice("replace")}
+                    type="button"
+                    variant="danger"
+                  >
+                    {t("lobby.spotify.quickPicks.replaceQueue")}
+                  </ActionButton>
+                  <ActionButton
+                    disabled={isApplying}
+                    onClick={() => setIsApplyChoiceOpen(false)}
+                    type="button"
+                    variant="neutral"
+                  >
+                    {t("common.cancel")}
+                  </ActionButton>
+                </div>
+              </div>
+            </motion.div>
+          ) : null}
 
           <PlaylistTrackDetailsSheet
             onClose={() => setActiveCandidateTrackId(null)}

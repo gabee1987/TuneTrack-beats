@@ -20,7 +20,7 @@ const MIN_CANDIDATE_TRACK_COUNT = 10;
 const SPOTIFY_PLAYLIST_SEARCH_PAGE_SIZE = 50;
 const SPOTIFY_PLAYLIST_SEARCH_MAX_PAGES = 4;
 const SPOTIFY_QUICK_PICK_PLAYLISTS_PER_QUERY = 5;
-const SPOTIFY_QUICK_PICK_MAX_PLAYLISTS = 12;
+const SPOTIFY_QUICK_PICK_MAX_PLAYLISTS = 18;
 const SPOTIFY_PLAYLIST_ID_REGEX = /^[a-zA-Z0-9]{22}$/;
 
 interface TrackYearRange {
@@ -32,6 +32,7 @@ interface GenerateFromPlaylistsOptions {
   sourceSummary?: string;
   yearRanges?: readonly TrackYearRange[];
   balanceByYear?: boolean;
+  interleaveSources?: boolean;
 }
 
 interface CandidateSession {
@@ -163,20 +164,24 @@ export class SpotifyDiscoveryService {
           this.apiClient.getAllPlaylistTracks(playlistId, accessToken),
         ),
       );
-      const rawTracks = rawTrackResults.flat();
-
-      const cards: GameTrackCard[] = [];
+      const cardGroups: GameTrackCard[][] = [];
       let filteredCount = 0;
 
-      for (const track of rawTracks) {
-        const card = mapSpotifyTrackToGameCard(track);
-        if (card) {
-          cards.push(card);
-        } else {
-          filteredCount++;
+      for (const rawTracks of rawTrackResults) {
+        const cards: GameTrackCard[] = [];
+        for (const track of rawTracks) {
+          const card = mapSpotifyTrackToGameCard(track);
+          if (card) {
+            cards.push(card);
+          } else {
+            filteredCount++;
+          }
         }
+        cardGroups.push(cards);
       }
 
+      const rawTracks = rawTrackResults.flat();
+      const cards = options.interleaveSources ? interleaveCardGroups(cardGroups) : cardGroups.flat();
       const { dedupedCards, duplicateCount } = dedupeCards(cards);
       const yearFilteredCards = filterCardsByYearRanges(dedupedCards, options.yearRanges);
       const yearFilteredCount = dedupedCards.length - yearFilteredCards.length;
@@ -326,6 +331,7 @@ export class SpotifyDiscoveryService {
           sourceSummary: `${preset.name} Quick Pick`,
           yearRanges: preset.yearRanges,
           balanceByYear: true,
+          interleaveSources: true,
         },
       );
     } catch (err) {
@@ -527,6 +533,26 @@ function selectBalancedByYear(cards: GameTrackCard[], targetCount: number): Game
   }
 
   return selectedCards;
+}
+
+function interleaveCardGroups(cardGroups: GameTrackCard[][]): GameTrackCard[] {
+  const queues = cardGroups.map((group) => [...group]).filter((group) => group.length > 0);
+  const interleavedCards: GameTrackCard[] = [];
+  let didSelectFromAnyGroup = true;
+
+  while (didSelectFromAnyGroup) {
+    didSelectFromAnyGroup = false;
+
+    for (const queue of queues) {
+      const nextCard = queue.shift();
+      if (!nextCard) continue;
+
+      interleavedCards.push(nextCard);
+      didSelectFromAnyGroup = true;
+    }
+  }
+
+  return interleavedCards;
 }
 
 function normalize(value: string): string {

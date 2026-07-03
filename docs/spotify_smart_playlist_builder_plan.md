@@ -610,6 +610,8 @@ Acceptance criteria:
 
 ### Phase 5 - Album And Artist Search
 
+Status: implemented.
+
 Goal: expand smart search beyond tracks/playlists.
 
 Tasks:
@@ -628,6 +630,8 @@ Acceptance criteria:
 - Opening an artist lets the host add top tracks.
 
 ### Phase 6 - Quick Pick Append/Replace
+
+Status: implemented.
 
 Goal: Quick Picks cooperate with the current queue.
 

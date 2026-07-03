@@ -1345,6 +1345,53 @@
   box-shadow: 0 14px 38px color-mix(in srgb, black 42%, transparent);
 }
 
+.spotifyApplyChoice {
+  position: absolute;
+  right: 10px;
+  bottom: calc(76px + var(--safe-area-bottom));
+  left: 10px;
+  z-index: 6;
+}
+
+.spotifyApplyChoicePanel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 70%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, #080a14 94%, var(--color-surface-elevated) 6%);
+  box-shadow: 0 18px 46px color-mix(in srgb, black 52%, transparent);
+}
+
+.spotifyApplyChoiceCopy {
+  display: grid;
+  gap: 4px;
+}
+
+.spotifyApplyChoiceCopy strong {
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.spotifyApplyChoiceCopy span {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.spotifyApplyChoiceActions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.spotifyApplyChoiceActions button {
+  min-height: 46px;
+}
+
 @media (max-width: 440px) {
   .spotifySetupOverlay {
     padding: 0;

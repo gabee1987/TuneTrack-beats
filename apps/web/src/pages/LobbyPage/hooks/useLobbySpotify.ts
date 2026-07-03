@@ -144,7 +144,7 @@ export interface UseLobbySpotifyResult {
   toggleSpotifyPlaylistSelection: (playlistId: string) => void;
   updateCandidateTrack: (trackId: string, patch: CandidateTrackUpdatePatch) => void;
   updateOpenedPlaylistTrack: (trackId: string, patch: CandidateTrackUpdatePatch) => void;
-  useGeneratedCandidates: () => void;
+  useGeneratedCandidates: (mode?: PlaylistQueueUpdateMode) => void;
 }
 
 interface CandidateTrackUpdatePatch {
@@ -845,7 +845,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     );
   }
 
-  function useGeneratedCandidates() {
+  function useGeneratedCandidates(mode: PlaylistQueueUpdateMode = "replace") {
     if (!roomId || !candidateSessionId || candidateTracks.length === 0) return;
 
     setCandidatePhase("applying");
@@ -856,18 +856,18 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
         socket.off(ServerToClientEvent.SpotifyCandidatesApplied, handleApplied);
 
         if (payload.success) {
+          const appliedMessage =
+            mode === "append"
+              ? t("lobby.spotify.builder.playlistTracksAdded", { count: candidateTracks.length })
+              : t("lobby.spotify.generatedPlaylistApplied", { count: payload.importedCount });
           setCandidatePhase("idle");
           setCandidateError(null);
           setCandidateSessionId(null);
           setCandidateSourceSummary(null);
           setCandidateTracks([]);
           currentPlaylistNameRef.current = candidateSourceSummary ?? undefined;
-          setSavedPlaylistMessage(
-            t("lobby.spotify.generatedPlaylistApplied", { count: payload.importedCount }),
-          );
-          showGeneratedPlaylistMessage(
-            t("lobby.spotify.generatedPlaylistApplied", { count: payload.importedCount }),
-          );
+          setSavedPlaylistMessage(appliedMessage);
+          showGeneratedPlaylistMessage(appliedMessage);
         } else {
           setCandidatePhase("error");
           setCandidateError(payload.message);
@@ -880,6 +880,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
         candidateSessionId,
         trackIds: candidateTracks.map((track) => track.id),
         tracks: candidateTracks,
+        mode,
       });
     });
   }
