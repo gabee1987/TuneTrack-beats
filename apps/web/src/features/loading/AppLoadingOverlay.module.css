@@ -1,0 +1,185 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1600;
+  display: grid;
+  place-items: center;
+  padding: max(22px, env(safe-area-inset-top)) 22px max(22px, env(safe-area-inset-bottom));
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--color-border-spotify) 18%, transparent), transparent 34%),
+    color-mix(in srgb, #050711 78%, transparent);
+  backdrop-filter: blur(16px) saturate(1.08);
+  -webkit-backdrop-filter: blur(16px) saturate(1.08);
+}
+
+.panel {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  width: min(320px, 100%);
+  padding: 30px 24px 26px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 72%, transparent);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--color-surface-elevated) 72%, #080a14 28%);
+  box-shadow: 0 26px 76px color-mix(in srgb, black 52%, transparent);
+}
+
+.animation {
+  position: relative;
+  width: 132px;
+  height: 108px;
+}
+
+.record {
+  position: absolute;
+  bottom: 4px;
+  left: 6px;
+  display: grid;
+  place-items: center;
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #141722 0 9px, transparent 10px),
+    conic-gradient(
+      from 0deg,
+      #10131d,
+      #222637,
+      #10131d,
+      color-mix(in srgb, var(--color-background-spotify) 42%, #10131d 58%),
+      #10131d
+    );
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, white 10%, transparent),
+    0 18px 34px color-mix(in srgb, black 44%, transparent);
+  animation: appLoadingRecordSpin 1.55s linear infinite;
+}
+
+.recordGroove {
+  position: absolute;
+  inset: 12px;
+  border: 1px solid color-mix(in srgb, white 12%, transparent);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 9px color-mix(in srgb, white 4%, transparent),
+    0 0 0 19px color-mix(in srgb, white 3%, transparent);
+}
+
+.recordLabel {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--color-background-spotify);
+  box-shadow: inset 0 0 0 7px color-mix(in srgb, #06100a 72%, transparent);
+}
+
+.equalizer {
+  position: absolute;
+  right: 8px;
+  bottom: 10px;
+  display: flex;
+  align-items: end;
+  gap: 5px;
+  height: 66px;
+}
+
+.equalizer span {
+  width: 8px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--color-background-spotify);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--color-background-spotify) 42%, transparent);
+  transform-origin: bottom;
+  animation: appLoadingEqualizer 0.72s ease-in-out infinite;
+}
+
+.equalizer span:nth-child(2) {
+  animation-delay: -0.18s;
+}
+
+.equalizer span:nth-child(3) {
+  animation-delay: -0.36s;
+}
+
+.equalizer span:nth-child(4) {
+  animation-delay: -0.54s;
+}
+
+.note {
+  position: absolute;
+  color: color-mix(in srgb, var(--color-background-spotify) 88%, white 12%);
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 8px 22px color-mix(in srgb, black 42%, transparent);
+  animation: appLoadingNoteFloat 1.8s ease-in-out infinite;
+}
+
+.noteOne {
+  top: 7px;
+  left: 12px;
+}
+
+.noteTwo {
+  top: 2px;
+  right: 16px;
+  animation-delay: -0.85s;
+}
+
+.copy {
+  display: grid;
+  gap: 6px;
+  text-align: center;
+}
+
+.copy strong {
+  color: var(--color-text-primary);
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.copy span {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+@keyframes appLoadingRecordSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes appLoadingEqualizer {
+  0%,
+  100% {
+    transform: scaleY(0.55);
+  }
+
+  50% {
+    transform: scaleY(1.55);
+  }
+}
+
+@keyframes appLoadingNoteFloat {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: translate3d(0, 8px, 0) scale(0.9) rotate(-6deg);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translate3d(0, -8px, 0) scale(1.05) rotate(7deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .record,
+  .equalizer span,
+  .note {
+    animation: none;
+  }
+}

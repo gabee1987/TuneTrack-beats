@@ -17,6 +17,7 @@ import {
   createStandardTransition,
 } from "../../../features/motion";
 import { useI18n } from "../../../features/i18n";
+import { useAppLoading } from "../../../features/loading";
 import { ActionButton } from "../../../features/ui/ActionButton";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { SettingInfoButton } from "../../../features/ui/SettingField";
@@ -927,11 +928,28 @@ function SpotifyQuickPicksPanel({
   spotifyState: LobbySpotifyState;
 }) {
   const { t } = useI18n();
+  const { hideLoading, showLoading } = useAppLoading();
   const { candidatePhase, candidateTracks, generateCandidatesFromPreset } = spotifyState;
   const [targetCountInput, setTargetCountInput] = useState("250");
   const isGenerating = candidatePhase === "generating";
   const hasGeneratedTracks = candidateTracks.length > 0;
   const targetCount = clampQuickPickTargetCount(targetCountInput);
+
+  useEffect(() => {
+    const loadingId = "spotify-quick-pick-generation";
+    if (!isGenerating) {
+      hideLoading(loadingId);
+      return;
+    }
+
+    showLoading({
+      id: loadingId,
+      title: t("appLoading.spotifyQuickPick.title"),
+      message: t("appLoading.spotifyQuickPick.message"),
+    });
+
+    return () => hideLoading(loadingId);
+  }, [hideLoading, isGenerating, showLoading, t]);
 
   return (
     <div className={styles.spotifyDiscoveryPanel}>
