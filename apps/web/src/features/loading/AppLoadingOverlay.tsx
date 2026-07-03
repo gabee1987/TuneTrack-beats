@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { MotionPresence, createDialogCardMotion, createFadeMotion } from "../motion";
+import { MotionPresence, createDialogCardMotion } from "../motion";
 import type { AppLoadingState } from "./AppLoading.types";
 import styles from "./AppLoadingOverlay.module.css";
 
@@ -9,6 +9,7 @@ interface AppLoadingOverlayProps {
 
 export function AppLoadingOverlay({ loading }: AppLoadingOverlayProps) {
   const reduceMotion = useReducedMotion() ?? false;
+  const overlayMotion = createLoadingOverlayMotion(reduceMotion);
 
   return (
     <MotionPresence>
@@ -21,7 +22,7 @@ export function AppLoadingOverlay({ loading }: AppLoadingOverlayProps) {
           exit="exit"
           initial="initial"
           role="dialog"
-          variants={createFadeMotion(reduceMotion)}
+          variants={overlayMotion}
         >
           <motion.div
             animate="animate"
@@ -40,6 +41,22 @@ export function AppLoadingOverlay({ loading }: AppLoadingOverlayProps) {
       ) : null}
     </MotionPresence>
   );
+}
+
+function createLoadingOverlayMotion(reduceMotion: boolean) {
+  return {
+    initial: { opacity: 0, pointerEvents: "none" },
+    animate: {
+      opacity: 1,
+      pointerEvents: "auto",
+      transition: { duration: reduceMotion ? 0.01 : 0.2 },
+    },
+    exit: {
+      opacity: 0,
+      pointerEvents: "none",
+      transition: { duration: reduceMotion ? 0.01 : 0.16 },
+    },
+  } as const;
 }
 
 function MusicLoadingAnimation() {

@@ -10,7 +10,12 @@ export interface ModalSheetMotionTargets {
 export function createModalOverlayMotionTargets(
   reduceMotion: boolean,
 ): Record<"initial" | "animate" | "exit", TargetAndTransition> {
-  return createFadeMotion(reduceMotion);
+  const fadeMotion = createFadeMotion(reduceMotion);
+  return {
+    initial: { ...fadeMotion.initial, pointerEvents: "none" },
+    animate: { ...fadeMotion.animate, pointerEvents: "auto" },
+    exit: { ...fadeMotion.exit, pointerEvents: "none" },
+  };
 }
 
 export function createModalSheetMotionTargets(
