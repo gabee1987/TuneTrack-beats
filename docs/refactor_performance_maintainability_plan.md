@@ -1,8 +1,35 @@
 # TuneTrack Refactor Plan — Performance, Traffic & Maintainability
 
-> Status: **Phase 2 complete — awaiting your manual checks (Lobby Spotify + game feel), then go Phase 3**  
+> Status: **Paused after Phase 2 — next up is Phase 3**  
 > Rules: follow [`AGENT.md`](../AGENT.md) and [`CLAUDE.md`](../CLAUDE.md)  
-> Created: 2026-07-17
+> Created: 2026-07-17  
+> Last checkpoint: 2026-07-17
+
+## Resume checkpoint (read this first when continuing)
+
+**Where we stopped:** Phases **0–2 are implemented**. Next command to resume: **`go Phase 3`** (split realtime socket handlers).
+
+| Item | State |
+|------|--------|
+| Phase 0 — baseline mapper tests | Done |
+| Phase 1 — Lobby Spotify file split | Done (`components/spotify/`, `hooks/spotify/`) |
+| Phase 1 follow-up — track dedupe / already-queued toast / added icon | Done (out-of-band during Phase 1 validation) |
+| Phase 2 — GamePage countdown + playback render isolation | Done (automated); **manual game-feel checklist still recommended** |
+| Phase 3+ | Not started |
+
+**Before starting Phase 3 (recommended):**
+1. Re-run `npm run test` and `npm run typecheck` once to confirm the tree is still green.
+2. Optionally finish Phase 2 manual game-feel checklist (challenge countdown smooth, playback tab without header flicker).
+3. Optionally re-spot-check Lobby Spotify add/remove/already-queued after the dedupe fix.
+
+**Known follow-ups already queued in this plan:**
+- Phase 7 item 5: replace flat `useLobbySpotify` ~90-field return with grouped domains / domain-hook consumption (snappy lobby UX).
+- Phase 1 CSS still shared: `LobbySpotifySection.module.css` (~1321 lines) — split later if needed.
+- Phase 5: strip `currentTrackCard.releaseYear` from wire until reveal (mapper tests in Phase 0 pin current leak).
+
+**Do not restart from scratch.** Preserve Phase 0 mapper tests; Phase 5 will intentionally change the year-on-wire assertions.
+
+---
 
 ## Goals
 
@@ -22,22 +49,21 @@
 - Visual redesign / new theme
 - Rewriting working GamePage controller composition wholesale
 
-## Current hotspots (measured)
+## Current hotspots (measured at plan start; Phase 1–2 addressed some)
 
-| File | ~Lines | Problem |
-|------|--------|---------|
-| `apps/web/.../LobbySpotifySection.tsx` | ~1850 | God UI: entire Spotify setup product in one file |
-| `apps/web/.../useLobbySpotify.ts` | ~1080 | God hook: auth, search, import, candidates, saved playlists |
-| `apps/server/.../registerSocketHandlers.ts` | ~1070 | 35 copy-paste handlers in one file |
-| `apps/server/.../RoomRegistry.ts` | ~1070 | Lifecycle + gameplay + timers + membership |
-| `apps/web/.../gamePageMenuTabs.tsx` | ~730 | Menu factory + heavy presentational UI |
-| `packages/game-engine/.../GameFlowService.ts` | ~680 | All rules in one service |
-| `apps/server/.../RoomService.ts` | ~514 | Room facade + Spotify/playlist bus |
+| File | ~Lines (then) | Problem | Status after Phase 1–2 |
+|------|--------|---------|------------------------|
+| `LobbySpotifySection.tsx` | ~1850 | God UI | **Split** → `components/spotify/` |
+| `useLobbySpotify.ts` | ~1080 | God hook | **Split** → `hooks/spotify/` (flat return bag remains; Phase 7 #5) |
+| `registerSocketHandlers.ts` | ~1070 | 35 copy-paste handlers | **Next (Phase 3)** |
+| `RoomRegistry.ts` | ~1070 | Lifecycle + gameplay + timers | Phase 4 |
+| `gamePageMenuTabs.tsx` | ~730 | Menu factory + UI | Partially improved (playback isolated); fuller split in Phase 7 |
+| `GameFlowService.ts` | ~680 | All rules in one service | Phase 6 |
+| `RoomService.ts` | ~514 | Room facade + Spotify/playlist bus | With Phase 4 |
 
-**Traffic finding:** every mutation emits full `PublicRoomState` via `state_update` (no deltas). History grows unbounded. `currentTrackCard.releaseYear` is on the wire before reveal (UI hides it; clients can still read it).
+**Traffic finding (still open — Phase 5):** every mutation emits full `PublicRoomState` via `state_update` (no deltas). History grows unbounded. `currentTrackCard.releaseYear` is on the wire before reveal.
 
-**Render finding:** challenge countdown ticks (~250ms) and host playback position updates flow through GamePage-wide derivation → menu tabs → header/actions, defeating existing `memo`s.
-
+**Render finding (Phase 2 addressed):** challenge countdown and host playback no longer tick the full GamePage derivation tree.
 ---
 
 ## Phase overview
@@ -196,6 +222,8 @@ Confirm no file under `spotify/` exceeds ~700 lines.
 | `npm run test -w apps/web` | **73 passed** |
 | `npm run typecheck -w apps/web` | **green** |
 | `npm run lint -w apps/web` | **green** |
+
+**Also landed during Phase 1 validation (same day):** track dedupe on import/replace/append; smart-search IDs unified with playlist track IDs; already-queued info toast; “added” icon based on Spotify track id/URI.
 
 ---
 
@@ -525,14 +553,14 @@ Per `AGENT.md` / `CLAUDE.md`:
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| 0 Baseline + safety nets | **Complete** | Mapper tests + full suite green |
-| 1 Lobby Spotify split | **Complete** | Manual Lobby Spotify checklist progressing, no regressions |
-| 2 GamePage render isolation | **Complete** | Countdown + playback isolated; awaiting your manual game feel check |
-| 3 Socket handlers split | Not started | |
+| 0 Baseline + safety nets | **Complete** | `apps/server/tests/rooms/roomStateMappers.test.ts` |
+| 1 Lobby Spotify split | **Complete** | + track dedupe / already-queued toast fix during validation |
+| 2 GamePage render isolation | **Complete** | Automated green; manual game-feel checklist optional before Phase 3 |
+| 3 Socket handlers split | **Next** | Resume here |
 | 4 RoomRegistry split | Not started | |
-| 5 Traffic & year integrity | Not started | |
+| 5 Traffic & year integrity | Not started | Changes Phase 0 year-on-wire baseline tests |
 | 6 GameFlowService split | Not started | |
-| 7 Menu + Lobby polish | Not started | |
+| 7 Menu + Lobby polish | Not started | Includes Spotify composer API optimization (#5) |
 | 8 Delta protocol (optional) | Deferred | |
 
 ---
@@ -548,10 +576,12 @@ Per `AGENT.md` / `CLAUDE.md`:
 
 ---
 
-## How to proceed
+## How to proceed (when resuming)
 
-Reply with one of:
+1. Open this file and read **Resume checkpoint**.
+2. Reply **`go Phase 3`** to continue the planned sequence.
+3. Or ask to adjust order / re-run Phase 2 manual validation first.
 
-- **`go Phase 0`** — I’ll add baseline mapper tests, run the suite, and stop for your OK  
-- **`go Phase 0+1`** — baseline then Spotify split in one sitting (still stops for your manual check before Phase 2)  
-- Adjust priorities / drop a phase if you disagree with ordering
+Earlier one-shot commands (historical):
+
+- **`go Phase 0`** / **`go Phase 0+1`** — already done; do not re-run as greenfield work.
