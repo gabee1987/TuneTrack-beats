@@ -9,7 +9,7 @@ import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import type { LobbyPageAssemblyProps } from "../LobbyPage.types";
 import { LobbyHostCoreSettings } from "../components/LobbyHostCoreSettings";
 import { LobbyHostTtSettings } from "../components/LobbyHostTtSettings";
-import { LobbySpotifySection } from "../components/LobbySpotifySection";
+import { LobbySpotifySection } from "../components/spotify/LobbySpotifySection";
 import { LobbyPlayerList } from "../components/LobbyPlayerList";
 import { LobbyRoomActions } from "../components/LobbyRoomActions";
 import { LobbySectionHeader } from "../components/LobbySectionHeader";

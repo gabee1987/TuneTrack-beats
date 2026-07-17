@@ -8,7 +8,6 @@ import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import { useI18n } from "../../../features/i18n";
 import { createGameMenuTabs } from "../gamePageMenuTabs";
 import { useGameHistory } from "./useGameHistory";
-import { useHostPlayback } from "./useHostPlayback";
 
 interface UseGamePageCapabilityStateOptions {
   currentPlayerId: string | null;
@@ -100,18 +99,6 @@ export function useGamePageCapabilityState({
       })
       .slice(0, 3) ?? [];
 
-  const isHost = roomState?.hostId === currentPlayerId;
-  const playbackEnabled =
-    Boolean(isHost) &&
-    roomState?.settings.spotifyAuthStatus === "connected" &&
-    Boolean(roomState?.settings.playlistImported);
-
-  const playback = useHostPlayback({
-    roomId: roomState?.roomId ?? "",
-    roomState,
-    enabled: playbackEnabled,
-  });
-
   const historyEntries = useGameHistory(roomState);
 
   const menuTabs = roomState
@@ -124,7 +111,6 @@ export function useGamePageCapabilityState({
         onTransferHost: handlers.handleTransferHost,
         roomState,
         t,
-        ...(playbackEnabled ? { playback } : {}),
       })
     : [];
 

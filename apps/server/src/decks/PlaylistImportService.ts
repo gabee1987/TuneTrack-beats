@@ -89,7 +89,10 @@ export class PlaylistImportService {
         }
       }
 
-      if (cards.length < MIN_IMPORTABLE_TRACK_COUNT) {
+      const { dedupedCards, duplicateCount } = dedupeImportedCards(cards);
+      const usableCount = dedupedCards.length;
+
+      if (usableCount < MIN_IMPORTABLE_TRACK_COUNT) {
         logAuditEvent({
           auditKind: "spotify_import",
           action: "playlist_import_rejected",
@@ -97,8 +100,9 @@ export class PlaylistImportService {
           code: "too_few_tracks",
           meta: {
             playlistId,
-            importedCount: cards.length,
+            importedCount: usableCount,
             filteredCount,
+            duplicateCount,
             totalFetched: rawTracks.length,
           },
         });
@@ -107,13 +111,18 @@ export class PlaylistImportService {
           payload: {
             success: false,
             code: "too_few_tracks",
-            message: `The playlist only has ${cards.length} usable track${cards.length === 1 ? "" : "s"}. At least ${MIN_IMPORTABLE_TRACK_COUNT} are needed.`,
+            message: `The playlist only has ${usableCount} usable track${usableCount === 1 ? "" : "s"}. At least ${MIN_IMPORTABLE_TRACK_COUNT} are needed.`,
           },
         };
       }
 
       logger.info(
-        { playlistId, imported: cards.length, filtered: filteredCount },
+        {
+          playlistId,
+          imported: usableCount,
+          filtered: filteredCount,
+          duplicateCount,
+        },
         "Playlist imported successfully",
       );
       logAuditEvent({
@@ -123,16 +132,17 @@ export class PlaylistImportService {
         meta: {
           playlistId,
           playlistName,
-          importedCount: cards.length,
+          importedCount: usableCount,
           filteredCount,
+          duplicateCount,
           totalFetched: rawTracks.length,
         },
       });
 
       return {
         success: true,
-        cards,
-        importedCount: cards.length,
+        cards: dedupedCards,
+        importedCount: usableCount,
         filteredCount,
         totalFetched: rawTracks.length,
         ...(playlistName ? { playlistName } : {}),
@@ -215,4 +225,29 @@ export class PlaylistImportService {
     this.tokenStore.setClientCredentials(tokenResponse.access_token, tokenResponse.expires_in);
     return tokenResponse.access_token;
   }
+}
+
+function dedupeImportedCards(cards: GameTrackCard[]): {
+  dedupedCards: GameTrackCard[];
+  duplicateCount: number;
+} {
+  const seen = new Set<string>();
+  const dedupedCards: GameTrackCard[] = [];
+
+  for (const card of cards) {
+    const key =
+      card.spotifyTrackUri ?? `${normalizeCardKey(card.title)}:${normalizeCardKey(card.artist)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    dedupedCards.push(card);
+  }
+
+  return {
+    dedupedCards,
+    duplicateCount: cards.length - dedupedCards.length,
+  };
+}
+
+function normalizeCardKey(value: string): string {
+  return value.trim().toLocaleLowerCase().replace(/\s+/g, " ");
 }

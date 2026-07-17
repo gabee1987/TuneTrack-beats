@@ -13,7 +13,6 @@ interface UseGamePageChallengeStatusStateOptions {
   currentPlayerId: string | null;
   getPlayerName: GamePagePlayerNameResolver;
   isCurrentPlayerTurn: boolean;
-  nowEpochMs: number;
   roomState: PublicRoomState | null;
 }
 
@@ -24,7 +23,6 @@ export function useGamePageChallengeStatusState({
   currentPlayerId,
   getPlayerName,
   isCurrentPlayerTurn,
-  nowEpochMs,
   roomState,
 }: UseGamePageChallengeStatusStateOptions): GamePageChallengeStatusSelectorResult {
   const { t } = useI18n();
@@ -36,7 +34,6 @@ export function useGamePageChallengeStatusState({
     currentPlayerId,
     getPlayerName,
     isCurrentPlayerTurn,
-    nowEpochMs,
     roomState,
     t,
   });

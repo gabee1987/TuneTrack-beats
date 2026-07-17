@@ -17,7 +17,6 @@ describe("buildGamePageAssemblyModel", () => {
       canUseSkipTrack: false,
       challengeActionBody: "Place the challenge card",
       challengeActionTitle: "Beat move",
-      challengeCountdownLabel: "12s left",
       challengeMarkerTone: "success",
       currentPlayerId: "player-1",
       currentPlayerTtCount: 2,

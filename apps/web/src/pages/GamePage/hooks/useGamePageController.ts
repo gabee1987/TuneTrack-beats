@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import {
   getOrCreatePlayerSessionId,
@@ -48,7 +48,6 @@ export function useGamePageController({
     errorMessage,
     handleClosedRoomReset,
     hasClosedRoomReset,
-    nowEpochMs,
     roomState,
   } = useGameRoomConnection({
     navigate,
@@ -78,6 +77,18 @@ export function useGamePageController({
     roomState,
   });
 
+  const handleSkipTrackWithTtIntent = useCallback(
+    (cardId: string | null) => {
+      setPendingSkippedTrackId(cardId);
+      setSkipTrackSpendAnimationKey((key) => key + 1);
+    },
+    [],
+  );
+
+  const handleBuyTimelineCardWithTtIntent = useCallback(() => {
+    setBuyTimelineCardSpendAnimationKey((key) => key + 1);
+  }, []);
+
   const actions = useGamePageActions({
     canClaimChallenge: actionAvailability.canClaimChallenge,
     canConfirmReveal: actionAvailability.canConfirmReveal,
@@ -87,13 +98,8 @@ export function useGamePageController({
     isCurrentPlayerTurn: actionAvailability.isCurrentPlayerTurn,
     roomState,
     selectedSlotIndex,
-    onSkipTrackWithTtIntent: (cardId) => {
-      setPendingSkippedTrackId(cardId);
-      setSkipTrackSpendAnimationKey((key) => key + 1);
-    },
-    onBuyTimelineCardWithTtIntent: () => {
-      setBuyTimelineCardSpendAnimationKey((key) => key + 1);
-    },
+    onSkipTrackWithTtIntent: handleSkipTrackWithTtIntent,
+    onBuyTimelineCardWithTtIntent: handleBuyTimelineCardWithTtIntent,
     setLocallyPlacedCard,
   });
 
@@ -107,7 +113,6 @@ export function useGamePageController({
       handleTransferHost: actions.handleTransferHost,
     },
     locallyPlacedCard,
-    nowEpochMs,
     roomState,
     selectedSlotIndex,
     showDevAlbumInfo: preferencesState.showDevAlbumInfo,
@@ -181,7 +186,6 @@ export function useGamePageController({
   const displayState = {
     challengeActionBody: derivedState.challengeActionBody,
     challengeActionTitle: derivedState.challengeActionTitle,
-    challengeCountdownLabel: derivedState.challengeCountdownLabel,
     challengeMarkerTone: derivedState.challengeMarkerTone,
     disabledTimelineSlots: derivedState.disabledTimelineSlots,
     previewCardTransitionEvent,

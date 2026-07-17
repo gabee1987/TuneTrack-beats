@@ -40,7 +40,6 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     canUseSkipTrack,
     challengeActionBody,
     challengeActionTitle,
-    challengeCountdownLabel,
     currentPlayerTtCount,
     getPlayerName,
     handleBuyTimelineCardWithTt,
@@ -117,7 +116,6 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
         canResolveChallengeWindow={canResolveChallengeWindow}
         challengeActionBody={challengeActionBody}
         challengeActionTitle={challengeActionTitle}
-        challengeCountdownLabel={challengeCountdownLabel}
         currentPlayerTtCount={currentPlayerTtCount}
         handleClaimChallenge={handleClaimChallenge}
         handlePlaceChallenge={handlePlaceChallenge}
@@ -171,7 +169,6 @@ function areActionPanelModelsEqual(
     previousModel.canUseSkipTrack === nextModel.canUseSkipTrack &&
     previousModel.challengeActionBody === nextModel.challengeActionBody &&
     previousModel.challengeActionTitle === nextModel.challengeActionTitle &&
-    previousModel.challengeCountdownLabel === nextModel.challengeCountdownLabel &&
     previousModel.currentPlayerTtCount === nextModel.currentPlayerTtCount &&
     previousModel.getPlayerName === nextModel.getPlayerName &&
     previousModel.handleBuyTimelineCardWithTt === nextModel.handleBuyTimelineCardWithTt &&

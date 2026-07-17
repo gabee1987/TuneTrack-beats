@@ -24,7 +24,6 @@ interface UseGamePageDisplayStateOptions {
   isCurrentPlayerTurn: boolean;
   isViewingOwnTimeline: boolean;
   locallyPlacedCard: PublicRoomState["currentTrackCard"] | null;
-  nowEpochMs: number;
   roomState: PublicRoomState | null;
   selectedSlotIndex: number;
 }
@@ -32,7 +31,6 @@ interface UseGamePageDisplayStateOptions {
 interface UseGamePageDisplayStateResult {
   challengeActionBody: string | null;
   challengeActionTitle: string | null;
-  challengeCountdownLabel: string | null;
   challengeMarkerTone: ChallengeMarkerTone;
   challengeSuccessCelebrationCard: GamePageCard | null;
   challengeSuccessCelebrationKey: string | null;
@@ -71,7 +69,6 @@ export function useGamePageDisplayState({
   isCurrentPlayerTurn,
   isViewingOwnTimeline,
   locallyPlacedCard,
-  nowEpochMs,
   roomState,
   selectedSlotIndex,
 }: UseGamePageDisplayStateOptions): UseGamePageDisplayStateResult {
@@ -129,7 +126,6 @@ export function useGamePageDisplayState({
     getPlayerName,
     getPossessivePlayerName,
     isCurrentPlayerTurn,
-    nowEpochMs,
     roomState,
   });
 
@@ -153,7 +149,6 @@ export function useGamePageDisplayState({
   return {
     challengeActionBody: statusState.challengeActionBody,
     challengeActionTitle: statusState.challengeActionTitle,
-    challengeCountdownLabel: statusState.challengeCountdownLabel,
     challengeMarkerTone: statusState.challengeMarkerTone,
     challengeSuccessCelebrationCard: revealOutcomeCard,
     challengeSuccessCelebrationKey: revealOutcomeKey,

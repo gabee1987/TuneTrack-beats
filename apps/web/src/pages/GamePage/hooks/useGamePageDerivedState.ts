@@ -17,7 +17,6 @@ import { useGamePageTimelineViewMode } from "./useGamePageTimelineViewMode";
 interface UseGamePageDerivedStateOptions {
   currentPlayerId: string | null;
   locallyPlacedCard: PublicRoomState["currentTrackCard"] | null;
-  nowEpochMs: number;
   roomState: PublicRoomState | null;
   selectedSlotIndex: number;
   theme: ThemeId;
@@ -70,7 +69,6 @@ interface GamePageDerivedInteractionState {
 interface GamePageDerivedChallengeState {
   challengeActionBody: string | null;
   challengeActionTitle: string | null;
-  challengeCountdownLabel: string | null;
   challengeMarkerTone: ChallengeMarkerTone;
   challengeSuccessCelebrationCard: GamePageCard | null;
   challengeSuccessCelebrationKey: string | null;
@@ -125,7 +123,6 @@ export function useGamePageDerivedState({
   currentPlayerId,
   handlers,
   locallyPlacedCard,
-  nowEpochMs,
   roomState,
   selectedSlotIndex,
   showDevAlbumInfo,
@@ -186,7 +183,6 @@ export function useGamePageDerivedState({
     isCurrentPlayerTurn: capabilityState.isCurrentPlayerTurn,
     isViewingOwnTimeline,
     locallyPlacedCard,
-    nowEpochMs,
     roomState,
     selectedSlotIndex,
   });
@@ -219,7 +215,6 @@ export function useGamePageDerivedState({
   const challengeState = {
     challengeActionBody: displayState.challengeActionBody,
     challengeActionTitle: displayState.challengeActionTitle,
-    challengeCountdownLabel: displayState.challengeCountdownLabel,
     challengeMarkerTone: displayState.challengeMarkerTone,
     challengeSuccessCelebrationCard: displayState.challengeSuccessCelebrationCard,
     challengeSuccessCelebrationKey: displayState.challengeSuccessCelebrationKey,

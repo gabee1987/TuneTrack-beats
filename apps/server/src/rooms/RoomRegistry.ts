@@ -384,8 +384,9 @@ export class RoomRegistry {
     if (roomRecord.roomState.hostId !== membership.playerId)
       throw new Error("ONLY_HOST_CAN_IMPORT_PLAYLIST");
 
-    const nextDeck =
-      mode === "append" ? dedupeImportedDeck([...(roomRecord.importedDeck ?? []), ...deck]) : deck;
+    const nextDeck = dedupeImportedDeck(
+      mode === "append" ? [...(roomRecord.importedDeck ?? []), ...deck] : deck,
+    );
     const nextRoomState = buildImportedDeckRoomState(roomRecord.roomState, nextDeck);
     this.roomsById.set(roomId, {
       ...roomRecord,

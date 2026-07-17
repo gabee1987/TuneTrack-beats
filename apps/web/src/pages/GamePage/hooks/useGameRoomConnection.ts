@@ -45,7 +45,6 @@ export function useGameRoomConnection({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorKey, setErrorKey] = useState(0);
   const errorKeyRef = useRef(0);
-  const [nowEpochMs, setNowEpochMs] = useState(() => Date.now());
   const [hasClosedRoomReset, setHasClosedRoomReset] = useState(false);
 
   function handleClosedRoomReset() {
@@ -151,30 +150,12 @@ export function useGameRoomConnection({
     };
   }, [navigate, playerSessionId, rememberedDisplayName, roomId, t]);
 
-  useEffect(() => {
-    if (
-      roomState?.status !== "challenge" ||
-      !roomState.challengeState?.challengeDeadlineEpochMs
-    ) {
-      return;
-    }
-
-    const intervalId = window.setInterval(() => {
-      setNowEpochMs(Date.now());
-    }, 250);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [roomState]);
-
   return {
     currentPlayerId,
     errorKey,
     errorMessage,
     handleClosedRoomReset,
     hasClosedRoomReset,
-    nowEpochMs,
     roomState,
     setErrorMessage,
   };

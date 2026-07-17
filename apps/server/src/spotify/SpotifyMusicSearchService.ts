@@ -84,6 +84,7 @@ export class SpotifyMusicSearchService {
         const card = mapSpotifyTrackToGameCard(track);
         return card ? [{ ...card, metadataStatus: card.metadataStatus ?? "imported" }] : [];
       });
+      const { dedupedCards, duplicateCount } = dedupePublicTracks(tracks);
 
       return {
         success: true,
@@ -93,8 +94,8 @@ export class SpotifyMusicSearchService {
         subtitle: source.subtitle,
         ...(source.imageUrl ? { imageUrl: source.imageUrl } : {}),
         totalFetched: source.rawTracks.length,
-        filteredCount: source.rawTracks.length - tracks.length,
-        tracks: tracks satisfies PublicTrackInfo[],
+        filteredCount: source.rawTracks.length - tracks.length + duplicateCount,
+        tracks: dedupedCards satisfies PublicTrackInfo[],
       };
     } catch (err) {
       logger.error(
@@ -292,4 +293,30 @@ function mapArtistResult(artist: SpotifyApiArtist): SpotifySmartSearchResult {
 function getTrackReleaseYear(track: SpotifyApiTrack): number | null {
   const year = Number.parseInt(track.album.release_date.slice(0, 4), 10);
   return Number.isFinite(year) ? year : null;
+}
+
+function dedupePublicTracks(tracks: PublicTrackInfo[]): {
+  dedupedCards: PublicTrackInfo[];
+  duplicateCount: number;
+} {
+  const seen = new Set<string>();
+  const dedupedCards: PublicTrackInfo[] = [];
+
+  for (const track of tracks) {
+    const key =
+      track.spotifyTrackUri ??
+      `${normalizePublicTrackKey(track.title)}:${normalizePublicTrackKey(track.artist)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    dedupedCards.push(track);
+  }
+
+  return {
+    dedupedCards,
+    duplicateCount: tracks.length - dedupedCards.length,
+  };
+}
+
+function normalizePublicTrackKey(value: string): string {
+  return value.trim().toLocaleLowerCase().replace(/\s+/g, " ");
 }

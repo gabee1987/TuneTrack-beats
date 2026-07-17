@@ -43,7 +43,6 @@ interface BuildGamePageControllerResultOptions {
     UseGamePageControllerResult,
     | "challengeActionBody"
     | "challengeActionTitle"
-    | "challengeCountdownLabel"
     | "challengeMarkerTone"
     | "disabledTimelineSlots"
     | "previewCardTransitionEvent"

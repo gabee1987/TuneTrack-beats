@@ -21,7 +21,7 @@ import { Badge } from "../../features/ui/Badge";
 import { CardCountAmount } from "../../features/ui/CardCountAmount";
 import { TokenCountAmount } from "../../features/ui/TokenCountAmount";
 import { TtTokenIcon } from "../../features/ui/TtToken";
-import type { HostPlaybackState } from "./hooks/useHostPlayback";
+import { useHostPlayback } from "./hooks/useHostPlayback";
 import type { GameHistoryEntry } from "./hooks/useGameHistory";
 import styles from "./GamePage.module.css";
 
@@ -33,7 +33,6 @@ interface CreateGameMenuTabsOptions {
   onKickPlayer: (playerId: string) => void;
   onRemoveTt: (playerId: string) => void;
   onTransferHost: (playerId: string) => void;
-  playback?: HostPlaybackState;
   t: Translate;
 }
 
@@ -467,7 +466,6 @@ function GameMenuPlayerItem({
 }
 
 interface PlaybackTabContentProps {
-  playback: HostPlaybackState;
   roomState: PublicRoomState;
   t: Translate;
 }
@@ -479,8 +477,12 @@ function formatMs(ms: number): string {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
-function PlaybackTabContent({ playback, roomState, t }: PlaybackTabContentProps) {
-  const { isReady, isPlaying, position, duration, pause, resume, seek } = playback;
+function PlaybackTabContent({ roomState, t }: PlaybackTabContentProps) {
+  const { isReady, isPlaying, position, duration, pause, resume, seek } = useHostPlayback({
+    roomId: roomState.roomId,
+    roomState,
+    enabled: true,
+  });
   const { currentTrackCard, status } = roomState;
   const showTrackDetails = status === "reveal" || status === "finished";
   const hasTrack = currentTrackCard !== null;
@@ -687,15 +689,13 @@ export function createGameMenuTabs({
   onKickPlayer,
   onRemoveTt,
   onTransferHost,
-  playback,
   t,
 }: CreateGameMenuTabsOptions): AppShellMenuTab[] {
   const isHost = roomState.hostId === currentPlayerId;
   const hasPlaybackTab =
     isHost &&
     roomState.settings.spotifyAuthStatus === "connected" &&
-    roomState.settings.playlistImported &&
-    playback !== undefined;
+    roomState.settings.playlistImported;
 
   return [
     {
@@ -727,7 +727,7 @@ export function createGameMenuTabs({
           {
             id: "playback" as const,
             label: t("gameMenu.tabs.playback"),
-            content: <PlaybackTabContent playback={playback!} roomState={roomState} t={t} />,
+            content: <PlaybackTabContent roomState={roomState} t={t} />,
           },
         ]
       : []),

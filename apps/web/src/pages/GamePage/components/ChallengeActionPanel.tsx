@@ -9,6 +9,7 @@ import {
 } from "../../../features/motion";
 import { useI18n } from "../../../features/i18n";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
+import { useChallengeCountdownLabel } from "../hooks/useChallengeCountdownLabel";
 import styles from "./GamePageActionPanels.module.css";
 import {
   ActionDock,
@@ -50,7 +51,6 @@ interface ChallengeActionPanelProps {
   canResolveChallengeWindow: boolean;
   challengeActionBody: string | null;
   challengeActionTitle: string | null;
-  challengeCountdownLabel: string | null;
   currentPlayerTtCount: number;
   handleClaimChallenge: () => void;
   handlePlaceChallenge: () => void;
@@ -70,7 +70,6 @@ export function ChallengeActionPanel({
   canResolveChallengeWindow,
   challengeActionBody,
   challengeActionTitle,
-  challengeCountdownLabel,
   currentPlayerTtCount,
   handleClaimChallenge,
   handlePlaceChallenge,
@@ -86,7 +85,12 @@ export function ChallengeActionPanel({
 
   const challengeState = roomState.status === "challenge" ? roomState.challengeState : null;
   const isOpenChallengeWindow = challengeState?.phase === "open";
-  const isManualChallengeWindow = isOpenChallengeWindow && !challengeCountdownLabel;
+  const challengeDeadlineEpochMs = challengeState?.challengeDeadlineEpochMs ?? null;
+  const challengeCountdownLabel = useChallengeCountdownLabel(
+    challengeDeadlineEpochMs,
+    isOpenChallengeWindow,
+  );
+  const isManualChallengeWindow = isOpenChallengeWindow && !challengeDeadlineEpochMs;
   const isActivePlayerChallengeView = isOpenChallengeWindow && isCurrentPlayerTurn;
 
   const challengeStatusText = challengeCountdownLabel
@@ -98,7 +102,7 @@ export function ChallengeActionPanel({
           ? t("game.challenge.youCloseBeatWindow")
           : t("game.challenge.hostClosesBeatWindow")
         : t("game.challenge.hostClosesBeatWindow");
-  const hasTimedChallengeWindow = isOpenChallengeWindow && Boolean(challengeCountdownLabel);
+  const hasTimedChallengeWindow = isOpenChallengeWindow && Boolean(challengeDeadlineEpochMs);
   const countdownSeconds = parseCountdownSeconds(challengeCountdownLabel);
   const countdownStageClassName = styles[getCountdownStageClassName(countdownSeconds)];
   const panelClassName = `${styles.challengeCallout} ${countdownStageClassName}`;

@@ -1062,6 +1062,47 @@ describe("room flow", () => {
       "spotify:track:three",
     ]);
   });
+
+  it("dedupes duplicate tracks when replacing the lobby deck", async () => {
+    const serverContext = await startTestServer();
+    const hostSocket = createClient(serverContext.baseUrl);
+
+    hostSocket.connect();
+    await waitForEvent(hostSocket, "connect");
+
+    const identityPromise = waitForEvent<PlayerIdentityPayload>(
+      hostSocket,
+      ServerToClientEvent.PlayerIdentity,
+    );
+    hostSocket.emit(ClientToServerEvent.CreateRoom, {
+      roomId: "dedupe-room",
+      displayName: "Host Player",
+      sessionId: "host-session",
+    });
+    await identityPromise;
+
+    const tracksPromise = waitForEvent<PlaylistTracksPayload>(
+      hostSocket,
+      ServerToClientEvent.PlaylistTracks,
+    );
+
+    hostSocket.emit(ClientToServerEvent.LoadCuratedPlaylist, {
+      roomId: "dedupe-room",
+      tracks: [
+        buildCuratedTrack("track-1", "First Song", "spotify:track:one"),
+        buildCuratedTrack("track-1-dup", "First Song Again", "spotify:track:one"),
+        buildCuratedTrack("track-2", "Second Song", "spotify:track:two"),
+      ],
+      mode: "replace",
+    });
+
+    const tracksPayload = await tracksPromise;
+    expect(tracksPayload.tracks).toHaveLength(2);
+    expect(tracksPayload.tracks.map((track) => track.spotifyTrackUri)).toEqual([
+      "spotify:track:one",
+      "spotify:track:two",
+    ]);
+  });
 });
 
 function buildCuratedTrack(id: string, title: string, spotifyTrackUri: string) {

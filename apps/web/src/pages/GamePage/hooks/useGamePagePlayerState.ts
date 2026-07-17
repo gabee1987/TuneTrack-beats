@@ -1,5 +1,5 @@
 import { type PublicRoomState } from "@tunetrack/shared";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useI18n } from "../../../features/i18n";
 import type { GamePagePlayerNameResolver } from "../GamePage.types";
 
@@ -54,32 +54,38 @@ export function useGamePagePlayerState({
     return roomState.timelines[currentPlayerId] ?? [];
   }, [currentPlayerId, roomState]);
 
-  const getPlayerName: GamePagePlayerNameResolver = (playerId) => {
-    if (!playerId) {
-      return t("game.player.unknown");
-    }
+  const getPlayerName: GamePagePlayerNameResolver = useCallback(
+    (playerId) => {
+      if (!playerId) {
+        return t("game.player.unknown");
+      }
 
-    if (playerId === currentPlayerId) {
-      return t("game.player.you");
-    }
+      if (playerId === currentPlayerId) {
+        return t("game.player.you");
+      }
 
-    return (
-      roomState?.players.find((player) => player.id === playerId)?.displayName ??
-      t("game.player.unknown")
-    );
-  };
+      return (
+        roomState?.players.find((player) => player.id === playerId)?.displayName ??
+        t("game.player.unknown")
+      );
+    },
+    [currentPlayerId, roomState, t],
+  );
 
-  const getPossessivePlayerName: GamePagePlayerNameResolver = (playerId) => {
-    if (!playerId) {
-      return t("game.player.unknownPossessive");
-    }
+  const getPossessivePlayerName: GamePagePlayerNameResolver = useCallback(
+    (playerId) => {
+      if (!playerId) {
+        return t("game.player.unknownPossessive");
+      }
 
-    if (playerId === currentPlayerId) {
-      return t("game.player.your");
-    }
+      if (playerId === currentPlayerId) {
+        return t("game.player.your");
+      }
 
-    return t("game.player.possessive", { playerName: getPlayerName(playerId) });
-  };
+      return t("game.player.possessive", { playerName: getPlayerName(playerId) });
+    },
+    [currentPlayerId, getPlayerName, t],
+  );
 
   return {
     activePlayer,

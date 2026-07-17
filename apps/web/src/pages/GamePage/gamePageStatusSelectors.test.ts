@@ -113,14 +113,12 @@ describe("gamePageStatusSelectors", () => {
         currentPlayerId: "player-2",
         getPlayerName,
         isCurrentPlayerTurn: false,
-        nowEpochMs: 11_200,
         roomState,
         t,
       }),
     ).toEqual({
       challengeActionBody: "Chosen slot: 3",
       challengeActionTitle: "Beat available",
-      challengeCountdownLabel: "4s left to call Beat!",
       challengeMarkerTone: "pending",
       challengeSuccessMessage: null,
     });
@@ -212,7 +210,6 @@ describe("gamePageStatusSelectors", () => {
       currentPlayerId: "player-2",
       getPlayerName,
       isCurrentPlayerTurn: false,
-      nowEpochMs: 0,
       roomState,
       t,
     });

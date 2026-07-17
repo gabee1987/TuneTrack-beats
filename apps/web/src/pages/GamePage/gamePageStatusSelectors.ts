@@ -12,7 +12,6 @@ interface GamePageChallengeStatusSelectorOptions {
   currentPlayerId: string | null;
   getPlayerName: GamePagePlayerNameResolver;
   isCurrentPlayerTurn: boolean;
-  nowEpochMs: number;
   roomState: PublicRoomState | null;
   t: (key: string, params?: Record<string, string | number>) => string;
 }
@@ -32,7 +31,6 @@ interface GamePageStatusCopySelectorOptions {
 export interface GamePageChallengeStatusSelectorResult {
   challengeActionBody: string | null;
   challengeActionTitle: string | null;
-  challengeCountdownLabel: string | null;
   challengeMarkerTone: ChallengeMarkerTone;
   challengeSuccessMessage: string | null;
 }
@@ -50,7 +48,6 @@ export function getGamePageChallengeStatusState({
   currentPlayerId,
   getPlayerName,
   isCurrentPlayerTurn,
-  nowEpochMs,
   roomState,
   t,
 }: GamePageChallengeStatusSelectorOptions): GamePageChallengeStatusSelectorResult {
@@ -59,14 +56,6 @@ export function getGamePageChallengeStatusState({
     roomState?.status === "challenge" &&
     roomState.challengeState?.phase === "open" &&
     !deadlineEpochMs;
-  const challengeCountdownLabel =
-    !deadlineEpochMs ||
-    roomState?.status !== "challenge" ||
-    roomState.challengeState?.phase !== "open"
-      ? null
-      : t("game.status.countdownBeat", {
-          seconds: Math.max(0, Math.ceil((deadlineEpochMs - nowEpochMs) / 1000)),
-        });
 
   const challengeActionTitle =
     roomState?.status !== "challenge" || !roomState.challengeState
@@ -110,7 +99,6 @@ export function getGamePageChallengeStatusState({
   return {
     challengeActionBody,
     challengeActionTitle,
-    challengeCountdownLabel,
     challengeMarkerTone,
     challengeSuccessMessage: challengeSuccessCelebrationCard ? t("game.status.cleanBeat") : null,
   };

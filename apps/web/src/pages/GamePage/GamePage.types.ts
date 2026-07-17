@@ -154,7 +154,6 @@ export interface GamePageActionPanelsModel
     | "canUseSkipTrack"
     | "challengeActionBody"
     | "challengeActionTitle"
-    | "challengeCountdownLabel"
     | "currentPlayerId"
     | "currentPlayerTtCount"
     | "getPlayerName"
@@ -195,7 +194,6 @@ export type GamePageController = GamePageActionHandlers & {
   canUseSkipTrack: boolean;
   challengeActionBody: string | null;
   challengeActionTitle: string | null;
-  challengeCountdownLabel: string | null;
   challengeMarkerTone: ChallengeMarkerTone;
   currentPlayerId: string | null;
   currentPlayerTtCount: number;

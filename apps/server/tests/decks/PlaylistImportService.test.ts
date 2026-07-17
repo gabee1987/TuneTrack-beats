@@ -101,6 +101,29 @@ describe("PlaylistImportService", () => {
       }
     });
 
+    it("removes duplicate Spotify tracks from an imported playlist", async () => {
+      const tracksWithDuplicates: SpotifyApiTrack[] = [
+        ...buildTracks(12),
+        buildApiTrack("id-0"),
+        buildApiTrack("id-1"),
+      ];
+      const mockClient = createMockApiClient({
+        getAllPlaylistTracks: vi.fn().mockResolvedValue(tracksWithDuplicates),
+      });
+      const service = new PlaylistImportService(mockClient, tokenStore);
+
+      const result = await service.importFromUrl(
+        "https://open.spotify.com/playlist/abc123",
+      );
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.importedCount).toBe(12);
+        expect(result.cards).toHaveLength(12);
+        expect(result.totalFetched).toBe(14);
+      }
+    });
+
     it("returns playlist_not_found when the Spotify API returns 404", async () => {
       const mockClient = createMockApiClient({
         getAllPlaylistTracks: vi.fn().mockRejectedValue(

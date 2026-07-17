@@ -2,7 +2,16 @@ import {
   ClientToServerEvent,
   type PublicRoomState,
 } from "@tunetrack/shared";
+import { useCallback } from "react";
 import { getSocketClient } from "../../../services/socket/socketClient";
+
+async function emitRoomEvent<TPayload>(
+  event: (typeof ClientToServerEvent)[keyof typeof ClientToServerEvent],
+  payload: TPayload,
+) {
+  const socketClient = await getSocketClient();
+  socketClient.emit(event, payload);
+}
 
 interface UseGamePageActionsOptions {
   canClaimChallenge: boolean | null | undefined;
@@ -31,15 +40,7 @@ export function useGamePageActions({
   onBuyTimelineCardWithTtIntent,
   setLocallyPlacedCard,
 }: UseGamePageActionsOptions) {
-  async function emitRoomEvent<TPayload>(
-    event: (typeof ClientToServerEvent)[keyof typeof ClientToServerEvent],
-    payload: TPayload,
-  ) {
-    const socketClient = await getSocketClient();
-    socketClient.emit(event, payload);
-  }
-
-  function handlePlaceCard() {
+  const handlePlaceCard = useCallback(() => {
     if (!roomState || roomState.status !== "turn" || !isCurrentPlayerTurn) {
       return;
     }
@@ -49,9 +50,9 @@ export function useGamePageActions({
       roomId: roomState.roomId,
       selectedSlotIndex,
     });
-  }
+  }, [isCurrentPlayerTurn, roomState, selectedSlotIndex, setLocallyPlacedCard]);
 
-  function handleConfirmReveal() {
+  const handleConfirmReveal = useCallback(() => {
     if (!roomState || !canConfirmReveal) {
       return;
     }
@@ -59,9 +60,9 @@ export function useGamePageActions({
     void emitRoomEvent(ClientToServerEvent.ConfirmReveal, {
       roomId: roomState.roomId,
     });
-  }
+  }, [canConfirmReveal, roomState]);
 
-  function handleClaimChallenge() {
+  const handleClaimChallenge = useCallback(() => {
     if (!roomState || !canClaimChallenge) {
       return;
     }
@@ -69,9 +70,9 @@ export function useGamePageActions({
     void emitRoomEvent(ClientToServerEvent.ClaimChallenge, {
       roomId: roomState.roomId,
     });
-  }
+  }, [canClaimChallenge, roomState]);
 
-  function handlePlaceChallenge() {
+  const handlePlaceChallenge = useCallback(() => {
     if (!roomState || !canSelectChallengeSlot) {
       return;
     }
@@ -80,9 +81,9 @@ export function useGamePageActions({
       roomId: roomState.roomId,
       selectedSlotIndex,
     });
-  }
+  }, [canSelectChallengeSlot, roomState, selectedSlotIndex]);
 
-  function handleResolveChallengeWindow() {
+  const handleResolveChallengeWindow = useCallback(() => {
     if (!roomState || !canResolveChallengeWindow) {
       return;
     }
@@ -90,9 +91,9 @@ export function useGamePageActions({
     void emitRoomEvent(ClientToServerEvent.ResolveChallengeWindow, {
       roomId: roomState.roomId,
     });
-  }
+  }, [canResolveChallengeWindow, roomState]);
 
-  function handleCloseRoom() {
+  const handleCloseRoom = useCallback(() => {
     if (!roomState || roomState.hostId !== currentPlayerId) {
       return;
     }
@@ -100,71 +101,83 @@ export function useGamePageActions({
     void emitRoomEvent(ClientToServerEvent.CloseRoom, {
       roomId: roomState.roomId,
     });
-  }
+  }, [currentPlayerId, roomState]);
 
-  function handleAwardTt(playerId: string) {
-    if (
-      !roomState ||
-      roomState.hostId !== currentPlayerId ||
-      !roomState.settings.ttModeEnabled
-    ) {
-      return;
-    }
+  const handleAwardTt = useCallback(
+    (playerId: string) => {
+      if (
+        !roomState ||
+        roomState.hostId !== currentPlayerId ||
+        !roomState.settings.ttModeEnabled
+      ) {
+        return;
+      }
 
-    void emitRoomEvent(ClientToServerEvent.AwardTt, {
-      roomId: roomState.roomId,
-      playerId,
-      amount: 1,
-    });
-  }
+      void emitRoomEvent(ClientToServerEvent.AwardTt, {
+        roomId: roomState.roomId,
+        playerId,
+        amount: 1,
+      });
+    },
+    [currentPlayerId, roomState],
+  );
 
-  function handleRemoveTt(playerId: string) {
-    if (
-      !roomState ||
-      roomState.hostId !== currentPlayerId ||
-      !roomState.settings.ttModeEnabled
-    ) {
-      return;
-    }
+  const handleRemoveTt = useCallback(
+    (playerId: string) => {
+      if (
+        !roomState ||
+        roomState.hostId !== currentPlayerId ||
+        !roomState.settings.ttModeEnabled
+      ) {
+        return;
+      }
 
-    void emitRoomEvent(ClientToServerEvent.AwardTt, {
-      roomId: roomState.roomId,
-      playerId,
-      amount: -1,
-    });
-  }
+      void emitRoomEvent(ClientToServerEvent.AwardTt, {
+        roomId: roomState.roomId,
+        playerId,
+        amount: -1,
+      });
+    },
+    [currentPlayerId, roomState],
+  );
 
-  function handleTransferHost(playerId: string) {
-    if (
-      !roomState ||
-      roomState.hostId !== currentPlayerId ||
-      playerId === currentPlayerId
-    ) {
-      return;
-    }
+  const handleTransferHost = useCallback(
+    (playerId: string) => {
+      if (
+        !roomState ||
+        roomState.hostId !== currentPlayerId ||
+        playerId === currentPlayerId
+      ) {
+        return;
+      }
 
-    void emitRoomEvent(ClientToServerEvent.TransferHost, {
-      roomId: roomState.roomId,
-      playerId,
-    });
-  }
+      void emitRoomEvent(ClientToServerEvent.TransferHost, {
+        roomId: roomState.roomId,
+        playerId,
+      });
+    },
+    [currentPlayerId, roomState],
+  );
 
-  function handleKickPlayer(playerId: string) {
-    if (
-      !roomState ||
-      roomState.hostId !== currentPlayerId ||
-      playerId === currentPlayerId
-    ) {
-      return;
-    }
+  const handleKickPlayer = useCallback(
+    (playerId: string) => {
+      if (
+        !roomState ||
+        roomState.hostId !== currentPlayerId ||
+        playerId === currentPlayerId
+      ) {
+        return;
+      }
 
-    void emitRoomEvent(ClientToServerEvent.KickPlayer, {
-      roomId: roomState.roomId,
-      playerId,
-    });
-  }
+      void emitRoomEvent(ClientToServerEvent.KickPlayer, {
+        roomId: roomState.roomId,
+        playerId,
+      });
+    },
+    [currentPlayerId, roomState],
+  );
 
-  function handleSkipTrackWithTt() {
+  const handleSkipTrackWithTt = useCallback(() => {
     if (
       !roomState ||
       !roomState.settings.ttModeEnabled ||
@@ -178,9 +191,9 @@ export function useGamePageActions({
     void emitRoomEvent(ClientToServerEvent.SkipTrackWithTt, {
       roomId: roomState.roomId,
     });
-  }
+  }, [isCurrentPlayerTurn, onSkipTrackWithTtIntent, roomState]);
 
-  function handleBuyTimelineCardWithTt() {
+  const handleBuyTimelineCardWithTt = useCallback(() => {
     if (
       !roomState ||
       !roomState.settings.ttModeEnabled ||
@@ -194,9 +207,9 @@ export function useGamePageActions({
     void emitRoomEvent(ClientToServerEvent.BuyTimelineCardWithTt, {
       roomId: roomState.roomId,
     });
-  }
+  }, [isCurrentPlayerTurn, onBuyTimelineCardWithTtIntent, roomState]);
 
-  function handleSkipTurn() {
+  const handleSkipTurn = useCallback(() => {
     if (!roomState || roomState.status !== "turn") {
       return;
     }
@@ -204,7 +217,7 @@ export function useGamePageActions({
     void emitRoomEvent(ClientToServerEvent.SkipTurn, {
       roomId: roomState.roomId,
     });
-  }
+  }, [roomState]);
 
   return {
     handleAwardTt,

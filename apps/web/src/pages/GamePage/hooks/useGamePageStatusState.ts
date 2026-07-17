@@ -16,7 +16,6 @@ interface UseGamePageStatusStateOptions {
   getPlayerName: GamePagePlayerNameResolver;
   getPossessivePlayerName: GamePagePlayerNameResolver;
   isCurrentPlayerTurn: boolean;
-  nowEpochMs: number;
   roomState: PublicRoomState | null;
 }
 
@@ -24,7 +23,6 @@ interface UseGamePageStatusStateResult {
   activeTimelineHint: string;
   challengeActionBody: string | null;
   challengeActionTitle: string | null;
-  challengeCountdownLabel: string | null;
   challengeMarkerTone: ChallengeMarkerTone;
   challengeSuccessMessage: string | null;
   statusBadgeText: string;
@@ -40,7 +38,6 @@ export function useGamePageStatusState({
   getPlayerName,
   getPossessivePlayerName,
   isCurrentPlayerTurn,
-  nowEpochMs,
   roomState,
 }: UseGamePageStatusStateOptions): UseGamePageStatusStateResult {
   const challengeStatusState = useGamePageChallengeStatusState({
@@ -50,7 +47,6 @@ export function useGamePageStatusState({
     currentPlayerId,
     getPlayerName,
     isCurrentPlayerTurn,
-    nowEpochMs,
     roomState,
   });
 
@@ -69,7 +65,6 @@ export function useGamePageStatusState({
     activeTimelineHint: statusCopyState.activeTimelineHint,
     challengeActionBody: challengeStatusState.challengeActionBody,
     challengeActionTitle: challengeStatusState.challengeActionTitle,
-    challengeCountdownLabel: challengeStatusState.challengeCountdownLabel,
     challengeMarkerTone: challengeStatusState.challengeMarkerTone,
     challengeSuccessMessage: challengeStatusState.challengeSuccessMessage,
     statusBadgeText: statusCopyState.statusBadgeText,

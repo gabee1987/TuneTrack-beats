@@ -4,7 +4,7 @@ import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { LobbyHostCoreSettings } from "./LobbyHostCoreSettings";
 import { LobbyHostStartPanel } from "./LobbyHostStartPanel";
 import { LobbyHostTtSettings } from "./LobbyHostTtSettings";
-import { LobbySpotifySection } from "./LobbySpotifySection";
+import { LobbySpotifySection } from "./spotify/LobbySpotifySection";
 import { LobbySectionHeader } from "./LobbySectionHeader";
 import type { LobbyHostSettingsPanelProps } from "./LobbyHostSettings.types";
 import styles from "../LobbyPage.module.css";
