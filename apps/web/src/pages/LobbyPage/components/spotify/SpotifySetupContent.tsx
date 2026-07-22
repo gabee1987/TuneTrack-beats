@@ -22,6 +22,7 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
     clearCurrentPlaylist,
     confirmRenamePlaylist,
     confirmSavePlaylist,
+    cancelConnectSpotify,
     connectSpotify,
     importError,
     importPhase,
@@ -73,27 +74,54 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
       {!isConnected ? (
         <div className={styles.spotifyConnectRow}>
           <div className={styles.spotifyConnectUnconnected}>
-            <p className={styles.spotifyConnectHint}>
-              {isConnecting
-                ? t("lobby.spotify.connectingHint")
-                : t("lobby.spotify.unconnectedHint")}
-            </p>
-            <ActionButton
-              className={styles.spotifyConnectBtn}
-              disabled={isConnecting}
-              onClick={connectSpotify}
-              type="button"
-              variant="neutral"
-            >
-              <SpotifyLogo />
-              {isConnecting ? t("lobby.spotify.connecting") : t("lobby.spotify.connect")}
-            </ActionButton>
+            {authPhase === "error" && authError ? (
+              <div className={styles.spotifyAuthErrorBlock}>
+                <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
+                  {authError}
+                </p>
+                <ActionButton
+                  className={styles.spotifyConnectBtn}
+                  onClick={connectSpotify}
+                  type="button"
+                  variant="neutral"
+                >
+                  <SpotifyLogo />
+                  {t("lobby.spotify.tryAgain")}
+                </ActionButton>
+              </div>
+            ) : (
+              <>
+                <p className={styles.spotifyConnectHint}>
+                  {isConnecting
+                    ? t("lobby.spotify.connectingHint")
+                    : t("lobby.spotify.unconnectedHint")}
+                </p>
+                <div className={styles.spotifyConnectActions}>
+                  <ActionButton
+                    className={styles.spotifyConnectBtn}
+                    disabled={isConnecting}
+                    onClick={connectSpotify}
+                    type="button"
+                    variant="neutral"
+                  >
+                    <SpotifyLogo />
+                    {isConnecting ? t("lobby.spotify.connecting") : t("lobby.spotify.connect")}
+                  </ActionButton>
+                  {isConnecting ? (
+                    <ActionButton
+                      className={styles.spotifyConnectCancelBtn}
+                      onClick={cancelConnectSpotify}
+                      type="button"
+                      variant="neutral"
+                    >
+                      {t("lobby.spotify.cancelConnect")}
+                    </ActionButton>
+                  ) : null}
+                </div>
+              </>
+            )}
           </div>
         </div>
-      ) : null}
-
-      {authPhase === "error" && authError ? (
-        <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>{authError}</p>
       ) : null}
 
       {isConnected ? (

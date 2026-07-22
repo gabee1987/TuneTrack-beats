@@ -76,19 +76,43 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
                   </div>
                 ) : null}
               </div>
-            ) : (
+            ) : spotifyState.authPhase !== "error" ? (
               <div className={styles.spotifyConnectUnconnected}>
                 <p className={styles.spotifyConnectHint}>{connectHint}</p>
               </div>
-            )}
+            ) : null}
           </div>
 
           {isConnected ? <p className={styles.spotifyConnectHint}>{connectHint}</p> : null}
 
           {spotifyState.authPhase === "error" && spotifyState.authError ? (
-            <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
-              {spotifyState.authError}
-            </p>
+            <div className={styles.spotifyAuthErrorBlock}>
+              <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
+                {spotifyState.authError}
+              </p>
+              <ActionButton
+                className={styles.spotifyConnectBtn}
+                onClick={spotifyState.connectSpotify}
+                type="button"
+                variant="neutral"
+              >
+                <SpotifyLogo />
+                {t("lobby.spotify.tryAgain")}
+              </ActionButton>
+            </div>
+          ) : null}
+
+          {spotifyState.authPhase === "connecting" ? (
+            <div className={styles.spotifyConnectActions}>
+              <ActionButton
+                className={styles.spotifyConnectCancelBtn}
+                onClick={spotifyState.cancelConnectSpotify}
+                type="button"
+                variant="neutral"
+              >
+                {t("lobby.spotify.cancelConnect")}
+              </ActionButton>
+            </div>
           ) : null}
 
           <ActionButton

@@ -7,6 +7,10 @@ import { usePageLayoutMode } from "../../hooks/usePageLayoutMode";
 import { GamePageToastStack } from "./components/GamePageToastStack";
 import type { GameRouteState, LoadedGamePageController } from "./GamePage.types";
 import { buildGamePageAssemblyModel } from "./hooks/buildGamePageAssemblyModel";
+import {
+  HostPlaybackProvider,
+  shouldEnableHostPlayback,
+} from "./hooks/HostPlaybackProvider";
 import { useGamePageController } from "./hooks/useGamePageController";
 import { useGamePageToasts } from "./hooks/useGamePageToasts";
 import styles from "./GamePage.module.css";
@@ -64,9 +68,17 @@ export function GamePage() {
     roomState: controller.roomState,
   };
   const model = buildGamePageAssemblyModel(loadedController);
+  const hostPlaybackEnabled = shouldEnableHostPlayback(
+    controller.roomState,
+    controller.currentPlayerId,
+  );
 
   return (
-    <>
+    <HostPlaybackProvider
+      enabled={hostPlaybackEnabled}
+      roomId={controller.roomState.roomId}
+      roomState={controller.roomState}
+    >
       {roomResetModal}
       <GamePageToastStack toasts={toasts} />
       <Suspense fallback={<AppRouteFallback />}>
@@ -76,6 +88,6 @@ export function GamePage() {
           <GamePageDesktop model={model} />
         )}
       </Suspense>
-    </>
+    </HostPlaybackProvider>
   );
 }

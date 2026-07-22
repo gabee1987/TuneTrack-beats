@@ -197,7 +197,9 @@ export function useSpotifyPlaybackSdk({
 
     return () => {
       disposed = true;
-      pauseCurrentSpotifyDevice();
+      // Local pause + disconnect only. Avoid REST pause here — the device is
+      // about to disappear and Spotify returns 404 "Device not found".
+      void player?.pause().catch(() => undefined);
       player?.disconnect();
       playerRef.current = null;
       setIsReady(false);
@@ -205,7 +207,7 @@ export function useSpotifyPlaybackSdk({
       deviceIdRef.current = null;
       resetPlaybackState();
     };
-  }, [enabled, pauseCurrentSpotifyDevice, requestToken, resetPlaybackState]);
+  }, [enabled, requestToken, resetPlaybackState]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -264,42 +266,42 @@ export function useSpotifyPlaybackSdk({
     return () => window.clearInterval(intervalId);
   }, [enabled, requestToken]);
 
-  const playTrack = useCallback(
-    (spotifyTrackUri: string) => {
-      const deviceIdValue = deviceId;
-      if (!deviceIdValue) return;
+  const playTrack = useCallback((spotifyTrackUri: string) => {
+    const deviceIdValue = deviceIdRef.current;
+    if (!deviceIdValue) return;
 
-      async function doPlay() {
-        // Await the token if not yet cached (handles the startup race condition)
-        let token = accessTokenRef.current;
+    async function doPlay() {
+      // Await the token if not yet cached (handles the startup race condition)
+      let token = accessTokenRef.current;
+      if (!token) {
+        token = await requestToken();
         if (!token) {
-          token = await requestToken();
-          if (!token) {
-            console.error("[TuneTrack] Spotify playTrack: could not obtain token");
-            return;
-          }
-        }
-        const res = await fetch(
-          `https://api.spotify.com/v1/me/player/play?device_id=${deviceIdValue}`,
-          {
-            method: "PUT",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ uris: [spotifyTrackUri] }),
-          },
-        );
-        if (!res.ok) {
-          const body = await res.text().catch(() => "");
-          console.error(`[TuneTrack] Spotify playTrack failed ${res.status}:`, body);
+          console.error("[TuneTrack] Spotify playTrack: could not obtain token");
+          return;
         }
       }
 
-      void doPlay();
-    },
-    [deviceId, requestToken],
-  );
+      // Prefer the live ref in case ready updated after this call was scheduled.
+      const activeDeviceId = deviceIdRef.current ?? deviceIdValue;
+      const res = await fetch(
+        `https://api.spotify.com/v1/me/player/play?device_id=${activeDeviceId}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ uris: [spotifyTrackUri] }),
+        },
+      );
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        console.error(`[TuneTrack] Spotify playTrack failed ${res.status}:`, body);
+      }
+    }
+
+    void doPlay();
+  }, [requestToken]);
 
   const pause = useCallback(() => {
     pauseCurrentSpotifyDevice();

@@ -46,6 +46,7 @@ export interface UseLobbySpotifyResult {
   confirmOverwrite: () => void;
   confirmRenamePlaylist: () => void;
   confirmSavePlaylist: () => void;
+  cancelConnectSpotify: () => void;
   connectSpotify: () => void;
   discardGeneratedCandidates: () => void;
   importContentHeight: number;

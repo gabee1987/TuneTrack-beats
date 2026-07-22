@@ -172,6 +172,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     confirmOverwrite: savedPlaylists.confirmOverwrite,
     confirmRenamePlaylist: savedPlaylists.confirmRenamePlaylist,
     confirmSavePlaylist: savedPlaylists.confirmSavePlaylist,
+    cancelConnectSpotify: auth.cancelConnectSpotify,
     connectSpotify: auth.connectSpotify,
     discardGeneratedCandidates: candidates.discardGeneratedCandidates,
     importContentHeight: playlistImport.importContentHeight,

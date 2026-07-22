@@ -21,7 +21,7 @@ import { Badge } from "../../features/ui/Badge";
 import { CardCountAmount } from "../../features/ui/CardCountAmount";
 import { TokenCountAmount } from "../../features/ui/TokenCountAmount";
 import { TtTokenIcon } from "../../features/ui/TtToken";
-import { useHostPlayback } from "./hooks/useHostPlayback";
+import { useHostPlaybackContext } from "./hooks/HostPlaybackProvider";
 import type { GameHistoryEntry } from "./hooks/useGameHistory";
 import styles from "./GamePage.module.css";
 
@@ -478,11 +478,7 @@ function formatMs(ms: number): string {
 }
 
 function PlaybackTabContent({ roomState, t }: PlaybackTabContentProps) {
-  const { isReady, isPlaying, position, duration, pause, resume, seek } = useHostPlayback({
-    roomId: roomState.roomId,
-    roomState,
-    enabled: true,
-  });
+  const { isReady, isPlaying, position, duration, pause, resume, seek } = useHostPlaybackContext();
   const { currentTrackCard, status } = roomState;
   const showTrackDetails = status === "reveal" || status === "finished";
   const hasTrack = currentTrackCard !== null;

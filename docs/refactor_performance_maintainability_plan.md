@@ -1,13 +1,13 @@
 # TuneTrack Refactor Plan — Performance, Traffic & Maintainability
 
-> Status: **Paused after Phase 2 — next up is Phase 3**  
+> Status: **Paused after Phase 3 — next up is Phase 4**  
 > Rules: follow [`AGENT.md`](../AGENT.md) and [`CLAUDE.md`](../CLAUDE.md)  
 > Created: 2026-07-17  
-> Last checkpoint: 2026-07-17
+> Last checkpoint: 2026-07-22
 
 ## Resume checkpoint (read this first when continuing)
 
-**Where we stopped:** Phases **0–2 are implemented**. Next command to resume: **`go Phase 3`** (split realtime socket handlers).
+**Where we stopped:** Phases **0–3 are implemented**. Next command to resume: **`go Phase 4`** (split RoomRegistry).
 
 | Item | State |
 |------|--------|
@@ -15,12 +15,12 @@
 | Phase 1 — Lobby Spotify file split | Done (`components/spotify/`, `hooks/spotify/`) |
 | Phase 1 follow-up — track dedupe / already-queued toast / added icon | Done (out-of-band during Phase 1 validation) |
 | Phase 2 — GamePage countdown + playback render isolation | Done (automated); **manual game-feel checklist still recommended** |
-| Phase 3+ | Not started |
+| Phase 3 — Split realtime socket handlers | Done (automated); **manual smoke checklist pending** |
+| Phase 4+ | Not started |
 
-**Before starting Phase 3 (recommended):**
-1. Re-run `npm run test` and `npm run typecheck` once to confirm the tree is still green.
-2. Optionally finish Phase 2 manual game-feel checklist (challenge countdown smooth, playback tab without header flicker).
-3. Optionally re-spot-check Lobby Spotify add/remove/already-queued after the dedupe fix.
+**Before starting Phase 4 (recommended):**
+1. Finish Phase 3 manual smoke (create/join/rename, place/challenge/reveal, host transfer, Spotify lobby, invalid-action error toast).
+2. Optionally finish Phase 2 manual game-feel checklist if not done yet.
 
 **Known follow-ups already queued in this plan:**
 - Phase 7 item 5: replace flat `useLobbySpotify` ~90-field return with grouped domains / domain-hook consumption (snappy lobby UX).
@@ -55,7 +55,7 @@
 |------|--------|---------|------------------------|
 | `LobbySpotifySection.tsx` | ~1850 | God UI | **Split** → `components/spotify/` |
 | `useLobbySpotify.ts` | ~1080 | God hook | **Split** → `hooks/spotify/` (flat return bag remains; Phase 7 #5) |
-| `registerSocketHandlers.ts` | ~1070 | 35 copy-paste handlers | **Next (Phase 3)** |
+| `registerSocketHandlers.ts` | ~1070 | 35 copy-paste handlers | **Split (Phase 3)** → thin wire + `handlers/*` |
 | `RoomRegistry.ts` | ~1070 | Lifecycle + gameplay + timers | Phase 4 |
 | `gamePageMenuTabs.tsx` | ~730 | Menu factory + UI | Partially improved (playback isolated); fuller split in Phase 7 |
 | `GameFlowService.ts` | ~680 | All rules in one service | Phase 6 |
@@ -276,7 +276,7 @@ npm run typecheck -w apps/web
 | Check | Result |
 |-------|--------|
 | Challenge countdown | `nowEpochMs` interval removed from `useGameRoomConnection`; countdown label no longer threaded through controller → derived → status selectors. `useChallengeCountdownLabel` owns its own 250ms interval and is called only inside `ChallengeActionPanel`, using `roomState.challengeState.challengeDeadlineEpochMs` directly. Pure math extracted to `formatChallengeCountdownLabel` (`gamePageChallengeCountdown.ts`). |
-| Host playback | `useHostPlayback` moved out of `useGamePageCapabilityState` (no longer rebuilds `menuTabs` on every tick) and into `PlaybackTabContent` inside `gamePageMenuTabs.tsx`, which mounts the hook itself. `createGameMenuTabs` no longer receives a `playback` prop. |
+| Host playback | `useHostPlayback` lives in `HostPlaybackProvider` on `GamePage` (player stays alive for the whole host game session). Playback tab consumes `useHostPlaybackContext` so position ticks stay scoped to that UI and do not rebuild `menuTabs`. |
 | Identity stability | `getPlayerName` / `getPossessivePlayerName` wrapped in `useCallback` (`useGamePagePlayerState`); all `useGamePageActions` handlers wrapped in `useCallback` with `emitRoomEvent` hoisted out of the hook body; `onSkipTrackWithTtIntent` / `onBuyTimelineCardWithTtIntent` wrapped in `useCallback` in `useGamePageController` so `GamePageHeader` / `GamePageActionPanels` memos can hold across unrelated re-renders. |
 | New tests | `gamePageChallengeCountdown.test.ts` — **4 passed** |
 | `npm run test -w apps/web` | **82 passed** |
@@ -327,10 +327,21 @@ npm run typecheck -w apps/server
 
 ### Exit criteria
 
-- [ ] Handler files ≤ ~700 lines; `registerSocketHandlers` is thin wiring
-- [ ] Server tests green
+- [x] Handler files ≤ ~700 lines; `registerSocketHandlers` is thin wiring
+- [x] Server tests green
 - [ ] Manual smoke OK
 - [ ] You say “go Phase 4”
+
+### Phase 3 results (2026-07-22)
+
+| Check | Result |
+|-------|--------|
+| Structure | `createSocketHandler.ts`, `errorMessages.ts`, `handlers/{lobby,gameplay,playlist,spotify}Handlers.ts`; `registerSocketHandlers.ts` wire-only (~28 lines) |
+| Largest handler file | `lobbyHandlers.ts` ~327 lines (all ≤ ~700) |
+| Error catalog | Per-action maps (same error code can keep different UX copy by action) |
+| New tests | `apps/server/tests/realtime/createSocketHandler.test.ts` — **7 passed** |
+| `npm run test -w apps/server` | **82 passed** |
+| `npm run typecheck -w apps/server` | **green** |
 
 ---
 
@@ -555,9 +566,9 @@ Per `AGENT.md` / `CLAUDE.md`:
 |-------|--------|-------|
 | 0 Baseline + safety nets | **Complete** | `apps/server/tests/rooms/roomStateMappers.test.ts` |
 | 1 Lobby Spotify split | **Complete** | + track dedupe / already-queued toast fix during validation |
-| 2 GamePage render isolation | **Complete** | Automated green; manual game-feel checklist optional before Phase 3 |
-| 3 Socket handlers split | **Next** | Resume here |
-| 4 RoomRegistry split | Not started | |
+| 2 GamePage render isolation | **Complete** | Automated green; manual game-feel checklist optional |
+| 3 Socket handlers split | **Complete** | Automated green; manual smoke pending before Phase 4 |
+| 4 RoomRegistry split | **Next** | Resume here |
 | 5 Traffic & year integrity | Not started | Changes Phase 0 year-on-wire baseline tests |
 | 6 GameFlowService split | Not started | |
 | 7 Menu + Lobby polish | Not started | Includes Spotify composer API optimization (#5) |
@@ -579,9 +590,9 @@ Per `AGENT.md` / `CLAUDE.md`:
 ## How to proceed (when resuming)
 
 1. Open this file and read **Resume checkpoint**.
-2. Reply **`go Phase 3`** to continue the planned sequence.
-3. Or ask to adjust order / re-run Phase 2 manual validation first.
+2. Reply **`go Phase 4`** to continue the planned sequence.
+3. Or ask to adjust order / finish Phase 3 manual smoke first.
 
 Earlier one-shot commands (historical):
 
-- **`go Phase 0`** / **`go Phase 0+1`** — already done; do not re-run as greenfield work.
+- **`go Phase 0`** / **`go Phase 0+1`** / **`go Phase 3`** — already done; do not re-run as greenfield work.
