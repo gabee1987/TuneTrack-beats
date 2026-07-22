@@ -1,5 +1,5 @@
 import type { PublicRoomState } from "@tunetrack/shared";
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, type ReactNode } from "react";
 import { useHostPlayback, type HostPlaybackState } from "./useHostPlayback";
 
 const HostPlaybackContext = createContext<HostPlaybackState | null>(null);
@@ -9,6 +9,7 @@ const disabledPlayback: HostPlaybackState = {
   isPlaying: false,
   position: 0,
   duration: 0,
+  unlockPlayback: () => undefined,
   pause: () => undefined,
   resume: () => undefined,
   seek: () => undefined,
@@ -45,6 +46,25 @@ export function HostPlaybackProvider({
     roomId,
     roomState,
   });
+  const unlockPlaybackRef = useRef(playback.unlockPlayback);
+  unlockPlaybackRef.current = playback.unlockPlayback;
+
+  // Arm the Web Playback SDK on every host gesture so later socket-driven
+  // track changes (outside the click stack) are still allowed to autoplay.
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
+    function handlePointerDown() {
+      unlockPlaybackRef.current();
+    }
+
+    window.addEventListener("pointerdown", handlePointerDown, true);
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown, true);
+    };
+  }, [enabled]);
 
   return (
     <HostPlaybackContext.Provider value={playback}>{children}</HostPlaybackContext.Provider>

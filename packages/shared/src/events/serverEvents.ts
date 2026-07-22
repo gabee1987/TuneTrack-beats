@@ -27,6 +27,7 @@ export const ServerToClientEvent = {
   SpotifySmartSearchResult: "spotify_smart_search_result",
   SpotifyAuthUrl: "spotify_auth_url",
   SpotifyTokenRefreshed: "spotify_token_refreshed",
+  SpotifyPlaybackResult: "spotify_playback_result",
   StateUpdate: "state_update",
   Error: "error",
 } as const;
@@ -78,6 +79,14 @@ export interface SpotifyTokenRefreshedPayload {
   accessToken: string;
   expiresInSeconds: number;
 }
+
+export type SpotifyPlaybackResultPayload =
+  | { success: true }
+  | {
+      success: false;
+      code: "device_not_found" | "not_host" | "spotify_api_error" | "not_connected";
+      message: string;
+    };
 
 export type { ImportPlaylistResultPayload, SpotifyAuthResultPayload };
 export type { PlaylistTracksPayload } from "../spotify/playlistTracks.js";

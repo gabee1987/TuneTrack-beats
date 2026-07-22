@@ -24,6 +24,7 @@ import type {
   PublicRoomSummary,
   PublicTrackInfo,
   RefreshSpotifyTokenPayloadParsed,
+  PlaySpotifyTrackPayloadParsed,
   RenameRoomPayloadParsed,
   RemovePlaylistTracksPayloadParsed,
   RequestSpotifyAuthUrlPayloadParsed,
@@ -32,6 +33,7 @@ import type {
   KickPlayerPayloadParsed,
   SkipTurnPayloadParsed,
   SpotifyAccountType,
+  SpotifyPlaybackResultPayload,
   StartGamePayloadParsed,
   GenerateSpotifyCandidatesPayloadParsed,
   SearchSpotifyMusicPayloadParsed,
@@ -480,6 +482,29 @@ export class RoomService {
     }
 
     return { result: null, roomState: null };
+  }
+
+  public async playSpotifyTrack(
+    payload: PlaySpotifyTrackPayloadParsed,
+    socketId: string,
+  ): Promise<SpotifyPlaybackResultPayload> {
+    this.roomRegistry.getRoomStateForMember(socketId, payload.roomId);
+
+    try {
+      this.roomRegistry.requireHost(socketId, payload.roomId);
+    } catch {
+      return {
+        success: false,
+        code: "not_host",
+        message: "Only the host can control Spotify playback.",
+      };
+    }
+
+    return this.spotifyAuthService.playTrackOnHostDevice(
+      payload.roomId,
+      payload.deviceId,
+      payload.spotifyTrackUri,
+    );
   }
 
   public getPlaylistTracks(

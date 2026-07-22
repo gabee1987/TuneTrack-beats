@@ -517,6 +517,35 @@ export class SpotifyApiClient {
 
     return `${SpotifyApiClient.ACCOUNTS_URL}/authorize?${params.toString()}`;
   }
+
+  public async playTracksOnDevice(
+    accessToken: string,
+    deviceId: string,
+    spotifyTrackUris: string[],
+  ): Promise<void> {
+    const response = await fetch(
+      `${SpotifyApiClient.BASE_URL}/me/player/play?device_id=${encodeURIComponent(deviceId)}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ uris: spotifyTrackUris }),
+      },
+    );
+
+    if (response.ok || response.status === 204) {
+      return;
+    }
+
+    const body = await response.text().catch(() => "");
+    throw new SpotifyApiError(
+      response.status === 404 ? "not_found" : "api_error",
+      body || `Spotify play failed with status ${response.status}`,
+      response.status,
+    );
+  }
 }
 
 function isSpotifyPlaylistSearchItem(

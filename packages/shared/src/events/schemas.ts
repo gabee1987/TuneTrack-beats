@@ -217,6 +217,15 @@ export const refreshSpotifyTokenPayloadSchema = z.object({
   roomId: roomIdSchema,
 });
 
+export const playSpotifyTrackPayloadSchema = z.object({
+  roomId: roomIdSchema,
+  deviceId: z.string().trim().min(1).max(128),
+  spotifyTrackUri: z
+    .string()
+    .trim()
+    .regex(/^spotify:track:[A-Za-z0-9]+$/, "Invalid Spotify track URI"),
+});
+
 export const searchSpotifyPlaylistsPayloadSchema = z.object({
   roomId: roomIdSchema,
   query: z.string().trim().min(2).max(100),
@@ -340,6 +349,7 @@ export type RequestSpotifyAuthUrlPayloadParsed = z.output<
 
 export type RefreshSpotifyTokenPayloadInput = z.input<typeof refreshSpotifyTokenPayloadSchema>;
 export type RefreshSpotifyTokenPayloadParsed = z.output<typeof refreshSpotifyTokenPayloadSchema>;
+export type PlaySpotifyTrackPayloadParsed = z.output<typeof playSpotifyTrackPayloadSchema>;
 export type SearchSpotifyPlaylistsPayloadParsed = z.output<
   typeof searchSpotifyPlaylistsPayloadSchema
 >;

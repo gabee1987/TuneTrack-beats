@@ -507,8 +507,9 @@ describe("room flow", () => {
       artist: "Test Artist 3",
       albumTitle: "Test Album 3",
       genre: "Pop",
-      releaseYear: 1990,
     });
+    expect(firstTurnState.currentTrackCard).not.toHaveProperty("releaseYear");
+    expect(firstTurnState.currentTrackCard).not.toHaveProperty("sourceReleaseYear");
     expect(firstTurnState.timelines[hostIdentity.playerId]).toEqual([
       {
         id: "test-track-1",

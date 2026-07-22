@@ -3,6 +3,7 @@ import {
   ServerToClientEvent,
   generateSpotifyCandidatesPayloadSchema,
   openSpotifyPlaylistPayloadSchema,
+  playSpotifyTrackPayloadSchema,
   refreshSpotifyTokenPayloadSchema,
   requestSpotifyAuthUrlPayloadSchema,
   searchSpotifyMusicPayloadSchema,
@@ -31,6 +32,7 @@ export function registerSpotifyHandlers(
   registerGenerateSpotifyCandidatesHandler(socket, roomService);
   registerUseSpotifyCandidatesHandler(io, socket, roomService);
   registerRefreshSpotifyTokenHandler(io, socket, roomService);
+  registerPlaySpotifyTrackHandler(socket, roomService);
 }
 
 function registerRequestSpotifyAuthUrlHandler(socket: Socket, roomService: RoomService): void {
@@ -234,6 +236,35 @@ function registerRefreshSpotifyTokenHandler(
         socket.emit(ServerToClientEvent.Error, {
           code: "SPOTIFY_TOKEN_REFRESH_FAILED",
           message: "Could not refresh Spotify token.",
+        });
+      });
+  });
+}
+
+function registerPlaySpotifyTrackHandler(socket: Socket, roomService: RoomService): void {
+  socket.on(ClientToServerEvent.PlaySpotifyTrack, (payload: unknown) => {
+    const parseResult = playSpotifyTrackPayloadSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      socket.emit(ServerToClientEvent.SpotifyPlaybackResult, {
+        success: false,
+        code: "spotify_api_error",
+        message: "Playback request is invalid.",
+      });
+      return;
+    }
+
+    void roomService
+      .playSpotifyTrack(parseResult.data, socket.id)
+      .then((result) => {
+        socket.emit(ServerToClientEvent.SpotifyPlaybackResult, result);
+      })
+      .catch((error: unknown) => {
+        logger.error({ error }, "play_spotify_track handler threw unexpectedly");
+        socket.emit(ServerToClientEvent.SpotifyPlaybackResult, {
+          success: false,
+          code: "spotify_api_error",
+          message: "Spotify could not start playback.",
         });
       });
   });

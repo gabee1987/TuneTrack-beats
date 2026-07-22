@@ -1,9 +1,10 @@
-import type { GameState, GameTrackCard } from "@tunetrack/game-engine";
+import type { GameState, GameTrackCard, RevealState } from "@tunetrack/game-engine";
 import type { PublicRoomState } from "@tunetrack/shared";
 import { describe, expect, it } from "vitest";
 import {
   createTrackCardMap,
   mapGameStateToPublicRoomState,
+  PUBLIC_HISTORY_MAX_ENTRIES,
 } from "../../src/rooms/roomStateMappers.js";
 
 const HOST_ID = "player-host";
@@ -67,7 +68,7 @@ describe("mapGameStateToPublicRoomState", () => {
     ]);
   });
 
-  it("includes releaseYear on currentTrackCard during turn (baseline; Phase 5 will remove)", () => {
+  it("omits releaseYear and sourceReleaseYear on currentTrackCard during turn", () => {
     const publicState = mapGameStateToPublicRoomState(
       createLobbyRoomState(),
       createTurnGameState({ currentTrackCard: trackA }),
@@ -79,15 +80,15 @@ describe("mapGameStateToPublicRoomState", () => {
       title: "Song A",
       artist: "Artist A",
       albumTitle: "Album A",
-      releaseYear: 1999,
-      sourceReleaseYear: 1998,
       artworkUrl: "https://example.com/a.jpg",
       previewUrl: "https://example.com/a.mp3",
       spotifyTrackUri: "spotify:track:a",
     });
+    expect(publicState.currentTrackCard).not.toHaveProperty("releaseYear");
+    expect(publicState.currentTrackCard).not.toHaveProperty("sourceReleaseYear");
   });
 
-  it("includes releaseYear on currentTrackCard during challenge (baseline; Phase 5 will remove)", () => {
+  it("omits releaseYear and sourceReleaseYear on currentTrackCard during challenge", () => {
     const gameState = createTurnGameState({
       phase: "challenge",
       currentTrackCard: trackA,
@@ -111,7 +112,8 @@ describe("mapGameStateToPublicRoomState", () => {
     );
 
     expect(publicState.status).toBe("challenge");
-    expect(publicState.currentTrackCard?.releaseYear).toBe(1999);
+    expect(publicState.currentTrackCard).not.toHaveProperty("releaseYear");
+    expect(publicState.currentTrackCard).not.toHaveProperty("sourceReleaseYear");
     expect(publicState.challengeState).toEqual({
       phase: "open",
       originalPlayerId: HOST_ID,
@@ -122,6 +124,40 @@ describe("mapGameStateToPublicRoomState", () => {
     });
     expect(publicState.challengeState).not.toHaveProperty("placedCard");
     expect(publicState.challengeState).not.toHaveProperty("originalWasCorrect");
+  });
+
+  it("includes releaseYear on currentTrackCard during reveal", () => {
+    const publicState = mapGameStateToPublicRoomState(
+      createLobbyRoomState(),
+      createTurnGameState({
+        phase: "reveal",
+        currentTrackCard: trackA,
+        turn: null,
+      }),
+      createTrackCardMap([trackA, trackB]),
+    );
+
+    expect(publicState.status).toBe("reveal");
+    expect(publicState.currentTrackCard?.releaseYear).toBe(1999);
+    expect(publicState.currentTrackCard?.sourceReleaseYear).toBe(1998);
+  });
+
+  it("includes releaseYear on currentTrackCard during finished", () => {
+    const publicState = mapGameStateToPublicRoomState(
+      createLobbyRoomState(),
+      createTurnGameState({
+        phase: "finished",
+        currentTrackCard: trackA,
+        turn: null,
+        winnerPlayerId: HOST_ID,
+      }),
+      createTrackCardMap([trackA, trackB]),
+    );
+
+    expect(publicState.status).toBe("finished");
+    expect(publicState.currentTrackCard?.releaseYear).toBe(1999);
+    expect(publicState.currentTrackCard?.sourceReleaseYear).toBe(1998);
+    expect(publicState.winnerPlayerId).toBe(HOST_ID);
   });
 
   it("maps timeline cards with full track metadata and revealedYear", () => {
@@ -156,6 +192,24 @@ describe("mapGameStateToPublicRoomState", () => {
         artworkUrl: "https://example.com/a.jpg",
       }),
     );
+  });
+
+  it("keeps timeline years even while currentTrackCard year is hidden", () => {
+    const publicState = mapGameStateToPublicRoomState(
+      createLobbyRoomState(),
+      createTurnGameState({
+        currentTrackCard: trackA,
+        timelines: {
+          [HOST_ID]: [{ id: trackB.id, releaseYear: 2005 }],
+          [GUEST_ID]: [],
+        },
+      }),
+      createTrackCardMap([trackA, trackB]),
+    );
+
+    expect(publicState.currentTrackCard).not.toHaveProperty("releaseYear");
+    expect(publicState.timelines[HOST_ID][0].releaseYear).toBe(2005);
+    expect(publicState.timelines[HOST_ID][0].revealedYear).toBe(2005);
   });
 
   it("maps turn with turnSkipDeadlineEpochMs reset to null", () => {
@@ -249,6 +303,24 @@ describe("mapGameStateToPublicRoomState", () => {
     expect(publicState.history[0]).not.toHaveProperty("challengerTtChange");
   });
 
+  it(`caps public history to the last ${PUBLIC_HISTORY_MAX_ENTRIES} entries`, () => {
+    const historyLength = PUBLIC_HISTORY_MAX_ENTRIES + 12;
+    const history = Array.from({ length: historyLength }, (_, index) =>
+      createHistoryEntry(index),
+    );
+
+    const publicState = mapGameStateToPublicRoomState(
+      createLobbyRoomState(),
+      createTurnGameState({ history }),
+      createTrackCardMap([trackA, trackB]),
+    );
+
+    expect(publicState.history).toHaveLength(PUBLIC_HISTORY_MAX_ENTRIES);
+    expect(publicState.history[0]?.selectedSlotIndex).toBe(12);
+    expect(publicState.history.at(-1)?.selectedSlotIndex).toBe(historyLength - 1);
+    expect(publicState.history.every((entry) => entry.placedCard.releaseYear === 1999)).toBe(true);
+  });
+
   it("projects winner and finished status", () => {
     const publicState = mapGameStateToPublicRoomState(
       createLobbyRoomState(),
@@ -284,6 +356,23 @@ describe("mapGameStateToPublicRoomState", () => {
     ).toThrow("TRACK_CARD_NOT_FOUND");
   });
 });
+
+function createHistoryEntry(selectedSlotIndex: number): RevealState {
+  return {
+    playerId: HOST_ID,
+    placedCard: { id: trackA.id, releaseYear: trackA.releaseYear },
+    selectedSlotIndex,
+    wasCorrect: true,
+    revealType: "placement",
+    validSlotIndexes: [selectedSlotIndex],
+    challengerPlayerId: null,
+    challengerSelectedSlotIndex: null,
+    challengeWasSuccessful: null,
+    challengerTtChange: 0,
+    awardedPlayerId: HOST_ID,
+    awardedSlotIndex: selectedSlotIndex,
+  };
+}
 
 function createLobbyRoomState(): PublicRoomState {
   return {

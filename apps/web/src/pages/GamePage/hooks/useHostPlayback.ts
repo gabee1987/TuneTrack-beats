@@ -11,6 +11,8 @@ export interface HostPlaybackState {
   isPlaying: boolean;
   position: number;
   duration: number;
+  /** Call from a user gesture so remote track changes can autoplay. */
+  unlockPlayback: () => void;
   pause: () => void;
   resume: () => void;
   seek: (positionMs: number) => void;
@@ -22,6 +24,7 @@ const disabled: HostPlaybackState = {
   isPlaying: false,
   position: 0,
   duration: 0,
+  unlockPlayback: noop,
   pause: noop,
   resume: noop,
   seek: noop,
@@ -46,18 +49,15 @@ export function useHostPlayback({
     isPlaying: sdkIsPlaying,
     position: sdkPosition,
     duration: sdkDuration,
-    hasActiveContext,
+    unlockPlayback: sdkUnlockPlayback,
     playTrack,
     pause: sdkPause,
-    resume: sdkResume,
     seek: sdkSeek,
   } = sdk;
 
-  // Keep a stable ref to the current track URI so resume() can use it without a dep
   const currentUriRef = useRef<string | null>(null);
   currentUriRef.current = roomState?.currentTrackCard?.spotifyTrackUri ?? null;
 
-  // Free account: create an Audio element imperatively
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [freeIsPlaying, setFreeIsPlaying] = useState(false);
   const [freePosition, setFreePosition] = useState(0);
@@ -131,21 +131,72 @@ export function useHostPlayback({
     };
   }, [enabled, isFree]);
 
-  // Premium: auto-play when the track URI changes and the SDK player is ready
-  const lastSdkUriRef = useRef<string | null>(null);
+  // Premium: auto-play when the track URI changes. Only mark success after the
+  // SDK reports audible playback for that URI (server accept alone is not enough).
+  const lastConfirmedUriRef = useRef<string | null>(null);
+  const playInFlightUriRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!enabled) lastSdkUriRef.current = null;
+    if (!enabled) {
+      lastConfirmedUriRef.current = null;
+      playInFlightUriRef.current = null;
+    }
   }, [enabled]);
+
   useEffect(() => {
     if (!enabled || !isPremium || !sdkReady) return;
     const uri = roomState?.currentTrackCard?.spotifyTrackUri ?? null;
-    if (uri && uri !== lastSdkUriRef.current) {
-      lastSdkUriRef.current = uri;
-      playTrack(uri);
+    if (!uri || uri === lastConfirmedUriRef.current || uri === playInFlightUriRef.current) {
+      return;
     }
+
+    let cancelled = false;
+    const retryTimeoutIds: number[] = [];
+    const retryDelaysMs = [0, 1500, 3500];
+
+    playInFlightUriRef.current = uri;
+
+    async function attemptPlayWithRetries() {
+      for (let attemptIndex = 0; attemptIndex < retryDelaysMs.length; attemptIndex += 1) {
+        const delayMs = retryDelaysMs[attemptIndex] ?? 0;
+        if (delayMs > 0) {
+          await new Promise<void>((resolve) => {
+            const timeoutId = window.setTimeout(resolve, delayMs);
+            retryTimeoutIds.push(timeoutId);
+          });
+        }
+        if (cancelled) {
+          return;
+        }
+
+        const success = await playTrack(uri!);
+        if (cancelled) {
+          return;
+        }
+        if (success) {
+          lastConfirmedUriRef.current = uri;
+          playInFlightUriRef.current = null;
+          return;
+        }
+      }
+
+      if (!cancelled && playInFlightUriRef.current === uri) {
+        playInFlightUriRef.current = null;
+      }
+    }
+
+    void attemptPlayWithRetries();
+
+    return () => {
+      cancelled = true;
+      for (const timeoutId of retryTimeoutIds) {
+        window.clearTimeout(timeoutId);
+      }
+      if (playInFlightUriRef.current === uri) {
+        playInFlightUriRef.current = null;
+      }
+    };
   }, [enabled, isPremium, sdkReady, playTrack, roomState?.currentTrackCard?.spotifyTrackUri]);
 
-  // Free: auto-play when the preview URL changes
   const lastPreviewUrlRef = useRef<string | null>(null);
   useEffect(() => {
     if (!enabled || !isFree) return;
@@ -158,6 +209,12 @@ export function useHostPlayback({
     }
   }, [enabled, isFree, roomState?.currentTrackCard?.previewUrl]);
 
+  const unlockPlayback = useCallback(() => {
+    if (isPremium) {
+      sdkUnlockPlayback();
+    }
+  }, [isPremium, sdkUnlockPlayback]);
+
   const pause = useCallback(() => {
     if (isPremium) sdkPause();
     else audioRef.current?.pause();
@@ -165,18 +222,21 @@ export function useHostPlayback({
 
   const resume = useCallback(() => {
     if (isPremium) {
-      if (hasActiveContext) {
-        // SDK already has a track loaded — just unpause
-        sdkResume();
-      } else {
-        // No track loaded yet (auto-play may have failed or not fired); start it now
-        const uri = currentUriRef.current;
-        if (uri) playTrack(uri);
+      // Explicit Play is a user gesture — always (re)request the current URI so
+      // we recover from failed auto-play track switches, not just unpause.
+      const uri = currentUriRef.current;
+      if (uri) {
+        void playTrack(uri).then((success) => {
+          if (success) {
+            lastConfirmedUriRef.current = uri;
+          }
+        });
+        return;
       }
     } else {
       void audioRef.current?.play().catch(() => undefined);
     }
-  }, [isPremium, hasActiveContext, sdkResume, playTrack]);
+  }, [isPremium, playTrack]);
 
   const seek = useCallback(
     (positionMs: number) => {
@@ -193,6 +253,7 @@ export function useHostPlayback({
       isPlaying: sdkIsPlaying,
       position: sdkPosition,
       duration: sdkDuration,
+      unlockPlayback,
       pause,
       resume,
       seek,
@@ -203,6 +264,7 @@ export function useHostPlayback({
       isPlaying: freeIsPlaying,
       position: freePosition,
       duration: freeDuration,
+      unlockPlayback,
       pause,
       resume,
       seek,

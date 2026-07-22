@@ -2,6 +2,7 @@ import {
   ClientToServerEvent,
   ServerToClientEvent,
   type ServerErrorPayload,
+  type SpotifyPlaybackResultPayload,
   type SpotifyTokenRefreshedPayload,
 } from "@tunetrack/shared";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -19,11 +20,16 @@ export interface UseSpotifyPlaybackSdkResult {
   position: number;
   duration: number;
   hasActiveContext: boolean;
-  playTrack: (spotifyTrackUri: string) => void;
+  /** Call from a user gesture so later remote play commands are allowed. */
+  unlockPlayback: () => void;
+  playTrack: (spotifyTrackUri: string) => Promise<boolean>;
   pause: () => void;
   resume: () => void;
   seek: (positionMs: number) => void;
 }
+
+const SERVER_PLAY_TIMEOUT_MS = 12_000;
+const PLAYBACK_CONFIRM_TIMEOUT_MS = 8_000;
 
 let sdkScriptLoaded = false;
 
@@ -48,7 +54,6 @@ export function useSpotifyPlaybackSdk({
   const [isPlaying, setIsPlaying] = useState(false);
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
-  // true once the first player_state_changed event fires — means an API play call succeeded
   const [hasActiveContext, setHasActiveContext] = useState(false);
 
   const playerRef = useRef<Spotify.Player | null>(null);
@@ -59,6 +64,12 @@ export function useSpotifyPlaybackSdk({
   const positionSnapshotTimeRef = useRef(0);
   const durationRef = useRef(0);
   const deviceIdRef = useRef<string | null>(null);
+  const currentTrackUriRef = useRef<string | null>(null);
+  const playConfirmRef = useRef<{
+    uri: string;
+    resolve: (success: boolean) => void;
+    timeoutId: number;
+  } | null>(null);
 
   const resetPlaybackState = useCallback(() => {
     setIsPlaying(false);
@@ -69,30 +80,24 @@ export function useSpotifyPlaybackSdk({
     positionSnapshotRef.current = 0;
     positionSnapshotTimeRef.current = 0;
     durationRef.current = 0;
+    currentTrackUriRef.current = null;
+  }, []);
+
+  const failPendingPlayConfirmation = useCallback(() => {
+    const pending = playConfirmRef.current;
+    if (!pending) {
+      return;
+    }
+    playConfirmRef.current = null;
+    window.clearTimeout(pending.timeoutId);
+    pending.resolve(false);
   }, []);
 
   const pauseCurrentSpotifyDevice = useCallback(() => {
-    const token = accessTokenRef.current;
-    const deviceIdValue = deviceIdRef.current;
-
-    void playerRef.current?.pause();
+    // Pause via the Web Playback SDK only — browser REST calls to api.spotify.com
+    // are blocked by CORS from this origin.
+    void playerRef.current?.pause().catch(() => undefined);
     resetPlaybackState();
-
-    if (!token) {
-      return;
-    }
-
-    const url = new URL("https://api.spotify.com/v1/me/player/pause");
-    if (deviceIdValue) {
-      url.searchParams.set("device_id", deviceIdValue);
-    }
-
-    void fetch(url, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }).catch(() => undefined);
   }, [resetPlaybackState]);
 
   const requestToken = useCallback(async (): Promise<string | null> => {
@@ -161,6 +166,11 @@ export function useSpotifyPlaybackSdk({
       });
       player.addListener("playback_error", ({ message }) => {
         console.error("[TuneTrack] Spotify SDK playback error:", message);
+        failPendingPlayConfirmation();
+      });
+      player.addListener("autoplay_failed", () => {
+        console.warn("[TuneTrack] Spotify SDK autoplay failed — needs a user gesture");
+        failPendingPlayConfirmation();
       });
 
       player.on("ready", ({ device_id }) => {
@@ -169,6 +179,7 @@ export function useSpotifyPlaybackSdk({
         deviceIdRef.current = device_id;
         setDeviceId(device_id);
         setIsReady(true);
+        void player?.activateElement().catch(() => undefined);
       });
 
       player.on("not_ready", () => {
@@ -179,6 +190,8 @@ export function useSpotifyPlaybackSdk({
       player.on("player_state_changed", (state) => {
         if (disposed || !state) return;
         const playing = !state.paused;
+        const trackUri = state.track_window.current_track?.uri ?? null;
+        currentTrackUriRef.current = trackUri;
         setIsPlaying(playing);
         setHasActiveContext(true);
         isPlayingRef.current = playing;
@@ -187,6 +200,13 @@ export function useSpotifyPlaybackSdk({
         durationRef.current = state.duration;
         setPosition(state.position);
         setDuration(state.duration);
+
+        const pending = playConfirmRef.current;
+        if (pending && trackUri === pending.uri && playing) {
+          playConfirmRef.current = null;
+          window.clearTimeout(pending.timeoutId);
+          pending.resolve(true);
+        }
       });
 
       await player.connect();
@@ -197,8 +217,7 @@ export function useSpotifyPlaybackSdk({
 
     return () => {
       disposed = true;
-      // Local pause + disconnect only. Avoid REST pause here — the device is
-      // about to disappear and Spotify returns 404 "Device not found".
+      failPendingPlayConfirmation();
       void player?.pause().catch(() => undefined);
       player?.disconnect();
       playerRef.current = null;
@@ -207,7 +226,7 @@ export function useSpotifyPlaybackSdk({
       deviceIdRef.current = null;
       resetPlaybackState();
     };
-  }, [enabled, requestToken, resetPlaybackState]);
+  }, [enabled, requestToken, resetPlaybackState, failPendingPlayConfirmation]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -233,7 +252,6 @@ export function useSpotifyPlaybackSdk({
     };
   }, [enabled, pauseCurrentSpotifyDevice]);
 
-  // Interpolate position while playing (between player_state_changed events)
   useEffect(() => {
     if (!enabled) return;
     const intervalId = window.setInterval(() => {
@@ -245,7 +263,6 @@ export function useSpotifyPlaybackSdk({
     return () => window.clearInterval(intervalId);
   }, [enabled]);
 
-  // Keep the token fresh: refresh ~1 minute before expiry
   useEffect(() => {
     if (!enabled) return;
 
@@ -266,48 +283,107 @@ export function useSpotifyPlaybackSdk({
     return () => window.clearInterval(intervalId);
   }, [enabled, requestToken]);
 
-  const playTrack = useCallback((spotifyTrackUri: string) => {
-    const deviceIdValue = deviceIdRef.current;
-    if (!deviceIdValue) return;
+  const unlockPlayback = useCallback(() => {
+    void playerRef.current?.activateElement().catch(() => undefined);
+  }, []);
 
-    async function doPlay() {
-      // Await the token if not yet cached (handles the startup race condition)
-      let token = accessTokenRef.current;
-      if (!token) {
-        token = await requestToken();
-        if (!token) {
-          console.error("[TuneTrack] Spotify playTrack: could not obtain token");
-          return;
-        }
-      }
-
-      // Prefer the live ref in case ready updated after this call was scheduled.
-      const activeDeviceId = deviceIdRef.current ?? deviceIdValue;
-      const res = await fetch(
-        `https://api.spotify.com/v1/me/player/play?device_id=${activeDeviceId}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ uris: [spotifyTrackUri] }),
-        },
-      );
-      if (!res.ok) {
-        const body = await res.text().catch(() => "");
-        console.error(`[TuneTrack] Spotify playTrack failed ${res.status}:`, body);
-      }
+  const waitForPlayingUri = useCallback((spotifyTrackUri: string): Promise<boolean> => {
+    const alreadyPlaying =
+      currentTrackUriRef.current === spotifyTrackUri && isPlayingRef.current;
+    if (alreadyPlaying) {
+      return Promise.resolve(true);
     }
 
-    void doPlay();
-  }, [requestToken]);
+    failPendingPlayConfirmation();
+
+    return new Promise((resolve) => {
+      const timeoutId = window.setTimeout(() => {
+        if (playConfirmRef.current?.uri === spotifyTrackUri) {
+          playConfirmRef.current = null;
+          console.error("[TuneTrack] Spotify playTrack: timed out waiting for audible playback");
+          resolve(false);
+        }
+      }, PLAYBACK_CONFIRM_TIMEOUT_MS);
+
+      playConfirmRef.current = {
+        uri: spotifyTrackUri,
+        resolve,
+        timeoutId,
+      };
+    });
+  }, [failPendingPlayConfirmation]);
+
+  const requestServerPlay = useCallback(
+    async (spotifyTrackUri: string, deviceIdValue: string): Promise<boolean> => {
+      const socketClient = await getSocketClient();
+
+      return new Promise((resolve) => {
+        const timeoutId = window.setTimeout(() => {
+          cleanup();
+          console.error("[TuneTrack] Spotify playTrack: timed out waiting for server");
+          resolve(false);
+        }, SERVER_PLAY_TIMEOUT_MS);
+
+        function cleanup() {
+          window.clearTimeout(timeoutId);
+          socketClient.off(ServerToClientEvent.SpotifyPlaybackResult, handleResult);
+        }
+
+        function handleResult(payload: SpotifyPlaybackResultPayload) {
+          cleanup();
+          if (!payload.success) {
+            console.error(
+              `[TuneTrack] Spotify playTrack failed (${payload.code}):`,
+              payload.message,
+            );
+            resolve(false);
+            return;
+          }
+          resolve(true);
+        }
+
+        socketClient.on(ServerToClientEvent.SpotifyPlaybackResult, handleResult);
+        socketClient.emit(ClientToServerEvent.PlaySpotifyTrack, {
+          roomId,
+          deviceId: deviceIdValue,
+          spotifyTrackUri,
+        });
+      });
+    },
+    [roomId],
+  );
+
+  const playTrack = useCallback(
+    async (spotifyTrackUri: string): Promise<boolean> => {
+      const activeDeviceId = deviceIdRef.current;
+      if (!activeDeviceId) {
+        return false;
+      }
+
+      try {
+        await playerRef.current?.activateElement();
+      } catch {
+        // Autoplay policies can reject this until a gesture; play may still work.
+      }
+
+      const serverAccepted = await requestServerPlay(spotifyTrackUri, activeDeviceId);
+      if (!serverAccepted) {
+        return false;
+      }
+
+      // Server 204 only means Spotify accepted the command. Confirm the SDK is
+      // actually playing this URI — otherwise later auto-plays get skipped.
+      return waitForPlayingUri(spotifyTrackUri);
+    },
+    [requestServerPlay, waitForPlayingUri],
+  );
 
   const pause = useCallback(() => {
     pauseCurrentSpotifyDevice();
   }, [pauseCurrentSpotifyDevice]);
 
   const resume = useCallback(() => {
+    void playerRef.current?.activateElement().catch(() => undefined);
     void playerRef.current?.resume();
   }, []);
 
@@ -322,6 +398,7 @@ export function useSpotifyPlaybackSdk({
     position,
     duration,
     hasActiveContext,
+    unlockPlayback,
     playTrack,
     pause,
     resume,

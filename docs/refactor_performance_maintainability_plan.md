@@ -1,13 +1,13 @@
 # TuneTrack Refactor Plan — Performance, Traffic & Maintainability
 
-> Status: **Paused after Phase 3 — next up is Phase 4**  
+> Status: **Paused after Phase 5 — next up is Phase 6**  
 > Rules: follow [`AGENT.md`](../AGENT.md) and [`CLAUDE.md`](../CLAUDE.md)  
 > Created: 2026-07-17  
 > Last checkpoint: 2026-07-22
 
 ## Resume checkpoint (read this first when continuing)
 
-**Where we stopped:** Phases **0–3 are implemented**. Next command to resume: **`go Phase 4`** (split RoomRegistry).
+**Where we stopped:** Phases **0–5 are implemented**. Next command to resume: **`go Phase 6`** (split GameFlowService).
 
 | Item | State |
 |------|--------|
@@ -16,18 +16,20 @@
 | Phase 1 follow-up — track dedupe / already-queued toast / added icon | Done (out-of-band during Phase 1 validation) |
 | Phase 2 — GamePage countdown + playback render isolation | Done (automated); **manual game-feel checklist still recommended** |
 | Phase 3 — Split realtime socket handlers | Done (automated); **manual smoke checklist pending** |
-| Phase 4+ | Not started |
+| Phase 4 — Split RoomRegistry | Done (`RoomStore`, `RoomTimerCoordinator`, Lobby/Gameplay/Connection) |
+| Phase 5 — Traffic & year integrity | Done (year omitted until reveal; history capped at 30) |
+| Phase 6+ | Not started |
 
-**Before starting Phase 4 (recommended):**
-1. Finish Phase 3 manual smoke (create/join/rename, place/challenge/reveal, host transfer, Spotify lobby, invalid-action error toast).
-2. Optionally finish Phase 2 manual game-feel checklist if not done yet.
+**Before starting Phase 6 (recommended):**
+1. Optional: Phase 5 manual fairness check (WS `state_update` during turn has no year on current card).
+2. Optionally finish Phase 2/3 manual checklists if not done yet.
 
 **Known follow-ups already queued in this plan:**
 - Phase 7 item 5: replace flat `useLobbySpotify` ~90-field return with grouped domains / domain-hook consumption (snappy lobby UX).
 - Phase 1 CSS still shared: `LobbySpotifySection.module.css` (~1321 lines) — split later if needed.
-- Phase 5: strip `currentTrackCard.releaseYear` from wire until reveal (mapper tests in Phase 0 pin current leak).
+- Phase 8: delta/`state_patch` only if history cap + year strip are insufficient.
 
-**Do not restart from scratch.** Preserve Phase 0 mapper tests; Phase 5 will intentionally change the year-on-wire assertions.
+**Do not restart from scratch.** Continue from Phase 6; preserve Phase 5 mapper year/history assertions.
 
 ---
 
@@ -56,12 +58,12 @@
 | `LobbySpotifySection.tsx` | ~1850 | God UI | **Split** → `components/spotify/` |
 | `useLobbySpotify.ts` | ~1080 | God hook | **Split** → `hooks/spotify/` (flat return bag remains; Phase 7 #5) |
 | `registerSocketHandlers.ts` | ~1070 | 35 copy-paste handlers | **Split (Phase 3)** → thin wire + `handlers/*` |
-| `RoomRegistry.ts` | ~1070 | Lifecycle + gameplay + timers | Phase 4 |
+| `RoomRegistry.ts` | ~1070 | Lifecycle + gameplay + timers | **Split (Phase 4)** → Store / TimerCoordinator / Lobby / Gameplay / Connection |
 | `gamePageMenuTabs.tsx` | ~730 | Menu factory + UI | Partially improved (playback isolated); fuller split in Phase 7 |
-| `GameFlowService.ts` | ~680 | All rules in one service | Phase 6 |
+| `GameFlowService.ts` | ~680 | All rules in one service | **Next (Phase 6)** |
 | `RoomService.ts` | ~514 | Room facade + Spotify/playlist bus | With Phase 4 |
 
-**Traffic finding (still open — Phase 5):** every mutation emits full `PublicRoomState` via `state_update` (no deltas). History grows unbounded. `currentTrackCard.releaseYear` is on the wire before reveal.
+**Traffic finding (Phase 5 addressed):** every mutation still emits full `PublicRoomState` via `state_update` (no deltas — deferred to Phase 8). Public history is capped at last **30** entries. `currentTrackCard.releaseYear` / `sourceReleaseYear` omitted during `turn`/`challenge`.
 
 **Render finding (Phase 2 addressed):** challenge countdown and host playback no longer tick the full GamePage derivation tree.
 ---
@@ -127,10 +129,10 @@ npm run test
 | `npm run test` | server 73, web 61, game-engine 29 — **all green** |
 | `npm run typecheck` | all workspaces — **green** |
 
-Baseline pinned (intentionally failing after Phase 5 until tests are updated):
-- `currentTrackCard.releaseYear` is present during `turn` and `challenge`
+Baseline (updated in Phase 5):
+- `currentTrackCard.releaseYear` / `sourceReleaseYear` **omitted** during `turn` and `challenge`; present during `reveal` / `finished`
 - Challenge public state omits internal fields (`placedCard`, `originalWasCorrect`)
-- History omits `validSlotIndexes` / `challengerTtChange`
+- History omits `validSlotIndexes` / `challengerTtChange`; public projection capped at last **30** entries
 - Mapper sets `turn.turnSkipDeadlineEpochMs` to `null`
 
 ---
@@ -389,10 +391,20 @@ Same as Phase 3 smoke, plus:
 
 ### Exit criteria
 
-- [ ] No rooms module production file > ~700 lines
-- [ ] Timer ownership clear (one coordinator)
-- [ ] Tests + manual OK
-- [ ] You say “go Phase 5”
+- [x] No rooms module production file > ~700 lines
+- [x] Timer ownership clear (one coordinator)
+- [x] Tests OK (manual smoke still optional)
+- [x] You say “go Phase 5”
+
+### Phase 4 results (2026-07-22)
+
+| Check | Result |
+|-------|--------|
+| Structure | `RoomStore.ts`, `RoomTimerCoordinator.ts`, `RoomLobbyService.ts`, `RoomGameplayService.ts`, `RoomConnectionService.ts`; thin `RoomRegistry` facade |
+| Reliability | `clearForRoom` on room teardown paths — timers cleared when room is removed |
+| Timer ownership | Sole coordinator for challenge / reconnect / host / turn-skip schedules |
+| `npm run test -w apps/server` | **84 passed** |
+| Typecheck / lint | **green** |
 
 ---
 
@@ -434,9 +446,27 @@ npm run typecheck
 
 ### Exit criteria
 
-- [ ] Year leakage fixed and tested
-- [ ] Documented payload reduction for at least one high-frequency update type
+- [x] Year leakage fixed and tested
+- [x] Documented payload reduction for at least one high-frequency update type
+- [ ] Manual fairness WS check (recommended)
 - [ ] You say “go Phase 6”
+
+### Phase 5 results (2026-07-22)
+
+| Check | Result |
+|-------|--------|
+| Year leak (before) | `currentTrackCard.releaseYear` / `sourceReleaseYear` present on wire during `turn` / `challenge` |
+| Year leak (after) | Omitted during `turn` / `challenge`; included during `reveal` / `finished`. Timelines + history still carry years |
+| History (before) | Unbounded `history` array on every full `state_update` |
+| History (after) | Public projection capped to last **`PUBLIC_HISTORY_MAX_ENTRIES` (30)**; always sent (clients never wiped) |
+| Protocol | Still full `state_update` replace — no delta / field masks (Phase 8) |
+| Frontend | Playback tab already guards on `status === reveal\|finished` and `releaseYear !== undefined`; no client correctness dependency on pre-reveal year |
+| Mapper tests | Turn/challenge omit years; reveal/finished include; timelines keep years; history > 30 capped |
+| Integration | `roomFlow` first-turn `currentTrackCard` assertion updated (no year) |
+| `npm run test -w apps/server` | **88 passed** |
+| `npm run typecheck` / lint (server) | **green** |
+| `npm run test -w apps/web -- src/pages/GamePage` | **33 passed** |
+| `npm run typecheck -w apps/web` | **green** |
 
 ---
 
@@ -567,10 +597,10 @@ Per `AGENT.md` / `CLAUDE.md`:
 | 0 Baseline + safety nets | **Complete** | `apps/server/tests/rooms/roomStateMappers.test.ts` |
 | 1 Lobby Spotify split | **Complete** | + track dedupe / already-queued toast fix during validation |
 | 2 GamePage render isolation | **Complete** | Automated green; manual game-feel checklist optional |
-| 3 Socket handlers split | **Complete** | Automated green; manual smoke pending before Phase 4 |
-| 4 RoomRegistry split | **Next** | Resume here |
-| 5 Traffic & year integrity | Not started | Changes Phase 0 year-on-wire baseline tests |
-| 6 GameFlowService split | Not started | |
+| 3 Socket handlers split | **Complete** | Automated green; manual smoke pending |
+| 4 RoomRegistry split | **Complete** | RoomStore, TimerCoordinator, Lobby/Gameplay/Connection; clearForRoom; 84 tests |
+| 5 Traffic & year integrity | **Complete** | Year omitted until reveal; history capped at 30 |
+| 6 GameFlowService split | **Next** | Resume here |
 | 7 Menu + Lobby polish | Not started | Includes Spotify composer API optimization (#5) |
 | 8 Delta protocol (optional) | Deferred | |
 
@@ -590,9 +620,9 @@ Per `AGENT.md` / `CLAUDE.md`:
 ## How to proceed (when resuming)
 
 1. Open this file and read **Resume checkpoint**.
-2. Reply **`go Phase 4`** to continue the planned sequence.
-3. Or ask to adjust order / finish Phase 3 manual smoke first.
+2. Reply **`go Phase 6`** to continue the planned sequence.
+3. Or ask to adjust order / finish Phase 5 manual fairness check first.
 
 Earlier one-shot commands (historical):
 
-- **`go Phase 0`** / **`go Phase 0+1`** / **`go Phase 3`** — already done; do not re-run as greenfield work.
+- **`go Phase 0`** / **`go Phase 0+1`** / **`go Phase 3`** / **`go Phase 4`** / **`go Phase 5`** — already done; do not re-run as greenfield work.

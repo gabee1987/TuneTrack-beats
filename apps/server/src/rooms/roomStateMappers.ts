@@ -13,11 +13,16 @@ import {
   type TrackCardPublic,
 } from "@tunetrack/shared";
 
+/** Public `state_update` history is capped so payloads stay bounded as games lengthen. */
+export const PUBLIC_HISTORY_MAX_ENTRIES = 30;
+
 export function mapGameStateToPublicRoomState(
   currentRoomState: PublicRoomState,
   gameState: GameState,
   trackCardsById: Map<string, GameTrackCard>,
 ): PublicRoomState {
+  const includeCurrentTrackYear = shouldIncludeCurrentTrackYear(gameState.phase);
+
   return {
     ...currentRoomState,
     status: gameState.phase,
@@ -40,7 +45,7 @@ export function mapGameStateToPublicRoomState(
       ]),
     ),
     currentTrackCard: gameState.currentTrackCard
-      ? mapTrackCardToPublicTrackCard(gameState.currentTrackCard)
+      ? mapTrackCardToPublicTrackCard(gameState.currentTrackCard, includeCurrentTrackYear)
       : null,
     turn: gameState.turn
       ? {
@@ -56,15 +61,19 @@ export function mapGameStateToPublicRoomState(
     revealState: gameState.revealState
       ? mapRevealStateToPublicRevealState(gameState.revealState, trackCardsById)
       : null,
-    history: gameState.history.map((entry) =>
-      mapRevealStateToPublicGameHistoryEntry(entry, trackCardsById),
-    ),
+    history: gameState.history
+      .slice(-PUBLIC_HISTORY_MAX_ENTRIES)
+      .map((entry) => mapRevealStateToPublicGameHistoryEntry(entry, trackCardsById)),
     winnerPlayerId: gameState.winnerPlayerId,
   };
 }
 
 export function createTrackCardMap(deckCards: GameTrackCard[]): Map<string, GameTrackCard> {
   return new Map(deckCards.map((card) => [card.id, { ...card }]));
+}
+
+function shouldIncludeCurrentTrackYear(phase: GameState["phase"]): boolean {
+  return phase !== "turn" && phase !== "challenge";
 }
 
 function mapChallengeStateToPublicChallengeState(
@@ -130,20 +139,27 @@ function mapTimelineCardToPublicTimelineCard(
   if (!trackCard) throw new Error("TRACK_CARD_NOT_FOUND");
 
   return {
-    ...mapTrackCardToPublicTrackCard(trackCard),
+    ...mapTrackCardToPublicTrackCard(trackCard, true),
     revealedYear: timelineCard.releaseYear,
   };
 }
 
-function mapTrackCardToPublicTrackCard(trackCard: GameTrackCard): TrackCardPublic {
+function mapTrackCardToPublicTrackCard(
+  trackCard: GameTrackCard,
+  includeYearFields: boolean,
+): TrackCardPublic {
   return {
     id: trackCard.id,
     title: trackCard.title,
     artist: trackCard.artist,
     albumTitle: trackCard.albumTitle,
-    releaseYear: trackCard.releaseYear,
-    ...(trackCard.sourceReleaseYear !== undefined
-      ? { sourceReleaseYear: trackCard.sourceReleaseYear }
+    ...(includeYearFields
+      ? {
+          releaseYear: trackCard.releaseYear,
+          ...(trackCard.sourceReleaseYear !== undefined
+            ? { sourceReleaseYear: trackCard.sourceReleaseYear }
+            : {}),
+        }
       : {}),
     ...(trackCard.metadataStatus ? { metadataStatus: trackCard.metadataStatus } : {}),
     ...(trackCard.genre ? { genre: trackCard.genre } : {}),

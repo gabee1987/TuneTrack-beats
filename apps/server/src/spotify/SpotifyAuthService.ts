@@ -217,6 +217,71 @@ export class SpotifyAuthService {
   public isRoomSpotifyConnected(roomId: RoomId): boolean {
     return this.tokenStore.getHostTokenRecord(roomId) !== null;
   }
+
+  public async playTrackOnHostDevice(
+    roomId: RoomId,
+    deviceId: string,
+    spotifyTrackUri: string,
+  ): Promise<
+    | { success: true }
+    | {
+        success: false;
+        code: "device_not_found" | "not_connected" | "spotify_api_error";
+        message: string;
+      }
+  > {
+    let accessToken = this.getValidHostAccessToken(roomId);
+    if (!accessToken) {
+      const refreshed = await this.refreshHostToken(roomId);
+      if (!refreshed.success) {
+        return {
+          success: false,
+          code: "not_connected",
+          message: "Spotify is not connected for this room.",
+        };
+      }
+      accessToken = refreshed.accessToken;
+    }
+
+    // Device registration can lag behind the Web Playback SDK "ready" event.
+    const retryDelaysMs = [0, 300, 700, 1200, 2000];
+    let lastError: unknown;
+
+    for (const delayMs of retryDelaysMs) {
+      if (delayMs > 0) {
+        await sleep(delayMs);
+      }
+
+      try {
+        await this.apiClient.playTracksOnDevice(accessToken, deviceId, [spotifyTrackUri]);
+        return { success: true };
+      } catch (error) {
+        lastError = error;
+        if (error instanceof SpotifyApiError && error.code === "not_found") {
+          continue;
+        }
+
+        return {
+          success: false,
+          code: "spotify_api_error",
+          message: "Spotify could not start playback.",
+        };
+      }
+    }
+
+    void lastError;
+    return {
+      success: false,
+      code: "device_not_found",
+      message: "Spotify player device is not ready yet. Try again in a moment.",
+    };
+  }
+}
+
+function sleep(delayMs: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, delayMs);
+  });
 }
 
 function encodeOAuthState(state: OAuthState): string {
