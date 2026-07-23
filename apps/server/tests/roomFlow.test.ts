@@ -304,6 +304,54 @@ describe("room flow", () => {
     );
   });
 
+  it("keeps a reconnected player online when their stale socket later disconnects", () => {
+    const roomRegistry = new RoomRegistry();
+    const hostJoin = roomRegistry.createRoom(
+      "reconnect-room",
+      "Host Player",
+      "host-socket-old",
+      "host-session",
+    );
+    roomRegistry.addPlayerToRoom("reconnect-room", "Guest Player", "guest-socket", "guest-session");
+
+    roomRegistry.addPlayerToRoom("reconnect-room", "Host Player", "host-socket-new", "host-session");
+
+    const staleDisconnectState = roomRegistry.removePlayerBySocketId("host-socket-old");
+    expect(staleDisconnectState).toBeNull();
+
+    const roomState = roomRegistry.getRoomStateForMember("host-socket-new", "reconnect-room");
+    expect(roomState.players.find((player) => player.id === hostJoin.playerId)).toEqual(
+      expect.objectContaining({
+        connectionStatus: "connected",
+        isHost: true,
+      }),
+    );
+  });
+
+  it("still marks a player disconnected when their only socket drops", () => {
+    const roomRegistry = new RoomRegistry();
+    const hostJoin = roomRegistry.createRoom(
+      "solo-drop-room",
+      "Host Player",
+      "host-socket",
+      "host-session",
+    );
+    const guestJoin = roomRegistry.addPlayerToRoom(
+      "solo-drop-room",
+      "Guest Player",
+      "guest-socket",
+      "guest-session",
+    );
+
+    const roomState = roomRegistry.removePlayerBySocketId("guest-socket");
+
+    expect(roomState).not.toBeNull();
+    expect(roomState?.players.find((player) => player.id === guestJoin.playerId)).toEqual(
+      expect.objectContaining({ connectionStatus: "disconnected" }),
+    );
+    expect(roomState?.hostId).toBe(hostJoin.playerId);
+  });
+
   it("rejects new room creation once the active room limit is reached", async () => {
     const serverContext = await startTestServer();
 

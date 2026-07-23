@@ -37,6 +37,11 @@ export class RoomConnectionService {
     if (!membership) return null;
 
     this.store.deleteSocketMembership(socketId);
+
+    if (this.store.hasSocketMembershipForSession(membership.sessionId)) {
+      return null;
+    }
+
     const roomState = this.markPlayerDisconnected(membership);
 
     if (roomState?.status === "lobby") {
@@ -146,6 +151,7 @@ export class RoomConnectionService {
       throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
     }
 
+    this.store.clearOtherSocketMembershipsForSession(sessionId, socketId);
     const connectedRoomState = this.markPlayerConnected(roomId, playerId);
     this.store.setSocketMembership(socketId, { playerId, roomId, sessionId });
     return { playerId, roomState: connectedRoomState };
@@ -172,6 +178,7 @@ export class RoomConnectionService {
     const membership = this.store.getSessionMembership(sessionId);
     if (!membership) return null;
     this.store.deleteSessionMembership(sessionId);
+    this.store.deleteSocketMembershipsForSession(sessionId);
 
     const roomRecord = this.store.getRoom(membership.roomId);
     if (!roomRecord) return null;

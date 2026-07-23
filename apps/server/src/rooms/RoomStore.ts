@@ -86,6 +86,29 @@ export class RoomStore {
     this.socketMemberships.delete(socketId);
   }
 
+  public hasSocketMembershipForSession(sessionId: string): boolean {
+    for (const membership of this.socketMemberships.values()) {
+      if (membership.sessionId === sessionId) return true;
+    }
+    return false;
+  }
+
+  public clearOtherSocketMembershipsForSession(sessionId: string, keepSocketId: string): void {
+    for (const [socketId, membership] of this.socketMemberships) {
+      if (membership.sessionId === sessionId && socketId !== keepSocketId) {
+        this.socketMemberships.delete(socketId);
+      }
+    }
+  }
+
+  public deleteSocketMembershipsForSession(sessionId: string): void {
+    for (const [socketId, membership] of this.socketMemberships) {
+      if (membership.sessionId === sessionId) {
+        this.socketMemberships.delete(socketId);
+      }
+    }
+  }
+
   public getSessionMembership(sessionId: string): SessionRoomMembership | undefined {
     return this.sessionMemberships.get(sessionId);
   }
