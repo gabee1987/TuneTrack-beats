@@ -34,10 +34,6 @@ export function useGamePageController({
     [],
   );
   const preferencesState = useGamePagePreferencesState();
-  const [skipTrackSpendAnimationKey, setSkipTrackSpendAnimationKey] =
-    useState(0);
-  const [buyTimelineCardSpendAnimationKey, setBuyTimelineCardSpendAnimationKey] =
-    useState(0);
   const [pendingSkippedTrackId, setPendingSkippedTrackId] = useState<string | null>(
     null,
   );
@@ -77,16 +73,8 @@ export function useGamePageController({
     roomState,
   });
 
-  const handleSkipTrackWithTtIntent = useCallback(
-    (cardId: string | null) => {
-      setPendingSkippedTrackId(cardId);
-      setSkipTrackSpendAnimationKey((key) => key + 1);
-    },
-    [],
-  );
-
-  const handleBuyTimelineCardWithTtIntent = useCallback(() => {
-    setBuyTimelineCardSpendAnimationKey((key) => key + 1);
+  const handleSkipTrackWithTtIntent = useCallback((cardId: string | null) => {
+    setPendingSkippedTrackId(cardId);
   }, []);
 
   const actions = useGamePageActions({
@@ -99,7 +87,6 @@ export function useGamePageController({
     roomState,
     selectedSlotIndex,
     onSkipTrackWithTtIntent: handleSkipTrackWithTtIntent,
-    onBuyTimelineCardWithTtIntent: handleBuyTimelineCardWithTtIntent,
     setLocallyPlacedCard,
   });
 
@@ -164,8 +151,6 @@ export function useGamePageController({
     handleResolveChallengeWindow: actions.handleResolveChallengeWindow,
     handleSkipTrackWithTt: actions.handleSkipTrackWithTt,
     handleSkipTurn: actions.handleSkipTurn,
-    buyTimelineCardSpendAnimationKey,
-    skipTrackSpendAnimationKey,
   };
 
   const capabilityState = {

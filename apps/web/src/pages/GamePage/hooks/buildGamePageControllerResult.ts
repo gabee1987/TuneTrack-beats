@@ -21,8 +21,6 @@ interface BuildGamePageControllerResultOptions {
     | "handleResolveChallengeWindow"
     | "handleSkipTrackWithTt"
     | "handleSkipTurn"
-    | "buyTimelineCardSpendAnimationKey"
-    | "skipTrackSpendAnimationKey"
   >;
   capabilityState: Pick<
     UseGamePageControllerResult,

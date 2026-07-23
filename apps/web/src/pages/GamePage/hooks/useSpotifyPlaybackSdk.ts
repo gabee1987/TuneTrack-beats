@@ -31,18 +31,30 @@ export interface UseSpotifyPlaybackSdkResult {
 const SERVER_PLAY_TIMEOUT_MS = 32_000;
 const PLAYBACK_CONFIRM_TIMEOUT_MS = 10_000;
 
-let sdkScriptLoaded = false;
+const SDK_SCRIPT_SRC = "https://sdk.scdn.co/spotify-player.js";
+
+let sdkLoadPromise: Promise<void> | null = null;
 
 function loadSdkScript(): Promise<void> {
-  if (sdkScriptLoaded) return Promise.resolve();
-  return new Promise((resolve, reject) => {
-    window.onSpotifyWebPlaybackSDKReady = resolve;
+  if (window.Spotify) return Promise.resolve();
+  if (sdkLoadPromise) return sdkLoadPromise;
+
+  sdkLoadPromise = new Promise<void>((resolve, reject) => {
+    window.onSpotifyWebPlaybackSDKReady = () => resolve();
+
     const script = document.createElement("script");
-    script.src = "https://sdk.scdn.co/spotify-player.js";
-    script.onerror = reject;
+    script.src = SDK_SCRIPT_SRC;
+    script.async = true;
+    script.onerror = () => {
+      script.remove();
+      // Allow a later attempt to retry after a failed/aborted load.
+      sdkLoadPromise = null;
+      reject(new Error("Spotify Web Playback SDK failed to load"));
+    };
     document.head.appendChild(script);
-    sdkScriptLoaded = true;
   });
+
+  return sdkLoadPromise;
 }
 
 function createPlaybackRequestId(): string {
@@ -143,7 +155,12 @@ export function useSpotifyPlaybackSdk({
         }
 
         function handleRefreshError(payload: ServerErrorPayload) {
-          if (payload.code !== "SPOTIFY_TOKEN_REFRESH_FAILED") return;
+          if (
+            payload.code !== "SPOTIFY_TOKEN_REFRESH_FAILED" &&
+            payload.code !== "SPOTIFY_TOKEN_REFRESH_DEFERRED"
+          ) {
+            return;
+          }
           cleanup();
           accessTokenRef.current = null;
           resolve(null);
@@ -297,7 +314,9 @@ export function useSpotifyPlaybackSdk({
       playerRef.current = player;
     }
 
-    void init();
+    void init().catch((error: unknown) => {
+      console.error("[TuneTrack] Spotify SDK: initialization failed", error);
+    });
 
     return () => {
       disposed = true;

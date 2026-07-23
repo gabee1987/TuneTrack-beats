@@ -181,8 +181,7 @@ function areActionPanelModelsEqual(
     previousModel.handleSkipTurn === nextModel.handleSkipTurn &&
     previousModel.isCurrentPlayerTurn === nextModel.isCurrentPlayerTurn &&
     previousModel.roomState === nextModel.roomState &&
-    previousModel.showHelperLabels === nextModel.showHelperLabels &&
-    previousModel.skipTrackSpendAnimationKey === nextModel.skipTrackSpendAnimationKey
+    previousModel.showHelperLabels === nextModel.showHelperLabels
   );
 }
 

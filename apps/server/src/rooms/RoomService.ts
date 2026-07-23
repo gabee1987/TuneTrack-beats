@@ -62,10 +62,10 @@ export interface ImportPlaylistServiceResult {
   resultPayload: ImportPlaylistResultPayload;
 }
 
-export interface RefreshTokenResult {
-  result: { accessToken: string; expiresInSeconds: number } | null;
-  roomState: PublicRoomState | null;
-}
+export type RefreshTokenResult =
+  | { status: "refreshed"; accessToken: string; expiresInSeconds: number }
+  | { status: "reauth_required"; roomState: PublicRoomState }
+  | { status: "deferred" };
 
 export interface UseSpotifyCandidatesResult {
   payload: SpotifyCandidatesAppliedPayload;
@@ -485,29 +485,31 @@ export class RoomService {
     try {
       this.roomRegistry.requireSpotifyPlaybackOwner(socketId, payload.roomId);
     } catch {
-      return { result: null, roomState: null };
+      // Socket membership not yet restored (reconnect race) or caller is not the
+      // playback owner. Neither is user-actionable — defer silently so the client retries.
+      return { status: "deferred" };
     }
 
     const result = await this.spotifyAuthService.refreshHostToken(payload.roomId);
 
     if (result.success) {
       return {
-        result: {
-          accessToken: result.accessToken,
-          expiresInSeconds: result.expiresInSeconds,
-        },
-        roomState: null,
+        status: "refreshed",
+        accessToken: result.accessToken,
+        expiresInSeconds: result.expiresInSeconds,
       };
     }
 
+    // Only a revoked/expired refresh token requires the user to reconnect Spotify.
+    // Transient API failures defer silently and rely on the client's retry cadence.
     if (result.reason === "invalid_grant") {
       return {
-        result: null,
+        status: "reauth_required",
         roomState: this.updateSpotifyAuthStatus(payload.roomId, socketId, false, null),
       };
     }
 
-    return { result: null, roomState: null };
+    return { status: "deferred" };
   }
 
   public async playSpotifyTrack(

@@ -89,6 +89,12 @@ export function useGameRoomConnection({
         return;
       }
 
+      // Deferred Spotify token refreshes are transient (reconnect race) and self-heal via
+      // the SDK's retry cadence — never surface them as a room error.
+      if (payload.code === "SPOTIFY_TOKEN_REFRESH_DEFERRED") {
+        return;
+      }
+
       errorKeyRef.current += 1;
       setErrorKey(errorKeyRef.current);
       setErrorMessage(localizeServerError(t, payload));

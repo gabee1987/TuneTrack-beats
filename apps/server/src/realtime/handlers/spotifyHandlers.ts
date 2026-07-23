@@ -22,6 +22,10 @@ import {
 } from "../createSocketHandler.js";
 import { useSpotifyCandidatesErrorMessages } from "../errorMessages.js";
 
+// Non-toasting error code: signals the client to resolve a pending token request and retry
+// later (reconnect race / non-owner caller) without showing a user-facing "reconnect" toast.
+const SPOTIFY_TOKEN_REFRESH_DEFERRED_CODE = "SPOTIFY_TOKEN_REFRESH_DEFERRED";
+
 export function registerSpotifyHandlers(
   io: Server,
   socket: Socket,
@@ -222,23 +226,35 @@ function registerRefreshSpotifyTokenHandler(
     void roomService
       .refreshSpotifyToken(parseResult.data, socket.id)
       .then((result) => {
-        if (result.result) {
-          socket.emit(ServerToClientEvent.SpotifyTokenRefreshed, result.result);
-        } else {
-          if (result.roomState) {
-            broadcastRoomState(io, result.roomState);
-          }
+        if (result.status === "refreshed") {
+          socket.emit(ServerToClientEvent.SpotifyTokenRefreshed, {
+            accessToken: result.accessToken,
+            expiresInSeconds: result.expiresInSeconds,
+          });
+          return;
+        }
+
+        if (result.status === "reauth_required") {
+          broadcastRoomState(io, result.roomState);
           socket.emit(ServerToClientEvent.Error, {
             code: "SPOTIFY_TOKEN_REFRESH_FAILED",
             message: "Could not refresh Spotify token. Please reconnect Spotify.",
           });
+          return;
         }
+
+        // Deferred: transient reconnect race or non-owner caller — resolve the client's
+        // pending request without surfacing a user-facing error toast.
+        socket.emit(ServerToClientEvent.Error, {
+          code: SPOTIFY_TOKEN_REFRESH_DEFERRED_CODE,
+          message: "Spotify token refresh deferred.",
+        });
       })
       .catch((error: unknown) => {
         logger.error({ error }, "refresh_spotify_token handler threw unexpectedly");
         socket.emit(ServerToClientEvent.Error, {
-          code: "SPOTIFY_TOKEN_REFRESH_FAILED",
-          message: "Could not refresh Spotify token.",
+          code: SPOTIFY_TOKEN_REFRESH_DEFERRED_CODE,
+          message: "Spotify token refresh deferred.",
         });
       });
   });

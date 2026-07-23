@@ -30,10 +30,8 @@ export function buildGamePageAssemblyModel(
       handleSkipTrackWithTt: controller.handleSkipTrackWithTt,
       handleSkipTurn: controller.handleSkipTurn,
       isCurrentPlayerTurn: controller.isCurrentPlayerTurn,
-      buyTimelineCardSpendAnimationKey: controller.buyTimelineCardSpendAnimationKey,
       roomState: controller.roomState,
       showHelperLabels: controller.showHelperLabels,
-      skipTrackSpendAnimationKey: controller.skipTrackSpendAnimationKey,
     },
     header: {
       currentPlayerId: controller.currentPlayerId,

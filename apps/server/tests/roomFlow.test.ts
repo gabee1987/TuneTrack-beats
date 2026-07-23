@@ -1183,6 +1183,19 @@ describe("room flow", () => {
   });
 });
 
+describe("refresh_spotify_token authorization", () => {
+  it("defers instead of erroring when the socket has no room membership yet (reconnect race)", async () => {
+    const roomService = createTestRoomService();
+
+    const result = await roomService.refreshSpotifyToken(
+      { roomId: "reconnect-room" },
+      "socket-without-membership",
+    );
+
+    expect(result).toEqual({ status: "deferred" });
+  });
+});
+
 function buildCuratedTrack(id: string, title: string, spotifyTrackUri: string) {
   return {
     id,

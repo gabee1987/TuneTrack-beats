@@ -166,8 +166,6 @@ export interface GamePageActionPanelsModel
     | "handleSkipTrackWithTt"
     | "handleSkipTurn"
     | "isCurrentPlayerTurn"
-    | "buyTimelineCardSpendAnimationKey"
-    | "skipTrackSpendAnimationKey"
     | "showHelperLabels"
   > {
   roomState: PublicRoomState;
@@ -209,8 +207,6 @@ export type GamePageController = GamePageActionHandlers & {
   selectedSlotIndex: number;
   setSelectedSlotIndex: (slotIndex: number) => void;
   setTimelineView: (view: TimelineView) => void;
-  buyTimelineCardSpendAnimationKey: number;
-  skipTrackSpendAnimationKey: number;
   previewCardTransitionEvent: PreviewCardTransitionEvent | null;
   timelinePreviewTransitionEvent: TimelinePreviewTransitionEvent | null;
   timelineCelebrationTransitionEvent: TimelineCelebrationTransitionEvent | null;
