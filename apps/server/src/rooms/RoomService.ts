@@ -372,7 +372,7 @@ export class RoomService {
     payload: RequestSpotifyAuthUrlPayloadParsed,
     socketId: string,
   ): string {
-    return this.spotifyAuthService.buildAuthUrl(payload.roomId, socketId);
+    return this.spotifyAuthService.buildAuthUrl(payload.roomId, socketId, payload.clientOrigin);
   }
 
   public searchSpotifyPlaylists(

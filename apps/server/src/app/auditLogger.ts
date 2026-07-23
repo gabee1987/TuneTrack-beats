@@ -16,7 +16,14 @@ interface AuditEventInput {
 }
 
 export function logAuditEvent(input: AuditEventInput): void {
-  if (!env.ENABLE_EVENT_AUDIT) return;
+  // Spotify auth/import audits always emit when Axiom is configured so local
+  // phone OAuth debugging does not require flipping every realtime audit flag.
+  const shouldAudit =
+    env.ENABLE_EVENT_AUDIT ||
+    ((input.auditKind === "spotify_auth" || input.auditKind === "spotify_import") &&
+      Boolean(env.AXIOM_TOKEN && env.AXIOM_DATASET));
+
+  if (!shouldAudit) return;
 
   const auditEvent = {
     service: "tunetrack-server",

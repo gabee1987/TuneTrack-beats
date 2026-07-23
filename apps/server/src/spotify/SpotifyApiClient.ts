@@ -146,7 +146,10 @@ export class SpotifyApiClient {
     return response.json() as Promise<SpotifyTokenResponse>;
   }
 
-  public async exchangeCodeForTokens(code: string): Promise<SpotifyTokenResponse> {
+  public async exchangeCodeForTokens(
+    code: string,
+    redirectUri: string,
+  ): Promise<SpotifyTokenResponse> {
     const credentials = Buffer.from(
       `${env.SPOTIFY_CLIENT_ID}:${env.SPOTIFY_CLIENT_SECRET}`,
     ).toString("base64");
@@ -154,7 +157,7 @@ export class SpotifyApiClient {
     const body = new URLSearchParams({
       grant_type: "authorization_code",
       code,
-      redirect_uri: env.SPOTIFY_REDIRECT_URI,
+      redirect_uri: redirectUri,
     });
 
     const response = await fetch(`${SpotifyApiClient.ACCOUNTS_URL}/api/token`, {
@@ -499,11 +502,11 @@ export class SpotifyApiClient {
     return tracks;
   }
 
-  public buildAuthUrl(state: string): string {
+  public buildAuthUrl(state: string, redirectUri: string): string {
     const params = new URLSearchParams({
       client_id: env.SPOTIFY_CLIENT_ID,
       response_type: "code",
-      redirect_uri: env.SPOTIFY_REDIRECT_URI,
+      redirect_uri: redirectUri,
       state,
       scope: [
         "user-read-playback-state",

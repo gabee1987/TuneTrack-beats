@@ -1,3 +1,4 @@
 process.env["SPOTIFY_CLIENT_ID"] = "test-client-id";
 process.env["SPOTIFY_CLIENT_SECRET"] = "test-client-secret";
-process.env["SPOTIFY_REDIRECT_URI"] = "http://127.0.0.1:3001/api/spotify/callback";
+process.env["SPOTIFY_REDIRECT_URI"] =
+  "http://127.0.0.1:3001/api/spotify/callback,https://localhost:5173/api/spotify/callback,https://192.168.1.83:5173/api/spotify/callback";

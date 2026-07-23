@@ -211,6 +211,7 @@ export const loadCuratedPlaylistPayloadSchema = z.object({
 
 export const requestSpotifyAuthUrlPayloadSchema = z.object({
   roomId: roomIdSchema,
+  clientOrigin: z.string().url().optional(),
 });
 
 export const refreshSpotifyTokenPayloadSchema = z.object({

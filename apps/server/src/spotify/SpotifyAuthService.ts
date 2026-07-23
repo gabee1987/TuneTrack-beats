@@ -4,10 +4,15 @@ import { logger } from "../app/logger.js";
 import { SpotifyApiClient, SpotifyApiError } from "./SpotifyApiClient.js";
 import { SpotifyTokenStore } from "./SpotifyTokenStore.js";
 import type { RoomId } from "@tunetrack/shared";
+import {
+  getPrimarySpotifyRedirectUri,
+  resolveSpotifyRedirectUri,
+} from "./spotifyRedirectUri.js";
 
 interface OAuthState {
   roomId: RoomId;
   socketId: string;
+  redirectUri: string;
 }
 
 export interface SpotifyCallbackResult {
@@ -26,9 +31,21 @@ export class SpotifyAuthService {
     private readonly tokenStore: SpotifyTokenStore,
   ) {}
 
-  public buildAuthUrl(roomId: RoomId, socketId: string): string {
-    const state = encodeOAuthState({ roomId, socketId });
-    return this.apiClient.buildAuthUrl(state);
+  public buildAuthUrl(roomId: RoomId, socketId: string, clientOrigin?: string): string {
+    const redirectUri = resolveSpotifyRedirectUri(clientOrigin);
+    const state = encodeOAuthState({ roomId, socketId, redirectUri });
+    logAuditEvent({
+      auditKind: "spotify_auth",
+      action: "auth_url_issued",
+      outcome: "succeeded",
+      roomId,
+      socketId,
+      meta: {
+        clientOrigin: clientOrigin ?? null,
+        redirectUri,
+      },
+    });
+    return this.apiClient.buildAuthUrl(state, redirectUri);
   }
 
   public async handleCallback(
@@ -68,7 +85,8 @@ export class SpotifyAuthService {
     }
 
     try {
-      const tokenResponse = await this.apiClient.exchangeCodeForTokens(code);
+      const redirectUri = state.redirectUri || getPrimarySpotifyRedirectUri();
+      const tokenResponse = await this.apiClient.exchangeCodeForTokens(code, redirectUri);
 
       if (!tokenResponse.refresh_token) {
         logAuditEvent({
@@ -300,7 +318,16 @@ function decodeOAuthState(raw: string): OAuthState | null {
       typeof (parsed as OAuthState).roomId === "string" &&
       typeof (parsed as OAuthState).socketId === "string"
     ) {
-      return parsed as OAuthState;
+      const redirectUri =
+        "redirectUri" in parsed && typeof (parsed as OAuthState).redirectUri === "string"
+          ? (parsed as OAuthState).redirectUri
+          : getPrimarySpotifyRedirectUri();
+
+      return {
+        roomId: (parsed as OAuthState).roomId,
+        socketId: (parsed as OAuthState).socketId,
+        redirectUri,
+      };
     }
 
     return null;

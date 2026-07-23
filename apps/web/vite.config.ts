@@ -53,6 +53,9 @@ export default defineConfig({
     }),
   ],
   server: {
+    // Bind on all interfaces so phones on the same Wi‑Fi can reach the app.
+    // (npm often swallows CLI `--host` before Vite sees it.)
+    host: true,
     port: 5173,
     proxy: {
       // Forward socket.io traffic to the HTTP server so HTTPS pages avoid mixed-content

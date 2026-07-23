@@ -30,7 +30,34 @@ const envSchema = z
     SPOTIFY_REDIRECT_URI: z
       .string()
       .transform((value) => value.trim())
-      .pipe(z.string().url()),
+      .pipe(
+        z
+          .string()
+          .min(1)
+          .superRefine((value, ctx) => {
+            const uris = value
+              .split(",")
+              .map((entry) => entry.trim())
+              .filter((entry) => entry.length > 0);
+
+            if (uris.length === 0) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Must include at least one redirect URI",
+              });
+              return;
+            }
+
+            for (const uri of uris) {
+              if (!URL.canParse(uri)) {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.custom,
+                  message: `Invalid redirect URI: ${uri}`,
+                });
+              }
+            }
+          }),
+      ),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).optional(),
     ENABLE_EVENT_AUDIT: z
       .enum(["true", "false"])
@@ -72,8 +99,9 @@ function formatEnvValidationError(error: z.ZodError): string {
       "Spotify setup:",
       "1. Open https://developer.spotify.com/dashboard and select (or create) your app.",
       "2. Copy Client ID and Client Secret into apps/server/.env (non-empty values override Windows env vars).",
-      "3. Add this Redirect URI in the Spotify app settings (exact match):",
-      "   http://127.0.0.1:3001/api/spotify/callback",
+      "3. Add Redirect URIs in the Spotify app settings (exact match), comma-separated in .env:",
+      "   http://127.0.0.1:3001/api/spotify/callback,https://localhost:5173/api/spotify/callback,https://YOUR-LAN-IP:5173/api/spotify/callback",
+      "   Phone/LAN login must use the Vite HTTPS callback (not 127.0.0.1).",
       "4. Restart the server after saving .env.",
       "",
       `Checked keys: ${issuePaths.join(", ")}`,

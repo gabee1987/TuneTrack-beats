@@ -169,6 +169,7 @@ export interface LoadCuratedPlaylistPayload {
 
 export interface RequestSpotifyAuthUrlPayload {
   roomId: RoomId;
+  clientOrigin?: string;
 }
 
 export interface RefreshSpotifyTokenPayload {

@@ -157,7 +157,10 @@ export function useSpotifyAuth(roomId: string | undefined) {
       authErrorListenerRef.current = handleSocketError;
       socket.once(ServerToClientEvent.SpotifyAuthUrl, handleAuthUrl);
       socket.on(ServerToClientEvent.Error, handleSocketError);
-      socket.emit(ClientToServerEvent.RequestSpotifyAuthUrl, { roomId });
+      socket.emit(ClientToServerEvent.RequestSpotifyAuthUrl, {
+        roomId,
+        clientOrigin: window.location.origin,
+      });
     });
   }, [clearAuthWatchers, closeAuthPopup, finishAuthFailure, roomId, t]);
 
