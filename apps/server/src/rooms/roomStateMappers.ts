@@ -52,7 +52,10 @@ export function mapGameStateToPublicRoomState(
           activePlayerId: gameState.turn.activePlayerId,
           turnNumber: gameState.turn.turnNumber,
           hasUsedSkipTrackWithTt: gameState.turn.hasUsedSkipTrackWithTt,
-          turnSkipDeadlineEpochMs: null,
+          turnSkipDeadlineEpochMs:
+            currentRoomState.turn?.activePlayerId === gameState.turn.activePlayerId
+              ? (currentRoomState.turn?.turnSkipDeadlineEpochMs ?? null)
+              : null,
         }
       : null,
     challengeState: gameState.challengeState

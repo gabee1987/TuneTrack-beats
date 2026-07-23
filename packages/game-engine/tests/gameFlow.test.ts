@@ -266,6 +266,40 @@ describe("GameFlowService", () => {
     expect(nextTurnState.deck).toEqual(gameState.deck);
   });
 
+  it("skips a manual turn to a specific player and draws a fresh card", () => {
+    const gameState = gameFlowService.startGame({
+      players,
+      deck,
+      targetTimelineCardCount: 3,
+    });
+
+    const previousCardId = gameState.currentTrackCard?.id;
+    const deckLengthBeforeSkip = gameState.deck.length;
+
+    const skippedState = gameFlowService.skipTurnToPlayer(gameState, "player-2");
+
+    expect(skippedState.phase).toBe("turn");
+    expect(skippedState.turn).toEqual({
+      activePlayerId: "player-2",
+      turnNumber: 2,
+      hasUsedSkipTrackWithTt: false,
+    });
+    expect(skippedState.currentTrackCard?.id).not.toBe(previousCardId);
+    expect(skippedState.deck.length).toBe(deckLengthBeforeSkip - 1);
+  });
+
+  it("throws when skipping a manual turn to an unknown player", () => {
+    const gameState = gameFlowService.startGame({
+      players,
+      deck,
+      targetTimelineCardCount: 3,
+    });
+
+    expect(() => gameFlowService.skipTurnToPlayer(gameState, "player-unknown")).toThrow(
+      "PLAYER_NOT_FOUND",
+    );
+  });
+
   it("throws when confirming reveal outside reveal phase", () => {
     const gameState = gameFlowService.startGame({
       players,

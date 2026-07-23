@@ -233,6 +233,53 @@ describe("mapGameStateToPublicRoomState", () => {
     });
   });
 
+  it("preserves turnSkipDeadlineEpochMs while the active player is unchanged", () => {
+    const deadlineEpochMs = 1_700_000_050_000;
+    const roomStateWithDeadline: PublicRoomState = {
+      ...createLobbyRoomState(),
+      status: "turn",
+      turn: {
+        activePlayerId: HOST_ID,
+        turnNumber: 3,
+        hasUsedSkipTrackWithTt: false,
+        turnSkipDeadlineEpochMs: deadlineEpochMs,
+      },
+    };
+
+    const publicState = mapGameStateToPublicRoomState(
+      roomStateWithDeadline,
+      createTurnGameState({
+        turn: { activePlayerId: HOST_ID, turnNumber: 3, hasUsedSkipTrackWithTt: false },
+      }),
+      createTrackCardMap([trackA, trackB]),
+    );
+
+    expect(publicState.turn?.turnSkipDeadlineEpochMs).toBe(deadlineEpochMs);
+  });
+
+  it("clears turnSkipDeadlineEpochMs when the active player changes", () => {
+    const roomStateWithDeadline: PublicRoomState = {
+      ...createLobbyRoomState(),
+      status: "turn",
+      turn: {
+        activePlayerId: HOST_ID,
+        turnNumber: 3,
+        hasUsedSkipTrackWithTt: false,
+        turnSkipDeadlineEpochMs: 1_700_000_050_000,
+      },
+    };
+
+    const publicState = mapGameStateToPublicRoomState(
+      roomStateWithDeadline,
+      createTurnGameState({
+        turn: { activePlayerId: GUEST_ID, turnNumber: 4, hasUsedSkipTrackWithTt: false },
+      }),
+      createTrackCardMap([trackA, trackB]),
+    );
+
+    expect(publicState.turn?.turnSkipDeadlineEpochMs).toBeNull();
+  });
+
   it("maps revealState and history with public track enrichment", () => {
     const revealEntry = {
       playerId: HOST_ID,

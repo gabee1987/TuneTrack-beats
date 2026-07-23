@@ -89,6 +89,10 @@ export class GameFlowService {
     return this.turnFlow.skipOfflinePlayerTurn(gameState);
   }
 
+  public skipTurnToPlayer(gameState: GameState, nextActivePlayerId: string): GameState {
+    return this.turnFlow.skipTurnToPlayer(gameState, nextActivePlayerId);
+  }
+
   public cancelClaimedChallengeForOfflineChallenger(gameState: GameState): GameState {
     return this.challengeFlow.cancelClaimedChallengeForOfflineChallenger(gameState);
   }

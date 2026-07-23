@@ -912,6 +912,34 @@ describe("room flow", () => {
     );
   });
 
+  it("skips a manual host skip over a disconnected player to the next connected one", () => {
+    const roomRegistry = new RoomRegistry();
+    const hostJoin = roomRegistry.createRoom(
+      "skip-room",
+      "Host Player",
+      "host-socket",
+      "host-session",
+    );
+    roomRegistry.addPlayerToRoom("skip-room", "Guest Player", "guest-socket", "guest-session");
+    const thirdJoin = roomRegistry.addPlayerToRoom(
+      "skip-room",
+      "Third Player",
+      "third-socket",
+      "third-session",
+    );
+
+    roomRegistry.startGame("host-socket", { roomId: "skip-room" }, getTurnOrderDeck());
+    expect(roomRegistry.getRoomStateForMember("host-socket", "skip-room").turn?.activePlayerId).toBe(
+      hostJoin.playerId,
+    );
+
+    roomRegistry.removePlayerBySocketId("guest-socket");
+
+    const stateAfterSkip = roomRegistry.skipTurn("host-socket", { roomId: "skip-room" });
+
+    expect(stateAfterSkip.turn?.activePlayerId).toBe(thirdJoin.playerId);
+  });
+
   it("lets the host award TT during a game", async () => {
     const serverContext = await startTestServer();
     const hostSocket = createClient(serverContext.baseUrl);

@@ -360,11 +360,13 @@ export class RoomLobbyService {
 
     if (!didUpdateTrack) throw new Error("PLAYLIST_TRACK_NOT_FOUND");
 
+    const nextRoomState = buildImportedDeckRoomState(roomRecord.roomState, nextDeck);
     this.store.setRoom(payload.roomId, {
       ...roomRecord,
+      roomState: nextRoomState,
       importedDeck: nextDeck,
     });
-    return roomRecord.roomState;
+    return nextRoomState;
   }
 
   public closeRoom(socketId: string, payload: CloseRoomPayloadParsed): RoomId {

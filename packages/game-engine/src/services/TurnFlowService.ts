@@ -241,6 +241,18 @@ export class TurnFlowService {
       gameState.turn.activePlayerId,
     );
 
+    return this.skipTurnToPlayer(gameState, nextActivePlayerId);
+  }
+
+  public skipTurnToPlayer(gameState: GameState, nextActivePlayerId: string): GameState {
+    if (gameState.phase !== "turn" || !gameState.turn) {
+      throw new Error("GAME_NOT_IN_TURN_PHASE");
+    }
+
+    if (!gameState.players.some((player) => player.id === nextActivePlayerId)) {
+      throw new Error("PLAYER_NOT_FOUND");
+    }
+
     return {
       ...gameState,
       turn: {

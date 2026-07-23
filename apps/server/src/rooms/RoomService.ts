@@ -482,6 +482,12 @@ export class RoomService {
     payload: RefreshSpotifyTokenPayloadParsed,
     socketId: string,
   ): Promise<RefreshTokenResult> {
+    try {
+      this.roomRegistry.requireSpotifyPlaybackOwner(socketId, payload.roomId);
+    } catch {
+      return { result: null, roomState: null };
+    }
+
     const result = await this.spotifyAuthService.refreshHostToken(payload.roomId);
 
     if (result.success) {

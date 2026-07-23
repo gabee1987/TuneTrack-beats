@@ -11,6 +11,7 @@ import {
   type SkipTrackWithTtPayloadParsed,
   type StartGamePayloadParsed,
 } from "@tunetrack/shared";
+import { selectNextConnectedTurnPlayer } from "./roomConnectionBuilders.js";
 import { createTrackCardMap, mapGameStateToPublicRoomState } from "./roomStateMappers.js";
 import type { RoomStore } from "./RoomStore.js";
 import type { RoomTimerCoordinator } from "./RoomTimerCoordinator.js";
@@ -92,7 +93,7 @@ export class RoomGameplayService {
 
     const nextGameState = isChallengeClaimedSkip
       ? this.gameFlowService.cancelClaimedChallengeForOfflineChallenger(roomRecord.gameState)
-      : this.gameFlowService.skipOfflinePlayerTurn(roomRecord.gameState);
+      : this.skipToNextConnectedPlayer(roomRecord.roomState, roomRecord.gameState);
     const nextRoomState = mapGameStateToPublicRoomState(
       roomRecord.roomState,
       nextGameState,
@@ -282,6 +283,17 @@ export class RoomGameplayService {
     this.store.setRoom(payload.roomId, { ...roomRecord, gameState, roomState });
     this.timers.clearChallenge(payload.roomId);
     return roomState;
+  }
+
+  private skipToNextConnectedPlayer(roomState: PublicRoomState, gameState: GameState): GameState {
+    const nextConnectedPlayer = selectNextConnectedTurnPlayer(
+      roomState,
+      gameState.turn?.activePlayerId ?? "",
+    );
+
+    return nextConnectedPlayer
+      ? this.gameFlowService.skipTurnToPlayer(gameState, nextConnectedPlayer.id)
+      : this.gameFlowService.skipOfflinePlayerTurn(gameState);
   }
 
   private scheduleChallengeAutoResolve(roomId: RoomId, gameState: GameState): void {
