@@ -831,7 +831,7 @@
 }
 
 .spotifySmartResultList {
-  display: grid;
+  display: block;
   flex: 1 1 auto;
   align-content: start;
   min-height: 0;

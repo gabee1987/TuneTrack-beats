@@ -23,15 +23,16 @@ export function SpotifyCandidateReviewPanel({
   spotifyState,
 }: SpotifyCandidateReviewPanelProps) {
   const { t } = useI18n();
+  const { candidates, savedPlaylists } = spotifyState;
   const {
     candidateError,
     candidatePhase,
     candidateTracks,
-    generatedPlaylistMessage,
     removeCandidateTrack,
     updateCandidateTrack,
     useGeneratedCandidates,
-  } = spotifyState;
+  } = candidates;
+  const { generatedPlaylistMessage } = savedPlaylists;
   const { showToast } = useAppToast();
   const isApplying = candidatePhase === "applying";
   const hasGeneratedTracks = candidateTracks.length > 0;

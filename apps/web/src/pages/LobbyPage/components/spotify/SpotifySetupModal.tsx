@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import type { PublicRoomSettings } from "@tunetrack/shared";
 import {
   MotionPresence,
@@ -9,11 +9,23 @@ import {
 } from "../../../../features/motion";
 import { useI18n } from "../../../../features/i18n";
 import { CloseIconButton } from "../../../../features/ui/CloseIconButton";
-import { SpotifyPlaylistSearchPanel } from "./SpotifyPlaylistSearchPanel";
-import { SpotifyQuickPicksPanel } from "./SpotifyQuickPicksPanel";
-import { SpotifySetupContent } from "./SpotifySetupContent";
 import type { LobbySpotifyState, SpotifySetupSource } from "./spotifySetupTypes";
 import styles from "./LobbySpotifySection.module.css";
+
+const SpotifyPlaylistSearchPanel = lazy(async () => {
+  const module = await import("./SpotifyPlaylistSearchPanel");
+  return { default: module.SpotifyPlaylistSearchPanel };
+});
+
+const SpotifyQuickPicksPanel = lazy(async () => {
+  const module = await import("./SpotifyQuickPicksPanel");
+  return { default: module.SpotifyQuickPicksPanel };
+});
+
+const SpotifySetupContent = lazy(async () => {
+  const module = await import("./SpotifySetupContent");
+  return { default: module.SpotifySetupContent };
+});
 
 interface SpotifySetupModalProps {
   activeSource: SpotifySetupSource;
@@ -101,19 +113,25 @@ export function SpotifySetupModal({
             </div>
 
             <div className={styles.spotifySetupBody}>
-              {activeSource === "findPlaylists" ? (
-                <SpotifyPlaylistSearchPanel spotifyState={spotifyState} />
-              ) : activeSource === "quickPicks" ? (
-                <SpotifyQuickPicksPanel
-                  currentSettings={currentSettings}
-                  spotifyState={spotifyState}
-                />
-              ) : (
-                <SpotifySetupContent
-                  currentSettings={currentSettings}
-                  spotifyState={spotifyState}
-                />
-              )}
+              <Suspense
+                fallback={
+                  <p className={styles.spotifyStatusLine}>{t("lobby.spotify.connecting")}</p>
+                }
+              >
+                {activeSource === "findPlaylists" ? (
+                  <SpotifyPlaylistSearchPanel spotifyState={spotifyState} />
+                ) : activeSource === "quickPicks" ? (
+                  <SpotifyQuickPicksPanel
+                    currentSettings={currentSettings}
+                    spotifyState={spotifyState}
+                  />
+                ) : (
+                  <SpotifySetupContent
+                    currentSettings={currentSettings}
+                    spotifyState={spotifyState}
+                  />
+                )}
+              </Suspense>
             </div>
           </motion.div>
         </motion.div>
@@ -142,3 +160,4 @@ function SpotifySourceTab({ disabled, isActive, label, onClick }: SpotifySourceT
     </button>
   );
 }
+

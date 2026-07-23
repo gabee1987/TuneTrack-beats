@@ -11,45 +11,43 @@ import { LobbySectionHeader } from "../components/LobbySectionHeader";
 import { LobbySummaryCard } from "../components/LobbySummaryCard";
 import styles from "./LobbyPageDesktop.module.css";
 
-export function LobbyPageDesktop({ controller }: LobbyPageAssemblyProps) {
+export function LobbyPageDesktop({ model }: LobbyPageAssemblyProps) {
   const { t } = useI18n();
-  const resolvedRoomId = controller.roomState?.roomId ?? controller.roomId ?? "lobby";
-  const players = controller.roomState?.players ?? [];
-  const hasStartedJoinError = controller.errorCode === "GAME_ALREADY_STARTED";
+  const { shell, room, hostSettings, players, roomActions } = model;
 
   return (
     <AppPageShell panelClassName={styles.panelShell} screenClassName={styles.screenShell}>
       <LobbyHeader
-        connectionStatus={controller.connectionStatus}
-        isHost={controller.isHost}
-        roomId={resolvedRoomId}
+        connectionStatus={room.connectionStatus}
+        isHost={room.isHost}
+        roomId={room.resolvedRoomId}
       />
 
-      {controller.errorMessage ? <StatusBanner>{controller.errorMessage}</StatusBanner> : null}
+      {shell.errorMessage ? <StatusBanner>{shell.errorMessage}</StatusBanner> : null}
 
       <div className={styles.layoutGrid}>
         <div className={styles.primaryColumn}>
           <LobbySummaryCard
-            displayName={controller.displayName}
-            isHost={controller.isHost}
-            playerCount={players.length}
-            roomId={resolvedRoomId}
+            displayName={room.displayName}
+            isHost={room.isHost}
+            playerCount={room.players.length}
+            roomId={room.resolvedRoomId}
           />
 
-          {hasStartedJoinError ? (
+          {room.hasStartedJoinError ? (
             <SurfaceCard className={styles.waitingCard}>
               <LobbySectionHeader
                 description={t("lobby.started.description")}
                 title={t("lobby.started.title")}
               />
             </SurfaceCard>
-          ) : controller.isHost ? (
+          ) : room.isHost ? (
             <LobbyHostSettingsPanel
-              currentSettings={controller.currentSettings}
-              onIntentToStartGame={controller.preloadGame}
-              onRoomSettingsChange={controller.handleRoomSettingsChange}
-              onStartGame={controller.handleStartGame}
-              onToggleTtMode={controller.toggleTtMode}
+              currentSettings={hostSettings.currentSettings}
+              onIntentToStartGame={hostSettings.onIntentToStartGame}
+              onRoomSettingsChange={hostSettings.onRoomSettingsChange}
+              onStartGame={hostSettings.onStartGame}
+              onToggleTtMode={hostSettings.onToggleTtMode}
             />
           ) : (
             <SurfaceCard className={styles.waitingCard}>
@@ -63,20 +61,20 @@ export function LobbyPageDesktop({ controller }: LobbyPageAssemblyProps) {
 
         <aside className={styles.secondaryColumn}>
           <LobbyPlayerList
-            currentPlayerId={controller.currentPlayerId}
-            isHost={controller.isHost}
-            onPlayerKick={controller.handlePlayerKick}
-            onPlayerStartingCardCountChange={controller.handlePlayerStartingCardCountChange}
-            onPlayerStartingTtTokenCountChange={controller.handlePlayerStartingTtTokenCountChange}
-            players={players}
-            roomSettings={controller.currentSettings}
+            currentPlayerId={players.currentPlayerId}
+            isHost={players.isHost}
+            onPlayerKick={players.onPlayerKick}
+            onPlayerStartingCardCountChange={players.onPlayerStartingCardCountChange}
+            onPlayerStartingTtTokenCountChange={players.onPlayerStartingTtTokenCountChange}
+            players={players.players}
+            roomSettings={players.roomSettings}
           />
 
-          {controller.isHost ? (
+          {roomActions.isHost ? (
             <LobbyRoomActions
-              onCloseRoom={controller.handleCloseRoom}
-              onIntentToStartGame={controller.preloadGame}
-              onStartGame={controller.handleStartGame}
+              onCloseRoom={roomActions.onCloseRoom}
+              onIntentToStartGame={roomActions.onIntentToStartGame}
+              onStartGame={roomActions.onStartGame}
             />
           ) : null}
         </aside>

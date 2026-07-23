@@ -20,7 +20,7 @@ export function SpotifyQuickPicksPanel({
 }) {
   const { t } = useI18n();
   const { hideLoading, showLoading } = useAppLoading();
-  const { candidatePhase, candidateTracks, generateCandidatesFromPreset } = spotifyState;
+  const { candidatePhase, candidateTracks, generateCandidatesFromPreset } = spotifyState.candidates;
   const [targetCountInput, setTargetCountInput] = useState("250");
   const isGenerating = candidatePhase === "generating";
   const hasGeneratedTracks = candidateTracks.length > 0;

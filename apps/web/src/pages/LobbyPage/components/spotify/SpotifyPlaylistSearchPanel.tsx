@@ -1,5 +1,6 @@
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { SpotifySmartSearchResult, SpotifySmartSearchTypeFilter } from "@tunetrack/shared";
 import { createStandardTransition } from "../../../../features/motion";
 import { useI18n } from "../../../../features/i18n";
@@ -15,34 +16,37 @@ import styles from "./LobbySpotifySection.module.css";
 export function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpotifyState }) {
   const { t } = useI18n();
   const { showToast } = useAppToast();
+  const { openedPlaylist: openedPlaylistState, smartSearch } = spotifyState;
   const {
     addSmartSearchTrackToQueue,
     addSmartSearchTracksToQueue,
-    applyOpenedPlaylistTracks,
-    closeOpenedPlaylist,
     loadMoreSpotifyMusic,
-    openSmartSearchPlaylist,
-    openedPlaylist,
-    openedPlaylistError,
-    openedPlaylistPhase,
-    queuedTrackIds,
-    removeOpenedPlaylistTracksFromQueue,
     removeSmartSearchTracksFromQueue,
     searchSpotifyMusic,
     searchSpotifyMusicByType,
     setSmartSearchQuery,
     setSmartSearchType,
     smartSearchError,
-    smartSearchHasSearched,
     smartSearchHasMore,
+    smartSearchHasSearched,
     smartSearchLoadMorePhase,
     smartSearchPhase,
     smartSearchQuery,
     smartSearchQueuedTrackIds,
     smartSearchResults,
     smartSearchType,
+  } = smartSearch;
+  const {
+    applyOpenedPlaylistTracks,
+    closeOpenedPlaylist,
+    openSmartSearchPlaylist,
+    openedPlaylist,
+    openedPlaylistError,
+    openedPlaylistPhase,
+    queuedTrackIds,
+    removeOpenedPlaylistTracksFromQueue,
     updateOpenedPlaylistTrack,
-  } = spotifyState;
+  } = openedPlaylistState;
 
   const isSearching = smartSearchPhase === "searching";
   const isLoadingMore = smartSearchLoadMorePhase === "loading";
@@ -281,36 +285,19 @@ export function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: Lob
           ) : null}
 
           {smartSearchResults.length > 0 ? (
-            <div
-              className={`${styles.spotifySmartResultList} ${
-                selectedSearchTracks.length > 0 ? styles.spotifySmartResultListWithAction : ""
-              }`}
-            >
-              {smartSearchResults.map((result) => (
-                <SpotifySmartSearchResultRow
-                  key={`${result.type}-${result.id}`}
-                  isAdded={smartSearchQueuedTrackIds.has(result.id)}
-                  isSelected={selectedSearchTrackIds.has(result.id)}
-                  onAdd={() => handleAddTrack(result)}
-                  onOpenPlaylist={() => openSmartSearchPlaylist(result)}
-                  onRemove={() => handleRemoveTrack(result)}
-                  onToggleSelection={() => toggleSearchTrackSelection(result.id)}
-                  result={result}
-                />
-              ))}
-              {smartSearchHasMore ? (
-                <button
-                  className={styles.spotifySearchMoreLink}
-                  disabled={isLoadingMore}
-                  onClick={loadMoreSpotifyMusic}
-                  type="button"
-                >
-                  {isLoadingMore
-                    ? t("lobby.spotify.builder.loadingMore")
-                    : t("lobby.spotify.builder.loadMore")}
-                </button>
-              ) : null}
-            </div>
+            <SmartSearchVirtualResultList
+              hasMore={smartSearchHasMore}
+              isLoadingMore={isLoadingMore}
+              onAdd={handleAddTrack}
+              onLoadMore={loadMoreSpotifyMusic}
+              onOpenPlaylist={openSmartSearchPlaylist}
+              onRemove={handleRemoveTrack}
+              onToggleSelection={toggleSearchTrackSelection}
+              queuedTrackIds={smartSearchQueuedTrackIds}
+              results={smartSearchResults}
+              selectedTrackIds={selectedSearchTrackIds}
+              showSelectedActionPadding={selectedSearchTracks.length > 0}
+            />
           ) : smartSearchHasSearched && smartSearchPhase === "idle" ? (
             <p className={styles.spotifyEmptyState}>{t("lobby.spotify.builder.noResults")}</p>
           ) : null}
@@ -353,3 +340,101 @@ export function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: Lob
     </div>
   );
 }
+
+interface SmartSearchVirtualResultListProps {
+  hasMore: boolean;
+  isLoadingMore: boolean;
+  onAdd: (result: SpotifySmartSearchResult) => void;
+  onLoadMore: () => void;
+  onOpenPlaylist: (result: SpotifySmartSearchResult) => void;
+  onRemove: (result: SpotifySmartSearchResult) => void;
+  onToggleSelection: (trackId: string) => void;
+  queuedTrackIds: ReadonlySet<string>;
+  results: SpotifySmartSearchResult[];
+  selectedTrackIds: ReadonlySet<string>;
+  showSelectedActionPadding: boolean;
+}
+
+function SmartSearchVirtualResultList({
+  hasMore,
+  isLoadingMore,
+  onAdd,
+  onLoadMore,
+  onOpenPlaylist,
+  onRemove,
+  onToggleSelection,
+  queuedTrackIds,
+  results,
+  selectedTrackIds,
+  showSelectedActionPadding,
+}: SmartSearchVirtualResultListProps) {
+  const { t } = useI18n();
+  const listRef = useRef<HTMLDivElement>(null);
+  const rowVirtualizer = useVirtualizer({
+    count: results.length,
+    getScrollElement: () => listRef.current,
+    estimateSize: () => 58,
+    overscan: 8,
+  });
+
+  return (
+    <div
+      className={`${styles.spotifySmartResultList} ${
+        showSelectedActionPadding ? styles.spotifySmartResultListWithAction : ""
+      }`}
+      ref={listRef}
+    >
+      <div
+        style={{
+          height: `${rowVirtualizer.getTotalSize()}px`,
+          position: "relative",
+          width: "100%",
+        }}
+      >
+        {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+          const result = results[virtualItem.index];
+          if (!result) {
+            return null;
+          }
+
+          return (
+            <div
+              key={virtualItem.key}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: `${virtualItem.size}px`,
+                transform: `translateY(${virtualItem.start}px)`,
+              }}
+            >
+              <SpotifySmartSearchResultRow
+                isAdded={queuedTrackIds.has(result.id)}
+                isSelected={selectedTrackIds.has(result.id)}
+                onAdd={() => onAdd(result)}
+                onOpenPlaylist={() => onOpenPlaylist(result)}
+                onRemove={() => onRemove(result)}
+                onToggleSelection={() => onToggleSelection(result.id)}
+                result={result}
+              />
+            </div>
+          );
+        })}
+      </div>
+      {hasMore ? (
+        <button
+          className={styles.spotifySearchMoreLink}
+          disabled={isLoadingMore}
+          onClick={onLoadMore}
+          type="button"
+        >
+          {isLoadingMore
+            ? t("lobby.spotify.builder.loadingMore")
+            : t("lobby.spotify.builder.loadMore")}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+

@@ -6,7 +6,7 @@ import { ActionButton } from "../../../../features/ui/ActionButton";
 import { PlaylistTrackDetailsSheet } from "../PlaylistTrackDetailsSheet";
 import { BackIcon, PlusIcon, ReplaceIcon, SpotifyLogo } from "./spotifySetupIcons";
 import { SpotifyOpenedTrackRow } from "./SpotifyOpenedTrackRow";
-import type { LobbySpotifyState } from "./spotifySetupTypes";
+import type { OpenedSpotifyPlaylist } from "../../hooks/spotify/lobbySpotify.types";
 import styles from "./LobbySpotifySection.module.css";
 
 interface SpotifyOpenedPlaylistPanelProps {
@@ -26,7 +26,7 @@ interface SpotifyOpenedPlaylistPanelProps {
     },
   ) => void;
   phase: "idle" | "loading" | "ready" | "applying" | "error";
-  playlist: LobbySpotifyState["openedPlaylist"];
+  playlist: OpenedSpotifyPlaylist | null;
   playlistError: string | null;
   queuedSpotifyTrackIds: ReadonlySet<string>;
   queuedTrackIds: ReadonlySet<string>;

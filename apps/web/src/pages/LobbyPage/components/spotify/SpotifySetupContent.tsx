@@ -14,48 +14,55 @@ interface SpotifySetupContentProps {
 
 export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySetupContentProps) {
   const { t } = useI18n();
+  const { auth, import: playlistImport, playlistSearch, queue, savedPlaylists } = spotifyState;
   const {
     authError,
     authPhase,
-    cancelRenamePlaylist,
-    cancelSavePlaylist,
-    clearCurrentPlaylist,
-    confirmRenamePlaylist,
-    confirmSavePlaylist,
     cancelConnectSpotify,
     connectSpotify,
+  } = auth;
+  const {
+    clearCurrentPlaylist,
     importError,
     importPhase,
     importPlaylist,
     importPlaylistSearchResult,
-    isOverwritePromptActive,
-    isSavingWithName,
-    loadedSavedPlaylistId,
-    openEditModal,
     playlistUrl,
+    setPlaylistUrl,
+  } = playlistImport;
+  const {
     playlistSearchError,
     playlistSearchPhase,
     playlistSearchResults,
+    searchSpotifyPlaylists,
+    setPlaylistSearchQuery,
+  } = playlistSearch;
+  const { openEditModal } = queue;
+  const {
+    cancelRenamePlaylist,
+    cancelSavePlaylist,
+    confirmOverwrite,
+    confirmRenamePlaylist,
+    confirmSavePlaylist,
+    deleteSelectedSavedPlaylist,
+    isOverwritePromptActive,
+    isSavingWithName,
+    loadedSavedPlaylistId,
     renameError,
     renameInputValue,
     renamingPlaylistId,
-    saveNameError,
-    saveName,
-    savedPlaylistMessage,
-    savedPlaylists,
-    selectedSavedPlaylistId,
-    confirmOverwrite,
-    deleteSelectedSavedPlaylist,
     saveCurrentPlaylist,
-    searchSpotifyPlaylists,
+    saveName,
+    saveNameError,
+    savedPlaylistMessage,
+    savedPlaylists: savedPlaylistItems,
+    selectedSavedPlaylistId,
     setRenameInputValue,
     setSaveName,
     setSelectedSavedPlaylistId,
-    setPlaylistSearchQuery,
-    setPlaylistUrl,
     startRenamePlaylist,
     switchToSaveAsNew,
-  } = spotifyState;
+  } = savedPlaylists;
 
   const isConnected = currentSettings.spotifyAuthStatus === "connected";
   const isImported = currentSettings.playlistImported;
@@ -66,7 +73,7 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
 
   const savedPlaylistOptions = [
     { label: t("lobby.spotify.savedPlaylistSelectPlaceholder"), value: "" },
-    ...savedPlaylists.map((playlist) => ({ label: playlist.name, value: playlist.id })),
+    ...savedPlaylistItems.map((playlist) => ({ label: playlist.name, value: playlist.id })),
   ];
 
   return (
@@ -238,7 +245,7 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
               <div className={styles.savedPlaylistOverwriteRow}>
                 <p className={styles.savedPlaylistOverwriteHint}>
                   {t("lobby.spotify.overwriteHint", {
-                    name: savedPlaylists.find((p) => p.id === loadedSavedPlaylistId)?.name ?? "",
+                    name: savedPlaylistItems.find((p) => p.id === loadedSavedPlaylistId)?.name ?? "",
                   })}
                 </p>
                 <div className={styles.savedPlaylistOverwriteActions}>
@@ -307,7 +314,7 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
             ) : null
           ) : null}
 
-          {savedPlaylists.length > 0 ? (
+          {savedPlaylistItems.length > 0 ? (
             <div className={styles.savedPlaylistPanel}>
               <div className={styles.savedPlaylistField}>
                 <span className={styles.savedPlaylistLabel}>

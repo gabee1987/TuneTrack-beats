@@ -25,14 +25,14 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
   const spotifyState = useLobbySpotify();
   const isConnected = currentSettings.spotifyAuthStatus === "connected";
   const isImported = currentSettings.playlistImported;
-  const accountType = spotifyState.accountType ?? currentSettings.spotifyAccountType;
-  const isConnecting = spotifyState.authPhase === "connecting";
+  const accountType = spotifyState.auth.accountType ?? currentSettings.spotifyAccountType;
+  const isConnecting = spotifyState.auth.authPhase === "connecting";
 
   useEffect(() => {
-    if (isSetupOpen && spotifyState.generatedPlaylistMessage) {
+    if (isSetupOpen && spotifyState.savedPlaylists.generatedPlaylistMessage) {
       setActiveSource("playlistUrl");
     }
-  }, [isSetupOpen, spotifyState.generatedPlaylistMessage]);
+  }, [isSetupOpen, spotifyState.savedPlaylists.generatedPlaylistMessage]);
 
   const connectHint = isConnected
     ? accountType === "premium"
@@ -76,7 +76,7 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
                   </div>
                 ) : null}
               </div>
-            ) : spotifyState.authPhase !== "error" ? (
+            ) : spotifyState.auth.authPhase !== "error" ? (
               <div className={styles.spotifyConnectUnconnected}>
                 <p className={styles.spotifyConnectHint}>{connectHint}</p>
               </div>
@@ -85,14 +85,14 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
 
           {isConnected ? <p className={styles.spotifyConnectHint}>{connectHint}</p> : null}
 
-          {spotifyState.authPhase === "error" && spotifyState.authError ? (
+          {spotifyState.auth.authPhase === "error" && spotifyState.auth.authError ? (
             <div className={styles.spotifyAuthErrorBlock}>
               <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
-                {spotifyState.authError}
+                {spotifyState.auth.authError}
               </p>
               <ActionButton
                 className={styles.spotifyConnectBtn}
-                onClick={spotifyState.connectSpotify}
+                onClick={spotifyState.auth.connectSpotify}
                 type="button"
                 variant="neutral"
               >
@@ -102,11 +102,11 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
             </div>
           ) : null}
 
-          {spotifyState.authPhase === "connecting" ? (
+          {spotifyState.auth.authPhase === "connecting" ? (
             <div className={styles.spotifyConnectActions}>
               <ActionButton
                 className={styles.spotifyConnectCancelBtn}
-                onClick={spotifyState.cancelConnectSpotify}
+                onClick={spotifyState.auth.cancelConnectSpotify}
                 type="button"
                 variant="neutral"
               >
@@ -136,8 +136,8 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
         spotifyState={spotifyState}
       />
       <PlaylistEditModal
-        isOpen={spotifyState.isEditModalOpen}
-        onClose={spotifyState.closeEditModal}
+        isOpen={spotifyState.queue.isEditModalOpen}
+        onClose={spotifyState.queue.closeEditModal}
       />
     </>
   );

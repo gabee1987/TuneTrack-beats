@@ -22,13 +22,13 @@ type InfoContent = {
   title: string;
 };
 
-export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
+export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
   const { t } = useI18n();
-  const resolvedRoomId = controller.roomState?.roomId ?? controller.roomId ?? "lobby";
-  const players = controller.roomState?.players ?? [];
-  const hasStartedJoinError = controller.errorCode === "GAME_ALREADY_STARTED";
-  const currentPlayer = players.find((player) => player.id === controller.currentPlayerId);
-  const visibleDisplayName = currentPlayer?.displayName ?? controller.displayName;
+  const { shell, room, hostSettings, players, roomActions, identity } = model;
+  const resolvedRoomId = identity.resolvedRoomId;
+  const hasStartedJoinError = identity.hasStartedJoinError;
+  const currentPlayer = room.players.find((player) => player.id === room.currentPlayerId);
+  const visibleDisplayName = currentPlayer?.displayName ?? identity.displayName;
   const navigate = useNavigate();
   const advancedSectionRef = useRef<HTMLElement | null>(null);
   const [draftDisplayName, setDraftDisplayName] = useState(visibleDisplayName);
@@ -59,11 +59,11 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
     rememberPlayerDisplayName(trimmedDisplayName);
 
     if (hasNameChange) {
-      controller.handlePlayerProfileChange(trimmedDisplayName);
+      identity.onPlayerProfileChange(trimmedDisplayName);
     }
 
-    if (hasRoomChange && controller.isHost) {
-      controller.handleRoomRename(trimmedRoomId);
+    if (hasRoomChange && identity.isHost) {
+      identity.onRoomRename(trimmedRoomId);
       return false;
     }
 
@@ -94,8 +94,8 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
 
     const canContinue = applySetupChanges();
 
-    if (canContinue && controller.isHost) {
-      controller.handleStartGame();
+    if (canContinue && identity.isHost) {
+      identity.onStartGame();
     }
   }
 
@@ -110,7 +110,7 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
     <AppPageShell panelClassName={styles.panelShell} screenClassName={styles.screenShell}>
       <div className={styles.backgroundOrbs} aria-hidden="true" />
 
-      {controller.errorMessage ? <StatusBanner>{controller.errorMessage}</StatusBanner> : null}
+      {shell.errorMessage ? <StatusBanner>{shell.errorMessage}</StatusBanner> : null}
 
       <section className={styles.setupScreen} aria-labelledby="lobby-setup-title">
         <form className={styles.setupCard} onSubmit={handleSetupSubmit}>
@@ -178,10 +178,10 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
           <div className={styles.setupFooter}>
             <button
               className={styles.primaryAction}
-              disabled={!canApplySetup || (!controller.isHost && !hasSetupChanges)}
-              onFocus={controller.preloadGame}
-              onMouseEnter={controller.preloadGame}
-              onTouchStart={controller.preloadGame}
+              disabled={!canApplySetup || (!identity.isHost && !hasSetupChanges)}
+              onFocus={identity.preloadGame}
+              onMouseEnter={identity.preloadGame}
+              onTouchStart={identity.preloadGame}
               type="submit"
             >
               <span className={styles.primaryActionInner}>
@@ -190,7 +190,7 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
                     ? t("lobby.setup.apply")
                     : hasStartedJoinError
                       ? t("lobby.setup.gameAlreadyStarted")
-                      : controller.isHost
+                      : identity.isHost
                         ? t("lobby.setup.startGame")
                         : t("lobby.setup.waitingForHost")}
                 </span>
@@ -221,18 +221,18 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
               title={t("lobby.started.title")}
             />
           </SurfaceCard>
-        ) : controller.isHost ? (
+        ) : identity.isHost ? (
           <div className={styles.advancedStack}>
             <LobbyHostCoreSettings
-              currentSettings={controller.currentSettings}
-              onRoomSettingsChange={controller.handleRoomSettingsChange}
+              currentSettings={hostSettings.currentSettings}
+              onRoomSettingsChange={hostSettings.onRoomSettingsChange}
             />
             <LobbyHostTtSettings
-              currentSettings={controller.currentSettings}
-              onRoomSettingsChange={controller.handleRoomSettingsChange}
-              onToggleTtMode={controller.toggleTtMode}
+              currentSettings={hostSettings.currentSettings}
+              onRoomSettingsChange={hostSettings.onRoomSettingsChange}
+              onToggleTtMode={hostSettings.onToggleTtMode}
             />
-            <LobbySpotifySection currentSettings={controller.currentSettings} />
+            <LobbySpotifySection currentSettings={hostSettings.currentSettings} />
           </div>
         ) : (
           <SurfaceCard className={styles.waitingCard}>
@@ -244,21 +244,21 @@ export function LobbyPageMobile({ controller }: LobbyPageAssemblyProps) {
         )}
 
         <LobbyPlayerList
-          currentPlayerId={controller.currentPlayerId}
-          isHost={controller.isHost}
-          onPlayerKick={controller.handlePlayerKick}
-          onPlayerStartingCardCountChange={controller.handlePlayerStartingCardCountChange}
-          onPlayerStartingTtTokenCountChange={controller.handlePlayerStartingTtTokenCountChange}
-          players={players}
-          roomSettings={controller.currentSettings}
+          currentPlayerId={players.currentPlayerId}
+          isHost={players.isHost}
+          onPlayerKick={players.onPlayerKick}
+          onPlayerStartingCardCountChange={players.onPlayerStartingCardCountChange}
+          onPlayerStartingTtTokenCountChange={players.onPlayerStartingTtTokenCountChange}
+          players={players.players}
+          roomSettings={players.roomSettings}
         />
 
-        {controller.isHost ? (
+        {roomActions.isHost ? (
           <LobbyRoomActions
             buttonClassName={styles.dangerAction}
-            onCloseRoom={controller.handleCloseRoom}
-            onIntentToStartGame={controller.preloadGame}
-            onStartGame={controller.handleStartGame}
+            onCloseRoom={roomActions.onCloseRoom}
+            onIntentToStartGame={roomActions.onIntentToStartGame}
+            onStartGame={roomActions.onStartGame}
           />
         ) : null}
       </section>

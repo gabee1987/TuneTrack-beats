@@ -1,13 +1,13 @@
 # TuneTrack Refactor Plan — Performance, Traffic & Maintainability
 
-> Status: **Paused after Phase 6 — next up is Phase 7**  
+> Status: **Paused after Phase 7 — plan complete pending your manual validation**  
 > Rules: follow [`AGENT.md`](../AGENT.md) and [`CLAUDE.md`](../CLAUDE.md)  
 > Created: 2026-07-17  
 > Last checkpoint: 2026-07-23
 
 ## Resume checkpoint (read this first when continuing)
 
-**Where we stopped:** Phases **0–6 are implemented**. Next command to resume: **`go Phase 7`** (game menu + lobby assembly polish).
+**Where we stopped:** Phases **0–7 are implemented**. Next: **manual Phase 7 checklist**, then optionally Phase 8.
 
 | Item | State |
 |------|--------|
@@ -19,18 +19,13 @@
 | Phase 4 — Split RoomRegistry | Done (`RoomStore`, `RoomTimerCoordinator`, Lobby/Gameplay/Connection) |
 | Phase 5 — Traffic & year integrity | Done (year omitted until reveal; history capped at 30) |
 | Phase 6 — Split GameFlowService | Done (`TurnFlowService`, `ChallengeFlowService`, `TtActionService` + thin facade) |
-| Phase 7+ | Not started |
+| Phase 7 — Game menu + Lobby polish | Done (automated); **manual checklist below** |
 
-**Before starting Phase 7 (recommended):**
-1. Optional: Phase 6 manual core loop (start → place → challenge → TT → win).
-2. Optionally finish Phase 2/3/5 manual checklists if not done yet.
+**Before starting Phase 8 (optional):**
+1. Run Phase 7 manual validation (menu tabs, lobby parity, long smart-search scroll).
+2. Decide whether Phase 5 trim is enough or you want `state_patch`.
 
-**Known follow-ups already queued in this plan:**
-- Phase 7 item 5: replace flat `useLobbySpotify` ~90-field return with grouped domains / domain-hook consumption (snappy lobby UX).
-- Phase 1 CSS still shared: `LobbySpotifySection.module.css` (~1321 lines) — split later if needed.
-- Phase 8: delta/`state_patch` only if history cap + year strip are insufficient.
-
-**Do not restart from scratch.** Continue from Phase 7; preserve Phase 5–6 behavior and tests.
+**Do not restart from scratch.** Preserve Phase 5–7 behavior and tests.
 
 ---
 
@@ -562,9 +557,27 @@ npm run typecheck -w apps/web
 
 ### Exit criteria
 
-- [ ] `gamePageMenuTabs` gone or thin; files ≤ ~700
-- [ ] Lobby assemblies share model
+- [x] `gamePageMenuTabs` gone or thin; files ≤ ~700
+- [x] Lobby assemblies share model
 - [ ] You approve plan complete (or Phase 8)
+
+### Phase 7 results (2026-07-23)
+
+| Extract | Owns |
+|---------|------|
+| `gameMenu/TokenAdjustButtons.tsx` | TT +/- flyout controls |
+| `gameMenu/GameMenuPlayerItem.tsx` | Player row, transfer/kick dialogs |
+| `gameMenu/PlaybackTabContent.tsx` | Host playback tab |
+| `gameMenu/HistoryTabContent.tsx` | History tab |
+| `gameMenu/createGameMenuTabs.tsx` | Thin `AppShellMenuTab[]` factory |
+| `buildLobbyAssemblyModel.ts` | Shared lobby model (`shell` / `room` / `hostSettings` / `players` / `roomActions` / `identity`) |
+| Grouped `UseLobbySpotifyResult` | `auth` / `import` / `playlistSearch` / `smartSearch` / `openedPlaylist` / `candidates` / `savedPlaylists` / `queue` |
+| Lazy Spotify setup panels | Code-split when modal opens |
+| Virtualized smart-search list | `@tanstack/react-virtual` for long results |
+
+`gamePageMenuTabs.tsx` is now a one-line re-export. Mobile/desktop lobby consume `LobbyAssemblyModel`.
+
+Automated: web typecheck green; lobby assembly + related unit tests green.
 
 ---
 
@@ -616,7 +629,7 @@ Per `AGENT.md` / `CLAUDE.md`:
 | 4 RoomRegistry split | **Complete** | RoomStore, TimerCoordinator, Lobby/Gameplay/Connection; clearForRoom; 84 tests |
 | 5 Traffic & year integrity | **Complete** | Year omitted until reveal; history capped at 30 |
 | 6 GameFlowService split | **Complete** | Turn / Challenge / TT + thin facade; PlacementService deleted |
-| 7 Menu + Lobby polish | **Next** | Includes Spotify composer API optimization (#5) |
+| 7 Menu + Lobby polish | **Complete** (automated) | Menu split, lobby model, grouped Spotify API, lazy modal, virtual search |
 | 8 Delta protocol (optional) | Deferred | |
 
 ---
@@ -635,9 +648,9 @@ Per `AGENT.md` / `CLAUDE.md`:
 ## How to proceed (when resuming)
 
 1. Open this file and read **Resume checkpoint**.
-2. Reply **`go Phase 7`** to continue the planned sequence.
-3. Or ask to adjust order / finish Phase 6 manual core-loop check first.
+2. Run the Phase 7 manual checklist (menu tabs, lobby parity, long smart-search scroll).
+3. Reply **`go Phase 8`** only if you want optional delta/`state_patch` work — or approve the plan complete.
 
 Earlier one-shot commands (historical):
 
-- **`go Phase 0`** … **`go Phase 6`** — already done; do not re-run as greenfield work.
+- **`go Phase 0`** … **`go Phase 7`** — already done; do not re-run as greenfield work.

@@ -1,4 +1,5 @@
 import type { PublicPlayerState, PublicRoomSettings, PublicRoomState } from "@tunetrack/shared";
+import type { LobbyAssemblyModel } from "./hooks/buildLobbyAssemblyModel";
 
 export interface LobbyPageController {
   connectionStatus: string;
@@ -25,5 +26,5 @@ export interface LobbyPageController {
 }
 
 export interface LobbyPageAssemblyProps {
-  controller: LobbyPageController;
+  model: LobbyAssemblyModel;
 }

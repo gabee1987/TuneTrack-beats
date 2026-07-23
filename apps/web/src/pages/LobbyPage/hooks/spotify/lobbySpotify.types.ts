@@ -35,95 +35,127 @@ export interface CandidateTrackUpdatePatch {
   metadataStatus?: PublicTrackInfo["metadataStatus"];
 }
 
-export interface UseLobbySpotifyResult {
+export interface LobbySpotifyAuthState {
   accountType: SpotifyAccountType | null;
   authError: string | null;
   authPhase: AuthPhase;
-  cancelRenamePlaylist: () => void;
-  cancelSavePlaylist: () => void;
-  clearCurrentPlaylist: () => void;
-  closeEditModal: () => void;
-  confirmOverwrite: () => void;
-  confirmRenamePlaylist: () => void;
-  confirmSavePlaylist: () => void;
   cancelConnectSpotify: () => void;
   connectSpotify: () => void;
-  discardGeneratedCandidates: () => void;
+}
+
+export interface LobbySpotifyImportState {
+  clearCurrentPlaylist: () => void;
   importContentHeight: number;
   importContentRef: React.RefObject<HTMLDivElement>;
   importError: string | null;
   importPhase: ImportPhase;
   importPlaylist: () => void;
   importPlaylistSearchResult: (playlist: SpotifyPlaylistSearchItem) => void;
-  isEditModalOpen: boolean;
-  isOverwritePromptActive: boolean;
-  isSavingWithName: boolean;
-  loadedSavedPlaylistId: string | null;
-  openEditModal: () => void;
   playlistUrl: string;
+  setPlaylistUrl: (url: string) => void;
+}
+
+export interface LobbySpotifyPlaylistSearchState {
   playlistSearchError: string | null;
   playlistSearchPhase: PlaylistSearchPhase;
   playlistSearchQuery: string;
   playlistSearchResults: SpotifyPlaylistSearchItem[];
+  searchSpotifyPlaylists: () => void;
+  setPlaylistSearchQuery: (query: string) => void;
+}
+
+export interface LobbySpotifySmartSearchState {
+  addSmartSearchTrackToQueue: (result: SpotifySmartSearchResult) => void;
+  addSmartSearchTracksToQueue: (results: SpotifySmartSearchResult[]) => void;
+  loadMoreSpotifyMusic: () => void;
+  removeSmartSearchTracksFromQueue: (results: SpotifySmartSearchResult[]) => void;
+  searchSpotifyMusic: () => void;
+  searchSpotifyMusicByType: (type: SpotifySmartSearchTypeFilter) => void;
+  setSmartSearchQuery: (query: string) => void;
+  setSmartSearchType: (type: SpotifySmartSearchTypeFilter) => void;
   smartSearchError: string | null;
-  smartSearchHasSearched: boolean;
   smartSearchHasMore: boolean;
+  smartSearchHasSearched: boolean;
   smartSearchLoadMorePhase: SmartSearchLoadMorePhase;
   smartSearchPhase: SmartSearchPhase;
   smartSearchQuery: string;
-  queuedTrackIds: ReadonlySet<string>;
   smartSearchQueuedTrackIds: ReadonlySet<string>;
   smartSearchResults: SpotifySmartSearchResult[];
   smartSearchType: SpotifySmartSearchTypeFilter;
+}
+
+export interface LobbySpotifyOpenedPlaylistState {
+  applyOpenedPlaylistTracks: (
+    mode: PlaylistQueueUpdateMode,
+    trackIds?: ReadonlySet<string>,
+  ) => void;
+  closeOpenedPlaylist: () => void;
+  openSmartSearchPlaylist: (result: SpotifySmartSearchResult) => void;
   openedPlaylist: OpenedSpotifyPlaylist | null;
   openedPlaylistError: string | null;
   openedPlaylistPhase: OpenedPlaylistPhase;
-  renameError: string | null;
-  renameInputValue: string;
-  renamingPlaylistId: string | null;
-  saveNameError: string | null;
-  saveName: string;
-  savedPlaylistMessage: string | null;
-  generatedPlaylistMessage: string | null;
-  savedPlaylists: SavedPlaylist[];
-  selectedSavedPlaylistId: string;
-  selectedSpotifyPlaylistIds: Set<string>;
+  queuedTrackIds: ReadonlySet<string>;
+  removeOpenedPlaylistTrack: (trackId: string) => void;
+  removeOpenedPlaylistTracksFromQueue: (trackIds: ReadonlySet<string>) => void;
+  updateOpenedPlaylistTrack: (trackId: string, patch: CandidateTrackUpdatePatch) => void;
+}
+
+export interface LobbySpotifyCandidatesState {
   candidateError: string | null;
   candidatePhase: CandidatePhase;
   candidateSessionId: string | null;
   candidateSourceSummary: string | null;
   candidateTracks: PublicTrackInfo[];
-  deleteSelectedSavedPlaylist: () => void;
-  generateCandidatesFromSelectedPlaylists: () => void;
+  discardGeneratedCandidates: () => void;
   generateCandidatesFromPreset: (presetId: SpotifyQuickPickPresetId, targetCount?: number) => void;
+  generateCandidatesFromSelectedPlaylists: () => void;
   removeCandidateTrack: (trackId: string) => void;
-  closeOpenedPlaylist: () => void;
+  selectedSpotifyPlaylistIds: Set<string>;
+  toggleSpotifyPlaylistSelection: (playlistId: string) => void;
+  updateCandidateTrack: (trackId: string, patch: CandidateTrackUpdatePatch) => void;
+  useGeneratedCandidates: (mode?: PlaylistQueueUpdateMode) => void;
+}
+
+export interface LobbySpotifySavedPlaylistsState {
+  cancelRenamePlaylist: () => void;
+  cancelSavePlaylist: () => void;
+  confirmOverwrite: () => void;
+  confirmRenamePlaylist: () => void;
+  confirmSavePlaylist: () => void;
+  deleteSelectedSavedPlaylist: () => void;
+  generatedPlaylistMessage: string | null;
+  isOverwritePromptActive: boolean;
+  isSavingWithName: boolean;
+  loadedSavedPlaylistId: string | null;
+  renameError: string | null;
+  renameInputValue: string;
+  renamingPlaylistId: string | null;
   saveCurrentPlaylist: () => void;
-  addSmartSearchTrackToQueue: (result: SpotifySmartSearchResult) => void;
-  addSmartSearchTracksToQueue: (results: SpotifySmartSearchResult[]) => void;
-  applyOpenedPlaylistTracks: (
-    mode: PlaylistQueueUpdateMode,
-    trackIds?: ReadonlySet<string>,
-  ) => void;
-  openSmartSearchPlaylist: (result: SpotifySmartSearchResult) => void;
-  removeOpenedPlaylistTrack: (trackId: string) => void;
-  removeOpenedPlaylistTracksFromQueue: (trackIds: ReadonlySet<string>) => void;
-  removeSmartSearchTracksFromQueue: (results: SpotifySmartSearchResult[]) => void;
-  loadMoreSpotifyMusic: () => void;
-  searchSpotifyMusic: () => void;
-  searchSpotifyMusicByType: (type: SpotifySmartSearchTypeFilter) => void;
-  searchSpotifyPlaylists: () => void;
-  setPlaylistSearchQuery: (query: string) => void;
-  setSmartSearchQuery: (query: string) => void;
-  setSmartSearchType: (type: SpotifySmartSearchTypeFilter) => void;
+  saveName: string;
+  saveNameError: string | null;
+  savedPlaylistMessage: string | null;
+  savedPlaylists: SavedPlaylist[];
+  selectedSavedPlaylistId: string;
   setRenameInputValue: (name: string) => void;
   setSaveName: (name: string) => void;
   setSelectedSavedPlaylistId: (playlistId: string) => void;
-  setPlaylistUrl: (url: string) => void;
   startRenamePlaylist: (playlistId: string) => void;
   switchToSaveAsNew: () => void;
-  toggleSpotifyPlaylistSelection: (playlistId: string) => void;
-  updateCandidateTrack: (trackId: string, patch: CandidateTrackUpdatePatch) => void;
-  updateOpenedPlaylistTrack: (trackId: string, patch: CandidateTrackUpdatePatch) => void;
-  useGeneratedCandidates: (mode?: PlaylistQueueUpdateMode) => void;
+}
+
+export interface LobbySpotifyQueueState {
+  closeEditModal: () => void;
+  isEditModalOpen: boolean;
+  openEditModal: () => void;
+}
+
+export interface UseLobbySpotifyResult {
+  auth: LobbySpotifyAuthState;
+  candidates: LobbySpotifyCandidatesState;
+  import: LobbySpotifyImportState;
+  openedPlaylist: LobbySpotifyOpenedPlaylistState;
+  playlistSearch: LobbySpotifyPlaylistSearchState;
+  queue: LobbySpotifyQueueState;
+  savedPlaylists: LobbySpotifySavedPlaylistsState;
+  smartSearch: LobbySpotifySmartSearchState;
 }

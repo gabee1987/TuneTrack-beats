@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { AppRouteFallback } from "../../app/components/AppRouteFallback";
 import { RoomResetModal } from "../../features/ui/RoomResetModal";
 import { usePageLayoutMode } from "../../hooks/usePageLayoutMode";
+import { buildLobbyAssemblyModel } from "./hooks/buildLobbyAssemblyModel";
 import { useLobbyPageController } from "./hooks/useLobbyPageController";
 
 const LobbyPageMobile = lazy(async () => {
@@ -17,6 +18,7 @@ const LobbyPageDesktop = lazy(async () => {
 export function LobbyPage() {
   const controller = useLobbyPageController();
   const layoutMode = usePageLayoutMode();
+  const model = buildLobbyAssemblyModel(controller);
 
   return (
     <>
@@ -26,9 +28,9 @@ export function LobbyPage() {
       />
       <Suspense fallback={<AppRouteFallback />}>
         {layoutMode === "mobile" ? (
-          <LobbyPageMobile controller={controller} />
+          <LobbyPageMobile model={model} />
         ) : (
-          <LobbyPageDesktop controller={controller} />
+          <LobbyPageDesktop model={model} />
         )}
       </Suspense>
     </>
