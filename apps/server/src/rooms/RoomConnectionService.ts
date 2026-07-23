@@ -19,6 +19,7 @@ import type {
 import type { RoomTimerCoordinator } from "./RoomTimerCoordinator.js";
 
 type RoomStateChangedEmitter = (roomState: PublicRoomState) => void;
+type SpotifyPlaybackHandoffEmitter = (roomId: RoomId) => void;
 
 export class RoomConnectionService {
   private static readonly IN_GAME_RECONNECT_DISPLAY_MS = 180_000;
@@ -28,6 +29,7 @@ export class RoomConnectionService {
     private readonly timers: RoomTimerCoordinator,
     private readonly gameFlowService: GameFlowService,
     private readonly emitRoomStateChanged: RoomStateChangedEmitter,
+    private readonly emitSpotifyPlaybackHandoff: SpotifyPlaybackHandoffEmitter = () => undefined,
   ) {}
 
   public removePlayerBySocketId(socketId: string): PublicRoomState | null {
@@ -108,11 +110,22 @@ export class RoomConnectionService {
       throw new Error("ROOM_EMPTY_AFTER_KICK");
     }
 
+    const previousPlaybackOwner = roomRecord.roomState.settings.spotifyPlaybackOwnerPlayerId;
+    const previousPlaybackGeneration = roomRecord.roomState.settings.spotifyPlaybackGeneration;
+
     const nextRoomState = gameState
       ? mapGameStateToPublicRoomState(baseRoomState, gameState, roomRecord.trackCardsById)
       : baseRoomState;
 
     this.store.setRoom(payload.roomId, { ...roomRecord, gameState, roomState: nextRoomState });
+
+    if (
+      nextRoomState.settings.spotifyPlaybackOwnerPlayerId !== previousPlaybackOwner ||
+      nextRoomState.settings.spotifyPlaybackGeneration !== previousPlaybackGeneration
+    ) {
+      this.emitSpotifyPlaybackHandoff(payload.roomId);
+    }
+
     return { kickedSocketIds, roomState: nextRoomState };
   }
 
@@ -163,6 +176,8 @@ export class RoomConnectionService {
     const roomRecord = this.store.getRoom(membership.roomId);
     if (!roomRecord) return null;
 
+    const previousPlaybackOwner = roomRecord.roomState.settings.spotifyPlaybackOwnerPlayerId;
+    const previousPlaybackGeneration = roomRecord.roomState.settings.spotifyPlaybackGeneration;
     const { nextRoomState } = buildPlayerRemovedRoomState(
       roomRecord.roomState,
       membership.playerId,
@@ -175,6 +190,14 @@ export class RoomConnectionService {
     }
 
     this.store.setRoom(membership.roomId, { ...roomRecord, roomState: nextRoomState });
+
+    if (
+      nextRoomState.settings.spotifyPlaybackOwnerPlayerId !== previousPlaybackOwner ||
+      nextRoomState.settings.spotifyPlaybackGeneration !== previousPlaybackGeneration
+    ) {
+      this.emitSpotifyPlaybackHandoff(membership.roomId);
+    }
+
     return nextRoomState;
   }
 
@@ -369,8 +392,18 @@ export class RoomConnectionService {
       throw new Error("HOST_TRANSFER_TARGET_DISCONNECTED");
     }
 
+    const previousPlaybackOwner = roomRecord.roomState.settings.spotifyPlaybackOwnerPlayerId;
+    const previousPlaybackGeneration = roomRecord.roomState.settings.spotifyPlaybackGeneration;
     const nextRoomState = buildHostTransferredRoomState(roomRecord.roomState, targetPlayerId);
     this.store.setRoom(roomId, { ...roomRecord, roomState: nextRoomState });
+
+    if (
+      nextRoomState.settings.spotifyPlaybackOwnerPlayerId !== previousPlaybackOwner ||
+      nextRoomState.settings.spotifyPlaybackGeneration !== previousPlaybackGeneration
+    ) {
+      this.emitSpotifyPlaybackHandoff(roomId);
+    }
+
     return nextRoomState;
   }
 }

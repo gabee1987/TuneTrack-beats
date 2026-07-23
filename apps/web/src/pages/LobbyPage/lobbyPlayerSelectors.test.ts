@@ -24,6 +24,8 @@ const baseRoomSettings: PublicRoomSettings = {
   importedTrackCount: 0,
   spotifyAuthStatus: "none",
   spotifyAccountType: null,
+  spotifyPlaybackOwnerPlayerId: null,
+  spotifyPlaybackGeneration: 0,
 };
 
 const testTranslations: Record<string, string> = {

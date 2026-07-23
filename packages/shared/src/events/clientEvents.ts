@@ -26,6 +26,8 @@ export const ClientToServerEvent = {
   PlaceChallenge: "place_challenge",
   RefreshSpotifyToken: "refresh_spotify_token",
   PlaySpotifyTrack: "play_spotify_track",
+  RegisterSpotifyPlaybackDevice: "register_spotify_playback_device",
+  UnregisterSpotifyPlaybackDevice: "unregister_spotify_playback_device",
   RemovePlaylistTracks: "remove_playlist_tracks",
   RenameRoom: "rename_room",
   RequestSpotifyAuthUrl: "request_spotify_auth_url",
@@ -180,6 +182,18 @@ export interface PlaySpotifyTrackPayload {
   roomId: RoomId;
   deviceId: string;
   spotifyTrackUri: string;
+  requestId: string;
+  playbackGeneration: number;
+}
+
+export interface RegisterSpotifyPlaybackDevicePayload {
+  roomId: RoomId;
+  deviceId: string;
+  playbackGeneration: number;
+}
+
+export interface UnregisterSpotifyPlaybackDevicePayload {
+  roomId: RoomId;
 }
 
 export interface SearchSpotifyPlaylistsPayload {

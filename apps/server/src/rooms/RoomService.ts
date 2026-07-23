@@ -1,9 +1,11 @@
 import { logger } from "../app/logger.js";
+import { logAuditEvent } from "../app/auditLogger.js";
 import { DeckService } from "../decks/DeckService.js";
 import { PlaylistImportService } from "../decks/PlaylistImportService.js";
 import { SpotifyAuthService } from "../spotify/SpotifyAuthService.js";
 import { SpotifyDiscoveryService } from "../spotify/SpotifyDiscoveryService.js";
 import { SpotifyMusicSearchService } from "../spotify/SpotifyMusicSearchService.js";
+import type { SpotifyPlaybackSessionStore } from "../spotify/SpotifyPlaybackSessionStore.js";
 import type { GameTrackCard } from "@tunetrack/game-engine";
 import type {
   AwardTtPayloadParsed,
@@ -25,6 +27,8 @@ import type {
   PublicTrackInfo,
   RefreshSpotifyTokenPayloadParsed,
   PlaySpotifyTrackPayloadParsed,
+  RegisterSpotifyPlaybackDevicePayloadParsed,
+  UnregisterSpotifyPlaybackDevicePayloadParsed,
   RenameRoomPayloadParsed,
   RemovePlaylistTracksPayloadParsed,
   RequestSpotifyAuthUrlPayloadParsed,
@@ -82,7 +86,19 @@ export class RoomService {
     private readonly playlistImportService: PlaylistImportService,
     private readonly spotifyDiscoveryService: SpotifyDiscoveryService,
     private readonly spotifyMusicSearchService: SpotifyMusicSearchService,
-  ) {}
+    private readonly spotifyPlaybackSessions: SpotifyPlaybackSessionStore,
+  ) {
+    this.roomRegistry.setSpotifyPlaybackHandoffListener((roomId) => {
+      this.spotifyPlaybackSessions.beginHandoff(roomId);
+      logAuditEvent({
+        auditKind: "spotify_auth",
+        action: "playback_handoff_started",
+        outcome: "succeeded",
+        roomId,
+      });
+      void this.spotifyAuthService.pauseRoomPlayback(roomId);
+    });
+  }
 
   public setRoomStateChangedListener(listener: (roomState: PublicRoomState) => void): void {
     this.roomRegistry.setRoomStateChangedListener(listener);
@@ -193,6 +209,7 @@ export class RoomService {
   }
 
   public removePlayer(socketId: string): PublicRoomState | null {
+    this.spotifyPlaybackSessions.unregisterBySocketId(socketId);
     const roomState = this.roomRegistry.removePlayerBySocketId(socketId);
     if (roomState) {
       logger.info(
@@ -231,6 +248,8 @@ export class RoomService {
     transferHostPayload: TransferHostPayloadParsed,
     socketId: string,
   ): PublicRoomState {
+    // Playback ownership + generation bump happen in buildHostTransferredRoomState;
+    // beginHandoff is emitted from RoomConnectionService.applyHostTransfer.
     return this.roomRegistry.transferHost(socketId, transferHostPayload);
   }
 
@@ -306,6 +325,7 @@ export class RoomService {
 
   public closeRoom(closeRoomPayload: CloseRoomPayloadParsed, socketId: string): string {
     this.spotifyAuthService.clearHostTokens(closeRoomPayload.roomId);
+    this.spotifyPlaybackSessions.clearRoom(closeRoomPayload.roomId);
     const roomId = this.roomRegistry.closeRoom(socketId, closeRoomPayload);
     logger.info({ roomId, socketId }, "room closed");
     return roomId;
@@ -488,23 +508,99 @@ export class RoomService {
     payload: PlaySpotifyTrackPayloadParsed,
     socketId: string,
   ): Promise<SpotifyPlaybackResultPayload> {
-    this.roomRegistry.getRoomStateForMember(socketId, payload.roomId);
+    const roomState = this.roomRegistry.getRoomStateForMember(socketId, payload.roomId);
+    const currentPlaybackGeneration = roomState.settings.spotifyPlaybackGeneration ?? 0;
 
-    try {
-      this.roomRegistry.requireHost(socketId, payload.roomId);
-    } catch {
+    if (payload.playbackGeneration !== currentPlaybackGeneration) {
       return {
         success: false,
-        code: "not_host",
-        message: "Only the host can control Spotify playback.",
+        requestId: payload.requestId,
+        code: "stale_playback_generation",
+        message: "Playback moved to a different host. Retry after reclaiming the player.",
       };
     }
 
-    return this.spotifyAuthService.playTrackOnHostDevice(
-      payload.roomId,
-      payload.deviceId,
-      payload.spotifyTrackUri,
-    );
+    try {
+      this.roomRegistry.requireSpotifyPlaybackOwner(socketId, payload.roomId);
+    } catch {
+      return {
+        success: false,
+        requestId: payload.requestId,
+        code: "not_playback_owner",
+        message: "Only the current host can control Spotify playback.",
+      };
+    }
+
+    this.spotifyPlaybackSessions.registerDevice(payload.roomId, socketId, payload.deviceId);
+    this.spotifyPlaybackSessions.beginPlayRequest(payload.roomId, payload.requestId);
+
+    return this.spotifyPlaybackSessions.runExclusive(payload.roomId, async () => {
+      if (!this.spotifyPlaybackSessions.isActivePlayRequest(payload.roomId, payload.requestId)) {
+        return {
+          success: false,
+          requestId: payload.requestId,
+          code: "superseded",
+          message: "A newer playback request replaced this one.",
+        } as const;
+      }
+
+      return this.spotifyAuthService.playTrackOnHostDevice(
+        payload.roomId,
+        payload.deviceId,
+        payload.spotifyTrackUri,
+        {
+          requestId: payload.requestId,
+          isSuperseded: () =>
+            !this.spotifyPlaybackSessions.isActivePlayRequest(payload.roomId, payload.requestId),
+        },
+      );
+    });
+  }
+
+  public registerSpotifyPlaybackDevice(
+    payload: RegisterSpotifyPlaybackDevicePayloadParsed,
+    socketId: string,
+  ): void {
+    const roomState = this.roomRegistry.getRoomStateForMember(socketId, payload.roomId);
+    const currentPlaybackGeneration = roomState.settings.spotifyPlaybackGeneration ?? 0;
+
+    // Soft-ignore stale registrations during handoff races — never surface as a room error toast.
+    if (payload.playbackGeneration !== currentPlaybackGeneration) {
+      logAuditEvent({
+        auditKind: "spotify_auth",
+        action: "playback_device_register_ignored_stale",
+        outcome: "succeeded",
+        roomId: payload.roomId,
+        socketId,
+        meta: {
+          deviceId: payload.deviceId,
+          payloadGeneration: payload.playbackGeneration,
+          currentGeneration: currentPlaybackGeneration,
+        },
+      });
+      return;
+    }
+
+    this.roomRegistry.requireSpotifyPlaybackOwner(socketId, payload.roomId);
+    this.spotifyPlaybackSessions.registerDevice(payload.roomId, socketId, payload.deviceId);
+    logAuditEvent({
+      auditKind: "spotify_auth",
+      action: "playback_device_registered",
+      outcome: "succeeded",
+      roomId: payload.roomId,
+      socketId,
+      meta: {
+        deviceId: payload.deviceId,
+        playbackGeneration: payload.playbackGeneration,
+      },
+    });
+  }
+
+  public unregisterSpotifyPlaybackDevice(
+    payload: UnregisterSpotifyPlaybackDevicePayloadParsed,
+    socketId: string,
+  ): void {
+    this.spotifyPlaybackSessions.unregisterDevice(payload.roomId, socketId);
   }
 
   public getPlaylistTracks(

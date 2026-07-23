@@ -41,6 +41,8 @@ export function buildInitialRoomState(
     importedTrackCount: 0,
     spotifyAuthStatus: "none",
     spotifyAccountType: null,
+    spotifyPlaybackOwnerPlayerId: null,
+    spotifyPlaybackGeneration: 0,
   };
 
   return {
@@ -202,6 +204,7 @@ export function buildSpotifyAuthRoomState(
   roomState: PublicRoomState,
   status: "none" | "connected",
   accountType: SpotifyAccountType | null,
+  playbackOwnerPlayerId: string | null,
 ): PublicRoomState {
   return {
     ...roomState,
@@ -209,6 +212,7 @@ export function buildSpotifyAuthRoomState(
       ...roomState.settings,
       spotifyAuthStatus: status,
       spotifyAccountType: accountType,
+      spotifyPlaybackOwnerPlayerId: status === "connected" ? playbackOwnerPlayerId : null,
     },
   };
 }

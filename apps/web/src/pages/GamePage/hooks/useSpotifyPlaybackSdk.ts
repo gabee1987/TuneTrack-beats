@@ -11,6 +11,7 @@ import { getSocketClient } from "../../../services/socket/socketClient";
 interface UseSpotifyPlaybackSdkOptions {
   roomId: string;
   enabled: boolean;
+  playbackGeneration: number;
 }
 
 export interface UseSpotifyPlaybackSdkResult {
@@ -20,7 +21,6 @@ export interface UseSpotifyPlaybackSdkResult {
   position: number;
   duration: number;
   hasActiveContext: boolean;
-  /** Call from a user gesture so later remote play commands are allowed. */
   unlockPlayback: () => void;
   playTrack: (spotifyTrackUri: string) => Promise<boolean>;
   pause: () => void;
@@ -28,8 +28,8 @@ export interface UseSpotifyPlaybackSdkResult {
   seek: (positionMs: number) => void;
 }
 
-const SERVER_PLAY_TIMEOUT_MS = 12_000;
-const PLAYBACK_CONFIRM_TIMEOUT_MS = 8_000;
+const SERVER_PLAY_TIMEOUT_MS = 32_000;
+const PLAYBACK_CONFIRM_TIMEOUT_MS = 10_000;
 
 let sdkScriptLoaded = false;
 
@@ -45,9 +45,17 @@ function loadSdkScript(): Promise<void> {
   });
 }
 
+function createPlaybackRequestId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `play-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
 export function useSpotifyPlaybackSdk({
   roomId,
   enabled,
+  playbackGeneration,
 }: UseSpotifyPlaybackSdkOptions): UseSpotifyPlaybackSdkResult {
   const [isReady, setIsReady] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
@@ -55,21 +63,29 @@ export function useSpotifyPlaybackSdk({
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [hasActiveContext, setHasActiveContext] = useState(false);
+  // Bumping remounts the Spotify.Player after hard failures (device_not_found).
+  const [playerEpoch, setPlayerEpoch] = useState(0);
 
   const playerRef = useRef<Spotify.Player | null>(null);
   const accessTokenRef = useRef<string | null>(null);
-  const pendingGetOAuthTokenRef = useRef<((token: string) => void) | null>(null);
+  const tokenRequestInFlightRef = useRef<Promise<string | null> | null>(null);
   const isPlayingRef = useRef(false);
   const positionSnapshotRef = useRef(0);
   const positionSnapshotTimeRef = useRef(0);
   const durationRef = useRef(0);
   const deviceIdRef = useRef<string | null>(null);
   const currentTrackUriRef = useRef<string | null>(null);
+  const activePlayRequestIdRef = useRef<string | null>(null);
+  const playbackGenerationRef = useRef(playbackGeneration);
+  playbackGenerationRef.current = playbackGeneration;
   const playConfirmRef = useRef<{
+    requestId: string;
     uri: string;
     resolve: (success: boolean) => void;
     timeoutId: number;
   } | null>(null);
+  const reconnectAttemptsRef = useRef(0);
+  const playGenerationRef = useRef(0);
 
   const resetPlaybackState = useCallback(() => {
     setIsPlaying(false);
@@ -83,9 +99,12 @@ export function useSpotifyPlaybackSdk({
     currentTrackUriRef.current = null;
   }, []);
 
-  const failPendingPlayConfirmation = useCallback(() => {
+  const failPendingPlayConfirmation = useCallback((onlyRequestId?: string) => {
     const pending = playConfirmRef.current;
     if (!pending) {
+      return;
+    }
+    if (onlyRequestId && pending.requestId !== onlyRequestId) {
       return;
     }
     playConfirmRef.current = null;
@@ -94,37 +113,56 @@ export function useSpotifyPlaybackSdk({
   }, []);
 
   const pauseCurrentSpotifyDevice = useCallback(() => {
-    // Pause via the Web Playback SDK only — browser REST calls to api.spotify.com
-    // are blocked by CORS from this origin.
     void playerRef.current?.pause().catch(() => undefined);
     resetPlaybackState();
   }, [resetPlaybackState]);
 
+  const pausePlayback = useCallback(() => {
+    void playerRef.current?.pause().catch(() => undefined);
+    setIsPlaying(false);
+    isPlayingRef.current = false;
+  }, []);
+
   const requestToken = useCallback(async (): Promise<string | null> => {
-    const socketClient = await getSocketClient();
-    return new Promise((resolve) => {
-      function cleanup() {
-        socketClient.off(ServerToClientEvent.SpotifyTokenRefreshed, handleTokenRefreshed);
-        socketClient.off(ServerToClientEvent.Error, handleRefreshError);
-      }
+    if (tokenRequestInFlightRef.current) {
+      return tokenRequestInFlightRef.current;
+    }
 
-      function handleTokenRefreshed(payload: SpotifyTokenRefreshedPayload) {
-        cleanup();
-        accessTokenRef.current = payload.accessToken;
-        resolve(payload.accessToken);
-      }
+    const requestPromise = (async (): Promise<string | null> => {
+      const socketClient = await getSocketClient();
+      return new Promise((resolve) => {
+        function cleanup() {
+          socketClient.off(ServerToClientEvent.SpotifyTokenRefreshed, handleTokenRefreshed);
+          socketClient.off(ServerToClientEvent.Error, handleRefreshError);
+        }
 
-      function handleRefreshError(payload: ServerErrorPayload) {
-        if (payload.code !== "SPOTIFY_TOKEN_REFRESH_FAILED") return;
-        cleanup();
-        accessTokenRef.current = null;
-        resolve(null);
-      }
+        function handleTokenRefreshed(payload: SpotifyTokenRefreshedPayload) {
+          cleanup();
+          accessTokenRef.current = payload.accessToken;
+          resolve(payload.accessToken);
+        }
 
-      socketClient.on(ServerToClientEvent.SpotifyTokenRefreshed, handleTokenRefreshed);
-      socketClient.on(ServerToClientEvent.Error, handleRefreshError);
-      socketClient.emit(ClientToServerEvent.RefreshSpotifyToken, { roomId });
-    });
+        function handleRefreshError(payload: ServerErrorPayload) {
+          if (payload.code !== "SPOTIFY_TOKEN_REFRESH_FAILED") return;
+          cleanup();
+          accessTokenRef.current = null;
+          resolve(null);
+        }
+
+        socketClient.on(ServerToClientEvent.SpotifyTokenRefreshed, handleTokenRefreshed);
+        socketClient.on(ServerToClientEvent.Error, handleRefreshError);
+        socketClient.emit(ClientToServerEvent.RefreshSpotifyToken, { roomId });
+      });
+    })();
+
+    tokenRequestInFlightRef.current = requestPromise;
+    try {
+      return await requestPromise;
+    } finally {
+      if (tokenRequestInFlightRef.current === requestPromise) {
+        tokenRequestInFlightRef.current = null;
+      }
+    }
   }, [roomId]);
 
   useEffect(() => {
@@ -132,26 +170,47 @@ export function useSpotifyPlaybackSdk({
 
     let disposed = false;
     let player: Spotify.Player | null = null;
+    let authRetryUsed = false;
+
+    async function registerDevice(nextDeviceId: string) {
+      const socketClient = await getSocketClient();
+      if (disposed) return;
+      socketClient.emit(ClientToServerEvent.RegisterSpotifyPlaybackDevice, {
+        roomId,
+        deviceId: nextDeviceId,
+        playbackGeneration: playbackGenerationRef.current,
+      });
+    }
+
+    async function unregisterDevice() {
+      try {
+        const socketClient = await getSocketClient();
+        socketClient.emit(ClientToServerEvent.UnregisterSpotifyPlaybackDevice, { roomId });
+      } catch {
+        // Best-effort on teardown.
+      }
+    }
 
     async function init() {
+      accessTokenRef.current = null;
       await loadSdkScript();
       if (disposed) return;
 
+      const freshToken = await requestToken();
+      if (disposed) return;
+      if (!freshToken) {
+        console.error("[TuneTrack] Spotify SDK: could not obtain access token before connect");
+        return;
+      }
+
       player = new window.Spotify.Player({
-        name: "TuneTrack Host",
+        name: "TuneTrack",
         volume: 0.8,
         getOAuthToken: (cb) => {
-          if (accessTokenRef.current) {
-            cb(accessTokenRef.current);
-          } else {
-            pendingGetOAuthTokenRef.current = cb;
-            void requestToken().then((token) => {
-              if (token) {
-                pendingGetOAuthTokenRef.current = null;
-                cb(token);
-              }
-            });
-          }
+          void requestToken().then((token) => {
+            if (disposed) return;
+            if (token) cb(token);
+          });
         },
       });
 
@@ -160,6 +219,18 @@ export function useSpotifyPlaybackSdk({
       });
       player.addListener("authentication_error", ({ message }) => {
         console.error("[TuneTrack] Spotify SDK authentication error:", message);
+        accessTokenRef.current = null;
+        if (disposed || authRetryUsed || !player) return;
+        authRetryUsed = true;
+        void requestToken().then(async (token) => {
+          if (!token || disposed || !player) return;
+          try {
+            player.disconnect();
+            await player.connect();
+          } catch (error) {
+            console.error("[TuneTrack] Spotify SDK reconnect after auth error failed:", error);
+          }
+        });
       });
       player.addListener("account_error", ({ message }) => {
         console.error("[TuneTrack] Spotify SDK account error:", message);
@@ -180,11 +251,15 @@ export function useSpotifyPlaybackSdk({
         setDeviceId(device_id);
         setIsReady(true);
         void player?.activateElement().catch(() => undefined);
+        void registerDevice(device_id);
       });
 
       player.on("not_ready", () => {
         if (disposed) return;
         setIsReady(false);
+        deviceIdRef.current = null;
+        setDeviceId(null);
+        void unregisterDevice();
       });
 
       player.on("player_state_changed", (state) => {
@@ -202,7 +277,12 @@ export function useSpotifyPlaybackSdk({
         setDuration(state.duration);
 
         const pending = playConfirmRef.current;
-        if (pending && trackUri === pending.uri && playing) {
+        if (
+          pending &&
+          pending.requestId === activePlayRequestIdRef.current &&
+          trackUri === pending.uri &&
+          playing
+        ) {
           playConfirmRef.current = null;
           window.clearTimeout(pending.timeoutId);
           pending.resolve(true);
@@ -210,6 +290,10 @@ export function useSpotifyPlaybackSdk({
       });
 
       await player.connect();
+      if (disposed) {
+        player.disconnect();
+        return;
+      }
       playerRef.current = player;
     }
 
@@ -218,15 +302,36 @@ export function useSpotifyPlaybackSdk({
     return () => {
       disposed = true;
       failPendingPlayConfirmation();
+      void unregisterDevice();
       void player?.pause().catch(() => undefined);
       player?.disconnect();
       playerRef.current = null;
+      accessTokenRef.current = null;
+      tokenRequestInFlightRef.current = null;
+      deviceIdRef.current = null;
       setIsReady(false);
       setDeviceId(null);
-      deviceIdRef.current = null;
       resetPlaybackState();
     };
-  }, [enabled, requestToken, resetPlaybackState, failPendingPlayConfirmation]);
+  }, [
+    enabled,
+    playbackGeneration,
+    playerEpoch,
+    requestToken,
+    resetPlaybackState,
+    failPendingPlayConfirmation,
+    roomId,
+  ]);
+
+  useEffect(() => {
+    if (!enabled) {
+      reconnectAttemptsRef.current = 0;
+    }
+  }, [enabled]);
+
+  useEffect(() => {
+    reconnectAttemptsRef.current = 0;
+  }, [playbackGeneration]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -235,12 +340,8 @@ export function useSpotifyPlaybackSdk({
     let cleanup: (() => void) | null = null;
 
     void getSocketClient().then((socketClient) => {
-      if (isDisposed) {
-        return;
-      }
-
+      if (isDisposed) return;
       socketClient.on(ServerToClientEvent.RoomClosed, pauseCurrentSpotifyDevice);
-
       cleanup = () => {
         socketClient.off(ServerToClientEvent.RoomClosed, pauseCurrentSpotifyDevice);
       };
@@ -265,21 +366,12 @@ export function useSpotifyPlaybackSdk({
 
   useEffect(() => {
     if (!enabled) return;
-
-    async function refresh() {
-      const token = await requestToken();
-      if (token) accessTokenRef.current = token;
-    }
-
-    void refresh();
-
     const intervalId = window.setInterval(
       () => {
-        void refresh();
+        void requestToken();
       },
       55 * 60 * 1000,
     );
-
     return () => window.clearInterval(intervalId);
   }, [enabled, requestToken]);
 
@@ -287,41 +379,53 @@ export function useSpotifyPlaybackSdk({
     void playerRef.current?.activateElement().catch(() => undefined);
   }, []);
 
-  const waitForPlayingUri = useCallback((spotifyTrackUri: string): Promise<boolean> => {
-    const alreadyPlaying =
-      currentTrackUriRef.current === spotifyTrackUri && isPlayingRef.current;
-    if (alreadyPlaying) {
-      return Promise.resolve(true);
-    }
+  const waitForPlayingUri = useCallback(
+    (requestId: string, spotifyTrackUri: string): Promise<boolean> => {
+      const alreadyPlaying =
+        currentTrackUriRef.current === spotifyTrackUri && isPlayingRef.current;
+      if (alreadyPlaying) {
+        return Promise.resolve(true);
+      }
 
-    failPendingPlayConfirmation();
+      failPendingPlayConfirmation();
 
-    return new Promise((resolve) => {
-      const timeoutId = window.setTimeout(() => {
-        if (playConfirmRef.current?.uri === spotifyTrackUri) {
-          playConfirmRef.current = null;
-          console.error("[TuneTrack] Spotify playTrack: timed out waiting for audible playback");
-          resolve(false);
-        }
-      }, PLAYBACK_CONFIRM_TIMEOUT_MS);
+      return new Promise((resolve) => {
+        const timeoutId = window.setTimeout(() => {
+          if (playConfirmRef.current?.requestId === requestId) {
+            playConfirmRef.current = null;
+            console.error("[TuneTrack] Spotify playTrack: timed out waiting for audible playback");
+            resolve(false);
+          }
+        }, PLAYBACK_CONFIRM_TIMEOUT_MS);
 
-      playConfirmRef.current = {
-        uri: spotifyTrackUri,
-        resolve,
-        timeoutId,
-      };
-    });
-  }, [failPendingPlayConfirmation]);
+        playConfirmRef.current = {
+          requestId,
+          uri: spotifyTrackUri,
+          resolve,
+          timeoutId,
+        };
+      });
+    },
+    [failPendingPlayConfirmation],
+  );
 
   const requestServerPlay = useCallback(
-    async (spotifyTrackUri: string, deviceIdValue: string): Promise<boolean> => {
+    async (
+      requestId: string,
+      spotifyTrackUri: string,
+      deviceIdValue: string,
+    ): Promise<SpotifyPlaybackResultPayload> => {
       const socketClient = await getSocketClient();
 
       return new Promise((resolve) => {
         const timeoutId = window.setTimeout(() => {
           cleanup();
-          console.error("[TuneTrack] Spotify playTrack: timed out waiting for server");
-          resolve(false);
+          resolve({
+            success: false,
+            requestId,
+            code: "device_not_found",
+            message: "Timed out waiting for Spotify play result.",
+          });
         }, SERVER_PLAY_TIMEOUT_MS);
 
         function cleanup() {
@@ -330,16 +434,11 @@ export function useSpotifyPlaybackSdk({
         }
 
         function handleResult(payload: SpotifyPlaybackResultPayload) {
-          cleanup();
-          if (!payload.success) {
-            console.error(
-              `[TuneTrack] Spotify playTrack failed (${payload.code}):`,
-              payload.message,
-            );
-            resolve(false);
+          if (payload.requestId !== requestId) {
             return;
           }
-          resolve(true);
+          cleanup();
+          resolve(payload);
         }
 
         socketClient.on(ServerToClientEvent.SpotifyPlaybackResult, handleResult);
@@ -347,6 +446,8 @@ export function useSpotifyPlaybackSdk({
           roomId,
           deviceId: deviceIdValue,
           spotifyTrackUri,
+          requestId,
+          playbackGeneration: playbackGenerationRef.current,
         });
       });
     },
@@ -357,30 +458,72 @@ export function useSpotifyPlaybackSdk({
     async (spotifyTrackUri: string): Promise<boolean> => {
       const activeDeviceId = deviceIdRef.current;
       if (!activeDeviceId) {
+        console.error("[TuneTrack] Spotify playTrack: player device is not ready");
         return false;
       }
+
+      const playGeneration = playGenerationRef.current + 1;
+      playGenerationRef.current = playGeneration;
+
+      const requestId = createPlaybackRequestId();
+      activePlayRequestIdRef.current = requestId;
 
       try {
         await playerRef.current?.activateElement();
       } catch {
-        // Autoplay policies can reject this until a gesture; play may still work.
+        // Gesture may be required; continue.
       }
 
-      const serverAccepted = await requestServerPlay(spotifyTrackUri, activeDeviceId);
-      if (!serverAccepted) {
+      if (playGenerationRef.current !== playGeneration) {
         return false;
       }
 
-      // Server 204 only means Spotify accepted the command. Confirm the SDK is
-      // actually playing this URI — otherwise later auto-plays get skipped.
-      return waitForPlayingUri(spotifyTrackUri);
+      const serverResult = await requestServerPlay(requestId, spotifyTrackUri, activeDeviceId);
+      if (
+        playGenerationRef.current !== playGeneration ||
+        activePlayRequestIdRef.current !== requestId
+      ) {
+        return false;
+      }
+
+      if (!serverResult.success) {
+        if (
+          serverResult.code === "superseded" ||
+          serverResult.code === "stale_playback_generation"
+        ) {
+          return false;
+        }
+
+        console.error(
+          `[TuneTrack] Spotify playTrack failed (${serverResult.code}):`,
+          serverResult.message,
+        );
+
+        // Remount only after several failed attempts on the same device — remounting
+        // creates a new device id and restarts Spotify Connect visibility from zero.
+        if (
+          serverResult.code === "device_not_found" &&
+          enabled &&
+          playGenerationRef.current === playGeneration
+        ) {
+          reconnectAttemptsRef.current += 1;
+          if (reconnectAttemptsRef.current === 3) {
+            setPlayerEpoch((value) => value + 1);
+          }
+        }
+
+        return false;
+      }
+
+      reconnectAttemptsRef.current = 0;
+      return waitForPlayingUri(requestId, spotifyTrackUri);
     },
-    [requestServerPlay, waitForPlayingUri],
+    [enabled, requestServerPlay, waitForPlayingUri],
   );
 
   const pause = useCallback(() => {
-    pauseCurrentSpotifyDevice();
-  }, [pauseCurrentSpotifyDevice]);
+    pausePlayback();
+  }, [pausePlayback]);
 
   const resume = useCallback(() => {
     void playerRef.current?.activateElement().catch(() => undefined);

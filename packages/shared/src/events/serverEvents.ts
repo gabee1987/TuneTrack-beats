@@ -81,10 +81,18 @@ export interface SpotifyTokenRefreshedPayload {
 }
 
 export type SpotifyPlaybackResultPayload =
-  | { success: true }
+  | { success: true; requestId: string }
   | {
       success: false;
-      code: "device_not_found" | "not_host" | "spotify_api_error" | "not_connected";
+      requestId: string;
+      code:
+        | "device_not_found"
+        | "not_host"
+        | "not_playback_owner"
+        | "stale_playback_generation"
+        | "spotify_api_error"
+        | "not_connected"
+        | "superseded";
       message: string;
     };
 

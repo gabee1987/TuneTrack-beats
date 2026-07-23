@@ -5,9 +5,11 @@ import {
   openSpotifyPlaylistPayloadSchema,
   playSpotifyTrackPayloadSchema,
   refreshSpotifyTokenPayloadSchema,
+  registerSpotifyPlaybackDevicePayloadSchema,
   requestSpotifyAuthUrlPayloadSchema,
   searchSpotifyMusicPayloadSchema,
   searchSpotifyPlaylistsPayloadSchema,
+  unregisterSpotifyPlaybackDevicePayloadSchema,
   useSpotifyCandidatesPayloadSchema,
 } from "@tunetrack/shared";
 import type { Server, Socket } from "socket.io";
@@ -33,6 +35,7 @@ export function registerSpotifyHandlers(
   registerUseSpotifyCandidatesHandler(io, socket, roomService);
   registerRefreshSpotifyTokenHandler(io, socket, roomService);
   registerPlaySpotifyTrackHandler(socket, roomService);
+  registerSpotifyPlaybackDeviceHandlers(socket, roomService);
 }
 
 function registerRequestSpotifyAuthUrlHandler(socket: Socket, roomService: RoomService): void {
@@ -246,8 +249,16 @@ function registerPlaySpotifyTrackHandler(socket: Socket, roomService: RoomServic
     const parseResult = playSpotifyTrackPayloadSchema.safeParse(payload);
 
     if (!parseResult.success) {
+      const requestId =
+        typeof payload === "object" &&
+        payload !== null &&
+        "requestId" in payload &&
+        typeof (payload as { requestId?: unknown }).requestId === "string"
+          ? (payload as { requestId: string }).requestId
+          : "00000000-0000-0000-0000-000000000000";
       socket.emit(ServerToClientEvent.SpotifyPlaybackResult, {
         success: false,
+        requestId,
         code: "spotify_api_error",
         message: "Playback request is invalid.",
       });
@@ -263,9 +274,45 @@ function registerPlaySpotifyTrackHandler(socket: Socket, roomService: RoomServic
         logger.error({ error }, "play_spotify_track handler threw unexpectedly");
         socket.emit(ServerToClientEvent.SpotifyPlaybackResult, {
           success: false,
+          requestId: parseResult.data.requestId,
           code: "spotify_api_error",
           message: "Spotify could not start playback.",
         });
       });
+  });
+}
+
+function registerSpotifyPlaybackDeviceHandlers(socket: Socket, roomService: RoomService): void {
+  createSocketHandler({
+    socket,
+    event: ClientToServerEvent.RegisterSpotifyPlaybackDevice,
+    schema: registerSpotifyPlaybackDevicePayloadSchema,
+    invalidPayload: {
+      code: "INVALID_REGISTER_SPOTIFY_PLAYBACK_DEVICE_PAYLOAD",
+      message: "Playback device registration is invalid.",
+    },
+    handle: (data) => {
+      roomService.registerSpotifyPlaybackDevice(data, socket.id);
+    },
+    fallbackErrorCode: "REGISTER_SPOTIFY_PLAYBACK_DEVICE_FAILED",
+    errorMessages: {
+      ONLY_SPOTIFY_PLAYBACK_OWNER_CAN_CONTROL:
+        "Only the current host can register Spotify playback.",
+    },
+  });
+
+  createSocketHandler({
+    socket,
+    event: ClientToServerEvent.UnregisterSpotifyPlaybackDevice,
+    schema: unregisterSpotifyPlaybackDevicePayloadSchema,
+    invalidPayload: {
+      code: "INVALID_UNREGISTER_SPOTIFY_PLAYBACK_DEVICE_PAYLOAD",
+      message: "Playback device unregistration is invalid.",
+    },
+    handle: (data) => {
+      roomService.unregisterSpotifyPlaybackDevice(data, socket.id);
+    },
+    fallbackErrorCode: "UNREGISTER_SPOTIFY_PLAYBACK_DEVICE_FAILED",
+    errorMessages: {},
   });
 }

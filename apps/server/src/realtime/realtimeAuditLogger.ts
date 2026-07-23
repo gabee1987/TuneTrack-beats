@@ -136,13 +136,37 @@ function logRealtimeAudit(input: AuditLogInput): void {
     playerId: input.playerId,
     errorCode: input.errorCode,
     durationMs: input.durationMs,
-    payload: env.EVENT_AUDIT_INCLUDE_PAYLOADS ? summarizePayload(input.payload) : undefined,
+    payload: resolveAuditPayload(input.eventName, input.payload),
     room: input.roomState ? summarizeRoomState(input.roomState) : undefined,
     ...input.meta,
   };
 
   logger.info(auditEvent, "realtime audit");
   enqueueAxiomLogEvent(auditEvent);
+}
+
+function resolveAuditPayload(eventName: string, payload: unknown): unknown {
+  // Playback results must always be diagnosable even when full payload audit is off.
+  if (eventName === "spotify_playback_result") {
+    return summarizeSpotifyPlaybackResult(payload);
+  }
+  if (!env.EVENT_AUDIT_INCLUDE_PAYLOADS) {
+    return undefined;
+  }
+  return summarizePayload(payload);
+}
+
+function summarizeSpotifyPlaybackResult(payload: unknown): Record<string, unknown> | undefined {
+  if (!payload || typeof payload !== "object") {
+    return undefined;
+  }
+  const value = payload as Record<string, unknown>;
+  return {
+    success: value.success,
+    requestId: value.requestId,
+    code: value.code,
+    message: typeof value.message === "string" ? value.message : undefined,
+  };
 }
 
 function consumeEventId(socket: Socket, eventName: string): string | undefined {
@@ -189,6 +213,8 @@ function summarizeRoomState(roomState: PublicRoomState): Record<string, unknown>
     status: roomState.status,
     playerCount: roomState.players.length,
     hostId: roomState.hostId,
+    spotifyPlaybackOwnerPlayerId: roomState.settings.spotifyPlaybackOwnerPlayerId,
+    spotifyPlaybackGeneration: roomState.settings.spotifyPlaybackGeneration,
     importedTrackCount: roomState.settings.importedTrackCount,
     currentTrackId: roomState.currentTrackCard?.id,
     turnNumber: roomState.turn?.turnNumber,

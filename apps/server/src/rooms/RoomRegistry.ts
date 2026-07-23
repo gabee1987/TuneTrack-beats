@@ -45,6 +45,7 @@ export class RoomRegistry {
   private readonly gameplay: RoomGameplayService;
   private readonly connection: RoomConnectionService;
   private roomStateChangedListener: ((roomState: PublicRoomState) => void) | null = null;
+  private spotifyPlaybackHandoffListener: ((roomId: RoomId) => void) | null = null;
 
   public constructor(
     private readonly gameFlowService = new GameFlowService(),
@@ -54,6 +55,9 @@ export class RoomRegistry {
   ) {
     const emitRoomStateChanged = (roomState: PublicRoomState): void => {
       this.roomStateChangedListener?.(roomState);
+    };
+    const emitSpotifyPlaybackHandoff = (roomId: RoomId): void => {
+      this.spotifyPlaybackHandoffListener?.(roomId);
     };
 
     this.store = new RoomStore();
@@ -68,6 +72,7 @@ export class RoomRegistry {
       this.timers,
       this.gameFlowService,
       emitRoomStateChanged,
+      emitSpotifyPlaybackHandoff,
     );
     this.lobby = new RoomLobbyService(
       this.store,
@@ -86,6 +91,10 @@ export class RoomRegistry {
 
   public setRoomStateChangedListener(listener: (roomState: PublicRoomState) => void): void {
     this.roomStateChangedListener = listener;
+  }
+
+  public setSpotifyPlaybackHandoffListener(listener: (roomId: RoomId) => void): void {
+    this.spotifyPlaybackHandoffListener = listener;
   }
 
   public listRoomSummaries(): PublicRoomSummary[] {
@@ -262,6 +271,15 @@ export class RoomRegistry {
     const roomRecord = this.store.getRoomRecordForMember(socketId, roomId);
     if (roomRecord.roomState.hostId !== membership.playerId) {
       throw new Error("ONLY_HOST_CAN_CONTROL_SPOTIFY_PLAYBACK");
+    }
+  }
+
+  public requireSpotifyPlaybackOwner(socketId: string, roomId: RoomId): void {
+    const membership = this.store.requireMembership(socketId);
+    const roomRecord = this.store.getRoomRecordForMember(socketId, roomId);
+    const ownerPlayerId = roomRecord.roomState.settings.spotifyPlaybackOwnerPlayerId;
+    if (!ownerPlayerId || ownerPlayerId !== membership.playerId) {
+      throw new Error("ONLY_SPOTIFY_PLAYBACK_OWNER_CAN_CONTROL");
     }
   }
 }

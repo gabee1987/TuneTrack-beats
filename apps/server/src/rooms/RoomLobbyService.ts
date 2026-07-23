@@ -291,7 +291,12 @@ export class RoomLobbyService {
     if (roomRecord.roomState.hostId !== membership.playerId)
       throw new Error("ONLY_HOST_CAN_SET_SPOTIFY_AUTH");
 
-    const nextRoomState = buildSpotifyAuthRoomState(roomRecord.roomState, status, accountType);
+    const nextRoomState = buildSpotifyAuthRoomState(
+      roomRecord.roomState,
+      status,
+      accountType,
+      status === "connected" ? membership.playerId : null,
+    );
     this.store.setRoom(roomId, { ...roomRecord, roomState: nextRoomState });
     return nextRoomState;
   }

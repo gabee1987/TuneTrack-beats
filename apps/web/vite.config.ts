@@ -14,7 +14,8 @@ export default defineConfig({
       injectRegister: "auto",
       registerType: "autoUpdate",
       devOptions: {
-        enabled: true,
+        // Self-signed HTTPS (basicSsl) breaks SW registration in Chrome; keep PWA for prod builds.
+        enabled: false,
       },
       manifest: {
         id: "tunetrack-beats",

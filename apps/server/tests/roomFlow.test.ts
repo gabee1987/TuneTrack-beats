@@ -21,6 +21,7 @@ import { SpotifyApiClient } from "../src/spotify/SpotifyApiClient.js";
 import { SpotifyAuthService } from "../src/spotify/SpotifyAuthService.js";
 import { SpotifyDiscoveryService } from "../src/spotify/SpotifyDiscoveryService.js";
 import { SpotifyMusicSearchService } from "../src/spotify/SpotifyMusicSearchService.js";
+import { SpotifyPlaybackSessionStore } from "../src/spotify/SpotifyPlaybackSessionStore.js";
 import { SpotifyTokenStore } from "../src/spotify/SpotifyTokenStore.js";
 
 interface TestServerContext {
@@ -1128,6 +1129,7 @@ function createTestRoomService(): RoomService {
     new PlaylistImportService(apiClient, tokenStore),
     new SpotifyDiscoveryService(apiClient, tokenStore),
     new SpotifyMusicSearchService(apiClient, tokenStore),
+    new SpotifyPlaybackSessionStore(),
   );
 }
 

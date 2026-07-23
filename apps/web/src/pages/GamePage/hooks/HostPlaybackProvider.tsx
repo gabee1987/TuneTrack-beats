@@ -24,7 +24,7 @@ export function shouldEnableHostPlayback(
   }
 
   return (
-    roomState.hostId === currentPlayerId &&
+    roomState.settings.spotifyPlaybackOwnerPlayerId === currentPlayerId &&
     roomState.settings.spotifyAuthStatus === "connected" &&
     roomState.settings.playlistImported
   );

@@ -8,4 +8,3 @@ export * from "./domain/TimelineCard.js";
 export * from "./domain/TurnState.js";
 export * from "./rules/placementRules.js";
 export * from "./services/GameFlowService.js";
-export * from "./services/PlacementService.js";

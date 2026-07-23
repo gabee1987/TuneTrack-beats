@@ -44,10 +44,19 @@ export function buildHostTransferredRoomState(
   roomState: PublicRoomState,
   targetPlayerId: string,
 ): PublicRoomState {
+  const shouldHandOffPlayback = roomState.settings.spotifyAuthStatus === "connected";
+
   return {
     ...roomState,
     hostId: targetPlayerId,
     players: roomState.players.map((p) => ({ ...p, isHost: p.id === targetPlayerId })),
+    settings: shouldHandOffPlayback
+      ? {
+          ...roomState.settings,
+          spotifyPlaybackOwnerPlayerId: targetPlayerId,
+          spotifyPlaybackGeneration: (roomState.settings.spotifyPlaybackGeneration ?? 0) + 1,
+        }
+      : roomState.settings,
   };
 }
 
@@ -68,12 +77,23 @@ export function buildPlayerRemovedRoomState(
     return { nextRoomState: null, nextHostId };
   }
 
+  const hostChanged = nextHostId !== roomState.hostId;
+  const shouldHandOffPlayback =
+    hostChanged && roomState.settings.spotifyAuthStatus === "connected";
+
   return {
     nextRoomState: {
       ...roomState,
       hostId: nextHostId,
       players: players.map((p) => ({ ...p, isHost: p.id === nextHostId })),
       timelines,
+      settings: shouldHandOffPlayback
+        ? {
+            ...roomState.settings,
+            spotifyPlaybackOwnerPlayerId: nextHostId,
+            spotifyPlaybackGeneration: (roomState.settings.spotifyPlaybackGeneration ?? 0) + 1,
+          }
+        : roomState.settings,
     },
     nextHostId,
   };

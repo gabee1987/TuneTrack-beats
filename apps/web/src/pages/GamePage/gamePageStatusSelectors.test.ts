@@ -55,6 +55,8 @@ function createRoomState(overrides: Partial<PublicRoomState> = {}): PublicRoomSt
       importedTrackCount: 0,
       spotifyAuthStatus: "none",
       spotifyAccountType: null,
+      spotifyPlaybackOwnerPlayerId: null,
+      spotifyPlaybackGeneration: 0,
     },
     turn: {
       activePlayerId: "player-1",

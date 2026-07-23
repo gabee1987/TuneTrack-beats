@@ -415,6 +415,8 @@ function createLobbyRoomState(): PublicRoomState {
       importedTrackCount: 20,
       spotifyAuthStatus: "none",
       spotifyAccountType: null,
+      spotifyPlaybackOwnerPlayerId: null,
+      spotifyPlaybackGeneration: 0,
     },
     turn: null,
     challengeState: null,

@@ -1,13 +1,13 @@
 # TuneTrack Refactor Plan — Performance, Traffic & Maintainability
 
-> Status: **Paused after Phase 5 — next up is Phase 6**  
+> Status: **Paused after Phase 6 — next up is Phase 7**  
 > Rules: follow [`AGENT.md`](../AGENT.md) and [`CLAUDE.md`](../CLAUDE.md)  
 > Created: 2026-07-17  
-> Last checkpoint: 2026-07-22
+> Last checkpoint: 2026-07-23
 
 ## Resume checkpoint (read this first when continuing)
 
-**Where we stopped:** Phases **0–5 are implemented**. Next command to resume: **`go Phase 6`** (split GameFlowService).
+**Where we stopped:** Phases **0–6 are implemented**. Next command to resume: **`go Phase 7`** (game menu + lobby assembly polish).
 
 | Item | State |
 |------|--------|
@@ -18,18 +18,19 @@
 | Phase 3 — Split realtime socket handlers | Done (automated); **manual smoke checklist pending** |
 | Phase 4 — Split RoomRegistry | Done (`RoomStore`, `RoomTimerCoordinator`, Lobby/Gameplay/Connection) |
 | Phase 5 — Traffic & year integrity | Done (year omitted until reveal; history capped at 30) |
-| Phase 6+ | Not started |
+| Phase 6 — Split GameFlowService | Done (`TurnFlowService`, `ChallengeFlowService`, `TtActionService` + thin facade) |
+| Phase 7+ | Not started |
 
-**Before starting Phase 6 (recommended):**
-1. Optional: Phase 5 manual fairness check (WS `state_update` during turn has no year on current card).
-2. Optionally finish Phase 2/3 manual checklists if not done yet.
+**Before starting Phase 7 (recommended):**
+1. Optional: Phase 6 manual core loop (start → place → challenge → TT → win).
+2. Optionally finish Phase 2/3/5 manual checklists if not done yet.
 
 **Known follow-ups already queued in this plan:**
 - Phase 7 item 5: replace flat `useLobbySpotify` ~90-field return with grouped domains / domain-hook consumption (snappy lobby UX).
 - Phase 1 CSS still shared: `LobbySpotifySection.module.css` (~1321 lines) — split later if needed.
 - Phase 8: delta/`state_patch` only if history cap + year strip are insufficient.
 
-**Do not restart from scratch.** Continue from Phase 6; preserve Phase 5 mapper year/history assertions.
+**Do not restart from scratch.** Continue from Phase 7; preserve Phase 5–6 behavior and tests.
 
 ---
 
@@ -60,7 +61,7 @@
 | `registerSocketHandlers.ts` | ~1070 | 35 copy-paste handlers | **Split (Phase 3)** → thin wire + `handlers/*` |
 | `RoomRegistry.ts` | ~1070 | Lifecycle + gameplay + timers | **Split (Phase 4)** → Store / TimerCoordinator / Lobby / Gameplay / Connection |
 | `gamePageMenuTabs.tsx` | ~730 | Menu factory + UI | Partially improved (playback isolated); fuller split in Phase 7 |
-| `GameFlowService.ts` | ~680 | All rules in one service | **Next (Phase 6)** |
+| `GameFlowService.ts` | ~680 | All rules in one service | **Split (Phase 6)** → Turn / Challenge / TT + thin facade |
 | `RoomService.ts` | ~514 | Room facade + Spotify/playlist bus | With Phase 4 |
 
 **Traffic finding (Phase 5 addressed):** every mutation still emits full `PublicRoomState` via `state_update` (no deltas — deferred to Phase 8). Public history is capped at last **30** entries. `currentTrackCard.releaseYear` / `sourceReleaseYear` omitted during `turn`/`challenge`.
@@ -506,10 +507,24 @@ Full core loop: start → place correct → place wrong → challenge success �
 
 ### Exit criteria
 
-- [ ] Engine service files ≤ ~700 lines
-- [ ] Engine + server tests green
+- [x] Engine service files ≤ ~700 lines
+- [x] Engine + server tests green
 - [ ] Manual core loop OK
 - [ ] You say “go Phase 7”
+
+### Phase 6 results (2026-07-23)
+
+| Extract | Owns |
+|---------|------|
+| `TurnFlowService.ts` (~225) | start, place, confirm reveal, advance, remove player, skip offline turn |
+| `ChallengeFlowService.ts` (~231) | claim, challenge place, resolve window, cancel offline claimed |
+| `TtActionService.ts` (~123) | award TT, skip track, buy card |
+| `gameFlowHelpers.ts` / `gameFlowTypes.ts` | shared pure helpers + input types |
+| Thin `GameFlowService.ts` (~80) | facade preserving public API for server callers |
+
+Also deleted unused `PlacementService` wrapper (rules stay in `placementRules.ts`).
+
+Automated: `game-engine` 29 tests + `server` 92 tests + typecheck green.
 
 ---
 
@@ -600,8 +615,8 @@ Per `AGENT.md` / `CLAUDE.md`:
 | 3 Socket handlers split | **Complete** | Automated green; manual smoke pending |
 | 4 RoomRegistry split | **Complete** | RoomStore, TimerCoordinator, Lobby/Gameplay/Connection; clearForRoom; 84 tests |
 | 5 Traffic & year integrity | **Complete** | Year omitted until reveal; history capped at 30 |
-| 6 GameFlowService split | **Next** | Resume here |
-| 7 Menu + Lobby polish | Not started | Includes Spotify composer API optimization (#5) |
+| 6 GameFlowService split | **Complete** | Turn / Challenge / TT + thin facade; PlacementService deleted |
+| 7 Menu + Lobby polish | **Next** | Includes Spotify composer API optimization (#5) |
 | 8 Delta protocol (optional) | Deferred | |
 
 ---
@@ -620,9 +635,9 @@ Per `AGENT.md` / `CLAUDE.md`:
 ## How to proceed (when resuming)
 
 1. Open this file and read **Resume checkpoint**.
-2. Reply **`go Phase 6`** to continue the planned sequence.
-3. Or ask to adjust order / finish Phase 5 manual fairness check first.
+2. Reply **`go Phase 7`** to continue the planned sequence.
+3. Or ask to adjust order / finish Phase 6 manual core-loop check first.
 
 Earlier one-shot commands (historical):
 
-- **`go Phase 0`** / **`go Phase 0+1`** / **`go Phase 3`** / **`go Phase 4`** / **`go Phase 5`** — already done; do not re-run as greenfield work.
+- **`go Phase 0`** … **`go Phase 6`** — already done; do not re-run as greenfield work.

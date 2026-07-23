@@ -42,16 +42,24 @@ export function useHostPlayback({
   const accountType = roomState?.settings.spotifyAccountType ?? null;
   const isPremium = accountType === "premium";
   const isFree = accountType === "free";
+  const playbackGeneration = roomState?.settings.spotifyPlaybackGeneration ?? 0;
 
-  const sdk = useSpotifyPlaybackSdk({ roomId, enabled: enabled && isPremium });
+  const sdk = useSpotifyPlaybackSdk({
+    roomId,
+    enabled: enabled && isPremium,
+    playbackGeneration,
+  });
   const {
     isReady: sdkReady,
+    deviceId: sdkDeviceId,
     isPlaying: sdkIsPlaying,
     position: sdkPosition,
     duration: sdkDuration,
+    hasActiveContext: sdkHasActiveContext,
     unlockPlayback: sdkUnlockPlayback,
     playTrack,
     pause: sdkPause,
+    resume: sdkResume,
     seek: sdkSeek,
   } = sdk;
 
@@ -131,27 +139,38 @@ export function useHostPlayback({
     };
   }, [enabled, isFree]);
 
-  // Premium: auto-play when the track URI changes. Only mark success after the
-  // SDK reports audible playback for that URI (server accept alone is not enough).
+  // Premium: auto-play when the current track URI changes. After host transfer the
+  // new Web Playback device can take a while to appear in Spotify Connect.
   const lastConfirmedUriRef = useRef<string | null>(null);
   const playInFlightUriRef = useRef<string | null>(null);
+  const lastSdkDeviceIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (!enabled) {
       lastConfirmedUriRef.current = null;
       playInFlightUriRef.current = null;
+      lastSdkDeviceIdRef.current = null;
     }
   }, [enabled]);
 
   useEffect(() => {
-    if (!enabled || !isPremium || !sdkReady) return;
+    if (!enabled || !isPremium || !sdkReady || !sdkDeviceId) return;
+
+    if (lastSdkDeviceIdRef.current !== sdkDeviceId) {
+      lastSdkDeviceIdRef.current = sdkDeviceId;
+      // Device remount recovery only — do not treat host role changes as a replay signal.
+      lastConfirmedUriRef.current = null;
+      playInFlightUriRef.current = null;
+    }
+
     const uri = roomState?.currentTrackCard?.spotifyTrackUri ?? null;
     if (!uri || uri === lastConfirmedUriRef.current || uri === playInFlightUriRef.current) {
       return;
     }
 
     let cancelled = false;
-    const retryTimeoutIds: number[] = [];
-    const retryDelaysMs = [0, 1500, 3500];
+    let retryTimeoutId: number | null = null;
+    // Keep the same device across retries; server already polls Connect visibility.
+    const retryDelaysMs = [0, 2500, 6000];
 
     playInFlightUriRef.current = uri;
 
@@ -160,16 +179,15 @@ export function useHostPlayback({
         const delayMs = retryDelaysMs[attemptIndex] ?? 0;
         if (delayMs > 0) {
           await new Promise<void>((resolve) => {
-            const timeoutId = window.setTimeout(resolve, delayMs);
-            retryTimeoutIds.push(timeoutId);
+            retryTimeoutId = window.setTimeout(resolve, delayMs);
           });
         }
-        if (cancelled) {
+        if (cancelled || playInFlightUriRef.current !== uri) {
           return;
         }
 
         const success = await playTrack(uri!);
-        if (cancelled) {
+        if (cancelled || playInFlightUriRef.current !== uri) {
           return;
         }
         if (success) {
@@ -188,14 +206,21 @@ export function useHostPlayback({
 
     return () => {
       cancelled = true;
-      for (const timeoutId of retryTimeoutIds) {
-        window.clearTimeout(timeoutId);
+      if (retryTimeoutId !== null) {
+        window.clearTimeout(retryTimeoutId);
       }
       if (playInFlightUriRef.current === uri) {
         playInFlightUriRef.current = null;
       }
     };
-  }, [enabled, isPremium, sdkReady, playTrack, roomState?.currentTrackCard?.spotifyTrackUri]);
+  }, [
+    enabled,
+    isPremium,
+    sdkReady,
+    sdkDeviceId,
+    playTrack,
+    roomState?.currentTrackCard?.spotifyTrackUri,
+  ]);
 
   const lastPreviewUrlRef = useRef<string | null>(null);
   useEffect(() => {
@@ -222,8 +247,12 @@ export function useHostPlayback({
 
   const resume = useCallback(() => {
     if (isPremium) {
-      // Explicit Play is a user gesture — always (re)request the current URI so
-      // we recover from failed auto-play track switches, not just unpause.
+      // True pause/resume when Spotify still has context; only re-request the URI
+      // when there is nothing to resume (failed autoplay / empty player).
+      if (sdkHasActiveContext) {
+        sdkResume();
+        return;
+      }
       const uri = currentUriRef.current;
       if (uri) {
         void playTrack(uri).then((success) => {
@@ -231,12 +260,11 @@ export function useHostPlayback({
             lastConfirmedUriRef.current = uri;
           }
         });
-        return;
       }
-    } else {
-      void audioRef.current?.play().catch(() => undefined);
+      return;
     }
-  }, [isPremium, playTrack]);
+    void audioRef.current?.play().catch(() => undefined);
+  }, [isPremium, sdkHasActiveContext, sdkResume, playTrack]);
 
   const seek = useCallback(
     (positionMs: number) => {

@@ -27,6 +27,8 @@ const fallbackRoomSettings: PublicRoomSettings = {
   importedTrackCount: 0,
   spotifyAuthStatus: "none",
   spotifyAccountType: null,
+  spotifyPlaybackOwnerPlayerId: null,
+  spotifyPlaybackGeneration: 0,
 };
 
 export function useLobbyPageController(): LobbyPageController {

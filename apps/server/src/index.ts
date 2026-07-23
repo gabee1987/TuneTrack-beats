@@ -14,6 +14,7 @@ import { SpotifyAuthService } from "./spotify/SpotifyAuthService.js";
 import { SpotifyDiscoveryService } from "./spotify/SpotifyDiscoveryService.js";
 import { SpotifyMusicSearchService } from "./spotify/SpotifyMusicSearchService.js";
 import { SpotifyTokenStore } from "./spotify/SpotifyTokenStore.js";
+import { SpotifyPlaybackSessionStore } from "./spotify/SpotifyPlaybackSessionStore.js";
 import {
   getConfiguredSpotifyRedirectUris,
   listSuggestedLanSpotifyRedirectUris,
@@ -25,6 +26,7 @@ const io = createSocketServer(httpServer);
 const spotifyTokenStore = new SpotifyTokenStore();
 const spotifyApiClient = new SpotifyApiClient();
 const spotifyAuthService = new SpotifyAuthService(spotifyApiClient, spotifyTokenStore);
+const spotifyPlaybackSessions = new SpotifyPlaybackSessionStore();
 const playlistImportService = new PlaylistImportService(spotifyApiClient, spotifyTokenStore);
 const spotifyDiscoveryService = new SpotifyDiscoveryService(spotifyApiClient, spotifyTokenStore);
 const spotifyMusicSearchService = new SpotifyMusicSearchService(
@@ -40,6 +42,7 @@ const roomService = new RoomService(
   playlistImportService,
   spotifyDiscoveryService,
   spotifyMusicSearchService,
+  spotifyPlaybackSessions,
 );
 
 registerSpotifyRoutes(app, io, spotifyAuthService, roomService);

@@ -549,6 +549,84 @@ export class SpotifyApiClient {
       response.status,
     );
   }
+
+  public async transferPlaybackToDevice(
+    accessToken: string,
+    deviceId: string,
+    play = false,
+  ): Promise<void> {
+    const response = await fetch(`${SpotifyApiClient.BASE_URL}/me/player`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        device_ids: [deviceId],
+        play,
+      }),
+    });
+
+    if (response.ok || response.status === 204) {
+      return;
+    }
+
+    const body = await response.text().catch(() => "");
+    throw new SpotifyApiError(
+      response.status === 404 ? "not_found" : "api_error",
+      body || `Spotify transfer failed with status ${response.status}`,
+      response.status,
+    );
+  }
+
+  public async pausePlayback(accessToken: string): Promise<void> {
+    const response = await fetch(`${SpotifyApiClient.BASE_URL}/me/player/pause`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    // 404 = nothing is playing / no active device — treat as already paused.
+    if (response.ok || response.status === 204 || response.status === 404) {
+      return;
+    }
+
+    const body = await response.text().catch(() => "");
+    throw new SpotifyApiError(
+      "api_error",
+      body || `Spotify pause failed with status ${response.status}`,
+      response.status,
+    );
+  }
+
+  public async listPlaybackDevices(accessToken: string): Promise<SpotifyPlaybackDevice[]> {
+    const response = await fetch(`${SpotifyApiClient.BASE_URL}/me/player/devices`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      throw new SpotifyApiError(
+        response.status === 404 ? "not_found" : "api_error",
+        body || `Spotify devices list failed with status ${response.status}`,
+        response.status,
+      );
+    }
+
+    const payload = (await response.json()) as { devices?: SpotifyPlaybackDevice[] };
+    return Array.isArray(payload.devices) ? payload.devices : [];
+  }
+}
+
+export interface SpotifyPlaybackDevice {
+  id: string | null;
+  name: string;
+  is_active: boolean;
+  is_restricted: boolean;
 }
 
 function isSpotifyPlaylistSearchItem(
