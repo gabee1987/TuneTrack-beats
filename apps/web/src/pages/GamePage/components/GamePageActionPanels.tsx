@@ -1,11 +1,12 @@
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { memo, useRef, useState } from "react";
 import {
   MotionPresence,
   createMenuTokenAdjustFlyoutPopTransition,
   createMenuTokenAdjustFlyoutPopVariants,
-  createMenuTokenAdjustFlyoutTransition,
-  createMenuTokenAdjustFlyoutVariants,
+  createTokenSpendFlyoutTransition,
+  createTokenSpendFlyoutVariants,
   useReducedMotionPreference,
 } from "../../../features/motion";
 import { TtTokenIcon } from "../../../features/ui/TtToken";
@@ -80,36 +81,41 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
 
   return (
     <>
-      <MotionPresence mode="sync">
-        {tokenSpendFlyouts.map((flyout) => (
-          <span
-            aria-hidden="true"
-            className={styles.tokenSpendFlyoutAnchor}
-            key={flyout.key}
-            style={{ left: flyout.originX, top: flyout.originY }}
-          >
-            <motion.span
-              animate="animate"
-              className={styles.tokenSpendFlyout}
-              initial="initial"
-              onAnimationComplete={() => clearTokenSpendFlyout(flyout.key)}
-              transition={createMenuTokenAdjustFlyoutTransition(reduceMotion)}
-              variants={createMenuTokenAdjustFlyoutVariants(reduceMotion, "remove")}
-            >
-              <motion.span
-                animate="animate"
-                className={styles.tokenSpendFlyoutContent}
-                initial="initial"
-                transition={createMenuTokenAdjustFlyoutPopTransition(reduceMotion)}
-                variants={createMenuTokenAdjustFlyoutPopVariants(reduceMotion)}
-              >
-                <span className={styles.tokenSpendFlyoutAmount}>{flyout.amount}</span>
-                <TtTokenIcon className={styles.tokenSpendIcon} />
-              </motion.span>
-            </motion.span>
-          </span>
-        ))}
-      </MotionPresence>
+      {typeof document !== "undefined"
+        ? createPortal(
+            <MotionPresence mode="sync">
+              {tokenSpendFlyouts.map((flyout) => (
+                <span
+                  aria-hidden="true"
+                  className={styles.tokenSpendFlyoutAnchor}
+                  key={flyout.key}
+                  style={{ left: flyout.originX, top: flyout.originY - 28 }}
+                >
+                  <motion.span
+                    animate="animate"
+                    className={styles.tokenSpendFlyout}
+                    initial="initial"
+                    onAnimationComplete={() => clearTokenSpendFlyout(flyout.key)}
+                    transition={createTokenSpendFlyoutTransition(reduceMotion)}
+                    variants={createTokenSpendFlyoutVariants(reduceMotion)}
+                  >
+                    <motion.span
+                      animate="animate"
+                      className={styles.tokenSpendFlyoutContent}
+                      initial="initial"
+                      transition={createMenuTokenAdjustFlyoutPopTransition(reduceMotion)}
+                      variants={createMenuTokenAdjustFlyoutPopVariants(reduceMotion)}
+                    >
+                      <span className={styles.tokenSpendFlyoutAmount}>{flyout.amount}</span>
+                      <TtTokenIcon className={styles.tokenSpendIcon} />
+                    </motion.span>
+                  </motion.span>
+                </span>
+              ))}
+            </MotionPresence>,
+            document.body,
+          )
+        : null}
 
       <ChallengeActionPanel
         canClaimChallenge={canClaimChallenge}

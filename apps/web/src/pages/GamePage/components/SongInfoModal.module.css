@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: var(--z-sheet);
+  z-index: 1100;
   background: var(--color-overlay-strong);
   display: flex;
   align-items: flex-end;
@@ -9,6 +9,7 @@
 }
 
 .sheet {
+  position: relative;
   width: 100%;
   max-height: min(92dvh, 720px);
   margin: 0;
@@ -18,22 +19,43 @@
   background: var(--sheet-bg);
   box-shadow: var(--sheet-shadow);
   outline: 1px solid var(--color-border-subtle);
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-3);
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
   flex-shrink: 0;
   min-height: 40px;
+  background: var(--sheet-bg);
 }
 
 .closeButton {
   margin-left: auto;
+}
+
+.sheetBody {
+  display: grid;
+  gap: var(--space-3);
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.sheetBody::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .artwork {

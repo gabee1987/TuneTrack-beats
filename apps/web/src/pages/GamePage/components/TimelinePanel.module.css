@@ -2,11 +2,70 @@
   --timeline-card-width: 176px;
   --timeline-card-height: 176px;
   position: relative;
+  min-width: 0;
+  max-width: 100%;
   min-height: 240px;
   margin-top: 10px;
   padding: 0;
+  overflow-x: clip;
   user-select: none;
   -webkit-user-select: none;
+}
+
+.timelinePanelDesktop {
+  --timeline-card-width: 100%;
+  --timeline-card-height: auto;
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  margin-top: 0;
+  overflow: hidden;
+}
+
+.timelinePanelDesktop .timelineRow {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  align-content: start;
+  align-items: start;
+  justify-content: stretch;
+  grid-auto-rows: max-content;
+  gap: 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-height: 0;
+  max-width: 100%;
+  padding: 8px 4px 24px;
+  margin-top: 0;
+  mask-image: none;
+  scrollbar-width: none;
+  scroll-snap-type: none;
+}
+
+.timelinePanelDesktop .timelineRow::-webkit-scrollbar {
+  display: none;
+}
+
+.timelinePanelDesktop .timelineRowOverflowing {
+  justify-content: stretch;
+  mask-image: none;
+}
+
+.timelinePanelDesktop .timelineItem,
+.timelinePanelDesktop .timelineItemPreview {
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1;
+}
+
+.timelinePanelDesktop .timelineCard,
+.timelinePanelDesktop .previewCard {
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 1;
 }
 
 .timelineHeader {
@@ -56,39 +115,93 @@
 
 .timelineCelebrationLayer {
   position: absolute;
-  inset: 46px 0 0;
-  z-index: 12;
+  inset: 0;
+  z-index: 30;
   display: grid;
   place-items: center;
   pointer-events: none;
 }
 
+.timelineCelebrationBurst {
+  position: absolute;
+  width: min(72vw, 520px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  opacity: 0.9;
+  animation: timelineCelebrationBurstPulse 1.9s ease-out both;
+}
+
+.timelineCelebrationBurstSuccess {
+  background:
+    radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-accent-brand) 42%, transparent) 0%,
+      color-mix(in srgb, var(--color-accent-brand) 12%, transparent) 42%,
+      transparent 70%
+    );
+}
+
+.timelineCelebrationBurstFailure {
+  background:
+    radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-danger) 38%, transparent) 0%,
+      color-mix(in srgb, var(--color-danger) 12%, transparent) 42%,
+      transparent 70%
+    );
+}
+
+@keyframes timelineCelebrationBurstPulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+
+  28% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+}
+
 .timelineCelebrationMessage {
-  padding: 10px 18px;
-  border-radius: 999px;
+  position: relative;
+  z-index: 1;
+  padding: var(--space-4) var(--space-6);
+  border-radius: var(--radius-pill);
   color: var(--color-text-primary);
-  font-size: clamp(16px, 2vw, 22px);
+  font-size: clamp(22px, 3.4vw, 36px);
   font-weight: 900;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.04em;
   box-shadow:
-    0 18px 40px rgba(0, 0, 0, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(12px) saturate(1.08);
-  -webkit-backdrop-filter: blur(12px) saturate(1.08);
+    0 18px 48px color-mix(in srgb, black 36%, transparent),
+    var(--shadow-overlay);
   transform-origin: center center;
   will-change: transform, opacity;
+  text-align: center;
 }
 
 .timelineCelebrationMessageSuccess {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04)),
-    color-mix(in srgb, var(--color-accent-success) 76%, transparent);
+  background: color-mix(in srgb, var(--color-accent-brand) 42%, var(--color-surface-elevated-solid));
+  outline: 2px solid color-mix(in srgb, var(--color-accent-brand) 72%, white 12%);
+  color: var(--color-on-accent-brand);
 }
 
 .timelineCelebrationMessageFailure {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.035)),
-    color-mix(in srgb, #ff315f 78%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 34%, var(--color-surface-elevated-solid));
+  outline: 2px solid color-mix(in srgb, var(--color-danger) 68%, white 10%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timelineCelebrationBurst {
+    animation: none;
+    opacity: 0.55;
+    transform: scale(1);
+  }
 }
 
 .timelineViewSwitcherCompact {
@@ -97,11 +210,10 @@
   display: flex;
   gap: 0;
   justify-content: center;
-  padding: 2px;
-  border-radius: 999px;
-  background: var(--color-chip);
+  padding: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-interactive);
   outline: 1px solid var(--color-border-subtle);
-  box-shadow: var(--shadow-game-drop-slot);
   overflow: visible;
 }
 
@@ -109,19 +221,17 @@
   position: relative;
   isolation: isolate;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 6px 10px;
   min-width: 58px;
   background: transparent;
-  color: color-mix(in srgb, var(--color-text-primary) 72%, var(--color-text-secondary));
+  color: var(--color-text-secondary);
   cursor: pointer;
   font-size: clamp(9px, 2.4vw, 11px);
   font-weight: 700;
   line-height: 1.05;
   overflow: visible;
-  transition:
-    color 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
-    text-shadow 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: color var(--motion-standard-duration) var(--motion-ease-standard);
 }
 
 .timelineViewCompactButtonLabel {
@@ -131,15 +241,14 @@
   min-width: 0;
   max-width: 100%;
   overflow: hidden;
-  opacity: 0.58;
+  opacity: 0.72;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: opacity 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: opacity var(--motion-quick-duration) var(--motion-ease-standard);
 }
 
 .timelineViewCompactButton[data-active="true"] .timelineViewCompactButtonLabel {
   opacity: 1;
-  text-shadow: 0 0 8px color-mix(in srgb, var(--color-token-orange, #ff8a3d) 44%, transparent);
 }
 
 .timelineViewCompactButton:disabled {
@@ -148,40 +257,21 @@
 }
 
 .timelineViewCompactButton[data-active="true"] {
-  color: #ffffff;
-  text-shadow: 0 0 8px color-mix(in srgb, var(--color-token-orange, #ff8a3d) 12%, transparent);
+  color: var(--color-text-primary);
 }
 
 .timelineViewCompactActivePill {
   position: absolute;
   inset: 0;
   z-index: 1;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, #361200 28%, transparent),
-    color-mix(in srgb, #000000 20%, transparent)
-  );
-  backdrop-filter: blur(10px) saturate(1.05);
-  -webkit-backdrop-filter: blur(10px) saturate(1.05);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--color-token-orange, #ff8a3d) 42%, var(--color-border-subtle));
+  background: color-mix(in srgb, var(--color-accent-brand) 22%, var(--color-surface-elevated-solid));
+  outline: 1px solid color-mix(in srgb, var(--color-accent-brand) 55%, transparent);
 }
 
 .timelineViewCompactActiveGlow {
-  position: absolute;
-  inset: -5px;
-  z-index: -1;
-  border-radius: inherit;
-  background: radial-gradient(
-    70% 60% at 50% 100%,
-    color-mix(in srgb, var(--color-token-orange, #ff8a3d) 16%, transparent),
-    transparent
-  );
-  filter: blur(8px);
-  opacity: 0.42;
+  display: none;
 }
 
 .flyToMineCard {
@@ -196,15 +286,19 @@
   display: flex;
   gap: 14px;
   overflow-x: auto;
+  overflow-y: hidden;
+  min-width: 0;
+  max-width: 100%;
   min-height: var(--timeline-card-height);
   padding: 14px;
+  padding-bottom: max(14px, var(--game-mobile-timeline-bottom-clearance, 14px));
   margin-top: -14px;
   scrollbar-width: none;
   scroll-snap-type: x proximity;
   scroll-padding-left: 14px;
   scroll-padding-right: 14px;
   scroll-padding-top: 14px;
-  scroll-padding-bottom: 14px;
+  scroll-padding-bottom: max(14px, var(--game-mobile-timeline-bottom-clearance, 14px));
   mask-image: none;
   justify-content: center;
 }
@@ -251,15 +345,64 @@
   min-width: var(--timeline-card-width);
   height: var(--timeline-card-height);
   min-height: var(--timeline-card-height);
-  padding: 16px 14px;
-  border-radius: 24px;
-  background: var(--card-gradient);
+  padding: var(--space-4) var(--space-3);
+  border-radius: var(--card-radius);
+  background-color: var(--color-surface-elevated-solid);
+  background-image: var(--card-gradient);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
   box-shadow: var(--shadow-game-card-base);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   text-align: center;
-  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+  transition: transform var(--motion-standard-duration) var(--motion-ease-standard);
+}
+
+.timelineCardArtwork .timelineArtist,
+.timelineCardArtwork .timelineTitle,
+.timelineCardArtwork .yearText {
+  color: #ffffff;
+}
+
+.timelineCardArtwork .yearText {
+  position: relative;
+  z-index: 1;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 4px 14px rgba(0, 0, 0, 0.75),
+    0 10px 28px rgba(0, 0, 0, 0.55);
+}
+
+.timelineCardArtwork .yearText::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: -1;
+  width: 140%;
+  height: 130%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.62) 0%,
+    rgba(0, 0, 0, 0.28) 48%,
+    transparent 74%
+  );
+  pointer-events: none;
+}
+
+.timelineCardArtwork .timelineArtist,
+.timelineCardArtwork .timelineTitle {
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.8),
+    0 4px 16px rgba(0, 0, 0, 0.5);
 }
 
 .timelineCardCurrentPick {
@@ -268,61 +411,17 @@
 
 .previewCardCurrentPick {
   position: relative;
-  box-shadow: 0 0 18px color-mix(in srgb, var(--color-game-card-current-outline) 80%, transparent);
+  box-shadow: var(--shadow-raised);
+  outline: 2px solid var(--color-game-card-current-outline);
 }
 
-.previewCardCurrentPick::before {
-  content: "";
-  position: absolute;
-  inset: 0px;
-  z-index: 5;
-  border-radius: inherit;
-  pointer-events: none;
-  padding: 2px;
-  /* background: conic-gradient(
-    from var(--current-pick-angle),
-    color-mix(in srgb, var(--color-token-orange, #ff8a3d) 94%, transparent),
-    color-mix(in srgb, var(--color-token-pink, #ff4d9d) 92%, transparent),
-    color-mix(in srgb, var(--color-token-violet, #8b5cff) 92%, transparent),
-    color-mix(in srgb, #38c8ff 90%, transparent),
-    color-mix(in srgb, var(--color-token-orange, #ff8a3d) 94%, transparent)
-  ); */
-  opacity: var(--current-pick-opacity);
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  /* animation:
-    currentPickBorderRotate 4s linear infinite,
-    currentPickBorderPulse 2.4s ease-in-out infinite alternate; */
-}
-
+.previewCardCurrentPick::before,
 .previewCardCurrentPick::after {
-  content: "";
-  position: absolute;
-  inset: -5px;
-  z-index: 4;
-  border-radius: inherit;
-  pointer-events: none;
-  /* background: conic-gradient(
-    from var(--current-pick-angle),
-    color-mix(in srgb, var(--color-token-orange, #ff8a3d) 52%, transparent),
-    color-mix(in srgb, var(--color-token-pink, #ff4d9d) 44%, transparent),
-    color-mix(in srgb, var(--color-token-violet, #8b5cff) 44%, transparent),
-    color-mix(in srgb, #38c8ff 42%, transparent),
-    color-mix(in srgb, var(--color-token-orange, #ff8a3d) 52%, transparent)
-  );
-  filter: blur(2px); */
-  opacity: 0.46;
-  animation: currentPickGlowPulse 3.4s ease-in-out infinite alternate;
+  content: none;
 }
 
 .previewCardCurrentPick.previewCardDraggable {
-  /* outline: 0; */
+  outline: 2px dashed var(--color-game-card-draggable-outline);
 }
 
 .previewCard.previewCardCurrentPick {
@@ -376,13 +475,12 @@
   border-radius: inherit;
   overflow: hidden;
   transform-origin: center center;
-  background:
-    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.12), transparent 52%),
-    linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
-    var(--card-gradient);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    0 10px 18px rgba(0, 0, 0, 0.14);
+  background-color: var(--color-surface-elevated-solid);
+  background-image: var(--card-gradient);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  box-shadow: var(--shadow-game-card-base);
   will-change: transform, opacity, filter;
 }
 
@@ -394,20 +492,13 @@
   flex-direction: column;
   justify-content: space-between;
   gap: 6px;
-  padding: 16px 14px;
+  padding: var(--space-4) var(--space-3);
   text-align: center;
   will-change: transform, opacity;
 }
 
 .correctPlacementFill::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
-    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.06), transparent 68%);
+  content: none;
 }
 
 .correctPlacementContent {
@@ -456,18 +547,15 @@
 }
 
 .correctPlacementDecorativeStarViolet {
-  background: linear-gradient(160deg, #8f63ff, #7b5dff);
-  box-shadow: 0 0 14px color-mix(in srgb, #8f63ff 36%, transparent);
+  background: var(--color-accent-brand);
 }
 
 .correctPlacementDecorativeStarPink {
-  background: linear-gradient(160deg, #c58cff, #b473ff);
-  box-shadow: 0 0 14px color-mix(in srgb, #b473ff 34%, transparent);
+  background: color-mix(in srgb, var(--color-accent-brand) 72%, white);
 }
 
 .correctPlacementDecorativeStarGold {
-  background: linear-gradient(160deg, #c58b03, #a97500);
-  box-shadow: 0 0 14px color-mix(in srgb, #c58b03 30%, transparent);
+  background: var(--color-warning);
 }
 
 .previewCard {
@@ -477,16 +565,19 @@
   min-width: 100%;
   height: var(--timeline-card-height);
   min-height: var(--timeline-card-height);
-  padding: 16px 14px;
-  border-radius: 24px;
+  padding: var(--space-4) var(--space-3);
+  border-radius: var(--card-radius);
   outline: 1px dashed var(--color-border-subtle);
   overflow: hidden;
+  background-color: var(--color-surface-elevated-solid);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
   transition:
-    transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
-    outline-color 220ms ease,
-    box-shadow 220ms ease,
-    background 220ms ease,
-    opacity 220ms ease;
+    transform var(--motion-standard-duration) var(--motion-ease-standard),
+    outline-color var(--motion-quick-duration) var(--motion-ease-standard),
+    box-shadow var(--motion-quick-duration) var(--motion-ease-standard),
+    opacity var(--motion-quick-duration) var(--motion-ease-standard);
 }
 
 .previewCardDraggable {
@@ -500,32 +591,123 @@
   opacity: 0.28;
 }
 
+.dragOverlayWrap {
+  position: relative;
+  display: block;
+  width: var(--timeline-card-width, 176px);
+  height: var(--timeline-card-height, 176px);
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.dragOverlayBlur {
+  display: none;
+}
+
+.dragOverlayWrap > :last-child {
+  position: relative;
+  z-index: 1;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
 .previewCardOverlay {
   cursor: grabbing;
+  overflow: hidden;
   transform: translateY(-6px);
-  opacity: 0.78;
-  box-shadow: var(--shadow-game-preview-card);
+  opacity: 1;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: var(--shadow-game-preview-card, 0 18px 44px rgba(0, 0, 0, 0.36));
 }
 
 .previewCardOverlay::before {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 0;
   border-radius: inherit;
-  background: var(--color-game-preview-scrim);
+  background: color-mix(in srgb, var(--color-game-preview-scrim) 55%, transparent);
   backdrop-filter: blur(24px) saturate(1.08);
   -webkit-backdrop-filter: blur(24px) saturate(1.08);
+  pointer-events: none;
+}
+
+.previewCardOverlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
   z-index: 0;
+  border-radius: inherit;
+  background-image: var(--card-gradient);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  opacity: 0.42;
+  pointer-events: none;
 }
 
-.previewCardArtwork {
-  /* background: var(--gradient-game-preview-surface), var(--card-gradient); */
+.previewCardOverlay .previewCardFace {
+  position: relative;
+  z-index: 1;
 }
 
+.previewCardArtwork,
 .previewCardGradient {
-  /* background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%),
-    var(--card-gradient); */
+  background-color: var(--color-surface-elevated-solid);
+}
+
+.previewCardOverlay.previewCardArtwork,
+.previewCardOverlay.previewCardGradient {
+  background-color: transparent;
+}
+
+.previewCardHasArtwork .previewCardYear {
+  color: #ffffff;
+  position: relative;
+  z-index: 1;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 4px 14px rgba(0, 0, 0, 0.75),
+    0 10px 28px rgba(0, 0, 0, 0.55);
+}
+
+.previewCardHasArtwork .previewCardYear::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: -1;
+  width: 140%;
+  height: 130%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.62) 0%,
+    rgba(0, 0, 0, 0.28) 48%,
+    transparent 74%
+  );
+  pointer-events: none;
+}
+
+.previewCardHasArtwork .previewCardArtist,
+.previewCardHasArtwork .previewCardTitle,
+.previewCardHasArtwork .previewCardAlbum {
+  color: #ffffff;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.8),
+    0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.previewCardHasArtwork .previewCardMetaPill {
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.35);
 }
 
 .previewCardRevealed {
@@ -534,21 +716,18 @@
 
 .previewCardCorrection,
 .previewCardCorrectionSurface {
-  outline: 2px solid #ff244f;
+  outline: 2px solid var(--color-game-card-correction-outline);
   outline-offset: -2px;
   box-shadow: var(--shadow-game-preview-card);
   animation: wrongPlacementPulse 1.12s ease-in-out infinite;
 }
 
 .previewCardCorrectionSurface {
-  background:
-    radial-gradient(
-      circle at 50% 0%,
-      color-mix(in srgb, #ff4f6d 34%, transparent),
-      transparent 50%
-    ),
-    linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(255, 79, 109, 0.16)),
+  background-image:
+    var(--gradient-game-preview-correction-surface),
     var(--card-gradient);
+  background-position: center;
+  background-size: cover;
 }
 
 .previewCardReplacing {
@@ -666,46 +845,20 @@
   isolation: isolate;
   display: inline-block;
   margin: 0;
-  color: transparent;
-  background: linear-gradient(
-    150deg,
-    color-mix(in srgb, var(--color-token-orange, #ff8a3d) 92%, white),
-    color-mix(in srgb, var(--color-token-pink, #ff4d9d) 72%, white),
-    color-mix(in srgb, var(--color-token-violet, #8b5cff) 82%, white)
-  );
-  background-clip: text;
-  -webkit-background-clip: text;
+  color: var(--color-text-primary);
   font-size: 62px;
-  font-weight: 900;
+  font-weight: 800;
   line-height: 1;
-  filter: drop-shadow(0 8px 16px color-mix(in srgb, #000000 26%, transparent));
-  text-shadow:
-    0 0 16px color-mix(in srgb, var(--color-token-orange, #ff8a3d) 48%, transparent),
-    0 0 30px color-mix(in srgb, var(--color-token-pink, #ff4d9d) 28%, transparent);
+  opacity: 0.88;
 }
 
 .previewCardMysteryMark::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  pointer-events: none;
+  content: none;
 }
 
-.previewCardMysteryMark::after {
-  left: 50%;
-  top: 50%;
-  width: 1.5em;
-  height: 1.5em;
-  background: radial-gradient(
-    circle,
-    color-mix(in srgb, var(--color-token-orange, #ff8a3d) 34%, transparent) 0%,
-    color-mix(in srgb, var(--color-token-pink, #ff4d9d) 22%, transparent) 34%,
-    transparent 70%
-  );
-  filter: blur(10px);
-  opacity: 0.72;
-  transform: translate(-50%, -50%);
-  animation: hiddenCardMysteryGlow 3.2s ease-in-out infinite alternate;
+.previewCardHasArtwork .previewCardMysteryMark {
+  color: #ffffff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
 @media (max-width: 720px) {
@@ -755,20 +908,10 @@
     width: 100%;
     min-height: 50px;
     justify-self: stretch;
-    padding: 4px;
-    border-radius: 999px;
-    background:
-      var(--color-game-preview-scrim),
-      linear-gradient(
-        180deg,
-        color-mix(in srgb, var(--color-chip) 80%, transparent),
-        color-mix(in srgb, var(--color-chip) 66%, transparent)
-      );
-    backdrop-filter: blur(24px) saturate(1.08);
-    -webkit-backdrop-filter: blur(24px) saturate(1.08);
-    box-shadow:
-      inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
-      0 14px 34px color-mix(in srgb, black 24%, transparent);
+    padding: var(--space-1);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-interactive);
+    outline: 1px solid var(--color-border-subtle);
   }
 
   .timelineViewCompactButton {
@@ -782,9 +925,9 @@
   .timelineHint {
     margin: -2px 0 10px;
     padding: 7px 10px;
-    border-radius: 14px;
-    background: color-mix(in srgb, var(--color-chip) 68%, transparent);
-    font-size: 11px;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-interactive);
+    font-size: var(--type-caption-size);
     line-height: 1.35;
   }
 
@@ -852,7 +995,7 @@
     min-height: 0;
     aspect-ratio: 1;
     padding: 10px 9px;
-    border-radius: 16px;
+    border-radius: var(--radius-sm);
   }
 
   .previewCardFaceSurface {
@@ -874,7 +1017,7 @@
   }
 
   .timelineCard {
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+    box-shadow: var(--shadow-raised);
   }
 
   .previewCardFace {
@@ -919,7 +1062,23 @@
 }
 
 @media (orientation: landscape) and (max-width: 1024px) {
+  .timelinePanel {
+    flex: 1 1 auto;
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
   .timelineRow {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
     padding-bottom: var(--game-mobile-timeline-bottom-clearance, 92px);
     scroll-padding-bottom: var(--game-mobile-timeline-bottom-clearance, 92px);
   }
@@ -928,11 +1087,11 @@
 @keyframes wrongPlacementPulse {
   0%,
   100% {
-    outline-color: #ff244f;
+    outline-color: var(--color-game-card-correction-outline);
   }
 
   50% {
-    outline-color: #ffb0bd;
+    outline-color: color-mix(in srgb, var(--color-danger) 40%, white);
   }
 }
 

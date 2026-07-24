@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type {
-  HiddenCardMode,
   MenuTabId,
+  RevealedCardMode,
   ThemeId,
   UiPreferences,
   UiPreferencesStore,
@@ -29,11 +29,11 @@ export interface AppShellMenuProps {
 }
 
 export interface AppShellMenuPreferencesState {
-  hiddenCardMode: HiddenCardMode;
   lastOpenedMenuTab: MenuTabId;
+  revealedCardMode: RevealedCardMode;
   setDevVisibility: UiPreferencesStore["setDevVisibility"];
-  setHiddenCardMode: (mode: HiddenCardMode) => void;
   setLastOpenedMenuTab: (tabId: MenuTabId) => void;
+  setRevealedCardMode: (mode: RevealedCardMode) => void;
   setTheme: (theme: ThemeId) => void;
   showDevAlbumInfo: boolean;
   showDevCardInfo: boolean;

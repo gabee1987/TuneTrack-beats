@@ -102,7 +102,13 @@ export function PlayPage() {
               <h2>{t("home.availableRoomsTitle")}</h2>
               <p>{t("play.availableRoomsDescription")}</p>
             </div>
-            <Button onClick={controller.refreshRooms} type="button" variant="ghost">
+            <Button
+              className={styles.refreshRoomsButton}
+              fullWidth
+              onClick={controller.refreshRooms}
+              type="button"
+              variant="secondary"
+            >
               {t("home.refreshRooms")}
             </Button>
           </div>

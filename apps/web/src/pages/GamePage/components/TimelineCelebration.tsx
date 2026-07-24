@@ -21,6 +21,14 @@ export function TimelineCelebration({
 
   return (
     <div className={styles.timelineCelebrationLayer}>
+      <span
+        aria-hidden="true"
+        className={`${styles.timelineCelebrationBurst} ${
+          tone === "failure"
+            ? styles.timelineCelebrationBurstFailure
+            : styles.timelineCelebrationBurstSuccess
+        }`}
+      />
       <motion.div
         className={`${styles.timelineCelebrationMessage} ${
           tone === "failure"

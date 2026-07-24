@@ -4,12 +4,13 @@ import { CSS } from "@dnd-kit/utilities";
 import type { CSSProperties } from "react";
 import type {
   HiddenCardMode,
+  RevealedCardMode,
   ThemeId,
 } from "../../../features/preferences/uiPreferences";
 import type { ChallengeMarkerTone, GamePageCard } from "../GamePage.types";
 import type { PreviewCardTransitionEvent } from "../gamePageTransitionEvents";
 import { TIMELINE_REORDER_DURATION_MS, TIMELINE_REORDER_EASING } from "../gamePage.constants";
-import { animateTimelineLayoutChanges, getCardGradient } from "../gamePage.utils";
+import { animateTimelineLayoutChanges, getTimelineCardSurfaceStyle } from "../gamePage.utils";
 import { CorrectPlacementCelebration } from "./CorrectPlacementCelebration";
 import { PreviewCard } from "./PreviewCard";
 import styles from "./TimelinePanel.module.css";
@@ -18,6 +19,7 @@ interface TimelineSortableItemProps {
   card: GamePageCard;
   challengeMarkerTone: ChallengeMarkerTone;
   hiddenCardMode: HiddenCardMode;
+  revealedCardMode: RevealedCardMode;
   id: string;
   isChallengeSlot: boolean;
   isDraggingPreviewCard: boolean;
@@ -42,6 +44,7 @@ function TimelineSortableItemComponent({
   card,
   challengeMarkerTone,
   hiddenCardMode,
+  revealedCardMode,
   id,
   isChallengeSlot,
   isDraggingPreviewCard,
@@ -77,11 +80,27 @@ function TimelineSortableItemComponent({
     transform: CSS.Transform.toString(transform),
     transition,
     ...(!isPreview
-      ? {
-          ["--card-gradient" as string]: getCardGradient(theme, id),
-        }
+      ? getTimelineCardSurfaceStyle(theme, id, card.artworkUrl, revealedCardMode)
       : {}),
   } as CSSProperties;
+
+  const hasArtwork =
+    revealedCardMode === "artwork" && Boolean(card.artworkUrl) && !isPreview;
+  const timelineCardClassName = `${styles.timelineCard} ${
+    hasArtwork ? styles.timelineCardArtwork : ""
+  } ${
+    isOriginalSlot && (isPreview || shouldCelebrateCorrectPlacement)
+      ? styles.timelineCardCurrentPick
+      : ""
+  } ${
+    shouldCelebrateCorrectPlacement ? styles.timelineCardResolvedCorrect : ""
+  } ${
+    isChallengeSlot
+      ? challengeMarkerTone === "failure"
+        ? styles.timelineCardChallengeFailure
+        : styles.timelineCardChallenge
+      : ""
+  }`;
 
   return (
     <div
@@ -98,6 +117,7 @@ function TimelineSortableItemComponent({
         <PreviewCard
           attributes={selectable ? attributes : undefined}
           hiddenCardMode={hiddenCardMode}
+          revealedCardMode={revealedCardMode}
           isChallengeSlot={isChallengeSlot}
           isCorrectionPreview={showCorrectionPreview}
           isCorrectPlacement={showCorrectPlacementPreview}
@@ -120,13 +140,7 @@ function TimelineSortableItemComponent({
         shouldCelebrateCorrectPlacement && shouldAnimateCorrectPlacement ? (
           <CorrectPlacementCelebration
             key={`resolved-correct-placement-${id}`}
-            className={`${styles.timelineCard} ${styles.timelineCardCurrentPick} ${styles.timelineCardResolvedCorrect} ${
-              isChallengeSlot
-                ? challengeMarkerTone === "failure"
-                  ? styles.timelineCardChallengeFailure
-                  : styles.timelineCardChallenge
-                : ""
-            }`}
+            className={`${timelineCardClassName} ${styles.timelineCardCurrentPick}`}
           >
             <p className={styles.timelineArtist}>{card.artist}</p>
             <div className={styles.timelineCardCenter}>
@@ -141,17 +155,7 @@ function TimelineSortableItemComponent({
         ) : (
           <article
             data-timeline-card="true"
-            className={`${styles.timelineCard} ${
-              isOriginalSlot ? styles.timelineCardCurrentPick : ""
-            } ${
-              shouldCelebrateCorrectPlacement ? styles.timelineCardResolvedCorrect : ""
-            } ${
-              isChallengeSlot
-                ? challengeMarkerTone === "failure"
-                  ? styles.timelineCardChallengeFailure
-                  : styles.timelineCardChallenge
-                : ""
-            }`}
+            className={timelineCardClassName}
           >
             <>
               <p className={styles.timelineArtist}>{card.artist}</p>

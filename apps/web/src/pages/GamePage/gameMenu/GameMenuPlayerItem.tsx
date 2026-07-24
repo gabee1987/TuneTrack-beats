@@ -10,6 +10,7 @@ import {
 import type { Translate } from "../../../features/i18n";
 import { Badge } from "../../../features/ui/Badge";
 import { CardCountAmount } from "../../../features/ui/CardCountAmount";
+import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import styles from "../GamePage.module.css";
 import { TokenAdjustButtons } from "./TokenAdjustButtons";
@@ -226,14 +227,12 @@ export function GameMenuPlayerItem({
       >
         <div className={styles.transferConfirmHeaderRow}>
           <p className={styles.transferConfirmEyebrow}>{t("gameMenu.hostTransfer")}</p>
-          <button
-            aria-label={t("gameMenu.closeHostTransferConfirmation")}
+          <CloseIconButton
+            ariaLabel={t("gameMenu.closeHostTransferConfirmation")}
             className={styles.transferConfirmCloseButton}
             onClick={() => setIsTransferConfirmOpen(false)}
-            type="button"
-          >
-            x
-          </button>
+            size="sm"
+          />
         </div>
         <h2 className={styles.transferConfirmTitle}>{t("gameMenu.transferHostQuestion")}</h2>
         <p className={styles.transferConfirmBody}>
@@ -266,14 +265,12 @@ export function GameMenuPlayerItem({
       >
         <div className={styles.transferConfirmHeaderRow}>
           <p className={styles.transferConfirmEyebrow}>{t("gameMenu.removePlayer")}</p>
-          <button
-            aria-label={t("gameMenu.closeKickPlayerConfirmation")}
+          <CloseIconButton
+            ariaLabel={t("gameMenu.closeKickPlayerConfirmation")}
             className={styles.transferConfirmCloseButton}
             onClick={() => setIsKickConfirmOpen(false)}
-            type="button"
-          >
-            x
-          </button>
+            size="sm"
+          />
         </div>
         <h2 className={styles.transferConfirmTitle}>
           {t("gameMenu.removePlayerQuestion", { playerName: player.displayName })}

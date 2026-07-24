@@ -4,9 +4,9 @@ import type { AppShellMenuPreferencesState } from "../AppShellMenu.types";
 export function useAppShellMenuPreferencesState(): AppShellMenuPreferencesState {
   const theme = useUiPreferencesStore((state) => state.theme);
   const setTheme = useUiPreferencesStore((state) => state.setTheme);
-  const hiddenCardMode = useUiPreferencesStore((state) => state.hiddenCardMode);
-  const setHiddenCardMode = useUiPreferencesStore(
-    (state) => state.setHiddenCardMode,
+  const revealedCardMode = useUiPreferencesStore((state) => state.revealedCardMode);
+  const setRevealedCardMode = useUiPreferencesStore(
+    (state) => state.setRevealedCardMode,
   );
   const view = useUiPreferencesStore((state) => state.view);
   const updateViewPreferences = useUiPreferencesStore(
@@ -35,11 +35,11 @@ export function useAppShellMenuPreferencesState(): AppShellMenuPreferencesState 
   );
 
   return {
-    hiddenCardMode,
     lastOpenedMenuTab,
+    revealedCardMode,
     setDevVisibility,
-    setHiddenCardMode,
     setLastOpenedMenuTab,
+    setRevealedCardMode,
     setTheme,
     showDevAlbumInfo,
     showDevCardInfo,

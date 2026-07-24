@@ -18,6 +18,9 @@ const REQUIRED_NEW_SEMANTIC_TOKENS = [
   "color-accent-brand-hover",
   "color-accent-brand-active",
   "color-on-accent-brand",
+  "color-background-spotify",
+  "color-border-spotify",
+  "color-on-spotify",
   "color-success",
   "color-danger",
   "color-warning",
@@ -27,6 +30,7 @@ const REQUIRED_NEW_SEMANTIC_TOKENS = [
   "shadow-overlay",
   "shadow-dialog",
   "gradient-card-hidden",
+  "gradient-card-artwork-scrim",
 ] as const;
 
 describe("theme token contract", () => {

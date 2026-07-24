@@ -98,9 +98,37 @@ describe("gamePageTimelineSelectors", () => {
       }),
     ).toEqual({
       activeTimelineChallengeSlot: 4,
-      activeTimelineOriginalSlot: 1,
+      activeTimelineOriginalSlot: null,
       activeTimelinePreviewCard: roomState.currentTrackCard,
       activeTimelinePreviewSlot: 4,
+    });
+  });
+
+  it("keeps the original placement marker visible for non-challengers during Beat", () => {
+    const roomState = createRoomState({
+      challengeState: {
+        challengeDeadlineEpochMs: null,
+        challengerPlayerId: "player-2",
+        challengerSelectedSlotIndex: null,
+        originalPlayerId: "player-1",
+        originalSelectedSlotIndex: 1,
+        phase: "claimed",
+      },
+      status: "challenge",
+    });
+
+    expect(
+      getGamePageActiveTimelinePreviewState({
+        canSelectChallengeSlot: false,
+        canSelectTurnSlot: false,
+        locallyPlacedCard: null,
+        roomState,
+        selectedSlotIndex: 0,
+      }),
+    ).toMatchObject({
+      activeTimelineChallengeSlot: null,
+      activeTimelineOriginalSlot: 1,
+      activeTimelinePreviewSlot: 1,
     });
   });
 

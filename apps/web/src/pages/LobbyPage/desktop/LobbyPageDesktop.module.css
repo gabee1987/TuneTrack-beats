@@ -1,5 +1,8 @@
 .screenShell {
   min-height: var(--app-height);
+  max-height: var(--app-height);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: calc(var(--safe-area-top) + var(--space-6)) calc(var(--safe-area-right) + var(--space-5))
     calc(var(--safe-area-bottom) + var(--space-6)) calc(var(--safe-area-left) + var(--space-5));
   background: var(--color-bg-app);
@@ -30,11 +33,16 @@
   display: grid;
   gap: var(--space-4);
   align-content: start;
+  min-width: 0;
 }
 
 .secondaryColumn {
   position: sticky;
   top: calc(var(--safe-area-top) + var(--space-4));
+  max-height: calc(var(--app-height) - var(--safe-area-top) - var(--safe-area-bottom) - var(--space-8));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: var(--space-4);
 }
 
 .waitingCard {

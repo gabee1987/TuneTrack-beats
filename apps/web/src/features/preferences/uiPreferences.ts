@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 
 export type ThemeId = "dark" | "light";
 export type HiddenCardMode = "artwork" | "gradient";
+export type RevealedCardMode = "artwork" | "gradient";
 export type MenuTabId =
   | "players"
   | "view"
@@ -24,6 +25,7 @@ export interface ViewPreferences {
 export interface UiPreferences {
   theme: ThemeId;
   hiddenCardMode: HiddenCardMode;
+  revealedCardMode: RevealedCardMode;
   view: ViewPreferences;
   showDevCardInfo: boolean;
   showDevYearInfo: boolean;
@@ -36,6 +38,7 @@ export interface UiPreferencesStore extends UiPreferences {
   setTheme: (theme: ThemeId) => void;
   toggleTheme: () => void;
   setHiddenCardMode: (mode: HiddenCardMode) => void;
+  setRevealedCardMode: (mode: RevealedCardMode) => void;
   setLastOpenedMenuTab: (tabId: MenuTabId) => void;
   updateViewPreferences: (nextView: Partial<ViewPreferences>) => void;
   setDevVisibility: (settings: {
@@ -49,6 +52,7 @@ export interface UiPreferencesStore extends UiPreferences {
 export const defaultUiPreferences: UiPreferences = {
   theme: "dark",
   hiddenCardMode: "artwork",
+  revealedCardMode: "artwork",
   view: {
     showMiniStandings: false,
     showHelperLabels: true,
@@ -74,6 +78,7 @@ export const useUiPreferencesStore = create<UiPreferencesStore>()(
           theme: state.theme === "dark" ? "light" : "dark",
         })),
       setHiddenCardMode: (hiddenCardMode) => set({ hiddenCardMode }),
+      setRevealedCardMode: (revealedCardMode) => set({ revealedCardMode }),
       setLastOpenedMenuTab: (lastOpenedMenuTab) => set({ lastOpenedMenuTab }),
       updateViewPreferences: (nextView) =>
         set((state) => ({
@@ -95,6 +100,7 @@ export const useUiPreferencesStore = create<UiPreferencesStore>()(
       partialize: (state) => ({
         theme: state.theme,
         hiddenCardMode: state.hiddenCardMode,
+        revealedCardMode: state.revealedCardMode,
         view: state.view,
         showDevCardInfo: state.showDevCardInfo,
         showDevYearInfo: state.showDevYearInfo,

@@ -4,6 +4,7 @@ import { useI18n } from "../../../features/i18n";
 import { CardCountAmount } from "../../../features/ui/CardCountAmount";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import { Chip, IconButton } from "../../../features/ui/primitives";
+import { usePageLayoutMode } from "../../../hooks/usePageLayoutMode";
 import type { GamePageHeaderModel } from "../GamePage.types";
 import { HeaderLeadersStrip } from "./HeaderLeadersStrip";
 import styles from "../GamePage.module.css";
@@ -14,6 +15,7 @@ interface GamePageHeaderProps {
 
 function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
   const { t } = useI18n();
+  const layoutMode = usePageLayoutMode();
   const {
     currentPlayerId,
     handleCloseRoom,
@@ -48,7 +50,9 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
     });
 
   return (
-    <header className={styles.header}>
+    <header
+      className={`${styles.header}${layoutMode === "mobile" ? ` ${styles.headerMobile}` : ""}`}
+    >
       <div className={styles.headerMain}>
         <div className={styles.headerChipRow}>
           {showRoomCodeChip ? (
@@ -63,6 +67,12 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
             </Chip>
           ) : null}
         </div>
+        <HeaderLeadersStrip
+          getCardCountLabel={getCardCountLabel}
+          leadingPlayers={leadingPlayers}
+          roomState={roomState}
+          show={showMiniStandings}
+        />
       </div>
       <div className={styles.headerAside}>
         <div className={styles.headerActionRow}>
@@ -171,12 +181,6 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
               : {})}
           />
         </div>
-        <HeaderLeadersStrip
-          getCardCountLabel={getCardCountLabel}
-          leadingPlayers={leadingPlayers}
-          roomState={roomState}
-          show={showMiniStandings}
-        />
         {showTimelineHints && statusDetailText ? (
           <p className={styles.statusCaption}>{statusDetailText}</p>
         ) : null}

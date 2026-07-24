@@ -106,18 +106,25 @@
 }
 
 .infoButton {
-  display: grid;
+  display: inline-grid;
   place-items: center;
   width: 32px;
   min-width: 32px;
   height: 32px;
+  min-height: 32px;
+  padding: 0;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-circle);
   background: var(--color-surface-interactive);
   color: var(--color-text-secondary);
-  font-size: var(--type-caption-size);
-  font-weight: 700;
+  line-height: 0;
   cursor: pointer;
+}
+
+.infoGlyph {
+  width: 14px;
+  height: 14px;
+  display: block;
 }
 
 .fieldError {
@@ -158,31 +165,56 @@
 }
 
 .infoCard {
+  position: relative;
   width: min(100%, 360px);
-  display: grid;
-  gap: var(--space-3);
+  max-width: calc(100vw - var(--space-8));
+  max-height: min(82dvh, 720px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   padding: var(--space-5);
-  border-radius: var(--dialog-radius);
-  background: var(--dialog-bg);
-  box-shadow: var(--dialog-shadow);
+  padding-top: calc(var(--space-5) + 8px);
+  border: 0;
+  border-radius: var(--dialog-radius, var(--radius-lg));
+  background: var(--dialog-bg, var(--color-surface-elevated-solid));
+  box-shadow: var(--dialog-shadow, var(--shadow-dialog));
   outline: 1px solid var(--color-border-subtle);
+  box-sizing: border-box;
 }
 
-.infoHeaderRow {
-  display: flex;
-  justify-content: space-between;
+.infoCloseButton {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 2;
+}
+
+.infoScroll {
+  display: grid;
   gap: var(--space-3);
-  align-items: center;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-right: calc(var(--size-touch-target) - 8px);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.infoScroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .infoEyebrow {
   margin: 0;
-  color: var(--color-accent-brand);
+  color: var(--color-text-secondary);
   font-size: var(--type-micro-size);
   line-height: var(--type-micro-leading);
   font-weight: var(--type-micro-weight);
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  min-width: 0;
 }
 
 .infoTitle {
@@ -192,6 +224,7 @@
   line-height: var(--type-title-md-leading);
   font-weight: var(--type-title-md-weight);
   letter-spacing: var(--type-title-md-tracking);
+  overflow-wrap: anywhere;
 }
 
 .infoBody {
@@ -199,6 +232,7 @@
   color: var(--color-text-secondary);
   font-size: var(--type-body-size);
   line-height: var(--type-body-leading);
+  overflow-wrap: anywhere;
 }
 
 @media (max-height: 760px) {

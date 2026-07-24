@@ -17,9 +17,9 @@ function createTokenSpendFlyoutInitial(
   return {
     opacity: 0,
     rotate: 0,
-    scale: 0.58,
+    scale: 0.72,
     x: 0,
-    y: 8,
+    y: 0,
   };
 }
 
@@ -32,16 +32,16 @@ function createTokenSpendFlyoutMotion(
       rotate: 0,
       scale: 1,
       x: 0,
-      y: [0, -8, -16],
+      y: [0, -12, -24],
     };
   }
 
   return {
     opacity: [0, 1, 1, 0],
-    rotate: [0, 0, -8, -16],
-    scale: [0.58, 1, 0.92, 0.76],
-    x: [0, 0, -8, -18],
-    y: [8, -18, -62, -96],
+    rotate: [0, -4, -10, -18],
+    scale: [0.72, 1.28, 1.12, 0.88],
+    x: [0, 4, -6, -16],
+    y: [0, -28, -72, -124],
   };
 }
 
@@ -51,6 +51,23 @@ export function createTokenSpendFlyoutVariants(
   return {
     initial: createTokenSpendFlyoutInitial(reduceMotion),
     animate: createTokenSpendFlyoutMotion(reduceMotion),
+  };
+}
+
+export function createTokenSpendFlyoutTransition(
+  reduceMotion: boolean,
+): Transition {
+  if (reduceMotion) {
+    return {
+      duration: motionDurations.quick,
+      ease: motionEasings.standard,
+    };
+  }
+
+  return {
+    duration: 0.92,
+    ease: [0.16, 0.84, 0.28, 1],
+    times: [0, 0.22, 0.68, 1],
   };
 }
 

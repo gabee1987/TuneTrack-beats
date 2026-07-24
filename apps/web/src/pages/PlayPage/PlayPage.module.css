@@ -140,10 +140,13 @@
 }
 
 .roomListHeader {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
   gap: var(--space-3);
-  align-items: flex-start;
+  align-items: start;
+}
+
+.refreshRoomsButton {
+  width: 100%;
 }
 
 .roomList {

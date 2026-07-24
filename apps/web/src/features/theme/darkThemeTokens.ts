@@ -41,6 +41,9 @@ const darkThemeCssVariables = {
   "color-accent-brand-hover": brandAccent.dark.hover,
   "color-accent-brand-active": brandAccent.dark.active,
   "color-on-accent-brand": brandAccent.dark.on,
+  "color-background-spotify": brandAccent.dark.base,
+  "color-border-spotify": brandAccent.dark.base,
+  "color-on-spotify": brandAccent.dark.on,
 
   // Solid semantic state colors (design-system layer; additive for Phase 1+)
   "color-success": "#22c55e",
@@ -53,11 +56,11 @@ const darkThemeCssVariables = {
   "color-focus-ring": "rgba(255, 171, 120, 0.95)",
   "color-status-connected-surface": "rgba(82, 227, 173, 0.36)",
   "color-status-connected-text": "#00a359",
-  "color-status-danger-surface": "rgba(255, 94, 129, 0.16)",
-  "color-status-danger-text": "#ffd9e3",
-  "color-status-danger-border": "rgba(255, 41, 88, 0.568)",
-  "color-status-danger-chip-surface": "rgba(255, 95, 143, 0.14)",
-  "color-status-danger-chip-text": "#ffd7e3",
+  "color-status-danger-surface": "rgba(239, 68, 68, 0.12)",
+  "color-status-danger-text": "#fecaca",
+  "color-status-danger-border": "rgba(248, 113, 113, 0.55)",
+  "color-status-danger-chip-surface": "rgba(239, 68, 68, 0.1)",
+  "color-status-danger-chip-text": "#fecaca",
   "color-badge-strong-background": "rgba(128, 126, 255, 0.38)",
   "color-badge-strong-text": "#ffffff",
   "gradient-toggle-checked": "linear-gradient(135deg, #ff8b5d 0%, #7b8cff 100%)",
@@ -74,12 +77,14 @@ const darkThemeCssVariables = {
   "gradient-surface-sheen":
     "linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 45%), linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 65%)",
   "gradient-hidden-card-preview-artwork":
-    "radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.14), transparent 30%), radial-gradient(circle at 80% 0%, rgba(124, 108, 255, 0.38), transparent 34%), linear-gradient(135deg, rgba(124, 108, 255, 0.8) 0%, rgba(255, 79, 154, 0.72) 100%)",
+    "radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.18), transparent 30%), radial-gradient(circle at 80% 0%, rgba(124, 108, 255, 0.42), transparent 34%), linear-gradient(135deg, rgba(124, 108, 255, 0.85) 0%, rgba(255, 79, 154, 0.72) 100%)",
   "gradient-hidden-card-preview-surface":
-    "linear-gradient(135deg, rgba(124, 108, 255, 0.7) 0%, rgba(23, 23, 40, 0.48) 100%)",
+    "linear-gradient(145deg, #2a2a2a 0%, #181818 55%, #121212 100%)",
   // Neutral hidden-card gradient for the flat design system (Phase 1+ adoption).
   "gradient-card-hidden":
     "linear-gradient(145deg, #2a2a2a 0%, #181818 55%, #121212 100%)",
+  "gradient-card-artwork-scrim":
+    "linear-gradient(180deg, rgba(10, 10, 10, 0.18) 0%, rgba(10, 10, 10, 0.34) 42%, rgba(10, 10, 10, 0.82) 100%)",
 
   // Slider and toggle controls
   "color-slider-track": "rgba(255, 255, 255, 0.07)",
@@ -88,40 +93,37 @@ const darkThemeCssVariables = {
 
   // Game UI
   "color-mask-solid": "#000000",
-  "color-game-error-text": "#ff8fb3",
-  "color-game-card-current-outline": "rgba(124, 108, 255, 0.64)",
-  "color-game-card-challenge-outline": "rgba(82, 227, 173, 0.72)",
-  "color-game-card-failure-outline": "rgba(255, 94, 129, 0.72)",
-  "color-game-card-correct-outline": "rgba(104, 214, 156, 0.92)",
-  "color-game-card-draggable-outline": "rgba(129, 112, 255, 1)",
-  "color-game-card-correction-outline": "rgba(255, 168, 76, 0.78)",
-  "color-game-preview-scrim": "rgba(24, 28, 40, 0.32)",
+  "color-game-error-text": "var(--color-status-danger-text)",
+  "color-game-card-current-outline": "color-mix(in srgb, var(--color-accent-brand) 72%, transparent)",
+  "color-game-card-challenge-outline": "color-mix(in srgb, var(--color-warning) 78%, transparent)",
+  "color-game-card-failure-outline": "color-mix(in srgb, var(--color-danger) 78%, transparent)",
+  "color-game-card-correct-outline": "color-mix(in srgb, var(--color-accent-brand) 88%, transparent)",
+  "color-game-card-draggable-outline": "var(--color-accent-brand)",
+  "color-game-card-correction-outline": "color-mix(in srgb, var(--color-danger) 82%, transparent)",
+  "color-game-preview-scrim": "rgba(18, 18, 18, 0.42)",
   "gradient-game-preview-surface":
-    "linear-gradient(160deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(26, 30, 44, 0.88)",
+    "linear-gradient(160deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%), var(--gradient-card-hidden)",
   "gradient-game-preview-correction-surface":
-    "linear-gradient(135deg, rgba(255, 129, 129, 0.18) 0%, rgba(255, 196, 76, 0.14) 100%)",
-  "color-game-meta-pill-background": "rgba(255, 255, 255, 0.16)",
+    "linear-gradient(135deg, color-mix(in srgb, var(--color-danger) 22%, transparent) 0%, color-mix(in srgb, var(--color-warning) 14%, transparent) 100%)",
+  "color-game-meta-pill-background": "rgba(255, 255, 255, 0.14)",
   "color-game-meta-pill-text": "#ffffff",
-  "color-game-artist-text": "rgba(255, 255, 255, 0.82)",
+  "color-game-artist-text": "rgba(255, 255, 255, 0.86)",
   "color-game-album-text": "rgba(255, 255, 255, 0.72)",
-  "gradient-floating-primary-action": "linear-gradient(135deg, #7c6cff 0%, #ff4f9a 100%)",
-  "color-floating-secondary-action-background": "rgba(31, 31, 49, 0.94)",
+  "gradient-floating-primary-action": "var(--color-accent-brand)",
+  "color-floating-secondary-action-background": "var(--color-surface-interactive)",
 
   // Shadows — legacy (keep until component migration)
   "shadow-surface": "0 24px 80px rgba(0, 0, 0, 0.4)",
   "shadow-form-card": "0 18px 48px rgba(0, 0, 0, 0.24)",
   "shadow-slider-thumb": "0 4px 14px rgba(0, 0, 0, 0.18)",
   "shadow-slider-thumb-active": "0 8px 20px rgba(0, 0, 0, 0.24)",
-  "shadow-game-drop-slot":
-    "inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 10px 18px rgba(0, 0, 0, 0.08)",
-  "shadow-game-drop-slot-hover":
-    "0 8px 18px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
-  "shadow-game-card-base": "inset 0 1px 0 rgba(255, 255, 255, 0.05)",
+  "shadow-game-drop-slot": "var(--shadow-raised)",
+  "shadow-game-drop-slot-hover": "var(--shadow-raised)",
+  "shadow-game-card-base": "var(--shadow-raised)",
   "shadow-game-card-correct":
-    "inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 0 0 3px rgba(104, 214, 156, 0.12)",
-  "shadow-game-preview-card":
-    "0 26px 60px rgba(0, 0, 0, 0.34), 0 10px 24px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.12) inset",
-  "shadow-floating-action": "0 14px 34px rgba(0, 0, 0, 0.24)",
+    "0 0 0 2px color-mix(in srgb, var(--color-accent-brand) 28%, transparent)",
+  "shadow-game-preview-card": "var(--shadow-overlay)",
+  "shadow-floating-action": "var(--shadow-raised)",
 
   // Elevation scale — flat design system (Phase 1+ adoption)
   "shadow-none": "none",
@@ -148,5 +150,5 @@ export const darkThemeDefinition: ThemeDefinition = {
   gameCardPreviewOverlay:
     "linear-gradient(160deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%)",
   gameCardPreviewHighlight:
-    "radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.12), transparent 28%)",
+    "radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.16), transparent 28%)",
 };

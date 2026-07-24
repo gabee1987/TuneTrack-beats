@@ -3,7 +3,7 @@ import { motionDurations, motionEasings } from "../coreMotionTokens";
 
 export const timelineCelebrationTransitionContract = {
   flyAnimationCleanupMs: 850,
-  toastVisibilityMs: 1800,
+  toastVisibilityMs: 2200,
   // Correct-placement celebration timings are split by role so the shell,
   // fill surface, and content can be tuned without coupling everything
   // into one opaque keyframe.
@@ -30,14 +30,14 @@ export function createTimelineCelebrationVariants(
   }
 
   return {
-    initial: { opacity: 0, rotate: -10, scale: 0.68, y: 26 },
+    initial: { opacity: 0, rotate: -12, scale: 0.55, y: 40 },
     animate: {
       opacity: [0, 1, 1, 0],
-      rotate: [-10, 5, -3, 7],
-      scale: [0.68, 1.12, 1.02, 0.9],
-      y: [26, -10, -2, -24],
+      rotate: [-12, 8, -4, 10],
+      scale: [0.55, 1.28, 1.08, 0.92],
+      y: [40, -16, -4, -36],
     },
-    exit: { opacity: 0, rotate: 8, scale: 0.9, y: -28 },
+    exit: { opacity: 0, rotate: 10, scale: 0.88, y: -40 },
   };
 }
 
@@ -45,9 +45,9 @@ export function createTimelineCelebrationTransition(
   reduceMotion: boolean,
 ): Transition {
   return {
-    duration: reduceMotion ? motionDurations.quick : 1.6,
+    duration: reduceMotion ? motionDurations.quick : 1.9,
     ease: "easeInOut",
-    times: [0, 0.24, 0.72, 1],
+    times: [0, 0.2, 0.7, 1],
   };
 }
 

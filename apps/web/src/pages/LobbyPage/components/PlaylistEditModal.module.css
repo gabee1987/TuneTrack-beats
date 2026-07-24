@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: 1200;
-  background: #05070d;
+  background: var(--color-overlay-strong);
   display: flex;
   justify-content: flex-end;
   align-items: stretch;
@@ -11,9 +11,9 @@
 .sheet {
   width: min(100%, 680px);
   height: 100%;
-  background: #0b101b;
-  border-left: 1px solid color-mix(in srgb, var(--color-border-subtle) 82%, white 18%);
-  box-shadow: -18px 0 44px color-mix(in srgb, black 28%, transparent);
+  background: var(--color-bg-app);
+  border-left: 0;
+  box-shadow: var(--shadow-overlay);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -148,7 +148,7 @@
 
 /* Divider between rows */
 .listScrollArea > div > div + div {
-  border-top: 1px solid color-mix(in srgb, var(--color-border-subtle) 50%, transparent);
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 /* ── Track rows ── */

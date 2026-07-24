@@ -11,11 +11,13 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type CSSProperties,
 } from "react";
 import {
   MotionPresence,
   timelineCelebrationTransitionContract,
 } from "../../../features/motion";
+import { usePageLayoutMode } from "../../../hooks/usePageLayoutMode";
 import type {
   GamePageCard,
   TimelinePanelDragModel,
@@ -40,6 +42,7 @@ interface TimelinePanelProps {
 }
 
 export function TimelinePanel({ model }: TimelinePanelProps) {
+  const layoutMode = usePageLayoutMode();
   const timelineView = model.render.timelineView ?? "active";
   const {
     displayPreviewCard,
@@ -66,6 +69,7 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
     challengerChosenSlotIndex: model.interaction.challengerChosenSlotIndex,
     disabledSlotIndexes: model.interaction.disabledSlotIndexes ?? [],
     hiddenCardMode: model.render.hiddenCardMode,
+    revealedCardMode: model.render.revealedCardMode,
     originalChosenSlotIndex: model.interaction.originalChosenSlotIndex,
     previewCardTransitionEvent: model.render.previewCardTransitionEvent,
     selectable: model.interaction.selectable,
@@ -82,6 +86,10 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
   const previewSlotIndex = dragModel.previewSlotIndex;
 
   const [cardForInfo, setCardForInfo] = useState<GamePageCard | null>(null);
+  const [dragOverlaySize, setDragOverlaySize] = useState<{
+    height: number;
+    width: number;
+  } | null>(null);
   const timelineRowRef = useRef<HTMLDivElement | null>(null);
   const previewCardElementRef = useRef<HTMLElement | null>(null);
   const lastCorrectPlacementAnimationKeyRef = useRef<string | null>(null);
@@ -149,10 +157,10 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
     correctPlacementAnimationKey !== null &&
     activeCorrectPlacementAnimationKey === correctPlacementAnimationKey;
   const {
-    handleDragCancel,
-    handleDragEnd,
+    handleDragCancel: completeDragCancel,
+    handleDragEnd: completeDragEnd,
     handleDragMove,
-    handleDragStart,
+    handleDragStart: completeDragStart,
     isDraggingPreviewCard,
     orderedItemIds,
     timelineItemMap,
@@ -169,6 +177,49 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
     timelineRowRef,
   });
 
+  function captureDragOverlaySize() {
+    const previewNode = previewCardElementRef.current;
+    if (!previewNode) {
+      return;
+    }
+
+    const previewRect = previewNode.getBoundingClientRect();
+    if (previewRect.width <= 0 || previewRect.height <= 0) {
+      return;
+    }
+
+    setDragOverlaySize({
+      height: previewRect.height,
+      width: previewRect.width,
+    });
+  }
+
+  function handleDragStart(
+    ...args: Parameters<typeof completeDragStart>
+  ) {
+    captureDragOverlaySize();
+    completeDragStart(...args);
+  }
+
+  function handleDragEnd(...args: Parameters<typeof completeDragEnd>) {
+    completeDragEnd(...args);
+    setDragOverlaySize(null);
+  }
+
+  function handleDragCancel(...args: Parameters<typeof completeDragCancel>) {
+    completeDragCancel(...args);
+    setDragOverlaySize(null);
+  }
+
+  const dragOverlayStyle = dragOverlaySize
+    ? ({
+        width: dragOverlaySize.width,
+        height: dragOverlaySize.height,
+        ["--timeline-card-width" as string]: `${dragOverlaySize.width}px`,
+        ["--timeline-card-height" as string]: `${dragOverlaySize.height}px`,
+      } as CSSProperties)
+    : undefined;
+
   useLayoutEffect(() => {
     if (!previewCardElementRef.current) {
       return;
@@ -179,7 +230,11 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
   }, [orderedItemIds, previewCard, previewSlotIndex, timelineView]);
 
   return (
-    <section className={styles.timelinePanel}>
+    <section
+      className={`${styles.timelinePanel}${
+        layoutMode === "desktop" ? ` ${styles.timelinePanelDesktop}` : ""
+      }`}
+    >
       <TimelinePanelHeader
         model={model.header}
         onMineButtonRef={(node) => {
@@ -227,23 +282,27 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
 
         <DragOverlay dropAnimation={null}>
           {isDraggingPreviewCard && previewCard ? (
-            <PreviewCard
-              hiddenCardMode={model.render.hiddenCardMode}
-              isChallengeSlot={false}
-              isGhosted={false}
-              isOriginalSlot={false}
-              isOverlay={true}
-              previewCard={previewCard}
-              selectable={false}
-              showDevAlbumInfo={model.render.showDevAlbumInfo}
-              showDevCardInfo={model.render.showDevCardInfo}
-              showDevYearInfo={model.render.showDevYearInfo}
-              showDevGenreInfo={model.render.showDevGenreInfo}
-              showRevealedContent={displayShowRevealedContent}
-              theme={model.render.theme}
-              tone="pending"
-              transitionEvent={null}
-            />
+            <div className={styles.dragOverlayWrap} style={dragOverlayStyle}>
+              <div aria-hidden="true" className={styles.dragOverlayBlur} />
+              <PreviewCard
+                hiddenCardMode={model.render.hiddenCardMode}
+                revealedCardMode={model.render.revealedCardMode}
+                isChallengeSlot={false}
+                isGhosted={false}
+                isOriginalSlot={false}
+                isOverlay={true}
+                previewCard={previewCard}
+                selectable={false}
+                showDevAlbumInfo={model.render.showDevAlbumInfo}
+                showDevCardInfo={model.render.showDevCardInfo}
+                showDevYearInfo={model.render.showDevYearInfo}
+                showDevGenreInfo={model.render.showDevGenreInfo}
+                showRevealedContent={displayShowRevealedContent}
+                theme={model.render.theme}
+                tone="pending"
+                transitionEvent={null}
+              />
+            </div>
           ) : null}
         </DragOverlay>
       </DndContext>

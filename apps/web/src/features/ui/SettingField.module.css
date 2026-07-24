@@ -25,6 +25,11 @@
   font-size: 14px;
 }
 
+.value {
+  font-size: 18px;
+  font-weight: 800;
+}
+
 .labelWithInfo,
 .toggleLabel {
   display: inline-flex;
@@ -37,21 +42,25 @@
 }
 
 .infoButton {
-  display: grid;
+  display: inline-grid;
   place-items: center;
-  width: 24px;
-  height: 24px;
-  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 80%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--color-surface-soft) 78%, transparent);
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-circle);
+  background: var(--color-surface-interactive);
   color: var(--color-text-secondary);
-  font-size: 12px;
-  font-weight: 900;
+  line-height: 0;
+  cursor: pointer;
 }
 
-.value {
-  font-size: 18px;
-  font-weight: 800;
+.infoGlyph {
+  width: 14px;
+  height: 14px;
+  display: block;
 }
 
 .infoOverlay {
@@ -60,85 +69,79 @@
   z-index: 1600;
   display: grid;
   place-items: center;
-  padding: 20px;
-  background: color-mix(in srgb, #02030a 72%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  padding: var(--space-5);
+  background: var(--color-overlay-strong);
 }
 
 .infoCard {
+  position: relative;
   width: min(100%, 360px);
+  max-width: calc(100vw - var(--space-8));
   max-height: min(82dvh, 720px);
-  overflow-y: auto;
-  display: grid;
-  gap: 10px;
-  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 96%, transparent);
-  border-radius: 30px;
-  padding: 22px;
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, #8b5cff 20%, transparent),
-      transparent 46%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-surface-strong) 96%, transparent),
-      #070813
-    );
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white 12%, transparent),
-    0 28px 90px color-mix(in srgb, black 44%, transparent);
-  color: var(--color-text-primary);
-}
-
-.infoHeaderRow {
+  overflow: hidden;
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: center;
-  position: sticky;
-  top: -22px;
-  z-index: 3;
-  margin: -22px -22px 0;
-  padding: 14px 22px 10px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--color-surface-strong) 98%, transparent),
-    color-mix(in srgb, var(--color-surface-strong) 84%, transparent),
-    transparent
-  );
-  /* backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px); */
+  flex-direction: column;
+  border: 0;
+  border-radius: var(--dialog-radius, var(--radius-lg));
+  padding: var(--space-5);
+  padding-top: calc(var(--space-5) + 8px);
+  background: var(--dialog-bg, var(--color-surface-elevated-solid));
+  box-shadow: var(--dialog-shadow, var(--shadow-dialog));
+  outline: 1px solid var(--color-border-subtle);
+  color: var(--color-text-primary);
+  box-sizing: border-box;
 }
 
 .infoCloseButton {
-  flex: 0 0 auto;
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 2;
+}
+
+.infoScroll {
+  display: grid;
+  gap: var(--space-3);
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-right: calc(var(--size-touch-target) - 8px);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.infoScroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .infoEyebrow {
-  color: #38c8ff;
-  font-size: 14px;
-  font-weight: 900;
-  letter-spacing: 0.18em;
+  color: var(--color-text-secondary);
+  font-size: var(--type-micro-size);
+  font-weight: 800;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+  min-width: 0;
 }
 
 .infoTitle {
-  color: #ffb26b;
-  font-size: 24px;
-  font-weight: 900;
+  color: var(--color-text-primary);
+  font-size: var(--type-title-md-size);
+  font-weight: 800;
   letter-spacing: -0.04em;
-  line-height: 1;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 
 .infoBody {
-  color: #ffffff;
-  font-size: 15px;
-  font-weight: 650;
+  color: var(--color-text-secondary);
+  font-size: var(--type-body-size);
+  font-weight: 500;
   line-height: 1.5;
   text-transform: none;
   letter-spacing: normal;
+  overflow-wrap: anywhere;
 }
 
 .toggleField {
@@ -169,60 +172,36 @@
 }
 
 .snapRange {
-  --snap-range-height: 36px;
+  --snap-range-height: 44px;
   --snap-range-tick-width: 14px;
-  --snap-range-tick-short: 5px;
-  --snap-range-tick-tall: 11px;
+  --snap-range-tick-short: 8px;
+  --snap-range-tick-tall: 16px;
   position: relative;
   min-height: var(--snap-range-height);
-  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 58%, transparent);
-  border-radius: 18px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
   overflow: hidden;
-  background:
-    radial-gradient(
-      circle at 50% 20%,
-      color-mix(in srgb, var(--color-token-orange, var(--color-accent-control)) 10%, transparent),
-      transparent 48%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-surface-elevated) 58%, transparent),
-      color-mix(in srgb, #050914 70%, transparent)
-    );
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white 9%, transparent),
-    0 12px 32px color-mix(in srgb, black 15%, transparent);
+  background: var(--color-surface-interactive);
+  box-shadow: none;
   outline: 0;
 }
 
 .snapRange:focus-visible {
-  border-color: color-mix(
-    in srgb,
-    var(--color-token-gold, var(--color-accent-control)) 60%,
-    transparent
-  );
-  box-shadow:
-    0 0 0 3px
-      var(--color-slider-focus, color-mix(in srgb, var(--color-accent-control) 36%, transparent)),
-    inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
-    0 12px 32px color-mix(in srgb, black 18%, transparent);
+  border-color: var(--color-accent-brand);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent-brand) 28%, transparent);
 }
 
 .snapRangeCenterLine {
   position: absolute;
   left: 50%;
-  top: 10px;
+  top: 50%;
   z-index: 2;
   width: 2px;
-  height: 14px;
-  border-radius: 999px;
-  transform: translateX(-50%);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, white 76%, var(--color-token-gold, white) 24%),
-    color-mix(in srgb, var(--color-token-gold, white) 74%, transparent)
-  );
-  box-shadow: 0 0 18px color-mix(in srgb, var(--color-token-gold, white) 22%, transparent);
+  height: var(--snap-range-tick-tall);
+  border-radius: var(--radius-pill);
+  transform: translate(-50%, -50%);
+  background: var(--color-accent-brand);
+  box-shadow: none;
   pointer-events: none;
 }
 
@@ -232,7 +211,7 @@
   height: var(--snap-range-height);
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 6px calc(50% - var(--snap-range-tick-width) / 2) 5px;
+  padding: 0 calc(50% - var(--snap-range-tick-width) / 2);
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
@@ -253,7 +232,7 @@
 .snapRangeTick {
   flex: 0 0 var(--snap-range-tick-width);
   width: var(--snap-range-tick-width);
-  height: 22px;
+  height: 100%;
   border: 0;
   padding: 0;
   display: grid;
@@ -284,25 +263,24 @@
 .snapRangeTickSelected .snapRangeTickLine {
   height: var(--snap-range-tick-tall);
   width: 2px;
-  background: color-mix(in srgb, white 78%, var(--color-token-gold, white) 22%);
-  transform: scaleY(1.08);
+  background: var(--color-accent-brand);
+  transform: none;
 }
 
 .compactSnapRange {
-  --snap-range-height: 30px;
-  --snap-range-tick-short: 4px;
-  --snap-range-tick-tall: 9px;
+  --snap-range-height: 36px;
+  --snap-range-tick-short: 6px;
+  --snap-range-tick-tall: 14px;
   border-radius: 16px;
 }
 
 .compactSnapRange .snapRangeCenterLine {
-  top: 8px;
-  height: 12px;
+  height: var(--snap-range-tick-tall);
 }
 
 .compactSnapRange .snapRangeScroller {
-  padding-top: 4px;
-  padding-bottom: 4px;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 @media (max-width: 720px) {

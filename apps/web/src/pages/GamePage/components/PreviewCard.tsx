@@ -4,17 +4,19 @@ import { forwardRef, type CSSProperties } from "react";
 import { useI18n } from "../../../features/i18n";
 import type {
   HiddenCardMode,
+  RevealedCardMode,
   ThemeId,
 } from "../../../features/preferences/uiPreferences";
 import type { ChallengeMarkerTone, GamePageCard } from "../GamePage.types";
 import type { PreviewCardTransitionEvent } from "../gamePageTransitionEvents";
-import { getCardGradient } from "../gamePage.utils";
+import { getPreviewCardSurfaceStyle } from "../gamePage.utils";
 import { usePreviewCardTransition } from "../hooks/transitions/usePreviewCardTransition";
 import styles from "./TimelinePanel.module.css";
 
 export interface PreviewCardProps {
   attributes?: DraggableAttributes | undefined;
   hiddenCardMode: HiddenCardMode;
+  revealedCardMode?: RevealedCardMode | undefined;
   isChallengeSlot: boolean;
   isCorrectPlacement?: boolean;
   isCorrectionPreview?: boolean;
@@ -87,6 +89,7 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
     {
       attributes,
       hiddenCardMode,
+      revealedCardMode = "artwork",
       isChallengeSlot,
       isCorrectPlacement = false,
       isCorrectionPreview = false,
@@ -129,15 +132,19 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
       transitionEvent,
     });
     const renderCard = displayCard ?? previewCard;
+    const hasArtworkSurface =
+      displayShowRevealedContent &&
+      revealedCardMode === "artwork" &&
+      Boolean(renderCard.artworkUrl);
 
     return (
       <motion.article
         ref={ref}
         className={`${styles.previewCard} ${
-          hiddenCardMode === "gradient"
+          (displayShowRevealedContent ? revealedCardMode : hiddenCardMode) === "gradient"
             ? styles.previewCardGradient
             : styles.previewCardArtwork
-        } ${cardToneClass} ${selectable ? styles.previewCardDraggable : ""} ${
+        } ${hasArtworkSurface ? styles.previewCardHasArtwork : ""} ${cardToneClass} ${selectable ? styles.previewCardDraggable : ""} ${
           isGhosted ? styles.previewCardGhost : ""
         } ${isOverlay ? styles.previewCardOverlay : ""} ${
           displayShowRevealedContent ? styles.previewCardRevealed : ""
@@ -148,11 +155,15 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
         initial={false}
         style={
           {
-            ["--card-gradient" as string]: getCardGradient(
+            ...getPreviewCardSurfaceStyle({
+              artworkUrl: previewCard.artworkUrl,
+              hiddenCardMode,
+              revealedCardMode,
+              isOverlay,
+              seed: `${previewCard.id}-preview`,
+              showRevealedContent: displayShowRevealedContent,
               theme,
-              `${previewCard.id}-preview`,
-              isOverlay ? "overlay" : "preview",
-            ),
+            }),
           } as CSSProperties as MotionStyle
         }
         {...attributes}

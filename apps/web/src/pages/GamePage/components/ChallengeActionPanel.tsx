@@ -218,10 +218,17 @@ export function ChallengeActionPanel({
       </MotionPresence>
   );
 
-  return (
+  return portalTarget ? (
     <>
-      {portalTarget ? createPortal(challengeCallout, portalTarget) : challengeCallout}
+      {createPortal(challengeCallout, portalTarget)}
       {challengeState ? actionDock : null}
     </>
+  ) : actionDock ? (
+    <div className={styles.challengeActionStack}>
+      {challengeCallout}
+      {actionDock}
+    </div>
+  ) : (
+    challengeCallout
   );
 }

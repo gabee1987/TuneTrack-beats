@@ -62,19 +62,21 @@ export function SongInfoModal({ card, onClose }: SongInfoModalProps) {
                 onClick={onClose}
               />
             </div>
-            <div className={styles.artwork}>
-              {artworkUrl ? (
-                <img alt="" className={styles.artworkImg} src={artworkUrl} />
-              ) : (
-                <MusicNoteIcon />
-              )}
-            </div>
-            <div className={styles.info}>
-              <div className={styles.titleRow}>
-                <h2 className={styles.title}>{card.title}</h2>
+            <div className={styles.sheetBody}>
+              <div className={styles.artwork}>
+                {artworkUrl ? (
+                  <img alt="" className={styles.artworkImg} src={artworkUrl} />
+                ) : (
+                  <MusicNoteIcon />
+                )}
               </div>
-              <p className={styles.artist}>{card.artist}</p>
-              {card.albumTitle ? <p className={styles.album}>{card.albumTitle}</p> : null}
+              <div className={styles.info}>
+                <div className={styles.titleRow}>
+                  <h2 className={styles.title}>{card.title}</h2>
+                </div>
+                <p className={styles.artist}>{card.artist}</p>
+                {card.albumTitle ? <p className={styles.album}>{card.albumTitle}</p> : null}
+              </div>
             </div>
           </motion.div>
         </motion.div>

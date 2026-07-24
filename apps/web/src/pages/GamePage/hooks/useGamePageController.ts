@@ -184,6 +184,7 @@ export function useGamePageController({
 
   const preferenceState = {
     hiddenCardMode: preferencesState.hiddenCardMode,
+    revealedCardMode: preferencesState.revealedCardMode,
     showDevAlbumInfo: derivedState.showDevAlbumInfo,
     showDevCardInfo: derivedState.showDevCardInfo,
     showDevGenreInfo: derivedState.showDevGenreInfo,

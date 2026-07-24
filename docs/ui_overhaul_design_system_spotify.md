@@ -530,6 +530,10 @@ Each phase ends at a **validation gate**: build + verify green, visual review on
 
 Out of scope for this overhaul. Desktop already consumes tokens; a dedicated effort later gives desktop richer layouts without touching mobile.
 
+### Post-overhaul follow-ups (do not forget)
+
+1. **Quick Picks selected-song add/replace** — After generating a tracklist via Quick Picks and browsing it, selecting individual songs currently cannot add/replace *only the selection* into the lobby playlist; apply still uses the full generated tracklist. Change this so selected songs can append or replace the current queue independently of the full generated set.
+
 ---
 
 ## 11. Definition Of Done (per screen)

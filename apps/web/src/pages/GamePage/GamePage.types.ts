@@ -6,6 +6,7 @@ import type {
 import type { AppShellMenuTab } from "../../features/app-shell/AppShellMenu";
 import type {
   HiddenCardMode,
+  RevealedCardMode,
   ViewPreferences,
   ThemeId,
 } from "../../features/preferences/uiPreferences";
@@ -69,6 +70,7 @@ export interface TimelinePanelInteractionModel {
 
 export interface TimelinePanelRenderModel {
   hiddenCardMode: HiddenCardMode;
+  revealedCardMode: RevealedCardMode;
   hint: string;
   previewCardTransitionEvent: PreviewCardTransitionEvent | null;
   timelinePreviewTransitionEvent: TimelinePreviewTransitionEvent | null;
@@ -96,6 +98,7 @@ export interface TimelinePanelItemsModel {
   challengerChosenSlotIndex: number | null;
   disabledSlotIndexes: number[];
   hiddenCardMode: HiddenCardMode;
+  revealedCardMode: RevealedCardMode;
   originalChosenSlotIndex: number | null;
   previewCardTransitionEvent: PreviewCardTransitionEvent | null;
   selectable: boolean;
@@ -198,6 +201,7 @@ export type GamePageController = GamePageActionHandlers & {
   disabledTimelineSlots: number[];
   errorMessage: string | null;
   hiddenCardMode: HiddenCardMode;
+  revealedCardMode: RevealedCardMode;
   isHost: boolean;
   isCurrentPlayerTurn: boolean;
   isViewingOwnTimeline: boolean;

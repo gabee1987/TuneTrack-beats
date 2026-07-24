@@ -143,26 +143,19 @@ export function SpotifyCandidateReviewPanel({
             initial={{ opacity: 0, y: 18 }}
             transition={createStandardTransition(false)}
           >
-            <ActionButton
-              className={styles.spotifyFloatingActionBtn}
-              disabled={candidateTracks.length < 10 || isApplying}
-              onClick={handleUseTracks}
-              type="button"
-              variant="primary"
-            >
-              {isApplying
-                ? t("lobby.spotify.review.applying")
-                : t("lobby.spotify.review.useTracks")}
-            </ActionButton>
-          </motion.div>
-
-          {isApplyChoiceOpen ? (
-            <motion.div
-              animate={{ opacity: 1, y: 0 }}
-              className={styles.spotifyApplyChoice}
-              initial={{ opacity: 0, y: 12 }}
-              transition={createStandardTransition(false)}
-            >
+            {!isApplyChoiceOpen ? (
+              <ActionButton
+                className={styles.spotifyFloatingActionBtn}
+                disabled={candidateTracks.length < 10 || isApplying}
+                onClick={handleUseTracks}
+                type="button"
+                variant="primary"
+              >
+                {isApplying
+                  ? t("lobby.spotify.review.applying")
+                  : t("lobby.spotify.review.useTracks")}
+              </ActionButton>
+            ) : (
               <div className={styles.spotifyApplyChoicePanel}>
                 <div className={styles.spotifyApplyChoiceCopy}>
                   <strong>{t("lobby.spotify.quickPicks.applyChoiceTitle")}</strong>
@@ -199,8 +192,8 @@ export function SpotifyCandidateReviewPanel({
                   </ActionButton>
                 </div>
               </div>
-            </motion.div>
-          ) : null}
+            )}
+          </motion.div>
 
           <PlaylistTrackDetailsSheet
             onClose={() => setActiveCandidateTrackId(null)}

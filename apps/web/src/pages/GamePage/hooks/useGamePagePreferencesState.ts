@@ -4,6 +4,9 @@ interface UseGamePagePreferencesStateResult {
   hiddenCardMode: ReturnType<
     typeof useUiPreferencesStore.getState
   >["hiddenCardMode"];
+  revealedCardMode: ReturnType<
+    typeof useUiPreferencesStore.getState
+  >["revealedCardMode"];
   showDevAlbumInfo: boolean;
   showDevCardInfo: boolean;
   showDevGenreInfo: boolean;
@@ -54,13 +57,15 @@ export function useGamePagePreferencesState(): UseGamePagePreferencesStateResult
   const showDevGenreInfo = useUiPreferencesStore(
     (state) => state.showDevGenreInfo,
   );
-  const hiddenCardMode = useUiPreferencesStore(
-    (state) => state.hiddenCardMode,
+  const revealedCardMode = useUiPreferencesStore(
+    (state) => state.revealedCardMode,
   );
   const theme = useUiPreferencesStore((state) => state.theme);
 
   return {
-    hiddenCardMode,
+    // Unrevealed placement cards always use the mystery gradient surface.
+    hiddenCardMode: "gradient",
+    revealedCardMode,
     showDevAlbumInfo,
     showDevCardInfo,
     showDevGenreInfo,

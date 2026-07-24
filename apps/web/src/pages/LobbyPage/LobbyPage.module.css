@@ -307,20 +307,22 @@
 
 .playerActionRow {
   display: flex;
-  justify-content: flex-end;
+  width: 100%;
   margin-top: 10px;
 }
 
 .playerKickButton {
-  min-height: 34px;
-  padding: 8px 12px;
-  border: 1px solid color-mix(in srgb, var(--color-status-danger-border) 72%, transparent);
-  border-radius: 999px;
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-status-danger-border);
+  border-radius: var(--radius-pill);
   background: var(--color-status-danger-surface);
   color: var(--color-status-danger-text);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
   cursor: pointer;
+  box-shadow: none;
 }
 
 .playerKickButton:hover {
@@ -782,7 +784,7 @@
   outline: 1px solid var(--color-border-subtle);
   box-shadow: var(--sheet-shadow);
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
 .mobileSelectSheetHeader {
@@ -790,6 +792,9 @@
   justify-content: space-between;
   gap: var(--space-3);
   align-items: flex-start;
+  padding-bottom: var(--space-5);
+  margin-bottom: var(--space-2);
+  border-bottom: 0;
 }
 
 .mobileSelectEyebrow {

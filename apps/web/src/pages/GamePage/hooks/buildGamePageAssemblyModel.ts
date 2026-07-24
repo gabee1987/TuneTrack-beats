@@ -75,6 +75,7 @@ export function buildGamePageAssemblyModel(
       },
       render: {
         hiddenCardMode: controller.hiddenCardMode,
+        revealedCardMode: controller.revealedCardMode,
         hint: controller.visibleTimelineHint,
         previewCardTransitionEvent: controller.previewCardTransitionEvent,
         timelinePreviewTransitionEvent: controller.timelinePreviewTransitionEvent,

@@ -12,14 +12,14 @@ export const lightThemeDefinition: ThemeDefinition = {
     "color-surface": "rgba(255, 252, 248, 0.88)",
     "color-surface-elevated": "rgba(136, 112, 95, 0.08)",
     "color-surface-elevated-solid": "#ffffff",
-    "color-surface-interactive": "rgba(136, 112, 95, 0.12)",
-    "color-surface-soft": "rgba(126, 111, 98, 0.08)",
-    "color-surface-strong": "rgba(255, 249, 242, 0.92)",
-    "color-card": "rgba(255, 251, 247, 0.94)",
-    "color-chip": "rgba(122, 110, 128, 0.1)",
+    "color-surface-interactive": "rgba(90, 72, 60, 0.14)",
+    "color-surface-soft": "rgba(90, 72, 60, 0.1)",
+    "color-surface-strong": "rgba(255, 249, 242, 0.96)",
+    "color-card": "#ffffff",
+    "color-chip": "rgba(90, 72, 60, 0.16)",
     "color-overlay": "rgba(244, 238, 232, 0.72)",
-    "color-overlay-strong": "rgba(244, 238, 232, 0.72)",
-    "color-border-subtle": "rgba(113, 92, 102, 0.14)",
+    "color-overlay-strong": "rgba(80, 68, 60, 0.42)",
+    "color-border-subtle": "rgba(90, 72, 60, 0.22)",
     "color-surface-outline-soft": "rgba(113, 92, 102, 0.08)",
     "color-surface-outline-strong": "rgba(113, 92, 102, 0.14)",
     "color-divider": "rgba(113, 92, 102, 0.12)",
@@ -42,6 +42,9 @@ export const lightThemeDefinition: ThemeDefinition = {
     "color-accent-brand-hover": brandAccent.light.hover,
     "color-accent-brand-active": brandAccent.light.active,
     "color-on-accent-brand": brandAccent.light.on,
+    "color-background-spotify": brandAccent.light.base,
+    "color-border-spotify": brandAccent.light.base,
+    "color-on-spotify": brandAccent.light.on,
 
     // Solid semantic state colors (design-system layer; additive for Phase 1+)
     "color-success": "#16a34a",
@@ -54,11 +57,11 @@ export const lightThemeDefinition: ThemeDefinition = {
     "color-focus-ring": "rgba(255, 171, 120, 0.95)",
     "color-status-connected-surface": "rgba(82, 227, 173, 0.26)",
     "color-status-connected-text": "#0d8b5a",
-    "color-status-danger-surface": "rgba(255, 94, 129, 0.14)",
-    "color-status-danger-text": "#9c3558",
-    "color-status-danger-border": "rgba(255, 41, 88, 0.568)",
-    "color-status-danger-chip-surface": "rgba(255, 95, 143, 0.12)",
-    "color-status-danger-chip-text": "#a23d63",
+    "color-status-danger-surface": "rgba(220, 38, 38, 0.08)",
+    "color-status-danger-text": "#b91c1c",
+    "color-status-danger-border": "rgba(220, 38, 38, 0.34)",
+    "color-status-danger-chip-surface": "rgba(220, 38, 38, 0.08)",
+    "color-status-danger-chip-text": "#b91c1c",
     "color-badge-strong-background": "rgba(123, 140, 255, 0.28)",
     "color-badge-strong-text": "#ffffff",
     "gradient-toggle-checked": "linear-gradient(135deg, #ff8b5d 0%, #7b8cff 100%)",
@@ -75,12 +78,14 @@ export const lightThemeDefinition: ThemeDefinition = {
     "gradient-surface-sheen":
       "linear-gradient(135deg, rgba(255, 255, 255, 0.38), transparent 45%), linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 65%)",
     "gradient-hidden-card-preview-artwork":
-      "radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.32), transparent 30%), radial-gradient(circle at 80% 0%, rgba(123, 140, 255, 0.28), transparent 34%), linear-gradient(135deg, rgba(123, 140, 255, 0.58) 0%, rgba(240, 111, 176, 0.5) 100%)",
+      "radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.36), transparent 30%), radial-gradient(circle at 80% 0%, rgba(123, 140, 255, 0.34), transparent 34%), linear-gradient(135deg, rgba(123, 140, 255, 0.62) 0%, rgba(240, 111, 176, 0.52) 100%)",
     "gradient-hidden-card-preview-surface":
-      "linear-gradient(135deg, rgba(123, 140, 255, 0.3) 0%, rgba(255, 252, 248, 0.86) 100%)",
+      "linear-gradient(145deg, #ececeb 0%, #f7f7f5 55%, #ffffff 100%)",
     // Neutral hidden-card gradient for the flat design system (Phase 1+ adoption).
     "gradient-card-hidden":
       "linear-gradient(145deg, #ececeb 0%, #f7f7f5 55%, #ffffff 100%)",
+    "gradient-card-artwork-scrim":
+      "linear-gradient(180deg, rgba(20, 16, 14, 0.12) 0%, rgba(20, 16, 14, 0.28) 42%, rgba(20, 16, 14, 0.78) 100%)",
 
     // Slider and toggle controls
     "color-slider-track": "rgba(122, 110, 128, 0.18)",
@@ -88,41 +93,38 @@ export const lightThemeDefinition: ThemeDefinition = {
     "color-slider-thumb-border": "rgba(255, 255, 255, 0.9)",
 
     // Game UI
-    "color-mask-solid": "#000000",
-    "color-game-error-text": "#d8487a",
-    "color-game-card-current-outline": "rgba(123, 140, 255, 0.64)",
-    "color-game-card-challenge-outline": "rgba(37, 162, 119, 0.64)",
-    "color-game-card-failure-outline": "rgba(219, 82, 126, 0.64)",
-    "color-game-card-correct-outline": "rgba(50, 177, 129, 0.76)",
-    "color-game-card-draggable-outline": "rgba(0, 175, 123, 0.94)",
-    "color-game-card-correction-outline": "rgba(240, 162, 77, 0.78)",
-    "color-game-preview-scrim": "rgba(248, 243, 238, 0.42)",
+    "color-mask-solid": "#f4eee8",
+    "color-game-error-text": "var(--color-status-danger-text)",
+    "color-game-card-current-outline": "color-mix(in srgb, var(--color-accent-brand) 72%, transparent)",
+    "color-game-card-challenge-outline": "color-mix(in srgb, var(--color-warning) 78%, transparent)",
+    "color-game-card-failure-outline": "color-mix(in srgb, var(--color-danger) 78%, transparent)",
+    "color-game-card-correct-outline": "color-mix(in srgb, var(--color-accent-brand) 88%, transparent)",
+    "color-game-card-draggable-outline": "var(--color-accent-brand)",
+    "color-game-card-correction-outline": "color-mix(in srgb, var(--color-danger) 82%, transparent)",
+    "color-game-preview-scrim": "rgba(244, 238, 232, 0.48)",
     "gradient-game-preview-surface":
-      "linear-gradient(160deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.08) 100%), rgba(244, 247, 253, 0.88)",
+      "linear-gradient(160deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.12) 100%), var(--gradient-card-hidden)",
     "gradient-game-preview-correction-surface":
-      "linear-gradient(135deg, rgba(255, 152, 152, 0.18) 0%, rgba(255, 204, 120, 0.16) 100%)",
-    "color-game-meta-pill-background": "rgba(28, 36, 54, 0.08)",
+      "linear-gradient(135deg, color-mix(in srgb, var(--color-danger) 18%, transparent) 0%, color-mix(in srgb, var(--color-warning) 12%, transparent) 100%)",
+    "color-game-meta-pill-background": "rgba(28, 36, 54, 0.1)",
     "color-game-meta-pill-text": "#1f2430",
-    "color-game-artist-text": "rgba(31, 36, 48, 0.82)",
+    "color-game-artist-text": "rgba(31, 36, 48, 0.86)",
     "color-game-album-text": "rgba(31, 36, 48, 0.72)",
-    "gradient-floating-primary-action": "linear-gradient(135deg, #7b8cff 0%, #f06fb0 100%)",
-    "color-floating-secondary-action-background": "rgba(0, 175, 123, 0.94)",
+    "gradient-floating-primary-action": "var(--color-accent-brand)",
+    "color-floating-secondary-action-background": "var(--color-surface-interactive)",
 
     // Shadows — legacy (keep until component migration)
     "shadow-surface": "0 24px 70px rgba(90, 79, 74, 0.12)",
     "shadow-form-card": "0 18px 48px rgba(90, 79, 74, 0.14)",
     "shadow-slider-thumb": "0 4px 14px rgba(90, 79, 74, 0.16)",
     "shadow-slider-thumb-active": "0 8px 20px rgba(90, 79, 74, 0.18)",
-    "shadow-game-drop-slot":
-      "inset 0 1px 0 rgba(255, 255, 255, 0.48), 0 10px 18px rgba(90, 79, 74, 0.08)",
-    "shadow-game-drop-slot-hover":
-      "0 8px 18px rgba(90, 79, 74, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.52)",
-    "shadow-game-card-base": "inset 0 1px 0 rgba(255, 255, 255, 0.38)",
+    "shadow-game-drop-slot": "var(--shadow-raised)",
+    "shadow-game-drop-slot-hover": "var(--shadow-raised)",
+    "shadow-game-card-base": "var(--shadow-raised)",
     "shadow-game-card-correct":
-      "inset 0 0 0 1px rgba(255, 255, 255, 0.56), 0 0 0 3px rgba(50, 177, 129, 0.12)",
-    "shadow-game-preview-card":
-      "0 26px 60px rgba(90, 79, 74, 0.18), 0 10px 24px rgba(90, 79, 74, 0.1), 0 0 0 1px rgba(113, 92, 102, 0.12) inset",
-    "shadow-floating-action": "0 14px 34px rgba(90, 79, 74, 0.16)",
+      "0 0 0 2px color-mix(in srgb, var(--color-accent-brand) 24%, transparent)",
+    "shadow-game-preview-card": "var(--shadow-overlay)",
+    "shadow-floating-action": "var(--shadow-raised)",
 
     // Elevation scale — flat design system (Phase 1+ adoption)
     "shadow-none": "none",

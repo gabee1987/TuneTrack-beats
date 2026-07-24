@@ -6,6 +6,7 @@ import type { PublicRoomState } from "@tunetrack/shared";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import type {
   HiddenCardMode,
+  RevealedCardMode,
   ThemeId,
 } from "../../../features/preferences/uiPreferences";
 
@@ -67,6 +68,7 @@ interface BuildGamePageControllerResultOptions {
   };
   preferenceState: {
     hiddenCardMode: HiddenCardMode;
+    revealedCardMode: RevealedCardMode;
     showDevAlbumInfo: boolean;
     showDevCardInfo: boolean;
     showDevGenreInfo: boolean;

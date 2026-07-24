@@ -34,6 +34,21 @@ interface SettingInfoButtonProps {
   label: string;
 }
 
+function InfoGlyph() {
+  return (
+    <svg aria-hidden="true" className={styles.infoGlyph} fill="none" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M12 10.5V16.5"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="2"
+      />
+      <circle cx="12" cy="7.5" fill="currentColor" r="1.25" />
+    </svg>
+  );
+}
+
 export function SettingInfoButton({ info, label }: SettingInfoButtonProps) {
   const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
@@ -50,7 +65,7 @@ export function SettingInfoButton({ info, label }: SettingInfoButtonProps) {
         }}
         type="button"
       >
-        i
+        <InfoGlyph />
       </button>
       <MotionDialogPortal
         cardClassName={styles.infoCard}
@@ -59,21 +74,21 @@ export function SettingInfoButton({ info, label }: SettingInfoButtonProps) {
         onClose={() => setIsOpen(false)}
         overlayClassName={styles.infoOverlay}
       >
-        <span className={styles.infoHeaderRow}>
+        <CloseIconButton
+          ariaLabel={t("lobby.info.close")}
+          className={styles.infoCloseButton}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            setIsOpen(false);
+          }}
+          size="sm"
+        />
+        <div className={styles.infoScroll}>
           <span className={styles.infoEyebrow}>{t("lobby.info.title")}</span>
-          <CloseIconButton
-            ariaLabel={t("lobby.info.close")}
-            className={styles.infoCloseButton}
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              setIsOpen(false);
-            }}
-            size="sm"
-          />
-        </span>
-        <span className={styles.infoTitle}>{label}</span>
-        <span className={styles.infoBody}>{info}</span>
+          <span className={styles.infoTitle}>{label}</span>
+          <span className={styles.infoBody}>{info}</span>
+        </div>
       </MotionDialogPortal>
     </span>
   );

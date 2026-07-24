@@ -17,19 +17,17 @@ export function GamePageDesktop({ model }: GamePageAssemblyProps) {
       <section className={styles.panel}>
         <GamePageHeader model={model.header} />
 
-        <div className={styles.layoutGrid}>
-          <motion.section
-            className={styles.mainColumn}
-            layout
-            transition={createStandardTransition(reduceMotion)}
-          >
-            <TimelinePanel model={model.timeline} />
-          </motion.section>
+        <motion.section
+          className={styles.mainColumn}
+          layout
+          transition={createStandardTransition(reduceMotion)}
+        >
+          <TimelinePanel model={model.timeline} />
+        </motion.section>
 
-          <aside className={styles.sidebarColumn}>
-            <GamePageActionPanels model={model.actions} />
-          </aside>
-        </div>
+        <aside className={styles.dockColumn}>
+          <GamePageActionPanels model={model.actions} />
+        </aside>
       </section>
     </main>
   );

@@ -46,6 +46,7 @@ function TimelinePanelItemsComponent({
           card={item.card}
           challengeMarkerTone={model.challengeMarkerTone}
           hiddenCardMode={model.hiddenCardMode}
+          revealedCardMode={model.revealedCardMode}
           id={item.id}
           isChallengeSlot={item.isChallengeSlot}
           isDraggingPreviewCard={isDraggingPreviewCard}

@@ -39,7 +39,9 @@ export function getGamePageActiveTimelinePreviewState({
 }: GamePageActiveTimelinePreviewSelectorOptions): GamePageActiveTimelinePreviewSelectorResult {
   const activeTimelineOriginalSlot =
     roomState?.status === "challenge"
-      ? roomState.challengeState?.originalSelectedSlotIndex ?? null
+      ? canSelectChallengeSlot
+        ? null
+        : roomState.challengeState?.originalSelectedSlotIndex ?? null
       : roomState?.status === "reveal"
         ? roomState.revealState?.selectedSlotIndex ?? null
         : canSelectTurnSlot

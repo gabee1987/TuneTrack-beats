@@ -119,33 +119,37 @@ export function AppShellMenuPanels({ activeTab, preferencesState }: AppShellMenu
         </div>
 
         <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>{t("appShell.menu.hiddenCardTitle")}</h3>
-          <p className={styles.sectionDescription}>{t("appShell.menu.hiddenCardDescription")}</p>
+          <h3 className={styles.sectionTitle}>{t("appShell.menu.revealedCardTitle")}</h3>
+          <p className={styles.sectionDescription}>
+            {t("appShell.menu.revealedCardDescription")}
+          </p>
           <div className={styles.segmentedRow}>
             <SegmentedButton
-              activeValue={preferencesState.hiddenCardMode}
-              label={t("appShell.menu.hiddenCardArtwork")}
-              onClick={preferencesState.setHiddenCardMode}
+              activeValue={preferencesState.revealedCardMode}
+              label={t("appShell.menu.revealedCardArtwork")}
+              onClick={preferencesState.setRevealedCardMode}
               value="artwork"
             />
             <SegmentedButton
-              activeValue={preferencesState.hiddenCardMode}
-              label={t("appShell.menu.hiddenCardGradient")}
-              onClick={preferencesState.setHiddenCardMode}
+              activeValue={preferencesState.revealedCardMode}
+              label={t("appShell.menu.revealedCardGradient")}
+              onClick={preferencesState.setRevealedCardMode}
               value="gradient"
             />
           </div>
-          <div className={styles.hiddenCardPreview}>
+          <div className={styles.cardStylePreview}>
             <div
-              className={`${styles.hiddenCardPreviewFace} ${
-                preferencesState.hiddenCardMode === "gradient"
-                  ? styles.hiddenCardPreviewGradient
-                  : styles.hiddenCardPreviewArtwork
+              className={`${styles.cardStylePreviewFace} ${
+                preferencesState.revealedCardMode === "gradient"
+                  ? styles.cardStylePreviewGradient
+                  : styles.cardStylePreviewArtwork
               }`}
             >
-              <span className={styles.hiddenCardPreviewLabel}>
-                {t("appShell.menu.hiddenCardPreview")}
-              </span>
+              <span className={styles.cardStylePreviewArtist}>Sample Artist</span>
+              <div className={styles.cardStylePreviewCenter}>
+                <span className={styles.cardStylePreviewYear}>2014</span>
+              </div>
+              <span className={styles.cardStylePreviewTitle}>Example Track</span>
             </div>
           </div>
         </div>

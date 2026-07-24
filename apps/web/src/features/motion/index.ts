@@ -44,6 +44,7 @@ export {
   createMenuTokenAdjustFlyoutPopVariants,
   createMenuTokenAdjustFlyoutTransition,
   createMenuTokenAdjustFlyoutVariants,
+  createTokenSpendFlyoutTransition,
   createTokenSpendFlyoutVariants,
 } from "./transitions/tokenFlyoutTransition";
 export {

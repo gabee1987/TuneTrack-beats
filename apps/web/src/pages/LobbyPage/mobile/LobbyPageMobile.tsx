@@ -7,7 +7,8 @@ import { rememberPlayerDisplayName } from "../../../services/session/playerSessi
 import { StatusBanner } from "../../../features/ui/StatusBanner";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { TextInput } from "../../../features/ui/TextInput";
-import { Button, IconButton } from "../../../features/ui/primitives";
+import { CloseIconButton } from "../../../features/ui/CloseIconButton";
+import { Button } from "../../../features/ui/primitives";
 import type { LobbyPageAssemblyProps } from "../LobbyPage.types";
 import { LobbyHostCoreSettings } from "../components/LobbyHostCoreSettings";
 import { LobbyHostTtSettings } from "../components/LobbyHostTtSettings";
@@ -264,19 +265,17 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
       >
         {infoContent ? (
           <>
-            <div className={styles.infoHeaderRow}>
+            <CloseIconButton
+              ariaLabel={t("lobby.info.close")}
+              className={styles.infoCloseButton}
+              onClick={() => setInfoContent(null)}
+              size="sm"
+            />
+            <div className={styles.infoScroll}>
               <p className={styles.infoEyebrow}>{t("lobby.info.title")}</p>
-              <IconButton
-                aria-label={t("lobby.info.close")}
-                onClick={() => setInfoContent(null)}
-                size="sm"
-                variant="ghost"
-              >
-                <span aria-hidden="true">×</span>
-              </IconButton>
+              <h2 className={styles.infoTitle}>{infoContent.title}</h2>
+              <p className={styles.infoBody}>{infoContent.body}</p>
             </div>
-            <h2 className={styles.infoTitle}>{infoContent.title}</h2>
-            <p className={styles.infoBody}>{infoContent.body}</p>
           </>
         ) : null}
       </MotionDialogPortal>
@@ -289,10 +288,20 @@ interface InfoButtonProps {
   onClick: () => void;
 }
 
+function InfoGlyph() {
+  return (
+    <svg aria-hidden="true" className={styles.infoGlyph} fill="none" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 10.5V16.5" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+      <circle cx="12" cy="7.5" fill="currentColor" r="1.25" />
+    </svg>
+  );
+}
+
 function InfoButton({ label, onClick }: InfoButtonProps) {
   return (
     <button aria-label={label} className={styles.infoButton} onClick={onClick} type="button">
-      i
+      <InfoGlyph />
     </button>
   );
 }
