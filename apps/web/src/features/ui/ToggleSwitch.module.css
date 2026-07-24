@@ -58,14 +58,14 @@
 }
 
 .checked .status {
-  color: var(--color-on-accent-brand);
+  color: #ffffff;
   transform: translateX(-34px);
 }
 
 .checked .thumb {
   transform: translateX(40px);
-  background: var(--color-on-accent-brand);
-  box-shadow: none;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
 
 .switch:focus-visible {

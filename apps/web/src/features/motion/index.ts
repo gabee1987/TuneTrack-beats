@@ -1,6 +1,7 @@
 export { MotionPresence } from "./MotionPresence";
 export { PageTransition } from "./PageTransition";
 export { MotionDialogPortal } from "./MotionDialogPortal";
+export { prefersReducedMotion } from "./prefersReducedMotion";
 export { useReducedMotionPreference } from "./useReducedMotionPreference";
 export type { ScreenTransitionDirection } from "./coreMotionTokens";
 export {

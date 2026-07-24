@@ -1,7 +1,7 @@
 .screen {
   min-height: 100dvh;
   padding: var(--space-1);
-  background: var(--color-bg-app);
+  background: var(--gradient-app-background);
 }
 
 .panel {

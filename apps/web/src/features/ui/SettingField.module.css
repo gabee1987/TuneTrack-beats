@@ -144,6 +144,10 @@
   overflow-wrap: anywhere;
 }
 
+.infoBody :where(p, span, li, div) {
+  color: inherit;
+}
+
 .toggleField {
   display: grid;
   gap: 12px;
@@ -310,8 +314,8 @@
     align-self: stretch;
     background: linear-gradient(
       180deg,
-      color-mix(in srgb, var(--color-surface-strong) 74%, transparent),
-      color-mix(in srgb, #050914 72%, transparent)
+      color-mix(in srgb, var(--color-surface-strong) 88%, transparent),
+      color-mix(in srgb, var(--color-surface-interactive) 92%, transparent)
     );
     border-radius: 999px;
     outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 96%, transparent);
@@ -381,8 +385,8 @@
     align-self: stretch;
     background: linear-gradient(
       180deg,
-      color-mix(in srgb, var(--color-surface-strong) 74%, transparent),
-      color-mix(in srgb, #050914 72%, transparent)
+      color-mix(in srgb, var(--color-surface-strong) 88%, transparent),
+      color-mix(in srgb, var(--color-surface-interactive) 92%, transparent)
     );
     border-radius: 999px;
     outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 96%, transparent);

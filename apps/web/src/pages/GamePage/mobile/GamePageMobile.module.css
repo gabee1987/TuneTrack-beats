@@ -3,7 +3,7 @@
   min-height: 100svh;
   padding: 0;
   overflow: hidden;
-  background: var(--color-bg-app);
+  background: var(--gradient-app-background);
 }
 
 .panel {

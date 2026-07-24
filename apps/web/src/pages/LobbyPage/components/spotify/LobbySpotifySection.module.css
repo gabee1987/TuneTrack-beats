@@ -44,7 +44,7 @@
   max-height: calc(100vh - 28px);
   border: 1px solid color-mix(in srgb, var(--color-border-subtle) 86%, transparent);
   border-radius: 18px;
-  background: linear-gradient(180deg, #11131e 0%, #080a14 100%);
+  background: var(--color-bg-app);
   color: var(--color-text-primary);
   box-shadow: 0 28px 90px color-mix(in srgb, black 46%, transparent);
   display: grid;
@@ -161,7 +161,7 @@
   gap: 14px;
   padding: 16px 24px;
   border-top: 1px solid color-mix(in srgb, var(--color-border-subtle) 70%, transparent);
-  background: #10121c;
+  background: var(--color-surface-elevated-solid);
 }
 
 .spotifySetupFooterStatus {
@@ -780,8 +780,8 @@
   content: "";
   background: linear-gradient(
     180deg,
-    #080a14 0%,
-    color-mix(in srgb, #080a14 88%, transparent) 58%,
+    var(--color-bg-app) 0%,
+    color-mix(in srgb, var(--color-bg-app) 88%, transparent) 58%,
     transparent 100%
   );
   pointer-events: none;
@@ -947,7 +947,7 @@
   align-items: center;
   min-height: 58px;
   padding: 8px 14px;
-  background: #080a14;
+  background: var(--color-bg-app);
   color: var(--color-text-primary);
   touch-action: pan-y;
   user-select: none;
@@ -980,7 +980,7 @@
   align-items: center;
   min-height: 58px;
   padding: 8px 14px;
-  background: #080a14;
+  background: var(--color-bg-app);
   color: var(--color-text-primary);
   touch-action: pan-y;
   user-select: none;
@@ -1367,7 +1367,7 @@
   padding: 10px 12px;
   border: 1px solid color-mix(in srgb, var(--color-border-subtle) 86%, white 8%);
   border-radius: 16px;
-  background: #111722;
+  background: var(--color-surface-elevated-solid);
   box-shadow: 0 14px 38px color-mix(in srgb, black 42%, transparent);
 }
 
@@ -1412,7 +1412,7 @@
   background: linear-gradient(
     180deg,
     transparent 0%,
-    color-mix(in srgb, #080a14 92%, transparent) 44%
+    color-mix(in srgb, var(--color-bg-app) 92%, transparent) 44%
   );
   pointer-events: none;
 }

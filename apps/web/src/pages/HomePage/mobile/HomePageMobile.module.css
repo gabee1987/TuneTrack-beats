@@ -1,7 +1,7 @@
 .screenShell {
   padding: 0;
   overflow: hidden;
-  background: var(--color-bg-app);
+  background: var(--gradient-app-background);
 }
 
 .panelShell {

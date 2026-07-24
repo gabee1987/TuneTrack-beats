@@ -131,8 +131,18 @@ export function useSpotifyCandidates({
     );
   }
 
-  function useGeneratedCandidates(mode: PlaylistQueueUpdateMode = "replace") {
+  function useGeneratedCandidates(
+    mode: PlaylistQueueUpdateMode = "replace",
+    trackIds?: string[],
+  ) {
     if (!roomId || !candidateSessionId || candidateTracks.length === 0) return;
+
+    const tracksToApply =
+      trackIds && trackIds.length > 0
+        ? candidateTracks.filter((track) => trackIds.includes(track.id))
+        : candidateTracks;
+
+    if (tracksToApply.length === 0) return;
 
     setCandidatePhase("applying");
     setCandidateError(null);
@@ -144,7 +154,7 @@ export function useSpotifyCandidates({
         if (payload.success) {
           const appliedMessage =
             mode === "append"
-              ? t("lobby.spotify.builder.playlistTracksAdded", { count: candidateTracks.length })
+              ? t("lobby.spotify.builder.playlistTracksAdded", { count: tracksToApply.length })
               : t("lobby.spotify.generatedPlaylistApplied", { count: payload.importedCount });
           setCandidatePhase("idle");
           setCandidateError(null);
@@ -164,8 +174,8 @@ export function useSpotifyCandidates({
       socket.emit(ClientToServerEvent.UseSpotifyCandidates, {
         roomId,
         candidateSessionId,
-        trackIds: candidateTracks.map((track) => track.id),
-        tracks: candidateTracks,
+        trackIds: tracksToApply.map((track) => track.id),
+        tracks: tracksToApply,
         mode,
       });
     });

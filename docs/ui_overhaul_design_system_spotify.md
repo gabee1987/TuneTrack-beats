@@ -2,7 +2,7 @@
 
 > **Purpose**: Define a robust, token-driven, Spotify-inspired flat design system and a phased plan to overhaul the TuneTrack UI without regressing performance, features, or code quality.
 >
-> **Status**: Design specification. This is the source of truth for the aesthetic direction and the design-system architecture. It is meant to be followed screen-by-screen during implementation.
+> **Status**: Implementation in progress. Phases 0–5 complete; Phase 6 polish/a11y in progress.
 
 ---
 
@@ -532,7 +532,9 @@ Out of scope for this overhaul. Desktop already consumes tokens; a dedicated eff
 
 ### Post-overhaul follow-ups (do not forget)
 
-1. **Quick Picks selected-song add/replace** — After generating a tracklist via Quick Picks and browsing it, selecting individual songs currently cannot add/replace *only the selection* into the lobby playlist; apply still uses the full generated tracklist. Change this so selected songs can append or replace the current queue independently of the full generated set.
+1. **Quick Picks selected-song add/replace** — ✅ Done in Phase 6: selecting songs in the review list applies only that selection (append/replace), otherwise the full generated set is used.
+2. **CSS module splits** — Still open: extract oversized modules (`LobbySpotifySection`, `TimelinePanel`, `GamePage`, `LobbyPage`, action panels) below the 500-line hard limit.
+3. **Dead token prune** — Still open: remove unused semantic tokens after a final reference audit.
 
 ---
 

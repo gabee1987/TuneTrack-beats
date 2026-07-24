@@ -2,7 +2,7 @@
   min-height: var(--app-height);
   padding: calc(var(--safe-area-top) + var(--space-6)) calc(var(--safe-area-right) + var(--space-6))
     calc(var(--safe-area-bottom) + var(--space-6)) calc(var(--safe-area-left) + var(--space-6));
-  background: var(--color-bg-app);
+  background: var(--gradient-app-background);
 }
 
 .panelShell {

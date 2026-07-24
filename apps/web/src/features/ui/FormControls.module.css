@@ -35,8 +35,8 @@
 }
 
 .buttonPrimary {
-  background: var(--color-accent-primary);
-  color: var(--color-text-on-accent);
+  background: var(--color-accent-brand);
+  color: var(--color-on-accent-brand);
 }
 
 .buttonDanger {

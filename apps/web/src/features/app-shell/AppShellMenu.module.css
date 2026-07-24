@@ -261,12 +261,10 @@
 }
 
 .segmentedButtonActive {
-  border: 1px solid color-mix(in srgb, #ffb26b 58%, var(--color-border-subtle));
-  background: color-mix(in srgb, var(--color-surface-elevated) 44%, transparent);
-  color: var(--color-text-on-accent);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, #ffb26b 22%, transparent),
-    0 0 8px color-mix(in srgb, #ff8a3d 24%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent-brand) 48%, var(--color-border-subtle));
+  background: color-mix(in srgb, var(--color-accent-brand) 18%, var(--color-surface-elevated-solid));
+  color: var(--color-text-primary);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent-brand) 16%, transparent);
 }
 
 .cardStylePreview {

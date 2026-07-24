@@ -5,7 +5,7 @@
   overscroll-behavior: contain;
   padding: calc(var(--safe-area-top) + var(--space-6)) calc(var(--safe-area-right) + var(--space-5))
     calc(var(--safe-area-bottom) + var(--space-6)) calc(var(--safe-area-left) + var(--space-5));
-  background: var(--color-bg-app);
+  background: var(--gradient-app-background);
 }
 
 .panelShell {

@@ -1,6 +1,9 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { createStandardTransition } from "../../../../features/motion";
+import {
+  createStandardTransition,
+  useReducedMotionPreference,
+} from "../../../../features/motion";
 import { useI18n } from "../../../../features/i18n";
 import { ActionButton } from "../../../../features/ui/ActionButton";
 import { PlaylistTrackDetailsSheet } from "../PlaylistTrackDetailsSheet";
@@ -46,6 +49,7 @@ export function SpotifyOpenedPlaylistPanel({
   queuedTrackIds,
 }: SpotifyOpenedPlaylistPanelProps) {
   const { t } = useI18n();
+  const reduceMotion = useReducedMotionPreference();
   const [selectedTrackIds, setSelectedTrackIds] = useState<Set<string>>(() => new Set());
   const [activeTrackId, setActiveTrackId] = useState<string | null>(null);
   const tracks = playlist?.tracks ?? [];
@@ -205,7 +209,7 @@ export function SpotifyOpenedPlaylistPanel({
           animate={{ opacity: 1, y: 0 }}
           className={styles.spotifySearchSelectedAction}
           initial={{ opacity: 0, y: 18 }}
-          transition={createStandardTransition(false)}
+          transition={createStandardTransition(reduceMotion)}
         >
           {selectedUnqueuedTracks.length > 0 ? (
             <ActionButton

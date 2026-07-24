@@ -2,7 +2,10 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { SpotifySmartSearchResult, SpotifySmartSearchTypeFilter } from "@tunetrack/shared";
-import { createStandardTransition } from "../../../../features/motion";
+import {
+  createStandardTransition,
+  useReducedMotionPreference,
+} from "../../../../features/motion";
 import { useI18n } from "../../../../features/i18n";
 import { useAppToast } from "../../../../features/toast";
 import { ActionButton } from "../../../../features/ui/ActionButton";
@@ -15,6 +18,7 @@ import styles from "./LobbySpotifySection.module.css";
 
 export function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpotifyState }) {
   const { t } = useI18n();
+  const reduceMotion = useReducedMotionPreference();
   const { showToast } = useAppToast();
   const { openedPlaylist: openedPlaylistState, smartSearch } = spotifyState;
   const {
@@ -307,7 +311,7 @@ export function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: Lob
               animate={{ opacity: 1, y: 0 }}
               className={styles.spotifySearchSelectedAction}
               initial={{ opacity: 0, y: 18 }}
-              transition={createStandardTransition(false)}
+              transition={createStandardTransition(reduceMotion)}
             >
               {selectedUnqueuedSearchTracks.length > 0 ? (
                 <ActionButton

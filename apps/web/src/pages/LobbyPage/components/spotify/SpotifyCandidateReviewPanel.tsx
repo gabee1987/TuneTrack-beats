@@ -1,6 +1,9 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { createStandardTransition } from "../../../../features/motion";
+import {
+  createStandardTransition,
+  useReducedMotionPreference,
+} from "../../../../features/motion";
 import { useI18n } from "../../../../features/i18n";
 import { useAppToast } from "../../../../features/toast";
 import { ActionButton } from "../../../../features/ui/ActionButton";
@@ -23,6 +26,7 @@ export function SpotifyCandidateReviewPanel({
   spotifyState,
 }: SpotifyCandidateReviewPanelProps) {
   const { t } = useI18n();
+  const reduceMotion = useReducedMotionPreference();
   const { candidates, savedPlaylists } = spotifyState;
   const {
     candidateError,
@@ -43,6 +47,12 @@ export function SpotifyCandidateReviewPanel({
   const [isApplyChoiceOpen, setIsApplyChoiceOpen] = useState(false);
   const activeCandidateTrack =
     candidateTracks.find((track) => track.id === activeCandidateTrackId) ?? null;
+  const selectedCandidateCount = selectedCandidateTrackIds.size;
+  const applyTrackIds =
+    selectedCandidateCount > 0 ? Array.from(selectedCandidateTrackIds) : undefined;
+  const canUseFullGeneratedSet = candidateTracks.length >= 10;
+  const canUseSelectedTracks = selectedCandidateCount > 0;
+  const canUseTracks = canUseSelectedTracks || canUseFullGeneratedSet;
 
   useEffect(() => {
     if (!generatedPlaylistMessage) return;
@@ -81,17 +91,21 @@ export function SpotifyCandidateReviewPanel({
   }
 
   function handleUseTracks() {
+    if (!canUseTracks) {
+      return;
+    }
+
     if (currentQueueCount > 0) {
       setIsApplyChoiceOpen(true);
       return;
     }
 
-    useGeneratedCandidates("replace");
+    useGeneratedCandidates("replace", applyTrackIds);
   }
 
   function handleApplyChoice(mode: "append" | "replace") {
     setIsApplyChoiceOpen(false);
-    useGeneratedCandidates(mode);
+    useGeneratedCandidates(mode, applyTrackIds);
   }
 
   return (
@@ -141,28 +155,37 @@ export function SpotifyCandidateReviewPanel({
             animate={{ opacity: 1, y: 0 }}
             className={styles.spotifyFloatingAction}
             initial={{ opacity: 0, y: 18 }}
-            transition={createStandardTransition(false)}
+            transition={createStandardTransition(reduceMotion)}
           >
             {!isApplyChoiceOpen ? (
               <ActionButton
                 className={styles.spotifyFloatingActionBtn}
-                disabled={candidateTracks.length < 10 || isApplying}
+                disabled={!canUseTracks || isApplying}
                 onClick={handleUseTracks}
                 type="button"
                 variant="primary"
               >
                 {isApplying
                   ? t("lobby.spotify.review.applying")
-                  : t("lobby.spotify.review.useTracks")}
+                  : selectedCandidateCount > 0
+                    ? t("lobby.spotify.review.useSelectedTracks", {
+                        count: selectedCandidateCount,
+                      })
+                    : t("lobby.spotify.review.useTracks")}
               </ActionButton>
             ) : (
               <div className={styles.spotifyApplyChoicePanel}>
                 <div className={styles.spotifyApplyChoiceCopy}>
                   <strong>{t("lobby.spotify.quickPicks.applyChoiceTitle")}</strong>
                   <span>
-                    {t("lobby.spotify.quickPicks.applyChoiceDescription", {
-                      count: currentQueueCount,
-                    })}
+                    {selectedCandidateCount > 0
+                      ? t("lobby.spotify.quickPicks.applyChoiceSelectedDescription", {
+                          selectedCount: selectedCandidateCount,
+                          count: currentQueueCount,
+                        })
+                      : t("lobby.spotify.quickPicks.applyChoiceDescription", {
+                          count: currentQueueCount,
+                        })}
                   </span>
                 </div>
                 <div className={styles.spotifyApplyChoiceActions}>
