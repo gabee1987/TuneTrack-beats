@@ -5,30 +5,13 @@ import {
   MotionPresence,
   useReducedMotionPreference,
 } from "../../../features/motion";
+import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import type { GamePageCard } from "../GamePage.types";
 import styles from "./SongInfoModal.module.css";
 
 interface SongInfoModalProps {
   card: GamePageCard | null;
   onClose: () => void;
-}
-
-function CloseIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      height={14}
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeWidth={2.5}
-      viewBox="0 0 24 24"
-      width={14}
-    >
-      <line x1="18" x2="6" y1="6" y2="18" />
-      <line x1="6" x2="18" y1="6" y2="18" />
-    </svg>
-  );
 }
 
 function MusicNoteIcon() {
@@ -73,14 +56,11 @@ export function SongInfoModal({ card, onClose }: SongInfoModalProps) {
               {releaseYear !== undefined ? (
                 <span className={styles.year}>{releaseYear}</span>
               ) : null}
-              <button
-                aria-label={t("game.songInfo.close")}
+              <CloseIconButton
+                ariaLabel={t("game.songInfo.close")}
                 className={styles.closeButton}
-                type="button"
                 onClick={onClose}
-              >
-                <CloseIcon />
-              </button>
+              />
             </div>
             <div className={styles.artwork}>
               {artworkUrl ? (

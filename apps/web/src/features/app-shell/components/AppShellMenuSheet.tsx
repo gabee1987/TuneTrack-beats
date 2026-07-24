@@ -12,7 +12,7 @@ import type {
   AppShellMenuPreferencesState,
   AppShellMenuTab,
 } from "../AppShellMenu.types";
-import { RoomDangerActionButton } from "../../ui/RoomDangerActionButton";
+import { Button } from "../../ui/primitives";
 import { AppShellMenuPanels } from "./AppShellMenuPanels";
 import styles from "../AppShellMenu.module.css";
 
@@ -171,22 +171,25 @@ export function AppShellMenuSheet({
         <footer className={styles.menuFooter}>
           {resolvedFooterActions.map((action, index) =>
             action.tone === "danger" ? (
-              <RoomDangerActionButton
+              <Button
+                fullWidth
                 key={`${action.label}-${index}`}
                 onClick={() => handleFooterActionClick(action)}
                 type="button"
+                variant="danger"
               >
                 {action.label}
-              </RoomDangerActionButton>
+              </Button>
             ) : (
-              <button
-                className={styles.footerActionButton}
+              <Button
+                fullWidth
                 key={`${action.label}-${index}`}
                 onClick={() => handleFooterActionClick(action)}
                 type="button"
+                variant="secondary"
               >
                 {action.label}
-              </button>
+              </Button>
             ),
           )}
         </footer>

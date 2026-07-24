@@ -6,6 +6,8 @@ import { MotionDialogPortal } from "../../../features/motion";
 import { rememberPlayerDisplayName } from "../../../services/session/playerSession";
 import { StatusBanner } from "../../../features/ui/StatusBanner";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
+import { TextInput } from "../../../features/ui/TextInput";
+import { Button, IconButton } from "../../../features/ui/primitives";
 import type { LobbyPageAssemblyProps } from "../LobbyPage.types";
 import { LobbyHostCoreSettings } from "../components/LobbyHostCoreSettings";
 import { LobbyHostTtSettings } from "../components/LobbyHostTtSettings";
@@ -106,10 +108,16 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
     });
   }
 
+  const primaryActionLabel = hasSetupChanges
+    ? t("lobby.setup.apply")
+    : hasStartedJoinError
+      ? t("lobby.setup.gameAlreadyStarted")
+      : identity.isHost
+        ? t("lobby.setup.startGame")
+        : t("lobby.setup.waitingForHost");
+
   return (
     <AppPageShell panelClassName={styles.panelShell} screenClassName={styles.screenShell}>
-      <div className={styles.backgroundOrbs} aria-hidden="true" />
-
       {shell.errorMessage ? <StatusBanner>{shell.errorMessage}</StatusBanner> : null}
 
       <section className={styles.setupScreen} aria-labelledby="lobby-setup-title">
@@ -136,9 +144,8 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
                   }
                 />
               </span>
-              <input
+              <TextInput
                 autoComplete="nickname"
-                className={styles.textInput}
                 maxLength={32}
                 onChange={(event) => setDraftDisplayName(event.target.value)}
                 placeholder={t("lobby.setup.playerNamePlaceholder")}
@@ -159,10 +166,9 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
                   }
                 />
               </span>
-              <input
+              <TextInput
                 autoCapitalize="none"
                 autoComplete="off"
-                className={styles.textInput}
                 inputMode="text"
                 maxLength={24}
                 onChange={(event) => setDraftRoomId(event.target.value)}
@@ -176,43 +182,30 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
           </div>
 
           <div className={styles.setupFooter}>
-            <button
-              className={styles.primaryAction}
+            <Button
               disabled={!canApplySetup || (!identity.isHost && !hasSetupChanges)}
+              fullWidth
+              haptic
               onFocus={identity.preloadGame}
               onMouseEnter={identity.preloadGame}
               onTouchStart={identity.preloadGame}
+              size="lg"
               type="submit"
             >
-              <span className={styles.primaryActionInner}>
-                <span className={styles.primaryActionLabel}>
-                  {hasSetupChanges
-                    ? t("lobby.setup.apply")
-                    : hasStartedJoinError
-                      ? t("lobby.setup.gameAlreadyStarted")
-                      : identity.isHost
-                        ? t("lobby.setup.startGame")
-                        : t("lobby.setup.waitingForHost")}
-                </span>
-              </span>
-            </button>
+              {primaryActionLabel}
+            </Button>
 
-            <button
-              className={styles.moreSettingsButton}
-              onClick={scrollToAdvancedSettings}
-              type="button"
-            >
-              <span>{t("lobby.setup.moreSettings")}</span>
-              <span aria-hidden="true">↓</span>
-            </button>
+            <Button onClick={scrollToAdvancedSettings} type="button" variant="ghost">
+              {t("lobby.setup.moreSettings")} ↓
+            </Button>
           </div>
         </form>
       </section>
 
       <section
+        aria-label={t("lobby.setup.advancedSettingsLabel")}
         className={styles.advancedSection}
         ref={advancedSectionRef}
-        aria-label={t("lobby.setup.advancedSettingsLabel")}
       >
         {hasStartedJoinError ? (
           <SurfaceCard className={styles.waitingCard}>
@@ -255,7 +248,6 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
 
         {roomActions.isHost ? (
           <LobbyRoomActions
-            buttonClassName={styles.dangerAction}
             onCloseRoom={roomActions.onCloseRoom}
             onIntentToStartGame={roomActions.onIntentToStartGame}
             onStartGame={roomActions.onStartGame}
@@ -274,14 +266,14 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
           <>
             <div className={styles.infoHeaderRow}>
               <p className={styles.infoEyebrow}>{t("lobby.info.title")}</p>
-              <button
+              <IconButton
                 aria-label={t("lobby.info.close")}
-                className={styles.infoCloseButton}
                 onClick={() => setInfoContent(null)}
-                type="button"
+                size="sm"
+                variant="ghost"
               >
-                ×
-              </button>
+                <span aria-hidden="true">×</span>
+              </IconButton>
             </div>
             <h2 className={styles.infoTitle}>{infoContent.title}</h2>
             <p className={styles.infoBody}>{infoContent.body}</p>

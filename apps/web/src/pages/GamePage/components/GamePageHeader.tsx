@@ -3,6 +3,7 @@ import { AppShellMenu } from "../../../features/app-shell/AppShellMenu";
 import { useI18n } from "../../../features/i18n";
 import { CardCountAmount } from "../../../features/ui/CardCountAmount";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
+import { Chip, IconButton } from "../../../features/ui/primitives";
 import type { GamePageHeaderModel } from "../GamePage.types";
 import { HeaderLeadersStrip } from "./HeaderLeadersStrip";
 import styles from "../GamePage.module.css";
@@ -51,19 +52,15 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
       <div className={styles.headerMain}>
         <div className={styles.headerChipRow}>
           {showRoomCodeChip ? (
-            <span className={styles.headerChip}>
-              {t("game.header.roomChip", { roomId: roomState.roomId })}
-            </span>
+            <Chip>{t("game.header.roomChip", { roomId: roomState.roomId })}</Chip>
           ) : null}
-          {showPhaseChip ? (
-            <span className={styles.headerChip}>{t(`game.phase.${roomState.status}`)}</span>
-          ) : null}
+          {showPhaseChip ? <Chip>{t(`game.phase.${roomState.status}`)}</Chip> : null}
           {showTurnNumberChip ? (
-            <span className={`${styles.headerChip} ${styles.headerChipTurn}`}>
+            <Chip className={styles.headerChipTurn}>
               {t("game.header.turnChip", {
                 turnNumber: roomState.turn?.turnNumber ?? "-",
               })}
-            </span>
+            </Chip>
           ) : null}
         </div>
       </div>
@@ -100,13 +97,12 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
               ) : null}
             </span>
           </div>
-          <button
+          <IconButton
             aria-label={
               showMiniStandings
                 ? t("game.header.hideLeaderboard")
                 : t("game.header.showLeaderboard")
             }
-            className={styles.headerIconButton}
             onClick={() =>
               updateViewPreferences({
                 showMiniStandings: !showMiniStandings,
@@ -117,7 +113,6 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
                 ? t("game.header.hideLeaderboard")
                 : t("game.header.showLeaderboard")
             }
-            type="button"
           >
             <svg aria-hidden="true" className={styles.headerIcon} fill="none" viewBox="0 0 24 24">
               <path
@@ -149,7 +144,7 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
                 strokeWidth="2"
               />
             </svg>
-          </button>
+          </IconButton>
           <AppShellMenu
             subtitle={t("gameMenu.lobbyNameSubtitle")}
             tabs={menuTabs}

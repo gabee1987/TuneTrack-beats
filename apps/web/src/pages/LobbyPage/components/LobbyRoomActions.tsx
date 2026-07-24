@@ -1,7 +1,6 @@
 import { useI18n } from "../../../features/i18n";
-import { RoomPrimaryActionButton } from "../../../features/ui/RoomPrimaryActionButton";
-import { RoomDangerActionButton } from "../../../features/ui/RoomDangerActionButton";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
+import { Button } from "../../../features/ui/primitives";
 import { LobbySectionHeader } from "./LobbySectionHeader";
 import styles from "../LobbyPage.module.css";
 
@@ -27,24 +26,28 @@ export function LobbyRoomActions({
         title={t("lobby.actions.title")}
       />
       {onStartGame ? (
-        <RoomPrimaryActionButton
+        <Button
           fullWidth
+          haptic
           onClick={onStartGame}
           onFocus={onIntentToStartGame}
           onMouseEnter={onIntentToStartGame}
           onTouchStart={onIntentToStartGame}
+          size="lg"
           type="button"
         >
           {t("lobby.actions.startGame")}
-        </RoomPrimaryActionButton>
+        </Button>
       ) : null}
-      <RoomDangerActionButton
+      <Button
         className={`${styles.cancelRoomButton}${buttonClassName ? ` ${buttonClassName}` : ""}`}
+        fullWidth
         onClick={onCloseRoom}
         type="button"
+        variant="danger"
       >
         {t("lobby.actions.closeRoom")}
-      </RoomDangerActionButton>
+      </Button>
     </SurfaceCard>
   );
 }

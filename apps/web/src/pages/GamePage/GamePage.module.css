@@ -1,13 +1,13 @@
 .screen {
   min-height: 100dvh;
-  padding: 4px;
-  background: linear-gradient(160deg, var(--color-bg-app) 0%, var(--color-bg-app-accent) 100%);
+  padding: var(--space-1);
+  background: var(--color-bg-app);
 }
 
 .panel {
   width: min(100%, 1180px);
   margin: 0 auto;
-  padding: 8px 8px 6px;
+  padding: var(--space-2) var(--space-2) var(--space-1);
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -16,7 +16,7 @@
 .header {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--space-4);
   align-items: flex-start;
   flex-wrap: wrap;
 }
@@ -29,19 +29,19 @@
 .headerChipRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .headerChip {
   display: inline-flex;
   align-items: center;
   min-height: 36px;
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-pill);
   background: var(--color-chip);
   color: var(--color-text-secondary);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-label-weight);
 }
 
 .headerChipTurn {
@@ -52,28 +52,28 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 8px;
+  gap: var(--space-2);
   min-width: 220px;
 }
 
 .headerActionRow {
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   align-items: center;
   flex-wrap: wrap;
   justify-content: flex-end;
-  padding-top: 4px;
+  padding-top: var(--space-1);
 }
 
 .headerIconButton {
   border: 0;
-  border-radius: var(--radius-pill);
-  width: 44px;
-  height: 44px;
+  border-radius: var(--radius-circle);
+  width: var(--size-touch-target);
+  height: var(--size-touch-target);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-chip);
+  background: var(--color-surface-interactive);
   color: var(--color-text-primary);
   cursor: pointer;
   outline: 1px solid var(--color-border-subtle);
@@ -86,14 +86,14 @@
 
 .title {
   margin: 0;
-  font-size: 32px;
+  font-size: var(--type-title-lg-size);
   letter-spacing: -0.04em;
 }
 
 .meta,
 .cardMeta,
 .genre {
-  margin: 8px 0 0;
+  margin: var(--space-2) 0 0;
   color: var(--color-text-secondary);
 }
 
@@ -101,18 +101,19 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2);
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-pill);
-  background: var(--color-chip);
-  font-size: 13px;
+  background: var(--color-surface-interactive);
+  outline: 1px solid var(--color-border-subtle);
+  font-size: var(--type-caption-size);
   font-weight: 700;
   overflow: visible;
 }
 
 .statusBadgeLeading {
-  padding-left: 14px;
+  padding-left: var(--space-3);
 }
 
 .statusBadgeCrown {
@@ -137,30 +138,30 @@
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
+  gap: var(--space-2);
   flex: 0 0 auto;
   color: var(--color-text-primary);
-  font-size: 14px;
+  font-size: var(--type-body-size);
   font-weight: 800;
 }
 
 .statusBadgeCounter {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   line-height: 1;
 }
 
 .statusBadgeCounterSeparator {
   color: var(--color-text-muted);
-  font-size: 13px;
+  font-size: var(--type-caption-size);
   line-height: 1;
 }
 
 .statusBadgeHostText {
   flex: 0 0 auto;
-  color: color-mix(in srgb, #ffb26b 72%, var(--color-text-primary));
-  font-size: 11px;
+  color: var(--color-accent-brand);
+  font-size: var(--type-micro-size);
   font-weight: 800;
   line-height: 1;
   text-transform: uppercase;
@@ -176,12 +177,12 @@
   color: var(--color-text-secondary);
   text-align: right;
   line-height: 1.35;
-  font-size: 13px;
+  font-size: var(--type-caption-size);
 }
 
 .headerLeadersStrip {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   overflow-x: auto;
   max-width: 100%;
   scrollbar-width: none;
@@ -199,36 +200,36 @@
 .headerLeaderChip {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-pill);
-  background: var(--color-chip);
+  background: var(--color-surface-interactive);
+  outline: 1px solid var(--color-border-subtle);
   white-space: nowrap;
 }
 
 .headerLeaderRank {
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: var(--type-micro-size);
 }
 
 .headerLeaderName {
-  font-size: 12px;
+  font-size: var(--type-caption-size);
 }
 
 .headerLeaderMeta {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   color: var(--color-text-primary);
-  font-size: 11px;
+  font-size: var(--type-micro-size);
 }
 
 .headerLeaderCardCount {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  /* line-height: 1; */
 }
 
 .menuInfoSection {
@@ -854,15 +855,10 @@
   place-items: center;
   width: 96px;
   height: 96px;
-  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 78%, transparent);
-  border-radius: 24px;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, white 10%, transparent), transparent 58%),
-    color-mix(in srgb, var(--color-surface-elevated) 82%, transparent);
-  color: color-mix(in srgb, var(--color-text-secondary) 86%, white 14%);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white 12%, transparent),
-    0 12px 28px color-mix(in srgb, black 18%, transparent);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-interactive);
+  color: var(--color-text-secondary);
 }
 
 .playbackArtworkImg {
@@ -897,20 +893,20 @@
   aspect-ratio: 1;
   border-radius: 50%;
   border: none;
-  background: #1db954;
-  color: #000;
+  background: var(--color-accent-brand);
+  color: var(--color-on-accent-brand);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition:
-    background 0.15s,
-    transform 0.1s;
+    background var(--motion-quick-duration) var(--motion-ease-standard),
+    transform var(--motion-quick-duration) var(--motion-ease-standard);
   padding: 16px;
 }
 
 .playbackCircleBtn:hover:not(:disabled) {
-  background: #1ed760;
+  background: var(--color-accent-brand-hover);
 }
 
 .playbackCircleBtn:active:not(:disabled) {
