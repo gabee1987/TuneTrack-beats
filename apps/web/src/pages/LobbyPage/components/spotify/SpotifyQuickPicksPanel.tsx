@@ -9,7 +9,7 @@ import { useAppLoading } from "../../../../features/loading";
 import { TextInput } from "../../../../features/ui/TextInput";
 import { SpotifyCandidateReviewPanel } from "./SpotifyCandidateReviewPanel";
 import type { LobbySpotifyState } from "./spotifySetupTypes";
-import styles from "./LobbySpotifySection.module.css";
+import styles from "./spotifyStyles";
 
 export function SpotifyQuickPicksPanel({
   currentSettings,

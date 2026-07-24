@@ -15,7 +15,7 @@ import { ChallengeActionPanel } from "./ChallengeActionPanel";
 import { FinishedStatePanel } from "./FinishedStatePanel";
 import { RevealActionDock } from "./RevealActionDock";
 import { TurnActionDock } from "./TurnActionDock";
-import styles from "./GamePageActionPanels.module.css";
+import styles from "./gamePageActionPanelsStyles";
 
 interface GamePageActionPanelsProps {
   model: GamePageActionPanelsModel;

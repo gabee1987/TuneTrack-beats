@@ -3,7 +3,7 @@ import { useI18n } from "../../../features/i18n";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { LobbyPlayerListItem } from "./LobbyPlayerListItem";
 import { LobbySectionHeader } from "./LobbySectionHeader";
-import styles from "../LobbyPage.module.css";
+import styles from "../lobbyPageStyles";
 
 interface LobbyPlayerListProps {
   currentPlayerId: string | null;

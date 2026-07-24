@@ -2,7 +2,7 @@
 
 > **Purpose**: Define a robust, token-driven, Spotify-inspired flat design system and a phased plan to overhaul the TuneTrack UI without regressing performance, features, or code quality.
 >
-> **Status**: Implementation in progress. Phases 0–5 complete; Phase 6 polish/a11y in progress.
+> **Status**: Phases 0–6 complete. Phase 7 (desktop visual pass) is deferred.
 
 ---
 
@@ -522,6 +522,14 @@ Each phase ends at a **validation gate**: build + verify green, visual review on
 - Remove dead styles/tokens; audit contrast (AA) both themes; verify reduced-motion paths; safe-area + orientation sweep; device-range spot checks (SE → large Android).
 - Confirm file-size limits; extract any CSS module that grew.
 
+**Done**
+
+- Split oversized CSS modules under the 500-line hard limit (`LobbySpotifySection`, `TimelinePanel`, `GamePage`, `LobbyPage`, action panels, playlist editor) via domain partials + `*Styles.ts` mergers.
+- Pruned unused legacy semantic tokens (kept documented `color-success` / `color-info` contract keys).
+- Normalized safe-area usage to `--safe-area-*` aliases.
+- Light-theme contrast fixes (info modals, toggles, playlist edit meta, pleasant light palette).
+- Quick Picks selected-song append/replace; reduced-motion coverage for Spotify panels/haptics.
+
 **Validation gate**
 
 - Full regression pass; a11y checks; `verify`/`build` green; docs updated.
@@ -530,11 +538,13 @@ Each phase ends at a **validation gate**: build + verify green, visual review on
 
 Out of scope for this overhaul. Desktop already consumes tokens; a dedicated effort later gives desktop richer layouts without touching mobile.
 
-### Post-overhaul follow-ups (do not forget)
+### Post-overhaul follow-ups
 
-1. **Quick Picks selected-song add/replace** — ✅ Done in Phase 6: selecting songs in the review list applies only that selection (append/replace), otherwise the full generated set is used.
-2. **CSS module splits** — Still open: extract oversized modules (`LobbySpotifySection`, `TimelinePanel`, `GamePage`, `LobbyPage`, action panels) below the 500-line hard limit.
-3. **Dead token prune** — Still open: remove unused semantic tokens after a final reference audit.
+1. **Quick Picks selected-song add/replace** — ✅ Done in Phase 6.
+2. **CSS module splits** — ✅ Done in Phase 6 (all former 500+ line modules split).
+3. **Dead token prune** — ✅ Done in Phase 6 (legacy unused semantic tokens removed; design-system success/info kept).
+4. **Remaining hex hardcodes** — Optional polish: migrate leftover brand/status hex in Spotify badges, AppShellMenu, RoomPrimaryActionButton to tokens where contrast pairs allow.
+5. **Device-range spot checks** — Manual: SE → large Android, portrait + landscape, dark + light.
 
 ---
 

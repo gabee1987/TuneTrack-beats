@@ -1,0 +1,329 @@
+.timelineCelebrationLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.timelineCelebrationBurst {
+  position: absolute;
+  width: min(72vw, 520px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  opacity: 0.9;
+  animation: timelineCelebrationBurstPulse 1.9s ease-out both;
+}
+
+.timelineCelebrationBurstSuccess {
+  background:
+    radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-accent-brand) 42%, transparent) 0%,
+      color-mix(in srgb, var(--color-accent-brand) 12%, transparent) 42%,
+      transparent 70%
+    );
+}
+
+.timelineCelebrationBurstFailure {
+  background:
+    radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-danger) 38%, transparent) 0%,
+      color-mix(in srgb, var(--color-danger) 12%, transparent) 42%,
+      transparent 70%
+    );
+}
+
+.timelineCelebrationMessage {
+  position: relative;
+  z-index: 1;
+  padding: var(--space-4) var(--space-6);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-primary);
+  font-size: clamp(22px, 3.4vw, 36px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  box-shadow:
+    0 18px 48px color-mix(in srgb, black 36%, transparent),
+    var(--shadow-overlay);
+  transform-origin: center center;
+  will-change: transform, opacity;
+  text-align: center;
+}
+
+.timelineCelebrationMessageSuccess {
+  background: color-mix(in srgb, var(--color-accent-brand) 42%, var(--color-surface-elevated-solid));
+  outline: 2px solid color-mix(in srgb, var(--color-accent-brand) 72%, white 12%);
+  color: var(--color-on-accent-brand);
+}
+
+.timelineCelebrationMessageFailure {
+  background: color-mix(in srgb, var(--color-danger) 34%, var(--color-surface-elevated-solid));
+  outline: 2px solid color-mix(in srgb, var(--color-danger) 68%, white 10%);
+}
+
+.correctPlacementShell {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  transform-origin: center center;
+  will-change: transform, opacity, filter;
+}
+
+.correctPlacementFill {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  overflow: hidden;
+  transform-origin: center center;
+  background-color: var(--color-surface-elevated-solid);
+  background-image: var(--card-gradient);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  box-shadow: var(--shadow-game-card-base);
+  will-change: transform, opacity, filter;
+}
+
+.correctPlacementShellContent {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  padding: var(--space-4) var(--space-3);
+  text-align: center;
+  will-change: transform, opacity;
+}
+
+.correctPlacementFill::before {
+  content: none;
+}
+
+.correctPlacementContent {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 16px 14px;
+  text-align: center;
+  will-change: transform, opacity;
+}
+
+.correctPlacementDecorativeStars {
+  position: absolute;
+  inset: -20%;
+  z-index: 7;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.correctPlacementDecorativeStar {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--correct-placement-decorative-star-size, 20px);
+  height: var(--correct-placement-decorative-star-size, 20px);
+  margin-left: calc(var(--correct-placement-decorative-star-size, 20px) * -0.5);
+  margin-top: calc(var(--correct-placement-decorative-star-size, 20px) * -0.5);
+  clip-path: polygon(
+    50% 0%,
+    61% 33%,
+    98% 35%,
+    69% 57%,
+    79% 91%,
+    50% 71%,
+    21% 91%,
+    31% 57%,
+    2% 35%,
+    39% 33%
+  );
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+.correctPlacementDecorativeStarViolet {
+  background: var(--color-accent-brand);
+}
+
+.correctPlacementDecorativeStarPink {
+  background: color-mix(in srgb, var(--color-accent-brand) 72%, white);
+}
+
+.correctPlacementDecorativeStarGold {
+  background: var(--color-warning);
+}
+
+@media (prefers-reduced-motion: reduce) {
+.timelineCelebrationBurst {
+    animation: none;
+    opacity: 0.55;
+    transform: scale(1);
+  }
+}
+
+
+@media (orientation: portrait) and (max-width: 720px) {
+.correctPlacementContent {
+    gap: 4px;
+    padding: 10px 9px;
+  }
+
+.correctPlacementShellContent {
+    gap: 4px;
+    padding: 10px 9px;
+  }
+
+.correctPlacementDecorativeStars {
+    inset: -18%;
+  }
+}
+
+
+@keyframes timelineCelebrationBurstPulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+
+  28% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+}
+
+@keyframes correctPlacementBeat {
+  0% {
+    transform: perspective(1040px) translateZ(0) scale(1);
+    filter: saturate(1) brightness(1);
+  }
+
+  38% {
+    transform: perspective(1040px) translateZ(74px) scale(1.11);
+    filter: saturate(1.16) brightness(1.18);
+  }
+
+  58% {
+    transform: perspective(1040px) translateZ(32px) scale(1.045);
+    filter: saturate(1.08) brightness(1.1);
+  }
+
+  100% {
+    transform: perspective(1040px) translateZ(0) scale(1);
+    filter: saturate(1) brightness(1);
+  }
+}
+
+@keyframes correctPlacementBurst {
+  0% {
+    opacity: 0;
+    transform: scale(0.76) rotate(-8deg);
+  }
+
+  36% {
+    opacity: 0.88;
+    transform: scale(1.06) rotate(0deg);
+  }
+
+  62% {
+    opacity: 0.5;
+    transform: scale(1.2) rotate(4deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.38) rotate(8deg);
+  }
+}
+
+@keyframes correctPlacementBorderSweep {
+  0% {
+    opacity: 0;
+    transform: rotate(0deg) scale(1);
+  }
+
+  46% {
+    opacity: 0;
+    transform: rotate(0deg) scale(1);
+  }
+
+  70% {
+    opacity: 0.92;
+    transform: rotate(52deg) scale(1.005);
+  }
+
+  86% {
+    opacity: 1;
+    transform: rotate(102deg) scale(1.008);
+  }
+
+  100% {
+    opacity: 0;
+    transform: rotate(126deg) scale(1.01);
+  }
+}
+
+@keyframes currentPickBorderRotate {
+  to {
+    --current-pick-angle: 360deg;
+  }
+}
+
+@keyframes currentPickBorderPulse {
+  to {
+    --current-pick-opacity: 0.96;
+  }
+}
+
+@keyframes currentPickGlowPulse {
+  0% {
+    opacity: 0.1;
+  }
+
+  100% {
+    opacity: 0.88;
+  }
+}
+
+@keyframes hiddenCardMysteryGlow {
+  0% {
+    opacity: 0.44;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+
+  100% {
+    opacity: 0.88;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+}
+
+@property --current-pick-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@property --current-pick-opacity {
+  syntax: "<number>";
+  initial-value: 0.58;
+  inherits: false;
+}

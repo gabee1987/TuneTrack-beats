@@ -2,7 +2,7 @@ import { BottomSheet } from "../../../features/ui/BottomSheet";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { useI18n } from "../../../features/i18n";
 import type { AdaptiveSelectOption } from "./AdaptiveSelect";
-import styles from "../LobbyPage.module.css";
+import styles from "../lobbyPageStyles";
 
 interface AdaptiveSelectSheetProps {
   label: string;

@@ -6,7 +6,7 @@ import {
   useReducedMotionPreference,
 } from "../../../features/motion";
 import type { TimelinePanelHeaderModel } from "../GamePage.types";
-import styles from "./TimelinePanel.module.css";
+import styles from "./timelineStyles";
 
 interface TimelinePanelHeaderProps {
   model: TimelinePanelHeaderModel;

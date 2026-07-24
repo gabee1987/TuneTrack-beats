@@ -11,7 +11,7 @@ import {
 } from "../../../features/motion";
 import type { GamePageCard } from "../GamePage.types";
 import { PreviewCard } from "./PreviewCard";
-import styles from "./TimelinePanel.module.css";
+import styles from "./timelineStyles";
 
 interface TimelinePanelFlyAnimationProps {
   flyAnimationState:

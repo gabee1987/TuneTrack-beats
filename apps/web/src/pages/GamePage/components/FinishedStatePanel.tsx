@@ -1,7 +1,7 @@
 import type { PublicRoomState } from "@tunetrack/shared";
 import { useI18n } from "../../../features/i18n";
 import type { GamePagePlayerNameResolver } from "../GamePage.types";
-import styles from "./GamePageActionPanels.module.css";
+import styles from "./gamePageActionPanelsStyles";
 
 interface FinishedStatePanelProps {
   currentPlayerId: string | null;

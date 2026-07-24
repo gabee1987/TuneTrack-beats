@@ -1,0 +1,10 @@
+.spotifyStatusLine {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.spotifyStatusError {
+  color: var(--color-status-danger-text);
+}

@@ -11,7 +11,7 @@ import {
 import { useI18n } from "../../../../features/i18n";
 import { CloseIconButton } from "../../../../features/ui/CloseIconButton";
 import type { LobbySpotifyState, SpotifySetupSource } from "./spotifySetupTypes";
-import styles from "./LobbySpotifySection.module.css";
+import styles from "./spotifyStyles";
 
 const SpotifyPlaylistSearchPanel = lazy(async () => {
   const module = await import("./SpotifyPlaylistSearchPanel");

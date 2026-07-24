@@ -2,7 +2,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import type { PublicTrackInfo } from "@tunetrack/shared";
 import { useRef } from "react";
 import { PlaylistTrackRow } from "./PlaylistTrackRow";
-import styles from "./PlaylistEditModal.module.css";
+import styles from "./playlistEditModalStyles";
 
 interface PlaylistTrackListProps {
   canSelect?: boolean;

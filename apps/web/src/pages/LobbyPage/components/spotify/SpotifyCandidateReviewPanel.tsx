@@ -10,7 +10,7 @@ import { ActionButton } from "../../../../features/ui/ActionButton";
 import { PlaylistTrackDetailsSheet } from "../PlaylistTrackDetailsSheet";
 import { PlaylistTrackList } from "../PlaylistTrackList";
 import type { LobbySpotifyState } from "./spotifySetupTypes";
-import styles from "./LobbySpotifySection.module.css";
+import styles from "./spotifyStyles";
 
 interface SpotifyCandidateReviewPanelProps {
   backLabel?: string;

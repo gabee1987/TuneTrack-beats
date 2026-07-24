@@ -10,7 +10,7 @@ import { PlaylistTrackDetailsSheet } from "../PlaylistTrackDetailsSheet";
 import { BackIcon, PlusIcon, ReplaceIcon, SpotifyLogo } from "./spotifySetupIcons";
 import { SpotifyOpenedTrackRow } from "./SpotifyOpenedTrackRow";
 import type { OpenedSpotifyPlaylist } from "../../hooks/spotify/lobbySpotify.types";
-import styles from "./LobbySpotifySection.module.css";
+import styles from "./spotifyStyles";
 
 interface SpotifyOpenedPlaylistPanelProps {
   onAddAll: () => void;

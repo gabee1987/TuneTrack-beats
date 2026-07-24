@@ -19,8 +19,6 @@
   overflow: hidden;
 }
 
-/* ── Header ── */
-
 .header {
   display: flex;
   align-items: center;
@@ -69,276 +67,6 @@
   outline-color: color-mix(in srgb, var(--color-accent-brand) 58%, white 20%);
   color: var(--color-text-primary);
 }
-
-/* ── Sort bar ── */
-
-.sortBar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 18px;
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--color-border-subtle);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.sortBar::-webkit-scrollbar {
-  display: none;
-}
-
-.sortLabel {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--color-text-secondary);
-  flex-shrink: 0;
-  margin-right: 2px;
-}
-
-.sortChip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  flex-shrink: 0;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-button);
-  min-height: 44px;
-  padding: 0 15px;
-  font-size: 14px;
-  font-weight: 800;
-  background: color-mix(in srgb, var(--color-surface-elevated) 72%, transparent);
-  color: var(--color-text-primary);
-  cursor: pointer;
-  transition:
-    background 0.12s,
-    color 0.12s,
-    border-color 0.12s;
-}
-
-.sortChip:hover {
-  color: var(--color-text-primary);
-}
-
-.sortChipActive {
-  background: color-mix(in srgb, var(--color-surface-elevated) 80%, transparent);
-  color: var(--color-text-primary);
-}
-
-.sortArrow {
-  font-size: 11px;
-  opacity: 0.7;
-}
-
-/* ── List scroll area ── */
-
-.listScrollArea {
-  flex: 1;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.listScrollArea::-webkit-scrollbar {
-  display: none;
-}
-
-/* Divider between rows */
-.listScrollArea > div > div + div {
-  border-top: 1px solid var(--color-border-subtle);
-}
-
-/* ── Track rows ── */
-
-.trackRowWrapper {
-  position: relative;
-  overflow: hidden;
-  height: 100%;
-}
-
-.deleteZone {
-  position: absolute;
-  right: 0;
-  top: 0;
-  height: 100%;
-  /* width is driven by the motion value — right edge stays pinned, left edge grows */
-  background: #dc2626;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  overflow: hidden;
-}
-
-.trackRow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 0 18px;
-  height: 100%;
-  border: none;
-  background: transparent;
-  touch-action: pan-y;
-  user-select: none;
-  cursor: default;
-  position: relative;
-  z-index: 1;
-  text-align: left;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.trackRowSelected {
-  background: transparent;
-}
-
-.trackOpenButton {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-  flex: 1;
-  height: 100%;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  text-align: left;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.trackOpenButton:active {
-  background: transparent;
-}
-
-.trackOpenButton:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--color-accent-brand) 62%, white 16%);
-  outline-offset: 3px;
-  border-radius: 8px;
-}
-
-/* ── Track info ── */
-
-.trackInfo {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.trackTitle {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.trackMeta {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.trackBadges {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 5px;
-  max-width: 88px;
-  flex-shrink: 0;
-}
-
-.trackBadgeIcon {
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--color-surface-elevated) 72%, transparent);
-  color: var(--color-text-secondary);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.trackBadgeVerified {
-  background: color-mix(in srgb, var(--color-status-connected-surface) 28%, transparent);
-  color: var(--color-text-primary);
-}
-
-.trackBadgeWarning {
-  background: color-mix(in srgb, var(--color-warning) 18%, transparent);
-  color: var(--color-warning);
-}
-
-/* ── Loading / Empty / Error states ── */
-
-.loadingState,
-.emptyState,
-.errorState {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  color: var(--color-text-secondary);
-  font-size: 14px;
-  padding: 40px 24px;
-  text-align: center;
-}
-
-.loadingSpinner {
-  width: 28px;
-  height: 28px;
-  border: 3px solid var(--color-border-subtle);
-  border-top-color: var(--color-text-secondary);
-  border-radius: 50%;
-  animation: spin 0.75s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* ── Batch selection toolbar ── */
-
-.batchToolbar {
-  flex-shrink: 0;
-  padding: 12px 18px;
-  padding-bottom: calc(12px + var(--safe-area-bottom));
-  border-top: 1px solid var(--color-border-subtle);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.batchCount {
-  flex: 1;
-  font-size: 14px;
-  color: var(--color-text-secondary);
-}
-
-.batchDeleteBtn {
-  min-height: 48px;
-  padding: 0 20px;
-}
-
-.batchDeleteBtn:active {
-  opacity: 0.85;
-}
-
-/* ── Track details ── */
 
 .detailsOverlay {
   position: absolute;
@@ -558,49 +286,33 @@
 }
 
 @media (max-width: 520px) {
-  .trackBadges {
-    max-width: 58px;
-  }
-
-  .trackBadgeIcon {
-    width: 22px;
-    height: 22px;
-  }
-
-  .header {
-    padding-inline: 14px;
-  }
-
-  .sortBar {
-    padding-inline: 14px;
-  }
-
-  .trackRow {
-    padding-inline: 14px;
-  }
-
-  .detailsSheet {
-    width: 100%;
-    border-left: none;
-  }
+.header {
+  padding-inline: 14px;
 }
 
+.detailsSheet {
+  width: 100%;
+    border-left: none;
+}
+}
+
+
 @media (max-height: 700px) {
-  .detailsEyebrow {
-    display: none;
-  }
+.detailsEyebrow {
+  display: none;
+}
 
-  .detailsArtworkRow {
-    padding-block: 9px;
-  }
+.detailsArtworkRow {
+  padding-block: 9px;
+}
 
-  .detailsArtwork {
-    width: 48px;
+.detailsArtwork {
+  width: 48px;
     height: 48px;
-  }
+}
 
-  .detailsFields {
-    gap: 8px;
+.detailsFields {
+  gap: 8px;
     padding-block: 10px;
-  }
+}
 }

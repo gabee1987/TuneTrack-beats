@@ -4,7 +4,7 @@
   z-index: 1600;
   display: grid;
   place-items: center;
-  padding: max(22px, env(safe-area-inset-top)) 22px max(22px, env(safe-area-inset-bottom));
+  padding: max(22px, var(--safe-area-top)) 22px max(22px, var(--safe-area-bottom));
   background:
     radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--color-border-spotify) 18%, transparent), transparent 34%),
     color-mix(in srgb, #050711 78%, transparent);

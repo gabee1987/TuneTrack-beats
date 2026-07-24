@@ -1,6 +1,6 @@
 import { useI18n } from "../../../features/i18n";
 import { Button } from "../../../features/ui/primitives";
-import styles from "../LobbyPage.module.css";
+import styles from "../lobbyPageStyles";
 
 interface LobbyHostStartPanelProps {
   onIntentToStart: () => void;

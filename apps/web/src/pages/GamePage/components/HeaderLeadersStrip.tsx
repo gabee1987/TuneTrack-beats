@@ -7,7 +7,7 @@ import {
 import { CardCountAmount } from "../../../features/ui/CardCountAmount";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import type { GamePageHeaderModel } from "../GamePage.types";
-import styles from "../GamePage.module.css";
+import styles from "../gamePageStyles";
 
 type HeaderLeadersStripProps = Pick<GamePageHeaderModel, "leadingPlayers" | "roomState"> & {
   show: boolean;

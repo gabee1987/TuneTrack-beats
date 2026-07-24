@@ -1,6 +1,6 @@
 import type { Translate } from "../../../features/i18n";
 import type { GameHistoryEntry } from "../hooks/useGameHistory";
-import styles from "../GamePage.module.css";
+import styles from "../gamePageStyles";
 
 interface HistoryTabContentProps {
   entries: GameHistoryEntry[];

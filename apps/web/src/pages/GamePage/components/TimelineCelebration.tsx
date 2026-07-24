@@ -5,7 +5,7 @@ import {
   createTimelineCelebrationTransition,
   useReducedMotionPreference,
 } from "../../../features/motion";
-import styles from "./TimelinePanel.module.css";
+import styles from "./timelineStyles";
 
 interface TimelineCelebrationProps {
   message: string;

@@ -11,8 +11,8 @@ import { useLobbySpotify } from "../../hooks/spotify/useLobbySpotify";
 import { SpotifyLogo } from "./spotifySetupIcons";
 import { SpotifySetupModal } from "./SpotifySetupModal";
 import type { SpotifySetupSource } from "./spotifySetupTypes";
-import lobbyStyles from "../../LobbyPage.module.css";
-import styles from "./LobbySpotifySection.module.css";
+import lobbyStyles from "../../lobbyPageStyles";
+import styles from "./spotifyStyles";
 
 interface LobbySpotifySectionProps {
   currentSettings: PublicRoomSettings;

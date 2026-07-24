@@ -35,7 +35,7 @@ import { TimelinePanelFlyAnimation } from "./TimelinePanelFlyAnimation";
 import { TimelinePanelHeader } from "./TimelinePanelHeader";
 import { TimelinePanelItems } from "./TimelinePanelItems";
 import { PreviewCard } from "./PreviewCard";
-import styles from "./TimelinePanel.module.css";
+import styles from "./timelineStyles";
 
 interface TimelinePanelProps {
   model: TimelinePanelModel;

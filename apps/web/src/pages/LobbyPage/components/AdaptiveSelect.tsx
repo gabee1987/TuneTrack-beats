@@ -5,7 +5,7 @@ import { ActionButton } from "../../../features/ui/ActionButton";
 import { SelectInput } from "../../../features/ui/SelectInput";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import { AdaptiveSelectSheet } from "./AdaptiveSelectSheet";
-import styles from "../LobbyPage.module.css";
+import styles from "../lobbyPageStyles";
 
 export interface AdaptiveSelectOption {
   label: string;

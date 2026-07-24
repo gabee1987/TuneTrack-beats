@@ -5,7 +5,6 @@ export const lightThemeDefinition: ThemeDefinition = {
   cssVariables: {
     // Soft cool paper — mint/sky wash, not flat white
     "color-bg-app": "#e8eef4",
-    "color-bg-app-accent": "#e4f3ec",
     "gradient-app-background":
       "radial-gradient(ellipse 90% 70% at 12% -10%, rgba(29, 185, 84, 0.14), transparent 52%), radial-gradient(ellipse 80% 60% at 92% 8%, rgba(91, 140, 255, 0.16), transparent 48%), linear-gradient(165deg, #e8eef4 0%, #eef6f2 48%, #e6edf6 100%)",
 
@@ -16,21 +15,17 @@ export const lightThemeDefinition: ThemeDefinition = {
     "color-surface-interactive": "rgba(36, 54, 72, 0.1)",
     "color-surface-soft": "rgba(36, 54, 72, 0.06)",
     "color-surface-strong": "#ffffff",
-    "color-card": "#ffffff",
     "color-chip": "rgba(36, 54, 72, 0.1)",
     "color-overlay": "rgba(232, 238, 244, 0.78)",
     "color-overlay-strong": "rgba(28, 40, 56, 0.42)",
     "color-border-subtle": "rgba(36, 54, 72, 0.16)",
     "color-surface-outline-soft": "rgba(36, 54, 72, 0.08)",
-    "color-surface-outline-strong": "rgba(36, 54, 72, 0.14)",
     "color-divider": "rgba(36, 54, 72, 0.1)",
 
     // Text
     "color-text-primary": "#182230",
     "color-text-secondary": "rgba(24, 34, 48, 0.72)",
     "color-text-muted": "rgba(24, 34, 48, 0.58)",
-    "color-text-on-accent": "#182230",
-    "color-text-on-dark-surface": "#ffffff",
 
     // Accent and feedback
     "color-accent-primary": "linear-gradient(135deg, #3d8bfd 0%, #1db954 100%)",
@@ -52,7 +47,6 @@ export const lightThemeDefinition: ThemeDefinition = {
     "color-info": "#1d4ed8",
 
     "color-accent-danger": "rgba(220, 38, 38, 0.1)",
-    "color-accent-success": "rgba(29, 185, 84, 0.14)",
     "color-focus-ring": "rgba(29, 185, 84, 0.55)",
     "color-status-connected-surface": "rgba(29, 185, 84, 0.16)",
     "color-status-connected-text": "#0a6b46",
@@ -74,21 +68,12 @@ export const lightThemeDefinition: ThemeDefinition = {
       "radial-gradient(circle at top left, rgba(91, 140, 255, 0.12), transparent 26%), radial-gradient(circle at bottom right, rgba(29, 185, 84, 0.1), transparent 24%), rgba(255, 255, 255, 0.55)",
     "gradient-lobby-shell-background-mobile":
       "radial-gradient(circle at top left, rgba(91, 140, 255, 0.09), transparent 26%), radial-gradient(circle at bottom right, rgba(29, 185, 84, 0.08), transparent 24%), transparent",
-    "gradient-surface-sheen":
-      "linear-gradient(135deg, rgba(255, 255, 255, 0.55), transparent 45%), linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 65%)",
     "gradient-hidden-card-preview-artwork":
       "radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.42), transparent 30%), radial-gradient(circle at 80% 0%, rgba(91, 140, 255, 0.28), transparent 34%), linear-gradient(135deg, rgba(91, 140, 255, 0.55) 0%, rgba(29, 185, 84, 0.42) 100%)",
-    "gradient-hidden-card-preview-surface":
-      "linear-gradient(145deg, #e7eef5 0%, #f2f6f9 55%, #ffffff 100%)",
     "gradient-card-hidden":
       "linear-gradient(145deg, #e7eef5 0%, #f2f6f9 55%, #ffffff 100%)",
     "gradient-card-artwork-scrim":
       "linear-gradient(180deg, rgba(20, 28, 40, 0.12) 0%, rgba(20, 28, 40, 0.28) 42%, rgba(20, 28, 40, 0.78) 100%)",
-
-    // Slider and toggle controls
-    "color-slider-track": "rgba(36, 54, 72, 0.14)",
-    "color-slider-thumb": brandAccent.light.base,
-    "color-slider-thumb-border": "rgba(255, 255, 255, 0.92)",
 
     // Game UI
     "color-mask-solid": "#e8eef4",
@@ -100,29 +85,22 @@ export const lightThemeDefinition: ThemeDefinition = {
     "color-game-card-draggable-outline": "var(--color-accent-brand)",
     "color-game-card-correction-outline": "color-mix(in srgb, var(--color-danger) 82%, transparent)",
     "color-game-preview-scrim": "rgba(232, 238, 244, 0.52)",
-    "gradient-game-preview-surface":
-      "linear-gradient(160deg, rgba(255, 255, 255, 0.48) 0%, rgba(255, 255, 255, 0.14) 100%), var(--gradient-card-hidden)",
     "gradient-game-preview-correction-surface":
       "linear-gradient(135deg, color-mix(in srgb, var(--color-danger) 18%, transparent) 0%, color-mix(in srgb, var(--color-warning) 12%, transparent) 100%)",
     "color-game-meta-pill-background": "rgba(24, 34, 48, 0.08)",
     "color-game-meta-pill-text": "#182230",
     "color-game-artist-text": "rgba(24, 34, 48, 0.86)",
     "color-game-album-text": "rgba(24, 34, 48, 0.72)",
-    "gradient-floating-primary-action": "var(--color-accent-brand)",
-    "color-floating-secondary-action-background": "var(--color-surface-interactive)",
 
     // Shadows
     "shadow-surface": "0 18px 48px rgba(36, 54, 72, 0.1)",
     "shadow-form-card": "0 14px 36px rgba(36, 54, 72, 0.1)",
     "shadow-slider-thumb": "0 4px 12px rgba(36, 54, 72, 0.14)",
     "shadow-slider-thumb-active": "0 6px 16px rgba(36, 54, 72, 0.16)",
-    "shadow-game-drop-slot": "var(--shadow-raised)",
-    "shadow-game-drop-slot-hover": "var(--shadow-raised)",
     "shadow-game-card-base": "var(--shadow-raised)",
     "shadow-game-card-correct":
       "0 0 0 2px color-mix(in srgb, var(--color-accent-brand) 24%, transparent)",
     "shadow-game-preview-card": "var(--shadow-overlay)",
-    "shadow-floating-action": "var(--shadow-raised)",
 
     "shadow-none": "none",
     "shadow-raised": "0 2px 12px rgba(36, 54, 72, 0.08)",

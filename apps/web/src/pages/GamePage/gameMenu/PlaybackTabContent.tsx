@@ -1,7 +1,7 @@
 import { type PublicRoomState } from "@tunetrack/shared";
 import type { Translate } from "../../../features/i18n";
 import { useHostPlaybackContext } from "../hooks/HostPlaybackProvider";
-import styles from "../GamePage.module.css";
+import styles from "../gamePageStyles";
 
 interface PlaybackTabContentProps {
   roomState: PublicRoomState;

@@ -12,7 +12,7 @@ import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { usePlaylistEditor, type SortField } from "../hooks/usePlaylistEditor";
 import { PlaylistTrackDetailsSheet } from "./PlaylistTrackDetailsSheet";
 import { PlaylistTrackList } from "./PlaylistTrackList";
-import styles from "./PlaylistEditModal.module.css";
+import styles from "./playlistEditModalStyles";
 
 interface PlaylistEditModalProps {
   isOpen: boolean;

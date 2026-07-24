@@ -5,7 +5,7 @@ import { TextInput } from "../../../../features/ui/TextInput";
 import { AdaptiveSelect } from "../AdaptiveSelect";
 import { SpotifyLogo } from "./spotifySetupIcons";
 import type { LobbySpotifyState } from "./spotifySetupTypes";
-import styles from "./LobbySpotifySection.module.css";
+import styles from "./spotifyStyles";
 
 interface SpotifySetupContentProps {
   currentSettings: PublicRoomSettings;

@@ -1,7 +1,7 @@
 import { Badge } from "../../../features/ui/Badge";
 import { useI18n } from "../../../features/i18n";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
-import styles from "../LobbyPage.module.css";
+import styles from "../lobbyPageStyles";
 
 interface LobbySummaryCardProps {
   displayName: string;

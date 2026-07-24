@@ -2,7 +2,7 @@ import { type PublicRoomState } from "@tunetrack/shared";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import type { Translate } from "../../../features/i18n";
 import type { GameHistoryEntry } from "../hooks/useGameHistory";
-import styles from "../GamePage.module.css";
+import styles from "../gamePageStyles";
 import { GameMenuPlayerItem } from "./GameMenuPlayerItem";
 import { HistoryTabContent } from "./HistoryTabContent";
 import { PlaybackTabContent } from "./PlaybackTabContent";

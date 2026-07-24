@@ -12,7 +12,7 @@ import { Badge } from "../../../features/ui/Badge";
 import { CardCountAmount } from "../../../features/ui/CardCountAmount";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
-import styles from "../GamePage.module.css";
+import styles from "../gamePageStyles";
 import { TokenAdjustButtons } from "./TokenAdjustButtons";
 
 interface GameMenuPlayerItemProps {

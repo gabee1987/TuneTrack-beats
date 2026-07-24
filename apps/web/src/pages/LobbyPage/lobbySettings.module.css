@@ -1,0 +1,449 @@
+.copyInviteButton {
+  width: 100%;
+  min-height: var(--size-touch-target);
+  margin-top: var(--space-3);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-interactive);
+  color: var(--color-text-primary);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.settingsGrid {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.settingsGroup {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-interactive);
+  outline: 1px solid var(--color-border-subtle);
+}
+
+.primaryActionTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--type-body-lg-size);
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+
+.primaryActionDescription,
+.settingsInlineHint {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
+}
+
+.conditionalGroup {
+  display: grid;
+  gap: 16px;
+}
+
+.ttInfoStack {
+  display: grid;
+  gap: 12px;
+}
+
+.ttModeTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ttModeTitleIcon {
+  width: 1.2em;
+  height: 1.2em;
+}
+
+.tokenModeToggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  min-height: 74px;
+  padding: 12px 4px;
+  border-radius: 24px;
+}
+
+.tokenModeToggleCopy {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.tokenModeToggleTitleRow {
+  display: inline-flex;
+  gap: 9px;
+  align-items: center;
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.tokenModeToggleIcon {
+  width: 1.28em;
+  height: 1.28em;
+  filter: drop-shadow(
+    0 0 12px color-mix(in srgb, var(--color-token-gold, #ffbf62) 36%, transparent)
+  );
+}
+
+.tokenModeToggleHint {
+  max-width: 32rem;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.ttInfoStack > span {
+  display: grid;
+  gap: 5px;
+}
+
+.ttInfoStack strong {
+  color: var(--color-accent-brand);
+  font-size: 16px;
+}
+
+.ttInfoStack span {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.42;
+}
+
+.primaryActionBar {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: center;
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-divider);
+}
+
+.selectInput {
+  min-height: var(--input-min-height);
+  border: 0;
+  border-radius: var(--input-radius);
+  background: color-mix(in srgb, var(--input-bg) 88%, transparent);
+  color: var(--input-fg);
+  outline: 1px solid color-mix(in srgb, var(--input-border) 88%, transparent);
+  padding: var(--space-3) var(--space-4);
+}
+
+.startGameButton {
+  min-width: 160px;
+}
+
+.playerList {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.playerItem {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-interactive);
+}
+
+.playerInfoRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.playerActionRow {
+  display: flex;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.playerKickButton {
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-status-danger-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-status-danger-surface);
+  color: var(--color-status-danger-text);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.playerKickButton:hover {
+  background: color-mix(in srgb, var(--color-status-danger-surface) 70%, white 8%);
+}
+
+.playerIdentity {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.playerNameRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.playerName {
+  overflow: hidden;
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playerSecondaryName {
+  color: var(--color-text-muted);
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playerBadges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.playerCounterBadges {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 5px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.playerBadge {
+  padding: 6px 10px;
+  font-size: 11px;
+}
+
+.playerCardCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1;
+}
+
+.playerSettingField {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.roomActionsSection {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.rosterSection {
+  display: grid;
+  gap: var(--space-3);
+}
+
+@media (min-width: 1100px) {
+.settingsGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+}
+
+
+@media (orientation: landscape) and (max-width: 1099px) {
+.settingsGrid {
+  grid-template-columns: 1fr;
+}
+}
+
+
+@media (max-width: 720px) {
+.primaryActionBar,
+  .playerInfoRow {
+  display: grid;
+    grid-template-columns: 1fr;
+}
+
+.settingsGrid {
+  grid-template-columns: 1fr;
+}
+
+.primaryActionDescription,
+  .settingsInlineHint {
+  font-size: 13px;
+    line-height: 1.35;
+}
+
+.startGameButton {
+  width: 100%;
+}
+
+.playerBadges {
+  justify-content: flex-start;
+}
+
+.settingsGroup,
+  .rosterSection,
+  .roomActionsSection {
+  gap: 20px;
+    padding: 18px;
+    border: 1px solid color-mix(in srgb, var(--color-border-subtle) 96%, transparent);
+    border-radius: 28px;
+    background:
+      radial-gradient(
+        circle at 100% 0%,
+        color-mix(in srgb, var(--color-accent-primary) 10%, transparent),
+        transparent 42%
+      ),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-surface-strong) 88%, transparent),
+        color-mix(in srgb, var(--color-bg-app) 86%, transparent)
+      );
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
+      0 18px 54px color-mix(in srgb, black 24%, transparent);
+    outline: 0;
+}
+
+.playerName,
+  .primaryActionTitle {
+  color: var(--color-text-primary);
+}
+
+.primaryActionDescription,
+  .settingsInlineHint,
+  .playerSecondaryName {
+  color: var(--color-text-secondary);
+}
+
+.playerItem {
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
+    border-radius: 20px;
+    background:
+      radial-gradient(
+        circle at 100% 0%,
+        color-mix(in srgb, #8b5cff 10%, transparent),
+        transparent 42%
+      ),
+      color-mix(in srgb, var(--color-surface-elevated) 70%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+}
+
+.selectInput {
+  min-height: 56px;
+    padding-right: 44px;
+    background-image:
+      linear-gradient(45deg, transparent 50%, currentColor 50%),
+      linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position:
+      calc(100% - 22px) calc(50% - 3px),
+      calc(100% - 16px) calc(50% - 3px);
+    background-size:
+      6px 6px,
+      6px 6px;
+    background-repeat: no-repeat;
+    appearance: none;
+}
+}
+
+
+@media (hover: none) and (pointer: coarse) {
+.primaryActionDescription,
+  .settingsInlineHint {
+  font-size: 13px;
+    line-height: 1.32;
+}
+
+.settingsGroup,
+  .rosterSection,
+  .roomActionsSection {
+  gap: 18px;
+    padding: 18px;
+    border: 1px solid color-mix(in srgb, var(--color-border-subtle) 96%, transparent);
+    border-radius: 28px;
+    background:
+      radial-gradient(
+        circle at 100% 0%,
+        color-mix(in srgb, var(--color-accent-primary) 10%, transparent),
+        transparent 42%
+      ),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-surface-strong) 88%, transparent),
+        color-mix(in srgb, var(--color-bg-app) 86%, transparent)
+      );
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
+      0 18px 54px color-mix(in srgb, black 24%, transparent);
+    outline: 0;
+}
+
+.playerName,
+  .primaryActionTitle {
+  color: var(--color-text-primary);
+}
+
+.primaryActionDescription,
+  .settingsInlineHint,
+  .playerSecondaryName {
+  color: var(--color-text-secondary);
+}
+
+.playerItem {
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
+    border-radius: 20px;
+    background:
+      radial-gradient(
+        circle at 100% 0%,
+        color-mix(in srgb, #8b5cff 10%, transparent),
+        transparent 42%
+      ),
+      color-mix(in srgb, var(--color-surface-elevated) 70%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+}
+
+.selectInput {
+  min-height: 56px;
+    padding-right: 44px;
+    appearance: none;
+}
+}
+
+
+@media (hover: none) and (pointer: coarse) and (max-height: 520px) {
+.settingsGrid {
+  grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.settingsGroup {
+  gap: 12px;
+    padding: 12px;
+}
+
+.primaryActionBar,
+  .playerInfoRow {
+  gap: 10px;
+}
+}

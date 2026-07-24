@@ -1,0 +1,412 @@
+.screen {
+  min-height: 100dvh;
+  padding: var(--space-1);
+  background: var(--gradient-app-background);
+}
+
+.panel {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: var(--space-2) var(--space-2) var(--space-1);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.headerMobile {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+}
+
+.headerMobile .headerMain {
+  display: contents;
+}
+
+.headerMobile .headerChipRow {
+  order: 1;
+}
+
+.headerMobile .headerAside {
+  order: 2;
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.headerMobile .headerLeadersDisclosure {
+  order: 3;
+  width: 100%;
+  max-width: 100%;
+}
+
+.headerMobile .headerActionRow {
+  width: 100%;
+  justify-content: stretch;
+}
+
+.headerMain {
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.headerChipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.headerChip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--color-chip);
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-label-weight);
+}
+
+.headerChipTurn {
+  display: inline-flex;
+}
+
+.headerAside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.headerActionRow {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  padding-top: 0;
+}
+
+.headerIconButton {
+  border: 0;
+  border-radius: var(--radius-circle);
+  width: var(--size-touch-target);
+  height: var(--size-touch-target);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-interactive);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  outline: 1px solid var(--color-border-subtle);
+}
+
+.headerIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--type-title-lg-size);
+  letter-spacing: -0.04em;
+}
+
+.meta,
+.cardMeta,
+.genre {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-secondary);
+}
+
+.statusBadge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  justify-content: space-between;
+  min-height: var(--size-touch-target);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-interactive);
+  outline: 1px solid var(--color-border-subtle);
+  font-size: var(--type-caption-size);
+  font-weight: 700;
+  overflow: visible;
+  box-sizing: border-box;
+}
+
+.statusBadgeLeading {
+  padding-left: var(--space-3);
+}
+
+.statusBadgeCrown {
+  position: absolute;
+  top: -7px;
+  left: -4px;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  transform: rotate(-18deg);
+  filter: drop-shadow(0 5px 8px color-mix(in srgb, black 34%, transparent));
+  pointer-events: none;
+}
+
+.statusBadgeTextGroup {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.statusBadgeCounters {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  flex: 0 0 auto;
+  color: var(--color-text-primary);
+  font-size: var(--type-body-size);
+  font-weight: 800;
+}
+
+.statusBadgeCounter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  line-height: 1;
+}
+
+.statusBadgeCounterSeparator {
+  color: var(--color-text-muted);
+  font-size: var(--type-caption-size);
+  line-height: 1;
+}
+
+.statusBadgeHostText {
+  flex: 0 0 auto;
+  color: var(--color-accent-brand);
+  font-size: var(--type-micro-size);
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.statusBadgeTimeline {
+  display: none;
+}
+
+.statusCaption {
+  max-width: 280px;
+  margin: 0;
+  color: var(--color-text-secondary);
+  text-align: right;
+  line-height: 1.35;
+  font-size: var(--type-caption-size);
+}
+
+.headerLeadersStrip {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  max-width: 100%;
+  scrollbar-width: none;
+}
+
+.headerLeadersDisclosure {
+  width: auto;
+  max-width: min(52vw, 520px);
+  overflow: visible;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.headerLeadersStrip::-webkit-scrollbar {
+  display: none;
+}
+
+.headerLeaderChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-interactive);
+  outline: 1px solid var(--color-border-subtle);
+  white-space: nowrap;
+}
+
+.headerLeaderRank {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-micro-size);
+}
+
+.headerLeaderName {
+  font-size: var(--type-caption-size);
+}
+
+.headerLeaderMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-primary);
+  font-size: var(--type-micro-size);
+}
+
+.headerLeaderCardCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.menuInfoSection {
+  display: grid;
+  gap: 14px;
+}
+
+.menuInfoTitle {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: -0.03em;
+}
+
+@media (max-width: 720px) {
+.screen {
+  padding: 4px;
+}
+
+.panel {
+  padding: 8px 8px calc(var(--safe-area-bottom) + 106px);
+    border-radius: 0;
+}
+
+.header {
+  position: relative;
+    z-index: 20;
+}
+
+.headerMain {
+  min-width: 0;
+}
+
+.headerChipTurn {
+  display: none;
+}
+
+.headerAside {
+  width: 100%;
+    min-width: 0;
+    align-items: stretch;
+}
+
+.headerActionRow {
+  width: 100%;
+    justify-content: stretch;
+}
+
+.statusBadge {
+  flex: 1;
+    background: var(--color-game-preview-scrim);
+    backdrop-filter: blur(24px) saturate(1.08);
+    -webkit-backdrop-filter: blur(24px) saturate(1.08);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
+      0 12px 30px color-mix(in srgb, black 20%, transparent);
+}
+
+.headerChip,
+  .headerIconButton,
+  .headerLeaderChip {
+  background: var(--color-game-preview-scrim);
+    backdrop-filter: blur(24px) saturate(1.08);
+    -webkit-backdrop-filter: blur(24px) saturate(1.08);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
+      0 12px 30px color-mix(in srgb, black 20%, transparent);
+}
+
+.headerLeadersStrip {
+  max-width: 100%;
+    width: 100%;
+}
+
+.headerLeadersDisclosure {
+  width: 100%;
+}
+
+.statusCaption {
+  max-width: none;
+    text-align: left;
+}
+}
+
+
+@media (hover: none) and (pointer: coarse) {
+.headerChipTurn {
+  display: none;
+}
+}
+
+
+@media (orientation: portrait) and (max-width: 720px) {
+.statusBadge {
+  display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    min-width: 0;
+    padding: 10px 14px;
+    overflow: visible;
+}
+
+.statusBadgeLeading {
+  padding-left: 14px;
+}
+
+.statusBadgeTextGroup {
+  min-width: 0;
+    overflow: hidden;
+}
+
+.statusBadgeDefault {
+  display: none;
+}
+
+.statusBadgeTimeline {
+  display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.statusCaption {
+  align-self: stretch;
+    margin-top: -2px;
+    padding: 8px 12px;
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--color-chip) 72%, transparent);
+    font-size: 11px;
+    line-height: 1.35;
+}
+}
+
+
+@media (orientation: landscape) and (max-width: 1024px) {
+.panel {
+  width: min(100%, 1120px);
+}
+}

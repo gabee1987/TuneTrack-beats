@@ -13,7 +13,7 @@ import { TIMELINE_REORDER_DURATION_MS, TIMELINE_REORDER_EASING } from "../gamePa
 import { animateTimelineLayoutChanges, getTimelineCardSurfaceStyle } from "../gamePage.utils";
 import { CorrectPlacementCelebration } from "./CorrectPlacementCelebration";
 import { PreviewCard } from "./PreviewCard";
-import styles from "./TimelinePanel.module.css";
+import styles from "./timelineStyles";
 
 interface TimelineSortableItemProps {
   card: GamePageCard;

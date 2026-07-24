@@ -2,7 +2,7 @@ import { useI18n } from "../../../features/i18n";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { Button } from "../../../features/ui/primitives";
 import { LobbySectionHeader } from "./LobbySectionHeader";
-import styles from "../LobbyPage.module.css";
+import styles from "../lobbyPageStyles";
 
 interface LobbyRoomActionsProps {
   buttonClassName?: string | undefined;

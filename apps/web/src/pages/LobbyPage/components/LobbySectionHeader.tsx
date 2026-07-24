@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import styles from "../LobbyPage.module.css";
+import styles from "../lobbyPageStyles";
 
 interface LobbySectionHeaderProps {
   badge?: ReactNode;

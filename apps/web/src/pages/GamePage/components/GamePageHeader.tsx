@@ -7,7 +7,7 @@ import { Chip, IconButton } from "../../../features/ui/primitives";
 import { usePageLayoutMode } from "../../../hooks/usePageLayoutMode";
 import type { GamePageHeaderModel } from "../GamePage.types";
 import { HeaderLeadersStrip } from "./HeaderLeadersStrip";
-import styles from "../GamePage.module.css";
+import styles from "../gamePageStyles";
 
 interface GamePageHeaderProps {
   model: GamePageHeaderModel;

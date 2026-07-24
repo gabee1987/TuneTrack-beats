@@ -11,7 +11,7 @@ import type { ChallengeMarkerTone, GamePageCard } from "../GamePage.types";
 import type { PreviewCardTransitionEvent } from "../gamePageTransitionEvents";
 import { getPreviewCardSurfaceStyle } from "../gamePage.utils";
 import { usePreviewCardTransition } from "../hooks/transitions/usePreviewCardTransition";
-import styles from "./TimelinePanel.module.css";
+import styles from "./timelineStyles";
 
 export interface PreviewCardProps {
   attributes?: DraggableAttributes | undefined;

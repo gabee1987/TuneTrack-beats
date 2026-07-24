@@ -221,153 +221,6 @@
   font-weight: 800;
 }
 
-.floatingActionDock {
-  position: relative;
-  bottom: auto;
-  z-index: var(--z-nav);
-  display: flex;
-  justify-content: center;
-  gap: var(--space-2);
-  margin-top: var(--space-3);
-  overflow: visible;
-}
-
-.floatingActionDockStacked {
-  width: min(100%, 420px);
-  flex-direction: column;
-  align-items: stretch;
-}
-
-.floatingActionSecondaryRow {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2);
-  width: 100%;
-}
-
-.floatingPrimaryButton,
-.floatingSecondaryButton {
-  position: relative;
-  box-sizing: border-box;
-  border: 0;
-  border-radius: var(--radius-pill);
-  padding: var(--space-3);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-width: 94px;
-  min-height: var(--size-touch-target);
-  color: var(--button-primary-fg);
-  font-size: var(--type-label-size);
-  font-weight: var(--type-label-weight);
-  line-height: 1.05;
-  cursor: pointer;
-  box-shadow: var(--shadow-raised);
-  overflow: hidden;
-  transition: transform var(--motion-quick-duration) var(--motion-ease-standard);
-}
-
-.floatingPrimaryButton:active,
-.floatingSecondaryButton:active {
-  transform: scale(0.97);
-}
-
-.actionButtonMotionWrap {
-  display: flex;
-  min-width: 0;
-}
-
-.actionButtonMotionWrapFull {
-  width: 100%;
-}
-
-.floatingActionDockStacked .floatingPrimaryButton,
-.floatingActionDockStacked .floatingSecondaryButton {
-  width: 100%;
-  min-width: 0;
-}
-
-.floatingPrimaryButton {
-  background: var(--button-primary-bg);
-  color: var(--button-primary-fg);
-}
-
-.floatingSecondaryButton {
-  background: var(--color-surface-interactive);
-  color: var(--color-text-primary);
-  outline: 1px solid var(--color-border-subtle);
-}
-
-.actionButtonLabel {
-  flex: 1 1 auto;
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ttCostBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 28px;
-  padding: 3px 0;
-  border-radius: var(--radius-pill);
-  color: inherit;
-  font-size: var(--type-body-size);
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  line-height: 1;
-  white-space: nowrap;
-  opacity: 0.92;
-}
-
-.ttCostIcon {
-  width: 2em;
-  height: 2em;
-}
-
-.tokenSpendFlyoutAnchor {
-  position: fixed;
-  z-index: 5000;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-
-.tokenSpendFlyout {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  color: #ff9daf;
-  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.45));
-  will-change: transform, opacity;
-}
-
-.tokenSpendFlyoutContent {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, #1a0d12 72%, transparent);
-  outline: 1px solid color-mix(in srgb, #ff9daf 42%, transparent);
-  font-size: 1.15rem;
-  font-weight: 900;
-}
-
-.tokenSpendFlyoutAmount {
-  line-height: 1;
-}
-
-.tokenSpendIcon {
-  width: 1.35em;
-  height: 1.35em;
-}
-
 .challengeMetaRow {
   display: flex;
   flex-wrap: wrap;
@@ -418,158 +271,6 @@
       0 0 0 5px rgb(255 255 255 / 0%),
       0 0 20px 4px rgb(255 255 255 / 0%),
       0 0 30px 6px rgb(255 255 255 / 0%);
-  }
-}
-
-@media (max-width: 720px), (hover: none) and (pointer: coarse) {
-  .challengeCallout {
-    position: fixed;
-    left: max(16px, env(safe-area-inset-left));
-    right: max(16px, env(safe-area-inset-right));
-    bottom: calc(var(--safe-area-bottom) + 86px);
-    z-index: 880;
-    margin: 0;
-    max-height: calc(100svh - var(--safe-area-top) - var(--safe-area-bottom) - 104px);
-    /* overflow-y: auto; */
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .floatingActionDock {
-    position: fixed;
-    left: calc(var(--safe-area-left) + 14px);
-    right: calc(var(--safe-area-right) + 14px);
-    bottom: calc(var(--safe-area-bottom) + 10px);
-    z-index: 900;
-    margin-top: 0;
-    padding: 8px;
-    box-sizing: border-box;
-    width: auto;
-    max-height: calc(100svh - var(--safe-area-top) - var(--safe-area-bottom) - 16px);
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-    /* border-radius: 999px; */
-    /* background: color-mix(in srgb, var(--color-surface) 62%, transparent); */
-    /* border: 1px solid color-mix(in srgb, var(--color-border-subtle) 78%, transparent); */
-    /* backdrop-filter: blur(18px) saturate(1.08); */
-    /* -webkit-backdrop-filter: blur(18px) saturate(1.08); */
-    /* box-shadow: 0 18px 44px rgb(0 0 0 / 42%); */
-  }
-
-  .floatingActionDockStacked {
-    width: auto;
-    border-radius: 28px;
-  }
-
-  .floatingActionSecondaryRow {
-    gap: 8px;
-  }
-
-  .floatingPrimaryButton,
-  .floatingSecondaryButton,
-  .actionButtonMotionWrap {
-    flex: 1;
-  }
-
-  .floatingPrimaryButton,
-  .floatingSecondaryButton {
-    min-height: 54px;
-    min-width: 0;
-    padding: 13px 12px;
-    font-size: 15px;
-  }
-
-  .ttCostBadge {
-    margin-left: auto;
-    font-size: 12px;
-  }
-}
-
-@media (max-width: 720px) and (max-height: 700px),
-  (hover: none) and (pointer: coarse) and (max-height: 700px) {
-  .floatingActionDock {
-    bottom: calc(var(--safe-area-bottom) + 8px);
-    gap: 6px;
-    padding: 4px 6px;
-  }
-
-  .challengeCallout {
-    bottom: calc(var(--safe-area-bottom) + 68px);
-    max-height: calc(100svh - var(--safe-area-top) - var(--safe-area-bottom) - 82px);
-    padding: 12px;
-    border-radius: 22px;
-  }
-
-  .floatingActionDockStacked {
-    border-radius: 24px;
-  }
-
-  .floatingActionSecondaryRow {
-    gap: 6px;
-  }
-
-  .floatingPrimaryButton,
-  .floatingSecondaryButton {
-    min-height: 46px;
-    padding: 10px 10px;
-    font-size: 14px;
-  }
-
-  .ttCostBadge {
-    min-width: 24px;
-    font-size: 11px;
-  }
-}
-
-@media (max-height: 420px) and (orientation: landscape) {
-  .challengeCallout {
-    left: max(10px, env(safe-area-inset-left));
-    right: max(10px, env(safe-area-inset-right));
-    bottom: calc(var(--safe-area-bottom) + 54px);
-    max-height: calc(100svh - var(--safe-area-top) - var(--safe-area-bottom) - 62px);
-    padding: 10px;
-    border-radius: 18px;
-  }
-
-  .challengeCalloutInner {
-    gap: 5px;
-  }
-
-  .challengeTitle {
-    font-size: 16px;
-  }
-
-  .challengeText {
-    font-size: 12px;
-  }
-
-  .challengeMetaRow {
-    gap: 6px;
-    margin-top: 6px;
-  }
-
-  .challengeCountdownBadge,
-  .challengeTokenChip {
-    min-height: 28px;
-    padding: 6px 8px;
-    font-size: 10px;
-  }
-
-  .floatingActionDock {
-    left: calc(var(--safe-area-left) + 10px);
-    right: calc(var(--safe-area-right) + 10px);
-    bottom: calc(var(--safe-area-bottom) + 4px);
-    gap: 5px;
-    padding: 2px 4px;
-  }
-
-  .floatingPrimaryButton,
-  .floatingSecondaryButton {
-    min-height: 40px;
-    padding: 8px 9px;
-    font-size: 13px;
   }
 }
 
@@ -626,24 +327,84 @@
 }
 
 @media (max-width: 720px), (hover: none) and (pointer: coarse) {
-  .offlinePlayerPanel {
-    position: fixed;
-    left: max(var(--space-3), env(safe-area-inset-left));
-    right: max(var(--space-3), env(safe-area-inset-right));
-    bottom: calc(env(safe-area-inset-bottom) + 94px);
+.challengeCallout {
+  position: fixed;
+    left: max(16px, var(--safe-area-left));
+    right: max(16px, var(--safe-area-right));
+    bottom: calc(var(--safe-area-bottom) + 86px);
+    z-index: 880;
+    margin: 0;
+    max-height: calc(100svh - var(--safe-area-top) - var(--safe-area-bottom) - 104px);
+    /* overflow-y: auto; */
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+}
+
+
+@media (max-width: 720px) and (max-height: 700px),
+  (hover: none) and (pointer: coarse) and (max-height: 700px) {
+.challengeCallout {
+  bottom: calc(var(--safe-area-bottom) + 68px);
+    max-height: calc(100svh - var(--safe-area-top) - var(--safe-area-bottom) - 82px);
+    padding: 12px;
+    border-radius: 22px;
+}
+}
+
+
+@media (max-height: 420px) and (orientation: landscape) {
+.challengeCallout {
+  left: max(10px, var(--safe-area-left));
+    right: max(10px, var(--safe-area-right));
+    bottom: calc(var(--safe-area-bottom) + 54px);
+    max-height: calc(100svh - var(--safe-area-top) - var(--safe-area-bottom) - 62px);
+    padding: 10px;
+    border-radius: 18px;
+}
+
+.challengeCalloutInner {
+  gap: 5px;
+}
+
+.challengeTitle {
+  font-size: 16px;
+}
+
+.challengeText {
+  font-size: 12px;
+}
+
+.challengeMetaRow {
+  gap: 6px;
+    margin-top: 6px;
+}
+
+.challengeCountdownBadge,
+  .challengeTokenChip {
+  min-height: 28px;
+    padding: 6px 8px;
+    font-size: 10px;
+}
+}
+
+
+@media (max-width: 720px), (hover: none) and (pointer: coarse) {
+.offlinePlayerPanel {
+  position: fixed;
+    left: max(var(--space-3), var(--safe-area-left));
+    right: max(var(--space-3), var(--safe-area-right));
+    bottom: calc(var(--safe-area-bottom) + 94px);
     z-index: 880;
     margin: 0;
     background: var(--color-surface-elevated-solid);
     box-shadow: var(--shadow-overlay);
-  }
+}
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .challengePulseBorder {
-    animation: none;
-  }
 
-  .tokenSpendFlyout {
-    display: none;
-  }
+@media (prefers-reduced-motion: reduce) {
+.challengePulseBorder {
+  animation: none;
+}
 }

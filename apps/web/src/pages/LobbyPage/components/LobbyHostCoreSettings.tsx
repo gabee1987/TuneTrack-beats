@@ -13,7 +13,7 @@ import { useI18n } from "../../../features/i18n";
 import { AdaptiveSelect } from "./AdaptiveSelect";
 import type { LobbyRoomSettingsChangeHandler } from "./LobbyHostSettings.types";
 import { LobbySectionHeader } from "./LobbySectionHeader";
-import styles from "../LobbyPage.module.css";
+import styles from "../lobbyPageStyles";
 
 interface LobbyHostCoreSettingsProps {
   currentSettings: PublicRoomSettings;

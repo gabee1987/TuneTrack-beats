@@ -5,7 +5,7 @@ import {
   getLobbyConnectionBadgeVariant,
   getLobbyHeaderMenuTabSpecs,
 } from "../lobbyHeaderSelectors";
-import styles from "../LobbyPage.module.css";
+import styles from "../lobbyPageStyles";
 
 interface LobbyHeaderProps {
   connectionStatus: string;

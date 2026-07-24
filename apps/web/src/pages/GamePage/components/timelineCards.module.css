@@ -1,0 +1,487 @@
+.timelineCard {
+  position: relative;
+  width: var(--timeline-card-width);
+  min-width: var(--timeline-card-min-width, var(--timeline-card-width));
+  height: var(--timeline-card-height);
+  min-height: var(--timeline-card-min-height, var(--timeline-card-height));
+  aspect-ratio: var(--timeline-card-aspect-ratio, auto);
+  padding: var(--space-4) var(--space-3);
+  border-radius: var(--card-radius);
+  background-color: var(--color-surface-elevated-solid);
+  background-image: var(--card-gradient);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  box-shadow: var(--shadow-game-card-base);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: center;
+  overflow: hidden;
+  transition: transform var(--motion-standard-duration) var(--motion-ease-standard);
+}
+
+.timelineCardArtwork .timelineArtist,
+.timelineCardArtwork .timelineTitle,
+.timelineCardArtwork .yearText {
+  color: #ffffff;
+}
+
+.timelineCardArtwork .yearText {
+  position: relative;
+  z-index: 1;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 4px 14px rgba(0, 0, 0, 0.75),
+    0 10px 28px rgba(0, 0, 0, 0.55);
+}
+
+.timelineCardArtwork .yearText::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: -1;
+  width: 140%;
+  height: 130%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.62) 0%,
+    rgba(0, 0, 0, 0.28) 48%,
+    transparent 74%
+  );
+  pointer-events: none;
+}
+
+.timelineCardArtwork .timelineArtist,
+.timelineCardArtwork .timelineTitle {
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.8),
+    0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.timelineCardCurrentPick {
+  outline: 2px solid var(--color-game-card-current-outline);
+}
+
+.previewCardCurrentPick {
+  position: relative;
+  box-shadow: var(--shadow-raised);
+  outline: 2px solid var(--color-game-card-current-outline);
+}
+
+.previewCardCurrentPick::before,
+.previewCardCurrentPick::after {
+  content: none;
+}
+
+.previewCardCurrentPick.previewCardDraggable {
+  outline: 2px dashed var(--color-game-card-draggable-outline);
+}
+
+.previewCard.previewCardCurrentPick {
+  overflow: visible;
+}
+
+.timelineCardChallenge,
+.previewCardChallenge {
+  outline: 2px solid var(--color-game-card-challenge-outline);
+}
+
+.timelineCardChallengeFailure,
+.previewCardChallengeFailure {
+  outline: 2px solid var(--color-game-card-failure-outline);
+}
+
+.timelineCardResolvedCorrect,
+.previewCardResolvedCorrect {
+  outline: 2px solid var(--color-game-card-correct-outline);
+  box-shadow: var(--shadow-game-card-correct);
+}
+
+.timelineCardResolvedCorrect {
+  position: relative;
+  overflow: visible;
+}
+
+.previewCardResolvedCorrect {
+  position: relative;
+  overflow: visible;
+}
+
+.previewCard {
+  position: relative;
+  z-index: 2;
+  width: var(--timeline-card-width);
+  min-width: var(--timeline-card-min-width, 100%);
+  height: var(--timeline-card-height);
+  min-height: var(--timeline-card-min-height, var(--timeline-card-height));
+  aspect-ratio: var(--timeline-card-aspect-ratio, auto);
+  padding: var(--space-4) var(--space-3);
+  border-radius: var(--card-radius);
+  outline: 1px dashed var(--color-border-subtle);
+  overflow: hidden;
+  background-color: var(--color-surface-elevated-solid);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  transition:
+    transform var(--motion-standard-duration) var(--motion-ease-standard),
+    outline-color var(--motion-quick-duration) var(--motion-ease-standard),
+    box-shadow var(--motion-quick-duration) var(--motion-ease-standard),
+    opacity var(--motion-quick-duration) var(--motion-ease-standard);
+}
+
+.previewCardDraggable {
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-drag: none;
+  outline: 2px dashed var(--color-game-card-draggable-outline);
+}
+
+.previewCardGhost {
+  opacity: 0.28;
+}
+
+.previewCardOverlay {
+  cursor: grabbing;
+  overflow: hidden;
+  transform: translateY(-6px);
+  opacity: 1;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: var(--shadow-game-preview-card, 0 18px 44px rgba(0, 0, 0, 0.36));
+}
+
+.previewCardOverlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--color-game-preview-scrim) 55%, transparent);
+  backdrop-filter: blur(24px) saturate(1.08);
+  -webkit-backdrop-filter: blur(24px) saturate(1.08);
+  pointer-events: none;
+}
+
+.previewCardOverlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background-image: var(--card-gradient);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+.previewCardOverlay .previewCardFace {
+  position: relative;
+  z-index: 1;
+}
+
+.previewCardArtwork,
+.previewCardGradient {
+  background-color: var(--color-surface-elevated-solid);
+}
+
+.previewCardOverlay.previewCardArtwork,
+.previewCardOverlay.previewCardGradient {
+  background-color: transparent;
+}
+
+.previewCardHasArtwork .previewCardYear {
+  color: #ffffff;
+  position: relative;
+  z-index: 1;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 4px 14px rgba(0, 0, 0, 0.75),
+    0 10px 28px rgba(0, 0, 0, 0.55);
+}
+
+.previewCardHasArtwork .previewCardYear::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: -1;
+  width: 140%;
+  height: 130%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.62) 0%,
+    rgba(0, 0, 0, 0.28) 48%,
+    transparent 74%
+  );
+  pointer-events: none;
+}
+
+.previewCardHasArtwork .previewCardArtist,
+.previewCardHasArtwork .previewCardTitle,
+.previewCardHasArtwork .previewCardAlbum {
+  color: #ffffff;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.8),
+    0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.previewCardHasArtwork .previewCardMetaPill {
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.previewCardRevealed {
+  outline-style: solid;
+}
+
+.previewCardCorrection,
+.previewCardCorrectionSurface {
+  outline: 2px solid var(--color-game-card-correction-outline);
+  outline-offset: -2px;
+  box-shadow: var(--shadow-game-preview-card);
+  animation: wrongPlacementPulse 1.12s ease-in-out infinite;
+}
+
+.previewCardCorrectionSurface {
+  background-image:
+    var(--gradient-game-preview-correction-surface),
+    var(--card-gradient);
+  background-position: center;
+  background-size: cover;
+}
+
+.previewCardReplacing {
+  position: relative;
+  transition:
+    outline-color 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease,
+    opacity 220ms ease;
+  will-change: transform;
+}
+
+.previewCardFace {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  text-align: center;
+}
+
+.previewCardMetaPill {
+  display: inline-flex;
+  width: fit-content;
+  margin: 8px auto 0;
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-game-meta-pill-background);
+  color: var(--color-game-meta-pill-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.previewCardArtist,
+.timelineArtist {
+  margin: 0;
+  color: var(--color-game-artist-text);
+  font-size: clamp(11px, 0.4vw + 11px, 14px);
+  font-weight: 600;
+  line-height: 1.22;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.timelineArtist {
+  color: var(--color-text-secondary);
+}
+
+.previewCardCenter,
+.timelineCardCenter {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.previewCardBottom,
+.timelineCardBottom {
+  display: grid;
+  gap: 6px;
+}
+
+.previewCardAlbum {
+  margin: 0;
+  color: var(--color-game-album-text);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.previewCardTitle,
+.timelineTitle {
+  margin: 0;
+  font-size: clamp(11px, 0.45vw + 11px, 15px);
+  letter-spacing: -0.03em;
+  line-height: 1.16;
+}
+
+.previewCardTitle {
+  color: var(--color-game-meta-pill-text);
+}
+
+.timelineTitle {
+  color: var(--color-text-primary);
+}
+
+.previewCardYear,
+.yearText {
+  display: inline-block;
+  margin: 0;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.previewCardYear {
+  color: var(--color-game-meta-pill-text);
+}
+
+.previewCardMysteryOnly {
+  display: grid;
+  flex: 1 1 auto;
+  align-self: stretch;
+  min-height: 100%;
+  place-items: center;
+}
+
+.previewCardMysteryMark {
+  position: relative;
+  isolation: isolate;
+  display: inline-block;
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 62px;
+  font-weight: 800;
+  line-height: 1;
+  opacity: 0.88;
+}
+
+.previewCardMysteryMark::after {
+  content: none;
+}
+
+.previewCardHasArtwork .previewCardMysteryMark {
+  color: #ffffff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+@media (orientation: portrait) and (max-width: 720px) {
+.timelineCard,
+  .previewCard {
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    min-height: 0;
+    aspect-ratio: 1;
+    padding: 10px 9px;
+    border-radius: var(--radius-sm);
+  }
+
+.previewCardFaceSurface {
+    padding: 10px 9px;
+  }
+
+.timelineCard {
+    box-shadow: var(--shadow-raised);
+  }
+
+.previewCardFace {
+    gap: 4px;
+  }
+
+.previewCardArtist,
+  .timelineArtist {
+    font-size: clamp(9px, 2.6vw, 11px);
+    line-height: 1.2;
+  }
+
+.previewCardAlbum {
+    font-size: 9px;
+    line-height: 1.2;
+  }
+
+.previewCardTitle,
+  .timelineTitle {
+    font-size: clamp(9px, 2.8vw, 11px);
+    line-height: 1.12;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+.previewCardYear,
+  .yearText {
+    font-size: clamp(20px, 6vw, 28px);
+  }
+
+.previewCardMysteryMark {
+    font-size: clamp(34px, 11vw, 50px);
+  }
+
+.previewCardMetaPill {
+    margin-top: 4px;
+    padding: 4px 7px;
+    font-size: 10px;
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+.previewCardCorrection,
+  .previewCardCorrectionSurface,
+  .previewCardReplacing,
+  .timelineCardResolvedCorrect,
+  .timelineCardResolvedCorrect::before,
+  .timelineCardResolvedCorrect::after,
+  .previewCardResolvedCorrect,
+  .previewCardResolvedCorrect::before,
+  .previewCardResolvedCorrect::after,
+  .previewCardCurrentPick::before,
+  .previewCardCurrentPick::after,
+  .previewCardMysteryMark::after {
+    animation: none;
+  }
+}
+
+@keyframes wrongPlacementPulse {
+  0%,
+  100% {
+    outline-color: var(--color-game-card-correction-outline);
+  }
+
+  50% {
+    outline-color: color-mix(in srgb, var(--color-danger) 40%, white);
+  }
+}

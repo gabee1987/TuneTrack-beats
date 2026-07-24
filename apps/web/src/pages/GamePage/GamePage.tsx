@@ -13,7 +13,7 @@ import {
 } from "./hooks/HostPlaybackProvider";
 import { useGamePageController } from "./hooks/useGamePageController";
 import { useGamePageToasts } from "./hooks/useGamePageToasts";
-import styles from "./GamePage.module.css";
+import styles from "./gamePageStyles";
 
 const GamePageMobile = lazy(async () => {
   const module = await import("./mobile/GamePageMobile");

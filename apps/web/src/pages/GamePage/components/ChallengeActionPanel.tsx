@@ -11,7 +11,7 @@ import {
 import { useI18n } from "../../../features/i18n";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import { useChallengeCountdownLabel } from "../hooks/useChallengeCountdownLabel";
-import styles from "./GamePageActionPanels.module.css";
+import styles from "./gamePageActionPanelsStyles";
 import {
   ActionDock,
   PrimaryActionButton,

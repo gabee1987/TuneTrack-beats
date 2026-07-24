@@ -17,7 +17,7 @@ import {
   PrimaryActionButton,
   SecondaryActionButton,
 } from "./ActionDock";
-import styles from "./GamePageActionPanels.module.css";
+import styles from "./gamePageActionPanelsStyles";
 
 function useTurnSkipCountdown(deadlineEpochMs: number | null): string | null {
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);

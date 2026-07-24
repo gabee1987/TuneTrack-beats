@@ -7,7 +7,7 @@ import {
   useReducedMotionPreference,
 } from "../../../features/motion";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
-import styles from "./GamePageActionPanels.module.css";
+import styles from "./gamePageActionPanelsStyles";
 
 const MOBILE_CONTROL_MEDIA_QUERY = "(max-width: 720px), (hover: none) and (pointer: coarse)";
 

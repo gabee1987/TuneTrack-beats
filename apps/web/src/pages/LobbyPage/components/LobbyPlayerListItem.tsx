@@ -12,7 +12,7 @@ import { useI18n } from "../../../features/i18n";
 import { RangeField } from "../../../features/ui/RangeField";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import { getLobbyPlayerDisplayState } from "../lobbyPlayerSelectors";
-import styles from "../LobbyPage.module.css";
+import styles from "../lobbyPageStyles";
 
 interface LobbyPlayerListItemProps {
   currentPlayerId: string | null;

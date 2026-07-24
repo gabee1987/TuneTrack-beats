@@ -1,0 +1,54 @@
+.error {
+  margin-top: 24px;
+  color: var(--color-game-error-text);
+}
+
+.summaryText {
+  margin: 12px 0 0;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+
+.revealResult {
+  margin: 14px 0 0;
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+
+.challengeMessage,
+.challengeOutcome {
+  margin: 14px 0 0;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+
+.revealHeaderCompact {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.revealBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-chip);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.revealInfoGrid {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+@media (max-width: 720px) {
+.revealHeaderCompact {
+  flex-direction: column;
+    align-items: flex-start;
+}
+}

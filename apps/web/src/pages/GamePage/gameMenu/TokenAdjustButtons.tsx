@@ -12,7 +12,7 @@ import {
   useReducedMotionPreference,
 } from "../../../features/motion";
 import { TtTokenIcon } from "../../../features/ui/TtToken";
-import styles from "../GamePage.module.css";
+import styles from "../gamePageStyles";
 
 type TokenFlyAnimation = "add" | "remove" | null;
 

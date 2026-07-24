@@ -14,7 +14,7 @@ import { SearchIcon } from "./spotifySetupIcons";
 import { SpotifyOpenedPlaylistPanel } from "./SpotifyOpenedPlaylistPanel";
 import { SpotifySmartSearchResultRow } from "./SpotifySmartSearchResultRow";
 import { SMART_SEARCH_TYPES, type LobbySpotifyState } from "./spotifySetupTypes";
-import styles from "./LobbySpotifySection.module.css";
+import styles from "./spotifyStyles";
 
 export function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpotifyState }) {
   const { t } = useI18n();
@@ -283,7 +283,9 @@ export function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: Lob
           </div>
 
           {smartSearchPhase === "error" && smartSearchError ? (
-            <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
+            <p
+              className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError} ${styles.spotifyDiscoveryStatusOffset}`}
+            >
               {smartSearchError}
             </p>
           ) : null}
@@ -303,7 +305,9 @@ export function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: Lob
               showSelectedActionPadding={selectedSearchTracks.length > 0}
             />
           ) : smartSearchHasSearched && smartSearchPhase === "idle" ? (
-            <p className={styles.spotifyEmptyState}>{t("lobby.spotify.builder.noResults")}</p>
+            <p className={`${styles.spotifyEmptyState} ${styles.spotifyDiscoveryStatusOffset}`}>
+              {t("lobby.spotify.builder.noResults")}
+            </p>
           ) : null}
 
           {selectedSearchTracks.length > 0 ? (
