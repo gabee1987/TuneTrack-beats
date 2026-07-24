@@ -1,6 +1,7 @@
 import { AppPageShell } from "../../features/mobile-shell/AppPageShell";
 import { useI18n } from "../../features/i18n";
-import { RoomPrimaryActionButton } from "../../features/ui/RoomPrimaryActionButton";
+import { TextInput } from "../../features/ui/TextInput";
+import { Button, EmptyState } from "../../features/ui/primitives";
 import { usePlayPageController } from "./hooks/usePlayPageController";
 import styles from "./PlayPage.module.css";
 
@@ -10,8 +11,6 @@ export function PlayPage() {
 
   return (
     <AppPageShell panelClassName={styles.panelShell} screenClassName={styles.screenShell}>
-      <div className={styles.backgroundOrbs} aria-hidden="true" />
-
       <main className={styles.content}>
         <header className={styles.header}>
           <p className={styles.eyebrow}>{t("home.roomEntryTitle")}</p>
@@ -28,11 +27,10 @@ export function PlayPage() {
 
             <label className={styles.field}>
               <span className={styles.labelRow}>{t("home.createRoomCodeLabel")}</span>
-              <input
+              <TextInput
                 autoCapitalize="none"
                 autoComplete="off"
                 autoCorrect="off"
-                className={styles.textInput}
                 inputMode="text"
                 onChange={(event) => controller.setCreateRoomId(event.target.value)}
                 placeholder={t("home.roomCodePlaceholder")}
@@ -42,9 +40,8 @@ export function PlayPage() {
 
             <label className={styles.field}>
               <span className={styles.labelRow}>{t("home.playerNameLabel")}</span>
-              <input
+              <TextInput
                 autoComplete="nickname"
-                className={styles.textInput}
                 maxLength={24}
                 onChange={(event) => controller.setDisplayName(event.target.value)}
                 placeholder={t("home.playerNamePlaceholder")}
@@ -52,16 +49,17 @@ export function PlayPage() {
               />
             </label>
 
-            <RoomPrimaryActionButton
+            <Button
               fullWidth
-              className={styles.primaryAction}
+              haptic
               onFocus={controller.preloadLobby}
               onMouseEnter={controller.preloadLobby}
               onTouchStart={controller.preloadLobby}
+              size="lg"
               type="submit"
             >
               {t("home.createRoomAction")}
-            </RoomPrimaryActionButton>
+            </Button>
           </form>
 
           <div className={styles.roomDivider}>{t("home.orJoinRoom")}</div>
@@ -74,11 +72,10 @@ export function PlayPage() {
 
             <label className={styles.field}>
               <span className={styles.labelRow}>{t("home.roomCodeLabel")}</span>
-              <input
+              <TextInput
                 autoCapitalize="none"
                 autoComplete="off"
                 autoCorrect="off"
-                className={styles.textInput}
                 inputMode="text"
                 onChange={(event) => controller.setJoinRoomId(event.target.value)}
                 placeholder={t("home.roomCodePlaceholder")}
@@ -86,15 +83,16 @@ export function PlayPage() {
               />
             </label>
 
-            <button
-              className={styles.secondaryAction}
+            <Button
+              fullWidth
               onFocus={controller.preloadLobby}
               onMouseEnter={controller.preloadLobby}
               onTouchStart={controller.preloadLobby}
               type="submit"
+              variant="secondary"
             >
               {t("home.openLobby")}
-            </button>
+            </Button>
           </form>
         </section>
 
@@ -104,9 +102,9 @@ export function PlayPage() {
               <h2>{t("home.availableRoomsTitle")}</h2>
               <p>{t("play.availableRoomsDescription")}</p>
             </div>
-            <button className={styles.refreshButton} onClick={controller.refreshRooms} type="button">
+            <Button onClick={controller.refreshRooms} type="button" variant="ghost">
               {t("home.refreshRooms")}
-            </button>
+            </Button>
           </div>
 
           <div className={styles.roomList}>
@@ -118,15 +116,21 @@ export function PlayPage() {
                   onClick={() => controller.handleSelectRoom(room.roomId)}
                   type="button"
                 >
-                  <span>
+                  <span className={styles.roomListCopy}>
                     <strong>{room.roomId}</strong>
                     <small>{t("home.roomHost", { hostName: room.hostName })}</small>
                   </span>
-                  <span>{t("home.roomPlayerCount", { count: room.playerCount })}</span>
+                  <span className={styles.roomListMeta}>
+                    {t("home.roomPlayerCount", { count: room.playerCount })}
+                  </span>
                 </button>
               ))
             ) : (
-              <p className={styles.emptyRooms}>{t("home.noRoomsAvailable")}</p>
+              <EmptyState
+                className={styles.emptyState}
+                description={t("home.noRoomsAvailable")}
+                title={t("home.availableRoomsTitle")}
+              />
             )}
           </div>
         </section>

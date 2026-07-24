@@ -1,10 +1,10 @@
 import { FormEvent, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useI18n } from "../../features/i18n";
-import { ActionButton } from "../../features/ui/ActionButton";
+import { AppPageShell } from "../../features/mobile-shell/AppPageShell";
 import { StatusBanner } from "../../features/ui/StatusBanner";
 import { TextInput } from "../../features/ui/TextInput";
-import { AppPageShell } from "../../features/mobile-shell/AppPageShell";
+import { Button, Skeleton } from "../../features/ui/primitives";
 import { rememberPlayerDisplayName } from "../../services/session/playerSession";
 import { buildInviteJoinPath, DEFAULT_DISPLAY_NAME } from "../HomePage/homePageNavigation";
 import { useJoinRoomPreview } from "./hooks/useJoinRoomPreview";
@@ -35,7 +35,11 @@ export function JoinRoomPage() {
         <h1 className={styles.title}>{roomId}</h1>
 
         {status === "loading" ? (
-          <StatusBanner>{t("joinRoom.loading")}</StatusBanner>
+          <div className={styles.loadingFacts} aria-busy="true" aria-live="polite">
+            <Skeleton height={72} width="100%" />
+            <Skeleton height={72} width="100%" />
+            <span className={styles.srOnly}>{t("joinRoom.loading")}</span>
+          </div>
         ) : room ? (
           <div className={styles.roomFacts}>
             <span>
@@ -61,9 +65,9 @@ export function JoinRoomPage() {
             />
           </label>
 
-          <ActionButton disabled={!room} type="submit">
+          <Button disabled={!room} fullWidth haptic size="lg" type="submit">
             {t("joinRoom.joinAction")}
-          </ActionButton>
+          </Button>
         </form>
       </section>
     </AppPageShell>

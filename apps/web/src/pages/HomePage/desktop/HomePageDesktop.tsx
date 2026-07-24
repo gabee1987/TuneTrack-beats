@@ -1,5 +1,5 @@
 import { AppPageShell } from "../../../features/mobile-shell/AppPageShell";
-import { ActionButton } from "../../../features/ui/ActionButton";
+import { Button } from "../../../features/ui/primitives";
 import { StatusBanner } from "../../../features/ui/StatusBanner";
 import type { HomePageAssemblyProps } from "../HomePage.types";
 import { HomePageHero } from "../components/HomePageHero";
@@ -8,10 +8,7 @@ import styles from "./HomePageDesktop.module.css";
 
 export function HomePageDesktop({ controller }: HomePageAssemblyProps) {
   return (
-    <AppPageShell
-      panelClassName={styles.panelShell}
-      screenClassName={styles.screenShell}
-    >
+    <AppPageShell panelClassName={styles.panelShell} screenClassName={styles.screenShell}>
       <HomePageTopBar />
 
       {controller.toastMessage ? (
@@ -29,16 +26,19 @@ export function HomePageDesktop({ controller }: HomePageAssemblyProps) {
             <p className={styles.startCopy}>
               Create a room as host or join an open room on the next screen.
             </p>
-            <ActionButton
+            <Button
               className={styles.startButton}
+              fullWidth
+              haptic
               onClick={controller.handleStart}
               onFocus={controller.preloadLobby}
               onMouseEnter={controller.preloadLobby}
               onTouchStart={controller.preloadLobby}
+              size="lg"
               type="button"
             >
               Start
-            </ActionButton>
+            </Button>
           </section>
         </aside>
       </div>

@@ -1,27 +1,25 @@
 .screenShell {
   min-height: var(--app-height);
-  padding: calc(var(--safe-area-top) + 28px) calc(var(--safe-area-right) + 28px)
-    calc(var(--safe-area-bottom) + 28px) calc(var(--safe-area-left) + 28px);
+  padding: calc(var(--safe-area-top) + var(--space-6)) calc(var(--safe-area-right) + var(--space-6))
+    calc(var(--safe-area-bottom) + var(--space-6)) calc(var(--safe-area-left) + var(--space-6));
+  background: var(--color-bg-app);
 }
 
 .panelShell {
   width: min(100%, 1380px);
   min-height: calc(var(--app-height) - var(--safe-area-top) - var(--safe-area-bottom) - 56px);
   margin: 0 auto;
-  padding: clamp(28px, 3vw, 40px);
-  border-radius: clamp(28px, 3vw, 40px);
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--color-accent-primary) 18%, transparent), transparent 32%),
-    var(--gradient-home-shell-background);
+  padding: clamp(var(--space-6), 3vw, var(--space-8));
+  border: 0;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-none);
+  outline: 1px solid var(--color-border-subtle);
 }
 
-.panelShell::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--gradient-surface-sheen);
-  pointer-events: none;
-  border-radius: clamp(28px, 3vw, 40px);
+.panelShell::before,
+.panelShell::after {
+  content: none;
 }
 
 .toast {
@@ -29,7 +27,7 @@
   z-index: 2;
   width: fit-content;
   max-width: min(100%, 520px);
-  margin: 18px 0 0 auto;
+  margin: var(--space-4) 0 0 auto;
 }
 
 .contentGrid {
@@ -37,16 +35,16 @@
   z-index: 1;
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(360px, 0.72fr);
-  gap: clamp(28px, 4vw, 48px);
+  gap: clamp(var(--space-6), 4vw, var(--space-12));
   align-items: stretch;
-  margin-top: clamp(28px, 4vw, 44px);
+  margin-top: clamp(var(--space-6), 4vw, var(--space-10));
 }
 
 .heroColumn {
   display: grid;
   align-content: center;
   min-height: 100%;
-  padding: clamp(16px, 2vw, 28px) clamp(4px, 1vw, 16px) clamp(24px, 2vw, 36px) 0;
+  padding: var(--space-4) var(--space-2) var(--space-6) 0;
 }
 
 .formColumn {
@@ -56,27 +54,30 @@
 
 .startPanel {
   display: grid;
-  gap: 16px;
-  padding: clamp(20px, 3vw, 30px);
-  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 90%, transparent);
-  border-radius: 28px;
-  background: color-mix(in srgb, var(--color-surface-strong) 88%, transparent);
-  box-shadow: var(--shadow-form-card);
+  gap: var(--space-4);
+  padding: clamp(var(--space-5), 3vw, var(--space-6));
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-elevated-solid);
+  outline: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-raised);
 }
 
 .startTitle {
   margin: 0;
-  font-size: 28px;
-  letter-spacing: -0.04em;
+  color: var(--color-text-primary);
+  font-size: var(--type-title-lg-size);
+  line-height: var(--type-title-lg-leading);
+  font-weight: var(--type-title-lg-weight);
+  letter-spacing: var(--type-title-lg-tracking);
 }
 
 .startCopy {
   margin: 0;
   color: var(--color-text-secondary);
-  line-height: 1.5;
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
 }
 
 .startButton {
   width: 100%;
-  min-height: 56px;
 }

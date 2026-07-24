@@ -1,77 +1,48 @@
-.screenShell {
-  min-height: var(--app-height);
-  padding: calc(var(--safe-area-top) + 20px) calc(var(--safe-area-right) + 16px)
-    calc(var(--safe-area-bottom) + 20px) calc(var(--safe-area-left) + 16px);
-}
-
-.panelShell {
-  width: min(100%, 1180px);
-  min-height: calc(var(--app-height) - var(--safe-area-top) - var(--safe-area-bottom) - 40px);
-  margin: 0 auto;
-  padding: clamp(18px, 3vw, 28px);
-  border-radius: clamp(24px, 4vw, 36px);
-  background: var(--gradient-home-shell-background);
-}
-
-.panelShell::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--gradient-surface-sheen);
-  pointer-events: none;
-  border-radius: clamp(24px, 4vw, 36px);
-}
-
 .topBar {
   position: relative;
   z-index: 1;
   display: flex;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--space-4);
   align-items: center;
 }
 
 .topBarCopy {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .topBarLabel,
 .eyebrow {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
+  font-size: var(--type-micro-size);
+  line-height: var(--type-micro-leading);
+  font-weight: var(--type-micro-weight);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--color-text-secondary);
+  color: var(--color-accent-brand);
 }
 
 .topBarMeta {
   color: var(--color-text-muted);
-  font-size: 14px;
-}
-
-.contentGrid {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  gap: clamp(20px, 3vw, 28px);
-  margin-top: clamp(18px, 3vw, 28px);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
 }
 
 .menuPlaceholder {
   margin: 0;
   color: var(--color-text-secondary);
-  line-height: 1.5;
+  line-height: var(--type-body-leading);
 }
 
 .heroSection {
   display: grid;
   align-content: start;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .title {
   margin: 0;
+  color: var(--color-text-primary);
   font-size: clamp(48px, 9vw, 96px);
   line-height: 0.92;
   letter-spacing: -0.06em;
@@ -89,8 +60,8 @@
 .heroSupport {
   margin: 0;
   color: var(--color-text-muted);
-  font-size: 14px;
-  line-height: 1.45;
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
 }
 
 .formCard {

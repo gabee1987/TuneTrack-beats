@@ -1,6 +1,7 @@
 import { AppPageShell } from "../../../features/mobile-shell/AppPageShell";
 import { AppShellMenu } from "../../../features/app-shell/AppShellMenu";
 import { useI18n } from "../../../features/i18n";
+import { Button } from "../../../features/ui/primitives";
 import { StatusBanner } from "../../../features/ui/StatusBanner";
 import type { HomePageAssemblyProps } from "../HomePage.types";
 import { getHomePageMenuTabSpecs } from "../homePageMenuConfig";
@@ -35,45 +36,49 @@ export function HomePageMobile({ controller }: HomePageAssemblyProps) {
         </div>
 
         <header className={styles.hero}>
-          <img className={styles.brandLogo} src="/logo.png" alt="TuneTrack Beats" />
-          {/* <p className={styles.eyebrow}>Party music timeline game</p> */}
+          <img alt="TuneTrack Beats" className={styles.brandLogo} src="/logo.png" />
+          <p className={styles.tagline}>{t("home.roomEntryDescription")}</p>
         </header>
 
-        <section className={styles.previewCard} aria-label={t("home.mobilePreviewLabel")}>
-          <div className={styles.featureList}>
-            <article className={styles.featureCard}>
-              <span className={styles.featureStep}>01</span>
-              <h3>{t("home.featureGuessTitle")}</h3>
-              <p>{t("home.featureGuessDescription")}</p>
-            </article>
+        <section aria-label={t("home.mobilePreviewLabel")} className={styles.featureList}>
+          <article className={styles.featureCard}>
+            <span className={styles.featureStep}>01</span>
+            <div className={styles.featureCopy}>
+              <h3 className={styles.featureTitle}>{t("home.featureGuessTitle")}</h3>
+              <p className={styles.featureDescription}>{t("home.featureGuessDescription")}</p>
+            </div>
+          </article>
 
-            <article className={styles.featureCard}>
-              <span className={styles.featureStep}>02</span>
-              <h3>{t("home.featurePlaceTitle")}</h3>
-              <p>{t("home.featurePlaceDescription")}</p>
-            </article>
+          <article className={styles.featureCard}>
+            <span className={styles.featureStep}>02</span>
+            <div className={styles.featureCopy}>
+              <h3 className={styles.featureTitle}>{t("home.featurePlaceTitle")}</h3>
+              <p className={styles.featureDescription}>{t("home.featurePlaceDescription")}</p>
+            </div>
+          </article>
 
-            <article className={styles.featureCard}>
-              <span className={styles.featureStep}>03</span>
-              <h3>{t("home.featureChallengeTitle")}</h3>
-              <p>{t("home.featureChallengeDescription")}</p>
-            </article>
-          </div>
+          <article className={styles.featureCard}>
+            <span className={styles.featureStep}>03</span>
+            <div className={styles.featureCopy}>
+              <h3 className={styles.featureTitle}>{t("home.featureChallengeTitle")}</h3>
+              <p className={styles.featureDescription}>{t("home.featureChallengeDescription")}</p>
+            </div>
+          </article>
         </section>
 
         <div className={styles.actionZone}>
-          <button
-            className={styles.primaryAction}
+          <Button
+            fullWidth
+            haptic
             onClick={controller.handleStart}
             onFocus={controller.preloadLobby}
             onMouseEnter={controller.preloadLobby}
             onTouchStart={controller.preloadLobby}
+            size="lg"
             type="button"
           >
-            <span className={styles.primaryActionInner}>
-              <span className={styles.primaryActionLabel}>{t("home.primaryAction")}</span>
-            </span>
-          </button>
+            {t("home.primaryAction")}
+          </Button>
         </div>
       </div>
     </AppPageShell>
