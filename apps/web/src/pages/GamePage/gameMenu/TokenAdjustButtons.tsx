@@ -2,13 +2,14 @@ import {
   MAX_STARTING_TT_TOKEN_COUNT,
   MIN_STARTING_TT_TOKEN_COUNT,
 } from "@tunetrack/shared";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useRef, useState } from "react";
 import {
   createMenuTokenAdjustFlyoutPopTransition,
   createMenuTokenAdjustFlyoutPopVariants,
   createMenuTokenAdjustFlyoutTransition,
   createMenuTokenAdjustFlyoutVariants,
+  useReducedMotionPreference,
 } from "../../../features/motion";
 import { TtTokenIcon } from "../../../features/ui/TtToken";
 import styles from "../GamePage.module.css";
@@ -33,7 +34,7 @@ export function TokenAdjustButtons({
   onAwardTt,
   onRemoveTt,
 }: TokenAdjustButtonsProps) {
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
   const animationKeyRef = useRef(0);
   const tokenActionsRef = useRef<HTMLDivElement | null>(null);
   const addButtonContentRef = useRef<HTMLSpanElement | null>(null);

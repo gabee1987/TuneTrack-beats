@@ -1,8 +1,9 @@
 import type { TimelineCelebrationTone } from "../GamePage.types";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   createTimelineCelebrationVariants,
   createTimelineCelebrationTransition,
+  useReducedMotionPreference,
 } from "../../../features/motion";
 import styles from "./TimelinePanel.module.css";
 
@@ -15,7 +16,7 @@ export function TimelineCelebration({
   message,
   tone = "success",
 }: TimelineCelebrationProps) {
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
   const celebrationVariants = createTimelineCelebrationVariants(reduceMotion);
 
   return (

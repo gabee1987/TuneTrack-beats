@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { lazy, Suspense, useEffect } from "react";
 import type { PublicRoomSettings } from "@tunetrack/shared";
 import {
@@ -6,6 +6,7 @@ import {
   createModalOverlayMotionTargets,
   createModalSheetMotionTargets,
   createStandardTransition,
+  useReducedMotionPreference,
 } from "../../../../features/motion";
 import { useI18n } from "../../../../features/i18n";
 import { CloseIconButton } from "../../../../features/ui/CloseIconButton";
@@ -45,7 +46,7 @@ export function SpotifySetupModal({
   spotifyState,
 }: SpotifySetupModalProps) {
   const { t } = useI18n();
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
 
   useEffect(() => {
     if (!isOpen) return;

@@ -1,9 +1,10 @@
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   createActionDockMotion,
   createStandardTransition,
+  useReducedMotionPreference,
 } from "../../../features/motion";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import styles from "./GamePageActionPanels.module.css";
@@ -45,7 +46,7 @@ interface ActionDockProps {
 }
 
 export function ActionDock({ children, className }: ActionDockProps) {
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
   const portalTarget = useMobileControlPortalTarget();
   const dock = (
     <motion.div

@@ -1,9 +1,10 @@
-import { useAnimationControls, useReducedMotion } from "framer-motion";
+import { useAnimationControls } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import {
   createPreviewCardReplaceEnterInitial,
   createPreviewCardReplaceEnterMotion,
   createPreviewCardReplaceExitMotion,
+  useReducedMotionPreference,
 } from "../../../../features/motion";
 import type { GamePageCard } from "../../GamePage.types";
 import type { PreviewCardTransitionEvent } from "../../gamePageTransitionEvents";
@@ -26,7 +27,7 @@ export function usePreviewCardTransition({
   showRevealedContent,
   transitionEvent,
 }: UsePreviewCardTransitionOptions): UsePreviewCardTransitionResult {
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
   const animationControls = useAnimationControls();
   const [displayCard, setDisplayCard] = useState<GamePageCard | null>(previewCard);
   const [displayShowRevealedContent, setDisplayShowRevealedContent] =

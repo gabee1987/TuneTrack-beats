@@ -1,4 +1,5 @@
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
+import { useReducedMotionPreference } from "./useReducedMotionPreference";
 import type { ReactNode } from "react";
 import {
   type ScreenTransitionDirection,
@@ -12,7 +13,7 @@ interface PageTransitionProps {
 }
 
 export function PageTransition({ children, direction }: PageTransitionProps) {
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
 
   return (
     <motion.div

@@ -1,9 +1,12 @@
 import type { PublicTrackInfo, TrackMetadataStatus } from "@tunetrack/shared";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { type FormEvent, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../../../features/i18n";
-import { MotionPresence } from "../../../features/motion";
+import {
+  MotionPresence,
+  useReducedMotionPreference,
+} from "../../../features/motion";
 import { ActionButton } from "../../../features/ui/ActionButton";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { TextInput } from "../../../features/ui/TextInput";
@@ -27,7 +30,7 @@ export function PlaylistTrackDetailsSheet({
   track,
 }: PlaylistTrackDetailsSheetProps) {
   const { t } = useI18n();
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
   const [title, setTitle] = useState("");
   const [artist, setArtist] = useState("");
   const [albumTitle, setAlbumTitle] = useState("");

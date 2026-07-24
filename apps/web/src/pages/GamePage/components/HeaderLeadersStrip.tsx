@@ -1,7 +1,8 @@
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   MotionPresence,
   createStandardTransition,
+  useReducedMotionPreference,
 } from "../../../features/motion";
 import { CardCountAmount } from "../../../features/ui/CardCountAmount";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
@@ -19,7 +20,7 @@ export function HeaderLeadersStrip({
   roomState,
   show,
 }: HeaderLeadersStripProps) {
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
   const transition = createStandardTransition(reduceMotion);
 
   return (

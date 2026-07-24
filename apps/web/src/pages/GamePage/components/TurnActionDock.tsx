@@ -3,12 +3,13 @@ import {
   SKIP_TRACK_TT_COST,
   type PublicRoomState,
 } from "@tunetrack/shared";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import {
   MotionPresence,
   createActionButtonExitMotion,
   createLayoutTransition,
+  useReducedMotionPreference,
 } from "../../../features/motion";
 import { useI18n } from "../../../features/i18n";
 import {
@@ -70,7 +71,7 @@ export function TurnActionDock({
   roomState,
 }: TurnActionDockProps) {
   const { t } = useI18n();
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
   const skipCostBadgeRef = useRef<HTMLSpanElement | null>(null);
   const buyCostBadgeRef = useRef<HTMLSpanElement | null>(null);
   const offlinePlayerId =

@@ -1,6 +1,7 @@
 export { MotionPresence } from "./MotionPresence";
 export { PageTransition } from "./PageTransition";
 export { MotionDialogPortal } from "./MotionDialogPortal";
+export { useReducedMotionPreference } from "./useReducedMotionPreference";
 export type { ScreenTransitionDirection } from "./coreMotionTokens";
 export {
   createAppShellMenuSheetMotionTargets,

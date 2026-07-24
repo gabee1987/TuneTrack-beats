@@ -53,6 +53,45 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        // Split third-party libs into stable, independently cacheable chunks so an
+        // app-code change no longer invalidates React/framer-motion for PWA updates.
+        // Libs used only by lazy routes (dnd-kit, tanstack, socket.io) stay deferred.
+        manualChunks(id) {
+          if (!id.includes("node_modules")) {
+            return undefined;
+          }
+          if (id.includes("framer-motion")) {
+            return "vendor-motion";
+          }
+          if (id.includes("@dnd-kit")) {
+            return "vendor-dnd";
+          }
+          if (id.includes("@tanstack")) {
+            return "vendor-tanstack";
+          }
+          if (id.includes("socket.io") || id.includes("engine.io")) {
+            return "vendor-socket";
+          }
+          if (id.includes("zod")) {
+            return "vendor-zod";
+          }
+          if (id.includes("react-router") || id.includes("@remix-run")) {
+            return "vendor-router";
+          }
+          if (id.includes("react-dom")) {
+            return "vendor-react-dom";
+          }
+          if (id.includes("/react/") || id.includes("react/jsx-runtime") || id.includes("scheduler")) {
+            return "vendor-react";
+          }
+          return "vendor";
+        },
+      },
+    },
+  },
   server: {
     // Bind on all interfaces so phones on the same Wi‑Fi can reach the app.
     // (npm often swallows CLI `--host` before Vite sees it.)

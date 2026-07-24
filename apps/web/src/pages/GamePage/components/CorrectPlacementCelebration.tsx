@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import { motion, useReducedMotion, type MotionStyle } from "framer-motion";
+import { motion, type MotionStyle } from "framer-motion";
 import {
   createCorrectPlacementCardTransition,
   createCorrectPlacementCardVariants,
@@ -9,6 +9,7 @@ import {
   createCorrectPlacementFillVariants,
   createCorrectPlacementShellContentTransition,
   createCorrectPlacementShellContentVariants,
+  useReducedMotionPreference,
 } from "../../../features/motion";
 import styles from "./TimelinePanel.module.css";
 
@@ -48,7 +49,7 @@ export function CorrectPlacementCelebration({
   className,
   showDecorativeStars = true,
 }: CorrectPlacementCelebrationProps) {
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
 
   return (
     <motion.article

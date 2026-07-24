@@ -1,8 +1,12 @@
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../../../features/i18n";
-import { createFadeMotion, createStandardTransition } from "../../../features/motion";
+import {
+  createFadeMotion,
+  createStandardTransition,
+  useReducedMotionPreference,
+} from "../../../features/motion";
 import { ActionButton } from "../../../features/ui/ActionButton";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { usePlaylistEditor, type SortField } from "../hooks/usePlaylistEditor";
@@ -30,7 +34,7 @@ function createSheetMotion(reduceMotion: boolean) {
 
 export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
   const { t } = useI18n();
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
 
   const {

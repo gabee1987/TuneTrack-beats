@@ -1,5 +1,9 @@
-import { motion, useReducedMotion } from "framer-motion";
-import { MotionPresence, createToastSlideMotion } from "../motion";
+import { motion } from "framer-motion";
+import {
+  MotionPresence,
+  createToastSlideMotion,
+  useReducedMotionPreference,
+} from "../motion";
 import type { AppToast } from "./AppToast.types";
 import styles from "./AppToastStack.module.css";
 
@@ -8,7 +12,7 @@ interface AppToastStackProps {
 }
 
 export function AppToastStack({ toasts }: AppToastStackProps) {
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
 
   return (
     <div className={styles.toastContainer} aria-live="polite" aria-atomic="false">

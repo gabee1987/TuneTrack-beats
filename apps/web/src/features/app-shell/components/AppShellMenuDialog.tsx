@@ -1,10 +1,11 @@
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useMemo } from "react";
 import { createPortal } from "react-dom";
 import {
   MotionPresence,
   createFadeMotion,
   createStandardTransition,
+  useReducedMotionPreference,
 } from "../../motion";
 import type { AppShellMenuProps } from "../AppShellMenu.types";
 import { useAppShellMenuPreferencesState } from "../hooks/useAppShellMenuPreferencesState";
@@ -25,7 +26,7 @@ export function AppShellMenuDialog({
   tabs,
   title,
 }: AppShellMenuDialogProps) {
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
   const preferencesState = useAppShellMenuPreferencesState();
   const availableTabs = useMemo(() => tabs, [tabs]);
   const activeTabId = availableTabs.some(

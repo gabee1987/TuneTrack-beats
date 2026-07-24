@@ -1,9 +1,10 @@
-import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   createAppShellMenuSheetMotionTargets,
   createMenuTabActivationTransition,
   createStandardTransition,
+  useReducedMotionPreference,
 } from "../../motion";
 import { useI18n } from "../../i18n";
 import type {
@@ -40,7 +41,7 @@ export function AppShellMenuSheet({
   tabs,
   title,
 }: AppShellMenuSheetProps) {
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
   const { t } = useI18n();
   const panelRef = useRef<HTMLElement | null>(null);
   const [showTopFade, setShowTopFade] = useState(false);

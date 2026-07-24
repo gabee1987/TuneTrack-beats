@@ -1,5 +1,9 @@
-import { motion, useReducedMotion } from "framer-motion";
-import { MotionPresence, createDialogCardMotion } from "../motion";
+import { motion } from "framer-motion";
+import {
+  MotionPresence,
+  createDialogCardMotion,
+  useReducedMotionPreference,
+} from "../motion";
 import type { AppLoadingState } from "./AppLoading.types";
 import styles from "./AppLoadingOverlay.module.css";
 
@@ -8,7 +12,7 @@ interface AppLoadingOverlayProps {
 }
 
 export function AppLoadingOverlay({ loading }: AppLoadingOverlayProps) {
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
   const overlayMotion = createLoadingOverlayMotion(reduceMotion);
 
   return (

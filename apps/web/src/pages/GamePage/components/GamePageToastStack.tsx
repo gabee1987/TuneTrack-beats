@@ -1,5 +1,9 @@
-import { motion, useReducedMotion } from "framer-motion";
-import { MotionPresence, createToastSlideMotion } from "../../../features/motion";
+import { motion } from "framer-motion";
+import {
+  MotionPresence,
+  createToastSlideMotion,
+  useReducedMotionPreference,
+} from "../../../features/motion";
 import type { GamePageToast } from "../gamePageToast.types";
 import styles from "./GamePageToastStack.module.css";
 
@@ -8,7 +12,7 @@ interface GamePageToastStackProps {
 }
 
 export function GamePageToastStack({ toasts }: GamePageToastStackProps) {
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
 
   return (
     <div className={styles.toastContainer} aria-live="polite" aria-atomic="false">

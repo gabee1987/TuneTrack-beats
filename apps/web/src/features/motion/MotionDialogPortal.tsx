@@ -1,4 +1,5 @@
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
+import { useReducedMotionPreference } from "./useReducedMotionPreference";
 import type { MouseEventHandler, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -25,7 +26,7 @@ export function MotionDialogPortal({
   onClose,
   overlayClassName,
 }: MotionDialogPortalProps) {
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
   const portalTarget = typeof document !== "undefined" ? document.body : null;
 
   if (!portalTarget) {

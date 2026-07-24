@@ -4,6 +4,7 @@ import {
   SKIP_TRACK_TT_COST,
   type PublicRoomState,
 } from "@tunetrack/shared";
+import { useMemo } from "react";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import { useI18n } from "../../../features/i18n";
 import { createGameMenuTabs } from "../gamePageMenuTabs";
@@ -88,31 +89,50 @@ export function useGamePageCapabilityState({
     roomState?.status === "turn" && isCurrentPlayerTurn && Boolean(roomState.currentTrackCard);
   const canConfirmBeatPlacement = roomState?.status === "challenge" && canSelectChallengeSlot;
 
-  const leadingPlayers =
-    roomState?.players
-      .slice()
-      .sort((leftPlayer, rightPlayer) => {
-        const rightScore = roomState.timelines[rightPlayer.id]?.length ?? 0;
-        const leftScore = roomState.timelines[leftPlayer.id]?.length ?? 0;
+  // Stable identity while roomState is unchanged so GamePageHeader's memo can skip
+  // re-renders during local-only interactions (slot selection, drag, menu open).
+  const leadingPlayers = useMemo<PublicRoomState["players"]>(
+    () =>
+      roomState?.players
+        .slice()
+        .sort((leftPlayer, rightPlayer) => {
+          const rightScore = roomState.timelines[rightPlayer.id]?.length ?? 0;
+          const leftScore = roomState.timelines[leftPlayer.id]?.length ?? 0;
 
-        return rightScore - leftScore;
-      })
-      .slice(0, 3) ?? [];
+          return rightScore - leftScore;
+        })
+        .slice(0, 3) ?? [],
+    [roomState],
+  );
 
   const historyEntries = useGameHistory(roomState);
 
-  const menuTabs = roomState
-    ? createGameMenuTabs({
-        currentPlayerId,
-        historyEntries,
-        onAwardTt: handlers.handleAwardTt,
-        onKickPlayer: handlers.handleKickPlayer,
-        onRemoveTt: handlers.handleRemoveTt,
-        onTransferHost: handlers.handleTransferHost,
-        roomState,
-        t,
-      })
-    : [];
+  const { handleAwardTt, handleKickPlayer, handleRemoveTt, handleTransferHost } = handlers;
+  const menuTabs = useMemo<AppShellMenuTab[]>(
+    () =>
+      roomState
+        ? createGameMenuTabs({
+            currentPlayerId,
+            historyEntries,
+            onAwardTt: handleAwardTt,
+            onKickPlayer: handleKickPlayer,
+            onRemoveTt: handleRemoveTt,
+            onTransferHost: handleTransferHost,
+            roomState,
+            t,
+          })
+        : [],
+    [
+      currentPlayerId,
+      historyEntries,
+      handleAwardTt,
+      handleKickPlayer,
+      handleRemoveTt,
+      handleTransferHost,
+      roomState,
+      t,
+    ],
+  );
 
   return {
     canClaimChallenge,

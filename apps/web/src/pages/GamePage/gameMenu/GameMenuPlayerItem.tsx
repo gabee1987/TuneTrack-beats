@@ -1,10 +1,11 @@
 import { type PublicPlayerState, type PublicRoomState } from "@tunetrack/shared";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useLayoutEffect, useRef, useState } from "react";
 import {
   MotionDialogPortal,
   createMeasuredDisclosureMotion,
   createStandardTransition,
+  useReducedMotionPreference,
 } from "../../../features/motion";
 import type { Translate } from "../../../features/i18n";
 import { Badge } from "../../../features/ui/Badge";
@@ -34,7 +35,7 @@ export function GameMenuPlayerItem({
   roomState,
   t,
 }: GameMenuPlayerItemProps) {
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isTransferConfirmOpen, setIsTransferConfirmOpen] = useState(false);
   const [isKickConfirmOpen, setIsKickConfirmOpen] = useState(false);

@@ -1,5 +1,8 @@
-import { motion, useReducedMotion } from "framer-motion";
-import { createStandardTransition } from "../../../features/motion";
+import { motion } from "framer-motion";
+import {
+  createStandardTransition,
+  useReducedMotionPreference,
+} from "../../../features/motion";
 import { GamePageActionPanels } from "../components/GamePageActionPanels";
 import { GamePageHeader } from "../components/GamePageHeader";
 import { TimelinePanel } from "../components/TimelinePanel";
@@ -7,7 +10,7 @@ import type { GamePageAssemblyProps } from "../GamePage.types";
 import styles from "./GamePageDesktop.module.css";
 
 export function GamePageDesktop({ model }: GamePageAssemblyProps) {
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
 
   return (
     <main className={styles.screen}>

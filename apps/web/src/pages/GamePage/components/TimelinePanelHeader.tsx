@@ -1,7 +1,10 @@
-import { LayoutGroup, motion, useReducedMotion } from "framer-motion";
+import { LayoutGroup, motion } from "framer-motion";
 import { memo } from "react";
 import { useI18n } from "../../../features/i18n";
-import { createLayoutTransition } from "../../../features/motion";
+import {
+  createLayoutTransition,
+  useReducedMotionPreference,
+} from "../../../features/motion";
 import type { TimelinePanelHeaderModel } from "../GamePage.types";
 import styles from "./TimelinePanel.module.css";
 
@@ -15,7 +18,7 @@ function TimelinePanelHeaderComponent({
   onMineButtonRef,
 }: TimelinePanelHeaderProps) {
   const { t } = useI18n();
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
   const layoutTransition = createLayoutTransition(reduceMotion);
   const {
     canChangeTimelineView = true,

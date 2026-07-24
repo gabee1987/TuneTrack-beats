@@ -1,11 +1,12 @@
 import { CHALLENGE_TT_COST, type PublicRoomState } from "@tunetrack/shared";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   MotionPresence,
   createChallengePanelMotion,
   createStandardTransition,
+  useReducedMotionPreference,
 } from "../../../features/motion";
 import { useI18n } from "../../../features/i18n";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
@@ -79,7 +80,7 @@ export function ChallengeActionPanel({
   roomState,
 }: ChallengeActionPanelProps) {
   const { t } = useI18n();
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
   const portalTarget = useMobileControlPortalTarget();
   const beatCostBadgeRef = useRef<HTMLSpanElement | null>(null);
 

@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { memo, useRef, useState } from "react";
 import {
   MotionPresence,
@@ -6,6 +6,7 @@ import {
   createMenuTokenAdjustFlyoutPopVariants,
   createMenuTokenAdjustFlyoutTransition,
   createMenuTokenAdjustFlyoutVariants,
+  useReducedMotionPreference,
 } from "../../../features/motion";
 import { TtTokenIcon } from "../../../features/ui/TtToken";
 import type { GamePageActionPanelsModel } from "../GamePage.types";
@@ -27,7 +28,7 @@ interface TokenSpendFlyoutState {
 }
 
 function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
   const animationKeyRef = useRef(0);
   const [tokenSpendFlyouts, setTokenSpendFlyouts] = useState<TokenSpendFlyoutState[]>([]);
   const {

@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { createPortal } from "react-dom";
 import type {
   HiddenCardMode,
@@ -7,6 +7,7 @@ import type {
 import {
   createTimelineFlyAnimationVariants,
   createTimelineFlyAnimationTransition,
+  useReducedMotionPreference,
 } from "../../../features/motion";
 import type { GamePageCard } from "../GamePage.types";
 import { PreviewCard } from "./PreviewCard";
@@ -31,7 +32,7 @@ export function TimelinePanelFlyAnimation({
   showDevGenreInfo,
   theme,
 }: TimelinePanelFlyAnimationProps) {
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
 
   if (typeof document === "undefined" || !flyAnimationState) {
     return null;

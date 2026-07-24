@@ -1,5 +1,5 @@
 import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
   MAX_CHALLENGE_WINDOW_DURATION_SECONDS,
@@ -12,6 +12,7 @@ import {
   createMeasuredDisclosureMotion,
   createStandardTransition,
   createToggleHintFadeMotion,
+  useReducedMotionPreference,
 } from "../../../features/motion";
 import { RangeField } from "../../../features/ui/RangeField";
 import { useI18n } from "../../../features/i18n";
@@ -42,7 +43,7 @@ export function LobbyHostTtSettings({
   onToggleTtMode,
 }: LobbyHostTtSettingsProps) {
   const { t } = useI18n();
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
   const challengeWindowOptionValues = getChallengeWindowOptionValueMap();
   const ttSettingsContentRef = useRef<HTMLDivElement | null>(null);
   const [ttSettingsContentHeight, setTtSettingsContentHeight] = useState(0);
