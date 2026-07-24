@@ -85,7 +85,7 @@
   padding-bottom: var(--space-4);
 }
 
-.challengeActionStack .floatingActionDock {
+.floatingActionDockInChallengeStack {
   position: relative;
   z-index: 4;
   margin-top: 0;
@@ -97,7 +97,7 @@
   box-shadow: none;
 }
 
-.challengeActionStack .floatingActionDockStacked {
+.floatingActionDockStackedInChallengeStack {
   width: min(100%, 420px);
 }
 

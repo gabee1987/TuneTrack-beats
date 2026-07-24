@@ -2,7 +2,11 @@
 
 > **Purpose**: Define a robust, token-driven, Spotify-inspired flat design system and a phased plan to overhaul the TuneTrack UI without regressing performance, features, or code quality.
 >
-> **Status**: Phases 0–6 complete. Phase 7 (desktop visual pass) is deferred.
+> **Status**: Phases 0–6 complete (mobile-first overhaul). Phase 7 (desktop visual pass) is deferred.
+>
+> **Merge checkpoint (2026-07-24):** `feature/ui-overhaul` is the shippable UI-overhaul tip for family/friends testing.
+> Merge path: `feature/ui-overhaul` → `develop` → `main` (Render + Railway auto-deploy from `main`).
+> Remaining optional polish (not merge blockers): leftover hex hardcodes, manual device-range spot checks, Phase 7 desktop.
 
 ---
 

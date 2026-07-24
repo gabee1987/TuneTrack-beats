@@ -139,9 +139,11 @@ export function ChallengeActionPanel({
     };
   }
 
+  const nestedDockClassName = portalTarget ? "" : styles.floatingActionDockInChallengeStack;
+
   const actionDock = isOpenChallengeWindow ? (
     canClaimChallenge || canResolveChallengeWindow ? (
-      <ActionDock>
+      <ActionDock className={nestedDockClassName}>
         {canClaimChallenge ? (
           <PrimaryActionButton
             onClick={(event) => {
@@ -169,7 +171,7 @@ export function ChallengeActionPanel({
       </ActionDock>
     ) : null
   ) : canConfirmBeatPlacement ? (
-    <ActionDock>
+    <ActionDock className={nestedDockClassName}>
       <PrimaryActionButton onClick={handlePlaceChallenge}>
         {t("game.controls.confirmBeat")}
       </PrimaryActionButton>
