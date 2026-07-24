@@ -26,6 +26,7 @@ export function AdaptiveSelectSheet({
       onClose={onClose}
       overlayClassName={styles.mobileSelectOverlay}
       sheetClassName={styles.mobileSelectSheet}
+      showHandle={false}
     >
       <div className={styles.mobileSelectSheetHeader}>
         <div>

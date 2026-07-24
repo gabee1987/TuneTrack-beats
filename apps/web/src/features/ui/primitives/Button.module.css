@@ -1,0 +1,88 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--button-min-height);
+  min-width: var(--size-touch-target);
+  padding: var(--space-3) var(--space-5);
+  border: 0;
+  border-radius: var(--button-radius);
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-leading);
+  font-weight: var(--type-label-weight);
+  letter-spacing: var(--type-label-tracking);
+  cursor: pointer;
+  transition:
+    transform var(--motion-quick-duration) var(--motion-ease-standard),
+    background-color var(--motion-quick-duration) var(--motion-ease-standard),
+    color var(--motion-quick-duration) var(--motion-ease-standard),
+    opacity var(--motion-quick-duration) var(--motion-ease-standard);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.lg {
+  min-height: 56px;
+  padding: var(--space-4) var(--space-6);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
+  font-weight: 700;
+}
+
+.primary {
+  background: var(--button-primary-bg);
+  color: var(--button-primary-fg);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--button-primary-bg-hover);
+}
+
+.primary:active:not(:disabled) {
+  background: var(--button-primary-bg-active);
+}
+
+.secondary {
+  background: var(--color-surface-interactive);
+  color: var(--color-text-primary);
+  outline: 1px solid var(--color-border-subtle);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--color-text-primary);
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--color-surface-interactive);
+}
+
+.danger {
+  background: var(--color-status-danger-surface);
+  color: var(--color-status-danger-text);
+  outline: 1px solid var(--color-status-danger-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+
+  .button:active:not(:disabled) {
+    transform: none;
+  }
+}

@@ -4,17 +4,22 @@
   justify-content: center;
   border-radius: var(--radius-pill);
   white-space: nowrap;
-  font-weight: 700;
+  font-weight: var(--type-label-weight);
+  letter-spacing: var(--type-caption-tracking);
 }
 
 .sm {
-  padding: 8px 12px;
-  font-size: 12px;
+  min-height: 28px;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
 }
 
 .md {
-  padding: 11px 14px;
-  font-size: 14px;
+  min-height: 36px;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
 }
 
 .neutral {

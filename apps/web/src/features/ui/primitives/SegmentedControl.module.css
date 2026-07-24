@@ -1,0 +1,59 @@
+.root {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-interactive);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.root::-webkit-scrollbar {
+  display: none;
+}
+
+.option {
+  flex: 1 0 auto;
+  min-height: var(--size-touch-target);
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-leading);
+  font-weight: var(--type-label-weight);
+  letter-spacing: var(--type-label-tracking);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-quick-duration) var(--motion-ease-standard),
+    color var(--motion-quick-duration) var(--motion-ease-standard),
+    transform var(--motion-quick-duration) var(--motion-ease-standard);
+}
+
+.option:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.option:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.selected {
+  background: var(--color-surface-elevated-solid);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-raised);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .option {
+    transition: none;
+  }
+
+  .option:active:not(:disabled) {
+    transform: none;
+  }
+}

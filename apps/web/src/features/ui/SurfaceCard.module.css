@@ -1,21 +1,7 @@
 .card {
-  padding: clamp(16px, 2vw, 22px);
-  border-radius: 24px;
+  padding: var(--card-padding);
+  border-radius: var(--card-radius);
   background: color-mix(in srgb, var(--color-surface-strong) 92%, transparent);
   outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 88%, transparent);
-  backdrop-filter: blur(16px);
-}
-
-@media (max-width: 720px) {
-  .card {
-    padding: 14px;
-    border-radius: 18px;
-  }
-}
-
-@media (hover: none) and (pointer: coarse) {
-  .card {
-    padding: 14px;
-    border-radius: 18px;
-  }
+  box-shadow: var(--shadow-none);
 }

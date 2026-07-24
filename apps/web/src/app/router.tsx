@@ -67,6 +67,22 @@ export const router = createBrowserRouter([
           };
         },
       },
+      ...(import.meta.env.DEV
+        ? [
+            {
+              path: "dev/ui",
+              lazy: async () => {
+                const { DesignSystemPage } = await import(
+                  "../pages/DesignSystemPage/DesignSystemPage"
+                );
+
+                return {
+                  Component: DesignSystemPage,
+                };
+              },
+            },
+          ]
+        : []),
     ],
   },
 ]);

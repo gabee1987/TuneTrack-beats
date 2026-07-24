@@ -6,6 +6,7 @@ import {
   createStandardTransition,
   useReducedMotionPreference,
 } from "../motion";
+import { classNames } from "./classNames";
 import styles from "./BottomSheet.module.css";
 
 interface BottomSheetProps {
@@ -13,6 +14,7 @@ interface BottomSheetProps {
   onClose: () => void;
   overlayClassName?: string | undefined;
   sheetClassName?: string | undefined;
+  showHandle?: boolean | undefined;
 }
 
 export function BottomSheet({
@@ -20,6 +22,7 @@ export function BottomSheet({
   onClose,
   overlayClassName,
   sheetClassName,
+  showHandle = true,
 }: BottomSheetProps) {
   const reduceMotion = useReducedMotionPreference();
   const stopPropagation: MouseEventHandler<HTMLDivElement> = (event) => {
@@ -29,7 +32,7 @@ export function BottomSheet({
   return (
     <motion.div
       animate="animate"
-      className={`${styles.overlay}${overlayClassName ? ` ${overlayClassName}` : ""}`}
+      className={classNames(styles.overlay, overlayClassName)}
       exit="exit"
       initial="initial"
       onClick={onClose}
@@ -39,7 +42,7 @@ export function BottomSheet({
     >
       <motion.div
         animate="animate"
-        className={`${styles.sheet}${sheetClassName ? ` ${sheetClassName}` : ""}`}
+        className={classNames(styles.sheet, sheetClassName)}
         exit="exit"
         initial="initial"
         onClick={stopPropagation}
@@ -47,7 +50,12 @@ export function BottomSheet({
         transition={createStandardTransition(reduceMotion)}
         variants={createBottomSheetMotion(reduceMotion)}
       >
-        {children}
+        {showHandle ? (
+          <div className={styles.handleRow} aria-hidden="true">
+            <div className={styles.handle} />
+          </div>
+        ) : null}
+        <div className={styles.content}>{children}</div>
       </motion.div>
     </motion.div>
   );

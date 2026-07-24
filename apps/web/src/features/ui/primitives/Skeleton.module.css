@@ -1,0 +1,33 @@
+.skeleton {
+  display: block;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-surface-interactive) 88%, transparent);
+  animation: skeletonPulse 1.4s var(--motion-ease-standard) infinite;
+}
+
+.circle {
+  border-radius: var(--radius-circle);
+}
+
+.text {
+  height: 0.9em;
+  border-radius: var(--radius-pill);
+}
+
+@keyframes skeletonPulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    opacity: 0.7;
+  }
+}
