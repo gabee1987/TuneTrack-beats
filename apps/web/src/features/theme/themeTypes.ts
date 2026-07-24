@@ -1,7 +1,9 @@
-export type ThemeCssVariables = Record<string, string>;
+import type { SemanticColorTokens } from "./darkThemeTokens";
+
+export type ThemeCssVariables = SemanticColorTokens;
 
 export interface ThemeDefinition {
-  cssVariables: ThemeCssVariables;
+  cssVariables: SemanticColorTokens;
   gameCardGradients: string[];
   gameCardPreviewOverlay: string;
   gameCardPreviewHighlight: string;

@@ -1,3 +1,4 @@
+import { brandAccent } from "./brandAccent";
 import type { ThemeDefinition } from "./themeTypes";
 
 export const lightThemeDefinition: ThemeDefinition = {
@@ -5,12 +6,13 @@ export const lightThemeDefinition: ThemeDefinition = {
     // App background
     "color-bg-app": "#f5f2ee",
     "color-bg-app-accent": "#eef5fb",
-    "gradient-app-background":
-      "linear-gradient(155deg, #f5f2ee 0%, #eef5fb 100%)",
+    "gradient-app-background": "linear-gradient(155deg, #f5f2ee 0%, #eef5fb 100%)",
 
     // Core surfaces
     "color-surface": "rgba(255, 252, 248, 0.88)",
     "color-surface-elevated": "rgba(136, 112, 95, 0.08)",
+    "color-surface-elevated-solid": "#ffffff",
+    "color-surface-interactive": "rgba(136, 112, 95, 0.12)",
     "color-surface-soft": "rgba(126, 111, 98, 0.08)",
     "color-surface-strong": "rgba(255, 249, 242, 0.92)",
     "color-card": "rgba(255, 251, 247, 0.94)",
@@ -30,9 +32,23 @@ export const lightThemeDefinition: ThemeDefinition = {
     "color-text-on-dark-surface": "#ffffff",
 
     // Accent and feedback
-    "color-accent-primary":
-      "linear-gradient(135deg, #ff8b5d 0%, #f06fb0 52%, #7b8cff 100%)",
+    // Legacy gradient accent — kept until Phase 1+ migrates CTAs to brand accent.
+    "color-accent-primary": "linear-gradient(135deg, #ff8b5d 0%, #f06fb0 52%, #7b8cff 100%)",
     "color-accent-control": "#7b8cff",
+
+    // Brand accent (reserved: primary CTAs, active state, play controls).
+    // Values live in ./brandAccent.ts — change there to rebrand.
+    "color-accent-brand": brandAccent.light.base,
+    "color-accent-brand-hover": brandAccent.light.hover,
+    "color-accent-brand-active": brandAccent.light.active,
+    "color-on-accent-brand": brandAccent.light.on,
+
+    // Solid semantic state colors (design-system layer; additive for Phase 1+)
+    "color-success": "#16a34a",
+    "color-danger": "#dc2626",
+    "color-warning": "#d97706",
+    "color-info": "#2563eb",
+
     "color-accent-danger": "rgba(255, 94, 129, 0.14)",
     "color-accent-success": "rgba(82, 227, 173, 0.16)",
     "color-focus-ring": "rgba(255, 171, 120, 0.95)",
@@ -45,8 +61,7 @@ export const lightThemeDefinition: ThemeDefinition = {
     "color-status-danger-chip-text": "#a23d63",
     "color-badge-strong-background": "rgba(123, 140, 255, 0.28)",
     "color-badge-strong-text": "#ffffff",
-    "gradient-toggle-checked":
-      "linear-gradient(135deg, #ff8b5d 0%, #7b8cff 100%)",
+    "gradient-toggle-checked": "linear-gradient(135deg, #ff8b5d 0%, #7b8cff 100%)",
 
     // Page decoration
     "gradient-home-shell-background":
@@ -63,6 +78,9 @@ export const lightThemeDefinition: ThemeDefinition = {
       "radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.32), transparent 30%), radial-gradient(circle at 80% 0%, rgba(123, 140, 255, 0.28), transparent 34%), linear-gradient(135deg, rgba(123, 140, 255, 0.58) 0%, rgba(240, 111, 176, 0.5) 100%)",
     "gradient-hidden-card-preview-surface":
       "linear-gradient(135deg, rgba(123, 140, 255, 0.3) 0%, rgba(255, 252, 248, 0.86) 100%)",
+    // Neutral hidden-card gradient for the flat design system (Phase 1+ adoption).
+    "gradient-card-hidden":
+      "linear-gradient(145deg, #ececeb 0%, #f7f7f5 55%, #ffffff 100%)",
 
     // Slider and toggle controls
     "color-slider-track": "rgba(122, 110, 128, 0.18)",
@@ -87,11 +105,10 @@ export const lightThemeDefinition: ThemeDefinition = {
     "color-game-meta-pill-text": "#1f2430",
     "color-game-artist-text": "rgba(31, 36, 48, 0.82)",
     "color-game-album-text": "rgba(31, 36, 48, 0.72)",
-    "gradient-floating-primary-action":
-      "linear-gradient(135deg, #7b8cff 0%, #f06fb0 100%)",
+    "gradient-floating-primary-action": "linear-gradient(135deg, #7b8cff 0%, #f06fb0 100%)",
     "color-floating-secondary-action-background": "rgba(0, 175, 123, 0.94)",
 
-    // Shadows
+    // Shadows — legacy (keep until component migration)
     "shadow-surface": "0 24px 70px rgba(90, 79, 74, 0.12)",
     "shadow-form-card": "0 18px 48px rgba(90, 79, 74, 0.14)",
     "shadow-slider-thumb": "0 4px 14px rgba(90, 79, 74, 0.16)",
@@ -106,6 +123,12 @@ export const lightThemeDefinition: ThemeDefinition = {
     "shadow-game-preview-card":
       "0 26px 60px rgba(90, 79, 74, 0.18), 0 10px 24px rgba(90, 79, 74, 0.1), 0 0 0 1px rgba(113, 92, 102, 0.12) inset",
     "shadow-floating-action": "0 14px 34px rgba(90, 79, 74, 0.16)",
+
+    // Elevation scale — flat design system (Phase 1+ adoption)
+    "shadow-none": "none",
+    "shadow-raised": "0 2px 10px rgba(90, 79, 74, 0.1)",
+    "shadow-overlay": "0 8px 28px rgba(90, 79, 74, 0.16)",
+    "shadow-dialog": "0 24px 56px rgba(90, 79, 74, 0.22)",
   },
   gameCardGradients: [
     "linear-gradient(142deg, rgba(163, 187, 255, 0.96) 0%, rgba(147, 232, 216, 0.93) 100%)",
