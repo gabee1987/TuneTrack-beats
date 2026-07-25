@@ -47,6 +47,7 @@ export function SpotifySmartSearchResultRow({
     [0.6, 1],
   );
   const isActing = useRef(false);
+  const rowRef = useRef<HTMLDivElement>(null);
   const isTrack = result.type === "track";
 
   useEffect(() => {
@@ -75,13 +76,24 @@ export function SpotifySmartSearchResultRow({
     }
 
     if (isAdded && info.offset.x < -SMART_SEARCH_SWIPE_THRESHOLD) {
+      const rowWidth = rowRef.current?.getBoundingClientRect().width ?? SMART_SEARCH_SWIPE_REVEAL_WIDTH;
       isActing.current = true;
-      await animate(x, -SMART_SEARCH_SWIPE_REVEAL_WIDTH, {
-        duration: 0.14,
-        ease: [0.2, 0, 0, 1],
-      });
+      await Promise.all([
+        animate(x, -rowWidth, {
+          duration: 0.2,
+          ease: [0.4, 0, 1, 1],
+        }),
+        animate(removeZoneWidth, rowWidth, {
+          duration: 0.2,
+          ease: [0.4, 0, 1, 1],
+        }),
+      ]);
       onRemove();
-      await animate(x, 0, { type: "spring", stiffness: 520, damping: 38 });
+      await animate(x, 0, {
+        type: "spring",
+        stiffness: 520,
+        damping: 38,
+      });
       addZoneWidth.set(0);
       removeZoneWidth.set(0);
       isActing.current = false;
@@ -92,7 +104,7 @@ export function SpotifySmartSearchResultRow({
   }
 
   return (
-    <div className={styles.spotifySmartResultRowWrapper}>
+    <div className={styles.spotifySmartResultRowWrapper} ref={rowRef}>
       {isTrack ? (
         <motion.div className={styles.spotifySmartAddZone} style={{ width: addZoneWidth }}>
           <motion.div style={{ opacity: addIconOpacity, scale: addIconScale }}>

@@ -1,5 +1,6 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { PublicTrackInfo } from "@tunetrack/shared";
+import { motion } from "framer-motion";
 import { useRef } from "react";
 import { PlaylistTrackRow } from "./PlaylistTrackRow";
 import styles from "./playlistEditModalStyles";
@@ -24,6 +25,7 @@ export function PlaylistTrackList({
   const listRef = useRef<HTMLDivElement>(null);
   const rowVirtualizer = useVirtualizer({
     count: tracks.length,
+    getItemKey: (index) => tracks[index]?.id ?? index,
     getScrollElement: () => listRef.current,
     estimateSize: () => 68,
     overscan: 10,
@@ -36,7 +38,9 @@ export function PlaylistTrackList({
           const track = tracks[virtualItem.index];
           if (!track) return null;
           return (
-            <div
+            <motion.div
+              animate={{ y: virtualItem.start }}
+              initial={false}
               key={virtualItem.key}
               style={{
                 position: "absolute",
@@ -44,19 +48,18 @@ export function PlaylistTrackList({
                 left: 0,
                 width: "100%",
                 height: `${virtualItem.size}px`,
-                transform: `translateY(${virtualItem.start}px)`,
               }}
+              transition={{ type: "spring", stiffness: 420, damping: 42, mass: 0.9 }}
             >
               <PlaylistTrackRow
                 canSelect={canSelect}
-                key={track.id}
                 isSelected={selectedIds.has(track.id)}
                 onOpen={onOpenTrack}
                 onRemove={onRemoveTrack}
                 onToggleSelect={onToggleSelection}
                 track={track}
               />
-            </div>
+            </motion.div>
           );
         })}
       </div>

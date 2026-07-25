@@ -1,10 +1,14 @@
 .sortBar {
+  position: absolute;
+  top: 82px;
+  right: 18px;
+  left: 18px;
+  z-index: 3;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 18px;
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--color-border-subtle);
+  padding: 0 2px 2px;
+  background: transparent;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -29,15 +33,17 @@
   justify-content: center;
   gap: 4px;
   flex-shrink: 0;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-button);
-  min-height: 44px;
+  min-height: 38px;
   padding: 0 15px;
-  font-size: 14px;
-  font-weight: 800;
-  background: color-mix(in srgb, var(--color-surface-elevated) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 72%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-surface-elevated) 86%, black 14%);
   color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
   cursor: pointer;
+  box-shadow: 0 6px 16px color-mix(in srgb, black 14%, transparent);
   transition:
     background 0.12s,
     color 0.12s,
@@ -49,7 +55,8 @@
 }
 
 .sortChipActive {
-  background: color-mix(in srgb, var(--color-surface-elevated) 80%, transparent);
+  border-color: color-mix(in srgb, var(--color-border-spotify) 72%, transparent);
+  background: color-mix(in srgb, var(--color-border-spotify) 45%, #10131d 55%);
   color: var(--color-text-primary);
 }
 
@@ -60,10 +67,14 @@
 
 .listScrollArea {
   flex: 1;
+  min-height: 0;
+  padding-top: 58px;
+  padding-bottom: 72px;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  scroll-padding-top: 58px;
 }
 
 .listScrollArea::-webkit-scrollbar {
@@ -229,24 +240,24 @@
 }
 
 .batchToolbar {
-  flex-shrink: 0;
-  padding: 12px 18px;
-  padding-bottom: calc(12px + var(--safe-area-bottom));
-  border-top: 1px solid var(--color-border-subtle);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.batchCount {
-  flex: 1;
-  font-size: 14px;
-  color: var(--color-text-secondary);
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  left: 14px;
+  z-index: 4;
+  display: grid;
+  pointer-events: none;
 }
 
 .batchDeleteBtn {
-  min-height: 48px;
-  padding: 0 20px;
+  width: 100%;
+  min-height: 46px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-status-danger-surface) 46%, #dc2626 54%);
+  color: #fff;
+  outline: 1px solid color-mix(in srgb, var(--color-status-danger-border) 48%, #fff 52%);
+  box-shadow: var(--shadow-raised);
+  pointer-events: auto;
 }
 
 .batchDeleteBtn:active {
@@ -264,7 +275,9 @@
 }
 
 .sortBar {
-  padding-inline: 14px;
+  top: 80px;
+  right: 14px;
+  left: 14px;
 }
 
 .trackRow {

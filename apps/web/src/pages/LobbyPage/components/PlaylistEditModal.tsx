@@ -114,9 +114,6 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
 
         {selectedIds.size > 0 && (
           <div className={styles.batchToolbar}>
-            <span className={styles.batchCount}>
-              {t("lobby.playlist.selected", { count: selectedIds.size })}
-            </span>
             <ActionButton
               className={styles.batchDeleteBtn}
               onClick={removeSelected}

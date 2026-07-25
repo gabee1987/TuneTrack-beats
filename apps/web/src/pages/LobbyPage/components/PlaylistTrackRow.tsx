@@ -7,7 +7,7 @@ import { SelectableArtwork, SelectableArtworkImage, StaticArtwork } from "./Sele
 import styles from "./playlistEditModalStyles";
 
 const SWIPE_THRESHOLD = 68;
-const SWIPE_REVEAL_WIDTH = 80;
+const SWIPE_REVEAL_WIDTH = 132;
 
 interface PlaylistTrackRowProps {
   canSelect: boolean;
@@ -32,6 +32,7 @@ export function PlaylistTrackRow({
   const iconOpacity = useTransform(zoneWidth, [0, 40, SWIPE_REVEAL_WIDTH], [0, 0, 1]);
   const iconScale = useTransform(zoneWidth, [40, SWIPE_REVEAL_WIDTH], [0.6, 1]);
   const isRemoving = useRef(false);
+  const rowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     return x.on("change", (v) => {
@@ -44,11 +45,13 @@ export function PlaylistTrackRow({
   async function handleDragEnd(_: unknown, info: { offset: { x: number } }) {
     if (isRemoving.current) return;
     if (info.offset.x < -SWIPE_THRESHOLD) {
+      const rowWidth = rowRef.current?.getBoundingClientRect().width ?? SWIPE_REVEAL_WIDTH;
       isRemoving.current = true;
       await Promise.all([
-        animate(x, -600, { duration: 0.2, ease: [0.4, 0, 1, 1] }),
-        animate(zoneOpacity, 0, { duration: 0.18 }),
+        animate(x, -rowWidth, { duration: 0.24, ease: [0.4, 0, 1, 1] }),
+        animate(zoneWidth, rowWidth, { duration: 0.24, ease: [0.4, 0, 1, 1] }),
       ]);
+      await animate(zoneOpacity, 0, { duration: 0.1, ease: [0.4, 0, 1, 1] });
       onRemove(track.id);
     } else {
       void animate(x, 0, { type: "spring", stiffness: 500, damping: 38 });
@@ -56,7 +59,7 @@ export function PlaylistTrackRow({
   }
 
   return (
-    <div className={styles.trackRowWrapper}>
+    <div className={styles.trackRowWrapper} ref={rowRef}>
       <motion.div className={styles.deleteZone} style={{ width: zoneWidth, opacity: zoneOpacity }}>
         <motion.div style={{ opacity: iconOpacity, scale: iconScale }}>
           <TrashIcon />

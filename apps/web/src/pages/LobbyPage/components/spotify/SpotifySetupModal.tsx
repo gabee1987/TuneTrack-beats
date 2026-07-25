@@ -96,12 +96,6 @@ export function SpotifySetupModal({
                   onClick={() => onSourceChange("findPlaylists")}
                 />
                 <SpotifySourceTab
-                  disabled
-                  isActive={activeSource === "filters"}
-                  label={t("lobby.spotify.source.filters")}
-                  onClick={() => onSourceChange("filters")}
-                />
-                <SpotifySourceTab
                   isActive={activeSource === "quickPicks"}
                   label={t("lobby.spotify.source.quickPicks")}
                   onClick={() => onSourceChange("quickPicks")}
