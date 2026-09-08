@@ -105,7 +105,6 @@ export function AppRoutes() {
   return (
     <div
       style={{
-        contain: "layout paint",
         minHeight: "var(--app-height)",
         overflow: "hidden",
         position: "relative",

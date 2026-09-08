@@ -711,38 +711,60 @@ needs no confirmation.
 
 ---
 
-## B14 · Switching light/dark mode can leave the app inert, then bounce to home
+## B14 · The app becomes unresponsive, then bounces to home
 
-**Severity:** S1 · **Status:** **Not diagnosed** · **Reported:** 2026-09-08 retest
+**Severity:** S1 · **Status:** **Partly addressed, root cause not found** · **Reported:** 2026-09-08 retest; widened 2026-09-08
 
-Switching the theme sometimes makes nothing interactive, and after a delay the app returns
-to the home screen on its own.
+First reported as a theme-switch fault. The reporter later corrected that: it happens
+**frequently, from ordinary interaction** — touching the board, opening settings — and is
+not specific to changing the theme. Touching further eventually returns the app to home.
 
-### Ruled out by inspection
+### Regression found and removed
 
-- **Server-side room closure.** A brief disconnect does not close a room: the server marks
-  the player disconnected with a 180 s in-game reconnect window
-  (`RoomConnectionService.IN_GAME_RECONNECT_DISPLAY_MS`) and only transfers the host after
-  15 s. So the automatic return to home is not a `RoomClosed` broadcast caused by a stall.
-- **A theme-driven remount.** `applyTheme` only writes CSS custom properties and the
-  `data-theme` attribute; no component keys off the theme id.
+`AppRoutes` wrapped every page in `contain: layout paint`, added in the z-index/transition
+commit as belt-and-braces against an orphaned exiting page. `contain: paint` makes that
+wrapper the containing block for **every non-portaled `position: fixed` descendant** and
+clips them to its box. Affected, all inside a page rather than portaled:
 
-### Remaining candidates
+- `GamePageToastStack`, `GamePageReconnectToast`
+- `timelinePanelShell` (the game board's own fixed layer)
+- `LobbyPageMobile`, `spotifySetupShell`
 
-1. An automatic `navigate("/")` from a connection hook — both hooks redirect home when the
-   remembered display name is missing, and `resetPlayerSession()` clears it.
-2. `RoomResetModal` opening on a `ROOM_MEMBERSHIP_NOT_FOUND` error: it is a blocking
-   full-screen overlay, which would read as "nothing is interactive".
-3. Style invalidation cost: `applyTheme` rewrote every component token on each switch even
-   though those are theme-agnostic. Reduced in the route-load hardening commit, but not proven to be the
-   cause.
+It also made the wrapper a stacking context, rescoping the whole z-index scale inside a
+page. `pointerEvents: "none"` on the exit variant already handles the orphan case that
+`contain` was guarding, so the containment was removed outright. Whether it caused this
+report is unproven — but it is a real app-wide defect that was introduced here.
 
-### Do this before writing a fix
+### Ruled out by evidence
 
-Capture, at the moment it happens: the screen the player was on, whether the settings panel
-was open, whether the URL changes when it returns home, and any console output — the new
-`[AppRouteError]` and `[AppRoutes] ... pending` warnings will name a route-load failure or
-a stalled navigation if either is involved.
+- **Server-side room closure.** A brief disconnect does not close a room: the server keeps
+  a 180 s in-game reconnect window and only transfers the host after 15 s.
+- **A theme-driven remount.** `applyTheme` writes CSS custom properties and `data-theme`;
+  nothing keys off the theme id.
+- **An exiting page re-running its effects against the new route.** The hypothesis was that
+  `AnimatePresence` keeps the outgoing page mounted while its router hooks read live
+  context, so a connection effect would re-run with the new location's params and hit its
+  own `navigate("/")` guard — which would explain the bounce to home.
+  `AppRoutes.exitingPage.test.tsx` disproves it: with both pages mounted simultaneously,
+  the exiting page's effect does not re-run. The test is kept as a guard.
+- **A blocking loading overlay.** `AppLoadingProvider` has a 120 s timeout and would fit the
+  symptom, but its only caller is the lobby's Spotify quick-picks panel.
+
+### Still open
+
+No mechanism has been proven. The next diagnostic step is deliberately not another
+hypothesis: `installGlobalErrorReporter` (`app/globalErrorReporter.ts`) now catches
+`error` and `unhandledrejection` at the window and, in development, paints a plain-DOM
+banner carrying the message. An error thrown in an event handler, timer or promise callback
+escapes every React boundary — React keeps the last good tree on screen, so the app looks
+intact while the interaction silently does nothing, which is indistinguishable from a
+freeze. If that is what is happening, the banner will name it on the device.
+
+### What to capture next time
+
+The banner text if one appears; otherwise the screen, whether the settings panel was open,
+whether the URL changes when it returns home, and any `[AppRouteError]` or
+`[AppRoutes] ... pending` console output.
 
 ---
 
