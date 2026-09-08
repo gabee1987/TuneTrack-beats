@@ -1,12 +1,14 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
+import { installElementRects } from "./src/test/stubs/layout";
 import { installMatchMedia, resetMatchMedia } from "./src/test/stubs/matchMedia";
 import { installObservers } from "./src/test/stubs/observers";
 import { installStorage, resetStorage } from "./src/test/stubs/storage";
 import { installViewport, resetViewport } from "./src/test/stubs/viewport";
 import { resetSequentialUuid } from "./src/test/stubs/crypto";
 
+installElementRects();
 installMatchMedia();
 installObservers();
 installStorage();

@@ -1,3 +1,4 @@
+import { preloadAppShellMenu } from "../features/app-shell/loadAppShellMenuDialog";
 import { preloadSocketClient } from "../services/socket/socketClient";
 
 let lobbyPagePromise: Promise<unknown> | null = null;
@@ -18,9 +19,11 @@ export function preloadGamePage(): void {
 export function preloadLobbyRuntime(): void {
   preloadLobbyPage();
   preloadSocketClient();
+  preloadAppShellMenu();
 }
 
 export function preloadGameRuntime(): void {
   preloadGamePage();
   preloadSocketClient();
+  preloadAppShellMenu();
 }

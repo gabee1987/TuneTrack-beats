@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useMemo } from "react";
+import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import { createPortal } from "react-dom";
 import {
   MotionPresence,
@@ -11,6 +12,8 @@ import type { AppShellMenuProps } from "../AppShellMenu.types";
 import { useAppShellMenuPreferencesState } from "../hooks/useAppShellMenuPreferencesState";
 import { AppShellMenuSheet } from "./AppShellMenuSheet";
 import styles from "../AppShellMenu.module.css";
+
+const MOBILE_SHEET_MEDIA_QUERY = "(max-width: 720px)";
 
 interface AppShellMenuDialogProps extends AppShellMenuProps {
   isOpen: boolean;
@@ -36,16 +39,14 @@ export function AppShellMenuDialog({
     : availableTabs[0]?.id;
   const activeTab = availableTabs.find((tab) => tab.id === activeTabId) ?? null;
   const menuLayer = typeof document !== "undefined" ? document.body : null;
-  const isMobileSheet =
-    typeof window !== "undefined" &&
-    window.matchMedia("(max-width: 720px)").matches;
+  const isMobileSheet = useMediaQuery(MOBILE_SHEET_MEDIA_QUERY);
 
   if (!menuLayer) {
     return null;
   }
 
   return createPortal(
-    <MotionPresence>
+    <MotionPresence initial>
       {isOpen ? (
         <motion.div
           animate="animate"

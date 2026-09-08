@@ -185,11 +185,14 @@ export function createFakeSocket(options: { connected?: boolean } = {}): FakeSoc
   return socket;
 }
 
-/**
- * Replace the socket-client module for a test file. Call at module scope, alongside a
- * `vi.mock("../../services/socket/socketClient")` for the path the component imports.
- */
-export function createSocketClientMock(socket: FakeSocket) {
+export interface SocketClientMock {
+  getSocketClient: ReturnType<typeof vi.fn>;
+  preloadSocketClient: ReturnType<typeof vi.fn>;
+  disconnectSocketClient: ReturnType<typeof vi.fn>;
+  resetSocketClient: ReturnType<typeof vi.fn>;
+}
+
+export function createSocketClientMock(socket: FakeSocket): SocketClientMock {
   return {
     getSocketClient: vi.fn(() => Promise.resolve(socket)),
     preloadSocketClient: vi.fn(),
@@ -199,4 +202,40 @@ export function createSocketClientMock(socket: FakeSocket) {
       socket.disconnect();
     }),
   };
+}
+
+let sharedSocket: FakeSocket | null = null;
+
+/**
+ * A single fake socket per test file, reachable from both the hoisted `vi.mock` factory
+ * and the test body.
+ *
+ *     vi.mock("../../services/socket/socketClient", async () => {
+ *       const { socketClientMockForSharedSocket } = await import("../../test/fakeSocket");
+ *       return socketClientMockForSharedSocket();
+ *     });
+ *
+ *     const socket = getSharedFakeSocket();
+ *
+ * The dynamic import inside the factory sidesteps `vi.mock` hoisting, which is why the
+ * socket cannot simply be a module-level `const` in the test file.
+ */
+export function getSharedFakeSocket(): FakeSocket {
+  if (!sharedSocket) {
+    sharedSocket = createFakeSocket({ connected: true });
+  }
+  return sharedSocket;
+}
+
+export function socketClientMockForSharedSocket(): SocketClientMock {
+  return createSocketClientMock(getSharedFakeSocket());
+}
+
+/** Clear listeners and the emit log between tests without replacing the instance. */
+export function resetSharedFakeSocket(): void {
+  const socket = getSharedFakeSocket();
+  socket.removeAllListeners();
+  socket.clearEmitted();
+  socket.connected = true;
+  socket.recovered = false;
 }

@@ -1,12 +1,8 @@
 import { lazy, Suspense, useState } from "react";
 import { useI18n } from "../i18n";
 import type { AppShellMenuProps } from "./AppShellMenu.types";
+import { loadAppShellMenuDialog } from "./loadAppShellMenuDialog";
 import styles from "./AppShellMenu.module.css";
-
-async function loadAppShellMenuDialog() {
-  const module = await import("./components/AppShellMenuDialog");
-  return { default: module.AppShellMenuDialog };
-}
 
 const AppShellMenuDialog = lazy(loadAppShellMenuDialog);
 
