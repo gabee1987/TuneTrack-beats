@@ -9,29 +9,14 @@ export const themeRegistry: Record<ThemeId, ThemeDefinition> = {
   light: lightThemeDefinition,
 };
 
-let appliedThemeId: ThemeId | null = null;
-let hasAppliedComponentTokens = false;
-
 function applyComponentTokens(root: HTMLElement) {
-  // Component tokens are theme-agnostic, so rewriting them on every theme switch is pure
-  // style invalidation for no change.
-  if (hasAppliedComponentTokens) {
-    return;
-  }
-
   Object.entries(componentTokenCssVariables).forEach(([tokenName, tokenValue]) => {
     root.style.setProperty(`--${tokenName}`, tokenValue);
   });
-
-  hasAppliedComponentTokens = true;
 }
 
 export function applyTheme(themeId: ThemeId) {
   if (typeof document === "undefined") {
-    return;
-  }
-
-  if (appliedThemeId === themeId && hasAppliedComponentTokens) {
     return;
   }
 
@@ -52,6 +37,4 @@ export function applyTheme(themeId: ThemeId) {
   if (themeColorMeta && appBackgroundColor) {
     themeColorMeta.setAttribute("content", appBackgroundColor);
   }
-
-  appliedThemeId = themeId;
 }

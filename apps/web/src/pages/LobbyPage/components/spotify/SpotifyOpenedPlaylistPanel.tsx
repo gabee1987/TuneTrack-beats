@@ -243,6 +243,7 @@ export function SpotifyOpenedPlaylistPanel({
       <PlaylistTrackDetailsSheet
         onClose={() => setActiveTrackId(null)}
         onSave={onUpdateTrack}
+        presentation="fullscreen"
         track={activeTrack}
       />
     </section>

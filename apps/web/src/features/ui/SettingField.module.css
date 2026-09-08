@@ -66,7 +66,7 @@
 .infoOverlay {
   position: fixed;
   inset: 0;
-  z-index: var(--z-sheet-nested);
+  z-index: 1600;
   display: grid;
   place-items: center;
   padding: var(--space-5);

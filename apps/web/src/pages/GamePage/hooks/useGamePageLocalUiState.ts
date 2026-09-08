@@ -4,13 +4,11 @@ import type { TimelineView } from "../GamePage.types";
 
 interface UseGamePageLocalUiStateOptions {
   currentPlayerId: string | null;
-  isConnected: boolean;
   roomState: PublicRoomState | null;
 }
 
 export function useGamePageLocalUiState({
   currentPlayerId,
-  isConnected,
   roomState,
 }: UseGamePageLocalUiStateOptions) {
   const [selectedSlotIndex, setSelectedSlotIndex] = useState(0);
@@ -49,17 +47,6 @@ export function useGamePageLocalUiState({
       setLocallyPlacedCard(null);
     }
   }, [roomState?.status, roomState?.turn?.turnNumber]);
-
-  /**
-   * Only a reveal clears the optimistic card, and a reveal can only arrive over the
-   * socket. Losing the connection while it is set would otherwise lock the board for good;
-   * the server's state wins again as soon as the rejoin lands.
-   */
-  useEffect(() => {
-    if (!isConnected) {
-      setLocallyPlacedCard(null);
-    }
-  }, [isConnected]);
 
   useEffect(() => {
     if (!roomState) {

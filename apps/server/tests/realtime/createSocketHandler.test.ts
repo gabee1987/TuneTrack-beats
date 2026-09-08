@@ -47,7 +47,7 @@ describe("emitServerError", () => {
   it("emits the thrown error code with catalog message", () => {
     const socket = createMockSocket();
 
-    emitServerError(socket as never, "start_game", new Error("ONLY_HOST_CAN_START_GAME"), "START_GAME_FAILED", {
+    emitServerError(socket as never, new Error("ONLY_HOST_CAN_START_GAME"), "START_GAME_FAILED", {
       ONLY_HOST_CAN_START_GAME: "Only the host can start the game.",
     });
 
@@ -65,7 +65,7 @@ describe("emitServerError", () => {
   it("falls back to default message when code is unmapped", () => {
     const socket = createMockSocket();
 
-    emitServerError(socket as never, "start_game", new Error("SOME_NEW_CODE"), "START_GAME_FAILED", {});
+    emitServerError(socket as never, new Error("SOME_NEW_CODE"), "START_GAME_FAILED", {});
 
     expect(socket.emitted).toEqual([
       {

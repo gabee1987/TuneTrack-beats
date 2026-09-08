@@ -1,16 +1,11 @@
 import { createBrowserRouter } from "react-router-dom";
 import { AppRoutes } from "./AppRoutes";
-import { AppRouteError } from "./components/AppRouteError";
 import { loadLazyRoute } from "./lazyRoute";
 
 export const router = createBrowserRouter([
   {
     path: "/",
     Component: AppRoutes,
-    // Every child route inherits this. Without it a failed `lazy()` import resolves to
-    // nothing at all: the URL never changes, the screen never updates, and the control
-    // the player tapped simply appears dead until the app is refreshed.
-    ErrorBoundary: AppRouteError,
     children: [
       {
         index: true,

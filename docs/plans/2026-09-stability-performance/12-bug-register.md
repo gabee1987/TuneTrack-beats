@@ -890,6 +890,57 @@ specifically during bursts, which is when a log is most likely to be read.
 
 ---
 
+## B17 · The hardening branch itself destabilised the app
+
+**Severity:** S1 · **Status:** **Resolved by reset** · **Found:** 2026-09-08
+
+The reporter tested `fix/general-fixes` against `develop` and found the branch crashed
+frequently — on switching theme, on opening settings, during ordinary play, on both phone
+and desktop — while `develop` was stable. The branch was reset to `develop`'s runtime
+behaviour on `fix/stability-verified`; `fix/general-fixes-archive` preserves the work.
+
+### Why it went wrong
+
+Most of the branch's changes were written for **theorised** failures rather than reproduced
+ones. Each was individually defensible and none was verified against the running app, so
+the defects they introduced were only discovered in aggregate, by which point attributing a
+symptom to a change was guesswork.
+
+### Defects the branch introduced
+
+1. **`pointerEvents: "none"` declared only in the page-transition `exit` variant.** Framer
+   Motion does not reset a property the next variant omits. `location.key` is stable per
+   history entry, so navigating back re-uses the key of a page that may still be mid-exit:
+   `AnimatePresence` flips that child back to present and animates it to `animate`, and the
+   `none` written during the exit stays on what is now the live page. The screen looks
+   correct and ignores every tap until a reload. This is the best available explanation for
+   "many times the app becomes not interactible". **Not provable in jsdom** — framer-motion
+   writes no inline styles there, so a test asserting it passes vacuously. Any re-land must
+   declare `pointerEvents` in *every* variant.
+2. **`contain: layout paint` on the page-transition wrapper.** Made it the containing block
+   for every non-portaled `position: fixed` descendant and clipped them to its box — the
+   game toast stack, the reconnect toast, the timeline panel's fixed layer, the lobby's
+   fixed bars — and turned it into a stacking context, rescoping the z-index scale inside
+   every page.
+3. **`emitWhenConnected` dropping room actions.** Changed Socket.IO's buffer-and-replay to
+   drop-when-disconnected. It stops stale replays, but it silently loses a live action
+   whenever `connected` is briefly false — the reported "buying a card with tokens did
+   nothing until a refresh".
+4. **`useBlocker` in the leave-game guard.** React Router supports one blocker at a time,
+   and under `mode="sync"` an exiting `GamePage` keeps its blocker registered while the next
+   one mounts. A blocker stuck in `blocked` kills navigation app-wide. Unproven, but the
+   risk is structural and it was added for a product nicety.
+
+### Re-land rules
+
+- One change per batch, each tied to a defect reproduced on a device, tested before the
+  next.
+- No defensive change for a failure mode that has not been observed.
+- A test that cannot fail is worse than no test: jsdom cannot verify framer-motion inline
+  styles, CSS containment, or layout.
+
+---
+
 ## Cross-reference
 
 | Reported item | Register entry | Primary plan |

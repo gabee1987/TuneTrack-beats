@@ -1,5 +1,5 @@
-import { LayoutGroup, motion } from "framer-motion";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   createAppShellMenuSheetMotionTargets,
   createMenuTabActivationTransition,
@@ -15,8 +15,6 @@ import type {
 import { Button } from "../../ui/primitives";
 import { AppShellMenuPanels } from "./AppShellMenuPanels";
 import styles from "../AppShellMenu.module.css";
-
-const MENU_TITLE_ID = "app-shell-menu-title";
 
 interface AppShellMenuSheetProps {
   activeTab: AppShellMenuTab | null;
@@ -65,13 +63,9 @@ export function AppShellMenuSheet({
     setShowBottomFade(hasOverflow && !atBottom);
   }, []);
 
-  // Layout effect, not effect: measuring after paint makes the edge fades appear a frame
-  // late, which reads as a flicker when the menu opens.
-  useLayoutEffect(() => {
-    updatePanelFadeState();
-  }, [activeTabId, updatePanelFadeState]);
-
   useEffect(() => {
+    updatePanelFadeState();
+
     const panelElement = panelRef.current;
     if (!panelElement) {
       return;
@@ -102,21 +96,16 @@ export function AppShellMenuSheet({
   return (
     <motion.aside
       animate={menuSheetMotionTargets.animate}
-      aria-labelledby={MENU_TITLE_ID}
-      aria-modal="true"
       className={styles.menuSheet}
       exit={menuSheetMotionTargets.exit}
       initial={menuSheetMotionTargets.initial}
       onClick={(event) => event.stopPropagation()}
-      role="dialog"
       transition={createStandardTransition(reduceMotion)}
     >
       <header className={styles.menuHeader}>
         <div>
           {subtitle ? <p className={styles.menuSubtitle}>{subtitle}</p> : null}
-          <h2 className={styles.menuTitle} id={MENU_TITLE_ID}>
-            {title}
-          </h2>
+          <h2 className={styles.menuTitle}>{title}</h2>
         </div>
         <button
           aria-label={t("appShell.menu.close")}
@@ -148,15 +137,20 @@ export function AppShellMenuSheet({
               onClick={() => preferencesState.setLastOpenedMenuTab(tab.id)}
               type="button"
             >
-              {tab.id === activeTabId ? (
-                <motion.span
-                  className={styles.tabButtonActiveBackground}
-                  layoutId="app-shell-menu-active-tab"
-                  transition={createMenuTabActivationTransition(reduceMotion)}
-                >
-                  <span className={styles.tabButtonActiveGlow} />
-                </motion.span>
-              ) : null}
+              <AnimatePresence>
+                {tab.id === activeTabId ? (
+                  <motion.span
+                    animate={{ opacity: 1 }}
+                    className={styles.tabButtonActiveBackground}
+                    exit={{ opacity: 0 }}
+                    initial={{ opacity: 0 }}
+                    key={`${tab.id}-active-border`}
+                    transition={createMenuTabActivationTransition(reduceMotion)}
+                  >
+                    <span className={styles.tabButtonActiveGlow} />
+                  </motion.span>
+                ) : null}
+              </AnimatePresence>
               <span className={styles.tabButtonLabel}>{tab.label}</span>
             </button>
           ))}

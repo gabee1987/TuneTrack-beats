@@ -3,18 +3,17 @@ import type { z } from "zod";
 import type { Server, Socket } from "socket.io";
 import { logger } from "../app/logger.js";
 import { resolveSocketErrorMessage } from "./errorMessages.js";
-import { logRejectedSocketEvent } from "./realtimeAuditLogger.js";
+import { logRejectedCurrentSocketEvent } from "./realtimeAuditLogger.js";
 
 export function emitServerError(
   socket: Socket,
-  eventName: string,
   error: unknown,
   fallbackCode: string,
   messageByCode: Record<string, string>,
 ): void {
   const errorCode = error instanceof Error ? error.message : fallbackCode;
-  logger.warn({ socketId: socket.id, event: eventName, code: errorCode }, "socket action rejected");
-  logRejectedSocketEvent(socket, eventName, errorCode);
+  logger.warn({ socketId: socket.id, code: errorCode }, "socket action rejected");
+  logRejectedCurrentSocketEvent(socket, errorCode);
 
   socket.emit(ServerToClientEvent.Error, {
     code: errorCode,
@@ -63,7 +62,6 @@ export function createSocketHandler<TSchema extends z.ZodTypeAny>(
     } catch (error) {
       emitServerError(
         options.socket,
-        options.event,
         error,
         options.fallbackErrorCode,
         options.errorMessages,

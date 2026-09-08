@@ -225,9 +225,6 @@
   overflow-x: auto;
   max-width: 100%;
   scrollbar-width: none;
-  /* `overflow-x: auto` makes this a scroll container in both axes, so anything painted
-     outside a chip's content box in the block direction gets clipped. */
-  padding-block: 1px;
 }
 
 .headerLeadersDisclosure {
@@ -249,9 +246,7 @@
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-pill);
   background: var(--color-surface-interactive);
-  /* A border, not an outline: an outline paints outside the border box and is clipped by
-     the scrolling strip. Matches the Chip primitive. */
-  border: 1px solid var(--color-border-subtle);
+  outline: 1px solid var(--color-border-subtle);
   white-space: nowrap;
 }
 
@@ -302,7 +297,7 @@
 
 .header {
   position: relative;
-    z-index: var(--z-sticky);
+    z-index: 20;
 }
 
 .headerMain {

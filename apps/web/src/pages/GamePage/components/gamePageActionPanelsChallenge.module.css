@@ -332,7 +332,7 @@
     left: max(16px, var(--safe-area-left));
     right: max(16px, var(--safe-area-right));
     bottom: calc(var(--safe-area-bottom) + 86px);
-    z-index: var(--z-nav);
+    z-index: 880;
     margin: 0;
     max-height: calc(100svh - var(--safe-area-top) - var(--safe-area-bottom) - 104px);
     /* overflow-y: auto; */
@@ -395,7 +395,7 @@
     left: max(var(--space-3), var(--safe-area-left));
     right: max(var(--space-3), var(--safe-area-right));
     bottom: calc(var(--safe-area-bottom) + 94px);
-    z-index: var(--z-nav);
+    z-index: 880;
     margin: 0;
     background: var(--color-surface-elevated-solid);
     box-shadow: var(--shadow-overlay);

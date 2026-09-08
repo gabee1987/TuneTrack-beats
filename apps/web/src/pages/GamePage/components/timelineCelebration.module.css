@@ -1,7 +1,7 @@
 .timelineCelebrationLayer {
   position: absolute;
   inset: 0;
-  z-index: var(--z-celebration);
+  z-index: 30;
   display: grid;
   place-items: center;
   pointer-events: none;

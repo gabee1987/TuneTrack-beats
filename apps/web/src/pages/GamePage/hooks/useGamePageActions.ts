@@ -3,7 +3,15 @@ import {
   type PublicRoomState,
 } from "@tunetrack/shared";
 import { useCallback } from "react";
-import { emitWhenConnected } from "../../../services/socket/socketClient";
+import { getSocketClient } from "../../../services/socket/socketClient";
+
+async function emitRoomEvent<TPayload>(
+  event: (typeof ClientToServerEvent)[keyof typeof ClientToServerEvent],
+  payload: TPayload,
+) {
+  const socketClient = await getSocketClient();
+  socketClient.emit(event, payload);
+}
 
 interface UseGamePageActionsOptions {
   canClaimChallenge: boolean | null | undefined;
@@ -14,7 +22,6 @@ interface UseGamePageActionsOptions {
   isCurrentPlayerTurn: boolean;
   roomState: PublicRoomState | null;
   selectedSlotIndex: number;
-  onActionUndeliverable: () => void;
   onSkipTrackWithTtIntent?: (cardId: string | null) => void;
   setLocallyPlacedCard: (card: PublicRoomState["currentTrackCard"] | null) => void;
 }
@@ -28,50 +35,20 @@ export function useGamePageActions({
   isCurrentPlayerTurn,
   roomState,
   selectedSlotIndex,
-  onActionUndeliverable,
   onSkipTrackWithTtIntent,
   setLocallyPlacedCard,
 }: UseGamePageActionsOptions) {
-  const emitRoomEvent = useCallback(
-    async <TPayload,>(
-      event: (typeof ClientToServerEvent)[keyof typeof ClientToServerEvent],
-      payload: TPayload,
-    ): Promise<boolean> => {
-      const wasDelivered = await emitWhenConnected(event, payload);
-
-      if (!wasDelivered) {
-        onActionUndeliverable();
-      }
-
-      return wasDelivered;
-    },
-    [onActionUndeliverable],
-  );
-
   const handlePlaceCard = useCallback(() => {
     if (!roomState || roomState.status !== "turn" || !isCurrentPlayerTurn) {
       return;
     }
 
-    // The optimistic card is what locks the board until the reveal arrives, so it may
-    // only be shown once the placement is actually on its way to the server.
-    const placedCard = roomState.currentTrackCard ?? null;
-
+    setLocallyPlacedCard(roomState.currentTrackCard ?? null);
     void emitRoomEvent(ClientToServerEvent.PlaceCard, {
       roomId: roomState.roomId,
       selectedSlotIndex,
-    }).then((wasDelivered) => {
-      if (wasDelivered) {
-        setLocallyPlacedCard(placedCard);
-      }
     });
-  }, [
-    emitRoomEvent,
-    isCurrentPlayerTurn,
-    roomState,
-    selectedSlotIndex,
-    setLocallyPlacedCard,
-  ]);
+  }, [isCurrentPlayerTurn, roomState, selectedSlotIndex, setLocallyPlacedCard]);
 
   const handleConfirmReveal = useCallback(() => {
     if (!roomState || !canConfirmReveal) {
@@ -81,7 +58,7 @@ export function useGamePageActions({
     void emitRoomEvent(ClientToServerEvent.ConfirmReveal, {
       roomId: roomState.roomId,
     });
-  }, [canConfirmReveal, emitRoomEvent, roomState]);
+  }, [canConfirmReveal, roomState]);
 
   const handleClaimChallenge = useCallback(() => {
     if (!roomState || !canClaimChallenge) {
@@ -91,7 +68,7 @@ export function useGamePageActions({
     void emitRoomEvent(ClientToServerEvent.ClaimChallenge, {
       roomId: roomState.roomId,
     });
-  }, [canClaimChallenge, emitRoomEvent, roomState]);
+  }, [canClaimChallenge, roomState]);
 
   const handlePlaceChallenge = useCallback(() => {
     if (!roomState || !canSelectChallengeSlot) {
@@ -102,7 +79,7 @@ export function useGamePageActions({
       roomId: roomState.roomId,
       selectedSlotIndex,
     });
-  }, [canSelectChallengeSlot, emitRoomEvent, roomState, selectedSlotIndex]);
+  }, [canSelectChallengeSlot, roomState, selectedSlotIndex]);
 
   const handleResolveChallengeWindow = useCallback(() => {
     if (!roomState || !canResolveChallengeWindow) {
@@ -112,7 +89,7 @@ export function useGamePageActions({
     void emitRoomEvent(ClientToServerEvent.ResolveChallengeWindow, {
       roomId: roomState.roomId,
     });
-  }, [canResolveChallengeWindow, emitRoomEvent, roomState]);
+  }, [canResolveChallengeWindow, roomState]);
 
   const handleCloseRoom = useCallback(() => {
     if (!roomState || roomState.hostId !== currentPlayerId) {
@@ -122,7 +99,7 @@ export function useGamePageActions({
     void emitRoomEvent(ClientToServerEvent.CloseRoom, {
       roomId: roomState.roomId,
     });
-  }, [currentPlayerId, emitRoomEvent, roomState]);
+  }, [currentPlayerId, roomState]);
 
   const handleAwardTt = useCallback(
     (playerId: string) => {
@@ -140,7 +117,7 @@ export function useGamePageActions({
         amount: 1,
       });
     },
-    [currentPlayerId, emitRoomEvent, roomState],
+    [currentPlayerId, roomState],
   );
 
   const handleRemoveTt = useCallback(
@@ -159,7 +136,7 @@ export function useGamePageActions({
         amount: -1,
       });
     },
-    [currentPlayerId, emitRoomEvent, roomState],
+    [currentPlayerId, roomState],
   );
 
   const handleTransferHost = useCallback(
@@ -177,7 +154,7 @@ export function useGamePageActions({
         playerId,
       });
     },
-    [currentPlayerId, emitRoomEvent, roomState],
+    [currentPlayerId, roomState],
   );
 
   const handleKickPlayer = useCallback(
@@ -195,7 +172,7 @@ export function useGamePageActions({
         playerId,
       });
     },
-    [currentPlayerId, emitRoomEvent, roomState],
+    [currentPlayerId, roomState],
   );
 
   const handleSkipTrackWithTt = useCallback(() => {
@@ -212,7 +189,7 @@ export function useGamePageActions({
     void emitRoomEvent(ClientToServerEvent.SkipTrackWithTt, {
       roomId: roomState.roomId,
     });
-  }, [emitRoomEvent, isCurrentPlayerTurn, onSkipTrackWithTtIntent, roomState]);
+  }, [isCurrentPlayerTurn, onSkipTrackWithTtIntent, roomState]);
 
   const handleBuyTimelineCardWithTt = useCallback(() => {
     if (
@@ -227,7 +204,7 @@ export function useGamePageActions({
     void emitRoomEvent(ClientToServerEvent.BuyTimelineCardWithTt, {
       roomId: roomState.roomId,
     });
-  }, [emitRoomEvent, isCurrentPlayerTurn, roomState]);
+  }, [isCurrentPlayerTurn, roomState]);
 
   const handleSkipTurn = useCallback(() => {
     if (!roomState || roomState.status !== "turn") {
@@ -237,7 +214,7 @@ export function useGamePageActions({
     void emitRoomEvent(ClientToServerEvent.SkipTurn, {
       roomId: roomState.roomId,
     });
-  }, [emitRoomEvent, roomState]);
+  }, [roomState]);
 
   return {
     handleAwardTt,

@@ -23,7 +23,7 @@ export function createPageTransitionVariants(reduceMotion: boolean): Variants {
     return {
       initial: { opacity: 1, x: "0%" },
       animate: { opacity: 1, x: "0%" },
-      exit: { opacity: 1, pointerEvents: "none", x: "0%" },
+      exit: { opacity: 1, x: "0%" },
     };
   }
 
@@ -36,11 +36,7 @@ export function createPageTransitionVariants(reduceMotion: boolean): Variants {
       x: "0%",
       zIndex: 2,
     },
-    // An exiting page must never receive input — this alone neutralises an orphaned
-    // exit (e.g. a second navigation landing mid-exit under `mode="sync"`) even if one
-    // occurs, regardless of the `zIndex` it happens to sit at.
     exit: (direction: ScreenTransitionDirection = 1) => ({
-      pointerEvents: "none",
       x: `${direction * -100}%`,
       zIndex: direction === -1 ? 2 : 1,
     }),

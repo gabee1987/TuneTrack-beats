@@ -92,8 +92,7 @@ describe("structural and component token foundations", () => {
     expect(radiusPrimitives.pill).toBe("999px");
     expect(radiusPrimitives.circle).toBe("50%");
     expect(motionDurationPrimitives.standard).toBe("240ms");
-    expect(zIndexPrimitives.celebration).toBe("800");
-    expect(zIndexPrimitives.blocking).toBe("900");
+    expect(zIndexPrimitives.celebration).toBe("700");
   });
 
   it("defines component tokens that resolve to CSS variables", () => {

@@ -221,6 +221,7 @@ export function SpotifyCandidateReviewPanel({
           <PlaylistTrackDetailsSheet
             onClose={() => setActiveCandidateTrackId(null)}
             onSave={updateCandidateTrack}
+            presentation="fullscreen"
             track={activeCandidateTrack}
           />
         </section>
