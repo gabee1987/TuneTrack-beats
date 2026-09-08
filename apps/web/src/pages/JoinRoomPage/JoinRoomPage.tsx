@@ -25,7 +25,7 @@ export function JoinRoomPage() {
     if (!targetPath) return;
 
     rememberPlayerDisplayName(displayName.trim());
-    navigate(targetPath);
+    navigate(targetPath, { replace: true });
   }
 
   return (

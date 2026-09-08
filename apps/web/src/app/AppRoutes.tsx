@@ -1,25 +1,35 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigationType, useOutlet } from "react-router-dom";
 import { MotionPresence, PageTransition } from "../features/motion";
+import { motionDurations } from "../features/motion/coreMotionTokens";
 import type { ScreenTransitionDirection } from "../features/motion";
 
-function getRouteOrder(pathname: string) {
-  if (pathname.startsWith("/game/")) {
-    return 2;
-  }
+const ROUTE_ORDER: ReadonlyArray<{ prefix: string; order: number }> = [
+  { prefix: "/game/", order: 3 },
+  { prefix: "/lobby/", order: 2 },
+  { prefix: "/join/", order: 1 },
+  { prefix: "/play", order: 1 },
+];
 
-  if (pathname.startsWith("/lobby/")) {
-    return 1;
-  }
-
-  return 0;
+export function getRouteOrder(pathname: string): number {
+  return ROUTE_ORDER.find(({ prefix }) => pathname.startsWith(prefix))?.order ?? 0;
 }
+
+/**
+ * Under `mode="sync"` a second navigation landing mid-exit can leave the previous page
+ * mounted; since it is `position: absolute; inset: 0`, an orphan covers the whole screen
+ * and swallows every tap. `pointerEvents: "none"` on the exit variant (coreMotionTokens)
+ * neutralises the symptom; this budget just makes a stuck exit visible in development
+ * instead of silent.
+ */
+const EXIT_WARNING_BUDGET_MS = motionDurations.screen * 1000 * 2;
 
 export function AppRoutes() {
   const location = useLocation();
   const navigationType = useNavigationType();
   const outlet = useOutlet();
   const previousPathnameRef = useRef(location.pathname);
+  const exitWarningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const direction = useMemo<ScreenTransitionDirection>(() => {
     const previousRouteOrder = getRouteOrder(previousPathnameRef.current);
     const currentRouteOrder = getRouteOrder(location.pathname);
@@ -39,15 +49,42 @@ export function AppRoutes() {
     previousPathnameRef.current = location.pathname;
   }, [location.pathname]);
 
+  useEffect(() => {
+    if (!import.meta.env.DEV) {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      console.warn(
+        `[AppRoutes] the page transition for "${location.pathname}" has not reported ` +
+          `onExitComplete after ${EXIT_WARNING_BUDGET_MS}ms — a stuck exiting page may be ` +
+          "covering the screen and swallowing input.",
+      );
+    }, EXIT_WARNING_BUDGET_MS);
+    exitWarningTimeoutRef.current = timeoutId;
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [location.key, location.pathname]);
+
+  function handleExitComplete() {
+    if (exitWarningTimeoutRef.current) {
+      clearTimeout(exitWarningTimeoutRef.current);
+      exitWarningTimeoutRef.current = null;
+    }
+  }
+
   return (
     <div
       style={{
+        contain: "layout paint",
         minHeight: "var(--app-height)",
         overflow: "hidden",
         position: "relative",
       }}
     >
-      <MotionPresence mode="sync">
+      <MotionPresence mode="sync" onExitComplete={handleExitComplete}>
         <PageTransition
           direction={direction}
           key={location.key}

@@ -21,7 +21,7 @@
 .menuOverlay {
   position: fixed;
   inset: 0;
-  z-index: 1200;
+  z-index: var(--z-sheet);
   background: var(--color-overlay-strong);
   display: flex;
   justify-content: flex-end;

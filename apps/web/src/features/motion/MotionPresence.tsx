@@ -15,15 +15,21 @@ interface MotionPresenceProps {
    */
   initial?: boolean;
   mode?: "sync" | "popLayout" | "wait";
+  onExitComplete?: () => void;
 }
 
 export function MotionPresence({
   children,
   initial = false,
   mode = "wait",
+  onExitComplete,
 }: MotionPresenceProps) {
   return (
-    <AnimatePresence initial={initial} mode={mode}>
+    <AnimatePresence
+      initial={initial}
+      mode={mode}
+      {...(onExitComplete ? { onExitComplete } : {})}
+    >
       {children}
     </AnimatePresence>
   );

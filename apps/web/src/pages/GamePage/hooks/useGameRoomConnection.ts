@@ -110,6 +110,7 @@ export function useGameRoomConnection({
 
       resetSocketClient();
       navigate("/", {
+        replace: true,
         state:
           payload.reason === "kicked"
             ? {

@@ -150,6 +150,7 @@ export function useLobbyRoomConnection({
       if (payload.roomState.status !== "lobby" && !hasNavigatedToGameRef.current) {
         hasNavigatedToGameRef.current = true;
         navigate(`/game/${encodeURIComponent(payload.roomState.roomId)}`, {
+          replace: true,
           state: {
             currentPlayerId: currentPlayerIdRef.current,
             roomState: payload.roomState,
@@ -185,6 +186,7 @@ export function useLobbyRoomConnection({
 
       resetSocketClient();
       navigate("/", {
+        replace: true,
         state:
           payload.reason === "kicked"
             ? {

@@ -69,13 +69,18 @@ export const motionEasePrimitives = {
 
 export const zIndexPrimitives = {
   base: "0",
+  raised: "10",
   sticky: "100",
   nav: "200",
   overlay: "300",
   sheet: "400",
+  "sheet-nested": "450",
   dialog: "500",
-  toast: "600",
-  celebration: "700",
+  "dialog-nested": "550",
+  hint: "600",
+  toast: "700",
+  celebration: "800",
+  blocking: "900",
 } as const;
 
 /** Neutral / brand ramps used when building semantic theme maps. */

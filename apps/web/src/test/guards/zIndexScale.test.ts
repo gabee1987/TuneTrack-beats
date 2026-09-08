@@ -5,26 +5,10 @@ import { expectRatchet, listCssModules } from "./cssSourceFiles";
  * `docs/rules/design_system.md` section 6: every overlay layer resolves to a `--z-*`
  * token. The only permitted literals are -1..9, for stacking inside a single component.
  *
- * This is a ratchet. As `docs/plans/2026-09-stability-performance/06-navigation-and-overlays.md`
- * section 2 migrates each file, remove it from the allowlist below.
+ * Migration (`docs/plans/2026-09-stability-performance/06-navigation-and-overlays.md`
+ * section 2) is complete — every file has been converted to a token or a local literal.
  */
-const PENDING_MIGRATION = [
-  "features/app-shell/AppShellMenu.module.css",
-  "features/loading/AppLoadingOverlay.module.css",
-  "features/ui/RoomResetModal.module.css",
-  "features/ui/SettingField.module.css",
-  "pages/GamePage/components/GamePageReconnectToast.module.css",
-  "pages/GamePage/components/SongInfoModal.module.css",
-  "pages/GamePage/components/gamePageActionPanelsChallenge.module.css",
-  "pages/GamePage/components/gamePageActionPanelsDock.module.css",
-  "pages/GamePage/components/timelineCelebration.module.css",
-  "pages/GamePage/components/timelinePanelShell.module.css",
-  "pages/GamePage/gamePageChrome.module.css",
-  "pages/GamePage/gamePageMenu.module.css",
-  "pages/HomePage/mobile/HomePageMobile.module.css",
-  "pages/LobbyPage/components/playlistEditChrome.module.css",
-  "pages/LobbyPage/components/spotify/spotifySetupShell.module.css",
-] as const;
+const PENDING_MIGRATION: readonly string[] = [];
 
 const MIN_LOCAL_LAYER = -1;
 const MAX_LOCAL_LAYER = 9;

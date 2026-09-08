@@ -35,6 +35,36 @@ performance plan was paused mid-way with a Phase 8 that is deliberately not bein
 
 ---
 
+### Navigation: push vs. replace (2026-09-08)
+
+Rule: a navigation caused by state that no longer exists uses `replace`; a navigation
+caused by a user choosing to go somewhere uses `push`.
+
+Applied in this pass (`docs/plans/2026-09-stability-performance/06-navigation-and-overlays.md`
+section 3.2):
+
+- Lobby -> game on game start now replaces. The lobby is gone once the game starts, so
+  back should leave the game rather than return to a dead lobby.
+- Room-closed redirects to home (both the lobby and the game connection hooks) now
+  replace. The room no longer exists, so back should not return to it.
+- Join-room submit now replaces when it pushes the lobby route, so back returns to the
+  invite context rather than re-entering the join form.
+- Route order for the page-transition direction was extended to
+  `/ -> 0, /join/:id -> 1, /play -> 1, /lobby/:id -> 2, /game/:id -> 3` so Home <-> Play
+  has a direction (previously both sat at 0).
+
+Still push (correct, unchanged): opening the lobby from Play, starting from Home, and
+the lobby's own rename replace (already correct).
+
+**Rationale:** the phone's hardware back button and the browser's back button must
+always return to where the user actually came from; leaving a `push` entry pointing at
+state that no longer exists (a closed room, a lobby that already started its game) is
+what produced the unresponsive-home-screen defect (B10 in
+`docs/plans/2026-09-stability-performance/12-bug-register.md`) and dead-lobby back
+navigation.
+
+---
+
 ### Equal release-year placement
 
 If a candidate track has the same release year as one or more adjacent timeline

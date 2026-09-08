@@ -87,13 +87,18 @@
 
   /* Z-index layers */
   --z-base: 0;
+  --z-raised: 10;
   --z-sticky: 100;
   --z-nav: 200;
   --z-overlay: 300;
   --z-sheet: 400;
+  --z-sheet-nested: 450;
   --z-dialog: 500;
-  --z-toast: 600;
-  --z-celebration: 700;
+  --z-dialog-nested: 550;
+  --z-hint: 600;
+  --z-toast: 700;
+  --z-celebration: 800;
+  --z-blocking: 900;
 
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-right: env(safe-area-inset-right, 0px);
