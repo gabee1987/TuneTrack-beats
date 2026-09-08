@@ -514,7 +514,7 @@ Contributing factors found in the same pass:
 - The app had **no `errorElement` / `ErrorBoundary` on any route**, so any route-load
   failure was invisible by construction.
 
-### Fixed in commit `018407c`
+### Fixed in the route-load hardening commit
 
 - `loadLazyRoute` never returns an unsettled promise; the reload path rejects after a
   4-second grace so the router can render its error element.
@@ -682,7 +682,7 @@ action.
 
 ## B13 · Back from the game screen leaves the game without warning
 
-**Severity:** S2 · **Status:** **Fixed** (commit `018407c`) · **Reported:** 2026-09-08 retest
+**Severity:** S2 · **Status:** **Fixed** (the route-load hardening commit) · **Reported:** 2026-09-08 retest
 
 Pressing the phone's back button on the game screen dropped the player straight out of a
 running game. After the B2 navigation work made the lobby-to-game step a `replace`, back
@@ -734,7 +734,7 @@ to the home screen on its own.
 2. `RoomResetModal` opening on a `ROOM_MEMBERSHIP_NOT_FOUND` error: it is a blocking
    full-screen overlay, which would read as "nothing is interactive".
 3. Style invalidation cost: `applyTheme` rewrote every component token on each switch even
-   though those are theme-agnostic. Reduced in commit `018407c`, but not proven to be the
+   though those are theme-agnostic. Reduced in the route-load hardening commit, but not proven to be the
    cause.
 
 ### Do this before writing a fix
