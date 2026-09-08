@@ -1,3 +1,15 @@
+> **Archived 2026-09-08.** Historical record: goal achieved, several named deliverables superseded.
+> Shipped: env validation, OAuth popup, playlist import, premium Web Playback SDK playback,
+> automatic play on card draw, playback handoff on host transfer, and the test-deck fallback.
+> **Diverged from the plan:** free-tier playback uses 30-second `previewUrl` audio rather than Spotify
+> Connect; `NowPlayingSheet`, `HostPlaybackControls` and `HostPlaybackViewModel` were never built -
+> the playback UI lives in the game menu Playback tab instead; there is no playback status chip; and
+> playback is not stopped on reveal.
+> Superseded by `spotify_auto_music_setup_plan.md`, `spotify_smart_playlist_builder_plan.md` and
+> `../plans/2026-09-stability-performance/08-spotify-session-and-playback.md`. Do not follow this plan.
+
+---
+
 # TuneTrack — Iteration 06 Spotify Integration Plan
 
 > This plan covers the full Spotify music integration for TuneTrack: playlist

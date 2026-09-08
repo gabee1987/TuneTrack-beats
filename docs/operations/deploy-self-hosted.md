@@ -355,7 +355,7 @@ Replace the URLs with your actual Cloudflare tunnel hostname.
 ### Step 6 — Deploy the frontend on Render (free static site)
 
 The frontend is a compiled set of static files. Keep it on Render's free static hosting
-to avoid complexity. Follow [deploy-render.md](deploy-render.md) Part 2 (Static Site
+to avoid complexity. Follow [deploy-railway-frontend.md](deploy-railway-frontend.md) (Render Static Site
 only) and set:
 
 ```

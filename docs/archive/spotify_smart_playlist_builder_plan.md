@@ -1,3 +1,11 @@
+> **Archived 2026-09-08.** Historical record: implemented (its own sections are marked *implemented*),
+> with one partial - playlist-result inspection is noted in the plan as implemented for playlist and
+> track search and track append only.
+> Superseded for further Spotify work by
+> `../plans/2026-09-stability-performance/08-spotify-session-and-playback.md`. Do not follow this plan.
+
+---
+
 # Spotify Smart Playlist Builder Plan
 
 ## Problem

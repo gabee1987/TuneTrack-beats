@@ -1,3 +1,9 @@
+> **Archived 2026-09-08.** Historical record: implemented and shipped (the plan itself is marked *completed*).
+> Delivered the turn/reveal loop, per-player lobby settings and the pure engine rules.
+> Current normative rules: `../../CLAUDE.md`, `../rules/`. Do not follow this plan.
+
+---
+
 # TuneTrack — Iteration 02 Gameplay Loop Plan
 
 > This plan builds directly on Iteration 01 and must follow the vision,

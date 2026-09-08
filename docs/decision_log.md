@@ -7,6 +7,34 @@ do not stay hidden in code.
 
 ## Decided
 
+### Documentation reorganisation (2026-09-08)
+
+`docs/` held 26 files, roughly 10 400 lines, mostly completed or superseded iteration
+plans, with no index and inconsistent status markers. Restructured into
+`architecture/`, `rules/`, `operations/`, `plans/` and `archive/`, with `docs/README.md`
+as the index.
+
+- 15 plans archived unedited, each with a header stating what shipped, what did not, and
+  what superseded it.
+- Deleted `deploy-render.md` (documented a deployment path the project moved away from,
+  and its only unique content — the cold-start warning — is already in
+  `deploy-railway-frontend.md`) and `frontend_rework_sequence_plan.md` (sequencing for a
+  finished phase). Both remain in git history.
+- Extracted the still-authoritative token and component contract from
+  `ui_overhaul_design_system_spotify.md` into `rules/design_system.md`.
+- Folded the product rules from `playlist_metadata_curation_plan.md` into `CLAUDE.md`
+  (Game Rules -> Track Metadata), since `CLAUDE.md` is the file actually loaded each
+  session.
+- Extracted the still-open items from `gamepage_refactor_handoff.md` section 4 into
+  `plans/gamepage-remaining-refactors.md`; five of nine were already done.
+
+**Rationale:** a contributor or agent opening `docs/` could not tell which documents were
+authoritative. Two archived plans were actively misleading — the reconnect plan was only
+partially implemented (its missing in-game eviction timer is finding F-12) and the
+performance plan was paused mid-way with a Phase 8 that is deliberately not being resumed.
+
+---
+
 ### Equal release-year placement
 
 If a candidate track has the same release year as one or more adjacent timeline

@@ -25,6 +25,36 @@ until reveal, tactile touch interactions, smooth animations.
 - Host can configure reveal confirmation mode: `host_only` or `host_or_active_player`.
 - Host disconnect → first remaining player inherits host role. Last player leaves → room removed.
 
+### Track Metadata
+
+Spotify is an **import source, not the game truth.** Remasters, deluxe editions,
+compilations, live albums and re-releases all report the release year of whichever album
+contains the track, which breaks the core promise: players guess the *original song*
+release year.
+
+- The curated `releaseYear` is the authoritative gameplay answer.
+- `sourceReleaseYear` preserves what Spotify reported, so a host can see what changed and
+  so future persistence can keep both values.
+- `metadataStatus` is `imported` | `edited` | `verified`. Any host edit to title, artist,
+  album or year promotes an `imported` track to `edited` unless the host sets the status
+  explicitly.
+- Release-year curation is the primary host workflow before starting a game; the playlist
+  editor exists for it.
+- Curated playlists are saved locally (`services/savedPlaylists`) for MVP reuse without an
+  account. The saved model is shaped so account-backed storage can replace local storage
+  later. Never store saved playlists in room settings — settings only summarise the active
+  room.
+- No external metadata-enrichment API and no automatic canonical-year lookup.
+- Imported-deck mutation belongs in `rooms/`, never in Socket.IO handlers.
+
+---
+
+## Documentation
+
+`docs/README.md` is the index. It states which documents are normative, which plan is
+live, and what is archived. **Do not read `docs/archive/`** — everything in it has shipped
+or been superseded, and each file says so in its header.
+
 ---
 
 ## Look & Feel

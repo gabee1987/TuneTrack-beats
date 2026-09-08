@@ -1,3 +1,9 @@
+> **Archived 2026-09-08.** Historical record: implemented and shipped (the plan itself is marked *completed*).
+> Delivered server-authoritative challenge resolution and TT token actions.
+> Current normative rules: `../../CLAUDE.md`, `../rules/`. Do not follow this plan.
+
+---
+
 # TuneTrack — Iteration 03 Challenge And TT Token Plan
 
 > This plan builds directly on Iteration 02 and must follow the vision,

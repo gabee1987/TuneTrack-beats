@@ -1,3 +1,10 @@
+> **Archived 2026-09-08.** Historical checkpoint. The refactor it describes was completed.
+> Its section 4 (What Still Needs Refactoring) was reviewed on 2026-09-08 and the still-open items
+> were extracted to `../plans/gamepage-remaining-refactors.md`, which records what is done and what
+> remains. Read that file, not this one. Do not follow this plan.
+
+---
+
 # GamePage Refactor Handoff
 
 > Purpose: preserve the current refactor state of the `GamePage` feature so future work can continue from a clean, explicit checkpoint.

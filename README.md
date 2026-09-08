@@ -55,7 +55,7 @@ apps/
 packages/
   shared/          # Shared DTOs, event names, schemas, constants
   game-engine/     # Framework-independent gameplay rules
-docs/              # Architecture docs, implementation plans, decision log
+docs/              # See docs/README.md - rules, architecture, live plans, archive
 ```
 
 ## Local Development
@@ -139,8 +139,13 @@ Shared event names and payload contracts live in `packages/shared`.
 
 ## Documentation
 
-- [Full architecture](docs/tunetrack_full_architecture.md)
-- [Technical implementation plan](docs/tunetrack_technical_implementation_plan.md)
-- [Iteration 01 foundation plan](docs/iteration_01_foundation_plan.md)
-- [Iteration 02 gameplay loop plan](docs/iteration_02_gameplay_loop_plan.md)
+Start at [docs/README.md](docs/README.md) - it is the index and says which documents are
+normative, which plan is live, and what is archived.
+
+- [Documentation index](docs/README.md)
+- [Full architecture](docs/architecture/tunetrack_full_architecture.md)
+- [Backend engineering rules](docs/rules/backend_engineering_rules.md)
+- [Frontend engineering rules](docs/rules/frontend_engineering_rules.md)
+- [Design system contract](docs/rules/design_system.md)
+- [Live plan: stability, performance and UX](docs/plans/2026-09-stability-performance/00-index.md)
 - [Decision log](docs/decision_log.md)

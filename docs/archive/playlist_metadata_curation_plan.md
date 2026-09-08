@@ -1,3 +1,14 @@
+> **Archived 2026-09-08.** Partially implemented; its product rules were promoted.
+> Shipped: phases 1-3 - the shared and server editing contract (`sourceReleaseYear`,
+> `metadataStatus`, curation flags), the playlist editor metadata UI, and the local saved-playlist
+> library.
+> **Never implemented:** phase 4 (in-game host correction of a wrong release year), now owned by
+> `../plans/2026-09-stability-performance/09-room-and-player-identity-flow.md` section 5.
+> Its normative product rules were folded into `../../CLAUDE.md` (Game Rules, Track metadata).
+> Do not follow this plan.
+
+---
+
 # Playlist Metadata Curation And Saved Decks Plan
 
 ## Problem

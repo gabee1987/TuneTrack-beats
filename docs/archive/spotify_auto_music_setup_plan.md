@@ -1,3 +1,11 @@
+> **Archived 2026-09-08.** Historical record: implemented (its own sections are marked *implemented*).
+> Delivered playlist search, candidate generation from genre/year/artist filters, quick-pick presets
+> and the candidate review panel.
+> Superseded for further Spotify work by
+> `../plans/2026-09-stability-performance/08-spotify-session-and-playback.md`. Do not follow this plan.
+
+---
+
 # Spotify Automatic Music Setup Plan
 
 ## Problem

@@ -1,3 +1,11 @@
+> **Archived 2026-09-08.** Historical record: implemented and shipped. The plan carried no status
+> marker; implementation was verified against the code during the 2026-09-08 audit - the challenge
+> window UI, TT action dock, reveal panels and host-only player controls all exist.
+> Section 8.8 (component extraction) was completed later by `gamepage_refactor_handoff.md`.
+> Current normative rules: `../../CLAUDE.md`, `../rules/`. Do not follow this plan.
+
+---
+
 # TuneTrack — Iteration 04 Frontend Challenge And TT UI Plan
 
 > This plan is the detailed frontend execution companion for Iteration 03.

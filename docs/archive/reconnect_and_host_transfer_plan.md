@@ -1,3 +1,14 @@
+> **Archived 2026-09-08.** Superseded, and **only partially implemented**.
+> Shipped: `connectionStatus` on players, session-based reconnect, the 30-second lobby grace period,
+> automatic host transfer after 15 seconds, and the 60-second turn skip for a disconnected active player.
+> **Never implemented:** the in-game session eviction timer. An in-game disconnect is marked
+> disconnected and given a 180-second countdown with no timer behind it, so an abandoned player is
+> never removed and the room is never deleted. That is finding **F-12** of the 2026-09-08 audit and is
+> now owned by `../plans/2026-09-stability-performance/04-backend-stability-and-sessions.md` section 1.
+> Superseded by docs 04 and 05 of that programme. Do not follow this plan.
+
+---
+
 # Reconnect And Host Transfer Plan
 
 > Purpose: define a robust, UX-friendly reconnect and host-transfer system for

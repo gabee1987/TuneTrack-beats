@@ -1,3 +1,12 @@
+> **Archived 2026-09-08.** Partially superseded. Phases 0-6 shipped (mobile-first overhaul);
+> phase 7 (desktop visual pass) was deferred and is now tracked in
+> `../plans/2026-09-stability-performance/07-design-system-consolidation.md`.
+> Its still-authoritative token and component contract (sections 3, 4, 5, 7, 8 and 15) was extracted
+> to `../rules/design_system.md` - read that instead.
+> The 2026-07-24 merge checkpoint is spent; `feature/ui-overhaul` is merged. Do not follow this plan.
+
+---
+
 # TuneTrack Beats — UI Overhaul Design System (Spotify-Inspired, Mobile-First)
 
 > **Purpose**: Define a robust, token-driven, Spotify-inspired flat design system and a phased plan to overhaul the TuneTrack UI without regressing performance, features, or code quality.

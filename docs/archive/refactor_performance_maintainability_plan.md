@@ -1,3 +1,14 @@
+> **Archived 2026-09-08.** Superseded. Phases 0-7 shipped; the document was left
+> "Paused after Phase 7". Its **Phase 8** (a generic `state_patch` delta protocol) was never started
+> and is deliberately not being resumed:
+> `../plans/2026-09-stability-performance/05-network-protocol-and-resilience.md` section 6 replaces it
+> with a simpler design (narrow named events plus a `revision` guard) and explains why.
+> Its Phase 0-7 results tables remain a useful record of what was measured in July 2026.
+> Superseded by docs 02, 03, 04 and 05 of `../plans/2026-09-stability-performance/`.
+> Do not follow this plan.
+
+---
+
 # TuneTrack Refactor Plan — Performance, Traffic & Maintainability
 
 > Status: **Paused after Phase 7 — plan complete pending your manual validation**  

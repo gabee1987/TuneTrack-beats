@@ -1,3 +1,10 @@
+> **Archived 2026-09-08.** Superseded. This was the original mobile UI/UX brief; the visual direction
+> and design-system layer it proposed were replaced by `ui_overhaul_design_system_spotify.md`, whose
+> token contract has since been extracted to `../rules/design_system.md`.
+> Kept for the original product-personality and motion-feel intent. Do not follow this plan.
+
+---
+
 # TuneTrack Beats — Mobile UI Design System & Implementation Guide (Codex-Ready)
 
 ## Scope
