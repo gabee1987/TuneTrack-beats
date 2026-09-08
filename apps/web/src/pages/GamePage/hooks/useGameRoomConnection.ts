@@ -7,7 +7,7 @@ import {
   type ServerErrorPayload,
   type StateUpdatePayload,
 } from "@tunetrack/shared";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useI18n } from "../../../features/i18n";
 import { localizeServerError } from "../../../features/i18n/localizedErrors";
@@ -46,6 +46,17 @@ export function useGameRoomConnection({
   const [errorKey, setErrorKey] = useState(0);
   const errorKeyRef = useRef(0);
   const [hasClosedRoomReset, setHasClosedRoomReset] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+
+  /**
+   * An action the socket could not deliver is dropped rather than buffered, so the only
+   * thing left to do is tell the player the board did not move.
+   */
+  const reportConnectionLost = useCallback(() => {
+    errorKeyRef.current += 1;
+    setErrorKey(errorKeyRef.current);
+    setErrorMessage(t("game.error.connectionLost"));
+  }, [t]);
 
   function handleClosedRoomReset() {
     setHasClosedRoomReset(false);
@@ -65,7 +76,12 @@ export function useGameRoomConnection({
       return;
     }
 
+    function handleDisconnect() {
+      setIsConnected(false);
+    }
+
     function handleConnect(socketClient: Awaited<ReturnType<typeof getSocketClient>>) {
+      setIsConnected(true);
       socketClient.emit(ClientToServerEvent.JoinRoom, {
         roomId,
         displayName: rememberedDisplayName,
@@ -131,6 +147,7 @@ export function useGameRoomConnection({
       const connectListener = () => handleConnect(socketClient);
 
       socketClient.on("connect", connectListener);
+      socketClient.on("disconnect", handleDisconnect);
       socketClient.on(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
       socketClient.on(ServerToClientEvent.RoomClosed, handleRoomClosed);
       socketClient.on(ServerToClientEvent.StateUpdate, handleStateUpdate);
@@ -138,6 +155,7 @@ export function useGameRoomConnection({
 
       cleanupSocketListeners = () => {
         socketClient.off("connect", connectListener);
+        socketClient.off("disconnect", handleDisconnect);
         socketClient.off(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
         socketClient.off(ServerToClientEvent.RoomClosed, handleRoomClosed);
         socketClient.off(ServerToClientEvent.StateUpdate, handleStateUpdate);
@@ -163,6 +181,8 @@ export function useGameRoomConnection({
     errorMessage,
     handleClosedRoomReset,
     hasClosedRoomReset,
+    isConnected,
+    reportConnectionLost,
     roomState,
     setErrorMessage,
   };

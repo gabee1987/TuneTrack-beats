@@ -746,6 +746,128 @@ a stalled navigation if either is involved.
 
 ---
 
+## B15 · Gameplay area stops responding, and stale actions replay on a dead room
+
+**Severity:** S1 · **Status:** **Fixed** (batch 5) · **Reported:** 2026-09-08 retest, with a server log
+
+Placing cards and then opening the settings panel left the gameplay area unable to accept
+any interaction. The server log taken during the session carries the proof.
+
+### Evidence
+
+Room `groove-64` was closed at `18:11:58` and its socket disconnected. Nine seconds later a
+**new** socket connected and immediately sent a burst of eleven `place_card` events for that
+closed room, all rejected with `ROOM_MEMBERSHIP_NOT_FOUND`:
+
+```
+[18:11:58.017] room closed        roomId=groove-64
+[18:12:07.615] socket connected   socketId=MyoFXqSszp6DblXTAAAa
+[18:12:07.662] place_card         roomId=groove-64  -> ROOM_MEMBERSHIP_NOT_FOUND
+[18:12:07.671] place_card x4      roomId=groove-64  -> ROOM_MEMBERSHIP_NOT_FOUND
+[18:12:07.672] place_card x4      roomId=groove-64  -> ROOM_MEMBERSHIP_NOT_FOUND
+[18:12:07.730] place_card         roomId=groove-64  -> ROOM_MEMBERSHIP_NOT_FOUND
+```
+
+Two details identify the mechanism. The burst arrives **within 70 ms** of a connect, which
+no human produces; and the socket sends **no `join_room` at all**, so it was not the game
+screen's own socket — the connect was triggered by another screen (the interleaved
+`list_rooms` is the home screen's room directory).
+
+### Root cause
+
+Socket.IO queues packets emitted while the socket is disconnected in `sendBuffer` and
+flushes them on the next connect. `emitRoomEvent` in `useGamePageActions` emitted through
+the shared client without ever checking `connected`, so:
+
+1. A tap on a slot emitted `place_card`. With the socket down, the packet was **buffered,
+   not sent** — and the caller could not tell the difference.
+2. `handlePlaceCard` set `locallyPlacedCard` *before* emitting. That optimistic card is
+   cleared only by a reveal, and a reveal can only arrive over the socket. With nothing
+   coming back, the board stayed locked. **This is the reported freeze.**
+3. Further taps buffered further packets, still with no feedback.
+4. Whenever an unrelated screen later connected the shared socket, the whole backlog
+   flushed at once against a room that no longer existed.
+
+A second, independent path to the same frozen screen: `createSocketClient` captured the
+generation before `await import("socket.io-client")`, and when a reset landed during that
+import it disconnected the new socket **and still returned it**. The caller then connected
+that socket and registered its listeners on it, while every other consumer emitted on the
+instance that replaced it — listeners on one socket, emits on another. The log shows such a
+stranded socket: `weyDkDjcCU9-WEs1AAAU` connected at `18:11:08` and emitted nothing for 44
+seconds while a second socket did all the work.
+
+### Fix
+
+- `emitWhenConnected` (`services/socket/socketClient.ts`) reports whether the action
+  actually went out, and drops it rather than buffering when the socket is down.
+- `resetSocketClient` clears `sendBuffer`, so no packet can outlive the socket that queued
+  it and replay against a later room.
+- `createSocketClient` no longer hands out a socket a concurrent reset discarded; it
+  returns the current shared instance instead.
+- `handlePlaceCard` shows the optimistic card **only once the placement is on its way**.
+- An undeliverable action raises `game.error.connectionLost` as a toast instead of failing
+  silently.
+- `useGamePageLocalUiState` clears the optimistic card when the connection drops, so a
+  disconnect mid-placement can never leave the board latched; the server's state wins again
+  on rejoin.
+
+### Verification
+
+- `useGamePageActions.test.ts` — the placement is sent and the optimistic card shown when
+  connected; when disconnected nothing is emitted, the board is untouched, and the failure
+  is reported. Same for an undeliverable reveal.
+- `socketClient.test.ts` — refuses to emit while disconnected, emits once connected, clears
+  queued packets on reset, and never hands out a socket a concurrent reset discarded.
+
+### Not addressed here
+
+The game screen still has no visible connection indicator, unlike the lobby. A player now
+gets a toast per undeliverable action but no standing "reconnecting" state. Belongs with
+Doc 05.
+
+---
+
+## B16 · Rejection audit records name the wrong event and lose their correlation id
+
+**Severity:** S3 (log integrity, no gameplay impact) · **Status:** **Fixed** (batch 5) · **Found:** 2026-09-08, in the B15 log
+
+The same log shows the audit trail misreporting the burst it recorded:
+
+```
+eventId=ea611c18 eventName=list_rooms  outcome=received
+                 eventName=place_card  outcome=rejected  ROOM_MEMBERSHIP_NOT_FOUND
+eventId=ea611c18 eventName=list_rooms  outcome=rejected  ROOM_MEMBERSHIP_NOT_FOUND
+```
+
+The `place_card` rejection is filed under `list_rooms`, and later rejections in the burst
+carry no `eventId` at all.
+
+### Root cause
+
+Two pieces of per-socket state could not represent more than one in-flight event:
+
+- `lastEventNameBySocket` held a single event name per socket. `logRejectedCurrentSocketEvent`
+  inferred the event from it, so when several packets arrived in the same tick a rejection
+  was attributed to whichever event arrived most recently.
+- `pendingEventIdsBySocket` keyed ids by event **name**, so eleven `place_card` arrivals
+  overwrote one slot: the first rejection consumed the id and the rest logged `undefined`.
+
+### Fix
+
+`emitServerError` now takes the event name explicitly — `createSocketHandler` already knows
+it — so the attribution is never inferred, and `logRejectedCurrentSocketEvent` is gone.
+Pending ids are held as a FIFO queue per event name, so a burst correlates in arrival order.
+
+### Why this matters beyond tidiness
+
+These records are labelled `auditKind: "realtime"` and are shipped to an external log sink.
+An audit trail that names the wrong event and drops correlation ids under load actively
+misleads an investigation. ISO 27001 A.8.15 expects logged events to be attributable, and
+A.8.16 expects them to support monitoring — both are undermined by misattribution
+specifically during bursts, which is when a log is most likely to be read.
+
+---
+
 ## Cross-reference
 
 | Reported item | Register entry | Primary plan |
@@ -768,6 +890,8 @@ a stalled navigation if either is involved.
 | Interactive first-run hints | (feature) | Doc 10 |
 | Skeleton loading for all pages | (feature) | Doc 07 phase 5 |
 | Host override for wrong metadata | (feature) | Doc 09 phase 4 |
+| Gameplay area frozen, stale actions replayed | B15 | Doc 12 B15 |
+| Audit records misattributed under load | B16 | Doc 12 B16 |
 | Bundle size and lazy loading | (programme) | Doc 02 |
 | More tests | (programme) | Doc 11 |
 | Room creation flow | (programme) | Doc 09 |

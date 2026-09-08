@@ -44,6 +44,8 @@ export function useGamePageController({
     errorMessage,
     handleClosedRoomReset,
     hasClosedRoomReset,
+    isConnected,
+    reportConnectionLost,
     roomState,
   } = useGameRoomConnection({
     navigate,
@@ -70,6 +72,7 @@ export function useGamePageController({
     timelineView,
   } = useGamePageLocalUiState({
     currentPlayerId,
+    isConnected,
     roomState,
   });
 
@@ -86,6 +89,7 @@ export function useGamePageController({
     isCurrentPlayerTurn: actionAvailability.isCurrentPlayerTurn,
     roomState,
     selectedSlotIndex,
+    onActionUndeliverable: reportConnectionLost,
     onSkipTrackWithTtIntent: handleSkipTrackWithTtIntent,
     setLocallyPlacedCard,
   });
