@@ -6,9 +6,14 @@ let modulePromise: Promise<AppShellMenuDialogModule> | null = null;
 
 export function loadAppShellMenuDialog(): Promise<AppShellMenuDialogModule> {
   if (!modulePromise) {
-    modulePromise = import("./components/AppShellMenuDialog").then((module) => ({
-      default: module.AppShellMenuDialog,
-    }));
+    modulePromise = import("./components/AppShellMenuDialog")
+      .then((module) => ({ default: module.AppShellMenuDialog }))
+      .catch((error: unknown) => {
+        // A failed load must not be remembered, or the menu stays broken for the rest of
+        // the session even once the network recovers.
+        modulePromise = null;
+        throw error;
+      });
   }
 
   return modulePromise;
@@ -22,5 +27,6 @@ export function loadAppShellMenuDialog(): Promise<AppShellMenuDialogModule> {
  * Lives in its own module so `app/preloadRoutes` does not have to import a component.
  */
 export function preloadAppShellMenu(): void {
-  void loadAppShellMenuDialog();
+  // A warm-up must never surface as an unhandled rejection; the real open path reports it.
+  void loadAppShellMenuDialog().catch(() => {});
 }

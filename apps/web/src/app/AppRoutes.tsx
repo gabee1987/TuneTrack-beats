@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { useLocation, useNavigationType, useOutlet } from "react-router-dom";
+import { useLocation, useNavigation, useNavigationType, useOutlet } from "react-router-dom";
 import { MotionPresence, PageTransition } from "../features/motion";
 import { motionDurations } from "../features/motion/coreMotionTokens";
 import type { ScreenTransitionDirection } from "../features/motion";
@@ -24,8 +24,16 @@ export function getRouteOrder(pathname: string): number {
  */
 const EXIT_WARNING_BUDGET_MS = motionDurations.screen * 1000 * 2;
 
+/**
+ * A route whose module never loads leaves the navigation pending, so the screen never
+ * changes and the control that triggered it looks dead. `AppRouteError` covers the
+ * failure case; this names the stall while it is still happening.
+ */
+const PENDING_NAVIGATION_BUDGET_MS = 8_000;
+
 export function AppRoutes() {
   const location = useLocation();
+  const navigation = useNavigation();
   const navigationType = useNavigationType();
   const outlet = useOutlet();
   const previousPathnameRef = useRef(location.pathname);
@@ -67,6 +75,25 @@ export function AppRoutes() {
       clearTimeout(timeoutId);
     };
   }, [location.key, location.pathname]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV || navigation.state === "idle") {
+      return;
+    }
+
+    const pendingPath = navigation.location?.pathname ?? "(unknown)";
+    const timeoutId = setTimeout(() => {
+      console.warn(
+        `[AppRoutes] the navigation to "${pendingPath}" has been pending for ` +
+          `${PENDING_NAVIGATION_BUDGET_MS}ms. Its route module is probably not resolving, ` +
+          "which blocks every later navigation until the app is reloaded.",
+      );
+    }, PENDING_NAVIGATION_BUDGET_MS);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [navigation.location?.pathname, navigation.state]);
 
   function handleExitComplete() {
     if (exitWarningTimeoutRef.current) {

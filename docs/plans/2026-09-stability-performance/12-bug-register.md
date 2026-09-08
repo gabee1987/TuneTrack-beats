@@ -479,9 +479,58 @@ going again.** Any doubt falls through to a re-issue.
 
 ## B10 · Home screen is unresponsive after closing a room
 
-**Severity:** S1 · **Status:** **Hypothesis** · **Finding:** F-27c · **Effort:** unknown until reproduced
+**Severity:** S1 · **Status:** **Partially fixed — diagnosis corrected** · **Finding:** F-27c
 
-### Candidate mechanisms
+### Confirmed on retest (2026-09-08)
+
+The first fix pass treated this as an input-blocking problem: `pointerEvents: "none"` was
+added to the page-transition exit variant, plus `contain: layout paint` and a dev warning
+(commit `f1dbb51`). **The defect survived that fix**, and the retest produced the decisive
+detail: *the settings panel still opens*. Input therefore works. Only navigation is dead.
+
+That eliminates every overlay- and pointer-based mechanism below, because a blocking
+overlay would swallow the settings trigger as well. In a data router, only three things
+stop a navigation from completing: a blocker, a loader, or an unresolved `lazy()`. There
+are no blockers and no loaders on these routes, so the route module is the only candidate
+left — and `lazyRoute.ts` contained exactly that failure:
+
+```
+window.location.reload();
+return new Promise<TModule>(() => {});   // never settles
+```
+
+If the reload does not take effect, that promise leaves the navigation pending forever and
+**every later navigation queues behind it**. The app keeps answering local input while no
+screen change is ever possible again — "the Start button does nothing, only a refresh
+helps", with the settings panel still working. A second chunk failure in one session took
+the `throw` branch instead, which had no error boundary anywhere in the app to catch it,
+so it also produced a silent dead navigation.
+
+Contributing factors found in the same pass:
+
+- `preloadRoutes.ts` memoised the preload promise permanently, so one rejected preload
+  poisoned that route for the rest of the session.
+- `loadAppShellMenuDialog` memoised its rejection the same way.
+- The app had **no `errorElement` / `ErrorBoundary` on any route**, so any route-load
+  failure was invisible by construction.
+
+### Fixed in commit `018407c`
+
+- `loadLazyRoute` never returns an unsettled promise; the reload path rejects after a
+  4-second grace so the router can render its error element.
+- `AppRouteError` added as the root route's `ErrorBoundary`: a real recovery screen with
+  Retry and Back-to-home, and it logs the underlying error.
+- Rejected preload promises are cleared instead of remembered, and preload warm-ups no
+  longer raise unhandled rejections.
+- A development warning names any navigation still pending after 8 seconds.
+
+### Still open
+
+If the symptom recurs, the console now identifies it: `[AppRouteError]` for a failed route
+load, or `[AppRoutes] the navigation to "..." has been pending` for a stalled one. Capture
+that line before changing more code.
+
+### Candidate mechanisms (superseded — kept for the audit trail)
 
 Static reading gives three, all in the same structural area as B2:
 
@@ -631,6 +680,72 @@ action.
 
 ---
 
+## B13 · Back from the game screen leaves the game without warning
+
+**Severity:** S2 · **Status:** **Fixed** (commit `018407c`) · **Reported:** 2026-09-08 retest
+
+Pressing the phone's back button on the game screen dropped the player straight out of a
+running game. After the B2 navigation work made the lobby-to-game step a `replace`, back
+landed on `/play` (the room setup screen) rather than a dead lobby — correct per the
+push/replace rule, but still wrong as a product behaviour: leaving a live game must be a
+deliberate act, and the destination is a screen that cannot resume the game.
+
+### Fix
+
+`useLeaveGameGuard` (`pages/GamePage/hooks/useLeaveGameGuard.ts`) uses the data router's
+`useBlocker`, guarding **only** `historyAction === "POP"` so the app's own redirects (room
+closed, closed-room reset, game start) proceed untouched. A confirmation dialog is shown;
+confirming closes the socket first, because the protocol has no "leave room" event, so a
+socket close is the only way the server learns the player left deliberately rather than
+momentarily.
+
+The guard is disabled once `roomState.status === "finished"`, so leaving a finished game
+needs no confirmation.
+
+### Verification
+
+- Manual: press back mid-game, confirm the dialog appears; Cancel keeps the game; Leave
+  exits to the previous screen.
+- Manual: a host closing the room still redirects everyone home with no dialog.
+- Follow-up: a proper `LeaveRoom` protocol event belongs with Doc 04 phase 1.
+
+---
+
+## B14 · Switching light/dark mode can leave the app inert, then bounce to home
+
+**Severity:** S1 · **Status:** **Not diagnosed** · **Reported:** 2026-09-08 retest
+
+Switching the theme sometimes makes nothing interactive, and after a delay the app returns
+to the home screen on its own.
+
+### Ruled out by inspection
+
+- **Server-side room closure.** A brief disconnect does not close a room: the server marks
+  the player disconnected with a 180 s in-game reconnect window
+  (`RoomConnectionService.IN_GAME_RECONNECT_DISPLAY_MS`) and only transfers the host after
+  15 s. So the automatic return to home is not a `RoomClosed` broadcast caused by a stall.
+- **A theme-driven remount.** `applyTheme` only writes CSS custom properties and the
+  `data-theme` attribute; no component keys off the theme id.
+
+### Remaining candidates
+
+1. An automatic `navigate("/")` from a connection hook — both hooks redirect home when the
+   remembered display name is missing, and `resetPlayerSession()` clears it.
+2. `RoomResetModal` opening on a `ROOM_MEMBERSHIP_NOT_FOUND` error: it is a blocking
+   full-screen overlay, which would read as "nothing is interactive".
+3. Style invalidation cost: `applyTheme` rewrote every component token on each switch even
+   though those are theme-agnostic. Reduced in commit `018407c`, but not proven to be the
+   cause.
+
+### Do this before writing a fix
+
+Capture, at the moment it happens: the screen the player was on, whether the settings panel
+was open, whether the URL changes when it returns home, and any console output — the new
+`[AppRouteError]` and `[AppRoutes] ... pending` warnings will name a route-load failure or
+a stalled navigation if either is involved.
+
+---
+
 ## Cross-reference
 
 | Reported item | Register entry | Primary plan |
@@ -648,6 +763,8 @@ action.
 | Home unresponsive after closing a room | B10 | Doc 06 sections 3-4 |
 | Player remove button design | B11 | Doc 07 phase 1 |
 | Player name separate from room flow, remembered | B12 | Doc 09 phases 1-3 |
+| Back from the game screen needs a confirmation | B13 | Doc 12 B13 |
+| Theme switch leaves the app inert | B14 | Doc 12 B14 (undiagnosed) |
 | Interactive first-run hints | (feature) | Doc 10 |
 | Skeleton loading for all pages | (feature) | Doc 07 phase 5 |
 | Host override for wrong metadata | (feature) | Doc 09 phase 4 |
