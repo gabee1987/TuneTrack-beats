@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { AppRouteFallback } from "../../app/components/AppRouteFallback";
 import { useI18n } from "../../features/i18n";
 import { RoomResetModal } from "../../features/ui/RoomResetModal";
+import { Button, Dialog } from "../../features/ui/primitives";
 import { usePageLayoutMode } from "../../hooks/usePageLayoutMode";
 import { GamePageToastStack } from "./components/GamePageToastStack";
 import type { GameRouteState, LoadedGamePageController } from "./GamePage.types";
@@ -13,6 +14,7 @@ import {
 } from "./hooks/HostPlaybackProvider";
 import { useGamePageController } from "./hooks/useGamePageController";
 import { useGamePageToasts } from "./hooks/useGamePageToasts";
+import { useLeaveGameGuard } from "./hooks/useLeaveGameGuard";
 import styles from "./gamePageStyles";
 
 const GamePageMobile = lazy(async () => {
@@ -43,17 +45,40 @@ export function GamePage() {
     roomState: controller.roomState,
   });
   const layoutMode = usePageLayoutMode();
-  const roomResetModal = (
-    <RoomResetModal
-      isOpen={controller.hasClosedRoomReset}
-      onReset={controller.handleClosedRoomReset}
-    />
+  const leaveGameGuard = useLeaveGameGuard({
+    isGuarded: Boolean(controller.roomState) && controller.roomState?.status !== "finished",
+  });
+  const screenOverlays = (
+    <>
+      <RoomResetModal
+        isOpen={controller.hasClosedRoomReset}
+        onReset={controller.handleClosedRoomReset}
+      />
+      <Dialog
+        actions={
+          <>
+            <Button onClick={leaveGameGuard.dismissLeave} type="button" variant="secondary">
+              {t("common.cancel")}
+            </Button>
+            <Button onClick={leaveGameGuard.confirmLeave} type="button" variant="danger">
+              {t("game.leaveConfirm.confirm")}
+            </Button>
+          </>
+        }
+        closeLabel={t("common.close")}
+        isOpen={leaveGameGuard.isConfirmVisible}
+        onClose={leaveGameGuard.dismissLeave}
+        title={t("game.leaveConfirm.title")}
+      >
+        {t("game.leaveConfirm.message")}
+      </Dialog>
+    </>
   );
 
   if (!controller.roomState) {
     return (
       <>
-        {roomResetModal}
+        {screenOverlays}
         <main className={styles.screen}>
           <section className={styles.panel}>
             <h1 className={styles.title}>{t("game.loading")}</h1>
@@ -79,7 +104,7 @@ export function GamePage() {
       roomId={controller.roomState.roomId}
       roomState={controller.roomState}
     >
-      {roomResetModal}
+      {screenOverlays}
       <GamePageToastStack toasts={toasts} />
       <Suspense fallback={<AppRouteFallback />}>
         {layoutMode === "mobile" ? (

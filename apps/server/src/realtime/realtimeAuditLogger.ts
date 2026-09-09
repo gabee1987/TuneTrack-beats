@@ -21,8 +21,12 @@ interface AuditLogInput {
   meta?: Record<string, unknown> | undefined;
 }
 
-const pendingEventIdsBySocket = new WeakMap<Socket, Map<string, string>>();
-const lastEventNameBySocket = new WeakMap<Socket, string>();
+/**
+ * One arrival of an event is one entry, held in arrival order. Keying by event name alone
+ * collapsed a burst of the same event into a single id, so only the first outcome could be
+ * correlated back to its `received` record and the rest logged no id at all.
+ */
+const pendingEventIdsBySocket = new WeakMap<Socket, Map<string, string[]>>();
 
 export function registerSocketAuditMiddleware(socket: Socket): void {
   if (!env.ENABLE_EVENT_AUDIT) return;
@@ -35,13 +39,14 @@ export function registerSocketAuditMiddleware(socket: Socket): void {
     }
 
     const eventId = randomUUID();
-    lastEventNameBySocket.set(socket, eventName);
     let pendingEventIds = pendingEventIdsBySocket.get(socket);
     if (!pendingEventIds) {
-      pendingEventIds = new Map<string, string>();
+      pendingEventIds = new Map<string, string[]>();
       pendingEventIdsBySocket.set(socket, pendingEventIds);
     }
-    pendingEventIds.set(eventName, eventId);
+    const arrivalsForEvent = pendingEventIds.get(eventName) ?? [];
+    arrivalsForEvent.push(eventId);
+    pendingEventIds.set(eventName, arrivalsForEvent);
 
     logRealtimeAudit({
       eventId,
@@ -96,15 +101,6 @@ export function logRejectedSocketEvent(
     errorCode,
     meta,
   });
-}
-
-export function logRejectedCurrentSocketEvent(
-  socket: Socket,
-  errorCode: string,
-  meta?: Record<string, unknown>,
-): void {
-  const eventName = lastEventNameBySocket.get(socket) ?? "unknown";
-  logRejectedSocketEvent(socket, eventName, errorCode, meta);
 }
 
 export function logRoomStateBroadcast(eventName: string, roomState: PublicRoomState): void {
@@ -171,8 +167,13 @@ function summarizeSpotifyPlaybackResult(payload: unknown): Record<string, unknow
 
 function consumeEventId(socket: Socket, eventName: string): string | undefined {
   const pendingEventIds = pendingEventIdsBySocket.get(socket);
-  const eventId = pendingEventIds?.get(eventName);
-  pendingEventIds?.delete(eventName);
+  const arrivalsForEvent = pendingEventIds?.get(eventName);
+  const eventId = arrivalsForEvent?.shift();
+
+  if (arrivalsForEvent?.length === 0) {
+    pendingEventIds?.delete(eventName);
+  }
+
   return eventId;
 }
 

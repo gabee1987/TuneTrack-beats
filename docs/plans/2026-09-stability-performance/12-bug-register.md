@@ -634,9 +634,15 @@ action.
 
 ## B13 · Back from the game screen leaves the game without warning
 
-**Severity:** S2 · **Status:** **Reverted — open again** · **Reported:** 2026-09-08 retest
+> **Re-land note (2026-09-09).** The reverted attempt blocked on `POP` alone. React Router
+> honours one blocker at a time, and a page can stay mounted after its exit begins
+> ([B18](#b18--a-stalled-page-exit-strands-everything-the-page-portalled)), so that guard
+> could hold every later navigation for the rest of the session. `useLeaveGameGuard` now
+> also requires `useIsPresent()`, and releases a navigation it is already holding as soon as
+> it stops applying — refusing new ones is not enough. Both properties are covered by tests
+> confirmed to fail without them.
 
-> Reverted with the branch reset (see [B17](#b17--the-hardening-branch-itself-destabilised-the-app)). The analysis below stands; the code does not. Re-land it with its own test and a device check.
+**Severity:** S2 · **Status:** **Re-landed** (2026-09-09) · **Reported:** 2026-09-08 retest
 
 Pressing the phone's back button on the game screen dropped the player straight out of a
 running game. After the B2 navigation work made the lobby-to-game step a `replace`, back
@@ -724,9 +730,15 @@ whether the URL changes when it returns home, and any `[AppRouteError]` or
 
 ## B15 · Gameplay area stops responding, and stale actions replay on a dead room
 
-**Severity:** S1 · **Status:** **Reverted — open again** · **Reported:** 2026-09-08 retest, with a server log
+> **Re-land note (2026-09-09).** Narrowed. The reverted attempt replaced Socket.IO's
+> buffering with dropping whenever the socket was not connected, which silently lost live
+> actions — a token purchase did nothing until a reload. Buffering is right across a brief
+> blip; it is only wrong across a reset, when the room those packets belonged to is gone.
+> The re-land therefore clears the buffer with the socket that holds it and fixes the race
+> that handed out a discarded instance, and drops nothing. The optimistic-placement latch is
+> not addressed here: it resolves itself once buffered packets are delivered.
 
-> Reverted with the branch reset (see [B17](#b17--the-hardening-branch-itself-destabilised-the-app)). The analysis below stands; the code does not. Re-land it with its own test and a device check.
+**Severity:** S1 · **Status:** **Re-landed, narrowed** (2026-09-09) · **Reported:** 2026-09-08 retest, with a server log
 
 Placing cards and then opening the settings panel left the gameplay area unable to accept
 any interaction. The server log taken during the session carries the proof.
@@ -807,9 +819,12 @@ Doc 05.
 
 ## B16 · Rejection audit records name the wrong event and lose their correlation id
 
-**Severity:** S3 (log integrity, no gameplay impact) · **Status:** **Reverted — open again** · **Found:** 2026-09-08, in the B15 log
+> **Re-land note (2026-09-09).** Same fix, now with a test of its own: a burst of one event
+> must correlate every arrival in order, which fails against the previous single-slot map.
+> Misattribution is gone by construction — `logRejectedCurrentSocketEvent` no longer exists,
+> so the event name cannot be inferred.
 
-> Reverted with the branch reset (see [B17](#b17--the-hardening-branch-itself-destabilised-the-app)). The analysis below stands; the code does not. Re-land it with its own test and a device check.
+**Severity:** S3 (log integrity, no gameplay impact) · **Status:** **Re-landed** (2026-09-09) · **Found:** 2026-09-08, in the B15 log
 
 The same log shows the audit trail misreporting the burst it recorded:
 

@@ -13,6 +13,19 @@ function resolveSocketServerUrl(): string {
   });
 }
 
+/**
+ * Socket.IO queues packets emitted while offline and flushes them on the next connect,
+ * which is what you want across a brief blip. It is not what you want across a reset: the
+ * room those packets belonged to is gone, and the replay arrives at whatever room the
+ * player is in next. The buffer has to die with the socket that holds it.
+ */
+function discardSocketClient(socketClient: Socket) {
+  socketClient.removeAllListeners();
+  socketClient.disconnect();
+  socketClient.sendBuffer = [];
+  socketClient.receiveBuffer = [];
+}
+
 async function createSocketClient(): Promise<Socket> {
   const generation = socketClientGeneration;
   const { io } = await import("socket.io-client");
@@ -21,9 +34,10 @@ async function createSocketClient(): Promise<Socket> {
   });
 
   if (generation !== socketClientGeneration) {
-    nextSocketClient.removeAllListeners();
-    nextSocketClient.disconnect();
-    return nextSocketClient;
+    // Handing this back would strand the caller: it connects the socket and registers its
+    // listeners there, while every other consumer emits on the instance that replaced it.
+    discardSocketClient(nextSocketClient);
+    return getSocketClient();
   }
 
   socketClientInstance = nextSocketClient;
@@ -52,8 +66,11 @@ export function disconnectSocketClient(): void {
 
 export function resetSocketClient(): void {
   socketClientGeneration += 1;
-  socketClientInstance?.removeAllListeners();
-  socketClientInstance?.disconnect();
+
+  if (socketClientInstance) {
+    discardSocketClient(socketClientInstance);
+  }
+
   socketClientInstance = null;
   socketClientPromise = null;
 }

@@ -202,7 +202,13 @@ function registerUseSpotifyCandidatesHandler(
         broadcastRoomState(io, result.roomState);
       }
     } catch (error) {
-      emitServerError(socket, error, "USE_SPOTIFY_CANDIDATES_FAILED", useSpotifyCandidatesErrorMessages);
+      emitServerError(
+        socket,
+        ClientToServerEvent.UseSpotifyCandidates,
+        error,
+        "USE_SPOTIFY_CANDIDATES_FAILED",
+        useSpotifyCandidatesErrorMessages,
+      );
     }
   });
 }

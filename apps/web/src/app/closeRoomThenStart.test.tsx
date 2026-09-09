@@ -84,7 +84,9 @@ describe("closing a room, then starting a new one", () => {
     seedLocalStorage({ "tunetrack.playerDisplayName": "Player 1" });
   });
 
-  it("leaves the home screen's primary action working", async () => {
+  // Boots the real router and loads the game, home and play route modules for real, so it
+  // needs far more than the default budget when the rest of the suite is competing for CPU.
+  it("leaves the home screen's primary action working", { timeout: 30_000 }, async () => {
     const user = userEvent.setup();
     const router = buildRouter(`/game/${TEST_ROOM_ID}`);
 
@@ -99,8 +101,9 @@ describe("closing a room, then starting a new one", () => {
     );
 
     // The game route is lazy and registers its socket listeners in a promise callback, so
-    // nothing can be delivered until it is actually mounted.
-    await screen.findByText(/loading game/i);
+    // nothing can be delivered until it is actually mounted. The waits are generous because
+    // these are real dynamic imports competing with the rest of the suite for the CPU.
+    await screen.findByText(/loading game/i, undefined, { timeout: 10_000 });
     await act(async () => {
       await Promise.resolve();
     });
@@ -120,7 +123,11 @@ describe("closing a room, then starting a new one", () => {
       });
     });
 
-    const startButton = await screen.findByRole("button", { name: /lets go/i });
+    const startButton = await screen.findByRole(
+      "button",
+      { name: /lets go/i },
+      { timeout: 10_000 },
+    );
     await user.click(startButton);
 
     await waitFor(() => expect(router.state.location.pathname).toBe("/play"));
