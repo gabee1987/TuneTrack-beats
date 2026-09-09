@@ -1,3 +1,10 @@
+> **Archived 2026-09-08.** Historical record: implemented and shipped. Every page now has separate
+> `mobile/` and `desktop/` assemblies with shared controller hooks.
+> Current normative rules: `../rules/frontend_engineering_rules.md`, `../../CLAUDE.md`.
+> Do not follow this plan.
+
+---
+
 # TuneTrack Mobile/Desktop Assembly Separation Plan
 
 ## Purpose

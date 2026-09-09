@@ -1,3 +1,9 @@
+> **Archived 2026-09-08.** Historical record: implemented and shipped (the plan itself is marked *completed*).
+> Delivered the workspace, shared contracts, game-engine package, server lobby flow and web lobby shell.
+> Current normative rules: `../../CLAUDE.md`, `../rules/`. Do not follow this plan.
+
+---
+
 # TuneTrack — Iteration 01 Foundation Plan
 
 > Goal: create a stable, testable technical foundation for TuneTrack without changing the gameplay vision or architecture rules defined in `tunetrack_full_architecture.md` and `tunetrack_technical_implementation_plan.md`.

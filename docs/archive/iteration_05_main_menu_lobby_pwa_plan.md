@@ -1,3 +1,12 @@
+> **Archived 2026-09-08.** Historical record: implemented and shipped. The plan carried no status
+> marker; implementation was verified against the code during the 2026-09-08 audit.
+> Its main-menu design was later replaced by `ui_overhaul_design_system_spotify.md`, and the
+> create/join form moved from Home to a dedicated Play page. The PWA phase (G) is live.
+> Superseded for the room-entry flow by
+> `../plans/2026-09-stability-performance/09-room-and-player-identity-flow.md`. Do not follow this plan.
+
+---
+
 # TuneTrack — Iteration 05 Main Menu And Lobby PWA UX Refactor Plan
 
 > This plan defines the redesign and refactor of the main menu and lobby host
