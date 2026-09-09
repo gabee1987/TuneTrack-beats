@@ -1,5 +1,5 @@
 import { CHALLENGE_TT_COST, type PublicRoomState } from "@tunetrack/shared";
-import { motion } from "framer-motion";
+import { motion, useIsPresent } from "framer-motion";
 import { useRef } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -82,6 +82,7 @@ export function ChallengeActionPanel({
   const { t } = useI18n();
   const reduceMotion = useReducedMotionPreference();
   const portalTarget = useMobileControlPortalTarget();
+  const isPresent = useIsPresent();
   const beatCostBadgeRef = useRef<HTMLSpanElement | null>(null);
 
   const challengeState = roomState.status === "challenge" ? roomState.challengeState : null;
@@ -219,6 +220,12 @@ export function ChallengeActionPanel({
         ) : null}
       </MotionPresence>
   );
+
+  // Portaled into `document.body`, this outlives the page's exit transform exactly as the
+  // action dock does — see the note in `ActionDock`.
+  if (portalTarget && !isPresent) {
+    return null;
+  }
 
   return portalTarget ? (
     <>

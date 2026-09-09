@@ -477,109 +477,60 @@ going again.** Any doubt falls through to a re-issue.
 
 ---
 
-## B10 · Home screen is unresponsive after closing a room
+## B10 · Home screen's primary action is dead after closing a room
 
-**Severity:** S1 · **Status:** **Partially fixed — diagnosis corrected** · **Finding:** F-27c
+**Severity:** S1 · **Status:** **Fixed and verified on device (2026-09-09)** · **Finding:** F-27c
 
-### Confirmed on retest (2026-09-08)
+Closing a room returns the player home, where the primary action does nothing until a
+reload. The settings menu still opens. Mobile only — desktop is unaffected.
 
-The first fix pass treated this as an input-blocking problem: `pointerEvents: "none"` was
-added to the page-transition exit variant, plus `contain: layout paint` and a dev warning
-(commit `f1dbb51`). **The defect survived that fix**, and the retest produced the decisive
-detail: *the settings panel still opens*. Input therefore works. Only navigation is dead.
+### Root cause
 
-That eliminates every overlay- and pointer-based mechanism below, because a blocking
-overlay would swallow the settings trigger as well. In a data router, only three things
-stop a navigation from completing: a blocker, a loader, or an unresolved `lazy()`. There
-are no blockers and no loaders on these routes, so the route module is the only candidate
-left — and `lazyRoute.ts` contained exactly that failure:
+Three things combine, and the defect needs all three:
 
-```
-window.location.reload();
-return new Promise<TModule>(() => {});   // never settles
-```
+1. `ActionDock` portals itself into `document.body`, but **only** on mobile
+   (`MOBILE_CONTROL_MEDIA_QUERY`). Desktop renders it inline, which is why desktop never
+   reproduced it.
+2. The page transition slides the *page wrapper* out with a transform. A portaled child is
+   not inside that wrapper, so the transform does not carry it away: the game page's body
+   leaves the screen while its dock stays exactly where it was.
+3. The dock's exit animates to `opacity: 0`. An opacity-0 element still receives clicks.
 
-If the reload does not take effect, that promise leaves the navigation pending forever and
-**every later navigation queues behind it**. The app keeps answering local input while no
-screen change is ever possible again — "the Start button does nothing, only a refresh
-helps", with the settings panel still working. A second chunk failure in one session took
-the `throw` branch instead, which had no error boundary anywhere in the app to catch it,
-so it also produced a silent dead navigation.
+The result is an invisible, fully hit-testable dock parked over the bottom of the next
+screen — precisely where the home screen's primary action sits. The menu kept working
+because it is in the top corner, outside the dock's footprint.
 
-Contributing factors found in the same pass:
+### How it was proven
 
-- `preloadRoutes.ts` memoised the preload promise permanently, so one rejected preload
-  poisoned that route for the rest of the session.
-- `loadAppShellMenuDialog` memoised its rejection the same way.
-- The app had **no `errorElement` / `ErrorBoundary` on any route**, so any route-load
-  failure was invisible by construction.
-
-### Fixed in the route-load hardening commit
-
-- `loadLazyRoute` never returns an unsettled promise; the reload path rejects after a
-  4-second grace so the router can render its error element.
-- `AppRouteError` added as the root route's `ErrorBoundary`: a real recovery screen with
-  Retry and Back-to-home, and it logs the underlying error.
-- Rejected preload promises are cleared instead of remembered, and preload warm-ups no
-  longer raise unhandled rejections.
-- A development warning names any navigation still pending after 8 seconds.
-
-### Still open
-
-If the symptom recurs, the console now identifies it: `[AppRouteError]` for a failed route
-load, or `[AppRoutes] the navigation to "..." has been pending` for a stalled one. Capture
-that line before changing more code.
-
-### Candidate mechanisms (superseded — kept for the audit trail)
-
-Static reading gives three, all in the same structural area as B2:
-
-1. **An exiting `PageTransition` that never unmounts.** It is
-   `position: absolute; inset: 0; min-height: var(--app-height); z-index: 2`
-   (`features/motion/PageTransition.tsx`), so an orphan covers the whole screen and
-   swallows every tap — permanently, which matches "only after refresh". Under
-   `mode="sync"` this is the known failure mode when the presence key changes again while a
-   child is still exiting. `handleRoomClosed` (`useGameRoomConnection.ts` lines 109-127)
-   navigates from a socket callback and, unlike `handleClosedRoomReset`, does **not** pass
-   `replace: true`, so a second navigation can land during the first exit.
-2. **A stuck portal overlay.** `RoomResetModal` (1500) or `AppLoadingOverlay` (1600) left
-   mounted with `pointer-events: auto`. The loading overlay's 120-second self-timeout would
-   read as permanent to a user.
-3. **A socket handshake that never settles** after `resetSocketClient()`, leaving `PlayPage`
-   connected but never receiving a room list.
-
-### Do this before writing any fix
-
-1. Reproduce on a device with DevTools attached.
-2. Inspect `document.body`'s children and
-   `document.querySelectorAll('[style*="position: absolute"]')` for a leftover
-   `PageTransition` node.
-3. Add a temporary `onExitComplete` log to `AppRoutes`' `AnimatePresence` and check whether
-   it fires for the game route.
-4. Run `document.elementFromPoint(x, y)` at the Start button's coordinates to see what is
-   actually receiving the tap.
-5. Record the confirmed mechanism here before changing code.
+`document.elementFromPoint` at the button's centre returned
+`<button class="_floatingPrimaryButton_…">`, and a scripted `button.click()` navigated to
+`/play` correctly. Together those show the handler and the router were never involved.
 
 ### Fix
 
-The Doc 06 work addresses all three candidates without needing to know which is firing:
-
-- `pointerEvents: "none"` on the exit variant neutralises candidate 1 even if orphans still
-  occur, and `onExitComplete` makes them visible in development.
-- Moving every overlay into the app-level host neutralises candidate 2.
-- Doc 05 section 5's explicit connection-state model makes candidate 3 visible to the user
-  as a banner rather than as an inert screen.
-
-Also apply the `replace` rule from B2 to `handleRoomClosed` in both connection hooks.
+`ActionDock` returns `null` once `useIsPresent()` reports the page is exiting, so the
+portaled node cannot outlive the page's visibility. Inline docks travel with the page and
+are left alone. `ChallengeActionPanel` portals to `document.body` the same way and carries
+the same guard.
 
 ### Verification
 
-- E2E E12: close the room from the host, then click Start on the home screen immediately —
-  no wait, no reload.
-- E2E: assert `document.body` has no leftover overlay node after the transition completes.
-- Manual M11, on both the browser and the installed PWA.
+- `ActionDock.test.tsx` — the dock is portaled out of the page on mobile, and renders
+  nothing once the page starts exiting. Confirmed to fail with the guard disabled.
+- Device: close a room, then use the home screen's primary action. Confirmed fixed.
 
----
+### Superseded diagnoses, kept as an audit trail
+
+Two earlier explanations were wrong and cost several cycles:
+
+1. **Input blocking.** `pointerEvents: "none"` on the page-transition exit variant plus
+   `contain: layout paint`. The defect survived, and both changes introduced defects of
+   their own (see [B17](#b17--the-hardening-branch-itself-destabilised-the-app)).
+2. **A pending navigation.** The reasoning was that the settings panel opening proved input
+   worked, so only navigation could be dead, and `lazyRoute.ts` returning a never-settling
+   promise was the mechanism. The premise was the flaw: *some* input worked. Nobody checked
+   whether the working control and the dead one were in the same region of the screen.
+   `elementFromPoint` answered in one line what two rounds of deduction did not.
 
 ## B11 · Player remove button does not match the token remove or close-room buttons
 
