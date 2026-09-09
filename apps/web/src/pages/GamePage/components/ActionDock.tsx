@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useIsPresent } from "framer-motion";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -48,6 +48,20 @@ interface ActionDockProps {
 export function ActionDock({ children, className }: ActionDockProps) {
   const reduceMotion = useReducedMotionPreference();
   const portalTarget = useMobileControlPortalTarget();
+  const isPresent = useIsPresent();
+
+  /**
+   * On mobile the dock is portaled to `document.body`, so the page's exit transform never
+   * carries it away. Its exit animation only fades it to `opacity: 0`, which still receives
+   * taps — leaving an invisible dock pinned over whatever screen comes next, right where
+   * the home screen's primary action sits (defect B10).
+   *
+   * An inline dock travels with the page and is harmless, so only the portaled one goes.
+   */
+  if (portalTarget && !isPresent) {
+    return null;
+  }
+
   const dock = (
     <motion.div
       animate="animate"
