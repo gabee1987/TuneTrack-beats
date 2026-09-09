@@ -15,7 +15,7 @@ identified but needs a live reproduction to confirm which of several candidates 
 
 ## B1 · Song editor opens under the playlist editor and cannot be closed
 
-**Severity:** S1 · **Status:** Confirmed · **Finding:** F-25 · **Effort:** very small
+**Severity:** S1 · **Status:** **Fixed** (2026-09-09) · **Finding:** F-25 · **Effort:** very small
 
 ### Root cause
 
@@ -220,57 +220,58 @@ Three factors compound:
 
 ---
 
-## B5 · Settings panel flickers when opened from the gameplay area
+## B5 · Settings panel flickers when opened, and its close animation is cut short
 
-**Severity:** S2 · **Status:** Confirmed · **Finding:** F-29 · **Effort:** small
+**Severity:** S2 · **Status:** **Fixed** (2026-09-09) · **Finding:** F-29 · **Effort:** small
+
+On open the page showed through the panel for a moment; on close the panel was gone well
+before the dim finished.
 
 ### Root cause
 
-Three independent contributors, all in the `AppShellMenu` chain:
+The dominant cause was not in the original analysis for this entry, and only surfaced from
+the device description of *both* directions:
 
-1. **The dialog chunk is fetched at tap time.**
-   `apps/web/src/features/app-shell/AppShellMenu.tsx` renders `AppShellMenuDialog` inside
-   `<Suspense fallback={null}>`. The chunk is 8.55 kB. The existing `onMouseEnter` /
-   `onFocus` / `onTouchStart` preloads help on desktop, but on a tap the fetch and the click
-   are one gesture, and the `null` fallback means nothing renders in between.
-2. **The enter animation is skipped.**
-   `apps/web/src/features/motion/MotionPresence.tsx` defaults `initial = false`, so the
-   dialog's `AnimatePresence` does not animate on mount. The sheet appears instantly rather
-   than transitioning in, which reads as a pop.
-3. **The scroll fades appear one frame late.**
-   `apps/web/src/features/app-shell/components/AppShellMenuSheet.tsx` lines 47-88 compute
-   `showTopFade` / `showBottomFade` in a `useEffect` plus a `ResizeObserver`, both starting
-   `false`. The gradients therefore fade in after the first paint. The active-tab pill
-   (lines 130-144) also animates opacity 0 to 1 on every mount, so the tab indicator fades in
-   each time the menu opens.
+**Nested opacity.** The scrim wrapped the sheet, and both animated `opacity`. Opacity
+multiplies down the tree, so halfway through the enter the sheet rendered at 0.5 × 0.5 =
+0.25 and the page was plainly visible through it; on exit the sheet was effectively gone a
+third of the way through while the scrim kept fading. One mechanism, both symptoms.
+
+Two smaller contributors, correctly identified earlier:
+
+- **The enter animation was skipped.** `AppShellMenuDialog` is `lazy()`, so its
+  `AnimatePresence` mounts with the panel already open, and `initial` defaults to `false` —
+  which suppresses the enter animation for children present at mount.
+- **The scroll fades landed a frame late**, computed in `useEffect` rather than
+  `useLayoutEffect`.
 
 ### Fix
 
-1. Preload the dialog module when the app shell mounts on the Lobby and Game routes, via
-   `apps/web/src/app/preloadRoutes.ts` (Doc 02 section 7.4). Give the `Suspense` fallback
-   the scrim, so the transition starts immediately even on a cold chunk.
-2. Change `MotionPresence`'s default to `initial = true`, and pass `initial={false}`
-   explicitly at the two call sites that need it (`AppRoutes`, `HeaderLeadersStrip`).
-3. Measure the scroll overflow in `useLayoutEffect` so the first committed paint is already
-   correct, or replace the JS measurement with a CSS-only edge mask. Remove the pill's
-   mount animation and give it a `layoutId` so it slides between tabs instead of fading in.
-4. While in the file: `isMobileSheet` is computed during render from
-   `window.matchMedia("(max-width: 720px)").matches` and never updates. Move it to the
-   viewport store (Doc 03 section 4).
+- The scrim is now a **sibling** of the sheet inside a plain, non-animating layer, so the
+  two opacities are independent. The sheet's `onClick` stopPropagation went with it: it
+  existed only to keep clicks from reaching the scrim's close handler through the parent.
+- `MotionPresence initial` is passed explicitly at this call site rather than flipping the
+  default under every other boundary.
+- Fade state moved to `useLayoutEffect`.
+- `createAppShellMenuTransition` is shared by both layers, so they cannot drift apart —
+  separating them for opacity is exactly what made that easy to do by accident.
+- Motion is a 64 px slide plus a fade over `motionDurations.standard` on the emphasised
+  curve. `isMobileSheet` was removed rather than fixed: the overlay anchors the sheet to the
+  same edge on both form factors, so the parameter changed nothing (it was already
+  `void`-ed, which is how the dead plumbing survived this long).
 
 ### Verification
 
-- Component test: the sheet renders with its fade classes already correct on first commit
-  (assert immediately after render, before flushing effects).
-- Component test: the tab pill does not animate on mount but does on a tab switch.
-- 60 fps screen capture, frame-stepped, showing one continuous enter animation.
-- Manual M4.
+- `AppShellMenuDialog.test.tsx` asserts the scrim is a sibling of the sheet and neither
+  contains the other — confirmed to fail when the sheet is nested back inside the scrim.
+- `appShellMotionTokens.test.ts` pins the targets and the one shared duration.
+- Device: confirmed on phone and desktop.
 
 ---
 
 ## B6 · Leaderboard chip bottom border is cut off in the gameplay area
 
-**Severity:** S2 · **Status:** Confirmed · **Finding:** F-32 · **Effort:** very small
+**Severity:** S2 · **Status:** **Fixed** (2026-09-09) · **Finding:** F-32 · **Effort:** very small
 
 ### Root cause
 
@@ -633,7 +634,9 @@ action.
 
 ## B13 · Back from the game screen leaves the game without warning
 
-**Severity:** S2 · **Status:** **Fixed** (the route-load hardening commit) · **Reported:** 2026-09-08 retest
+**Severity:** S2 · **Status:** **Reverted — open again** · **Reported:** 2026-09-08 retest
+
+> Reverted with the branch reset (see [B17](#b17--the-hardening-branch-itself-destabilised-the-app)). The analysis below stands; the code does not. Re-land it with its own test and a device check.
 
 Pressing the phone's back button on the game screen dropped the player straight out of a
 running game. After the B2 navigation work made the lobby-to-game step a `replace`, back
@@ -721,7 +724,9 @@ whether the URL changes when it returns home, and any `[AppRouteError]` or
 
 ## B15 · Gameplay area stops responding, and stale actions replay on a dead room
 
-**Severity:** S1 · **Status:** **Fixed** (batch 5) · **Reported:** 2026-09-08 retest, with a server log
+**Severity:** S1 · **Status:** **Reverted — open again** · **Reported:** 2026-09-08 retest, with a server log
+
+> Reverted with the branch reset (see [B17](#b17--the-hardening-branch-itself-destabilised-the-app)). The analysis below stands; the code does not. Re-land it with its own test and a device check.
 
 Placing cards and then opening the settings panel left the gameplay area unable to accept
 any interaction. The server log taken during the session carries the proof.
@@ -802,7 +807,9 @@ Doc 05.
 
 ## B16 · Rejection audit records name the wrong event and lose their correlation id
 
-**Severity:** S3 (log integrity, no gameplay impact) · **Status:** **Fixed** (batch 5) · **Found:** 2026-09-08, in the B15 log
+**Severity:** S3 (log integrity, no gameplay impact) · **Status:** **Reverted — open again** · **Found:** 2026-09-08, in the B15 log
+
+> Reverted with the branch reset (see [B17](#b17--the-hardening-branch-itself-destabilised-the-app)). The analysis below stands; the code does not. Re-land it with its own test and a device check.
 
 The same log shows the audit trail misreporting the burst it recorded:
 
@@ -889,6 +896,45 @@ symptom to a change was guesswork.
 - No defensive change for a failure mode that has not been observed.
 - A test that cannot fail is worse than no test: jsdom cannot verify framer-motion inline
   styles, CSS containment, or layout.
+
+---
+
+## B18 · A stalled page exit strands everything the page portalled
+
+**Severity:** S2 · **Status:** **Open — underlying cause of [B10](#b10--home-screens-primary-action-is-dead-after-closing-a-room)**
+
+Fixing B10 by unmounting the action dock on exit works, which tells us something the fix
+itself does not address: **the dock was still there to be unmounted.** A page transition
+lasts 0.32 s, after which `AnimatePresence` should remove the outgoing page and every
+portal it owns. The dock persisted until a reload, so the exit is not completing and the
+game page is never removed.
+
+That leaves an invisible mounted page behind, still holding its socket listeners, its
+timers and its portalled children. B10 was simply its most harmful instance, because a
+portal into `document.body` escapes the exit transform and an `opacity: 0` element still
+receives taps.
+
+### Other portals from the same page, all with the same exposure
+
+`SongInfoModal`, `TimelinePanelFlyAnimation`, the token-spend flyouts in
+`GamePageActionPanels`, and — after the B1 fix — `PlaylistTrackDetailsSheet` in the lobby.
+None is known to strand today: most are conditional on transient state and paint a visible
+surface rather than a transparent one, so a stranded instance would be noticed rather than
+silently eating input.
+
+### Why it is not being chased now
+
+The remedy is in the page-transition layer, which is where the reverted branch did its
+worst damage (see [B17](#b17--the-hardening-branch-itself-destabilised-the-app)). It needs
+a reproduction of the stall itself — not another theory about `mode="sync"` — and belongs
+with Doc 06 rather than a drive-by change.
+
+### Where to start
+
+Instrument `AnimatePresence`'s `onExitComplete` against a wall-clock budget and find which
+descendant never reports completion. The action dock carried both `layout` and a portal,
+which is the combination framer-motion is least reliable about; the panels listed above are
+the next candidates.
 
 ---
 

@@ -7,6 +7,7 @@ export type { ScreenTransitionDirection } from "./coreMotionTokens";
 export {
   createAppShellMenuSheetMotionTargets,
   createMenuTabActivationTransition,
+  createAppShellMenuTransition,
 } from "./appShellMotionTokens";
 export {
   createModalOverlayMotionTargets,

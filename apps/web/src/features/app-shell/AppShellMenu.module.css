@@ -18,14 +18,20 @@
   height: 18px;
 }
 
-.menuOverlay {
+.menuLayer {
   position: fixed;
   inset: 0;
   z-index: 1200;
-  background: var(--color-overlay-strong);
   display: flex;
   justify-content: flex-end;
   align-items: stretch;
+  overflow: hidden;
+}
+
+.menuScrim {
+  position: absolute;
+  inset: 0;
+  background: var(--color-overlay-strong);
 }
 
 .menuSheet {
@@ -390,7 +396,7 @@
 }
 
 @media (max-width: 720px) {
-  .menuOverlay {
+  .menuLayer {
     justify-content: stretch;
     align-items: stretch;
   }

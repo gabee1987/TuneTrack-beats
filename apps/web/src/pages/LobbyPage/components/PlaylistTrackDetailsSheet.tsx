@@ -17,7 +17,6 @@ import styles from "./playlistEditModalStyles";
 interface PlaylistTrackDetailsSheetProps {
   onClose: () => void;
   onSave: (trackId: string, patch: PlaylistTrackUpdatePatch) => void;
-  presentation?: "contained" | "fullscreen";
   track: PublicTrackInfo | null;
 }
 
@@ -26,7 +25,6 @@ const METADATA_STATUS_OPTIONS: TrackMetadataStatus[] = ["imported", "edited", "v
 export function PlaylistTrackDetailsSheet({
   onClose,
   onSave,
-  presentation = "contained",
   track,
 }: PlaylistTrackDetailsSheetProps) {
   const { t } = useI18n();
@@ -75,9 +73,7 @@ export function PlaylistTrackDetailsSheet({
       {track ? (
         <motion.div
           animate={{ opacity: 1 }}
-          className={`${styles.detailsOverlay} ${
-            presentation === "fullscreen" ? styles.detailsOverlayFullscreen : ""
-          }`}
+          className={styles.detailsOverlay}
           exit={{ opacity: 0 }}
           initial={{ opacity: 0 }}
           onClick={onClose}
@@ -219,11 +215,13 @@ export function PlaylistTrackDetailsSheet({
     </MotionPresence>
   );
 
-  if (presentation === "fullscreen" && typeof document !== "undefined") {
-    return createPortal(detailsSheet, document.body);
+  if (typeof document === "undefined") {
+    return null;
   }
 
-  return detailsSheet;
+  // Always portalled: nesting this inside the panel that opened it puts it below that
+  // panel's own header stacking context.
+  return createPortal(detailsSheet, document.body);
 }
 
 interface EditableTrackFields {

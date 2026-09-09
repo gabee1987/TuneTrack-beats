@@ -1,9 +1,9 @@
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   createAppShellMenuSheetMotionTargets,
+  createAppShellMenuTransition,
   createMenuTabActivationTransition,
-  createStandardTransition,
   useReducedMotionPreference,
 } from "../../motion";
 import { useI18n } from "../../i18n";
@@ -21,7 +21,6 @@ interface AppShellMenuSheetProps {
   activeTabId: AppShellMenuTab["id"] | undefined;
   footerAction?: AppShellMenuFooterAction;
   footerActions?: AppShellMenuFooterAction[];
-  isMobileSheet: boolean;
   onClose: () => void;
   preferencesState: AppShellMenuPreferencesState;
   subtitle: string;
@@ -34,7 +33,6 @@ export function AppShellMenuSheet({
   activeTabId,
   footerAction,
   footerActions,
-  isMobileSheet,
   onClose,
   preferencesState,
   subtitle,
@@ -47,7 +45,7 @@ export function AppShellMenuSheet({
   const [showTopFade, setShowTopFade] = useState(false);
   const [showBottomFade, setShowBottomFade] = useState(false);
   const resolvedFooterActions = footerActions ?? (footerAction ? [footerAction] : []);
-  const menuSheetMotionTargets = createAppShellMenuSheetMotionTargets(reduceMotion, isMobileSheet);
+  const menuSheetMotionTargets = createAppShellMenuSheetMotionTargets(reduceMotion);
   const updatePanelFadeState = useCallback(() => {
     const panelElement = panelRef.current;
     if (!panelElement) {
@@ -63,9 +61,13 @@ export function AppShellMenuSheet({
     setShowBottomFade(hasOverflow && !atBottom);
   }, []);
 
-  useEffect(() => {
+  // Layout effect, not effect: computed after paint the edge fades appear a frame late,
+  // which reads as a flicker every time the panel opens.
+  useLayoutEffect(() => {
     updatePanelFadeState();
+  }, [activeTabId, updatePanelFadeState]);
 
+  useEffect(() => {
     const panelElement = panelRef.current;
     if (!panelElement) {
       return;
@@ -99,8 +101,7 @@ export function AppShellMenuSheet({
       className={styles.menuSheet}
       exit={menuSheetMotionTargets.exit}
       initial={menuSheetMotionTargets.initial}
-      onClick={(event) => event.stopPropagation()}
-      transition={createStandardTransition(reduceMotion)}
+      transition={createAppShellMenuTransition(reduceMotion)}
     >
       <header className={styles.menuHeader}>
         <div>

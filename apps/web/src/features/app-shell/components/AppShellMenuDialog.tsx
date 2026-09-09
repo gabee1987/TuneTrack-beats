@@ -3,8 +3,8 @@ import { useMemo } from "react";
 import { createPortal } from "react-dom";
 import {
   MotionPresence,
+  createAppShellMenuTransition,
   createFadeMotion,
-  createStandardTransition,
   useReducedMotionPreference,
 } from "../../motion";
 import type { AppShellMenuProps } from "../AppShellMenu.types";
@@ -36,30 +36,31 @@ export function AppShellMenuDialog({
     : availableTabs[0]?.id;
   const activeTab = availableTabs.find((tab) => tab.id === activeTabId) ?? null;
   const menuLayer = typeof document !== "undefined" ? document.body : null;
-  const isMobileSheet =
-    typeof window !== "undefined" &&
-    window.matchMedia("(max-width: 720px)").matches;
 
   if (!menuLayer) {
     return null;
   }
 
   return createPortal(
-    <MotionPresence>
+    // `initial` matters here: the dialog is lazy, so this boundary mounts with the panel
+    // already open and would otherwise skip the enter animation and snap into place.
+    <MotionPresence initial>
       {isOpen ? (
-        <motion.div
-          animate="animate"
-          className={styles.menuOverlay}
-          exit="exit"
-          initial="initial"
-          onClick={onClose}
-          transition={createStandardTransition(reduceMotion)}
-          variants={createFadeMotion(reduceMotion)}
-        >
+        // The scrim is a sibling of the sheet, never its parent: nested opacities multiply,
+        // so a fading scrim around a fading sheet leaves the panel see-through.
+        <div className={styles.menuLayer} key="app-shell-menu">
+          <motion.div
+            animate="animate"
+            className={styles.menuScrim}
+            exit="exit"
+            initial="initial"
+            onClick={onClose}
+            transition={createAppShellMenuTransition(reduceMotion)}
+            variants={createFadeMotion(reduceMotion)}
+          />
           <AppShellMenuSheet
             activeTab={activeTab}
             activeTabId={activeTabId}
-            isMobileSheet={isMobileSheet}
             onClose={onClose}
             preferencesState={preferencesState}
             subtitle={subtitle}
@@ -68,7 +69,7 @@ export function AppShellMenuDialog({
             {...(footerAction ? { footerAction } : {})}
             {...(footerActions ? { footerActions } : {})}
           />
-        </motion.div>
+        </div>
       ) : null}
     </MotionPresence>,
     menuLayer,
