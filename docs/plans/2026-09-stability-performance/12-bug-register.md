@@ -322,7 +322,11 @@ Doc 07 phase 1.
 
 ## B7 · Playback is inconsistent: mid-song starts, and sometimes needs a manual start
 
-**Severity:** S2 · **Status:** Confirmed · **Findings:** F-37, F-39 · **Effort:** small
+**Severity:** S1 · **Status:** **Fixed** (2026-09-09) · **Findings:** F-37, F-39 · **Effort:**
+small
+
+Raised from S2 after manual testing: the second half is not "sometimes needs a manual start"
+but "a host who reloads mid-turn cannot start audio again at all", which ends the game.
 
 ### Root cause, part 1 — mid-song starts
 
@@ -345,27 +349,129 @@ UI cannot prompt. The host is left with a silent player and no affordance.
 The retry ladder is also the wrong remedy for this failure: an autoplay block will never
 succeed on retry without a user gesture, so the three attempts are wasted time.
 
+### Root cause, part 3 — the retry ladder cancels the host's own play
+
+Found while fixing parts 1 and 2, and this is the mechanism behind "after a reload I cannot
+play a song no matter what I do".
+
+`useHostPlayback`'s autoplay effect retries on the ladder `[0, 2500, 6000]` ms, and each
+attempt calls `playTrack`, which bumps `playGenerationRef` and takes over
+`activePlayRequestIdRef`. A play the host asks for by hand goes through the same counters.
+So while a ladder is running, the two race, and the ladder wins every time: the host's
+request is superseded by the next scheduled attempt, and that attempt then fails for the
+same reason the earlier ones did.
+
+The window is wide — a single attempt can take the 32 s server timeout plus the 10 s
+audible-playback confirm — and a reload guarantees a ladder is running, because device-ready
+fires the autoplay effect. Under an autoplay block the ladder could never succeed and could
+never stop, so every press of play was swallowed for the duration.
+
 ### Fix
 
-Doc 08 phases 1 and 2:
+1. `SpotifyApiClient.playTracksOnDevice` sends `position_ms`, defaulting to 0.
+2. `playTrack` takes `{ expectRestart }`, which skips the already-playing shortcut in
+   `waitForPlayingUri`, and `restart()` passes it.
+3. `playTrack` resolves to a `PlayAttemptOutcome` — `{ success, needsUserGesture }` — rather
+   than a bare boolean, so the caller can tell a device problem from a gesture problem at the
+   moment it decides whether to retry. `needsUserGesture` is raised by `autoplay_failed` and
+   cleared on any state event reporting playback, on reset, and at the start of every attempt.
+4. The retry ladder breaks immediately on an autoplay block, and exposes a cancel handle that
+   `restart()` calls before issuing its own play, so anything user-initiated wins.
+5. `HostPlaybackProvider`'s existing pointerdown handler now re-issues the blocked track after
+   arming the element, so the first gesture that *could* start audio does start it.
 
-1. Send `position_ms: 0` by default, with an optional `startPositionMs` parameter.
-2. Add `expectRestart` to `playTrack` so an intentional restart skips the already-playing
-   shortcut and waits for a low `position`.
-3. Add `needsUserGesture` to `HostPlaybackState`; set it on `autoplay_failed` and on retry
-   exhaustion; clear it on any successful confirmation.
-4. Branch the retry ladder: keep it for device-visibility failures, skip it entirely for
-   autoplay blocks.
-5. Render a prominent "Tap to play" control in the turn action dock while
-   `needsUserGesture` is true.
+### Deviation from the plan
+
+Doc 08 phase 2 asked for a "Tap to play" control in the turn action dock. Recovering on the
+next gesture removes the need for one: any tap the host makes — including the tap that would
+have pressed such a button — now starts the blocked track, so a dedicated control would in
+practice only ever be visible until the moment it was touched. That also keeps the dock, the
+component behind B10 and B18, untouched during a stability pass. Revisit if manual testing
+shows a block that survives a gesture.
+
+`expectRestart` skips the already-playing shortcut but does **not** additionally wait for a
+low `position` as Doc 08 suggested. With `position_ms: 0` on every play request an accepted
+play always restarts, so the extra predicate would buy only confirmation accuracy while
+adding a way to time out and re-issue a track that was in fact already playing correctly —
+an audible double-start traded for nothing.
+
+### Second pass, after the first fix did not hold (2026-09-09)
+
+Manual testing showed both symptoms surviving the fixes above, which ruled out the causes
+they addressed and pointed at two further ones. Neither is reachable from the parts already
+fixed, so all four causes are real and independent.
+
+**Part 4 — `resume()` resumes whatever the device is holding.** `player.resume()` acts on the
+track loaded in the device, and nothing checked that it was the track the room is on. A card
+change Spotify never received left the previous track loaded and paused part-way, so the
+host's play button resumed *that* — the mid-song start, arriving by a path `position_ms` does
+not touch. `resume()` now compares the device's `currentTrackUri` against the room's current
+card and re-issues rather than resuming when they differ. The free-tier path gained the same
+check against `audio.src`.
+
+**Part 5 — the SDK boot has one-way doors.** Three of them, each leaving a host who reloads
+mid-game with a player that can never reach Spotify again, which is exactly "I cannot start
+playback at all, not manually and not on a new card":
+
+1. `init()` treated a deferred token as fatal and returned without constructing the player.
+   Nothing re-runs the effect, so the session was over. The server's own comment calls a
+   deferral retryable — "defer silently so the client retries" — and a reload is precisely
+   when it happens, whether from a membership still restoring or a transient refresh failure.
+2. `requestToken()` had no timeout, and it is also the de-duplication handle. A response that
+   never arrived pinned `tokenRequestInFlightRef` to a permanently pending promise, so every
+   later token request awaited a dead one.
+3. A `playTrack` against a missing device — never ready, or dropped by `not_ready` — reported
+   failure and left the device missing.
+
+Fixed by making the boot self-healing: the token request times out, token acquisition retries
+on a capped backoff for as long as the hook is mounted, `init()` failures retry rather than
+abort, and a play attempt against a dead device asks for a player rebuild (throttled).
+
+The Playback tab now says "Connecting to Spotify…" while the device is not ready and "Tap
+anywhere to start the song" while an autoplay block stands, so a dead player stops looking
+exactly like a working one.
+
+### Third pass — the mid-song start had two more causes (2026-09-10)
+
+The reload failure was confirmed fixed by manual testing. Mid-song starts survived, now
+reported precisely: a new card *sometimes* begins part-way through. "Sometimes" was the tell —
+both remaining causes are races, and neither goes through `position_ms`.
+
+**Part 6 — the Connect transfer raced the play request, on every single card.**
+`SpotifyAuthService.playTrackOnHostDevice` called `transferPlaybackToDevice(device, false)`
+immediately before `playTracksOnDevice`. Spotify defines `play: false` on a transfer as *keep
+the current playback state* — so that call hands the device the **previous** track at its
+current position. The two commands then settle in whatever order Spotify applies them.
+Usually the play wins. When the transfer won, the device was left playing the last song from
+some arbitrary point, and nothing corrected it until the client's 10 s confirmation timeout.
+
+A play request already targets the device through `?device_id=`, so the transfer is redundant
+except when the device is not yet visible to Connect. It is now issued only from the second
+attempt onward, which removes it from the path every ordinary card takes.
+
+**Part 7 — the premium autoplay effect was keyed on the track URI.** It skipped issuing a
+play whenever the new card's URI matched the last one played, so a playlist holding the same
+track twice — or a card coming round again — produced no play at all. The device carried on
+with whatever it already held, and `resume()` then continued that track from where it had
+been paused. This is the same defect fixed on the free-tier preview path in B9; the premium
+path was missed. Both latches are now keyed on the card id.
 
 ### Verification
 
-- `apps/server/tests/spotify/SpotifyApiClient.test.ts`: the request body contains
-  `position_ms: 0`.
-- Component test with the fake Spotify player (Doc 11 section 3.4): `autoplay_failed` sets
-  `needsUserGesture` and the dock renders the control.
-- Component test: no retry occurs after an autoplay block.
+- `apps/server/tests/spotify/SpotifyApiClient.test.ts`: the play body carries
+  `position_ms: 0`, and an explicit start position is honoured.
+- `useHostPlayback.test.ts`: an autoplay block stops the retry ladder.
+- `useHostPlayback.test.ts`: a manual `restart()` during a pending retry is not superseded by
+  the ladder waking up.
+- `HostPlaybackProvider.gesture.test.tsx`: a pointerdown after `autoplay_failed` issues a new
+  play request.
+- `useHostPlayback.test.ts`: `resume()` re-issues the current card when the device is holding
+  a different track paused part-way through.
+- `useHostPlayback.test.ts`: a deferred token is retried and the player is still built.
+- `playTrackOnHostDevice.test.ts`: a play that succeeds on the first attempt issues no Connect
+  transfer, and a device that refuses a direct play still gets one on the retry.
+- `useHostPlayback.test.ts`: a new card repeating the previous track still issues a play.
+- All ten fail when their fix is reverted.
 - Manual M9.
 
 ---
@@ -424,7 +530,7 @@ Doc 08 phases 1 and 2:
 
 ## B9 · A track that finishes during a placement cannot be restarted
 
-**Severity:** S1 · **Status:** Confirmed · **Finding:** F-38 · **Effort:** small
+**Severity:** S1 · **Status:** **Fixed** (2026-09-09) · **Finding:** F-38 · **Effort:** small
 
 ### Root cause
 
@@ -451,29 +557,47 @@ There is also no `restart` member on `HostPlaybackState`, so no UI control can e
 
 ### Fix
 
-Doc 08 section 3:
+Doc 08 section 3, as planned:
 
-1. Derive `hasEnded` in `player_state_changed`, detecting both known end-of-context shapes
-   (`paused` with `position` at or near 0 and no next tracks; `paused` with
-   `position >= duration`). Clear it on any unpaused state and on every new `playTrack`.
-2. Set `hasActiveContext` false when `hasEnded` becomes true, so the flag means what its
-   name says.
-3. Rewrite `resume()` to fall through to `restart()` whenever `hasEnded || !hasActiveContext`.
-4. Add `restart()` to the contract and wire a restart control into the turn action dock, so
-   pause, play and restart are available at any point in a turn.
-5. Give the free-tier preview path the same `restart()` and reset `lastPreviewUrlRef` on
-   card change rather than comparing URLs, so a repeated preview can replay.
+1. `isEndOfContext` in `useSpotifyPlaybackSdk` reads both known end shapes from
+   `player_state_changed` — paused back at the start, and paused at or past the duration —
+   each with an empty `next_tracks`. A one-second tolerance covers both edges. The predicate
+   deliberately leans towards `true`: a false positive costs a restart where a resume would
+   have done, while a false negative is the reported defect.
+2. `hasActiveContext` is now `!ended` rather than a latch that was set once and never
+   cleared, so the flag means what its name says. `hasEnded` is exposed alongside it and is
+   cleared on every new `playTrack`.
+3. `resume()` calls `sdkResume()` only while `hasActiveContext && !hasEnded`, and otherwise
+   falls through to `restart()`.
+4. `restart()` is on `HostPlaybackState` for both account types: premium re-issues the URI
+   through `playTrack`; free re-assigns `audio.src` rather than seeking to zero, which also
+   recovers a preview that ended, one never loaded, and one cleared when a previous room
+   closed.
+5. The free-tier preview effect is keyed on the **card id**, not the preview URL. Comparing
+   URLs made a repeated card silently unplayable, and would have done the same to two cards
+   sharing a preview.
 
-The important property to preserve: **no state exists in which the host cannot get audio
-going again.** Any doubt falls through to a re-issue.
+The property this preserves: **no state exists in which the host cannot get audio going
+again.** Every branch with any doubt in it falls through to a re-issue.
+
+### Deviation from the plan
+
+The restart control sits beside play/pause in the game menu's **Playback tab**, where the
+host's transport controls already live — not in the turn action dock as Doc 08 proposed. The
+dock is the component behind [B10](#b10--home-screens-primary-action-is-dead-after-closing-a-room)
+and [B18](#b18--a-stalled-page-exit-strands-everything-the-page-portalled); adding to it
+during a stability pass buys a placement improvement at the cost of the exact risk this
+programme exists to remove. Dock placement belongs with B7's "Tap to play" affordance, which
+needs a dock entry anyway.
 
 ### Verification
 
-- Component test with the fake Spotify player: emit an end-of-track state, call `resume()`,
-  assert `playTrack` is called and `player.resume()` is not.
-- Component test: `restart()` from all five states (never played, playing, paused mid-track,
-  ended, autoplay-blocked).
-- Component test: free-tier replay of the same preview URL.
+- `useHostPlayback.test.ts` drives the real hook through the fake player and fake socket:
+  both end shapes re-issue the URI and never call `player.resume()`; a mid-track pause still
+  resumes in place and issues no new play request; `restart()` re-issues while playing; a
+  free-tier preview replays on the next card despite an identical URL. The two end-shape
+  tests were confirmed to fail against the old latched `hasActiveContext`, and the free-tier
+  test against the old URL comparison.
 - Manual M8.
 
 ---
@@ -788,32 +912,35 @@ seconds while a second socket did all the work.
 
 ### Fix
 
-- `emitWhenConnected` (`services/socket/socketClient.ts`) reports whether the action
-  actually went out, and drops it rather than buffering when the socket is down.
-- `resetSocketClient` clears `sendBuffer`, so no packet can outlive the socket that queued
-  it and replay against a later room.
+Only the reset boundary is touched. Nothing is dropped, and Socket.IO keeps buffering across
+a blip, because a delayed action is right and a discarded one is not.
+
+- `discardSocketClient` (`services/socket/socketClient.ts`) clears `sendBuffer` and
+  `receiveBuffer` alongside `removeAllListeners()`/`disconnect()`, and `resetSocketClient`
+  goes through it. A queued packet can no longer outlive the socket that queued it and
+  replay against a later room.
 - `createSocketClient` no longer hands out a socket a concurrent reset discarded; it
-  returns the current shared instance instead.
-- `handlePlaceCard` shows the optimistic card **only once the placement is on its way**.
-- An undeliverable action raises `game.error.connectionLost` as a toast instead of failing
-  silently.
-- `useGamePageLocalUiState` clears the optimistic card when the connection drops, so a
-  disconnect mid-placement can never leave the board latched; the server's state wins again
-  on rejoin.
+  discards the orphan and returns the current shared instance instead. That is what stranded
+  `weyDkDjcCU9-WEs1AAAU` in the log: listeners registered on one socket, emits going to
+  another.
+
+### Deliberately not fixed here
+
+**The optimistic-placement latch.** It resolves itself once the buffered packets are
+delivered, and the alternative — refusing to emit while disconnected — is what caused the
+regression described in the re-land note.
 
 ### Verification
 
-- `useGamePageActions.test.ts` — the placement is sent and the optimistic card shown when
-  connected; when disconnected nothing is emitted, the board is untouched, and the failure
-  is reported. Same for an undeliverable reveal.
-- `socketClient.test.ts` — refuses to emit while disconnected, emits once connected, clears
-  queued packets on reset, and never hands out a socket a concurrent reset discarded.
+- `socketClient.test.ts` — a reset clears both buffers, a reset during an in-flight
+  `createSocketClient` never returns the discarded instance, and repeated
+  `getSocketClient()` calls share one instance. The first two were confirmed to fail
+  without the fix.
 
 ### Not addressed here
 
-The game screen still has no visible connection indicator, unlike the lobby. A player now
-gets a toast per undeliverable action but no standing "reconnecting" state. Belongs with
-Doc 05.
+The game screen still has no visible connection indicator, unlike the lobby, and no standing
+"reconnecting" state. Belongs with Doc 05.
 
 ---
 
@@ -964,7 +1091,7 @@ the next candidates.
 | Drag/scroll conflict on iPhone | B4 | Doc 12 B4, Doc 03 section 6 |
 | Settings panel flicker | B5 | Doc 06 section 6 |
 | Leaderboard chip clipped border | B6 | Doc 12 B6, Doc 07 phase 1 |
-| Inconsistent playback start | B7 | Doc 08 phases 1-2 |
+| Inconsistent playback start | B7 | Doc 08 phases 1-2 · **fixed** |
 | Network inconsistencies | B8 | Doc 04, Doc 05 |
 | Cannot restart a finished track | B9 | Doc 08 phase 2 |
 | Home unresponsive after closing a room | B10 | Doc 06 sections 3-4 |

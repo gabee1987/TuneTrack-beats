@@ -92,4 +92,39 @@ describe("SpotifyApiClient", () => {
       expect(url).toContain("fields=");
     });
   });
+
+  describe("playTracksOnDevice", () => {
+    it("starts the track from the beginning rather than resuming it", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      const client = new SpotifyApiClient();
+      await client.playTracksOnDevice("access-token", "TEST_DEVICE_1", [
+        "spotify:track:TEST0000000000000001",
+      ]);
+
+      const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toContain("device_id=TEST_DEVICE_1");
+      expect(JSON.parse(String(init.body))).toEqual({
+        uris: ["spotify:track:TEST0000000000000001"],
+        position_ms: 0,
+      });
+    });
+
+    it("honours an explicit start position", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      const client = new SpotifyApiClient();
+      await client.playTracksOnDevice(
+        "access-token",
+        "TEST_DEVICE_1",
+        ["spotify:track:TEST0000000000000001"],
+        30_000,
+      );
+
+      const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(JSON.parse(String(init.body))).toMatchObject({ position_ms: 30_000 });
+    });
+  });
 });

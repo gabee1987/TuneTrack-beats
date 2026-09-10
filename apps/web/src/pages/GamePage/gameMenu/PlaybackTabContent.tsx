@@ -16,7 +16,8 @@ function formatMs(ms: number): string {
 }
 
 export function PlaybackTabContent({ roomState, t }: PlaybackTabContentProps) {
-  const { isReady, isPlaying, position, duration, pause, resume, seek } = useHostPlaybackContext();
+  const { isReady, isPlaying, needsUserGesture, position, duration, pause, restart, resume, seek } =
+    useHostPlaybackContext();
   const { currentTrackCard, status } = roomState;
   const showTrackDetails = status === "reveal" || status === "finished";
   const hasTrack = currentTrackCard !== null;
@@ -80,17 +81,36 @@ export function PlaybackTabContent({ roomState, t }: PlaybackTabContentProps) {
           </div>
         ) : null}
 
+        {hasTrack && !isReady ? (
+          <p className={styles.playbackHiddenNote}>{t("gameMenu.playbackNotReady")}</p>
+        ) : null}
+        {hasTrack && isReady && needsUserGesture ? (
+          <p className={styles.playbackHiddenNote}>{t("gameMenu.playbackNeedsGesture")}</p>
+        ) : null}
+
         <div className={styles.playbackActions}>
           {hasTrack ? (
-            <button
-              aria-label={isPlaying ? t("gameMenu.pause") : t("gameMenu.play")}
-              className={styles.playbackCircleBtn}
-              disabled={!isReady}
-              onClick={isPlaying ? pause : resume}
-              type="button"
-            >
-              {isPlaying ? <PlaybackPauseIcon /> : <PlaybackPlayIcon />}
-            </button>
+            <>
+              <button
+                aria-label={isPlaying ? t("gameMenu.pause") : t("gameMenu.play")}
+                className={styles.playbackCircleBtn}
+                disabled={!isReady}
+                onClick={isPlaying ? pause : resume}
+                type="button"
+              >
+                {isPlaying ? <PlaybackPauseIcon /> : <PlaybackPlayIcon />}
+              </button>
+              <button
+                aria-label={t("gameMenu.restart")}
+                className={`${styles.playbackCircleBtn} ${styles.playbackCircleBtnSecondary}`}
+                disabled={!isReady}
+                onClick={restart}
+                title={t("gameMenu.restart")}
+                type="button"
+              >
+                <PlaybackRestartIcon />
+              </button>
+            </>
           ) : null}
         </div>
       </div>
@@ -110,6 +130,14 @@ function PlaybackPauseIcon() {
   return (
     <svg aria-hidden="true" fill="currentColor" height={20} viewBox="0 0 24 24" width={32}>
       <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+    </svg>
+  );
+}
+
+function PlaybackRestartIcon() {
+  return (
+    <svg aria-hidden="true" fill="currentColor" height={20} viewBox="0 0 24 24" width={32}>
+      <path d="M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" />
     </svg>
   );
 }

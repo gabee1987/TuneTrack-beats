@@ -307,7 +307,8 @@ export class SpotifyAuthService {
     const retryDelaysMs = [0, 500, 1000, 1500, 2000, 3000, 4000, 5000, 6000];
     let lastError: unknown;
 
-    for (const delayMs of retryDelaysMs) {
+    for (let attemptIndex = 0; attemptIndex < retryDelaysMs.length; attemptIndex += 1) {
+      const delayMs = retryDelaysMs[attemptIndex] ?? 0;
       if (isSuperseded()) {
         return {
           success: false,
@@ -336,23 +337,30 @@ export class SpotifyAuthService {
         // sometimes accepts play before the device appears in /me/player/devices.
         const playableDeviceId = listedDeviceId ?? deviceId;
 
-        try {
-          await this.apiClient.transferPlaybackToDevice(accessToken, playableDeviceId, false);
-        } catch (transferError) {
-          if (
-            !(transferError instanceof SpotifyApiError && transferError.code === "not_found")
-          ) {
-            lastError = transferError;
+        // Transfer is recovery, not routine. A play request already targets the device, while
+        // a transfer carries `play: false` — "keep the current playback state" — which hands
+        // the device the *previous* track at its current position. Sent alongside the play on
+        // every card, the two commands raced inside Spotify, and whenever the transfer settled
+        // last the host heard the previous song resume mid-way with nothing to correct it.
+        if (attemptIndex > 0) {
+          try {
+            await this.apiClient.transferPlaybackToDevice(accessToken, playableDeviceId, false);
+          } catch (transferError) {
+            if (
+              !(transferError instanceof SpotifyApiError && transferError.code === "not_found")
+            ) {
+              lastError = transferError;
+            }
           }
-        }
 
-        if (isSuperseded()) {
-          return {
-            success: false,
-            requestId,
-            code: "superseded",
-            message: "A newer playback request replaced this one.",
-          };
+          if (isSuperseded()) {
+            return {
+              success: false,
+              requestId,
+              code: "superseded",
+              message: "A newer playback request replaced this one.",
+            };
+          }
         }
 
         await this.apiClient.playTracksOnDevice(accessToken, playableDeviceId, [spotifyTrackUri]);

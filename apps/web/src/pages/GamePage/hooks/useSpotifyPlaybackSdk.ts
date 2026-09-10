@@ -14,6 +14,16 @@ interface UseSpotifyPlaybackSdkOptions {
   playbackGeneration: number;
 }
 
+/**
+ * `needsUserGesture` travels with the outcome rather than being read from state afterwards,
+ * because the caller decides whether to retry the moment the attempt returns, and a state
+ * update from the same tick has not landed by then.
+ */
+export interface PlayAttemptOutcome {
+  success: boolean;
+  needsUserGesture: boolean;
+}
+
 export interface UseSpotifyPlaybackSdkResult {
   isReady: boolean;
   deviceId: string | null;
@@ -21,8 +31,16 @@ export interface UseSpotifyPlaybackSdkResult {
   position: number;
   duration: number;
   hasActiveContext: boolean;
+  hasEnded: boolean;
+  /** The track the device actually holds, which is not always the one the room wants. */
+  currentTrackUri: string | null;
+  /** An autoplay block is pending; only a real user gesture can lift it. */
+  needsUserGesture: boolean;
   unlockPlayback: () => void;
-  playTrack: (spotifyTrackUri: string) => Promise<boolean>;
+  playTrack: (
+    spotifyTrackUri: string,
+    options?: { expectRestart?: boolean },
+  ) => Promise<PlayAttemptOutcome>;
   pause: () => void;
   resume: () => void;
   seek: (positionMs: number) => void;
@@ -30,6 +48,38 @@ export interface UseSpotifyPlaybackSdkResult {
 
 const SERVER_PLAY_TIMEOUT_MS = 32_000;
 const PLAYBACK_CONFIRM_TIMEOUT_MS = 10_000;
+const END_OF_CONTEXT_TOLERANCE_MS = 1_000;
+const TOKEN_REQUEST_TIMEOUT_MS = 10_000;
+const DEVICE_RECOVERY_COOLDOWN_MS = 5_000;
+
+/**
+ * The server defers a token refresh for reasons that clear on their own — a membership that
+ * has not finished restoring after a reload, a transient Spotify API failure. Giving up on
+ * one of those left the player unbuilt for the rest of the session, so retry until it works
+ * or the hook goes away. The last delay repeats.
+ */
+const TOKEN_RETRY_DELAYS_MS = [1_000, 2_000, 4_000, 8_000, 15_000];
+
+/**
+ * A single-URI context that has run out has nothing left to resume: `player.resume()` is a
+ * no-op there, and only re-issuing the URI produces audio again. Spotify reports the
+ * exhausted context in two shapes depending on SDK version — paused back at the start, or
+ * paused at the end — and both leave the queue empty.
+ *
+ * Leaning towards `true` is deliberate. A false positive costs a restart where a resume
+ * would have done; a false negative leaves the host with a dead play button.
+ */
+function isEndOfContext(state: Spotify.PlaybackState): boolean {
+  if (!state.paused || state.track_window.next_tracks.length > 0) {
+    return false;
+  }
+
+  const isBackAtStart = state.position <= END_OF_CONTEXT_TOLERANCE_MS;
+  const isAtEnd =
+    state.duration > 0 && state.position >= state.duration - END_OF_CONTEXT_TOLERANCE_MS;
+
+  return isBackAtStart || isAtEnd;
+}
 
 const SDK_SCRIPT_SRC = "https://sdk.scdn.co/spotify-player.js";
 
@@ -75,6 +125,9 @@ export function useSpotifyPlaybackSdk({
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [hasActiveContext, setHasActiveContext] = useState(false);
+  const [hasEnded, setHasEnded] = useState(false);
+  const [needsUserGesture, setNeedsUserGesture] = useState(false);
+  const [currentTrackUri, setCurrentTrackUri] = useState<string | null>(null);
   // Bumping remounts the Spotify.Player after hard failures (device_not_found).
   const [playerEpoch, setPlayerEpoch] = useState(0);
 
@@ -98,18 +151,43 @@ export function useSpotifyPlaybackSdk({
   } | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const playGenerationRef = useRef(0);
+  const needsUserGestureRef = useRef(false);
+  const lastPlayerRecoveryAtRef = useRef(0);
+
+  /**
+   * A device that never arrived, or that went away with `not_ready`, leaves every play
+   * request failing on the spot. Rebuilding the player is the only way back, so a play
+   * attempt against a dead device asks for one instead of just reporting failure.
+   */
+  const requestPlayerRecovery = useCallback(() => {
+    const now = Date.now();
+    if (now - lastPlayerRecoveryAtRef.current < DEVICE_RECOVERY_COOLDOWN_MS) {
+      return;
+    }
+    lastPlayerRecoveryAtRef.current = now;
+    console.warn("[TuneTrack] Spotify SDK: rebuilding the player after a dead device");
+    setPlayerEpoch((value) => value + 1);
+  }, []);
+
+  const setNeedsUserGestureFlag = useCallback((value: boolean) => {
+    needsUserGestureRef.current = value;
+    setNeedsUserGesture(value);
+  }, []);
 
   const resetPlaybackState = useCallback(() => {
     setIsPlaying(false);
     setPosition(0);
     setDuration(0);
     setHasActiveContext(false);
+    setHasEnded(false);
+    setNeedsUserGestureFlag(false);
     isPlayingRef.current = false;
     positionSnapshotRef.current = 0;
     positionSnapshotTimeRef.current = 0;
     durationRef.current = 0;
     currentTrackUriRef.current = null;
-  }, []);
+    setCurrentTrackUri(null);
+  }, [setNeedsUserGestureFlag]);
 
   const failPendingPlayConfirmation = useCallback((onlyRequestId?: string) => {
     const pending = playConfirmRef.current;
@@ -143,7 +221,16 @@ export function useSpotifyPlaybackSdk({
     const requestPromise = (async (): Promise<string | null> => {
       const socketClient = await getSocketClient();
       return new Promise((resolve) => {
+        // Without this the promise could stay pending forever, and because it is also the
+        // de-duplication handle, every later token request would await the same dead promise.
+        const timeoutId = window.setTimeout(() => {
+          cleanup();
+          console.warn("[TuneTrack] Spotify token refresh timed out");
+          resolve(null);
+        }, TOKEN_REQUEST_TIMEOUT_MS);
+
         function cleanup() {
+          window.clearTimeout(timeoutId);
           socketClient.off(ServerToClientEvent.SpotifyTokenRefreshed, handleTokenRefreshed);
           socketClient.off(ServerToClientEvent.Error, handleRefreshError);
         }
@@ -188,6 +275,39 @@ export function useSpotifyPlaybackSdk({
     let disposed = false;
     let player: Spotify.Player | null = null;
     let authRetryUsed = false;
+    let releaseBootWait: (() => void) | null = null;
+    let bootWaitTimeoutId: number | null = null;
+
+    async function waitBeforeRetry(delayMs: number) {
+      await new Promise<void>((resolve) => {
+        releaseBootWait = resolve;
+        bootWaitTimeoutId = window.setTimeout(resolve, delayMs);
+      });
+      releaseBootWait = null;
+      if (bootWaitTimeoutId !== null) {
+        window.clearTimeout(bootWaitTimeoutId);
+        bootWaitTimeoutId = null;
+      }
+    }
+
+    function retryDelayFor(attempt: number): number {
+      return TOKEN_RETRY_DELAYS_MS[Math.min(attempt, TOKEN_RETRY_DELAYS_MS.length - 1)] ?? 15_000;
+    }
+
+    async function acquireAccessToken(): Promise<string | null> {
+      for (let attempt = 0; !disposed; attempt += 1) {
+        const token = await requestToken();
+        if (disposed || token) {
+          return token;
+        }
+        const delayMs = retryDelayFor(attempt);
+        console.warn(
+          `[TuneTrack] Spotify SDK: no access token yet, retrying in ${delayMs}ms`,
+        );
+        await waitBeforeRetry(delayMs);
+      }
+      return null;
+    }
 
     async function registerDevice(nextDeviceId: string) {
       const socketClient = await getSocketClient();
@@ -213,12 +333,8 @@ export function useSpotifyPlaybackSdk({
       await loadSdkScript();
       if (disposed) return;
 
-      const freshToken = await requestToken();
-      if (disposed) return;
-      if (!freshToken) {
-        console.error("[TuneTrack] Spotify SDK: could not obtain access token before connect");
-        return;
-      }
+      const freshToken = await acquireAccessToken();
+      if (disposed || !freshToken) return;
 
       player = new window.Spotify.Player({
         name: "TuneTrack",
@@ -258,6 +374,7 @@ export function useSpotifyPlaybackSdk({
       });
       player.addListener("autoplay_failed", () => {
         console.warn("[TuneTrack] Spotify SDK autoplay failed — needs a user gesture");
+        setNeedsUserGestureFlag(true);
         failPendingPlayConfirmation();
       });
 
@@ -283,9 +400,18 @@ export function useSpotifyPlaybackSdk({
         if (disposed || !state) return;
         const playing = !state.paused;
         const trackUri = state.track_window.current_track?.uri ?? null;
+        const ended = isEndOfContext(state);
+        if (playing) {
+          setNeedsUserGestureFlag(false);
+        }
         currentTrackUriRef.current = trackUri;
+        setCurrentTrackUri(trackUri);
         setIsPlaying(playing);
-        setHasActiveContext(true);
+        setHasEnded(ended);
+        // The flag now means what its name says. It stayed true for the life of the player
+        // before, so an exhausted context still looked resumable and the host's play button
+        // did nothing at all.
+        setHasActiveContext(!ended);
         isPlayingRef.current = playing;
         positionSnapshotRef.current = state.position;
         positionSnapshotTimeRef.current = Date.now();
@@ -314,12 +440,31 @@ export function useSpotifyPlaybackSdk({
       playerRef.current = player;
     }
 
-    void init().catch((error: unknown) => {
-      console.error("[TuneTrack] Spotify SDK: initialization failed", error);
-    });
+    // Every failure here used to be terminal: the player was never built and nothing re-ran
+    // the effect, so the host was left with controls that could not reach Spotify at all.
+    async function boot() {
+      for (let attempt = 0; !disposed; attempt += 1) {
+        try {
+          await init();
+          return;
+        } catch (error: unknown) {
+          if (disposed) return;
+          console.error("[TuneTrack] Spotify SDK: initialization failed, retrying", error);
+          await waitBeforeRetry(retryDelayFor(attempt));
+        }
+      }
+    }
+
+    void boot();
 
     return () => {
       disposed = true;
+      if (bootWaitTimeoutId !== null) {
+        window.clearTimeout(bootWaitTimeoutId);
+        bootWaitTimeoutId = null;
+      }
+      releaseBootWait?.();
+      releaseBootWait = null;
       failPendingPlayConfirmation();
       void unregisterDevice();
       void player?.pause().catch(() => undefined);
@@ -339,6 +484,7 @@ export function useSpotifyPlaybackSdk({
     requestToken,
     resetPlaybackState,
     failPendingPlayConfirmation,
+    setNeedsUserGestureFlag,
     roomId,
   ]);
 
@@ -399,9 +545,12 @@ export function useSpotifyPlaybackSdk({
   }, []);
 
   const waitForPlayingUri = useCallback(
-    (requestId: string, spotifyTrackUri: string): Promise<boolean> => {
+    (requestId: string, spotifyTrackUri: string, expectRestart: boolean): Promise<boolean> => {
+      // The shortcut answers "is this URI audible", which is not the question a restart asks.
+      // Reporting an already-playing track as a successful start is how a deliberate replay
+      // came back as a no-op.
       const alreadyPlaying =
-        currentTrackUriRef.current === spotifyTrackUri && isPlayingRef.current;
+        !expectRestart && currentTrackUriRef.current === spotifyTrackUri && isPlayingRef.current;
       if (alreadyPlaying) {
         return Promise.resolve(true);
       }
@@ -474,12 +623,26 @@ export function useSpotifyPlaybackSdk({
   );
 
   const playTrack = useCallback(
-    async (spotifyTrackUri: string): Promise<boolean> => {
+    async (
+      spotifyTrackUri: string,
+      options?: { expectRestart?: boolean },
+    ): Promise<PlayAttemptOutcome> => {
+      const blocked = (): PlayAttemptOutcome => ({
+        success: false,
+        needsUserGesture: needsUserGestureRef.current,
+      });
+
       const activeDeviceId = deviceIdRef.current;
       if (!activeDeviceId) {
         console.error("[TuneTrack] Spotify playTrack: player device is not ready");
-        return false;
+        requestPlayerRecovery();
+        return blocked();
       }
+
+      setHasEnded(false);
+      // Cleared up front so a gesture-driven recovery cannot fire twice for one block: the
+      // `autoplay_failed` listener raises it again if this attempt is blocked too.
+      setNeedsUserGestureFlag(false);
 
       const playGeneration = playGenerationRef.current + 1;
       playGenerationRef.current = playGeneration;
@@ -494,7 +657,7 @@ export function useSpotifyPlaybackSdk({
       }
 
       if (playGenerationRef.current !== playGeneration) {
-        return false;
+        return blocked();
       }
 
       const serverResult = await requestServerPlay(requestId, spotifyTrackUri, activeDeviceId);
@@ -502,7 +665,7 @@ export function useSpotifyPlaybackSdk({
         playGenerationRef.current !== playGeneration ||
         activePlayRequestIdRef.current !== requestId
       ) {
-        return false;
+        return blocked();
       }
 
       if (!serverResult.success) {
@@ -510,7 +673,7 @@ export function useSpotifyPlaybackSdk({
           serverResult.code === "superseded" ||
           serverResult.code === "stale_playback_generation"
         ) {
-          return false;
+          return blocked();
         }
 
         console.error(
@@ -531,13 +694,24 @@ export function useSpotifyPlaybackSdk({
           }
         }
 
-        return false;
+        return blocked();
       }
 
       reconnectAttemptsRef.current = 0;
-      return waitForPlayingUri(requestId, spotifyTrackUri);
+      const success = await waitForPlayingUri(
+        requestId,
+        spotifyTrackUri,
+        options?.expectRestart ?? false,
+      );
+      return { success, needsUserGesture: !success && needsUserGestureRef.current };
     },
-    [enabled, requestServerPlay, waitForPlayingUri],
+    [
+      enabled,
+      requestPlayerRecovery,
+      requestServerPlay,
+      setNeedsUserGestureFlag,
+      waitForPlayingUri,
+    ],
   );
 
   const pause = useCallback(() => {
@@ -560,6 +734,9 @@ export function useSpotifyPlaybackSdk({
     position,
     duration,
     hasActiveContext,
+    hasEnded,
+    currentTrackUri,
+    needsUserGesture,
     unlockPlayback,
     playTrack,
     pause,

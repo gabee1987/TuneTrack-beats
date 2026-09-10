@@ -15,6 +15,10 @@ export interface HostPlaybackState {
   unlockPlayback: () => void;
   pause: () => void;
   resume: () => void;
+  /** Play the current track from the beginning, from any state. */
+  restart: () => void;
+  /** Autoplay was blocked; the next real user gesture has to start the track. */
+  needsUserGesture: boolean;
   seek: (positionMs: number) => void;
 }
 
@@ -27,6 +31,8 @@ const disabled: HostPlaybackState = {
   unlockPlayback: noop,
   pause: noop,
   resume: noop,
+  restart: noop,
+  needsUserGesture: false,
   seek: noop,
 };
 
@@ -56,6 +62,9 @@ export function useHostPlayback({
     position: sdkPosition,
     duration: sdkDuration,
     hasActiveContext: sdkHasActiveContext,
+    hasEnded: sdkHasEnded,
+    currentTrackUri: sdkCurrentTrackUri,
+    needsUserGesture: sdkNeedsUserGesture,
     unlockPlayback: sdkUnlockPlayback,
     playTrack,
     pause: sdkPause,
@@ -65,8 +74,13 @@ export function useHostPlayback({
 
   const currentUriRef = useRef<string | null>(null);
   currentUriRef.current = roomState?.currentTrackCard?.spotifyTrackUri ?? null;
+  const currentPreviewUrlRef = useRef<string | null>(null);
+  currentPreviewUrlRef.current = roomState?.currentTrackCard?.previewUrl ?? null;
+  const currentCardIdRef = useRef<string | null>(null);
+  currentCardIdRef.current = roomState?.currentTrackCard?.id ?? null;
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const lastPreviewCardIdRef = useRef<string | null>(null);
   const [freeIsPlaying, setFreeIsPlaying] = useState(false);
   const [freePosition, setFreePosition] = useState(0);
   const [freeDuration, setFreeDuration] = useState(0);
@@ -116,6 +130,7 @@ export function useHostPlayback({
       audio.pause();
       audio.removeAttribute("src");
       audio.load();
+      lastPreviewCardIdRef.current = null;
       setFreeIsPlaying(false);
       setFreePosition(0);
       setFreeDuration(0);
@@ -141,13 +156,17 @@ export function useHostPlayback({
 
   // Premium: auto-play when the current track URI changes. After host transfer the
   // new Web Playback device can take a while to appear in Spotify Connect.
-  const lastConfirmedUriRef = useRef<string | null>(null);
-  const playInFlightUriRef = useRef<string | null>(null);
+  // Keyed on the card rather than the track URI. A playlist can hold the same track twice and
+  // a card can come round again, and either way the URI still matched what was last played —
+  // so no play was issued, and the device simply carried on with whatever it already held.
+  const lastPlayedCardIdRef = useRef<string | null>(null);
+  const playInFlightCardIdRef = useRef<string | null>(null);
   const lastSdkDeviceIdRef = useRef<string | null>(null);
+  const cancelAutoplayLadderRef = useRef<(() => void) | null>(null);
   useEffect(() => {
     if (!enabled) {
-      lastConfirmedUriRef.current = null;
-      playInFlightUriRef.current = null;
+      lastPlayedCardIdRef.current = null;
+      playInFlightCardIdRef.current = null;
       lastSdkDeviceIdRef.current = null;
     }
   }, [enabled]);
@@ -158,59 +177,87 @@ export function useHostPlayback({
     if (lastSdkDeviceIdRef.current !== sdkDeviceId) {
       lastSdkDeviceIdRef.current = sdkDeviceId;
       // Device remount recovery only — do not treat host role changes as a replay signal.
-      lastConfirmedUriRef.current = null;
-      playInFlightUriRef.current = null;
+      lastPlayedCardIdRef.current = null;
+      playInFlightCardIdRef.current = null;
     }
 
+    const cardId = roomState?.currentTrackCard?.id ?? null;
     const uri = roomState?.currentTrackCard?.spotifyTrackUri ?? null;
-    if (!uri || uri === lastConfirmedUriRef.current || uri === playInFlightUriRef.current) {
+    if (
+      !uri ||
+      !cardId ||
+      cardId === lastPlayedCardIdRef.current ||
+      cardId === playInFlightCardIdRef.current
+    ) {
       return;
     }
 
     let cancelled = false;
     let retryTimeoutId: number | null = null;
+    let releaseRetryWait: (() => void) | null = null;
     // Keep the same device across retries; server already polls Connect visibility.
     const retryDelaysMs = [0, 2500, 6000];
 
-    playInFlightUriRef.current = uri;
+    playInFlightCardIdRef.current = cardId;
+
+    // Each attempt bumps the SDK's play generation, so a ladder still running would cancel
+    // a play the host asked for by hand. Anything user-initiated stops it first.
+    function cancelLadder() {
+      cancelled = true;
+      if (retryTimeoutId !== null) {
+        window.clearTimeout(retryTimeoutId);
+        retryTimeoutId = null;
+      }
+      releaseRetryWait?.();
+      releaseRetryWait = null;
+      if (playInFlightCardIdRef.current === cardId) {
+        playInFlightCardIdRef.current = null;
+      }
+    }
+
+    cancelAutoplayLadderRef.current = cancelLadder;
 
     async function attemptPlayWithRetries() {
       for (let attemptIndex = 0; attemptIndex < retryDelaysMs.length; attemptIndex += 1) {
         const delayMs = retryDelaysMs[attemptIndex] ?? 0;
         if (delayMs > 0) {
           await new Promise<void>((resolve) => {
+            releaseRetryWait = resolve;
             retryTimeoutId = window.setTimeout(resolve, delayMs);
           });
+          releaseRetryWait = null;
         }
-        if (cancelled || playInFlightUriRef.current !== uri) {
+        if (cancelled || playInFlightCardIdRef.current !== cardId) {
           return;
         }
 
-        const success = await playTrack(uri!);
-        if (cancelled || playInFlightUriRef.current !== uri) {
+        const outcome = await playTrack(uri!);
+        if (cancelled || playInFlightCardIdRef.current !== cardId) {
           return;
         }
-        if (success) {
-          lastConfirmedUriRef.current = uri;
-          playInFlightUriRef.current = null;
+        if (outcome.success) {
+          lastPlayedCardIdRef.current = cardId;
+          playInFlightCardIdRef.current = null;
           return;
+        }
+        // Retrying an autoplay block just burns the window in which the host's own tap
+        // could have started the track. Only a gesture lifts it.
+        if (outcome.needsUserGesture) {
+          break;
         }
       }
 
-      if (!cancelled && playInFlightUriRef.current === uri) {
-        playInFlightUriRef.current = null;
+      if (!cancelled && playInFlightCardIdRef.current === cardId) {
+        playInFlightCardIdRef.current = null;
       }
     }
 
     void attemptPlayWithRetries();
 
     return () => {
-      cancelled = true;
-      if (retryTimeoutId !== null) {
-        window.clearTimeout(retryTimeoutId);
-      }
-      if (playInFlightUriRef.current === uri) {
-        playInFlightUriRef.current = null;
+      cancelLadder();
+      if (cancelAutoplayLadderRef.current === cancelLadder) {
+        cancelAutoplayLadderRef.current = null;
       }
     };
   }, [
@@ -219,20 +266,23 @@ export function useHostPlayback({
     sdkReady,
     sdkDeviceId,
     playTrack,
+    roomState?.currentTrackCard?.id,
     roomState?.currentTrackCard?.spotifyTrackUri,
   ]);
 
-  const lastPreviewUrlRef = useRef<string | null>(null);
+  // Keyed on the card, not on the preview URL: two cards can share a URL, and the same card
+  // can come round again, and comparing URLs made both of those silently unplayable.
+  const currentCardId = roomState?.currentTrackCard?.id ?? null;
   useEffect(() => {
     if (!enabled || !isFree) return;
-    const url = roomState?.currentTrackCard?.previewUrl ?? null;
-    if (!url || url === lastPreviewUrlRef.current) return;
-    lastPreviewUrlRef.current = url;
+    const url = currentPreviewUrlRef.current;
+    if (!currentCardId || !url || currentCardId === lastPreviewCardIdRef.current) return;
+    lastPreviewCardIdRef.current = currentCardId;
     if (audioRef.current) {
       audioRef.current.src = url;
       void audioRef.current.play().catch(() => undefined);
     }
-  }, [enabled, isFree, roomState?.currentTrackCard?.previewUrl]);
+  }, [enabled, isFree, currentCardId, roomState?.currentTrackCard?.previewUrl]);
 
   const unlockPlayback = useCallback(() => {
     if (isPremium) {
@@ -245,26 +295,61 @@ export function useHostPlayback({
     else audioRef.current?.pause();
   }, [isPremium, sdkPause]);
 
+  const restart = useCallback(() => {
+    if (isPremium) {
+      const uri = currentUriRef.current;
+      if (!uri) {
+        return;
+      }
+      cancelAutoplayLadderRef.current?.();
+      void playTrack(uri, { expectRestart: true }).then((outcome) => {
+        if (outcome.success) {
+          lastPlayedCardIdRef.current = currentCardIdRef.current;
+        }
+      });
+      return;
+    }
+
+    const audio = audioRef.current;
+    const previewUrl = currentPreviewUrlRef.current;
+    if (!audio || !previewUrl) {
+      return;
+    }
+
+    // Re-assigning the source rather than seeking to zero, so this recovers a preview that
+    // ended, one that was never loaded, and one cleared when a previous room closed.
+    audio.src = previewUrl;
+    void audio.play().catch(() => undefined);
+  }, [isPremium, playTrack]);
+
   const resume = useCallback(() => {
     if (isPremium) {
-      // True pause/resume when Spotify still has context; only re-request the URI
-      // when there is nothing to resume (failed autoplay / empty player).
-      if (sdkHasActiveContext) {
+      const uri = currentUriRef.current;
+      // Resuming is only right while the device is holding the card the room is actually on.
+      // `player.resume()` picks up whatever was left loaded, so a card change that Spotify
+      // never received came back as the *previous* track continuing from where it stopped —
+      // the mid-song start.
+      const holdsCurrentCard = !!uri && sdkCurrentTrackUri === uri;
+
+      // True pause/resume only while Spotify still has something to resume. An exhausted
+      // single-URI context reports itself as paused, and `player.resume()` on it is a no-op
+      // — which is how the host ended up pressing play against silence.
+      if (holdsCurrentCard && sdkHasActiveContext && !sdkHasEnded) {
         sdkResume();
         return;
       }
-      const uri = currentUriRef.current;
-      if (uri) {
-        void playTrack(uri).then((success) => {
-          if (success) {
-            lastConfirmedUriRef.current = uri;
-          }
-        });
-      }
+      restart();
       return;
     }
-    void audioRef.current?.play().catch(() => undefined);
-  }, [isPremium, sdkHasActiveContext, sdkResume, playTrack]);
+
+    const audio = audioRef.current;
+    const previewUrl = currentPreviewUrlRef.current;
+    if (!audio?.src || !previewUrl || audio.src !== previewUrl) {
+      restart();
+      return;
+    }
+    void audio.play().catch(() => undefined);
+  }, [isPremium, restart, sdkCurrentTrackUri, sdkHasActiveContext, sdkHasEnded, sdkResume]);
 
   const seek = useCallback(
     (positionMs: number) => {
@@ -284,6 +369,8 @@ export function useHostPlayback({
       unlockPlayback,
       pause,
       resume,
+      restart,
+      needsUserGesture: sdkNeedsUserGesture,
       seek,
     };
   if (isFree)
@@ -295,6 +382,8 @@ export function useHostPlayback({
       unlockPlayback,
       pause,
       resume,
+      restart,
+      needsUserGesture: false,
       seek,
     };
   return disabled;

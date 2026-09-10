@@ -1,4 +1,4 @@
-# Agent Coding Rules
+    ># Agent Coding Rules
 
 This file defines the general coding and behavior rules for AI agents working in
 this repository. App-specific product, architecture, domain, and UI rules live in

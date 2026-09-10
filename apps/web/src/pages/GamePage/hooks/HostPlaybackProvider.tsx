@@ -12,6 +12,8 @@ const disabledPlayback: HostPlaybackState = {
   unlockPlayback: () => undefined,
   pause: () => undefined,
   resume: () => undefined,
+  restart: () => undefined,
+  needsUserGesture: false,
   seek: () => undefined,
 };
 
@@ -48,6 +50,10 @@ export function HostPlaybackProvider({
   });
   const unlockPlaybackRef = useRef(playback.unlockPlayback);
   unlockPlaybackRef.current = playback.unlockPlayback;
+  const restartRef = useRef(playback.restart);
+  restartRef.current = playback.restart;
+  const needsUserGestureRef = useRef(playback.needsUserGesture);
+  needsUserGestureRef.current = playback.needsUserGesture;
 
   // Arm the Web Playback SDK on every host gesture so later socket-driven
   // track changes (outside the click stack) are still allowed to autoplay.
@@ -58,6 +64,12 @@ export function HostPlaybackProvider({
 
     function handlePointerDown() {
       unlockPlaybackRef.current();
+      // Arming alone leaves the blocked track silent: nothing re-issues it, so the host
+      // was left tapping a player that would never speak again. This gesture is the first
+      // moment the browser would allow it, so spend it.
+      if (needsUserGestureRef.current) {
+        restartRef.current();
+      }
     }
 
     window.addEventListener("pointerdown", handlePointerDown, true);

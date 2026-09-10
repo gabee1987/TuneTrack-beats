@@ -82,6 +82,17 @@
   padding: 16px;
 }
 
+.playbackCircleBtnSecondary {
+  background: var(--color-surface-interactive);
+  color: var(--color-text-primary);
+  outline: 1px solid var(--color-border-subtle);
+  padding: 12px;
+}
+
+.playbackCircleBtnSecondary:hover:not(:disabled) {
+  background: var(--color-surface-elevated);
+}
+
 .playbackCircleBtn:hover:not(:disabled) {
   background: var(--color-accent-brand-hover);
 }

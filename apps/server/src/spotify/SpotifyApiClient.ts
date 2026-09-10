@@ -521,10 +521,15 @@ export class SpotifyApiClient {
     return `${SpotifyApiClient.ACCOUNTS_URL}/authorize?${params.toString()}`;
   }
 
+  /**
+   * `position_ms` is explicit because Spotify treats a play request for the URI already on
+   * the device as a resume, so a card coming round again started wherever it was left.
+   */
   public async playTracksOnDevice(
     accessToken: string,
     deviceId: string,
     spotifyTrackUris: string[],
+    positionMs = 0,
   ): Promise<void> {
     const response = await fetch(
       `${SpotifyApiClient.BASE_URL}/me/player/play?device_id=${encodeURIComponent(deviceId)}`,
@@ -534,7 +539,7 @@ export class SpotifyApiClient {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ uris: spotifyTrackUris }),
+        body: JSON.stringify({ uris: spotifyTrackUris, position_ms: positionMs }),
       },
     );
 
