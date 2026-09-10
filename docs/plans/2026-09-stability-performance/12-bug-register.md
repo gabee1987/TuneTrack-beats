@@ -1080,6 +1080,64 @@ the next candidates.
 
 ---
 
+## B19 · Buying a card with TT tokens shows no celebration, and can suppress the next one too
+
+**Severity:** S3 · **Status:** **Fixed** (2026-09-10)
+
+### Report
+
+Buying a card with TT tokens shows no on-card "correct placement" glow. Reported as
+tolerable on its own, but the very next genuine correct placement was also seen to miss
+its glow.
+
+### Root cause
+
+`TimelinePanel.tsx` derived the glow's identity key like this:
+
+```
+model.render.timelineCelebrationTransitionEvent?.celebrationKey ?? <fallback from this card>
+```
+
+`timelineCelebrationTransitionEvent` is the toast-celebration event held in
+`useGamePageTransitionEvents` — state that is only ever replaced when a `revealType:
+"placement"` reveal fires, and is otherwise left holding whatever the last real placement
+produced, forever. A `tt_buy` reveal (`packages/game-engine/.../TtActionService.ts`) is
+`wasCorrect: true` like any correct placement, so the glow's gate
+(`showCorrectPlacementPreview`) opens for it too — but the key computed for it is the
+**unchanged, already-consumed key from the previous real placement**, not anything derived
+from the bought card. Two failure shapes follow from that:
+
+1. If enough time has passed for the previous glow's own hero animation to finish
+   (~1.1 s — utterly normal at real game pace), the stale key still equals the one already
+   recorded in `lastCorrectPlacementAnimationKeyRef`, so the effect bails out and the
+   bought card gets no glow at all.
+2. If the tt_buy reveal lands inside that ~1.1 s window (a tester clicking through turns
+   quickly reproduces this easily), the *stale, still-active* animation state is read as
+   "still running" and is shown against whichever card now sits at `originalChosenSlotIndex`
+   — the bought card, coincidentally in the right place but for the wrong reason.
+
+Neither path touches the *next* genuine placement's own key, which is why a single
+follow-up placement was never actually at risk — its key differs by turn number regardless.
+What manual testing read as "every placement after" was, on inspection, the tt_buy turn
+itself misbehaving, tested repeatedly.
+
+### Fix
+
+The glow's key is now derived only from the current render's own reveal identity — slot
+index, card id, revealed year — never from the toast event. The toast (a separate,
+independent visual) is untouched. This also means a bought card now gets its own glow,
+consistent with a real placement; there was no principled reason it shouldn't.
+
+### Verification
+
+- `TimelinePanel.test.tsx`: a tt_buy reveal, at real game pace, following an earlier real
+  placement whose own celebration has already fully finished, still glows the bought card
+  using its own identity — not the stale, already-consumed key — and a subsequent genuine
+  placement still glows correctly afterwards.
+- Fails when the fix is reverted.
+
+---
+
 ## Cross-reference
 
 | Reported item | Register entry | Primary plan |
@@ -1104,6 +1162,7 @@ the next candidates.
 | Host override for wrong metadata | (feature) | Doc 09 phase 4 |
 | Gameplay area frozen, stale actions replayed | B15 | Doc 12 B15 |
 | Audit records misattributed under load | B16 | Doc 12 B16 |
+| TT-bought card and the next placement miss the correct-placement glow | B19 | Doc 12 B19 · **fixed** |
 | Bundle size and lazy loading | (programme) | Doc 02 |
 | More tests | (programme) | Doc 11 |
 | Room creation flow | (programme) | Doc 09 |

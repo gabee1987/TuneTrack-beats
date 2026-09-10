@@ -95,24 +95,27 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
   const lastCorrectPlacementAnimationKeyRef = useRef<string | null>(null);
   const [activeCorrectPlacementAnimationKey, setActiveCorrectPlacementAnimationKey] =
     useState<string | null>(null);
-  const correctPlacementFallbackCard =
+  const correctPlacementCard =
     displayShowCorrectPlacementPreview &&
     model.interaction.originalChosenSlotIndex !== null
       ? model.render.timelineCards[model.interaction.originalChosenSlotIndex] ?? null
       : null;
+  // Derived from this render's own reveal, never from the toast celebration event: that
+  // event only exists for revealType "placement" and sits in state indefinitely once one
+  // has fired, so reading it here meant a tt_buy reveal either reused a stale, unrelated key
+  // (glowing the wrong card, or the right card under the wrong identity) or found nothing
+  // and skipped its own glow — and either way left the ref primed with a value the next
+  // genuine placement could collide with if it followed quickly.
   const correctPlacementAnimationKey =
-    displayShowCorrectPlacementPreview
-      ? (model.render.timelineCelebrationTransitionEvent?.celebrationKey ??
-        (correctPlacementFallbackCard
-          ? [
-              "correct-placement",
-              model.interaction.originalChosenSlotIndex,
-              correctPlacementFallbackCard.id,
-              "revealedYear" in correctPlacementFallbackCard
-                ? correctPlacementFallbackCard.revealedYear
-                : correctPlacementFallbackCard.releaseYear,
-            ].join(":")
-          : null))
+    displayShowCorrectPlacementPreview && correctPlacementCard
+      ? [
+          "correct-placement",
+          model.interaction.originalChosenSlotIndex,
+          correctPlacementCard.id,
+          "revealedYear" in correctPlacementCard
+            ? correctPlacementCard.revealedYear
+            : correctPlacementCard.releaseYear,
+        ].join(":")
       : null;
   const {
     activeCelebrationEvent,
