@@ -76,6 +76,8 @@ export function useLobbyRoomConnection({
   roomId,
 }: UseLobbyRoomConnectionOptions): UseLobbyRoomConnectionResult {
   const { t } = useI18n();
+  const translateRef = useRef(t);
+  translateRef.current = t;
   const [connectionStatus, setConnectionStatus] = useState("Connecting");
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
   const currentPlayerIdRef = useRef<string | null>(null);
@@ -181,7 +183,7 @@ export function useLobbyRoomConnection({
       }
 
       setErrorCode(payload.code);
-      setErrorMessage(localizeServerError(t, payload));
+      setErrorMessage(localizeServerError(translateRef.current, payload));
     }
 
     function handleRoomClosed(payload: RoomClosedPayload) {
@@ -240,7 +242,7 @@ export function useLobbyRoomConnection({
       isDisposed = true;
       cleanupSocketListeners?.();
     };
-  }, [displayName, intent, navigate, playerSessionId, roomId, t]);
+  }, [displayName, intent, navigate, playerSessionId, roomId]);
 
   return {
     hasClosedRoomReset,

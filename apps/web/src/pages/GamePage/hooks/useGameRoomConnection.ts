@@ -36,6 +36,8 @@ export function useGameRoomConnection({
   rememberedDisplayName,
 }: UseGameRoomConnectionOptions) {
   const { t } = useI18n();
+  const translateRef = useRef(t);
+  translateRef.current = t;
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(
     routeState.currentPlayerId ?? null,
   );
@@ -97,7 +99,7 @@ export function useGameRoomConnection({
 
       errorKeyRef.current += 1;
       setErrorKey(errorKeyRef.current);
-      setErrorMessage(localizeServerError(t, payload));
+      setErrorMessage(localizeServerError(translateRef.current, payload));
     }
 
     function handleRoomClosed(payload: RoomClosedPayload) {
@@ -154,7 +156,7 @@ export function useGameRoomConnection({
       isDisposed = true;
       cleanupSocketListeners?.();
     };
-  }, [navigate, playerSessionId, rememberedDisplayName, roomId, t]);
+  }, [navigate, playerSessionId, rememberedDisplayName, roomId]);
 
   return {
     currentPlayerId,

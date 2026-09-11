@@ -534,15 +534,30 @@ Focused server and hook regressions cover both the successful same-session retry
 genuine room-id collision. Each regression was confirmed to fail with its corresponding fix
 temporarily removed and pass after restoration.
 
-Root causes #2–#5 remain open. Acknowledgements, the i18n effect dependency, Socket.IO server
-recovery/tuning, and the explicit client reconnection policy are out of scope for this pass,
-so B8 remains **Confirmed**, not Fixed.
+Root causes #2, #4, and #5 remain open. Acknowledgements, Socket.IO server recovery/tuning,
+and the explicit client reconnection policy are out of scope for this pass, so B8 remains
+**Confirmed**, not Fixed.
+
+### Root cause #3 fixed (2026-09-11)
+
+Both room-connection hooks now keep the current i18n translator in a ref and read it only
+when a server error arrives. The connection effects no longer depend on the translator
+function, so changing language neither emits another room handshake nor removes and
+re-registers socket listeners. Errors received after the switch still use the newly selected
+language.
+
+Focused hook regressions cover the lobby and game pages. Both were confirmed to fail before
+the fix because the language switch emitted a new `join_room`, and both pass with listener
+registrations unchanged after the fix.
+
+Root causes #2, #4, and #5 remain open, so B8 remains **Confirmed**, not Fixed.
 
 ### Verification
 
 - E2E E7 to E12 — these fail against current code and are the proof that the work landed.
 - Server tests per Doc 11 section 6.
-- Component test: a language change emits nothing and drops no listener.
+- `useLobbyRoomConnection.test.ts` and `useGameRoomConnection.test.ts`: a language change
+  emits nothing, replaces no listener, and subsequent server errors use the current language.
 - Manual M10.
 
 ---

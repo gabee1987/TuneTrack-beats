@@ -1,13 +1,10 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { ClientToServerEvent } from "@tunetrack/shared";
+import { ClientToServerEvent, ServerToClientEvent } from "@tunetrack/shared";
+import { createElement, type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { I18nProvider, useI18n } from "../../../features/i18n";
 import { getSharedFakeSocket, resetSharedFakeSocket } from "../../../test/fakeSocket";
 import { getLobbyRoomStateUpdateDecision, useLobbyRoomConnection } from "./useLobbyRoomConnection";
-
-vi.mock("../../../features/i18n", () => {
-  const t = (key: string) => key;
-  return { useI18n: () => ({ t }) };
-});
 
 vi.mock("../../../services/socket/socketClient", async () => {
   const { socketClientMockForSharedSocket } = await import("../../../test/fakeSocket");
@@ -17,6 +14,10 @@ vi.mock("../../../services/socket/socketClient", async () => {
 beforeEach(() => {
   resetSharedFakeSocket();
 });
+
+function I18nTestWrapper({ children }: { children: ReactNode }) {
+  return createElement(I18nProvider, null, children);
+}
 
 describe("getLobbyRoomStateUpdateDecision", () => {
   it("accepts state updates for the requested room", () => {
@@ -67,14 +68,16 @@ describe("useLobbyRoomConnection", () => {
     const socket = getSharedFakeSocket();
     const navigate = vi.fn();
 
-    renderHook(() =>
-      useLobbyRoomConnection({
-        displayName: "Player One",
-        intent: "create",
-        navigate,
-        playerSessionId: "TEST_SESSION_1",
-        roomId: "TEST_ROOM_1",
-      }),
+    renderHook(
+      () =>
+        useLobbyRoomConnection({
+          displayName: "Player One",
+          intent: "create",
+          navigate,
+          playerSessionId: "TEST_SESSION_1",
+          roomId: "TEST_ROOM_1",
+        }),
+      { wrapper: I18nTestWrapper },
     );
 
     await waitFor(() => {
@@ -93,5 +96,53 @@ describe("useLobbyRoomConnection", () => {
         sessionId: "TEST_SESSION_1",
       },
     ]);
+  });
+
+  it("keeps its socket handshake and listeners unchanged when the language changes", async () => {
+    const socket = getSharedFakeSocket();
+    const navigate = vi.fn();
+    const onSpy = vi.spyOn(socket, "on");
+    const offSpy = vi.spyOn(socket, "off");
+
+    const view = renderHook(
+      () => {
+        const { setLanguage } = useI18n();
+        const connection = useLobbyRoomConnection({
+          displayName: "Player One",
+          intent: "join",
+          navigate,
+          playerSessionId: "TEST_SESSION_1",
+          roomId: "TEST_ROOM_1",
+        });
+        return { connection, setLanguage };
+      },
+      { wrapper: I18nTestWrapper },
+    );
+
+    await waitFor(() => {
+      expect(socket.emittedFor(ClientToServerEvent.JoinRoom)).toHaveLength(1);
+    });
+    socket.clearEmitted();
+    const listenerRegistrationCount = onSpy.mock.calls.length;
+
+    await act(async () => {
+      view.result.current.setLanguage("hu");
+      await Promise.resolve();
+    });
+
+    expect(socket.emitted).toHaveLength(0);
+    expect(onSpy).toHaveBeenCalledTimes(listenerRegistrationCount);
+    expect(offSpy).not.toHaveBeenCalled();
+
+    act(() => {
+      socket.serverEmit(ServerToClientEvent.Error, {
+        code: "ONLY_HOST_CAN_START_GAME",
+        message: "Only the host can start the game.",
+      });
+    });
+
+    expect(view.result.current.connection.errorMessage).toBe(
+      "Csak a host indíthatja el a játékot.",
+    );
   });
 });
