@@ -79,6 +79,7 @@ export function useLobbyRoomConnection({
   const [connectionStatus, setConnectionStatus] = useState("Connecting");
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
   const currentPlayerIdRef = useRef<string | null>(null);
+  const hasAttemptedCreateRef = useRef(false);
   const hasNavigatedToGameRef = useRef(false);
   const joinedRoomIdRef = useRef<string | null>(null);
   const [roomState, setRoomState] = useState<PublicRoomState | null>(null);
@@ -99,6 +100,7 @@ export function useLobbyRoomConnection({
   useEffect(() => {
     let isDisposed = false;
     let cleanupSocketListeners: (() => void) | null = null;
+    hasAttemptedCreateRef.current = false;
 
     if (!roomId || !displayName) {
       navigate("/");
@@ -111,11 +113,18 @@ export function useLobbyRoomConnection({
       setConnectionStatus("Connected");
       setErrorCode(null);
       setErrorMessage(null);
-      socketClient.emit(intent === "create" ? ClientToServerEvent.CreateRoom : ClientToServerEvent.JoinRoom, {
-        displayName,
-        roomId,
-        sessionId: playerSessionId,
-      });
+      const shouldCreateRoom = intent === "create" && !hasAttemptedCreateRef.current;
+      if (intent === "create") {
+        hasAttemptedCreateRef.current = true;
+      }
+      socketClient.emit(
+        shouldCreateRoom ? ClientToServerEvent.CreateRoom : ClientToServerEvent.JoinRoom,
+        {
+          displayName,
+          roomId,
+          sessionId: playerSessionId,
+        },
+      );
     }
 
     function handleDisconnect() {

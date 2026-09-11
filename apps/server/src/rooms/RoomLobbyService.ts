@@ -49,11 +49,28 @@ export class RoomLobbyService {
     socketId: string,
     sessionId: string,
   ): JoinRoomResult {
-    if (this.store.hasRoom(roomId)) {
+    const existingRoomRecord = this.store.getRoom(roomId);
+    const existingSessionMembership = this.store.getSessionMembership(sessionId);
+
+    if (
+      existingRoomRecord &&
+      existingSessionMembership?.roomId === roomId &&
+      existingRoomRecord.roomState.players.some(
+        (player) => player.id === existingSessionMembership.playerId,
+      )
+    ) {
+      return this.connection.restorePlayerSession(
+        roomId,
+        existingSessionMembership.playerId,
+        socketId,
+        sessionId,
+      );
+    }
+
+    if (existingRoomRecord) {
       throw new Error("ROOM_ALREADY_EXISTS");
     }
 
-    const existingSessionMembership = this.store.getSessionMembership(sessionId);
     if (existingSessionMembership) {
       const previousRoomState = this.connection.removePlayerBySessionId(sessionId);
       if (previousRoomState) {

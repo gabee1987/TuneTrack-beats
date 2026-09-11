@@ -519,6 +519,25 @@ path was missed. Both latches are now keyed on the card id.
 - Doc 04 section 1 — the in-game disconnect lifecycle (B10's neighbour, and a genuine state
   loss).
 
+### Root cause #1 fixed (2026-09-11)
+
+The lobby connection hook now honours `intent=create` only for its first connection attempt
+per effect lifetime. Later Socket.IO `connect` events emit `JoinRoom` with the same player
+session, so an ordinary host reconnect uses the established restoration path.
+
+`RoomLobbyService.createRoom` is also idempotent when the existing room, stored session
+membership, and room player entry all identify the same player. It restores that session on
+the new socket while preserving `ROOM_ALREADY_EXISTS` for a different session or an invalid
+stored membership.
+
+Focused server and hook regressions cover both the successful same-session retry and the
+genuine room-id collision. Each regression was confirmed to fail with its corresponding fix
+temporarily removed and pass after restoration.
+
+Root causes #2–#5 remain open. Acknowledgements, the i18n effect dependency, Socket.IO server
+recovery/tuning, and the explicit client reconnection policy are out of scope for this pass,
+so B8 remains **Confirmed**, not Fixed.
+
 ### Verification
 
 - E2E E7 to E12 — these fail against current code and are the proof that the work landed.
