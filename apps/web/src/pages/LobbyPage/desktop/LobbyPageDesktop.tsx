@@ -44,10 +44,12 @@ export function LobbyPageDesktop({ model }: LobbyPageAssemblyProps) {
           ) : room.isHost ? (
             <LobbyHostSettingsPanel
               currentSettings={hostSettings.currentSettings}
+              isStartGamePending={hostSettings.isStartGamePending}
               onIntentToStartGame={hostSettings.onIntentToStartGame}
               onRoomSettingsChange={hostSettings.onRoomSettingsChange}
               onStartGame={hostSettings.onStartGame}
               onToggleTtMode={hostSettings.onToggleTtMode}
+              startGameActionStatus={hostSettings.startGameActionStatus}
             />
           ) : (
             <SurfaceCard className={styles.waitingCard}>
@@ -72,9 +74,11 @@ export function LobbyPageDesktop({ model }: LobbyPageAssemblyProps) {
 
           {roomActions.isHost ? (
             <LobbyRoomActions
+              isStartGamePending={roomActions.isStartGamePending}
               onCloseRoom={roomActions.onCloseRoom}
               onIntentToStartGame={roomActions.onIntentToStartGame}
               onStartGame={roomActions.onStartGame}
+              startGameActionStatus={roomActions.startGameActionStatus}
             />
           ) : null}
         </aside>

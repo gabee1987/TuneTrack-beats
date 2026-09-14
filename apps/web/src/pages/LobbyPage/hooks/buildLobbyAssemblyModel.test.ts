@@ -66,9 +66,11 @@ function createController(
     handleRoomSettingsChange: () => undefined,
     handleStartGame: () => undefined,
     isHost: true,
+    isStartGamePending: true,
     preloadGame: () => undefined,
     roomId: "ROOM1",
     roomState,
+    startGameActionStatus: "retrying",
     toggleTtMode: () => undefined,
     ...overrides,
   };
@@ -82,8 +84,12 @@ describe("buildLobbyAssemblyModel", () => {
     expect(model.room.players).toHaveLength(1);
     expect(model.room.isHost).toBe(true);
     expect(model.hostSettings.currentSettings).toBe(settings);
+    expect(model.hostSettings.isStartGamePending).toBe(true);
+    expect(model.hostSettings.startGameActionStatus).toBe("retrying");
     expect(model.players.roomSettings).toBe(settings);
     expect(model.roomActions.isHost).toBe(true);
+    expect(model.roomActions.isStartGamePending).toBe(true);
+    expect(model.identity.startGameActionStatus).toBe("retrying");
     expect(model.identity.resolvedRoomId).toBe("ROOM1");
   });
 

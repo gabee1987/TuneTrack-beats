@@ -622,6 +622,16 @@ blocks rapid duplicate presses and exposes localised pending, retrying, and fina
 If the authoritative state has already closed or claimed the submitted challenge window, its
 stale timeout state is discarded.
 
+### Root cause #2 `start_game` migration (2026-09-14)
+
+`start_game` now uses the acknowledged action path and has room-scoped replay protection. An
+acknowledgement timeout retries once with the same request id; replay returns the original
+success acknowledgement without attempting to initialise the game twice. One synchronous
+guard and localised pending, retrying, and final retry state is shared by the mobile setup
+form, desktop host start panel, and secondary room-actions control. Navigation still follows
+only the authoritative room-state broadcast, and stale timeout state is discarded after the
+room leaves the submitted lobby or changes host.
+
 Root cause #2 remains **open**. The remaining action callers still use bare emits, the other
 non-idempotent actions still need replay protection, and their per-action pending/error
 experiences remain to be added. Root causes #4 and #5 also remain open; B8 therefore remains
@@ -642,10 +652,14 @@ experiences remain to be added. Root causes #4 and #5 also remain open; B8 there
   optimistic preview, acceptance preserves it until authoritative state arrives, and a
   timeout shows both automatic-retry progress and the final retry affordance. Challenge
   claim and placement have the same duplicate guard and timeout lifecycle.
+- `useLobbyRoomActions.test.tsx`: two quick game-start presses emit once, the real start
+  control remains disabled through its automatic retry, and a final timeout exposes a fresh
+  retry affordance.
 - `roomFlow.test.ts`: replaying the same `place_card` request id returns the original success
-  acknowledgement while the placement service runs once; replaying `confirm_reveal` likewise
-  advances the turn once; replaying `claim_challenge` reserves it once; and replaying
-  `place_challenge` resolves it once. Each replay returns its original acknowledgement.
+  acknowledgement while the placement service runs once; replaying `start_game` initialises
+  the game once; replaying `confirm_reveal` advances the turn once; replaying
+  `claim_challenge` reserves it once; and replaying `place_challenge` resolves it once. Each
+  replay returns its original acknowledgement.
 - `RoomStore.test.ts`: processed-action acknowledgements are room-scoped, capped at 32, and
   removed with their room.
 - Manual M10.

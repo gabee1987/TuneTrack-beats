@@ -11,10 +11,12 @@ import styles from "../lobbyPageStyles";
 
 export function LobbyHostSettingsPanel({
   currentSettings,
+  isStartGamePending,
   onIntentToStartGame,
   onRoomSettingsChange,
   onStartGame,
   onToggleTtMode,
+  startGameActionStatus,
 }: LobbyHostSettingsPanelProps) {
   const { t } = useI18n();
 
@@ -39,7 +41,12 @@ export function LobbyHostSettingsPanel({
         <LobbySpotifySection currentSettings={currentSettings} />
       </div>
 
-      <LobbyHostStartPanel onIntentToStart={onIntentToStartGame} onStartGame={onStartGame} />
+      <LobbyHostStartPanel
+        isStartGamePending={isStartGamePending}
+        onIntentToStart={onIntentToStartGame}
+        onStartGame={onStartGame}
+        startGameActionStatus={startGameActionStatus}
+      />
     </SurfaceCard>
   );
 }

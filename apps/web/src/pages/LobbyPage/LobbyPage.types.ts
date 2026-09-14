@@ -1,6 +1,8 @@
 import type { PublicPlayerState, PublicRoomSettings, PublicRoomState } from "@tunetrack/shared";
 import type { LobbyAssemblyModel } from "./hooks/buildLobbyAssemblyModel";
 
+export type StartGameActionStatus = "idle" | "pending" | "retrying" | "failed";
+
 export interface LobbyPageController {
   connectionStatus: string;
   currentPlayerId: string | null;
@@ -19,9 +21,11 @@ export interface LobbyPageController {
   handleRoomSettingsChange: (nextSettings: PublicRoomSettings) => void;
   handleStartGame: () => void;
   isHost: boolean;
+  isStartGamePending: boolean;
   preloadGame: () => void;
   roomId: string | undefined;
   roomState: PublicRoomState | null;
+  startGameActionStatus: StartGameActionStatus;
   toggleTtMode: (enabled: boolean) => void;
 }
 

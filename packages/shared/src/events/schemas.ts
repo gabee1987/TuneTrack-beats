@@ -148,6 +148,7 @@ export const awardTtPayloadSchema = z.object({
 
 export const startGamePayloadSchema = z.object({
   roomId: roomIdSchema,
+  requestId: z.string().uuid().optional(),
 });
 
 export const transferHostPayloadSchema = z.object({

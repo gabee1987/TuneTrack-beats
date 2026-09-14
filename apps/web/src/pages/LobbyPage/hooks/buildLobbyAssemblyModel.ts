@@ -16,10 +16,12 @@ export interface LobbyAssemblyModel {
   };
   hostSettings: {
     currentSettings: PublicRoomSettings;
+    isStartGamePending: boolean;
     onIntentToStartGame: () => void;
     onRoomSettingsChange: (nextSettings: PublicRoomSettings) => void;
     onStartGame: () => void;
     onToggleTtMode: (enabled: boolean) => void;
+    startGameActionStatus: LobbyPageController["startGameActionStatus"];
   };
   players: {
     currentPlayerId: string | null;
@@ -32,19 +34,23 @@ export interface LobbyAssemblyModel {
   };
   roomActions: {
     isHost: boolean;
+    isStartGamePending: boolean;
     onCloseRoom: () => void;
     onIntentToStartGame: () => void;
     onStartGame: () => void;
+    startGameActionStatus: LobbyPageController["startGameActionStatus"];
   };
   identity: {
     displayName: string;
     hasStartedJoinError: boolean;
     isHost: boolean;
+    isStartGamePending: boolean;
     onPlayerProfileChange: (displayName: string) => void;
     onRoomRename: (nextRoomId: string) => void;
     onStartGame: () => void;
     preloadGame: () => void;
     resolvedRoomId: string;
+    startGameActionStatus: LobbyPageController["startGameActionStatus"];
   };
 }
 
@@ -68,10 +74,12 @@ export function buildLobbyAssemblyModel(controller: LobbyPageController): LobbyA
     },
     hostSettings: {
       currentSettings: controller.currentSettings,
+      isStartGamePending: controller.isStartGamePending,
       onIntentToStartGame: controller.preloadGame,
       onRoomSettingsChange: controller.handleRoomSettingsChange,
       onStartGame: controller.handleStartGame,
       onToggleTtMode: controller.toggleTtMode,
+      startGameActionStatus: controller.startGameActionStatus,
     },
     players: {
       currentPlayerId: controller.currentPlayerId,
@@ -84,19 +92,23 @@ export function buildLobbyAssemblyModel(controller: LobbyPageController): LobbyA
     },
     roomActions: {
       isHost: controller.isHost,
+      isStartGamePending: controller.isStartGamePending,
       onCloseRoom: controller.handleCloseRoom,
       onIntentToStartGame: controller.preloadGame,
       onStartGame: controller.handleStartGame,
+      startGameActionStatus: controller.startGameActionStatus,
     },
     identity: {
       displayName: controller.displayName,
       hasStartedJoinError,
       isHost: controller.isHost,
+      isStartGamePending: controller.isStartGamePending,
       onPlayerProfileChange: controller.handlePlayerProfileChange,
       onRoomRename: controller.handleRoomRename,
       onStartGame: controller.handleStartGame,
       preloadGame: controller.preloadGame,
       resolvedRoomId,
+      startGameActionStatus: controller.startGameActionStatus,
     },
   };
 }

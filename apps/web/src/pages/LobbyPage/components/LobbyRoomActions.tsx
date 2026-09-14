@@ -3,21 +3,34 @@ import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { Button } from "../../../features/ui/primitives";
 import { LobbySectionHeader } from "./LobbySectionHeader";
 import styles from "../lobbyPageStyles";
+import type { StartGameActionStatus } from "../LobbyPage.types";
 
 interface LobbyRoomActionsProps {
   buttonClassName?: string | undefined;
+  isStartGamePending: boolean;
   onCloseRoom: () => void;
   onIntentToStartGame?: (() => void) | undefined;
   onStartGame?: (() => void) | undefined;
+  startGameActionStatus: StartGameActionStatus;
 }
 
 export function LobbyRoomActions({
   buttonClassName,
+  isStartGamePending,
   onCloseRoom,
   onIntentToStartGame,
   onStartGame,
+  startGameActionStatus,
 }: LobbyRoomActionsProps) {
   const { t } = useI18n();
+  let startGameButtonLabel = t("lobby.actions.startGame");
+  if (startGameActionStatus === "pending") {
+    startGameButtonLabel = t("lobby.startGame.pending");
+  } else if (startGameActionStatus === "retrying") {
+    startGameButtonLabel = t("lobby.startGame.retrying");
+  } else if (startGameActionStatus === "failed") {
+    startGameButtonLabel = t("lobby.startGame.retry");
+  }
 
   return (
     <SurfaceCard className={styles.roomActionsSection}>
@@ -29,6 +42,7 @@ export function LobbyRoomActions({
         <Button
           fullWidth
           haptic
+          disabled={isStartGamePending}
           onClick={onStartGame}
           onFocus={onIntentToStartGame}
           onMouseEnter={onIntentToStartGame}
@@ -36,7 +50,7 @@ export function LobbyRoomActions({
           size="lg"
           type="button"
         >
-          {t("lobby.actions.startGame")}
+          {startGameButtonLabel}
         </Button>
       ) : null}
       <Button

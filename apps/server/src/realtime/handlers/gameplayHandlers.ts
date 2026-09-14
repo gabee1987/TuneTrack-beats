@@ -60,6 +60,17 @@ function registerStartGameHandler(io: Server, socket: Socket, roomService: RoomS
     handle: (data) => {
       broadcastRoomState(io, roomService.startGame(data, socket.id));
     },
+    idempotency: {
+      find: (data) =>
+        data.requestId
+          ? roomService.getProcessedActionAck(socket.id, data.roomId, data.requestId)
+          : undefined,
+      remember: (data, ack) => {
+        if (data.requestId) {
+          roomService.rememberProcessedActionAck(data.roomId, ack);
+        }
+      },
+    },
     fallbackErrorCode: "START_GAME_FAILED",
     errorMessages: startGameErrorMessages,
   });

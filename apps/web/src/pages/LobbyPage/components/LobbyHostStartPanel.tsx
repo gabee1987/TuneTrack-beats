@@ -1,14 +1,30 @@
 import { useI18n } from "../../../features/i18n";
 import { Button } from "../../../features/ui/primitives";
 import styles from "../lobbyPageStyles";
+import type { StartGameActionStatus } from "../LobbyPage.types";
 
 interface LobbyHostStartPanelProps {
+  isStartGamePending: boolean;
   onIntentToStart: () => void;
   onStartGame: () => void;
+  startGameActionStatus: StartGameActionStatus;
 }
 
-export function LobbyHostStartPanel({ onIntentToStart, onStartGame }: LobbyHostStartPanelProps) {
+export function LobbyHostStartPanel({
+  isStartGamePending,
+  onIntentToStart,
+  onStartGame,
+  startGameActionStatus,
+}: LobbyHostStartPanelProps) {
   const { t } = useI18n();
+  let startGameButtonLabel = t("lobby.host.startGame");
+  if (startGameActionStatus === "pending") {
+    startGameButtonLabel = t("lobby.startGame.pending");
+  } else if (startGameActionStatus === "retrying") {
+    startGameButtonLabel = t("lobby.startGame.retrying");
+  } else if (startGameActionStatus === "failed") {
+    startGameButtonLabel = t("lobby.startGame.retry");
+  }
 
   return (
     <div className={styles.primaryActionBar}>
@@ -18,6 +34,7 @@ export function LobbyHostStartPanel({ onIntentToStart, onStartGame }: LobbyHostS
       </div>
       <Button
         className={styles.startGameButton}
+        disabled={isStartGamePending}
         haptic
         onClick={onStartGame}
         onFocus={onIntentToStart}
@@ -26,7 +43,7 @@ export function LobbyHostStartPanel({ onIntentToStart, onStartGame }: LobbyHostS
         size="lg"
         type="button"
       >
-        {t("lobby.host.startGame")}
+        {startGameButtonLabel}
       </Button>
     </div>
   );

@@ -109,12 +109,21 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
     });
   }
 
+  let startGameButtonLabel = t("lobby.setup.startGame");
+  if (identity.startGameActionStatus === "pending") {
+    startGameButtonLabel = t("lobby.startGame.pending");
+  } else if (identity.startGameActionStatus === "retrying") {
+    startGameButtonLabel = t("lobby.startGame.retrying");
+  } else if (identity.startGameActionStatus === "failed") {
+    startGameButtonLabel = t("lobby.startGame.retry");
+  }
+
   const primaryActionLabel = hasSetupChanges
     ? t("lobby.setup.apply")
     : hasStartedJoinError
       ? t("lobby.setup.gameAlreadyStarted")
       : identity.isHost
-        ? t("lobby.setup.startGame")
+        ? startGameButtonLabel
         : t("lobby.setup.waitingForHost");
 
   return (
@@ -184,7 +193,11 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
 
           <div className={styles.setupFooter}>
             <Button
-              disabled={!canApplySetup || (!identity.isHost && !hasSetupChanges)}
+              disabled={
+                identity.isStartGamePending ||
+                !canApplySetup ||
+                (!identity.isHost && !hasSetupChanges)
+              }
               fullWidth
               haptic
               onFocus={identity.preloadGame}
@@ -249,9 +262,11 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
 
         {roomActions.isHost ? (
           <LobbyRoomActions
+            isStartGamePending={roomActions.isStartGamePending}
             onCloseRoom={roomActions.onCloseRoom}
             onIntentToStartGame={roomActions.onIntentToStartGame}
             onStartGame={roomActions.onStartGame}
+            startGameActionStatus={roomActions.startGameActionStatus}
           />
         ) : null}
       </section>

@@ -256,6 +256,8 @@ fire-and-forget until last.
       its button blocks duplicate presses and exposes pending, retrying, and final retry states.
 - [x] `claim_challenge` reserves the challenge once when its acknowledged request is replayed;
       its button blocks duplicate presses and exposes pending, retrying, and final retry states.
+- [x] `start_game` starts the room once when its acknowledged request is replayed; every
+      mobile and desktop start control shares duplicate blocking and timeout feedback.
 
 ## 5. Phase 5 — Honest connection state in the UI · **S2**
 

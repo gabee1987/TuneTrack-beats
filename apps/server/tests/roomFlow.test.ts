@@ -492,6 +492,7 @@ describe("room flow", () => {
 
   it("starts a game, applies a replayed placement once, resolves reveal, and advances turn", async () => {
     const roomService = createTestRoomService();
+    const startGameSpy = vi.spyOn(roomService, "startGame");
     const placeCardSpy = vi.spyOn(roomService, "placeCard");
     const confirmRevealSpy = vi.spyOn(roomService, "confirmReveal");
     const serverContext = await startTestServer(roomService);
@@ -542,11 +543,28 @@ describe("room flow", () => {
       (roomState) => roomState.status === "turn" && roomState.turn?.turnNumber === 1,
     );
 
-    hostSocket.emit(ClientToServerEvent.StartGame, {
-      roomId: "game-room",
-    });
+    const startRequestId = "00000000-0000-4000-8000-000000000100";
+    const firstStartAckPromise = hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.StartGame, {
+        roomId: "game-room",
+        requestId: startRequestId,
+      }) as Promise<ActionAck>;
 
-    const firstTurnState = await gameTurnPromise;
+    const [firstTurnState, firstStartAck] = await Promise.all([
+      gameTurnPromise,
+      firstStartAckPromise,
+    ]);
+    const replayStartAck = (await hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.StartGame, {
+        roomId: "game-room",
+        requestId: startRequestId,
+      })) as ActionAck;
+
+    expect(firstStartAck).toEqual({ ok: true, requestId: startRequestId });
+    expect(replayStartAck).toEqual(firstStartAck);
+    expect(startGameSpy).toHaveBeenCalledTimes(1);
 
     expect(firstTurnState.turn).toEqual({
       activePlayerId: hostIdentity.playerId,

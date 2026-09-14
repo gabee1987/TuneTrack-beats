@@ -99,6 +99,7 @@ export interface AwardTtPayload {
 
 export interface StartGamePayload {
   roomId: RoomId;
+  requestId?: string;
 }
 
 export interface TransferHostPayload {

@@ -90,9 +90,11 @@ export function useLobbyPageController(): LobbyPageController {
     handleRoomSettingsChange: actions.handleRoomSettingsChange,
     handleStartGame: actions.handleStartGame,
     isHost,
+    isStartGamePending: actions.isStartGamePending,
     preloadGame: preloadGameRuntime,
     roomId,
     roomState,
+    startGameActionStatus: actions.startGameActionStatus,
     toggleTtMode: actions.toggleTtMode,
   };
 }
