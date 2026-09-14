@@ -22,6 +22,7 @@ export type ConfirmRevealActionStatus = "idle" | "pending" | "retrying" | "faile
 export type ClaimChallengeActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type PlaceChallengeActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type CloseRoomActionStatus = "idle" | "pending" | "retrying" | "failed";
+export type BuyTimelineCardActionStatus = "idle" | "pending" | "retrying" | "failed";
 
 export type ChallengeMarkerTone = "pending" | "success" | "failure";
 export type TimelineCelebrationTone = "success" | "failure";
@@ -162,6 +163,7 @@ export interface GamePageActionPanelsModel
     | "canSkipOfflinePlayer"
     | "canUseBuyCard"
     | "canUseSkipTrack"
+    | "buyTimelineCardActionStatus"
     | "challengeActionBody"
     | "challengeActionTitle"
     | "claimChallengeActionStatus"
@@ -177,6 +179,7 @@ export interface GamePageActionPanelsModel
     | "handleResolveChallengeWindow"
     | "handleSkipTrackWithTt"
     | "handleSkipTurn"
+    | "isBuyTimelineCardPending"
     | "isCurrentPlayerTurn"
     | "isClaimChallengePending"
     | "isConfirmRevealPending"
@@ -218,6 +221,7 @@ export type GamePageController = GamePageActionHandlers & {
   hiddenCardMode: HiddenCardMode;
   revealedCardMode: RevealedCardMode;
   isHost: boolean;
+  isBuyTimelineCardPending: boolean;
   isCloseRoomPending: boolean;
   isCurrentPlayerTurn: boolean;
   isClaimChallengePending: boolean;
@@ -227,6 +231,7 @@ export type GamePageController = GamePageActionHandlers & {
   confirmRevealActionStatus: ConfirmRevealActionStatus;
   claimChallengeActionStatus: ClaimChallengeActionStatus;
   closeRoomActionStatus: CloseRoomActionStatus;
+  buyTimelineCardActionStatus: BuyTimelineCardActionStatus;
   placeCardActionStatus: PlaceCardActionStatus;
   placeChallengeActionStatus: PlaceChallengeActionStatus;
   isViewingOwnTimeline: boolean;

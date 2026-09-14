@@ -142,6 +142,7 @@ export function useGamePageController({
   });
 
   const actionState = {
+    buyTimelineCardActionStatus: actions.buyTimelineCardActionStatus,
     closeRoomActionStatus: actions.closeRoomActionStatus,
     handleBuyTimelineCardWithTt: actions.handleBuyTimelineCardWithTt,
     handleClaimChallenge: actions.handleClaimChallenge,
@@ -152,6 +153,7 @@ export function useGamePageController({
     handleResolveChallengeWindow: actions.handleResolveChallengeWindow,
     handleSkipTrackWithTt: actions.handleSkipTrackWithTt,
     handleSkipTurn: actions.handleSkipTurn,
+    isBuyTimelineCardPending: actions.isBuyTimelineCardPending,
     isClaimChallengePending: actions.isClaimChallengePending,
     isCloseRoomPending: actions.isCloseRoomPending,
     isConfirmRevealPending: actions.isConfirmRevealPending,

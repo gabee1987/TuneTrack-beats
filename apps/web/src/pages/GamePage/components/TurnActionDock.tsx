@@ -12,7 +12,10 @@ import {
   useReducedMotionPreference,
 } from "../../../features/motion";
 import { useI18n } from "../../../features/i18n";
-import type { PlaceCardActionStatus } from "../GamePage.types";
+import type {
+  BuyTimelineCardActionStatus,
+  PlaceCardActionStatus,
+} from "../GamePage.types";
 import {
   ActionDock,
   PrimaryActionButton,
@@ -43,6 +46,7 @@ function useTurnSkipCountdown(deadlineEpochMs: number | null): string | null {
 }
 
 interface TurnActionDockProps {
+  buyTimelineCardActionStatus: BuyTimelineCardActionStatus;
   canConfirmTurnPlacement: boolean;
   canSkipOfflinePlayer: boolean;
   canUseBuyCard: boolean;
@@ -51,6 +55,7 @@ interface TurnActionDockProps {
   handlePlaceCard: () => void;
   handleSkipOfflinePlayer: () => void;
   handleSkipTrackWithTt: () => void;
+  isBuyTimelineCardPending: boolean;
   isPlaceCardPending: boolean;
   placeCardActionStatus: PlaceCardActionStatus;
   onTokenSpendAnimationStart?: (payload: {
@@ -62,6 +67,7 @@ interface TurnActionDockProps {
 }
 
 export function TurnActionDock({
+  buyTimelineCardActionStatus,
   canConfirmTurnPlacement,
   canSkipOfflinePlayer,
   canUseBuyCard,
@@ -70,6 +76,7 @@ export function TurnActionDock({
   handlePlaceCard,
   handleSkipOfflinePlayer,
   handleSkipTrackWithTt,
+  isBuyTimelineCardPending,
   isPlaceCardPending,
   placeCardActionStatus,
   onTokenSpendAnimationStart,
@@ -97,6 +104,14 @@ export function TurnActionDock({
     placeCardButtonLabel = t("game.controls.placementRetrying");
   } else if (placeCardActionStatus === "failed") {
     placeCardButtonLabel = t("game.controls.retryPlacement");
+  }
+  let buyTimelineCardButtonLabel = t("game.controls.buy");
+  if (buyTimelineCardActionStatus === "pending") {
+    buyTimelineCardButtonLabel = t("game.controls.buyPending");
+  } else if (buyTimelineCardActionStatus === "retrying") {
+    buyTimelineCardButtonLabel = t("game.controls.buyRetrying");
+  } else if (buyTimelineCardActionStatus === "failed") {
+    buyTimelineCardButtonLabel = t("game.controls.retryBuy");
   }
 
   function resolveSpendOrigin(
@@ -184,6 +199,7 @@ export function TurnActionDock({
                   transition={createLayoutTransition(reduceMotion)}
                 >
                   <SecondaryActionButton
+                    disabled={isBuyTimelineCardPending}
                     onClick={(event) => {
                       const origin = resolveSpendOrigin(
                         event.currentTarget,
@@ -198,7 +214,7 @@ export function TurnActionDock({
                     ttCost={BUY_TIMELINE_CARD_TT_COST}
                     ttCostBadgeRef={buyCostBadgeRef}
                   >
-                    {t("game.controls.buy")}
+                    {buyTimelineCardButtonLabel}
                   </SecondaryActionButton>
                 </motion.span>
               ) : null}
@@ -258,6 +274,7 @@ export function TurnActionDock({
                 transition={createLayoutTransition(reduceMotion)}
               >
                 <SecondaryActionButton
+                  disabled={isBuyTimelineCardPending}
                   onClick={(event) => {
                     const origin = resolveSpendOrigin(
                       event.currentTarget,
@@ -272,7 +289,7 @@ export function TurnActionDock({
                   ttCost={BUY_TIMELINE_CARD_TT_COST}
                   ttCostBadgeRef={buyCostBadgeRef}
                 >
-                  {t("game.controls.buy")}
+                  {buyTimelineCardButtonLabel}
                 </SecondaryActionButton>
               </motion.span>
             ) : null}

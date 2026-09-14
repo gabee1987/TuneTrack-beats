@@ -149,6 +149,7 @@ export interface SkipTrackWithTtPayload {
 
 export interface BuyTimelineCardWithTtPayload {
   roomId: RoomId;
+  requestId?: string;
 }
 
 export interface ImportPlaylistPayload {

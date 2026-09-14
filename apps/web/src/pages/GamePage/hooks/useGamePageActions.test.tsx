@@ -4,6 +4,7 @@ import type { EmitActionResult } from "../../../services/socket/emitAction";
 import { I18nProvider } from "../../../features/i18n";
 import {
   buildChallengeRoomState,
+  buildRoomSettings,
   buildRevealRoomState,
   buildTurnRoomState,
   TEST_GUEST_ID,
@@ -52,6 +53,7 @@ function PlacementHarness({
   return (
     <I18nProvider>
       <TurnActionDock
+        buyTimelineCardActionStatus={actions.buyTimelineCardActionStatus}
         canConfirmTurnPlacement
         canSkipOfflinePlayer={false}
         canUseBuyCard={false}
@@ -60,6 +62,7 @@ function PlacementHarness({
         handlePlaceCard={actions.handlePlaceCard}
         handleSkipOfflinePlayer={actions.handleSkipTurn}
         handleSkipTrackWithTt={actions.handleSkipTrackWithTt}
+        isBuyTimelineCardPending={actions.isBuyTimelineCardPending}
         isPlaceCardPending={actions.isPlaceCardPending}
         placeCardActionStatus={actions.placeCardActionStatus}
         roomState={roomState}
@@ -196,6 +199,48 @@ function CloseRoomHarness() {
     <button disabled={actions.isCloseRoomPending} onClick={actions.handleCloseRoom}>
       {actions.closeRoomActionStatus}
     </button>
+  );
+}
+
+function BuyTimelineCardHarness({
+  onTokenSpendAnimationStart,
+}: {
+  onTokenSpendAnimationStart: ReturnType<typeof vi.fn>;
+}) {
+  const roomState = buildTurnRoomState({
+    settings: buildRoomSettings({ ttModeEnabled: true }),
+  });
+  const actions = useGamePageActions({
+    canClaimChallenge: false,
+    canConfirmReveal: false,
+    canResolveChallengeWindow: false,
+    canSelectChallengeSlot: false,
+    currentPlayerId: TEST_HOST_ID,
+    isCurrentPlayerTurn: true,
+    roomState,
+    selectedSlotIndex: 1,
+    setLocallyPlacedCard: vi.fn(),
+  });
+
+  return (
+    <I18nProvider>
+      <TurnActionDock
+        buyTimelineCardActionStatus={actions.buyTimelineCardActionStatus}
+        canConfirmTurnPlacement={false}
+        canSkipOfflinePlayer={false}
+        canUseBuyCard
+        canUseSkipTrack={false}
+        handleBuyTimelineCardWithTt={actions.handleBuyTimelineCardWithTt}
+        handlePlaceCard={actions.handlePlaceCard}
+        handleSkipOfflinePlayer={actions.handleSkipTurn}
+        handleSkipTrackWithTt={actions.handleSkipTrackWithTt}
+        isBuyTimelineCardPending={actions.isBuyTimelineCardPending}
+        isPlaceCardPending={actions.isPlaceCardPending}
+        onTokenSpendAnimationStart={onTokenSpendAnimationStart}
+        placeCardActionStatus={actions.placeCardActionStatus}
+        roomState={roomState}
+      />
+    </I18nProvider>
   );
 }
 
@@ -444,5 +489,53 @@ describe("useGamePageActions close_room", () => {
     });
 
     expect(await screen.findByRole("button", { name: "failed" })).toBeEnabled();
+  });
+});
+
+describe("useGamePageActions buy_timeline_card_with_tt", () => {
+  beforeEach(() => {
+    emitActionMock.mockReset();
+  });
+
+  it("retries safely, blocks duplicate purchases, and exposes a final retry", async () => {
+    const deferred = createDeferredActionResult();
+    const onTokenSpendAnimationStart = vi.fn();
+    emitActionMock.mockReturnValueOnce(deferred.promise);
+    render(
+      <BuyTimelineCardHarness onTokenSpendAnimationStart={onTokenSpendAnimationStart} />,
+    );
+
+    const buyButton = screen.getByRole("button", { name: /buy/i });
+    fireEvent.click(buyButton);
+    fireEvent.click(buyButton);
+
+    expect(screen.getByRole("button", { name: /buying card/i })).toBeDisabled();
+    expect(emitActionMock).toHaveBeenCalledTimes(1);
+    expect(emitActionMock).toHaveBeenCalledWith(
+      ClientToServerEvent.BuyTimelineCardWithTt,
+      { roomId: "TEST_ROOM_1" },
+      expect.objectContaining({ retryOnTimeout: true }),
+    );
+    expect(onTokenSpendAnimationStart).toHaveBeenCalledTimes(1);
+
+    const options = emitActionMock.mock.calls[0]?.[2] as {
+      onTimeoutRetry?: () => void;
+    };
+    act(() => options.onTimeoutRetry?.());
+
+    expect(screen.getByRole("button", { name: /no response.*retrying/i })).toBeDisabled();
+
+    await act(async () => {
+      deferred.resolve({ status: "timeout" });
+      await deferred.promise;
+    });
+
+    const retryButton = await screen.findByRole("button", { name: /try again/i });
+    expect(retryButton).toBeEnabled();
+
+    emitActionMock.mockResolvedValueOnce({ status: "ok" });
+    fireEvent.click(retryButton);
+
+    await waitFor(() => expect(emitActionMock).toHaveBeenCalledTimes(2));
   });
 });

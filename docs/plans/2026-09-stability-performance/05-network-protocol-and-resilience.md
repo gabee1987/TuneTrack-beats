@@ -238,8 +238,8 @@ Per-action feedback becomes possible for the first time:
 - `"offline"` shows a persistent connection banner (see Phase 5) instead of a toast.
 
 Migrate incrementally, highest-risk actions first: `place_card`, `confirm_reveal`,
-`place_challenge`, `claim_challenge`, `start_game`, `close_room`. Settings toggles can stay
-fire-and-forget until last.
+`place_challenge`, `claim_challenge`, `start_game`, `close_room`,
+`buy_timeline_card_with_tt`. Settings toggles can stay fire-and-forget until last.
 
 ### Acceptance
 
@@ -261,6 +261,9 @@ fire-and-forget until last.
 - [x] `close_room` closes the room once when its acknowledged request is replayed. Its
       socket-local terminal acknowledgement survives room deletion without retaining a room
       tombstone, and lobby/in-game controls share duplicate blocking and timeout feedback.
+- [x] `buy_timeline_card_with_tt` spends tokens and awards the timeline card once when its
+      acknowledged request is replayed; the buy control blocks duplicate presses and exposes
+      pending, retrying, and final retry states.
 
 ## 5. Phase 5 — Honest connection state in the UI · **S2**
 

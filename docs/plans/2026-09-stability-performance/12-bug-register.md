@@ -647,6 +647,19 @@ and disappears with the socket handler on disconnect. Replaying the close theref
 the original success without closing or notifying the room twice and without retaining a
 room tombstone.
 
+### Root cause #2 `buy_timeline_card_with_tt` migration (2026-09-14)
+
+`buy_timeline_card_with_tt` now uses the acknowledged action path and the room-scoped replay
+LRU. One timeout retry reuses the original request id, so a lost acknowledgement cannot spend
+three more tokens or award another timeline card. Replaying a successful purchase returns its
+original acknowledgement before gameplay mutation or state broadcast.
+
+The buy control has a synchronous duplicate guard and localised pending, retrying, and final
+retry states. Its existing token-spend animation still runs for a user submission, while the
+disabled control prevents rapid taps from starting duplicate animations or purchases. If an
+authoritative update has already moved beyond the submitted turn and card, stale timeout state
+is discarded.
+
 Root cause #2 remains **open**. The remaining action callers still use bare emits, the other
 non-idempotent actions still need replay protection, and their per-action pending/error
 experiences remain to be added. Root causes #4 and #5 also remain open; B8 therefore remains
@@ -666,7 +679,12 @@ experiences remain to be added. Root causes #4 and #5 also remain open; B8 there
   confirmation control stays disabled until acknowledgement, rejection rolls back the
   optimistic preview, acceptance preserves it until authoritative state arrives, and a
   timeout shows both automatic-retry progress and the final retry affordance. Challenge
-  claim and placement have the same duplicate guard and timeout lifecycle.
+  claim and placement have the same duplicate guard and timeout lifecycle. Timeline-card
+  purchase also blocks duplicate presses and animations, retries once, and exposes a final
+  retry affordance.
+- `roomFlow.test.ts`: replaying a successful timeline-card purchase returns the original
+  acknowledgement, calls the purchase service once, spends three tokens once, and awards one
+  card.
 - `useLobbyRoomActions.test.tsx`: two quick game-start presses emit once, the real start
   control remains disabled through its automatic retry, and a final timeout exposes a fresh
   retry affordance. Lobby close uses the same lifecycle; the in-game close hook has a matching

@@ -8,6 +8,7 @@ export function buildGamePageAssemblyModel(
 ): GamePageAssemblyModel {
   return {
     actions: {
+      buyTimelineCardActionStatus: controller.buyTimelineCardActionStatus,
       canClaimChallenge: controller.canClaimChallenge,
       canConfirmBeatPlacement: controller.canConfirmBeatPlacement,
       canConfirmReveal: controller.canConfirmReveal,
@@ -31,6 +32,7 @@ export function buildGamePageAssemblyModel(
       handleResolveChallengeWindow: controller.handleResolveChallengeWindow,
       handleSkipTrackWithTt: controller.handleSkipTrackWithTt,
       handleSkipTurn: controller.handleSkipTurn,
+      isBuyTimelineCardPending: controller.isBuyTimelineCardPending,
       isCurrentPlayerTurn: controller.isCurrentPlayerTurn,
       isClaimChallengePending: controller.isClaimChallengePending,
       isConfirmRevealPending: controller.isConfirmRevealPending,

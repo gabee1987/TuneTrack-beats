@@ -6,6 +6,7 @@ import { useCallback, useRef, useState } from "react";
 import { emitAction } from "../../../services/socket/emitAction";
 import { getSocketClient } from "../../../services/socket/socketClient";
 import type {
+  BuyTimelineCardActionStatus,
   ClaimChallengeActionStatus,
   CloseRoomActionStatus,
   ConfirmRevealActionStatus,
@@ -51,6 +52,9 @@ export function useGamePageActions({
   const isCloseRoomPendingRef = useRef(false);
   const [closeRoomActionStatus, setCloseRoomActionStatus] =
     useState<CloseRoomActionStatus>("idle");
+  const isBuyTimelineCardPendingRef = useRef(false);
+  const [buyTimelineCardActionStatus, setBuyTimelineCardActionStatus] =
+    useState<BuyTimelineCardActionStatus>("idle");
   const isClaimChallengePendingRef = useRef(false);
   const [claimChallengeActionStatus, setClaimChallengeActionStatus] =
     useState<ClaimChallengeActionStatus>("idle");
@@ -76,6 +80,9 @@ export function useGamePageActions({
     placeChallengeActionStatus === "retrying";
   const isCloseRoomPending =
     closeRoomActionStatus === "pending" || closeRoomActionStatus === "retrying";
+  const isBuyTimelineCardPending =
+    buyTimelineCardActionStatus === "pending" ||
+    buyTimelineCardActionStatus === "retrying";
 
   const handlePlaceCard = useCallback(async () => {
     if (
@@ -392,19 +399,51 @@ export function useGamePageActions({
     });
   }, [isCurrentPlayerTurn, onSkipTrackWithTtIntent, roomState]);
 
-  const handleBuyTimelineCardWithTt = useCallback(() => {
+  const handleBuyTimelineCardWithTt = useCallback(async () => {
     if (
       !roomState ||
       !roomState.settings.ttModeEnabled ||
       roomState.status !== "turn" ||
-      !isCurrentPlayerTurn
+      !isCurrentPlayerTurn ||
+      isBuyTimelineCardPendingRef.current
     ) {
       return;
     }
 
-    void emitRoomEvent(ClientToServerEvent.BuyTimelineCardWithTt, {
-      roomId: roomState.roomId,
-    });
+    const submittedTurnNumber = roomState.turn?.turnNumber;
+    const submittedCardId = roomState.currentTrackCard?.id;
+    function isSubmittedTurnCurrent() {
+      const currentRoomState = roomStateRef.current;
+      return (
+        currentRoomState?.status === "turn" &&
+        currentRoomState.turn?.turnNumber === submittedTurnNumber &&
+        currentRoomState.currentTrackCard?.id === submittedCardId
+      );
+    }
+
+    isBuyTimelineCardPendingRef.current = true;
+    setBuyTimelineCardActionStatus("pending");
+    try {
+      const result = await emitAction(
+        ClientToServerEvent.BuyTimelineCardWithTt,
+        { roomId: roomState.roomId },
+        {
+          onTimeoutRetry: () => {
+            if (isSubmittedTurnCurrent()) {
+              setBuyTimelineCardActionStatus("retrying");
+            }
+          },
+          retryOnTimeout: true,
+        },
+      );
+      setBuyTimelineCardActionStatus(
+        result.status === "timeout" && isSubmittedTurnCurrent() ? "failed" : "idle",
+      );
+    } catch {
+      setBuyTimelineCardActionStatus(isSubmittedTurnCurrent() ? "failed" : "idle");
+    } finally {
+      isBuyTimelineCardPendingRef.current = false;
+    }
   }, [isCurrentPlayerTurn, roomState]);
 
   const handleSkipTurn = useCallback(() => {
@@ -418,6 +457,7 @@ export function useGamePageActions({
   }, [roomState]);
 
   return {
+    buyTimelineCardActionStatus,
     closeRoomActionStatus,
     handleAwardTt,
     handleRemoveTt,
@@ -432,6 +472,7 @@ export function useGamePageActions({
     handleSkipTrackWithTt,
     handleSkipTurn,
     handleTransferHost,
+    isBuyTimelineCardPending,
     isClaimChallengePending,
     isCloseRoomPending,
     isConfirmRevealPending,

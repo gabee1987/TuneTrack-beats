@@ -15,6 +15,7 @@ describe("buildGamePageAssemblyModel", () => {
       canToggleTimelineView: true,
       canUseBuyCard: true,
       canUseSkipTrack: false,
+      buyTimelineCardActionStatus: "retrying",
       challengeActionBody: "Place the challenge card",
       challengeActionTitle: "Beat move",
       challengeMarkerTone: "success",
@@ -37,6 +38,7 @@ describe("buildGamePageAssemblyModel", () => {
       hiddenCardMode: "artwork",
       revealedCardMode: "artwork",
       isHost: true,
+      isBuyTimelineCardPending: true,
       isConfirmRevealPending: true,
       isClaimChallengePending: true,
       isCloseRoomPending: false,
@@ -114,9 +116,11 @@ describe("buildGamePageAssemblyModel", () => {
     });
     expect(model.timeline.interaction.disabledSlotIndexes).toEqual([1, 3]);
     expect(model.actions.challengeActionTitle).toBe("Beat move");
+    expect(model.actions.buyTimelineCardActionStatus).toBe("retrying");
     expect(model.actions.confirmRevealActionStatus).toBe("pending");
     expect(model.actions.claimChallengeActionStatus).toBe("retrying");
     expect(model.actions.isClaimChallengePending).toBe(true);
+    expect(model.actions.isBuyTimelineCardPending).toBe(true);
     expect(model.actions.isConfirmRevealPending).toBe(true);
     expect(model.actions.isPlaceCardPending).toBe(true);
     expect(model.actions.placeCardActionStatus).toBe("retrying");

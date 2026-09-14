@@ -1213,6 +1213,75 @@ describe("room flow", () => {
     ).toBe(1);
   });
 
+  it("applies a replayed timeline-card purchase once", async () => {
+    const roomService = createTestRoomService();
+    const buyTimelineCardSpy = vi.spyOn(roomService, "buyTimelineCardWithTt");
+    const serverContext = await startTestServer(roomService);
+    const hostSocket = createClient(serverContext.baseUrl);
+
+    const connectionPromise = waitForEvent(hostSocket, "connect");
+    hostSocket.connect();
+    await connectionPromise;
+
+    const hostIdentityPromise = waitForEvent<PlayerIdentityPayload>(
+      hostSocket,
+      ServerToClientEvent.PlayerIdentity,
+    );
+    hostSocket.emit(ClientToServerEvent.CreateRoom, {
+      roomId: "buy-room",
+      displayName: "Host Player",
+      sessionId: "host-session",
+    });
+    const hostIdentity = await hostIdentityPromise;
+
+    const settingsPromise = waitForStateUpdate(
+      hostSocket,
+      (roomState) =>
+        roomState.settings.ttModeEnabled && roomState.players[0]?.ttTokenCount === 3,
+    );
+    hostSocket.emit(ClientToServerEvent.UpdateRoomSettings, {
+      roomId: "buy-room",
+      startingTtTokenCount: 3,
+      ttModeEnabled: true,
+    });
+    await settingsPromise;
+
+    const turnPromise = waitForStateUpdate(
+      hostSocket,
+      (roomState) => roomState.status === "turn",
+    );
+    hostSocket.emit(ClientToServerEvent.StartGame, { roomId: "buy-room" });
+    await turnPromise;
+
+    const revealPromise = waitForStateUpdate(
+      hostSocket,
+      (roomState) => roomState.revealState?.revealType === "tt_buy",
+    );
+    const requestId = "00000000-0000-4000-8000-000000000106";
+    const firstAckPromise = hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.BuyTimelineCardWithTt, {
+        roomId: "buy-room",
+        requestId,
+      }) as Promise<ActionAck>;
+
+    const [revealState, firstAck] = await Promise.all([revealPromise, firstAckPromise]);
+    const replayAck = (await hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.BuyTimelineCardWithTt, {
+        roomId: "buy-room",
+        requestId,
+      })) as ActionAck;
+
+    expect(firstAck).toEqual({ ok: true, requestId });
+    expect(replayAck).toEqual(firstAck);
+    expect(buyTimelineCardSpy).toHaveBeenCalledTimes(1);
+    expect(
+      revealState.players.find((player) => player.id === hostIdentity.playerId)?.ttTokenCount,
+    ).toBe(0);
+    expect(revealState.timelines[hostIdentity.playerId]).toHaveLength(2);
+  });
+
   it("loads a curated playlist into the lobby deck", async () => {
     const serverContext = await startTestServer();
     const hostSocket = createClient(serverContext.baseUrl);

@@ -113,6 +113,7 @@ export function PrimaryActionButton({
 
 export function SecondaryActionButton({
   children,
+  disabled,
   onClick,
   ttCost,
   ttCostBadgeRef,
@@ -120,6 +121,7 @@ export function SecondaryActionButton({
   return (
     <button
       className={styles.floatingSecondaryButton}
+      disabled={disabled}
       onClick={onClick}
       type="button"
     >

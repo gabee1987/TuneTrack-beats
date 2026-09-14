@@ -33,6 +33,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
   const animationKeyRef = useRef(0);
   const [tokenSpendFlyouts, setTokenSpendFlyouts] = useState<TokenSpendFlyoutState[]>([]);
   const {
+    buyTimelineCardActionStatus,
     canClaimChallenge,
     canConfirmBeatPlacement,
     canConfirmReveal,
@@ -56,6 +57,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     isCurrentPlayerTurn,
     isClaimChallengePending,
     isConfirmRevealPending,
+    isBuyTimelineCardPending,
     isPlaceCardPending,
     isPlaceChallengePending,
     placeCardActionStatus,
@@ -160,6 +162,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
       />
 
       <TurnActionDock
+        buyTimelineCardActionStatus={buyTimelineCardActionStatus}
         canConfirmTurnPlacement={canConfirmTurnPlacement}
         canSkipOfflinePlayer={model.canSkipOfflinePlayer}
         canUseBuyCard={canUseBuyCard}
@@ -168,6 +171,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
         handlePlaceCard={handlePlaceCard}
         handleSkipOfflinePlayer={model.handleSkipTurn}
         handleSkipTrackWithTt={handleSkipTrackWithTt}
+        isBuyTimelineCardPending={isBuyTimelineCardPending}
         isPlaceCardPending={isPlaceCardPending}
         placeCardActionStatus={placeCardActionStatus}
         onTokenSpendAnimationStart={handleTokenSpendAnimationStart}
@@ -190,6 +194,7 @@ function areActionPanelModelsEqual(
     previousModel.canSkipOfflinePlayer === nextModel.canSkipOfflinePlayer &&
     previousModel.canUseBuyCard === nextModel.canUseBuyCard &&
     previousModel.canUseSkipTrack === nextModel.canUseSkipTrack &&
+    previousModel.buyTimelineCardActionStatus === nextModel.buyTimelineCardActionStatus &&
     previousModel.challengeActionBody === nextModel.challengeActionBody &&
     previousModel.challengeActionTitle === nextModel.challengeActionTitle &&
     previousModel.claimChallengeActionStatus === nextModel.claimChallengeActionStatus &&
@@ -207,6 +212,7 @@ function areActionPanelModelsEqual(
     previousModel.isCurrentPlayerTurn === nextModel.isCurrentPlayerTurn &&
     previousModel.isClaimChallengePending === nextModel.isClaimChallengePending &&
     previousModel.isConfirmRevealPending === nextModel.isConfirmRevealPending &&
+    previousModel.isBuyTimelineCardPending === nextModel.isBuyTimelineCardPending &&
     previousModel.isPlaceCardPending === nextModel.isPlaceCardPending &&
     previousModel.isPlaceChallengePending === nextModel.isPlaceChallengePending &&
     previousModel.placeCardActionStatus === nextModel.placeCardActionStatus &&

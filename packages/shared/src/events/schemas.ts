@@ -198,6 +198,7 @@ export const skipTrackWithTtPayloadSchema = z.object({
 
 export const buyTimelineCardWithTtPayloadSchema = z.object({
   roomId: roomIdSchema,
+  requestId: z.string().uuid().optional(),
 });
 
 export const skipTurnPayloadSchema = z.object({
