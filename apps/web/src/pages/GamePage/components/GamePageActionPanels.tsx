@@ -53,6 +53,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     handleSkipTrackWithTt,
     isCurrentPlayerTurn,
     isPlaceCardPending,
+    placeCardActionStatus,
     roomState,
     showHelperLabels,
   } = model;
@@ -156,6 +157,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
         handleSkipOfflinePlayer={model.handleSkipTurn}
         handleSkipTrackWithTt={handleSkipTrackWithTt}
         isPlaceCardPending={isPlaceCardPending}
+        placeCardActionStatus={placeCardActionStatus}
         onTokenSpendAnimationStart={handleTokenSpendAnimationStart}
         roomState={roomState}
       />
@@ -190,6 +192,7 @@ function areActionPanelModelsEqual(
     previousModel.handleSkipTurn === nextModel.handleSkipTurn &&
     previousModel.isCurrentPlayerTurn === nextModel.isCurrentPlayerTurn &&
     previousModel.isPlaceCardPending === nextModel.isPlaceCardPending &&
+    previousModel.placeCardActionStatus === nextModel.placeCardActionStatus &&
     previousModel.roomState === nextModel.roomState &&
     previousModel.showHelperLabels === nextModel.showHelperLabels
   );

@@ -53,6 +53,7 @@ function PlacementHarness({
         handleSkipOfflinePlayer={actions.handleSkipTurn}
         handleSkipTrackWithTt={actions.handleSkipTrackWithTt}
         isPlaceCardPending={actions.isPlaceCardPending}
+        placeCardActionStatus={actions.placeCardActionStatus}
         roomState={roomState}
       />
     </I18nProvider>
@@ -82,7 +83,7 @@ describe("useGamePageActions place_card", () => {
         roomId: "TEST_ROOM_1",
         selectedSlotIndex: 1,
       },
-      { retryOnTimeout: true },
+      expect.objectContaining({ retryOnTimeout: true }),
     );
     expect(setLocallyPlacedCard).toHaveBeenCalledWith(
       expect.objectContaining({ id: "track-current" }),
@@ -95,6 +96,38 @@ describe("useGamePageActions place_card", () => {
 
     await waitFor(() => expect(confirmButton).toBeEnabled());
     expect(setLocallyPlacedCard).toHaveBeenLastCalledWith(null);
+  });
+
+  it("shows timeout retry progress and a retry affordance after the final timeout", async () => {
+    const deferred = createDeferredActionResult();
+    const setLocallyPlacedCard = vi.fn();
+    emitActionMock.mockReturnValueOnce(deferred.promise);
+    render(<PlacementHarness setLocallyPlacedCard={setLocallyPlacedCard} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /confirm/i }));
+
+    expect(screen.getByRole("button", { name: /confirming/i })).toBeDisabled();
+    const options = emitActionMock.mock.calls[0]?.[2] as {
+      onTimeoutRetry?: () => void;
+    };
+
+    act(() => options.onTimeoutRetry?.());
+
+    expect(screen.getByRole("button", { name: /no response.*retrying/i })).toBeDisabled();
+
+    await act(async () => {
+      deferred.resolve({ status: "timeout" });
+      await deferred.promise;
+    });
+
+    const retryButton = await screen.findByRole("button", { name: /try again/i });
+    expect(retryButton).toBeEnabled();
+    expect(setLocallyPlacedCard).toHaveBeenLastCalledWith(null);
+
+    emitActionMock.mockResolvedValueOnce({ status: "ok" });
+    fireEvent.click(retryButton);
+
+    await waitFor(() => expect(emitActionMock).toHaveBeenCalledTimes(2));
   });
 
   it("keeps the optimistic card when the server accepts the placement", async () => {

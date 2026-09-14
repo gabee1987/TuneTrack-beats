@@ -584,9 +584,18 @@ reuse the same generated request id, a second timeout stops the sequence, and a 
 between attempts returns `offline` without buffering the retry. The placement remains pending
 through both attempts, then rolls back and unlocks if neither succeeds.
 
+### Root cause #2 `place_card` timeout feedback (2026-09-14)
+
+The placement confirmation now exposes the acknowledgement lifecycle in the action itself.
+Its localised label changes from confirming to "No response — retrying..." when the first
+timeout starts the single automatic retry. A final timeout rolls back the optimistic card and
+unlocks the button as an explicit "Try again" action; pressing it starts a fresh acknowledged
+placement attempt. Server rejections and offline results retain their existing error and
+connection-state paths.
+
 Root cause #2 remains **open**. The remaining action callers still use bare emits, the other
-non-idempotent actions still need replay protection, and explicit in-progress/final-timeout
-feedback remains to be added. Root causes #4 and #5 also remain open; B8 therefore remains
+non-idempotent actions still need replay protection, and their per-action pending/error
+experiences remain to be added. Root causes #4 and #5 also remain open; B8 therefore remains
 **Confirmed**, not Fixed.
 
 ### Verification
@@ -601,7 +610,8 @@ feedback remains to be added. Root causes #4 and #5 also remain open; B8 therefo
   reuses its request id, stops after one retry, and is not buffered after a disconnect.
 - `useGamePageActions.test.tsx`: two quick placement confirmations emit once, the real
   confirmation control stays disabled until acknowledgement, rejection rolls back the
-  optimistic preview, and acceptance preserves it until authoritative state arrives.
+  optimistic preview, acceptance preserves it until authoritative state arrives, and a
+  timeout shows both automatic-retry progress and the final retry affordance.
 - `roomFlow.test.ts`: replaying the same `place_card` request id returns the original success
   acknowledgement while the placement service runs once.
 - `RoomStore.test.ts`: processed-action acknowledgements are room-scoped, capped at 32, and

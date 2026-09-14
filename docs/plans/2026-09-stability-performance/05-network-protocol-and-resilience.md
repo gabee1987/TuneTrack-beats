@@ -243,13 +243,13 @@ fire-and-forget until last.
 
 ### Acceptance
 
-- [ ] `createSocketHandler.test.ts` extended: ack on success, ack on schema failure, ack on
+- [x] `createSocketHandler.test.ts` extended: ack on success, ack on schema failure, ack on
       thrown error, and ack absent (older client) does not break the handler.
-- [ ] New test: replaying the same `requestId` for `place_card` applies the placement once
+- [x] New test: replaying the same `requestId` for `place_card` applies the placement once
       and returns the same ack twice.
-- [ ] Component test: pressing "Confirm placement" twice in quick succession emits one
+- [x] Component test: pressing "Confirm placement" twice in quick succession emits one
       action and the button is disabled between press and ack.
-- [ ] Component test: an ack timeout shows the retry affordance and a single retry.
+- [x] Component test: an ack timeout shows the retry affordance and a single retry.
 
 ## 5. Phase 5 — Honest connection state in the UI · **S2**
 

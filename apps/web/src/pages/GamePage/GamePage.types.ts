@@ -17,6 +17,7 @@ import type {
 } from "./gamePageTransitionEvents";
 
 export type TimelineView = "active" | "mine";
+export type PlaceCardActionStatus = "idle" | "pending" | "retrying" | "failed";
 
 export type ChallengeMarkerTone = "pending" | "success" | "failure";
 export type TimelineCelebrationTone = "success" | "failure";
@@ -170,6 +171,7 @@ export interface GamePageActionPanelsModel
     | "handleSkipTurn"
     | "isCurrentPlayerTurn"
     | "isPlaceCardPending"
+    | "placeCardActionStatus"
     | "showHelperLabels"
   > {
   roomState: PublicRoomState;
@@ -206,6 +208,7 @@ export type GamePageController = GamePageActionHandlers & {
   isHost: boolean;
   isCurrentPlayerTurn: boolean;
   isPlaceCardPending: boolean;
+  placeCardActionStatus: PlaceCardActionStatus;
   isViewingOwnTimeline: boolean;
   leadingPlayers: PublicRoomState["players"];
   menuTabs: AppShellMenuTab[];

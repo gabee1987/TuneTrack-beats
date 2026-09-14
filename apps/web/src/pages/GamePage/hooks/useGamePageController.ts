@@ -152,6 +152,7 @@ export function useGamePageController({
     handleSkipTrackWithTt: actions.handleSkipTrackWithTt,
     handleSkipTurn: actions.handleSkipTurn,
     isPlaceCardPending: actions.isPlaceCardPending,
+    placeCardActionStatus: actions.placeCardActionStatus,
   };
 
   const capabilityState = {

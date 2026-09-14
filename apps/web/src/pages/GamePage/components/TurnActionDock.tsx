@@ -12,6 +12,7 @@ import {
   useReducedMotionPreference,
 } from "../../../features/motion";
 import { useI18n } from "../../../features/i18n";
+import type { PlaceCardActionStatus } from "../GamePage.types";
 import {
   ActionDock,
   PrimaryActionButton,
@@ -51,6 +52,7 @@ interface TurnActionDockProps {
   handleSkipOfflinePlayer: () => void;
   handleSkipTrackWithTt: () => void;
   isPlaceCardPending: boolean;
+  placeCardActionStatus: PlaceCardActionStatus;
   onTokenSpendAnimationStart?: (payload: {
     amount: number;
     originX: number;
@@ -69,6 +71,7 @@ export function TurnActionDock({
   handleSkipOfflinePlayer,
   handleSkipTrackWithTt,
   isPlaceCardPending,
+  placeCardActionStatus,
   onTokenSpendAnimationStart,
   roomState,
 }: TurnActionDockProps) {
@@ -87,6 +90,14 @@ export function TurnActionDock({
   const turnSkipCountdown = useTurnSkipCountdown(
     canSkipOfflinePlayer ? (roomState.turn?.turnSkipDeadlineEpochMs ?? null) : null,
   );
+  let placeCardButtonLabel = t("game.controls.confirm");
+  if (placeCardActionStatus === "pending") {
+    placeCardButtonLabel = t("game.controls.placementPending");
+  } else if (placeCardActionStatus === "retrying") {
+    placeCardButtonLabel = t("game.controls.placementRetrying");
+  } else if (placeCardActionStatus === "failed") {
+    placeCardButtonLabel = t("game.controls.retryPlacement");
+  }
 
   function resolveSpendOrigin(
     fallbackButton: HTMLButtonElement,
@@ -201,7 +212,7 @@ export function TurnActionDock({
                 disabled={isPlaceCardPending}
                 onClick={() => handlePlaceCard()}
               >
-                {t("game.controls.confirm")}
+                {placeCardButtonLabel}
               </PrimaryActionButton>
             </motion.span>
           </>
@@ -275,7 +286,7 @@ export function TurnActionDock({
                   disabled={isPlaceCardPending}
                   onClick={() => handlePlaceCard()}
                 >
-                  {t("game.controls.confirm")}
+                  {placeCardButtonLabel}
                 </PrimaryActionButton>
               </motion.span>
             ) : null}

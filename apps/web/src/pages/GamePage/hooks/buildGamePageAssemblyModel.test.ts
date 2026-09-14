@@ -35,6 +35,7 @@ describe("buildGamePageAssemblyModel", () => {
       revealedCardMode: "artwork",
       isHost: true,
       isPlaceCardPending: true,
+      placeCardActionStatus: "retrying",
       isViewingOwnTimeline: false,
       leadingPlayers: [],
       menuTabs: [],
@@ -104,6 +105,7 @@ describe("buildGamePageAssemblyModel", () => {
     expect(model.timeline.interaction.disabledSlotIndexes).toEqual([1, 3]);
     expect(model.actions.challengeActionTitle).toBe("Beat move");
     expect(model.actions.isPlaceCardPending).toBe(true);
+    expect(model.actions.placeCardActionStatus).toBe("retrying");
     expect(model.actions.roomState).toBe(controller.roomState);
   });
 });

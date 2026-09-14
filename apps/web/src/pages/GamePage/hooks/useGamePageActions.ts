@@ -5,6 +5,7 @@ import {
 import { useCallback, useRef, useState } from "react";
 import { emitAction } from "../../../services/socket/emitAction";
 import { getSocketClient } from "../../../services/socket/socketClient";
+import type { PlaceCardActionStatus } from "../GamePage.types";
 
 async function emitRoomEvent<TPayload>(
   event: (typeof ClientToServerEvent)[keyof typeof ClientToServerEvent],
@@ -40,7 +41,10 @@ export function useGamePageActions({
   setLocallyPlacedCard,
 }: UseGamePageActionsOptions) {
   const isPlaceCardPendingRef = useRef(false);
-  const [isPlaceCardPending, setIsPlaceCardPending] = useState(false);
+  const [placeCardActionStatus, setPlaceCardActionStatus] =
+    useState<PlaceCardActionStatus>("idle");
+  const isPlaceCardPending =
+    placeCardActionStatus === "pending" || placeCardActionStatus === "retrying";
 
   const handlePlaceCard = useCallback(async () => {
     if (
@@ -53,7 +57,7 @@ export function useGamePageActions({
     }
 
     isPlaceCardPendingRef.current = true;
-    setIsPlaceCardPending(true);
+    setPlaceCardActionStatus("pending");
     setLocallyPlacedCard(roomState.currentTrackCard ?? null);
     try {
       const result = await emitAction(
@@ -62,16 +66,20 @@ export function useGamePageActions({
           roomId: roomState.roomId,
           selectedSlotIndex,
         },
-        { retryOnTimeout: true },
+        {
+          onTimeoutRetry: () => setPlaceCardActionStatus("retrying"),
+          retryOnTimeout: true,
+        },
       );
       if (result.status !== "ok") {
         setLocallyPlacedCard(null);
       }
+      setPlaceCardActionStatus(result.status === "timeout" ? "failed" : "idle");
     } catch {
       setLocallyPlacedCard(null);
+      setPlaceCardActionStatus("failed");
     } finally {
       isPlaceCardPendingRef.current = false;
-      setIsPlaceCardPending(false);
     }
   }, [isCurrentPlayerTurn, roomState, selectedSlotIndex, setLocallyPlacedCard]);
 
@@ -256,5 +264,6 @@ export function useGamePageActions({
     handleSkipTurn,
     handleTransferHost,
     isPlaceCardPending,
+    placeCardActionStatus,
   };
 }

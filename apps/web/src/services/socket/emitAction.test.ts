@@ -63,6 +63,7 @@ describe("emitAction", () => {
   });
 
   it("retries one timeout with the same request id when enabled", async () => {
+    const onTimeoutRetry = vi.fn();
     socket.emitWithAck
       .mockRejectedValueOnce(new Error("operation has timed out"))
       .mockResolvedValueOnce({
@@ -74,28 +75,32 @@ describe("emitAction", () => {
       emitAction(
         ClientToServerEvent.PlaceCard,
         { roomId: "TEST_ROOM_1", selectedSlotIndex: 1 },
-        { retryOnTimeout: true },
+        { onTimeoutRetry, retryOnTimeout: true },
       ),
     ).resolves.toEqual({ status: "ok" });
 
+    expect(onTimeoutRetry).toHaveBeenCalledTimes(1);
     expect(socket.emitWithAck).toHaveBeenCalledTimes(2);
     expect(socket.emitWithAck.mock.calls[1]).toEqual(socket.emitWithAck.mock.calls[0]);
   });
 
   it("stops after one timeout retry", async () => {
+    const onTimeoutRetry = vi.fn();
     socket.emitWithAck.mockRejectedValue(new Error("operation has timed out"));
 
     await expect(
       emitAction(
         ClientToServerEvent.PlaceCard,
         { roomId: "TEST_ROOM_1", selectedSlotIndex: 1 },
-        { retryOnTimeout: true },
+        { onTimeoutRetry, retryOnTimeout: true },
       ),
     ).resolves.toEqual({ status: "timeout" });
+    expect(onTimeoutRetry).toHaveBeenCalledTimes(1);
     expect(socket.emitWithAck).toHaveBeenCalledTimes(2);
   });
 
   it("does not buffer the retry when the socket disconnects after the first timeout", async () => {
+    const onTimeoutRetry = vi.fn();
     socket.emitWithAck.mockImplementationOnce(() => {
       socket.connected = false;
       return Promise.reject(new Error("operation has timed out"));
@@ -105,9 +110,10 @@ describe("emitAction", () => {
       emitAction(
         ClientToServerEvent.PlaceCard,
         { roomId: "TEST_ROOM_1", selectedSlotIndex: 1 },
-        { retryOnTimeout: true },
+        { onTimeoutRetry, retryOnTimeout: true },
       ),
     ).resolves.toEqual({ status: "offline" });
+    expect(onTimeoutRetry).not.toHaveBeenCalled();
     expect(socket.emitWithAck).toHaveBeenCalledTimes(1);
   });
 

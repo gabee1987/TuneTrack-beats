@@ -10,6 +10,7 @@ export type EmitActionResult =
   | { status: "offline" };
 
 interface EmitActionOptions {
+  onTimeoutRetry?: () => void;
   retryOnTimeout?: boolean;
   timeoutMs?: number;
 }
@@ -46,6 +47,11 @@ export async function emitAction<TPayload extends object>(
       if (attempt === attemptCount - 1) {
         return { status: "timeout" };
       }
+      if (!socketClient.connected) {
+        return { status: "offline" };
+      }
+
+      options.onTimeoutRetry?.();
     }
   }
 
