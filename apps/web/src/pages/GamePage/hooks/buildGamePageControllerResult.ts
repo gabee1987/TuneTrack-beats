@@ -13,6 +13,7 @@ import type {
 interface BuildGamePageControllerResultOptions {
   actionState: Pick<
     UseGamePageControllerResult,
+    | "closeRoomActionStatus"
     | "handleBuyTimelineCardWithTt"
     | "handleClaimChallenge"
     | "handleCloseRoom"
@@ -23,6 +24,7 @@ interface BuildGamePageControllerResultOptions {
     | "handleSkipTrackWithTt"
     | "handleSkipTurn"
     | "isClaimChallengePending"
+    | "isCloseRoomPending"
     | "isConfirmRevealPending"
     | "isPlaceCardPending"
     | "isPlaceChallengePending"

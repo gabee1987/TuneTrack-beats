@@ -142,6 +142,7 @@ export function useGamePageController({
   });
 
   const actionState = {
+    closeRoomActionStatus: actions.closeRoomActionStatus,
     handleBuyTimelineCardWithTt: actions.handleBuyTimelineCardWithTt,
     handleClaimChallenge: actions.handleClaimChallenge,
     handleCloseRoom: actions.handleCloseRoom,
@@ -152,6 +153,7 @@ export function useGamePageController({
     handleSkipTrackWithTt: actions.handleSkipTrackWithTt,
     handleSkipTurn: actions.handleSkipTurn,
     isClaimChallengePending: actions.isClaimChallengePending,
+    isCloseRoomPending: actions.isCloseRoomPending,
     isConfirmRevealPending: actions.isConfirmRevealPending,
     isPlaceCardPending: actions.isPlaceCardPending,
     isPlaceChallengePending: actions.isPlaceChallengePending,

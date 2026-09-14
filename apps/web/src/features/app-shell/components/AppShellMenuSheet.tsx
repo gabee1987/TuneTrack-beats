@@ -173,6 +173,7 @@ export function AppShellMenuSheet({
           {resolvedFooterActions.map((action, index) =>
             action.tone === "danger" ? (
               <Button
+                disabled={action.disabled}
                 fullWidth
                 key={`${action.label}-${index}`}
                 onClick={() => handleFooterActionClick(action)}
@@ -183,6 +184,7 @@ export function AppShellMenuSheet({
               </Button>
             ) : (
               <Button
+                disabled={action.disabled}
                 fullWidth
                 key={`${action.label}-${index}`}
                 onClick={() => handleFooterActionClick(action)}

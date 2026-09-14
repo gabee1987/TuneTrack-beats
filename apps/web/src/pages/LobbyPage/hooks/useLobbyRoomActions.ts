@@ -7,7 +7,7 @@ import {
 import { useRef, useState } from "react";
 import { emitAction } from "../../../services/socket/emitAction";
 import { getSocketClient } from "../../../services/socket/socketClient";
-import type { StartGameActionStatus } from "../LobbyPage.types";
+import type { CloseRoomActionStatus, StartGameActionStatus } from "../LobbyPage.types";
 
 const DEFAULT_ENABLED_STARTING_TT_TOKEN_COUNT = 1;
 
@@ -18,6 +18,7 @@ interface UseLobbyRoomActionsOptions {
 }
 
 interface UseLobbyRoomActionsResult {
+  closeRoomActionStatus: CloseRoomActionStatus;
   handleCloseRoom: () => void;
   handlePlayerStartingCardCountChange: (player: PublicPlayerState, nextValue: number) => void;
   handlePlayerStartingTtTokenCountChange: (player: PublicPlayerState, nextValue: number) => void;
@@ -26,6 +27,7 @@ interface UseLobbyRoomActionsResult {
   handleRoomRename: (nextRoomId: string) => void;
   handleRoomSettingsChange: (nextSettings: PublicRoomSettings) => void;
   handleStartGame: () => void;
+  isCloseRoomPending: boolean;
   isStartGamePending: boolean;
   startGameActionStatus: StartGameActionStatus;
   toggleTtMode: (enabled: boolean) => void;
@@ -38,11 +40,16 @@ export function useLobbyRoomActions({
 }: UseLobbyRoomActionsOptions): UseLobbyRoomActionsResult {
   const roomStateRef = useRef(roomState);
   roomStateRef.current = roomState;
+  const isCloseRoomPendingRef = useRef(false);
+  const [closeRoomActionStatus, setCloseRoomActionStatus] =
+    useState<CloseRoomActionStatus>("idle");
   const isStartGamePendingRef = useRef(false);
   const [startGameActionStatus, setStartGameActionStatus] =
     useState<StartGameActionStatus>("idle");
   const isStartGamePending =
     startGameActionStatus === "pending" || startGameActionStatus === "retrying";
+  const isCloseRoomPending =
+    closeRoomActionStatus === "pending" || closeRoomActionStatus === "retrying";
 
   async function emitRoomEvent<TPayload>(
     event: (typeof ClientToServerEvent)[keyof typeof ClientToServerEvent],
@@ -163,14 +170,44 @@ export function useLobbyRoomActions({
     }
   }
 
-  function handleCloseRoom() {
-    if (!roomState || !isHost) {
+  async function handleCloseRoom() {
+    if (!roomState || !isHost || isCloseRoomPendingRef.current) {
       return;
     }
 
-    void emitRoomEvent(ClientToServerEvent.CloseRoom, {
-      roomId: roomState.roomId,
-    });
+    const submittedRoomId = roomState.roomId;
+    const submittedHostId = roomState.hostId;
+    function isSubmittedRoomCurrent() {
+      const currentRoomState = roomStateRef.current;
+      return (
+        currentRoomState?.roomId === submittedRoomId &&
+        currentRoomState.hostId === submittedHostId
+      );
+    }
+
+    isCloseRoomPendingRef.current = true;
+    setCloseRoomActionStatus("pending");
+    try {
+      const result = await emitAction(
+        ClientToServerEvent.CloseRoom,
+        { roomId: submittedRoomId },
+        {
+          onTimeoutRetry: () => {
+            if (isSubmittedRoomCurrent()) {
+              setCloseRoomActionStatus("retrying");
+            }
+          },
+          retryOnTimeout: true,
+        },
+      );
+      setCloseRoomActionStatus(
+        result.status === "timeout" && isSubmittedRoomCurrent() ? "failed" : "idle",
+      );
+    } catch {
+      setCloseRoomActionStatus(isSubmittedRoomCurrent() ? "failed" : "idle");
+    } finally {
+      isCloseRoomPendingRef.current = false;
+    }
   }
 
   function toggleTtMode(enabled: boolean) {
@@ -191,6 +228,7 @@ export function useLobbyRoomActions({
   }
 
   return {
+    closeRoomActionStatus,
     handleCloseRoom,
     handlePlayerStartingCardCountChange,
     handlePlayerStartingTtTokenCountChange,
@@ -199,6 +237,7 @@ export function useLobbyRoomActions({
     handleRoomRename,
     handleRoomSettingsChange,
     handleStartGame,
+    isCloseRoomPending,
     isStartGamePending,
     startGameActionStatus,
     toggleTtMode,

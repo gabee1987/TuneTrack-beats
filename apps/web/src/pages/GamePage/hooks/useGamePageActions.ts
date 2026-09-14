@@ -7,6 +7,7 @@ import { emitAction } from "../../../services/socket/emitAction";
 import { getSocketClient } from "../../../services/socket/socketClient";
 import type {
   ClaimChallengeActionStatus,
+  CloseRoomActionStatus,
   ConfirmRevealActionStatus,
   PlaceCardActionStatus,
   PlaceChallengeActionStatus,
@@ -47,6 +48,9 @@ export function useGamePageActions({
 }: UseGamePageActionsOptions) {
   const roomStateRef = useRef(roomState);
   roomStateRef.current = roomState;
+  const isCloseRoomPendingRef = useRef(false);
+  const [closeRoomActionStatus, setCloseRoomActionStatus] =
+    useState<CloseRoomActionStatus>("idle");
   const isClaimChallengePendingRef = useRef(false);
   const [claimChallengeActionStatus, setClaimChallengeActionStatus] =
     useState<ClaimChallengeActionStatus>("idle");
@@ -70,6 +74,8 @@ export function useGamePageActions({
   const isPlaceChallengePending =
     placeChallengeActionStatus === "pending" ||
     placeChallengeActionStatus === "retrying";
+  const isCloseRoomPending =
+    closeRoomActionStatus === "pending" || closeRoomActionStatus === "retrying";
 
   const handlePlaceCard = useCallback(async () => {
     if (
@@ -252,14 +258,48 @@ export function useGamePageActions({
     });
   }, [canResolveChallengeWindow, roomState]);
 
-  const handleCloseRoom = useCallback(() => {
-    if (!roomState || roomState.hostId !== currentPlayerId) {
+  const handleCloseRoom = useCallback(async () => {
+    if (
+      !roomState ||
+      roomState.hostId !== currentPlayerId ||
+      isCloseRoomPendingRef.current
+    ) {
       return;
     }
 
-    void emitRoomEvent(ClientToServerEvent.CloseRoom, {
-      roomId: roomState.roomId,
-    });
+    const submittedRoomId = roomState.roomId;
+    const submittedHostId = roomState.hostId;
+    function isSubmittedRoomCurrent() {
+      const currentRoomState = roomStateRef.current;
+      return (
+        currentRoomState?.roomId === submittedRoomId &&
+        currentRoomState.hostId === submittedHostId
+      );
+    }
+
+    isCloseRoomPendingRef.current = true;
+    setCloseRoomActionStatus("pending");
+    try {
+      const result = await emitAction(
+        ClientToServerEvent.CloseRoom,
+        { roomId: submittedRoomId },
+        {
+          onTimeoutRetry: () => {
+            if (isSubmittedRoomCurrent()) {
+              setCloseRoomActionStatus("retrying");
+            }
+          },
+          retryOnTimeout: true,
+        },
+      );
+      setCloseRoomActionStatus(
+        result.status === "timeout" && isSubmittedRoomCurrent() ? "failed" : "idle",
+      );
+    } catch {
+      setCloseRoomActionStatus(isSubmittedRoomCurrent() ? "failed" : "idle");
+    } finally {
+      isCloseRoomPendingRef.current = false;
+    }
   }, [currentPlayerId, roomState]);
 
   const handleAwardTt = useCallback(
@@ -378,6 +418,7 @@ export function useGamePageActions({
   }, [roomState]);
 
   return {
+    closeRoomActionStatus,
     handleAwardTt,
     handleRemoveTt,
     handleBuyTimelineCardWithTt,
@@ -392,6 +433,7 @@ export function useGamePageActions({
     handleSkipTurn,
     handleTransferHost,
     isClaimChallengePending,
+    isCloseRoomPending,
     isConfirmRevealPending,
     isPlaceCardPending,
     isPlaceChallengePending,

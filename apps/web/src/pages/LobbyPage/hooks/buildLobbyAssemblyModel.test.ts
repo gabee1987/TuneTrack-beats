@@ -50,6 +50,7 @@ function createController(
 
   return {
     connectionStatus: "connected",
+    closeRoomActionStatus: "failed",
     currentPlayerId: "host-1",
     currentSettings: settings,
     displayName: "Host",
@@ -66,6 +67,7 @@ function createController(
     handleRoomSettingsChange: () => undefined,
     handleStartGame: () => undefined,
     isHost: true,
+    isCloseRoomPending: false,
     isStartGamePending: true,
     preloadGame: () => undefined,
     roomId: "ROOM1",
@@ -88,6 +90,8 @@ describe("buildLobbyAssemblyModel", () => {
     expect(model.hostSettings.startGameActionStatus).toBe("retrying");
     expect(model.players.roomSettings).toBe(settings);
     expect(model.roomActions.isHost).toBe(true);
+    expect(model.roomActions.closeRoomActionStatus).toBe("failed");
+    expect(model.roomActions.isCloseRoomPending).toBe(false);
     expect(model.roomActions.isStartGamePending).toBe(true);
     expect(model.identity.startGameActionStatus).toBe("retrying");
     expect(model.identity.resolvedRoomId).toBe("ROOM1");

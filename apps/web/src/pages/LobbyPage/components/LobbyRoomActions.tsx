@@ -3,10 +3,12 @@ import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { Button } from "../../../features/ui/primitives";
 import { LobbySectionHeader } from "./LobbySectionHeader";
 import styles from "../lobbyPageStyles";
-import type { StartGameActionStatus } from "../LobbyPage.types";
+import type { CloseRoomActionStatus, StartGameActionStatus } from "../LobbyPage.types";
 
 interface LobbyRoomActionsProps {
   buttonClassName?: string | undefined;
+  closeRoomActionStatus: CloseRoomActionStatus;
+  isCloseRoomPending: boolean;
   isStartGamePending: boolean;
   onCloseRoom: () => void;
   onIntentToStartGame?: (() => void) | undefined;
@@ -16,6 +18,8 @@ interface LobbyRoomActionsProps {
 
 export function LobbyRoomActions({
   buttonClassName,
+  closeRoomActionStatus,
+  isCloseRoomPending,
   isStartGamePending,
   onCloseRoom,
   onIntentToStartGame,
@@ -30,6 +34,14 @@ export function LobbyRoomActions({
     startGameButtonLabel = t("lobby.startGame.retrying");
   } else if (startGameActionStatus === "failed") {
     startGameButtonLabel = t("lobby.startGame.retry");
+  }
+  let closeRoomButtonLabel = t("lobby.actions.closeRoom");
+  if (closeRoomActionStatus === "pending") {
+    closeRoomButtonLabel = t("room.close.pending");
+  } else if (closeRoomActionStatus === "retrying") {
+    closeRoomButtonLabel = t("room.close.retrying");
+  } else if (closeRoomActionStatus === "failed") {
+    closeRoomButtonLabel = t("room.close.retry");
   }
 
   return (
@@ -55,12 +67,13 @@ export function LobbyRoomActions({
       ) : null}
       <Button
         className={`${styles.cancelRoomButton}${buttonClassName ? ` ${buttonClassName}` : ""}`}
+        disabled={isCloseRoomPending}
         fullWidth
         onClick={onCloseRoom}
         type="button"
         variant="danger"
       >
-        {t("lobby.actions.closeRoom")}
+        {closeRoomButtonLabel}
       </Button>
     </SurfaceCard>
   );

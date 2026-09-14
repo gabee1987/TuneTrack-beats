@@ -33,7 +33,9 @@ export interface LobbyAssemblyModel {
     roomSettings: PublicRoomSettings;
   };
   roomActions: {
+    closeRoomActionStatus: LobbyPageController["closeRoomActionStatus"];
     isHost: boolean;
+    isCloseRoomPending: boolean;
     isStartGamePending: boolean;
     onCloseRoom: () => void;
     onIntentToStartGame: () => void;
@@ -91,7 +93,9 @@ export function buildLobbyAssemblyModel(controller: LobbyPageController): LobbyA
       roomSettings: controller.currentSettings,
     },
     roomActions: {
+      closeRoomActionStatus: controller.closeRoomActionStatus,
       isHost: controller.isHost,
+      isCloseRoomPending: controller.isCloseRoomPending,
       isStartGamePending: controller.isStartGamePending,
       onCloseRoom: controller.handleCloseRoom,
       onIntentToStartGame: controller.preloadGame,

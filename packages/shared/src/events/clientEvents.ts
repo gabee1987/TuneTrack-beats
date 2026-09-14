@@ -125,6 +125,7 @@ export interface ConfirmRevealPayload {
 
 export interface CloseRoomPayload {
   roomId: RoomId;
+  requestId?: string;
 }
 
 export interface ClaimChallengePayload {

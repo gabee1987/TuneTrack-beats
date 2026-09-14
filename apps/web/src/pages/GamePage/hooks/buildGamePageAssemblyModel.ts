@@ -42,9 +42,11 @@ export function buildGamePageAssemblyModel(
       showHelperLabels: controller.showHelperLabels,
     },
     header: {
+      closeRoomActionStatus: controller.closeRoomActionStatus,
       currentPlayerId: controller.currentPlayerId,
       handleCloseRoom: controller.handleCloseRoom,
       handleSkipTurn: controller.handleSkipTurn,
+      isCloseRoomPending: controller.isCloseRoomPending,
       leadingPlayers: controller.leadingPlayers,
       menuTabs: controller.menuTabs,
       roomState: controller.roomState,

@@ -1,4 +1,5 @@
 import {
+  type ActionAck,
   ClientToServerEvent,
   ServerToClientEvent,
   closeRoomPayloadSchema,
@@ -308,6 +309,10 @@ function registerUpdateRoomSettingsHandler(
 }
 
 function registerCloseRoomHandler(io: Server, socket: Socket, roomService: RoomService): void {
+  let lastSuccessfulClose:
+    | { roomId: string; requestId: string; ack: ActionAck }
+    | undefined;
+
   createSocketHandler({
     socket,
     event: ClientToServerEvent.CloseRoom,
@@ -327,6 +332,19 @@ function registerCloseRoomHandler(io: Server, socket: Socket, roomService: RoomS
         message: "The host closed this room.",
       });
       io.in(roomId).socketsLeave(roomId);
+    },
+    idempotency: {
+      find: (data) =>
+        data.requestId &&
+        lastSuccessfulClose?.roomId === data.roomId &&
+        lastSuccessfulClose.requestId === data.requestId
+          ? lastSuccessfulClose.ack
+          : undefined,
+      remember: (data, ack) => {
+        if (data.requestId) {
+          lastSuccessfulClose = { roomId: data.roomId, requestId: data.requestId, ack };
+        }
+      },
     },
     fallbackErrorCode: "CLOSE_ROOM_FAILED",
     errorMessages: closeRoomErrorMessages,

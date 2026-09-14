@@ -15,6 +15,7 @@ export interface AppShellMenuTab {
 }
 
 export interface AppShellMenuFooterAction {
+  disabled?: boolean;
   label: string;
   onClick: () => void;
   tone?: "danger" | "neutral";

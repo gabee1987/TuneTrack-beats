@@ -951,7 +951,9 @@ describe("room flow", () => {
   });
 
   it("lets the host close the room for everyone", async () => {
-    const serverContext = await startTestServer();
+    const roomService = createTestRoomService();
+    const closeRoomSpy = vi.spyOn(roomService, "closeRoom");
+    const serverContext = await startTestServer(roomService);
     const hostSocket = createClient(serverContext.baseUrl);
     const guestSocket = createClient(serverContext.baseUrl);
 
@@ -981,14 +983,32 @@ describe("room flow", () => {
       ServerToClientEvent.RoomClosed,
     );
 
-    hostSocket.emit(ClientToServerEvent.CloseRoom, {
-      roomId: "close-room",
-    });
+    const requestId = "00000000-0000-4000-8000-000000000105";
+    const firstAckPromise = hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.CloseRoom, {
+        roomId: "close-room",
+        requestId,
+      }) as Promise<ActionAck>;
 
-    await expect(roomClosedPromise).resolves.toEqual({
+    const [roomClosed, firstAck] = await Promise.all([
+      roomClosedPromise,
+      firstAckPromise,
+    ]);
+    const replayAck = (await hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.CloseRoom, {
+        roomId: "close-room",
+        requestId,
+      })) as ActionAck;
+
+    expect(roomClosed).toEqual({
       roomId: "close-room",
       message: "The host closed this room.",
     });
+    expect(firstAck).toEqual({ ok: true, requestId });
+    expect(replayAck).toEqual(firstAck);
+    expect(closeRoomSpy).toHaveBeenCalledTimes(1);
   });
 
   it("notifies a kicked player so their client can leave the room", async () => {

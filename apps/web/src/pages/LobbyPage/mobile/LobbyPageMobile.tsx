@@ -262,6 +262,8 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
 
         {roomActions.isHost ? (
           <LobbyRoomActions
+            closeRoomActionStatus={roomActions.closeRoomActionStatus}
+            isCloseRoomPending={roomActions.isCloseRoomPending}
             isStartGamePending={roomActions.isStartGamePending}
             onCloseRoom={roomActions.onCloseRoom}
             onIntentToStartGame={roomActions.onIntentToStartGame}

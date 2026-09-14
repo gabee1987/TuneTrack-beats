@@ -2,8 +2,10 @@ import type { PublicPlayerState, PublicRoomSettings, PublicRoomState } from "@tu
 import type { LobbyAssemblyModel } from "./hooks/buildLobbyAssemblyModel";
 
 export type StartGameActionStatus = "idle" | "pending" | "retrying" | "failed";
+export type CloseRoomActionStatus = "idle" | "pending" | "retrying" | "failed";
 
 export interface LobbyPageController {
+  closeRoomActionStatus: CloseRoomActionStatus;
   connectionStatus: string;
   currentPlayerId: string | null;
   currentSettings: PublicRoomSettings;
@@ -21,6 +23,7 @@ export interface LobbyPageController {
   handleRoomSettingsChange: (nextSettings: PublicRoomSettings) => void;
   handleStartGame: () => void;
   isHost: boolean;
+  isCloseRoomPending: boolean;
   isStartGamePending: boolean;
   preloadGame: () => void;
   roomId: string | undefined;

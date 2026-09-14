@@ -178,6 +178,27 @@ function ChallengeClaimHarness() {
   );
 }
 
+function CloseRoomHarness() {
+  const roomState = buildTurnRoomState();
+  const actions = useGamePageActions({
+    canClaimChallenge: false,
+    canConfirmReveal: false,
+    canResolveChallengeWindow: false,
+    canSelectChallengeSlot: false,
+    currentPlayerId: TEST_HOST_ID,
+    isCurrentPlayerTurn: true,
+    roomState,
+    selectedSlotIndex: 1,
+    setLocallyPlacedCard: vi.fn(),
+  });
+
+  return (
+    <button disabled={actions.isCloseRoomPending} onClick={actions.handleCloseRoom}>
+      {actions.closeRoomActionStatus}
+    </button>
+  );
+}
+
 describe("useGamePageActions place_card", () => {
   beforeEach(() => {
     emitActionMock.mockReset();
@@ -392,5 +413,36 @@ describe("useGamePageActions claim_challenge", () => {
     fireEvent.click(retryButton);
 
     await waitFor(() => expect(emitActionMock).toHaveBeenCalledTimes(2));
+  });
+});
+
+describe("useGamePageActions close_room", () => {
+  beforeEach(() => {
+    emitActionMock.mockReset();
+  });
+
+  it("blocks duplicate closes and retains a final retry state", async () => {
+    const deferred = createDeferredActionResult();
+    emitActionMock.mockReturnValueOnce(deferred.promise);
+    render(<CloseRoomHarness />);
+
+    const closeButton = screen.getByRole("button", { name: "idle" });
+    fireEvent.click(closeButton);
+    fireEvent.click(closeButton);
+
+    expect(screen.getByRole("button", { name: "pending" })).toBeDisabled();
+    expect(emitActionMock).toHaveBeenCalledTimes(1);
+    expect(emitActionMock).toHaveBeenCalledWith(
+      ClientToServerEvent.CloseRoom,
+      { roomId: "TEST_ROOM_1" },
+      expect.objectContaining({ retryOnTimeout: true }),
+    );
+
+    await act(async () => {
+      deferred.resolve({ status: "timeout" });
+      await deferred.promise;
+    });
+
+    expect(await screen.findByRole("button", { name: "failed" })).toBeEnabled();
   });
 });

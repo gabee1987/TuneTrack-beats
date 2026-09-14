@@ -73,6 +73,7 @@ export function useLobbyPageController(): LobbyPageController {
   }, [roomState?.roomId, roomState?.status]);
 
   return {
+    closeRoomActionStatus: actions.closeRoomActionStatus,
     connectionStatus,
     currentPlayerId,
     currentSettings,
@@ -90,6 +91,7 @@ export function useLobbyPageController(): LobbyPageController {
     handleRoomSettingsChange: actions.handleRoomSettingsChange,
     handleStartGame: actions.handleStartGame,
     isHost,
+    isCloseRoomPending: actions.isCloseRoomPending,
     isStartGamePending: actions.isStartGamePending,
     preloadGame: preloadGameRuntime,
     roomId,

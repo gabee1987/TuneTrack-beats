@@ -21,6 +21,7 @@ export type PlaceCardActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type ConfirmRevealActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type ClaimChallengeActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type PlaceChallengeActionStatus = "idle" | "pending" | "retrying" | "failed";
+export type CloseRoomActionStatus = "idle" | "pending" | "retrying" | "failed";
 
 export type ChallengeMarkerTone = "pending" | "success" | "failure";
 export type TimelineCelebrationTone = "success" | "failure";
@@ -128,8 +129,10 @@ export interface GamePageHeaderModel
   extends Pick<
     GamePageController,
     | "currentPlayerId"
+    | "closeRoomActionStatus"
     | "handleCloseRoom"
     | "handleSkipTurn"
+    | "isCloseRoomPending"
     | "leadingPlayers"
     | "menuTabs"
     | "showMiniStandings"
@@ -215,6 +218,7 @@ export type GamePageController = GamePageActionHandlers & {
   hiddenCardMode: HiddenCardMode;
   revealedCardMode: RevealedCardMode;
   isHost: boolean;
+  isCloseRoomPending: boolean;
   isCurrentPlayerTurn: boolean;
   isClaimChallengePending: boolean;
   isConfirmRevealPending: boolean;
@@ -222,6 +226,7 @@ export type GamePageController = GamePageActionHandlers & {
   isPlaceChallengePending: boolean;
   confirmRevealActionStatus: ConfirmRevealActionStatus;
   claimChallengeActionStatus: ClaimChallengeActionStatus;
+  closeRoomActionStatus: CloseRoomActionStatus;
   placeCardActionStatus: PlaceCardActionStatus;
   placeChallengeActionStatus: PlaceChallengeActionStatus;
   isViewingOwnTimeline: boolean;

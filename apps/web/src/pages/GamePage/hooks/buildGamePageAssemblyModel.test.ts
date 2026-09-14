@@ -19,6 +19,7 @@ describe("buildGamePageAssemblyModel", () => {
       challengeActionTitle: "Beat move",
       challengeMarkerTone: "success",
       claimChallengeActionStatus: "retrying",
+      closeRoomActionStatus: "failed",
       currentPlayerId: "player-1",
       currentPlayerTtCount: 2,
       confirmRevealActionStatus: "pending",
@@ -38,6 +39,7 @@ describe("buildGamePageAssemblyModel", () => {
       isHost: true,
       isConfirmRevealPending: true,
       isClaimChallengePending: true,
+      isCloseRoomPending: false,
       isPlaceCardPending: true,
       placeCardActionStatus: "retrying",
       placeChallengeActionStatus: "failed",
@@ -100,6 +102,8 @@ describe("buildGamePageAssemblyModel", () => {
 
     expect(model.header.roomState.roomId).toBe("ABCD");
     expect(model.header.statusBadgeText).toBe("Your turn");
+    expect(model.header.closeRoomActionStatus).toBe("failed");
+    expect(model.header.isCloseRoomPending).toBe(false);
     expect(model.header.visibleTimelineTtCount).toBe(3);
     expect(model.timeline.interaction.selectable).toBe(true);
     expect(model.timeline.render.showDevCardInfo).toBe(true);

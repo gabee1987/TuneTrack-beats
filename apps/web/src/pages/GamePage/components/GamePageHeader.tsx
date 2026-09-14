@@ -17,9 +17,11 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
   const { t } = useI18n();
   const layoutMode = usePageLayoutMode();
   const {
+    closeRoomActionStatus,
     currentPlayerId,
     handleCloseRoom,
     handleSkipTurn,
+    isCloseRoomPending,
     leadingPlayers,
     menuTabs,
     roomState,
@@ -48,6 +50,14 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
       count,
       plural: count === 1 ? "" : "s",
     });
+  let closeRoomLabel = t("game.header.closeRoom");
+  if (closeRoomActionStatus === "pending") {
+    closeRoomLabel = t("room.close.pending");
+  } else if (closeRoomActionStatus === "retrying") {
+    closeRoomLabel = t("room.close.retrying");
+  } else if (closeRoomActionStatus === "failed") {
+    closeRoomLabel = t("room.close.retry");
+  }
 
   return (
     <header
@@ -172,7 +182,8 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
                         ]
                       : []),
                     {
-                      label: t("game.header.closeRoom"),
+                      disabled: isCloseRoomPending,
+                      label: closeRoomLabel,
                       onClick: handleCloseRoom,
                       tone: "danger" as const,
                     },
@@ -194,9 +205,11 @@ function areHeaderModelsEqual(
   nextModel: GamePageHeaderModel,
 ): boolean {
   return (
+    previousModel.closeRoomActionStatus === nextModel.closeRoomActionStatus &&
     previousModel.currentPlayerId === nextModel.currentPlayerId &&
     previousModel.handleCloseRoom === nextModel.handleCloseRoom &&
     previousModel.handleSkipTurn === nextModel.handleSkipTurn &&
+    previousModel.isCloseRoomPending === nextModel.isCloseRoomPending &&
     previousModel.leadingPlayers === nextModel.leadingPlayers &&
     previousModel.menuTabs === nextModel.menuTabs &&
     previousModel.roomState === nextModel.roomState &&

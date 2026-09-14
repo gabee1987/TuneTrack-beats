@@ -632,6 +632,21 @@ form, desktop host start panel, and secondary room-actions control. Navigation s
 only the authoritative room-state broadcast, and stale timeout state is discarded after the
 room leaves the submitted lobby or changes host.
 
+### Root cause #2 `close_room` migration (2026-09-14)
+
+`close_room` now uses the acknowledged action path across both lobby and in-game host
+controls. A synchronous guard blocks duplicate submissions, one timeout retry reuses the
+request id, and localised pending, retrying, and final retry states remain available while
+the submitted room is still authoritative.
+
+Room closure deletes its room-scoped replay LRU and memberships, so the normal replay path
+cannot work after success. The close handler instead retains only that socket's latest
+successful close acknowledgement, keyed by room and request id. It survives deletion for the
+single retry, cannot be replayed by another socket, is replaced by a later successful close,
+and disappears with the socket handler on disconnect. Replaying the close therefore returns
+the original success without closing or notifying the room twice and without retaining a
+room tombstone.
+
 Root cause #2 remains **open**. The remaining action callers still use bare emits, the other
 non-idempotent actions still need replay protection, and their per-action pending/error
 experiences remain to be added. Root causes #4 and #5 also remain open; B8 therefore remains
@@ -654,12 +669,14 @@ experiences remain to be added. Root causes #4 and #5 also remain open; B8 there
   claim and placement have the same duplicate guard and timeout lifecycle.
 - `useLobbyRoomActions.test.tsx`: two quick game-start presses emit once, the real start
   control remains disabled through its automatic retry, and a final timeout exposes a fresh
-  retry affordance.
+  retry affordance. Lobby close uses the same lifecycle; the in-game close hook has a matching
+  duplicate guard and final retry state regression.
 - `roomFlow.test.ts`: replaying the same `place_card` request id returns the original success
   acknowledgement while the placement service runs once; replaying `start_game` initialises
   the game once; replaying `confirm_reveal` advances the turn once; replaying
   `claim_challenge` reserves it once; and replaying `place_challenge` resolves it once. Each
-  replay returns its original acknowledgement.
+  replay returns its original acknowledgement. Replaying `close_room` after room deletion
+  likewise returns its original acknowledgement while the close service runs once.
 - `RoomStore.test.ts`: processed-action acknowledgements are room-scoped, capped at 32, and
   removed with their room.
 - Manual M10.
