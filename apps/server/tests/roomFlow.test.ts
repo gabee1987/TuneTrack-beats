@@ -700,6 +700,115 @@ describe("room flow", () => {
     expect(secondTurnState.revealState).toBeNull();
   });
 
+  it("applies a replayed challenge placement once", async () => {
+    const roomService = createTestRoomService();
+    const placeChallengeSpy = vi.spyOn(roomService, "placeChallenge");
+    const serverContext = await startTestServer(roomService);
+    const hostSocket = createClient(serverContext.baseUrl);
+    const guestSocket = createClient(serverContext.baseUrl);
+
+    const hostIdentityPromise = waitForEvent<PlayerIdentityPayload>(
+      hostSocket,
+      ServerToClientEvent.PlayerIdentity,
+    );
+    const guestIdentityPromise = waitForEvent<PlayerIdentityPayload>(
+      guestSocket,
+      ServerToClientEvent.PlayerIdentity,
+    );
+    const connectionPromises = [
+      waitForEvent(hostSocket, "connect"),
+      waitForEvent(guestSocket, "connect"),
+    ];
+    hostSocket.connect();
+    guestSocket.connect();
+    await Promise.all(connectionPromises);
+
+    hostSocket.emit(ClientToServerEvent.CreateRoom, {
+      roomId: "beat-room",
+      displayName: "Host Player",
+      sessionId: "host-session",
+    });
+    guestSocket.emit(ClientToServerEvent.JoinRoom, {
+      roomId: "beat-room",
+      displayName: "Guest Player",
+      sessionId: "guest-session",
+    });
+    const [hostIdentity, guestIdentity] = await Promise.all([
+      hostIdentityPromise,
+      guestIdentityPromise,
+      waitForStateUpdate(
+        guestSocket,
+        (roomState) => roomState.status === "lobby" && roomState.players.length === 2,
+      ),
+    ]);
+
+    const settingsPromise = waitForStateUpdate(
+      guestSocket,
+      (roomState) => roomState.settings.ttModeEnabled,
+    );
+    hostSocket.emit(ClientToServerEvent.UpdateRoomSettings, {
+      roomId: "beat-room",
+      startingTtTokenCount: 1,
+      ttModeEnabled: true,
+      challengeWindowDurationSeconds: null,
+    });
+    await settingsPromise;
+
+    const turnPromise = waitForStateUpdate(
+      guestSocket,
+      (roomState) => roomState.status === "turn",
+    );
+    hostSocket.emit(ClientToServerEvent.StartGame, { roomId: "beat-room" });
+    await turnPromise;
+
+    const openChallengePromise = waitForStateUpdate(
+      guestSocket,
+      (roomState) => roomState.challengeState?.phase === "open",
+    );
+    hostSocket.emit(ClientToServerEvent.PlaceCard, {
+      roomId: "beat-room",
+      selectedSlotIndex: 0,
+    });
+    await openChallengePromise;
+
+    const claimedChallengePromise = waitForStateUpdate(
+      hostSocket,
+      (roomState) => roomState.challengeState?.challengerPlayerId === guestIdentity.playerId,
+    );
+    guestSocket.emit(ClientToServerEvent.ClaimChallenge, {
+      roomId: "beat-room",
+    });
+    await claimedChallengePromise;
+    placeChallengeSpy.mockClear();
+
+    const revealPromise = waitForStateUpdate(
+      hostSocket,
+      (roomState) => roomState.status === "reveal",
+    );
+    const requestId = "00000000-0000-4000-8000-000000000103";
+    const firstAckPromise = guestSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.PlaceChallenge, {
+        roomId: "beat-room",
+        selectedSlotIndex: 1,
+        requestId,
+      }) as Promise<ActionAck>;
+    const [revealState, firstAck] = await Promise.all([revealPromise, firstAckPromise]);
+    const replayAck = (await guestSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.PlaceChallenge, {
+        roomId: "beat-room",
+        selectedSlotIndex: 1,
+        requestId,
+      })) as ActionAck;
+
+    expect(firstAck).toEqual({ ok: true, requestId });
+    expect(replayAck).toEqual(firstAck);
+    expect(placeChallengeSpy).toHaveBeenCalledTimes(1);
+    expect(revealState.revealState?.challengerPlayerId).toBe(guestIdentity.playerId);
+    expect(revealState.revealState?.playerId).toBe(hostIdentity.playerId);
+  });
+
   it("restores the same player identity after a refresh during an active game", async () => {
     const serverContext = await startTestServer();
     const hostSocket = createClient(serverContext.baseUrl);

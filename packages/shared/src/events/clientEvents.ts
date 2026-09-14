@@ -133,6 +133,7 @@ export interface ClaimChallengePayload {
 export interface PlaceChallengePayload {
   roomId: RoomId;
   selectedSlotIndex: number;
+  requestId?: string;
 }
 
 export interface ResolveChallengeWindowPayload {

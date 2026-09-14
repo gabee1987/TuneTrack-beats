@@ -603,6 +603,16 @@ authoritative state update has already moved beyond the submitted reveal while i
 acknowledgement is lost, the stale timeout state is discarded instead of leaking into a later
 turn.
 
+### Root cause #2 `place_challenge` migration (2026-09-14)
+
+`place_challenge` now uses the acknowledged action path and has room-scoped replay protection.
+An acknowledgement timeout retries once with the same request id; replay returns the original
+success acknowledgement without applying the challenge result or its token change again. The
+challenger's confirmation control blocks rapid duplicate presses and exposes localised pending,
+retrying, and final retry labels. If an authoritative state update has already moved beyond the
+submitted challenge turn, card, or challenger while its acknowledgement is lost, the stale
+timeout state is discarded.
+
 Root cause #2 remains **open**. The remaining action callers still use bare emits, the other
 non-idempotent actions still need replay protection, and their per-action pending/error
 experiences remain to be added. Root causes #4 and #5 also remain open; B8 therefore remains
@@ -621,10 +631,12 @@ experiences remain to be added. Root causes #4 and #5 also remain open; B8 there
 - `useGamePageActions.test.tsx`: two quick placement confirmations emit once, the real
   confirmation control stays disabled until acknowledgement, rejection rolls back the
   optimistic preview, acceptance preserves it until authoritative state arrives, and a
-  timeout shows both automatic-retry progress and the final retry affordance.
+  timeout shows both automatic-retry progress and the final retry affordance. Challenge
+  placement has the same duplicate guard and timeout lifecycle.
 - `roomFlow.test.ts`: replaying the same `place_card` request id returns the original success
   acknowledgement while the placement service runs once; replaying `confirm_reveal` likewise
-  advances the turn once and returns the original acknowledgement.
+  advances the turn once; replaying `place_challenge` resolves it once. Each replay returns
+  its original acknowledgement.
 - `RoomStore.test.ts`: processed-action acknowledgements are room-scoped, capped at 32, and
   removed with their room.
 - Manual M10.

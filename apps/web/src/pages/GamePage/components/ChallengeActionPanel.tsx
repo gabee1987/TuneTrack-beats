@@ -11,6 +11,7 @@ import {
 import { useI18n } from "../../../features/i18n";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import { useChallengeCountdownLabel } from "../hooks/useChallengeCountdownLabel";
+import type { PlaceChallengeActionStatus } from "../GamePage.types";
 import styles from "./gamePageActionPanelsStyles";
 import {
   ActionDock,
@@ -57,12 +58,14 @@ interface ChallengeActionPanelProps {
   handlePlaceChallenge: () => void;
   handleResolveChallengeWindow: () => void;
   isCurrentPlayerTurn: boolean;
+  isPlaceChallengePending: boolean;
   onTokenSpendAnimationStart?: (payload: {
     amount: number;
     originX: number;
     originY: number;
   }) => void;
   roomState: PublicRoomState;
+  placeChallengeActionStatus: PlaceChallengeActionStatus;
 }
 
 export function ChallengeActionPanel({
@@ -76,8 +79,10 @@ export function ChallengeActionPanel({
   handlePlaceChallenge,
   handleResolveChallengeWindow,
   isCurrentPlayerTurn,
+  isPlaceChallengePending,
   onTokenSpendAnimationStart,
   roomState,
+  placeChallengeActionStatus,
 }: ChallengeActionPanelProps) {
   const { t } = useI18n();
   const reduceMotion = useReducedMotionPreference();
@@ -141,6 +146,14 @@ export function ChallengeActionPanel({
   }
 
   const nestedDockClassName = portalTarget ? "" : styles.floatingActionDockInChallengeStack;
+  const placeChallengeButtonLabel =
+    placeChallengeActionStatus === "pending"
+      ? t("game.controls.challengePlacementPending")
+      : placeChallengeActionStatus === "retrying"
+        ? t("game.controls.challengePlacementRetrying")
+        : placeChallengeActionStatus === "failed"
+          ? t("game.controls.retryChallengePlacement")
+          : t("game.controls.confirmBeat");
 
   const actionDock = isOpenChallengeWindow ? (
     canClaimChallenge || canResolveChallengeWindow ? (
@@ -173,8 +186,8 @@ export function ChallengeActionPanel({
     ) : null
   ) : canConfirmBeatPlacement ? (
     <ActionDock className={nestedDockClassName}>
-      <PrimaryActionButton onClick={handlePlaceChallenge}>
-        {t("game.controls.confirmBeat")}
+      <PrimaryActionButton disabled={isPlaceChallengePending} onClick={handlePlaceChallenge}>
+        {placeChallengeButtonLabel}
       </PrimaryActionButton>
     </ActionDock>
   ) : null;

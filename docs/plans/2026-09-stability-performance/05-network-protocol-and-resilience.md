@@ -252,6 +252,8 @@ fire-and-forget until last.
 - [x] Component test: an ack timeout shows the retry affordance and a single retry.
 - [x] `confirm_reveal` advances the turn once when its acknowledged request is replayed;
       its button blocks duplicate presses and exposes pending, retrying, and final retry states.
+- [x] `place_challenge` resolves a challenge once when its acknowledged request is replayed;
+      its button blocks duplicate presses and exposes pending, retrying, and final retry states.
 
 ## 5. Phase 5 — Honest connection state in the UI · **S2**
 

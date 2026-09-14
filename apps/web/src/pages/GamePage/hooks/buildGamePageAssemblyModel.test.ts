@@ -38,6 +38,8 @@ describe("buildGamePageAssemblyModel", () => {
       isConfirmRevealPending: true,
       isPlaceCardPending: true,
       placeCardActionStatus: "retrying",
+      placeChallengeActionStatus: "failed",
+      isPlaceChallengePending: false,
       isViewingOwnTimeline: false,
       leadingPlayers: [],
       menuTabs: [],
@@ -110,6 +112,8 @@ describe("buildGamePageAssemblyModel", () => {
     expect(model.actions.isConfirmRevealPending).toBe(true);
     expect(model.actions.isPlaceCardPending).toBe(true);
     expect(model.actions.placeCardActionStatus).toBe("retrying");
+    expect(model.actions.placeChallengeActionStatus).toBe("failed");
+    expect(model.actions.isPlaceChallengePending).toBe(false);
     expect(model.actions.roomState).toBe(controller.roomState);
   });
 });

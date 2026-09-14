@@ -19,6 +19,7 @@ import type {
 export type TimelineView = "active" | "mine";
 export type PlaceCardActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type ConfirmRevealActionStatus = "idle" | "pending" | "retrying" | "failed";
+export type PlaceChallengeActionStatus = "idle" | "pending" | "retrying" | "failed";
 
 export type ChallengeMarkerTone = "pending" | "success" | "failure";
 export type TimelineCelebrationTone = "success" | "failure";
@@ -174,7 +175,9 @@ export interface GamePageActionPanelsModel
     | "isCurrentPlayerTurn"
     | "isConfirmRevealPending"
     | "isPlaceCardPending"
+    | "isPlaceChallengePending"
     | "placeCardActionStatus"
+    | "placeChallengeActionStatus"
     | "showHelperLabels"
   > {
   roomState: PublicRoomState;
@@ -212,8 +215,10 @@ export type GamePageController = GamePageActionHandlers & {
   isCurrentPlayerTurn: boolean;
   isConfirmRevealPending: boolean;
   isPlaceCardPending: boolean;
+  isPlaceChallengePending: boolean;
   confirmRevealActionStatus: ConfirmRevealActionStatus;
   placeCardActionStatus: PlaceCardActionStatus;
+  placeChallengeActionStatus: PlaceChallengeActionStatus;
   isViewingOwnTimeline: boolean;
   leadingPlayers: PublicRoomState["players"];
   menuTabs: AppShellMenuTab[];

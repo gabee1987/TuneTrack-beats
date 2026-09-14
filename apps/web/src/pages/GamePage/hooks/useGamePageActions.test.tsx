@@ -3,10 +3,13 @@ import { ClientToServerEvent } from "@tunetrack/shared";
 import type { EmitActionResult } from "../../../services/socket/emitAction";
 import { I18nProvider } from "../../../features/i18n";
 import {
+  buildChallengeRoomState,
   buildRevealRoomState,
   buildTurnRoomState,
+  TEST_GUEST_ID,
   TEST_HOST_ID,
 } from "../../../test/roomStateFixtures";
+import { ChallengeActionPanel } from "../components/ChallengeActionPanel";
 import { RevealActionDock } from "../components/RevealActionDock";
 import { TurnActionDock } from "../components/TurnActionDock";
 import { useGamePageActions } from "./useGamePageActions";
@@ -86,6 +89,50 @@ function RevealHarness() {
         confirmRevealActionStatus={actions.confirmRevealActionStatus}
         handleConfirmReveal={actions.handleConfirmReveal}
         isConfirmRevealPending={actions.isConfirmRevealPending}
+        roomState={roomState}
+      />
+    </I18nProvider>
+  );
+}
+
+function ChallengePlacementHarness() {
+  const roomState = buildChallengeRoomState({
+    challengeState: {
+      phase: "claimed",
+      originalPlayerId: TEST_HOST_ID,
+      originalSelectedSlotIndex: 0,
+      challengerPlayerId: TEST_GUEST_ID,
+      challengeDeadlineEpochMs: null,
+      challengerSelectedSlotIndex: null,
+    },
+  });
+  const actions = useGamePageActions({
+    canClaimChallenge: false,
+    canConfirmReveal: false,
+    canResolveChallengeWindow: false,
+    canSelectChallengeSlot: true,
+    currentPlayerId: TEST_GUEST_ID,
+    isCurrentPlayerTurn: false,
+    roomState,
+    selectedSlotIndex: 1,
+    setLocallyPlacedCard: vi.fn(),
+  });
+
+  return (
+    <I18nProvider>
+      <ChallengeActionPanel
+        canClaimChallenge={false}
+        canConfirmBeatPlacement
+        canResolveChallengeWindow={false}
+        challengeActionBody="Place the challenge card"
+        challengeActionTitle="Beat claimed"
+        currentPlayerTtCount={1}
+        handleClaimChallenge={actions.handleClaimChallenge}
+        handlePlaceChallenge={actions.handlePlaceChallenge}
+        handleResolveChallengeWindow={actions.handleResolveChallengeWindow}
+        isCurrentPlayerTurn={false}
+        isPlaceChallengePending={actions.isPlaceChallengePending}
+        placeChallengeActionStatus={actions.placeChallengeActionStatus}
         roomState={roomState}
       />
     </I18nProvider>
@@ -196,6 +243,50 @@ describe("useGamePageActions confirm_reveal", () => {
     expect(emitActionMock).toHaveBeenCalledWith(
       ClientToServerEvent.ConfirmReveal,
       { roomId: "TEST_ROOM_1" },
+      expect.objectContaining({ retryOnTimeout: true }),
+    );
+
+    const options = emitActionMock.mock.calls[0]?.[2] as {
+      onTimeoutRetry?: () => void;
+    };
+    act(() => options.onTimeoutRetry?.());
+
+    expect(screen.getByRole("button", { name: /no response.*retrying/i })).toBeDisabled();
+
+    await act(async () => {
+      deferred.resolve({ status: "timeout" });
+      await deferred.promise;
+    });
+
+    const retryButton = await screen.findByRole("button", { name: /try again/i });
+    expect(retryButton).toBeEnabled();
+
+    emitActionMock.mockResolvedValueOnce({ status: "ok" });
+    fireEvent.click(retryButton);
+
+    await waitFor(() => expect(emitActionMock).toHaveBeenCalledTimes(2));
+  });
+});
+
+describe("useGamePageActions place_challenge", () => {
+  beforeEach(() => {
+    emitActionMock.mockReset();
+  });
+
+  it("retries one timeout, blocks duplicate placement, and exposes a final retry", async () => {
+    const deferred = createDeferredActionResult();
+    emitActionMock.mockReturnValueOnce(deferred.promise);
+    render(<ChallengePlacementHarness />);
+
+    const confirmBeatButton = screen.getByRole("button", { name: /confirm beat/i });
+    fireEvent.click(confirmBeatButton);
+    fireEvent.click(confirmBeatButton);
+
+    expect(screen.getByRole("button", { name: /confirming beat/i })).toBeDisabled();
+    expect(emitActionMock).toHaveBeenCalledTimes(1);
+    expect(emitActionMock).toHaveBeenCalledWith(
+      ClientToServerEvent.PlaceChallenge,
+      { roomId: "TEST_ROOM_1", selectedSlotIndex: 1 },
       expect.objectContaining({ retryOnTimeout: true }),
     );
 

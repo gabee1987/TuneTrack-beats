@@ -24,8 +24,10 @@ interface BuildGamePageControllerResultOptions {
     | "handleSkipTurn"
     | "isConfirmRevealPending"
     | "isPlaceCardPending"
+    | "isPlaceChallengePending"
     | "confirmRevealActionStatus"
     | "placeCardActionStatus"
+    | "placeChallengeActionStatus"
   >;
   capabilityState: Pick<
     UseGamePageControllerResult,

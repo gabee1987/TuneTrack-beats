@@ -55,7 +55,9 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     isCurrentPlayerTurn,
     isConfirmRevealPending,
     isPlaceCardPending,
+    isPlaceChallengePending,
     placeCardActionStatus,
+    placeChallengeActionStatus,
     roomState,
     showHelperLabels,
   } = model;
@@ -132,7 +134,9 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
         handlePlaceChallenge={handlePlaceChallenge}
         handleResolveChallengeWindow={handleResolveChallengeWindow}
         isCurrentPlayerTurn={isCurrentPlayerTurn}
+        isPlaceChallengePending={isPlaceChallengePending}
         onTokenSpendAnimationStart={handleTokenSpendAnimationStart}
+        placeChallengeActionStatus={placeChallengeActionStatus}
         roomState={roomState}
       />
 
@@ -198,7 +202,9 @@ function areActionPanelModelsEqual(
     previousModel.isCurrentPlayerTurn === nextModel.isCurrentPlayerTurn &&
     previousModel.isConfirmRevealPending === nextModel.isConfirmRevealPending &&
     previousModel.isPlaceCardPending === nextModel.isPlaceCardPending &&
+    previousModel.isPlaceChallengePending === nextModel.isPlaceChallengePending &&
     previousModel.placeCardActionStatus === nextModel.placeCardActionStatus &&
+    previousModel.placeChallengeActionStatus === nextModel.placeChallengeActionStatus &&
     previousModel.roomState === nextModel.roomState &&
     previousModel.showHelperLabels === nextModel.showHelperLabels
   );

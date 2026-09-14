@@ -182,6 +182,7 @@ export const claimChallengePayloadSchema = z.object({
 export const placeChallengePayloadSchema = z.object({
   roomId: roomIdSchema,
   selectedSlotIndex: z.number().int().nonnegative(),
+  requestId: z.string().uuid().optional(),
 });
 
 export const resolveChallengeWindowPayloadSchema = z.object({

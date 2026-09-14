@@ -8,6 +8,7 @@ import { getSocketClient } from "../../../services/socket/socketClient";
 import type {
   ConfirmRevealActionStatus,
   PlaceCardActionStatus,
+  PlaceChallengeActionStatus,
 } from "../GamePage.types";
 
 async function emitRoomEvent<TPayload>(
@@ -51,11 +52,17 @@ export function useGamePageActions({
   const isPlaceCardPendingRef = useRef(false);
   const [placeCardActionStatus, setPlaceCardActionStatus] =
     useState<PlaceCardActionStatus>("idle");
+  const isPlaceChallengePendingRef = useRef(false);
+  const [placeChallengeActionStatus, setPlaceChallengeActionStatus] =
+    useState<PlaceChallengeActionStatus>("idle");
   const isPlaceCardPending =
     placeCardActionStatus === "pending" || placeCardActionStatus === "retrying";
   const isConfirmRevealPending =
     confirmRevealActionStatus === "pending" ||
     confirmRevealActionStatus === "retrying";
+  const isPlaceChallengePending =
+    placeChallengeActionStatus === "pending" ||
+    placeChallengeActionStatus === "retrying";
 
   const handlePlaceCard = useCallback(async () => {
     if (
@@ -145,15 +152,51 @@ export function useGamePageActions({
     });
   }, [canClaimChallenge, roomState]);
 
-  const handlePlaceChallenge = useCallback(() => {
-    if (!roomState || !canSelectChallengeSlot) {
+  const handlePlaceChallenge = useCallback(async () => {
+    if (!roomState || !canSelectChallengeSlot || isPlaceChallengePendingRef.current) {
       return;
     }
 
-    void emitRoomEvent(ClientToServerEvent.PlaceChallenge, {
-      roomId: roomState.roomId,
-      selectedSlotIndex,
-    });
+    const submittedTurnNumber = roomState.turn?.turnNumber;
+    const submittedCardId = roomState.currentTrackCard?.id;
+    const submittedChallengerId = roomState.challengeState?.challengerPlayerId;
+    function isSubmittedChallengeCurrent() {
+      const currentRoomState = roomStateRef.current;
+      return (
+        currentRoomState?.status === "challenge" &&
+        currentRoomState.challengeState?.phase === "claimed" &&
+        currentRoomState.turn?.turnNumber === submittedTurnNumber &&
+        currentRoomState.currentTrackCard?.id === submittedCardId &&
+        currentRoomState.challengeState.challengerPlayerId === submittedChallengerId
+      );
+    }
+
+    isPlaceChallengePendingRef.current = true;
+    setPlaceChallengeActionStatus("pending");
+    try {
+      const result = await emitAction(
+        ClientToServerEvent.PlaceChallenge,
+        {
+          roomId: roomState.roomId,
+          selectedSlotIndex,
+        },
+        {
+          onTimeoutRetry: () => {
+            if (isSubmittedChallengeCurrent()) {
+              setPlaceChallengeActionStatus("retrying");
+            }
+          },
+          retryOnTimeout: true,
+        },
+      );
+      setPlaceChallengeActionStatus(
+        result.status === "timeout" && isSubmittedChallengeCurrent() ? "failed" : "idle",
+      );
+    } catch {
+      setPlaceChallengeActionStatus(isSubmittedChallengeCurrent() ? "failed" : "idle");
+    } finally {
+      isPlaceChallengePendingRef.current = false;
+    }
   }, [canSelectChallengeSlot, roomState, selectedSlotIndex]);
 
   const handleResolveChallengeWindow = useCallback(() => {
@@ -307,7 +350,9 @@ export function useGamePageActions({
     handleTransferHost,
     isConfirmRevealPending,
     isPlaceCardPending,
+    isPlaceChallengePending,
     confirmRevealActionStatus,
     placeCardActionStatus,
+    placeChallengeActionStatus,
   };
 }
