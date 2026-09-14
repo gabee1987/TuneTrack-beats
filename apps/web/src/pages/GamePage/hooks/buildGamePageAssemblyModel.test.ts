@@ -20,6 +20,7 @@ describe("buildGamePageAssemblyModel", () => {
       challengeMarkerTone: "success",
       currentPlayerId: "player-1",
       currentPlayerTtCount: 2,
+      confirmRevealActionStatus: "pending",
       disabledTimelineSlots: [1, 3],
       getPlayerName: (playerId: string | null | undefined) =>
         playerId === "player-1" ? "You" : "Other",
@@ -34,6 +35,7 @@ describe("buildGamePageAssemblyModel", () => {
       hiddenCardMode: "artwork",
       revealedCardMode: "artwork",
       isHost: true,
+      isConfirmRevealPending: true,
       isPlaceCardPending: true,
       placeCardActionStatus: "retrying",
       isViewingOwnTimeline: false,
@@ -104,6 +106,8 @@ describe("buildGamePageAssemblyModel", () => {
     });
     expect(model.timeline.interaction.disabledSlotIndexes).toEqual([1, 3]);
     expect(model.actions.challengeActionTitle).toBe("Beat move");
+    expect(model.actions.confirmRevealActionStatus).toBe("pending");
+    expect(model.actions.isConfirmRevealPending).toBe(true);
     expect(model.actions.isPlaceCardPending).toBe(true);
     expect(model.actions.placeCardActionStatus).toBe("retrying");
     expect(model.actions.roomState).toBe(controller.roomState);

@@ -213,8 +213,8 @@ Client side, in `apps/web/src/services/socket/`:
 
 Retries and the recovery-replay behaviour from Doc 04 section 2.1 make it possible for the
 server to see the same action twice. For most events this is harmless (settings toggles are
-idempotent by nature) but three are not: `place_card`, `place_challenge`,
-`buy_timeline_card_with_tt`, `skip_track_with_tt`, `award_tt`.
+idempotent by nature), but these are not: `place_card`, `confirm_reveal`,
+`place_challenge`, `buy_timeline_card_with_tt`, `skip_track_with_tt`, `award_tt`.
 
 - Add an optional `requestId` to those payload schemas in
   `packages/shared/src/events/schemas.ts`.
@@ -250,6 +250,8 @@ fire-and-forget until last.
 - [x] Component test: pressing "Confirm placement" twice in quick succession emits one
       action and the button is disabled between press and ack.
 - [x] Component test: an ack timeout shows the retry affordance and a single retry.
+- [x] `confirm_reveal` advances the turn once when its acknowledged request is replayed;
+      its button blocks duplicate presses and exposes pending, retrying, and final retry states.
 
 ## 5. Phase 5 — Honest connection state in the UI · **S2**
 

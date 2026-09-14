@@ -593,6 +593,16 @@ unlocks the button as an explicit "Try again" action; pressing it starts a fresh
 placement attempt. Server rejections and offline results retain their existing error and
 connection-state paths.
 
+### Root cause #2 `confirm_reveal` migration (2026-09-14)
+
+`confirm_reveal` now uses the acknowledged action path and has room-scoped replay protection.
+An acknowledgement timeout retries once with the same request id; replay returns the original
+success acknowledgement without advancing the turn again. The next-song control blocks rapid
+duplicate presses and exposes localised pending, retrying, and final retry labels. If an
+authoritative state update has already moved beyond the submitted reveal while its
+acknowledgement is lost, the stale timeout state is discarded instead of leaking into a later
+turn.
+
 Root cause #2 remains **open**. The remaining action callers still use bare emits, the other
 non-idempotent actions still need replay protection, and their per-action pending/error
 experiences remain to be added. Root causes #4 and #5 also remain open; B8 therefore remains
@@ -613,7 +623,8 @@ experiences remain to be added. Root causes #4 and #5 also remain open; B8 there
   optimistic preview, acceptance preserves it until authoritative state arrives, and a
   timeout shows both automatic-retry progress and the final retry affordance.
 - `roomFlow.test.ts`: replaying the same `place_card` request id returns the original success
-  acknowledgement while the placement service runs once.
+  acknowledgement while the placement service runs once; replaying `confirm_reveal` likewise
+  advances the turn once and returns the original acknowledgement.
 - `RoomStore.test.ts`: processed-action acknowledgements are room-scoped, capped at 32, and
   removed with their room.
 - Manual M10.

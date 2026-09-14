@@ -18,6 +18,7 @@ import type {
 
 export type TimelineView = "active" | "mine";
 export type PlaceCardActionStatus = "idle" | "pending" | "retrying" | "failed";
+export type ConfirmRevealActionStatus = "idle" | "pending" | "retrying" | "failed";
 
 export type ChallengeMarkerTone = "pending" | "success" | "failure";
 export type TimelineCelebrationTone = "success" | "failure";
@@ -158,6 +159,7 @@ export interface GamePageActionPanelsModel
     | "canUseSkipTrack"
     | "challengeActionBody"
     | "challengeActionTitle"
+    | "confirmRevealActionStatus"
     | "currentPlayerId"
     | "currentPlayerTtCount"
     | "getPlayerName"
@@ -170,6 +172,7 @@ export interface GamePageActionPanelsModel
     | "handleSkipTrackWithTt"
     | "handleSkipTurn"
     | "isCurrentPlayerTurn"
+    | "isConfirmRevealPending"
     | "isPlaceCardPending"
     | "placeCardActionStatus"
     | "showHelperLabels"
@@ -207,7 +210,9 @@ export type GamePageController = GamePageActionHandlers & {
   revealedCardMode: RevealedCardMode;
   isHost: boolean;
   isCurrentPlayerTurn: boolean;
+  isConfirmRevealPending: boolean;
   isPlaceCardPending: boolean;
+  confirmRevealActionStatus: ConfirmRevealActionStatus;
   placeCardActionStatus: PlaceCardActionStatus;
   isViewingOwnTimeline: boolean;
   leadingPlayers: PublicRoomState["players"];

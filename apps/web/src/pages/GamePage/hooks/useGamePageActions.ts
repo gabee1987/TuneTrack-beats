@@ -5,7 +5,10 @@ import {
 import { useCallback, useRef, useState } from "react";
 import { emitAction } from "../../../services/socket/emitAction";
 import { getSocketClient } from "../../../services/socket/socketClient";
-import type { PlaceCardActionStatus } from "../GamePage.types";
+import type {
+  ConfirmRevealActionStatus,
+  PlaceCardActionStatus,
+} from "../GamePage.types";
 
 async function emitRoomEvent<TPayload>(
   event: (typeof ClientToServerEvent)[keyof typeof ClientToServerEvent],
@@ -40,11 +43,19 @@ export function useGamePageActions({
   onSkipTrackWithTtIntent,
   setLocallyPlacedCard,
 }: UseGamePageActionsOptions) {
+  const roomStateRef = useRef(roomState);
+  roomStateRef.current = roomState;
+  const isConfirmRevealPendingRef = useRef(false);
+  const [confirmRevealActionStatus, setConfirmRevealActionStatus] =
+    useState<ConfirmRevealActionStatus>("idle");
   const isPlaceCardPendingRef = useRef(false);
   const [placeCardActionStatus, setPlaceCardActionStatus] =
     useState<PlaceCardActionStatus>("idle");
   const isPlaceCardPending =
     placeCardActionStatus === "pending" || placeCardActionStatus === "retrying";
+  const isConfirmRevealPending =
+    confirmRevealActionStatus === "pending" ||
+    confirmRevealActionStatus === "retrying";
 
   const handlePlaceCard = useCallback(async () => {
     if (
@@ -83,14 +94,45 @@ export function useGamePageActions({
     }
   }, [isCurrentPlayerTurn, roomState, selectedSlotIndex, setLocallyPlacedCard]);
 
-  const handleConfirmReveal = useCallback(() => {
-    if (!roomState || !canConfirmReveal) {
+  const handleConfirmReveal = useCallback(async () => {
+    if (!roomState || !canConfirmReveal || isConfirmRevealPendingRef.current) {
       return;
     }
 
-    void emitRoomEvent(ClientToServerEvent.ConfirmReveal, {
-      roomId: roomState.roomId,
-    });
+    const submittedTurnNumber = roomState.turn?.turnNumber;
+    const submittedCardId = roomState.currentTrackCard?.id;
+    function isSubmittedRevealCurrent() {
+      const currentRoomState = roomStateRef.current;
+      return (
+        currentRoomState?.status === "reveal" &&
+        currentRoomState.turn?.turnNumber === submittedTurnNumber &&
+        currentRoomState.currentTrackCard?.id === submittedCardId
+      );
+    }
+
+    isConfirmRevealPendingRef.current = true;
+    setConfirmRevealActionStatus("pending");
+    try {
+      const result = await emitAction(
+        ClientToServerEvent.ConfirmReveal,
+        { roomId: roomState.roomId },
+        {
+          onTimeoutRetry: () => {
+            if (isSubmittedRevealCurrent()) {
+              setConfirmRevealActionStatus("retrying");
+            }
+          },
+          retryOnTimeout: true,
+        },
+      );
+      setConfirmRevealActionStatus(
+        result.status === "timeout" && isSubmittedRevealCurrent() ? "failed" : "idle",
+      );
+    } catch {
+      setConfirmRevealActionStatus(isSubmittedRevealCurrent() ? "failed" : "idle");
+    } finally {
+      isConfirmRevealPendingRef.current = false;
+    }
   }, [canConfirmReveal, roomState]);
 
   const handleClaimChallenge = useCallback(() => {
@@ -263,7 +305,9 @@ export function useGamePageActions({
     handleSkipTrackWithTt,
     handleSkipTurn,
     handleTransferHost,
+    isConfirmRevealPending,
     isPlaceCardPending,
+    confirmRevealActionStatus,
     placeCardActionStatus,
   };
 }

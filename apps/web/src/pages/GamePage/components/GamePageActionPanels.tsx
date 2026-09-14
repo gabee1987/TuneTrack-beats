@@ -42,6 +42,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     canUseSkipTrack,
     challengeActionBody,
     challengeActionTitle,
+    confirmRevealActionStatus,
     currentPlayerTtCount,
     getPlayerName,
     handleBuyTimelineCardWithTt,
@@ -52,6 +53,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     handleResolveChallengeWindow,
     handleSkipTrackWithTt,
     isCurrentPlayerTurn,
+    isConfirmRevealPending,
     isPlaceCardPending,
     placeCardActionStatus,
     roomState,
@@ -143,7 +145,9 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
 
       <RevealActionDock
         canConfirmReveal={canConfirmReveal}
+        confirmRevealActionStatus={confirmRevealActionStatus}
         handleConfirmReveal={handleConfirmReveal}
+        isConfirmRevealPending={isConfirmRevealPending}
         roomState={roomState}
       />
 
@@ -180,6 +184,7 @@ function areActionPanelModelsEqual(
     previousModel.canUseSkipTrack === nextModel.canUseSkipTrack &&
     previousModel.challengeActionBody === nextModel.challengeActionBody &&
     previousModel.challengeActionTitle === nextModel.challengeActionTitle &&
+    previousModel.confirmRevealActionStatus === nextModel.confirmRevealActionStatus &&
     previousModel.currentPlayerTtCount === nextModel.currentPlayerTtCount &&
     previousModel.getPlayerName === nextModel.getPlayerName &&
     previousModel.handleBuyTimelineCardWithTt === nextModel.handleBuyTimelineCardWithTt &&
@@ -191,6 +196,7 @@ function areActionPanelModelsEqual(
     previousModel.handleSkipTrackWithTt === nextModel.handleSkipTrackWithTt &&
     previousModel.handleSkipTurn === nextModel.handleSkipTurn &&
     previousModel.isCurrentPlayerTurn === nextModel.isCurrentPlayerTurn &&
+    previousModel.isConfirmRevealPending === nextModel.isConfirmRevealPending &&
     previousModel.isPlaceCardPending === nextModel.isPlaceCardPending &&
     previousModel.placeCardActionStatus === nextModel.placeCardActionStatus &&
     previousModel.roomState === nextModel.roomState &&

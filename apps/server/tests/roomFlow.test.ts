@@ -493,6 +493,7 @@ describe("room flow", () => {
   it("starts a game, applies a replayed placement once, resolves reveal, and advances turn", async () => {
     const roomService = createTestRoomService();
     const placeCardSpy = vi.spyOn(roomService, "placeCard");
+    const confirmRevealSpy = vi.spyOn(roomService, "confirmReveal");
     const serverContext = await startTestServer(roomService);
     const hostSocket = createClient(serverContext.baseUrl);
     const guestSocket = createClient(serverContext.baseUrl);
@@ -656,17 +657,38 @@ describe("room flow", () => {
       code: "ONLY_HOST_CAN_CONFIRM_REVEAL",
       message: "Only the host can confirm the reveal.",
     });
+    confirmRevealSpy.mockClear();
 
     const secondTurnPromise = waitForStateUpdate(
       guestSocket,
       (roomState) => roomState.status === "turn" && roomState.turn?.turnNumber === 2,
     );
 
-    hostSocket.emit(ClientToServerEvent.ConfirmReveal, {
-      roomId: "game-room",
-    });
+    const confirmRevealRequestId = "00000000-0000-4000-8000-000000000102";
+    const firstConfirmRevealAckPromise = hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.ConfirmReveal, {
+        roomId: "game-room",
+        requestId: confirmRevealRequestId,
+      }) as Promise<ActionAck>;
 
-    const secondTurnState = await secondTurnPromise;
+    const [secondTurnState, firstConfirmRevealAck] = await Promise.all([
+      secondTurnPromise,
+      firstConfirmRevealAckPromise,
+    ]);
+    const replayConfirmRevealAck = (await hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.ConfirmReveal, {
+        roomId: "game-room",
+        requestId: confirmRevealRequestId,
+      })) as ActionAck;
+
+    expect(firstConfirmRevealAck).toEqual({
+      ok: true,
+      requestId: confirmRevealRequestId,
+    });
+    expect(replayConfirmRevealAck).toEqual(firstConfirmRevealAck);
+    expect(confirmRevealSpy).toHaveBeenCalledTimes(1);
 
     expect(secondTurnState.turn).toEqual({
       activePlayerId: guestIdentity.playerId,

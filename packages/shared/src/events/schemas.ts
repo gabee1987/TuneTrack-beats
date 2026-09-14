@@ -168,6 +168,7 @@ export const placeCardPayloadSchema = z.object({
 
 export const confirmRevealPayloadSchema = z.object({
   roomId: roomIdSchema,
+  requestId: z.string().uuid().optional(),
 });
 
 export const closeRoomPayloadSchema = z.object({

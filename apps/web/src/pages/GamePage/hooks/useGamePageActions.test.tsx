@@ -2,7 +2,12 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { ClientToServerEvent } from "@tunetrack/shared";
 import type { EmitActionResult } from "../../../services/socket/emitAction";
 import { I18nProvider } from "../../../features/i18n";
-import { buildTurnRoomState, TEST_HOST_ID } from "../../../test/roomStateFixtures";
+import {
+  buildRevealRoomState,
+  buildTurnRoomState,
+  TEST_HOST_ID,
+} from "../../../test/roomStateFixtures";
+import { RevealActionDock } from "../components/RevealActionDock";
 import { TurnActionDock } from "../components/TurnActionDock";
 import { useGamePageActions } from "./useGamePageActions";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -54,6 +59,33 @@ function PlacementHarness({
         handleSkipTrackWithTt={actions.handleSkipTrackWithTt}
         isPlaceCardPending={actions.isPlaceCardPending}
         placeCardActionStatus={actions.placeCardActionStatus}
+        roomState={roomState}
+      />
+    </I18nProvider>
+  );
+}
+
+function RevealHarness() {
+  const roomState = buildRevealRoomState();
+  const actions = useGamePageActions({
+    canClaimChallenge: false,
+    canConfirmReveal: true,
+    canResolveChallengeWindow: false,
+    canSelectChallengeSlot: false,
+    currentPlayerId: TEST_HOST_ID,
+    isCurrentPlayerTurn: true,
+    roomState,
+    selectedSlotIndex: 1,
+    setLocallyPlacedCard: vi.fn(),
+  });
+
+  return (
+    <I18nProvider>
+      <RevealActionDock
+        canConfirmReveal
+        confirmRevealActionStatus={actions.confirmRevealActionStatus}
+        handleConfirmReveal={actions.handleConfirmReveal}
+        isConfirmRevealPending={actions.isConfirmRevealPending}
         roomState={roomState}
       />
     </I18nProvider>
@@ -142,5 +174,49 @@ describe("useGamePageActions place_card", () => {
     expect(setLocallyPlacedCard).toHaveBeenCalledWith(
       expect.objectContaining({ id: "track-current" }),
     );
+  });
+});
+
+describe("useGamePageActions confirm_reveal", () => {
+  beforeEach(() => {
+    emitActionMock.mockReset();
+  });
+
+  it("retries one timeout, blocks duplicate confirmation, and exposes a final retry", async () => {
+    const deferred = createDeferredActionResult();
+    emitActionMock.mockReturnValueOnce(deferred.promise);
+    render(<RevealHarness />);
+
+    const nextSongButton = screen.getByRole("button", { name: /next song/i });
+    fireEvent.click(nextSongButton);
+    fireEvent.click(nextSongButton);
+
+    expect(screen.getByRole("button", { name: /loading next song/i })).toBeDisabled();
+    expect(emitActionMock).toHaveBeenCalledTimes(1);
+    expect(emitActionMock).toHaveBeenCalledWith(
+      ClientToServerEvent.ConfirmReveal,
+      { roomId: "TEST_ROOM_1" },
+      expect.objectContaining({ retryOnTimeout: true }),
+    );
+
+    const options = emitActionMock.mock.calls[0]?.[2] as {
+      onTimeoutRetry?: () => void;
+    };
+    act(() => options.onTimeoutRetry?.());
+
+    expect(screen.getByRole("button", { name: /no response.*retrying/i })).toBeDisabled();
+
+    await act(async () => {
+      deferred.resolve({ status: "timeout" });
+      await deferred.promise;
+    });
+
+    const retryButton = await screen.findByRole("button", { name: /try again/i });
+    expect(retryButton).toBeEnabled();
+
+    emitActionMock.mockResolvedValueOnce({ status: "ok" });
+    fireEvent.click(retryButton);
+
+    await waitFor(() => expect(emitActionMock).toHaveBeenCalledTimes(2));
   });
 });

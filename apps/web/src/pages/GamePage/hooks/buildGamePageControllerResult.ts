@@ -22,7 +22,9 @@ interface BuildGamePageControllerResultOptions {
     | "handleResolveChallengeWindow"
     | "handleSkipTrackWithTt"
     | "handleSkipTurn"
+    | "isConfirmRevealPending"
     | "isPlaceCardPending"
+    | "confirmRevealActionStatus"
     | "placeCardActionStatus"
   >;
   capabilityState: Pick<

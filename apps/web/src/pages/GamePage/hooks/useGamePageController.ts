@@ -151,7 +151,9 @@ export function useGamePageController({
     handleResolveChallengeWindow: actions.handleResolveChallengeWindow,
     handleSkipTrackWithTt: actions.handleSkipTrackWithTt,
     handleSkipTurn: actions.handleSkipTurn,
+    isConfirmRevealPending: actions.isConfirmRevealPending,
     isPlaceCardPending: actions.isPlaceCardPending,
+    confirmRevealActionStatus: actions.confirmRevealActionStatus,
     placeCardActionStatus: actions.placeCardActionStatus,
   };
 

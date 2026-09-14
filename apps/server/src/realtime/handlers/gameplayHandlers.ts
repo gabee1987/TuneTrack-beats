@@ -118,6 +118,17 @@ function registerConfirmRevealHandler(io: Server, socket: Socket, roomService: R
     handle: (data) => {
       broadcastRoomState(io, roomService.confirmReveal(data, socket.id));
     },
+    idempotency: {
+      find: (data) =>
+        data.requestId
+          ? roomService.getProcessedActionAck(socket.id, data.roomId, data.requestId)
+          : undefined,
+      remember: (data, ack) => {
+        if (data.requestId) {
+          roomService.rememberProcessedActionAck(data.roomId, ack);
+        }
+      },
+    },
     fallbackErrorCode: "CONFIRM_REVEAL_FAILED",
     errorMessages: confirmRevealErrorMessages,
   });

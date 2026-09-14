@@ -119,6 +119,7 @@ export interface PlaceCardPayload {
 
 export interface ConfirmRevealPayload {
   roomId: RoomId;
+  requestId?: string;
 }
 
 export interface CloseRoomPayload {
