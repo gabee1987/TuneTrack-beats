@@ -74,3 +74,35 @@ describe("RoomStore socket membership session helpers", () => {
     expect(store.getSocketMembership("socket-c")).toBeDefined();
   });
 });
+
+describe("RoomStore processed action acknowledgements", () => {
+  it("keeps only the 32 most recently applied actions per room", () => {
+    const store = new RoomStore();
+
+    for (let index = 1; index <= 33; index += 1) {
+      store.rememberProcessedActionAck("room-1", {
+        ok: true,
+        requestId: `request-${index}`,
+      });
+    }
+
+    expect(store.getProcessedActionAck("room-1", "request-1")).toBeUndefined();
+    expect(store.getProcessedActionAck("room-1", "request-2")).toEqual({
+      ok: true,
+      requestId: "request-2",
+    });
+    expect(store.getProcessedActionAck("other-room", "request-2")).toBeUndefined();
+  });
+
+  it("forgets processed actions when their room is deleted", () => {
+    const store = new RoomStore();
+    store.rememberProcessedActionAck("room-1", {
+      ok: true,
+      requestId: "request-1",
+    });
+
+    store.deleteRoom("room-1");
+
+    expect(store.getProcessedActionAck("room-1", "request-1")).toBeUndefined();
+  });
+});

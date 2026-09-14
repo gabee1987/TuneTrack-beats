@@ -45,6 +45,10 @@ type CreateSocketHandlerOptions<TSchema extends z.ZodTypeAny> = {
   handle: (parsed: z.output<TSchema>) => void;
   fallbackErrorCode: string;
   errorMessages: Record<string, string>;
+  idempotency?: {
+    find: (parsed: z.output<TSchema>) => ActionAck | undefined;
+    remember: (parsed: z.output<TSchema>, ack: ActionAck) => void;
+  };
 };
 
 export function createSocketHandler<TSchema extends z.ZodTypeAny>(
@@ -67,11 +71,18 @@ export function createSocketHandler<TSchema extends z.ZodTypeAny>(
       return;
     }
 
-    options.log?.(parseResult.data);
-
     try {
+      const replayAck = options.idempotency?.find(parseResult.data);
+      if (replayAck) {
+        ack?.(replayAck);
+        return;
+      }
+
+      options.log?.(parseResult.data);
       options.handle(parseResult.data);
-      ack?.({ ok: true, requestId });
+      const successAck = { ok: true, requestId } satisfies ActionAck;
+      options.idempotency?.remember(parseResult.data, successAck);
+      ack?.(successAck);
     } catch (error) {
       const errorCode = emitServerError(
         options.socket,

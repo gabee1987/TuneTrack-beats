@@ -1,5 +1,6 @@
 import { GameFlowService, type GameTrackCard } from "@tunetrack/game-engine";
 import {
+  type ActionAck,
   type AwardTtPayloadParsed,
   type BuyTimelineCardWithTtPayloadParsed,
   type CloseRoomPayloadParsed,
@@ -207,6 +208,19 @@ export class RoomRegistry {
 
   public getRoomStateForMember(socketId: string, roomId: RoomId): PublicRoomState {
     return this.store.getRoomRecordForMember(socketId, roomId).roomState;
+  }
+
+  public getProcessedActionAck(
+    socketId: string,
+    roomId: RoomId,
+    requestId: string,
+  ): ActionAck | undefined {
+    this.store.getRoomRecordForMember(socketId, roomId);
+    return this.store.getProcessedActionAck(roomId, requestId);
+  }
+
+  public rememberProcessedActionAck(roomId: RoomId, ack: ActionAck): void {
+    this.store.rememberProcessedActionAck(roomId, ack);
   }
 
   public startGame(

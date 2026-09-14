@@ -163,6 +163,7 @@ export const kickPlayerPayloadSchema = z.object({
 export const placeCardPayloadSchema = z.object({
   roomId: roomIdSchema,
   selectedSlotIndex: z.number().int().nonnegative(),
+  requestId: z.string().uuid().optional(),
 });
 
 export const confirmRevealPayloadSchema = z.object({

@@ -8,6 +8,7 @@ import { SpotifyMusicSearchService } from "../spotify/SpotifyMusicSearchService.
 import type { SpotifyPlaybackSessionStore } from "../spotify/SpotifyPlaybackSessionStore.js";
 import type { GameTrackCard } from "@tunetrack/game-engine";
 import type {
+  ActionAck,
   AwardTtPayloadParsed,
   BuyTimelineCardWithTtPayloadParsed,
   CloseRoomPayloadParsed,
@@ -147,6 +148,18 @@ export class RoomService {
 
   public getRoomPreview(payload: GetRoomPreviewPayloadParsed): PublicRoomSummary | null {
     return this.roomRegistry.getRoomSummary(payload.roomId);
+  }
+
+  public getProcessedActionAck(
+    socketId: string,
+    roomId: string,
+    requestId: string,
+  ): ActionAck | undefined {
+    return this.roomRegistry.getProcessedActionAck(socketId, roomId, requestId);
+  }
+
+  public rememberProcessedActionAck(roomId: string, ack: ActionAck): void {
+    this.roomRegistry.rememberProcessedActionAck(roomId, ack);
   }
 
   public updateRoomSettings(

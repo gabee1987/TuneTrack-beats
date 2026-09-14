@@ -571,9 +571,18 @@ second submission before React can render the disabled state, and rejected, time
 offline results roll back the optimistic card preview. Accepted actions continue to wait for
 the room-state broadcast as the source of truth.
 
-Root cause #2 remains **open**. The remaining action callers still use bare emits, and a safe
-retry plus server-side replay protection for non-idempotent actions are still required.
-Root causes #4 and #5 also remain open; B8 therefore remains **Confirmed**, not Fixed.
+### Root cause #2 `place_card` replay protection (2026-09-14)
+
+Validated `place_card` payloads now retain an optional UUID request id. Successful placement
+acknowledgements are stored in a room-scoped 32-entry LRU. Replaying the same request id
+returns the original acknowledgement before logging, gameplay mutation, or state broadcast,
+so the card is applied once. Rejected attempts are not cached and remain retryable. Cache
+entries are removed with their room, and replay lookup still validates socket membership.
+
+Root cause #2 remains **open**. The client does not yet perform its single safe placement
+retry, the remaining action callers still use bare emits, and the other non-idempotent actions
+still need replay protection. Root causes #4 and #5 also remain open; B8 therefore remains
+**Confirmed**, not Fixed.
 
 ### Verification
 
@@ -588,6 +597,10 @@ Root causes #4 and #5 also remain open; B8 therefore remains **Confirmed**, not 
 - `useGamePageActions.test.tsx`: two quick placement confirmations emit once, the real
   confirmation control stays disabled until acknowledgement, rejection rolls back the
   optimistic preview, and acceptance preserves it until authoritative state arrives.
+- `roomFlow.test.ts`: replaying the same `place_card` request id returns the original success
+  acknowledgement while the placement service runs once.
+- `RoomStore.test.ts`: processed-action acknowledgements are room-scoped, capped at 32, and
+  removed with their room.
 - Manual M10.
 
 ---

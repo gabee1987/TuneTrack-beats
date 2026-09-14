@@ -114,6 +114,7 @@ export interface KickPlayerPayload {
 export interface PlaceCardPayload {
   roomId: RoomId;
   selectedSlotIndex: number;
+  requestId?: string;
 }
 
 export interface ConfirmRevealPayload {

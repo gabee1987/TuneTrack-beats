@@ -1,5 +1,10 @@
 import type { GameState, GameTrackCard } from "@tunetrack/game-engine";
-import type { PublicRoomState, PublicRoomSummary, RoomId } from "@tunetrack/shared";
+import type {
+  ActionAck,
+  PublicRoomState,
+  PublicRoomSummary,
+  RoomId,
+} from "@tunetrack/shared";
 
 export interface SocketRoomMembership {
   playerId: string;
@@ -30,6 +35,12 @@ export interface KickPlayerResult {
 }
 
 export class RoomStore {
+  private static readonly MAX_PROCESSED_ACTION_COUNT = 32;
+
+  private readonly processedActionAcksByRoomId = new Map<
+    RoomId,
+    Map<string, ActionAck>
+  >();
   private readonly roomsById = new Map<RoomId, RoomRecord>();
   private readonly roomRedirectsById = new Map<RoomId, RoomId>();
   private readonly socketMemberships = new Map<string, SocketRoomMembership>();
@@ -53,6 +64,36 @@ export class RoomStore {
 
   public deleteRoom(roomId: RoomId): void {
     this.roomsById.delete(roomId);
+    this.processedActionAcksByRoomId.delete(roomId);
+  }
+
+  public getProcessedActionAck(
+    roomId: RoomId,
+    requestId: string,
+  ): ActionAck | undefined {
+    const roomAcks = this.processedActionAcksByRoomId.get(roomId);
+    const ack = roomAcks?.get(requestId);
+    if (!roomAcks || !ack) {
+      return undefined;
+    }
+
+    roomAcks.delete(requestId);
+    roomAcks.set(requestId, ack);
+    return ack;
+  }
+
+  public rememberProcessedActionAck(roomId: RoomId, ack: ActionAck): void {
+    const roomAcks = this.processedActionAcksByRoomId.get(roomId) ?? new Map();
+    roomAcks.delete(ack.requestId);
+    roomAcks.set(ack.requestId, ack);
+    this.processedActionAcksByRoomId.set(roomId, roomAcks);
+
+    if (roomAcks.size > RoomStore.MAX_PROCESSED_ACTION_COUNT) {
+      const oldestRequestId = roomAcks.keys().next().value;
+      if (oldestRequestId) {
+        roomAcks.delete(oldestRequestId);
+      }
+    }
   }
 
   public listLobbySummaries(): PublicRoomSummary[] {

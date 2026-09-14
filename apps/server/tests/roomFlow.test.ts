@@ -2,13 +2,14 @@ import type { GameTrackCard } from "@tunetrack/game-engine";
 import {
   ClientToServerEvent,
   ServerToClientEvent,
+  type ActionAck,
   type PlayerIdentityPayload,
   type PlaylistTracksPayload,
   type PublicRoomState,
   type ServerErrorPayload,
   type StateUpdatePayload,
 } from "@tunetrack/shared";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { io as createSocketClient, type Socket } from "socket.io-client";
 import { createHttpServer } from "../src/app/createHttpServer.js";
 import { createSocketServer } from "../src/app/createSocketServer.js";
@@ -489,8 +490,10 @@ describe("room flow", () => {
     );
   });
 
-  it("starts a game, rejects inactive placement, resolves reveal, and advances turn", async () => {
-    const serverContext = await startTestServer();
+  it("starts a game, applies a replayed placement once, resolves reveal, and advances turn", async () => {
+    const roomService = createTestRoomService();
+    const placeCardSpy = vi.spyOn(roomService, "placeCard");
+    const serverContext = await startTestServer(roomService);
     const hostSocket = createClient(serverContext.baseUrl);
     const guestSocket = createClient(serverContext.baseUrl);
 
@@ -585,18 +588,37 @@ describe("room flow", () => {
       code: "NOT_ACTIVE_PLAYER",
       message: "It is not your turn.",
     });
+    placeCardSpy.mockClear();
 
     const revealStatePromise = waitForStateUpdate(
       guestSocket,
       (roomState) => roomState.status === "reveal",
     );
 
-    hostSocket.emit(ClientToServerEvent.PlaceCard, {
-      roomId: "game-room",
-      selectedSlotIndex: 1,
-    });
+    const requestId = "00000000-0000-4000-8000-000000000101";
+    const firstAckPromise = hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.PlaceCard, {
+        roomId: "game-room",
+        selectedSlotIndex: 1,
+        requestId,
+      }) as Promise<ActionAck>;
 
-    const revealState = await revealStatePromise;
+    const [revealState, firstAck] = await Promise.all([
+      revealStatePromise,
+      firstAckPromise,
+    ]);
+    const replayAck = (await hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.PlaceCard, {
+        roomId: "game-room",
+        selectedSlotIndex: 1,
+        requestId,
+      })) as ActionAck;
+
+    expect(firstAck).toEqual({ ok: true, requestId });
+    expect(replayAck).toEqual(firstAck);
+    expect(placeCardSpy).toHaveBeenCalledTimes(1);
 
     expect(revealState.revealState).toEqual({
       playerId: hostIdentity.playerId,
