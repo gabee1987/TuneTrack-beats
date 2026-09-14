@@ -579,9 +579,14 @@ returns the original acknowledgement before logging, gameplay mutation, or state
 so the card is applied once. Rejected attempts are not cached and remain retryable. Cache
 entries are removed with their room, and replay lookup still validates socket membership.
 
-Root cause #2 remains **open**. The client does not yet perform its single safe placement
-retry, the remaining action callers still use bare emits, and the other non-idempotent actions
-still need replay protection. Root causes #4 and #5 also remain open; B8 therefore remains
+`place_card` now enables one automatic retry after an acknowledgement timeout. Both attempts
+reuse the same generated request id, a second timeout stops the sequence, and a disconnect
+between attempts returns `offline` without buffering the retry. The placement remains pending
+through both attempts, then rolls back and unlocks if neither succeeds.
+
+Root cause #2 remains **open**. The remaining action callers still use bare emits, the other
+non-idempotent actions still need replay protection, and explicit in-progress/final-timeout
+feedback remains to be added. Root causes #4 and #5 also remain open; B8 therefore remains
 **Confirmed**, not Fixed.
 
 ### Verification
@@ -592,8 +597,8 @@ still need replay protection. Root causes #4 and #5 also remain open; B8 therefo
   emits nothing, replaces no listener, and subsequent server errors use the current language.
 - `createSocketHandler.test.ts`: acknowledgements cover success, invalid payloads, thrown
   service errors, and compatibility with callers that omit the callback.
-- `emitAction.test.ts`: accepted, rejected, timed-out, and offline outcomes; offline actions
-  emit nothing.
+- `emitAction.test.ts`: accepted, rejected, timed-out, and offline outcomes; a timeout retry
+  reuses its request id, stops after one retry, and is not buffered after a disconnect.
 - `useGamePageActions.test.tsx`: two quick placement confirmations emit once, the real
   confirmation control stays disabled until acknowledgement, rejection rolls back the
   optimistic preview, and acceptance preserves it until authoritative state arrives.

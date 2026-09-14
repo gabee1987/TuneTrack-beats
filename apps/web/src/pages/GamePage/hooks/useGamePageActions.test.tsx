@@ -76,10 +76,14 @@ describe("useGamePageActions place_card", () => {
 
     expect(confirmButton).toBeDisabled();
     expect(emitActionMock).toHaveBeenCalledTimes(1);
-    expect(emitActionMock).toHaveBeenCalledWith(ClientToServerEvent.PlaceCard, {
-      roomId: "TEST_ROOM_1",
-      selectedSlotIndex: 1,
-    });
+    expect(emitActionMock).toHaveBeenCalledWith(
+      ClientToServerEvent.PlaceCard,
+      {
+        roomId: "TEST_ROOM_1",
+        selectedSlotIndex: 1,
+      },
+      { retryOnTimeout: true },
+    );
     expect(setLocallyPlacedCard).toHaveBeenCalledWith(
       expect.objectContaining({ id: "track-current" }),
     );

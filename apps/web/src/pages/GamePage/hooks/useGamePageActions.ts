@@ -56,10 +56,14 @@ export function useGamePageActions({
     setIsPlaceCardPending(true);
     setLocallyPlacedCard(roomState.currentTrackCard ?? null);
     try {
-      const result = await emitAction(ClientToServerEvent.PlaceCard, {
-        roomId: roomState.roomId,
-        selectedSlotIndex,
-      });
+      const result = await emitAction(
+        ClientToServerEvent.PlaceCard,
+        {
+          roomId: roomState.roomId,
+          selectedSlotIndex,
+        },
+        { retryOnTimeout: true },
+      );
       if (result.status !== "ok") {
         setLocallyPlacedCard(null);
       }

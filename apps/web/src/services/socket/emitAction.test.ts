@@ -62,6 +62,55 @@ describe("emitAction", () => {
     ).resolves.toEqual({ status: "timeout" });
   });
 
+  it("retries one timeout with the same request id when enabled", async () => {
+    socket.emitWithAck
+      .mockRejectedValueOnce(new Error("operation has timed out"))
+      .mockResolvedValueOnce({
+        ok: true,
+        requestId: "00000000-0000-4000-8000-000000000003",
+      });
+
+    await expect(
+      emitAction(
+        ClientToServerEvent.PlaceCard,
+        { roomId: "TEST_ROOM_1", selectedSlotIndex: 1 },
+        { retryOnTimeout: true },
+      ),
+    ).resolves.toEqual({ status: "ok" });
+
+    expect(socket.emitWithAck).toHaveBeenCalledTimes(2);
+    expect(socket.emitWithAck.mock.calls[1]).toEqual(socket.emitWithAck.mock.calls[0]);
+  });
+
+  it("stops after one timeout retry", async () => {
+    socket.emitWithAck.mockRejectedValue(new Error("operation has timed out"));
+
+    await expect(
+      emitAction(
+        ClientToServerEvent.PlaceCard,
+        { roomId: "TEST_ROOM_1", selectedSlotIndex: 1 },
+        { retryOnTimeout: true },
+      ),
+    ).resolves.toEqual({ status: "timeout" });
+    expect(socket.emitWithAck).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not buffer the retry when the socket disconnects after the first timeout", async () => {
+    socket.emitWithAck.mockImplementationOnce(() => {
+      socket.connected = false;
+      return Promise.reject(new Error("operation has timed out"));
+    });
+
+    await expect(
+      emitAction(
+        ClientToServerEvent.PlaceCard,
+        { roomId: "TEST_ROOM_1", selectedSlotIndex: 1 },
+        { retryOnTimeout: true },
+      ),
+    ).resolves.toEqual({ status: "offline" });
+    expect(socket.emitWithAck).toHaveBeenCalledTimes(1);
+  });
+
   it("returns offline without emitting or buffering the action", async () => {
     socket.connected = false;
 
