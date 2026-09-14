@@ -128,6 +128,7 @@ export interface CloseRoomPayload {
 
 export interface ClaimChallengePayload {
   roomId: RoomId;
+  requestId?: string;
 }
 
 export interface PlaceChallengePayload {

@@ -126,10 +126,49 @@ function ChallengePlacementHarness() {
         canResolveChallengeWindow={false}
         challengeActionBody="Place the challenge card"
         challengeActionTitle="Beat claimed"
+        claimChallengeActionStatus={actions.claimChallengeActionStatus}
         currentPlayerTtCount={1}
         handleClaimChallenge={actions.handleClaimChallenge}
         handlePlaceChallenge={actions.handlePlaceChallenge}
         handleResolveChallengeWindow={actions.handleResolveChallengeWindow}
+        isClaimChallengePending={actions.isClaimChallengePending}
+        isCurrentPlayerTurn={false}
+        isPlaceChallengePending={actions.isPlaceChallengePending}
+        placeChallengeActionStatus={actions.placeChallengeActionStatus}
+        roomState={roomState}
+      />
+    </I18nProvider>
+  );
+}
+
+function ChallengeClaimHarness() {
+  const roomState = buildChallengeRoomState();
+  const actions = useGamePageActions({
+    canClaimChallenge: true,
+    canConfirmReveal: false,
+    canResolveChallengeWindow: false,
+    canSelectChallengeSlot: false,
+    currentPlayerId: TEST_GUEST_ID,
+    isCurrentPlayerTurn: false,
+    roomState,
+    selectedSlotIndex: 1,
+    setLocallyPlacedCard: vi.fn(),
+  });
+
+  return (
+    <I18nProvider>
+      <ChallengeActionPanel
+        canClaimChallenge
+        canConfirmBeatPlacement={false}
+        canResolveChallengeWindow={false}
+        challengeActionBody="Call Beat"
+        challengeActionTitle="Beat window"
+        claimChallengeActionStatus={actions.claimChallengeActionStatus}
+        currentPlayerTtCount={1}
+        handleClaimChallenge={actions.handleClaimChallenge}
+        handlePlaceChallenge={actions.handlePlaceChallenge}
+        handleResolveChallengeWindow={actions.handleResolveChallengeWindow}
+        isClaimChallengePending={actions.isClaimChallengePending}
         isCurrentPlayerTurn={false}
         isPlaceChallengePending={actions.isPlaceChallengePending}
         placeChallengeActionStatus={actions.placeChallengeActionStatus}
@@ -287,6 +326,50 @@ describe("useGamePageActions place_challenge", () => {
     expect(emitActionMock).toHaveBeenCalledWith(
       ClientToServerEvent.PlaceChallenge,
       { roomId: "TEST_ROOM_1", selectedSlotIndex: 1 },
+      expect.objectContaining({ retryOnTimeout: true }),
+    );
+
+    const options = emitActionMock.mock.calls[0]?.[2] as {
+      onTimeoutRetry?: () => void;
+    };
+    act(() => options.onTimeoutRetry?.());
+
+    expect(screen.getByRole("button", { name: /no response.*retrying/i })).toBeDisabled();
+
+    await act(async () => {
+      deferred.resolve({ status: "timeout" });
+      await deferred.promise;
+    });
+
+    const retryButton = await screen.findByRole("button", { name: /try again/i });
+    expect(retryButton).toBeEnabled();
+
+    emitActionMock.mockResolvedValueOnce({ status: "ok" });
+    fireEvent.click(retryButton);
+
+    await waitFor(() => expect(emitActionMock).toHaveBeenCalledTimes(2));
+  });
+});
+
+describe("useGamePageActions claim_challenge", () => {
+  beforeEach(() => {
+    emitActionMock.mockReset();
+  });
+
+  it("retries one timeout, blocks duplicate claims, and exposes a final retry", async () => {
+    const deferred = createDeferredActionResult();
+    emitActionMock.mockReturnValueOnce(deferred.promise);
+    render(<ChallengeClaimHarness />);
+
+    const beatButton = screen.getByRole("button", { name: /^beat!/i });
+    fireEvent.click(beatButton);
+    fireEvent.click(beatButton);
+
+    expect(screen.getByRole("button", { name: /calling beat/i })).toBeDisabled();
+    expect(emitActionMock).toHaveBeenCalledTimes(1);
+    expect(emitActionMock).toHaveBeenCalledWith(
+      ClientToServerEvent.ClaimChallenge,
+      { roomId: "TEST_ROOM_1" },
       expect.objectContaining({ retryOnTimeout: true }),
     );
 

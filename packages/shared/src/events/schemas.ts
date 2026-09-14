@@ -177,6 +177,7 @@ export const closeRoomPayloadSchema = z.object({
 
 export const claimChallengePayloadSchema = z.object({
   roomId: roomIdSchema,
+  requestId: z.string().uuid().optional(),
 });
 
 export const placeChallengePayloadSchema = z.object({

@@ -11,7 +11,10 @@ import {
 import { useI18n } from "../../../features/i18n";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import { useChallengeCountdownLabel } from "../hooks/useChallengeCountdownLabel";
-import type { PlaceChallengeActionStatus } from "../GamePage.types";
+import type {
+  ClaimChallengeActionStatus,
+  PlaceChallengeActionStatus,
+} from "../GamePage.types";
 import styles from "./gamePageActionPanelsStyles";
 import {
   ActionDock,
@@ -53,10 +56,12 @@ interface ChallengeActionPanelProps {
   canResolveChallengeWindow: boolean;
   challengeActionBody: string | null;
   challengeActionTitle: string | null;
+  claimChallengeActionStatus: ClaimChallengeActionStatus;
   currentPlayerTtCount: number;
   handleClaimChallenge: () => void;
   handlePlaceChallenge: () => void;
   handleResolveChallengeWindow: () => void;
+  isClaimChallengePending: boolean;
   isCurrentPlayerTurn: boolean;
   isPlaceChallengePending: boolean;
   onTokenSpendAnimationStart?: (payload: {
@@ -74,10 +79,12 @@ export function ChallengeActionPanel({
   canResolveChallengeWindow,
   challengeActionBody,
   challengeActionTitle,
+  claimChallengeActionStatus,
   currentPlayerTtCount,
   handleClaimChallenge,
   handlePlaceChallenge,
   handleResolveChallengeWindow,
+  isClaimChallengePending,
   isCurrentPlayerTurn,
   isPlaceChallengePending,
   onTokenSpendAnimationStart,
@@ -146,6 +153,14 @@ export function ChallengeActionPanel({
   }
 
   const nestedDockClassName = portalTarget ? "" : styles.floatingActionDockInChallengeStack;
+  const claimChallengeButtonLabel =
+    claimChallengeActionStatus === "pending"
+      ? t("game.controls.challengeClaimPending")
+      : claimChallengeActionStatus === "retrying"
+        ? t("game.controls.challengeClaimRetrying")
+        : claimChallengeActionStatus === "failed"
+          ? t("game.controls.retryChallengeClaim")
+          : t("game.controls.beat");
   const placeChallengeButtonLabel =
     placeChallengeActionStatus === "pending"
       ? t("game.controls.challengePlacementPending")
@@ -160,6 +175,7 @@ export function ChallengeActionPanel({
       <ActionDock className={nestedDockClassName}>
         {canClaimChallenge ? (
           <PrimaryActionButton
+            disabled={isClaimChallengePending}
             onClick={(event) => {
               const origin = resolveSpendOrigin(
                 event.currentTarget,
@@ -174,7 +190,7 @@ export function ChallengeActionPanel({
             ttCost={CHALLENGE_TT_COST}
             ttCostBadgeRef={beatCostBadgeRef}
           >
-            {t("game.controls.beat")}
+            {claimChallengeButtonLabel}
           </PrimaryActionButton>
         ) : null}
         {canResolveChallengeWindow ? (

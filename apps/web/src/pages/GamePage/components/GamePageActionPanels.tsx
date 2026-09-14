@@ -42,6 +42,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     canUseSkipTrack,
     challengeActionBody,
     challengeActionTitle,
+    claimChallengeActionStatus,
     confirmRevealActionStatus,
     currentPlayerTtCount,
     getPlayerName,
@@ -53,6 +54,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     handleResolveChallengeWindow,
     handleSkipTrackWithTt,
     isCurrentPlayerTurn,
+    isClaimChallengePending,
     isConfirmRevealPending,
     isPlaceCardPending,
     isPlaceChallengePending,
@@ -129,11 +131,13 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
         canResolveChallengeWindow={canResolveChallengeWindow}
         challengeActionBody={challengeActionBody}
         challengeActionTitle={challengeActionTitle}
+        claimChallengeActionStatus={claimChallengeActionStatus}
         currentPlayerTtCount={currentPlayerTtCount}
         handleClaimChallenge={handleClaimChallenge}
         handlePlaceChallenge={handlePlaceChallenge}
         handleResolveChallengeWindow={handleResolveChallengeWindow}
         isCurrentPlayerTurn={isCurrentPlayerTurn}
+        isClaimChallengePending={isClaimChallengePending}
         isPlaceChallengePending={isPlaceChallengePending}
         onTokenSpendAnimationStart={handleTokenSpendAnimationStart}
         placeChallengeActionStatus={placeChallengeActionStatus}
@@ -188,6 +192,7 @@ function areActionPanelModelsEqual(
     previousModel.canUseSkipTrack === nextModel.canUseSkipTrack &&
     previousModel.challengeActionBody === nextModel.challengeActionBody &&
     previousModel.challengeActionTitle === nextModel.challengeActionTitle &&
+    previousModel.claimChallengeActionStatus === nextModel.claimChallengeActionStatus &&
     previousModel.confirmRevealActionStatus === nextModel.confirmRevealActionStatus &&
     previousModel.currentPlayerTtCount === nextModel.currentPlayerTtCount &&
     previousModel.getPlayerName === nextModel.getPlayerName &&
@@ -200,6 +205,7 @@ function areActionPanelModelsEqual(
     previousModel.handleSkipTrackWithTt === nextModel.handleSkipTrackWithTt &&
     previousModel.handleSkipTurn === nextModel.handleSkipTurn &&
     previousModel.isCurrentPlayerTurn === nextModel.isCurrentPlayerTurn &&
+    previousModel.isClaimChallengePending === nextModel.isClaimChallengePending &&
     previousModel.isConfirmRevealPending === nextModel.isConfirmRevealPending &&
     previousModel.isPlaceCardPending === nextModel.isPlaceCardPending &&
     previousModel.isPlaceChallengePending === nextModel.isPlaceChallengePending &&

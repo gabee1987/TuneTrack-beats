@@ -700,8 +700,9 @@ describe("room flow", () => {
     expect(secondTurnState.revealState).toBeNull();
   });
 
-  it("applies a replayed challenge placement once", async () => {
+  it("applies replayed challenge actions once", async () => {
     const roomService = createTestRoomService();
+    const claimChallengeSpy = vi.spyOn(roomService, "claimChallenge");
     const placeChallengeSpy = vi.spyOn(roomService, "placeChallenge");
     const serverContext = await startTestServer(roomService);
     const hostSocket = createClient(serverContext.baseUrl);
@@ -775,17 +776,34 @@ describe("room flow", () => {
       hostSocket,
       (roomState) => roomState.challengeState?.challengerPlayerId === guestIdentity.playerId,
     );
-    guestSocket.emit(ClientToServerEvent.ClaimChallenge, {
-      roomId: "beat-room",
-    });
-    await claimedChallengePromise;
+    const claimRequestId = "00000000-0000-4000-8000-000000000103";
+    const firstClaimAckPromise = guestSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.ClaimChallenge, {
+        roomId: "beat-room",
+        requestId: claimRequestId,
+      }) as Promise<ActionAck>;
+    const [, firstClaimAck] = await Promise.all([
+      claimedChallengePromise,
+      firstClaimAckPromise,
+    ]);
+    const replayClaimAck = (await guestSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.ClaimChallenge, {
+        roomId: "beat-room",
+        requestId: claimRequestId,
+      })) as ActionAck;
+
+    expect(firstClaimAck).toEqual({ ok: true, requestId: claimRequestId });
+    expect(replayClaimAck).toEqual(firstClaimAck);
+    expect(claimChallengeSpy).toHaveBeenCalledTimes(1);
     placeChallengeSpy.mockClear();
 
     const revealPromise = waitForStateUpdate(
       hostSocket,
       (roomState) => roomState.status === "reveal",
     );
-    const requestId = "00000000-0000-4000-8000-000000000103";
+    const requestId = "00000000-0000-4000-8000-000000000104";
     const firstAckPromise = guestSocket
       .timeout(1_000)
       .emitWithAck(ClientToServerEvent.PlaceChallenge, {

@@ -254,6 +254,8 @@ fire-and-forget until last.
       its button blocks duplicate presses and exposes pending, retrying, and final retry states.
 - [x] `place_challenge` resolves a challenge once when its acknowledged request is replayed;
       its button blocks duplicate presses and exposes pending, retrying, and final retry states.
+- [x] `claim_challenge` reserves the challenge once when its acknowledged request is replayed;
+      its button blocks duplicate presses and exposes pending, retrying, and final retry states.
 
 ## 5. Phase 5 — Honest connection state in the UI · **S2**
 
