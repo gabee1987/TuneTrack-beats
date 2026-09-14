@@ -50,6 +50,7 @@ interface TurnActionDockProps {
   handlePlaceCard: () => void;
   handleSkipOfflinePlayer: () => void;
   handleSkipTrackWithTt: () => void;
+  isPlaceCardPending: boolean;
   onTokenSpendAnimationStart?: (payload: {
     amount: number;
     originX: number;
@@ -67,6 +68,7 @@ export function TurnActionDock({
   handlePlaceCard,
   handleSkipOfflinePlayer,
   handleSkipTrackWithTt,
+  isPlaceCardPending,
   onTokenSpendAnimationStart,
   roomState,
 }: TurnActionDockProps) {
@@ -195,7 +197,10 @@ export function TurnActionDock({
               layout="position"
               transition={createLayoutTransition(reduceMotion)}
             >
-              <PrimaryActionButton onClick={() => handlePlaceCard()}>
+              <PrimaryActionButton
+                disabled={isPlaceCardPending}
+                onClick={() => handlePlaceCard()}
+              >
                 {t("game.controls.confirm")}
               </PrimaryActionButton>
             </motion.span>
@@ -266,7 +271,10 @@ export function TurnActionDock({
                 layout="position"
                 transition={createLayoutTransition(reduceMotion)}
               >
-                <PrimaryActionButton onClick={() => handlePlaceCard()}>
+                <PrimaryActionButton
+                  disabled={isPlaceCardPending}
+                  onClick={() => handlePlaceCard()}
+                >
                   {t("game.controls.confirm")}
                 </PrimaryActionButton>
               </motion.span>

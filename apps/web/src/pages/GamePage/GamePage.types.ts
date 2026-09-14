@@ -169,6 +169,7 @@ export interface GamePageActionPanelsModel
     | "handleSkipTrackWithTt"
     | "handleSkipTurn"
     | "isCurrentPlayerTurn"
+    | "isPlaceCardPending"
     | "showHelperLabels"
   > {
   roomState: PublicRoomState;
@@ -204,6 +205,7 @@ export type GamePageController = GamePageActionHandlers & {
   revealedCardMode: RevealedCardMode;
   isHost: boolean;
   isCurrentPlayerTurn: boolean;
+  isPlaceCardPending: boolean;
   isViewingOwnTimeline: boolean;
   leadingPlayers: PublicRoomState["players"];
   menuTabs: AppShellMenuTab[];

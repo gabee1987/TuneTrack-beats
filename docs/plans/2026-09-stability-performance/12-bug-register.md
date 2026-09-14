@@ -552,12 +552,42 @@ registrations unchanged after the fix.
 
 Root causes #2, #4, and #5 remain open, so B8 remains **Confirmed**, not Fixed.
 
+### Root cause #2 first pass (2026-09-11)
+
+The acknowledgement transport foundation is now in place. `ActionAck` defines the shared
+contract, every schema-backed server handler accepts an optional Socket.IO acknowledgement
+callback, and success, invalid payloads, and thrown service errors return the originating
+request id. Existing global error events remain in place for compatibility with clients that
+do not send an acknowledgement callback.
+
+The web socket layer now provides `emitAction`, which adds a request id, applies the default
+8 s acknowledgement timeout, and returns explicit `ok`, `rejected`, `timeout`, or `offline`
+results. It refuses immediately while disconnected, so actions using it cannot enter
+Socket.IO's send buffer.
+
+`place_card` is now the first gameplay caller migrated to `emitAction`. Its confirmation
+button is disabled while the acknowledgement is pending, a synchronous ref guard blocks a
+second submission before React can render the disabled state, and rejected, timed-out, or
+offline results roll back the optimistic card preview. Accepted actions continue to wait for
+the room-state broadcast as the source of truth.
+
+Root cause #2 remains **open**. The remaining action callers still use bare emits, and a safe
+retry plus server-side replay protection for non-idempotent actions are still required.
+Root causes #4 and #5 also remain open; B8 therefore remains **Confirmed**, not Fixed.
+
 ### Verification
 
 - E2E E7 to E12 — these fail against current code and are the proof that the work landed.
 - Server tests per Doc 11 section 6.
 - `useLobbyRoomConnection.test.ts` and `useGameRoomConnection.test.ts`: a language change
   emits nothing, replaces no listener, and subsequent server errors use the current language.
+- `createSocketHandler.test.ts`: acknowledgements cover success, invalid payloads, thrown
+  service errors, and compatibility with callers that omit the callback.
+- `emitAction.test.ts`: accepted, rejected, timed-out, and offline outcomes; offline actions
+  emit nothing.
+- `useGamePageActions.test.tsx`: two quick placement confirmations emit once, the real
+  confirmation control stays disabled until acknowledgement, rejection rolls back the
+  optimistic preview, and acceptance preserves it until authoritative state arrives.
 - Manual M10.
 
 ---

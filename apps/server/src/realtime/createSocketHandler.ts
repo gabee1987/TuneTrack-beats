@@ -1,4 +1,5 @@
-import { ServerToClientEvent, type PublicRoomState } from "@tunetrack/shared";
+import { randomUUID } from "node:crypto";
+import { ServerToClientEvent, type ActionAck, type PublicRoomState } from "@tunetrack/shared";
 import type { z } from "zod";
 import type { Server, Socket } from "socket.io";
 import { logger } from "../app/logger.js";
@@ -11,7 +12,7 @@ export function emitServerError(
   error: unknown,
   fallbackCode: string,
   messageByCode: Record<string, string>,
-): void {
+): string {
   const errorCode = error instanceof Error ? error.message : fallbackCode;
   logger.warn(
     { socketId: socket.id, event: eventName, code: errorCode },
@@ -23,6 +24,7 @@ export function emitServerError(
     code: errorCode,
     message: resolveSocketErrorMessage(errorCode, messageByCode),
   });
+  return errorCode;
 }
 
 export function broadcastRoomState(io: Server, roomState: PublicRoomState): void {
@@ -48,10 +50,16 @@ type CreateSocketHandlerOptions<TSchema extends z.ZodTypeAny> = {
 export function createSocketHandler<TSchema extends z.ZodTypeAny>(
   options: CreateSocketHandlerOptions<TSchema>,
 ): void {
-  options.socket.on(options.event, (payload: unknown) => {
+  options.socket.on(options.event, (payload: unknown, ack?: (response: ActionAck) => void) => {
+    const requestId = getActionRequestId(payload);
     const parseResult = options.schema.safeParse(payload);
 
     if (!parseResult.success) {
+      ack?.({
+        ok: false,
+        requestId,
+        code: options.invalidPayload.code,
+      });
       options.socket.emit(ServerToClientEvent.Error, {
         code: options.invalidPayload.code,
         message: options.invalidPayload.message,
@@ -63,14 +71,27 @@ export function createSocketHandler<TSchema extends z.ZodTypeAny>(
 
     try {
       options.handle(parseResult.data);
+      ack?.({ ok: true, requestId });
     } catch (error) {
-      emitServerError(
+      const errorCode = emitServerError(
         options.socket,
         options.event,
         error,
         options.fallbackErrorCode,
         options.errorMessages,
       );
+      ack?.({ ok: false, requestId, code: errorCode });
     }
   });
+}
+
+function getActionRequestId(payload: unknown): string {
+  if (payload && typeof payload === "object") {
+    const requestId = (payload as { requestId?: unknown }).requestId;
+    if (typeof requestId === "string" && requestId.length > 0) {
+      return requestId;
+    }
+  }
+
+  return randomUUID();
 }

@@ -151,6 +151,7 @@ export function useGamePageController({
     handleResolveChallengeWindow: actions.handleResolveChallengeWindow,
     handleSkipTrackWithTt: actions.handleSkipTrackWithTt,
     handleSkipTurn: actions.handleSkipTurn,
+    isPlaceCardPending: actions.isPlaceCardPending,
   };
 
   const capabilityState = {

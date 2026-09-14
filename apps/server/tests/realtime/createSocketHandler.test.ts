@@ -11,20 +11,23 @@ import {
 } from "../../src/realtime/errorMessages.js";
 
 function createMockSocket() {
-  const listeners = new Map<string, (payload: unknown) => void>();
+  const listeners = new Map<
+    string,
+    (payload: unknown, ack?: (response: unknown) => void) => void
+  >();
   const emitted: Array<{ event: string; payload: unknown }> = [];
 
   return {
     id: "socket-test",
     emitted,
-    on(event: string, listener: (payload: unknown) => void) {
+    on(event: string, listener: (payload: unknown, ack?: (response: unknown) => void) => void) {
       listeners.set(event, listener);
     },
     emit(event: string, payload: unknown) {
       emitted.push({ event, payload });
     },
-    trigger(event: string, payload: unknown) {
-      listeners.get(event)?.(payload);
+    trigger(event: string, payload: unknown, ack?: (response: unknown) => void) {
+      listeners.get(event)?.(payload, ack);
     },
   };
 }
@@ -80,6 +83,106 @@ describe("emitServerError", () => {
 });
 
 describe("createSocketHandler", () => {
+  it("acknowledges a successful action", () => {
+    const socket = createMockSocket();
+    const ack = vi.fn();
+
+    createSocketHandler({
+      socket: socket as never,
+      event: ClientToServerEvent.StartGame,
+      schema: startGamePayloadSchema,
+      invalidPayload: {
+        code: "INVALID_START_GAME_PAYLOAD",
+        message: "Room code is invalid.",
+      },
+      handle: vi.fn(),
+      fallbackErrorCode: "START_GAME_FAILED",
+      errorMessages: startGameErrorMessages,
+    });
+
+    socket.trigger(
+      ClientToServerEvent.StartGame,
+      { roomId: "party-room", requestId: "00000000-0000-4000-8000-000000000001" },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({
+      ok: true,
+      requestId: "00000000-0000-4000-8000-000000000001",
+    });
+  });
+
+  it("acknowledges an invalid payload and keeps emitting the compatibility error", () => {
+    const socket = createMockSocket();
+    const ack = vi.fn();
+
+    createSocketHandler({
+      socket: socket as never,
+      event: ClientToServerEvent.StartGame,
+      schema: startGamePayloadSchema,
+      invalidPayload: {
+        code: "INVALID_START_GAME_PAYLOAD",
+        message: "Room code is invalid.",
+      },
+      handle: vi.fn(),
+      fallbackErrorCode: "START_GAME_FAILED",
+      errorMessages: startGameErrorMessages,
+    });
+
+    socket.trigger(
+      ClientToServerEvent.StartGame,
+      { roomId: "", requestId: "00000000-0000-4000-8000-000000000002" },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({
+      ok: false,
+      requestId: "00000000-0000-4000-8000-000000000002",
+      code: "INVALID_START_GAME_PAYLOAD",
+    });
+    expect(socket.emitted).toEqual([
+      {
+        event: ServerToClientEvent.Error,
+        payload: {
+          code: "INVALID_START_GAME_PAYLOAD",
+          message: "Room code is invalid.",
+        },
+      },
+    ]);
+  });
+
+  it("acknowledges a thrown service error", () => {
+    const socket = createMockSocket();
+    const ack = vi.fn();
+
+    createSocketHandler({
+      socket: socket as never,
+      event: ClientToServerEvent.StartGame,
+      schema: startGamePayloadSchema,
+      invalidPayload: {
+        code: "INVALID_START_GAME_PAYLOAD",
+        message: "Room code is invalid.",
+      },
+      handle: () => {
+        throw new Error("ONLY_HOST_CAN_START_GAME");
+      },
+      fallbackErrorCode: "START_GAME_FAILED",
+      errorMessages: startGameErrorMessages,
+    });
+
+    socket.trigger(
+      ClientToServerEvent.StartGame,
+      { roomId: "party-room", requestId: "00000000-0000-4000-8000-000000000003" },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({
+      ok: false,
+      requestId: "00000000-0000-4000-8000-000000000003",
+      code: "ONLY_HOST_CAN_START_GAME",
+    });
+  });
+
   it("emits the expected error for an invalid payload", () => {
     const socket = createMockSocket();
     const handle = vi.fn();

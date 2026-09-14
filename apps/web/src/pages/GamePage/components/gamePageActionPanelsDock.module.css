@@ -50,6 +50,11 @@
   transform: scale(0.97);
 }
 
+.floatingPrimaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .actionButtonMotionWrap {
   display: flex;
   min-width: 0;

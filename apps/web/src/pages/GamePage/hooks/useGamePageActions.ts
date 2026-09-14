@@ -2,7 +2,8 @@ import {
   ClientToServerEvent,
   type PublicRoomState,
 } from "@tunetrack/shared";
-import { useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
+import { emitAction } from "../../../services/socket/emitAction";
 import { getSocketClient } from "../../../services/socket/socketClient";
 
 async function emitRoomEvent<TPayload>(
@@ -38,16 +39,36 @@ export function useGamePageActions({
   onSkipTrackWithTtIntent,
   setLocallyPlacedCard,
 }: UseGamePageActionsOptions) {
-  const handlePlaceCard = useCallback(() => {
-    if (!roomState || roomState.status !== "turn" || !isCurrentPlayerTurn) {
+  const isPlaceCardPendingRef = useRef(false);
+  const [isPlaceCardPending, setIsPlaceCardPending] = useState(false);
+
+  const handlePlaceCard = useCallback(async () => {
+    if (
+      !roomState ||
+      roomState.status !== "turn" ||
+      !isCurrentPlayerTurn ||
+      isPlaceCardPendingRef.current
+    ) {
       return;
     }
 
+    isPlaceCardPendingRef.current = true;
+    setIsPlaceCardPending(true);
     setLocallyPlacedCard(roomState.currentTrackCard ?? null);
-    void emitRoomEvent(ClientToServerEvent.PlaceCard, {
-      roomId: roomState.roomId,
-      selectedSlotIndex,
-    });
+    try {
+      const result = await emitAction(ClientToServerEvent.PlaceCard, {
+        roomId: roomState.roomId,
+        selectedSlotIndex,
+      });
+      if (result.status !== "ok") {
+        setLocallyPlacedCard(null);
+      }
+    } catch {
+      setLocallyPlacedCard(null);
+    } finally {
+      isPlaceCardPendingRef.current = false;
+      setIsPlaceCardPending(false);
+    }
   }, [isCurrentPlayerTurn, roomState, selectedSlotIndex, setLocallyPlacedCard]);
 
   const handleConfirmReveal = useCallback(() => {
@@ -230,5 +251,6 @@ export function useGamePageActions({
     handleSkipTrackWithTt,
     handleSkipTurn,
     handleTransferHost,
+    isPlaceCardPending,
   };
 }

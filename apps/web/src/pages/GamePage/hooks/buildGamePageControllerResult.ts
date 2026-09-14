@@ -22,6 +22,7 @@ interface BuildGamePageControllerResultOptions {
     | "handleResolveChallengeWindow"
     | "handleSkipTrackWithTt"
     | "handleSkipTurn"
+    | "isPlaceCardPending"
   >;
   capabilityState: Pick<
     UseGamePageControllerResult,

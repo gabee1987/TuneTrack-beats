@@ -30,6 +30,7 @@ export function buildGamePageAssemblyModel(
       handleSkipTrackWithTt: controller.handleSkipTrackWithTt,
       handleSkipTurn: controller.handleSkipTurn,
       isCurrentPlayerTurn: controller.isCurrentPlayerTurn,
+      isPlaceCardPending: controller.isPlaceCardPending,
       roomState: controller.roomState,
       showHelperLabels: controller.showHelperLabels,
     },

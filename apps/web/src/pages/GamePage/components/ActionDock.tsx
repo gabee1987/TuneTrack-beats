@@ -81,6 +81,7 @@ export function ActionDock({ children, className }: ActionDockProps) {
 
 interface ActionButtonProps {
   children: React.ReactNode;
+  disabled?: boolean;
   onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
   ttCost?: number;
   ttCostBadgeRef?: React.Ref<HTMLSpanElement>;
@@ -88,6 +89,7 @@ interface ActionButtonProps {
 
 export function PrimaryActionButton({
   children,
+  disabled,
   onClick,
   ttCost,
   ttCostBadgeRef,
@@ -95,6 +97,7 @@ export function PrimaryActionButton({
   return (
     <button
       className={styles.floatingPrimaryButton}
+      disabled={disabled}
       onClick={onClick}
       type="button"
     >
