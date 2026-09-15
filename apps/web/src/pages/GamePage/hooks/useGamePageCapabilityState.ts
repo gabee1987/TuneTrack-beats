@@ -9,6 +9,7 @@ import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import { useI18n } from "../../../features/i18n";
 import type {
   AwardTtActionState,
+  KickPlayerActionState,
   TransferHostActionState,
 } from "../GamePage.types";
 import { createGameMenuTabs } from "../gamePageMenuTabs";
@@ -25,7 +26,9 @@ interface UseGamePageCapabilityStateOptions {
     handleKickPlayer: (playerId: string) => void;
     handleTransferHost: (playerId: string) => void;
     isAwardTtPending: boolean;
+    isKickPlayerPending: boolean;
     isTransferHostPending: boolean;
+    kickPlayerActionState: KickPlayerActionState | null;
     transferHostActionState: TransferHostActionState | null;
   };
   roomState: PublicRoomState | null;
@@ -122,7 +125,9 @@ export function useGamePageCapabilityState({
     handleRemoveTt,
     handleTransferHost,
     isAwardTtPending,
+    isKickPlayerPending,
     isTransferHostPending,
+    kickPlayerActionState,
     transferHostActionState,
   } = handlers;
   const menuTabs = useMemo<AppShellMenuTab[]>(
@@ -133,7 +138,9 @@ export function useGamePageCapabilityState({
             historyEntries,
             awardTtActionState,
             isAwardTtPending,
+            isKickPlayerPending,
             isTransferHostPending,
+            kickPlayerActionState,
             onAwardTt: handleAwardTt,
             onKickPlayer: handleKickPlayer,
             onRemoveTt: handleRemoveTt,
@@ -152,7 +159,9 @@ export function useGamePageCapabilityState({
       handleRemoveTt,
       handleTransferHost,
       isAwardTtPending,
+      isKickPlayerPending,
       isTransferHostPending,
+      kickPlayerActionState,
       roomState,
       t,
       transferHostActionState,

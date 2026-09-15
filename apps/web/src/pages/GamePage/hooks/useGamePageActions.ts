@@ -4,7 +4,6 @@ import {
 } from "@tunetrack/shared";
 import { useCallback, useRef, useState } from "react";
 import { emitAction } from "../../../services/socket/emitAction";
-import { getSocketClient } from "../../../services/socket/socketClient";
 import type {
   BuyTimelineCardActionStatus,
   ClaimChallengeActionStatus,
@@ -15,17 +14,10 @@ import type {
   SkipTrackActionStatus,
 } from "../GamePage.types";
 import { useAwardTtAction } from "./useAwardTtAction";
+import { useKickPlayerAction } from "./useKickPlayerAction";
 import { useResolveChallengeWindowAction } from "./useResolveChallengeWindowAction";
 import { useSkipTurnAction } from "./useSkipTurnAction";
 import { useTransferHostAction } from "./useTransferHostAction";
-
-async function emitRoomEvent<TPayload>(
-  event: (typeof ClientToServerEvent)[keyof typeof ClientToServerEvent],
-  payload: TPayload,
-) {
-  const socketClient = await getSocketClient();
-  socketClient.emit(event, payload);
-}
 
 interface UseGamePageActionsOptions {
   canClaimChallenge: boolean | null | undefined;
@@ -55,6 +47,7 @@ export function useGamePageActions({
   const roomStateRef = useRef(roomState);
   roomStateRef.current = roomState;
   const awardTtAction = useAwardTtAction({ currentPlayerId, roomState });
+  const kickPlayerAction = useKickPlayerAction({ currentPlayerId, roomState });
   const resolveChallengeWindowAction = useResolveChallengeWindowAction({
     canResolveChallengeWindow,
     roomState,
@@ -316,24 +309,6 @@ export function useGamePageActions({
     }
   }, [currentPlayerId, roomState]);
 
-  const handleKickPlayer = useCallback(
-    (playerId: string) => {
-      if (
-        !roomState ||
-        roomState.hostId !== currentPlayerId ||
-        playerId === currentPlayerId
-      ) {
-        return;
-      }
-
-      void emitRoomEvent(ClientToServerEvent.KickPlayer, {
-        roomId: roomState.roomId,
-        playerId,
-      });
-    },
-    [currentPlayerId, roomState],
-  );
-
   const handleSkipTrackWithTt = useCallback(async () => {
     if (
       !roomState ||
@@ -447,7 +422,7 @@ export function useGamePageActions({
     handleClaimChallenge,
     handleCloseRoom,
     handleConfirmReveal,
-    handleKickPlayer,
+    handleKickPlayer: kickPlayerAction.handleKickPlayer,
     handlePlaceCard,
     handlePlaceChallenge,
     handleResolveChallengeWindow:
@@ -459,6 +434,7 @@ export function useGamePageActions({
     isAwardTtPending: awardTtAction.isPending,
     isClaimChallengePending,
     isCloseRoomPending,
+    isKickPlayerPending: kickPlayerAction.isPending,
     isConfirmRevealPending,
     isPlaceCardPending,
     isPlaceChallengePending,
@@ -470,6 +446,7 @@ export function useGamePageActions({
     confirmRevealActionStatus,
     placeCardActionStatus,
     placeChallengeActionStatus,
+    kickPlayerActionState: kickPlayerAction.actionState,
     resolveChallengeWindowActionStatus: resolveChallengeWindowAction.actionStatus,
     skipTrackActionStatus,
     skipTurnActionStatus: skipTurnAction.actionStatus,

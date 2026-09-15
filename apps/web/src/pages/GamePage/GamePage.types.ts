@@ -32,6 +32,7 @@ export type SkipTrackActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type SkipTurnActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type AwardTtActionStatus = "pending" | "retrying" | "failed";
 export type TransferHostActionStatus = "pending" | "retrying" | "failed";
+export type KickPlayerActionStatus = "pending" | "retrying" | "failed";
 
 export interface AwardTtActionState {
   amount: 1 | -1;
@@ -42,6 +43,11 @@ export interface AwardTtActionState {
 export interface TransferHostActionState {
   playerId: string;
   status: TransferHostActionStatus;
+}
+
+export interface KickPlayerActionState {
+  playerId: string;
+  status: KickPlayerActionStatus;
 }
 
 export type ChallengeMarkerTone = "pending" | "success" | "failure";

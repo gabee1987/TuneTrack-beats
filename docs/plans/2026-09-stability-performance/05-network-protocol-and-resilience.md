@@ -216,8 +216,9 @@ server to see the same action twice. For most events this is harmless (settings 
 idempotent by nature), but these are not: `place_card`, `confirm_reveal`,
 `place_challenge`, `buy_timeline_card_with_tt`, `skip_track_with_tt`, `award_tt`.
 Manual `skip_turn` advances gameplay, while `resolve_challenge_window` changes its phase;
-`transfer_host` changes the caller's authority. All three therefore require the same replay
-protection for a lost acknowledgement.
+`transfer_host` changes the caller's authority, and `kick_player` removes membership and emits
+a terminal notification. All four therefore require the same replay protection for a lost
+acknowledgement.
 
 - Add an optional `requestId` to those payload schemas in
   `packages/shared/src/events/schemas.ts`.
@@ -243,8 +244,8 @@ Per-action feedback becomes possible for the first time:
 Migrate incrementally, highest-risk actions first: `place_card`, `confirm_reveal`,
 `place_challenge`, `claim_challenge`, `start_game`, `close_room`,
 `buy_timeline_card_with_tt`, `skip_track_with_tt`, `award_tt`, `skip_turn`,
-`resolve_challenge_window`, `transfer_host`. Settings toggles can stay fire-and-forget until
-last.
+`resolve_challenge_window`, `transfer_host`, `kick_player`. Settings toggles can stay
+fire-and-forget until last.
 
 ### Acceptance
 
@@ -284,6 +285,9 @@ last.
 - [x] `transfer_host` changes room ownership once when its acknowledged request is replayed;
       all player-row controls share duplicate blocking and the selected confirmation exposes
       retry feedback only when an acknowledgement is delayed or lost.
+- [x] `kick_player` removes the selected player and sends its terminal notification once when
+      an acknowledged request is replayed; all player-row removal controls share duplicate
+      blocking and the selected confirmation exposes timeout-only retry feedback.
 
 ## 5. Phase 5 — Honest connection state in the UI · **S2**
 

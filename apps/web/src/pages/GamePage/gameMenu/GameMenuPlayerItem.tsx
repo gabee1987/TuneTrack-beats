@@ -15,6 +15,7 @@ import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import styles from "../gamePageStyles";
 import type {
   AwardTtActionState,
+  KickPlayerActionState,
   TransferHostActionState,
 } from "../GamePage.types";
 import { TokenAdjustButtons } from "./TokenAdjustButtons";
@@ -23,7 +24,9 @@ interface GameMenuPlayerItemProps {
   awardTtActionState: AwardTtActionState | null;
   currentPlayerId: string | null;
   isAwardTtPending: boolean;
+  isKickPlayerPending: boolean;
   isTransferHostPending: boolean;
+  kickPlayerActionState: KickPlayerActionState | null;
   onAwardTt: (playerId: string) => boolean;
   onKickPlayer: (playerId: string) => void;
   onRemoveTt: (playerId: string) => boolean;
@@ -38,7 +41,9 @@ export function GameMenuPlayerItem({
   awardTtActionState,
   currentPlayerId,
   isAwardTtPending,
+  isKickPlayerPending,
   isTransferHostPending,
+  kickPlayerActionState,
   onAwardTt,
   onKickPlayer,
   onRemoveTt,
@@ -60,7 +65,8 @@ export function GameMenuPlayerItem({
   const hasTransferPermission =
     isCurrentPlayerHost && !isCurrentPlayer && !player.isHost && !isDisconnected;
   const canTransferHost = hasTransferPermission && !isTransferHostPending;
-  const canKickPlayer = isCurrentPlayerHost && !isCurrentPlayer;
+  const hasKickPermission = isCurrentPlayerHost && !isCurrentPlayer;
+  const canKickPlayer = hasKickPermission && !isKickPlayerPending;
   const hasTokenActions = roomState.settings.ttModeEnabled && isCurrentPlayerHost;
   const hasTransferAction = isCurrentPlayerHost && !isCurrentPlayer;
   const hasExpandableContent = hasTransferAction;
@@ -74,6 +80,20 @@ export function GameMenuPlayerItem({
       : transferActionStatus === "failed"
         ? t("gameMenu.retryTransferHost")
         : t("gameMenu.transferHost");
+  const kickActionStatus =
+    kickPlayerActionState?.playerId === player.id ? kickPlayerActionState.status : null;
+  const kickButtonLabel =
+    kickActionStatus === "retrying"
+      ? t("gameMenu.kickPlayerRetrying")
+      : kickActionStatus === "failed"
+        ? t("gameMenu.retryKickPlayer")
+        : t("gameMenu.kickPlayer");
+  const removePlayerButtonLabel =
+    kickActionStatus === "retrying"
+      ? t("gameMenu.kickPlayerRetrying")
+      : kickActionStatus === "failed"
+        ? t("gameMenu.retryKickPlayer")
+        : t("gameMenu.removePlayer");
   const cardCount = roomState.timelines[player.id]?.length ?? 0;
   const cardCountLabel = t("gameMenu.cards", {
     count: cardCount,
@@ -108,6 +128,12 @@ export function GameMenuPlayerItem({
     }
   }, [hasTransferAction, isTransferConfirmOpen]);
 
+  useEffect(() => {
+    if (isKickConfirmOpen && !hasKickPermission) {
+      setIsKickConfirmOpen(false);
+    }
+  }, [hasKickPermission, isKickConfirmOpen]);
+
   function handleTransferHost() {
     if (!canTransferHost) {
       return;
@@ -120,7 +146,6 @@ export function GameMenuPlayerItem({
       return;
     }
     onKickPlayer(player.id);
-    setIsKickConfirmOpen(false);
   }
 
   return (
@@ -244,7 +269,7 @@ export function GameMenuPlayerItem({
               onClick={() => setIsKickConfirmOpen(true)}
               type="button"
             >
-              {t("gameMenu.kickPlayer")}
+              {kickButtonLabel}
             </button>
           ) : null}
         </div>
@@ -319,10 +344,11 @@ export function GameMenuPlayerItem({
           </button>
           <button
             className={`${styles.menuActionButton} ${styles.menuKickPlayerButton}`}
+            disabled={!canKickPlayer}
             onClick={handleKickPlayer}
             type="button"
           >
-            {t("gameMenu.removePlayer")}
+            {removePlayerButtonLabel}
           </button>
         </div>
       </MotionDialogPortal>

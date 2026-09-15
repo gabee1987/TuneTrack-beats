@@ -4,6 +4,7 @@ import type { Translate } from "../../../features/i18n";
 import type { GameHistoryEntry } from "../hooks/useGameHistory";
 import type {
   AwardTtActionState,
+  KickPlayerActionState,
   TransferHostActionState,
 } from "../GamePage.types";
 import styles from "../gamePageStyles";
@@ -17,7 +18,9 @@ export interface CreateGameMenuTabsOptions {
   historyEntries: GameHistoryEntry[];
   roomState: PublicRoomState;
   isAwardTtPending: boolean;
+  isKickPlayerPending: boolean;
   isTransferHostPending: boolean;
+  kickPlayerActionState: KickPlayerActionState | null;
   onAwardTt: (playerId: string) => boolean;
   onKickPlayer: (playerId: string) => void;
   onRemoveTt: (playerId: string) => boolean;
@@ -31,7 +34,9 @@ export function createGameMenuTabs({
   currentPlayerId,
   historyEntries,
   isAwardTtPending,
+  isKickPlayerPending,
   isTransferHostPending,
+  kickPlayerActionState,
   roomState,
   onAwardTt,
   onKickPlayer,
@@ -60,7 +65,9 @@ export function createGameMenuTabs({
                 currentPlayerId={currentPlayerId}
                 key={player.id}
                 isAwardTtPending={isAwardTtPending}
+                isKickPlayerPending={isKickPlayerPending}
                 isTransferHostPending={isTransferHostPending}
+                kickPlayerActionState={kickPlayerActionState}
                 onAwardTt={onAwardTt}
                 onKickPlayer={onKickPlayer}
                 onRemoveTt={onRemoveTt}

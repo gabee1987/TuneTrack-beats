@@ -161,6 +161,7 @@ export const transferHostPayloadSchema = z.object({
 export const kickPlayerPayloadSchema = z.object({
   roomId: roomIdSchema,
   playerId: z.string().trim().min(1),
+  requestId: z.string().uuid().optional(),
 });
 
 export const placeCardPayloadSchema = z.object({

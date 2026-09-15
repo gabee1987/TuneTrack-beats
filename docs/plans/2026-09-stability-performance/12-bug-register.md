@@ -730,9 +730,23 @@ Submitted room, host, target membership, and connection state are rechecked befo
 feedback is retained, and the confirmation closes when authoritative state removes the old
 host's transfer controls.
 
-Root cause #2 remains **open**. Player removal and settings callers still use bare emits and
-do not yet have per-action acknowledgement feedback. Root causes #4 and #5 also remain open;
-B8 therefore remains **Confirmed**, not Fixed.
+### Root cause #2 `kick_player` migration (2026-09-15)
+
+`kick_player` now uses the acknowledged action path and room-scoped replay LRU. Its single
+timeout retry reuses the original request id, so replay returns the original success without
+removing the target again, sending another kicked-room notification, logging another removal,
+or rebroadcasting unchanged membership. The host remains a room member, so the successful
+acknowledgement remains available after the target is removed.
+
+All player rows share a synchronous removal guard. The selected destructive confirmation
+stays open and disabled while awaiting authoritative state, retaining its normal label for a
+typical response. Localised retrying and final retry labels appear only after acknowledgement
+timeouts. Submitted room, host, and target membership are rechecked before retaining timeout
+feedback; authoritative removal unmounts the target row and its confirmation.
+
+Root cause #2 remains **open**. Settings callers still use bare emits and do not yet have
+per-action acknowledgement feedback. Root causes #4 and #5 also remain open; B8 therefore
+remains **Confirmed**, not Fixed.
 
 ### Verification
 
@@ -757,7 +771,8 @@ B8 therefore remains **Confirmed**, not Fixed.
   likewise blocks duplicates, retries once, retains its normal label during a typical response,
   and discards timeout feedback after the submitted open window is no longer current. Host
   transfer uses the same lifecycle in its real confirmation dialog, with one shared guard
-  across every eligible target.
+  across every eligible target. Player removal has a matching destructive-dialog regression,
+  including stable normal text and timeout-only feedback.
 - `roomFlow.test.ts`: replaying successful skip-track and timeline-card purchases returns each
   original acknowledgement. Each service is called once; the skip spends one token and draws
   one track, then the purchase spends three tokens and awards one card. Replaying a host token
@@ -774,7 +789,8 @@ B8 therefore remains **Confirmed**, not Fixed.
   replay returns its original acknowledgement. Replaying `resolve_challenge_window` closes the
   open window once and returns the original success after the room enters reveal. Replaying
   `transfer_host` returns the original success after ownership changes while the transfer
-  service runs once. Replaying `close_room` after room deletion likewise returns its original
+  service runs once. Replaying `kick_player` removes the target and sends its terminal
+  notification once. Replaying `close_room` after room deletion likewise returns its original
   acknowledgement while the close service runs once.
 - `RoomStore.test.ts`: processed-action acknowledgements are room-scoped, capped at 32, and
   removed with their room.

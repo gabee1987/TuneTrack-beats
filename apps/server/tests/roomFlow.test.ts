@@ -1079,7 +1079,9 @@ describe("room flow", () => {
   });
 
   it("notifies a kicked player so their client can leave the room", async () => {
-    const serverContext = await startTestServer();
+    const roomService = createTestRoomService();
+    const kickPlayerSpy = vi.spyOn(roomService, "kickPlayer");
+    const serverContext = await startTestServer(roomService);
     const hostSocket = createClient(serverContext.baseUrl);
     const guestSocket = createClient(serverContext.baseUrl);
 
@@ -1105,7 +1107,14 @@ describe("room flow", () => {
 
     const guestIdentity = await guestIdentityPromise;
 
-    const kickedPromise = waitForEvent<{ roomId: string; message: string }>(
+    const kickedNotificationSpy = vi.fn();
+    guestSocket.on(ServerToClientEvent.RoomClosed, kickedNotificationSpy);
+    const kickedPromise = waitForEvent<{
+      roomId: string;
+      message: string;
+      reason: string;
+      roomName: string;
+    }>(
       guestSocket,
       ServerToClientEvent.RoomClosed,
     );
@@ -1116,10 +1125,14 @@ describe("room flow", () => {
         !roomState.players.some((player) => player.id === guestIdentity.playerId),
     );
 
-    hostSocket.emit(ClientToServerEvent.KickPlayer, {
-      roomId: "kick-room",
-      playerId: guestIdentity.playerId,
-    });
+    const requestId = "00000000-0000-4000-8000-00000000010c";
+    const firstAckPromise = hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.KickPlayer, {
+        roomId: "kick-room",
+        playerId: guestIdentity.playerId,
+        requestId,
+      }) as Promise<ActionAck>;
 
     await expect(kickedPromise).resolves.toEqual({
       roomId: "kick-room",
@@ -1130,6 +1143,19 @@ describe("room flow", () => {
     await expect(hostStatePromise).resolves.toEqual(
       expect.objectContaining({ roomId: "kick-room" }),
     );
+    const firstAck = await firstAckPromise;
+    const replayAck = (await hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.KickPlayer, {
+        roomId: "kick-room",
+        playerId: guestIdentity.playerId,
+        requestId,
+      })) as ActionAck;
+
+    expect(firstAck).toEqual({ ok: true, requestId });
+    expect(replayAck).toEqual(firstAck);
+    expect(kickPlayerSpy).toHaveBeenCalledTimes(1);
+    expect(kickedNotificationSpy).toHaveBeenCalledTimes(1);
   });
 
   it("removes kicked players from future turn order during a game", () => {

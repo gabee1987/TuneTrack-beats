@@ -112,6 +112,7 @@ export interface TransferHostPayload {
 export interface KickPlayerPayload {
   roomId: RoomId;
   playerId: PlayerId;
+  requestId?: string;
 }
 
 export interface PlaceCardPayload {

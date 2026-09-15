@@ -251,6 +251,17 @@ function registerKickPlayerHandler(io: Server, socket: Socket, roomService: Room
 
       broadcastRoomState(io, roomState);
     },
+    idempotency: {
+      find: (data) =>
+        data.requestId
+          ? roomService.getProcessedActionAck(socket.id, data.roomId, data.requestId)
+          : undefined,
+      remember: (data, ack) => {
+        if (data.requestId) {
+          roomService.rememberProcessedActionAck(data.roomId, ack);
+        }
+      },
+    },
     fallbackErrorCode: "KICK_PLAYER_FAILED",
     errorMessages: kickPlayerErrorMessages,
   });

@@ -278,7 +278,9 @@ function TransferHostHarnessContent() {
         awardTtActionState={actions.awardTtActionState}
         currentPlayerId={TEST_HOST_ID}
         isAwardTtPending={actions.isAwardTtPending}
+        isKickPlayerPending={actions.isKickPlayerPending}
         isTransferHostPending={actions.isTransferHostPending}
+        kickPlayerActionState={actions.kickPlayerActionState}
         onAwardTt={actions.handleAwardTt}
         onKickPlayer={actions.handleKickPlayer}
         onRemoveTt={actions.handleRemoveTt}
@@ -822,6 +824,62 @@ describe("useGamePageActions transfer_host", () => {
 
     const retryButton = within(dialog).getByRole("button", {
       name: /try transferring again/i,
+    });
+    expect(retryButton).toBeEnabled();
+
+    emitActionMock.mockResolvedValueOnce({ status: "ok" });
+    fireEvent.click(retryButton);
+
+    await waitFor(() => expect(emitActionMock).toHaveBeenCalledTimes(2));
+  });
+});
+
+describe("useGamePageActions kick_player", () => {
+  beforeEach(() => {
+    emitActionMock.mockReset();
+  });
+
+  it("retries one timeout, blocks duplicate removals, and exposes a final retry", async () => {
+    const deferred = createDeferredActionResult();
+    emitActionMock.mockReturnValueOnce(deferred.promise);
+    render(<TransferHostHarness />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /show host transfer controls/i }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: /^kick player$/i }));
+    const dialog = screen.getByRole("dialog", { name: /^kick player$/i });
+    const confirmButton = within(dialog).getByRole("button", {
+      name: /remove player/i,
+    });
+    fireEvent.click(confirmButton);
+    fireEvent.click(confirmButton);
+
+    expect(confirmButton).toBeDisabled();
+    expect(confirmButton).toHaveTextContent(/^remove player$/i);
+    expect(emitActionMock).toHaveBeenCalledTimes(1);
+    expect(emitActionMock).toHaveBeenCalledWith(
+      ClientToServerEvent.KickPlayer,
+      { roomId: "TEST_ROOM_1", playerId: TEST_GUEST_ID },
+      expect.objectContaining({ retryOnTimeout: true }),
+    );
+
+    const options = emitActionMock.mock.calls[0]?.[2] as {
+      onTimeoutRetry?: () => void;
+    };
+    act(() => options.onTimeoutRetry?.());
+
+    expect(
+      within(dialog).getByRole("button", { name: /no response.*retrying/i }),
+    ).toBeDisabled();
+
+    await act(async () => {
+      deferred.resolve({ status: "timeout" });
+      await deferred.promise;
+    });
+
+    const retryButton = within(dialog).getByRole("button", {
+      name: /try removing again/i,
     });
     expect(retryButton).toBeEnabled();
 

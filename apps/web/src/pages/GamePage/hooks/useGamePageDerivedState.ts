@@ -5,6 +5,7 @@ import type {
   GamePageCard,
   GamePagePlayerNameResolver,
   GamePageViewPreferenceUpdater,
+  KickPlayerActionState,
   TimelineCelebrationTone,
   TimelineView,
   TransferHostActionState,
@@ -42,7 +43,9 @@ interface UseGamePageDerivedStateOptions {
     handleKickPlayer: (playerId: string) => void;
     handleTransferHost: (playerId: string) => void;
     isAwardTtPending: boolean;
+    isKickPlayerPending: boolean;
     isTransferHostPending: boolean;
+    kickPlayerActionState: KickPlayerActionState | null;
     transferHostActionState: TransferHostActionState | null;
   };
 }
