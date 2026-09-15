@@ -45,7 +45,9 @@ describe("buildGamePageAssemblyModel", () => {
       isPlaceCardPending: true,
       placeCardActionStatus: "retrying",
       placeChallengeActionStatus: "failed",
+      skipTrackActionStatus: "pending",
       isPlaceChallengePending: false,
+      isSkipTrackPending: true,
       isViewingOwnTimeline: false,
       leadingPlayers: [],
       menuTabs: [],
@@ -126,6 +128,8 @@ describe("buildGamePageAssemblyModel", () => {
     expect(model.actions.placeCardActionStatus).toBe("retrying");
     expect(model.actions.placeChallengeActionStatus).toBe("failed");
     expect(model.actions.isPlaceChallengePending).toBe(false);
+    expect(model.actions.skipTrackActionStatus).toBe("pending");
+    expect(model.actions.isSkipTrackPending).toBe(true);
     expect(model.actions.roomState).toBe(controller.roomState);
   });
 });

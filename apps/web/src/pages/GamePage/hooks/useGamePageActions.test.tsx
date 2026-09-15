@@ -64,8 +64,10 @@ function PlacementHarness({
         handleSkipTrackWithTt={actions.handleSkipTrackWithTt}
         isBuyTimelineCardPending={actions.isBuyTimelineCardPending}
         isPlaceCardPending={actions.isPlaceCardPending}
+        isSkipTrackPending={actions.isSkipTrackPending}
         placeCardActionStatus={actions.placeCardActionStatus}
         roomState={roomState}
+        skipTrackActionStatus={actions.skipTrackActionStatus}
       />
     </I18nProvider>
   );
@@ -236,9 +238,58 @@ function BuyTimelineCardHarness({
         handleSkipTrackWithTt={actions.handleSkipTrackWithTt}
         isBuyTimelineCardPending={actions.isBuyTimelineCardPending}
         isPlaceCardPending={actions.isPlaceCardPending}
+        isSkipTrackPending={actions.isSkipTrackPending}
         onTokenSpendAnimationStart={onTokenSpendAnimationStart}
         placeCardActionStatus={actions.placeCardActionStatus}
         roomState={roomState}
+        skipTrackActionStatus={actions.skipTrackActionStatus}
+      />
+    </I18nProvider>
+  );
+}
+
+function SkipTrackHarness({
+  onSkipTrackWithTtIntent,
+  onTokenSpendAnimationStart,
+}: {
+  onSkipTrackWithTtIntent: ReturnType<typeof vi.fn>;
+  onTokenSpendAnimationStart: ReturnType<typeof vi.fn>;
+}) {
+  const roomState = buildTurnRoomState({
+    settings: buildRoomSettings({ ttModeEnabled: true }),
+  });
+  const actions = useGamePageActions({
+    canClaimChallenge: false,
+    canConfirmReveal: false,
+    canResolveChallengeWindow: false,
+    canSelectChallengeSlot: false,
+    currentPlayerId: TEST_HOST_ID,
+    isCurrentPlayerTurn: true,
+    onSkipTrackWithTtIntent,
+    roomState,
+    selectedSlotIndex: 1,
+    setLocallyPlacedCard: vi.fn(),
+  });
+
+  return (
+    <I18nProvider>
+      <TurnActionDock
+        buyTimelineCardActionStatus={actions.buyTimelineCardActionStatus}
+        canConfirmTurnPlacement={false}
+        canSkipOfflinePlayer={false}
+        canUseBuyCard={false}
+        canUseSkipTrack
+        handleBuyTimelineCardWithTt={actions.handleBuyTimelineCardWithTt}
+        handlePlaceCard={actions.handlePlaceCard}
+        handleSkipOfflinePlayer={actions.handleSkipTurn}
+        handleSkipTrackWithTt={actions.handleSkipTrackWithTt}
+        isBuyTimelineCardPending={actions.isBuyTimelineCardPending}
+        isPlaceCardPending={actions.isPlaceCardPending}
+        isSkipTrackPending={actions.isSkipTrackPending}
+        onTokenSpendAnimationStart={onTokenSpendAnimationStart}
+        placeCardActionStatus={actions.placeCardActionStatus}
+        roomState={roomState}
+        skipTrackActionStatus={actions.skipTrackActionStatus}
       />
     </I18nProvider>
   );
@@ -532,6 +583,61 @@ describe("useGamePageActions buy_timeline_card_with_tt", () => {
 
     const retryButton = await screen.findByRole("button", { name: /try again/i });
     expect(retryButton).toBeEnabled();
+
+    emitActionMock.mockResolvedValueOnce({ status: "ok" });
+    fireEvent.click(retryButton);
+
+    await waitFor(() => expect(emitActionMock).toHaveBeenCalledTimes(2));
+  });
+});
+
+describe("useGamePageActions skip_track_with_tt", () => {
+  beforeEach(() => {
+    emitActionMock.mockReset();
+  });
+
+  it("retries safely, blocks duplicate skips, and clears failed animation intent", async () => {
+    const deferred = createDeferredActionResult();
+    const onSkipTrackWithTtIntent = vi.fn();
+    const onTokenSpendAnimationStart = vi.fn();
+    emitActionMock.mockReturnValueOnce(deferred.promise);
+    render(
+      <SkipTrackHarness
+        onSkipTrackWithTtIntent={onSkipTrackWithTtIntent}
+        onTokenSpendAnimationStart={onTokenSpendAnimationStart}
+      />,
+    );
+
+    const skipButton = screen.getByRole("button", { name: /skip/i });
+    fireEvent.click(skipButton);
+    fireEvent.click(skipButton);
+
+    expect(screen.getByRole("button", { name: /skipping track/i })).toBeDisabled();
+    expect(emitActionMock).toHaveBeenCalledTimes(1);
+    expect(emitActionMock).toHaveBeenCalledWith(
+      ClientToServerEvent.SkipTrackWithTt,
+      { roomId: "TEST_ROOM_1" },
+      expect.objectContaining({ retryOnTimeout: true }),
+    );
+    expect(onSkipTrackWithTtIntent).toHaveBeenCalledTimes(1);
+    expect(onSkipTrackWithTtIntent).toHaveBeenCalledWith("track-current");
+    expect(onTokenSpendAnimationStart).toHaveBeenCalledTimes(1);
+
+    const options = emitActionMock.mock.calls[0]?.[2] as {
+      onTimeoutRetry?: () => void;
+    };
+    act(() => options.onTimeoutRetry?.());
+
+    expect(screen.getByRole("button", { name: /no response.*retrying/i })).toBeDisabled();
+
+    await act(async () => {
+      deferred.resolve({ status: "timeout" });
+      await deferred.promise;
+    });
+
+    const retryButton = await screen.findByRole("button", { name: /try again/i });
+    expect(retryButton).toBeEnabled();
+    expect(onSkipTrackWithTtIntent).toHaveBeenLastCalledWith(null);
 
     emitActionMock.mockResolvedValueOnce({ status: "ok" });
     fireEvent.click(retryButton);

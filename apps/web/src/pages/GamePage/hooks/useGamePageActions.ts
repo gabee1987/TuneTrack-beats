@@ -12,6 +12,7 @@ import type {
   ConfirmRevealActionStatus,
   PlaceCardActionStatus,
   PlaceChallengeActionStatus,
+  SkipTrackActionStatus,
 } from "../GamePage.types";
 
 async function emitRoomEvent<TPayload>(
@@ -55,6 +56,9 @@ export function useGamePageActions({
   const isBuyTimelineCardPendingRef = useRef(false);
   const [buyTimelineCardActionStatus, setBuyTimelineCardActionStatus] =
     useState<BuyTimelineCardActionStatus>("idle");
+  const isSkipTrackPendingRef = useRef(false);
+  const [skipTrackActionStatus, setSkipTrackActionStatus] =
+    useState<SkipTrackActionStatus>("idle");
   const isClaimChallengePendingRef = useRef(false);
   const [claimChallengeActionStatus, setClaimChallengeActionStatus] =
     useState<ClaimChallengeActionStatus>("idle");
@@ -83,6 +87,8 @@ export function useGamePageActions({
   const isBuyTimelineCardPending =
     buyTimelineCardActionStatus === "pending" ||
     buyTimelineCardActionStatus === "retrying";
+  const isSkipTrackPending =
+    skipTrackActionStatus === "pending" || skipTrackActionStatus === "retrying";
 
   const handlePlaceCard = useCallback(async () => {
     if (
@@ -383,20 +389,60 @@ export function useGamePageActions({
     [currentPlayerId, roomState],
   );
 
-  const handleSkipTrackWithTt = useCallback(() => {
+  const handleSkipTrackWithTt = useCallback(async () => {
     if (
       !roomState ||
       !roomState.settings.ttModeEnabled ||
       roomState.status !== "turn" ||
-      !isCurrentPlayerTurn
+      !isCurrentPlayerTurn ||
+      isSkipTrackPendingRef.current
     ) {
       return;
     }
 
-    onSkipTrackWithTtIntent?.(roomState.currentTrackCard?.id ?? null);
-    void emitRoomEvent(ClientToServerEvent.SkipTrackWithTt, {
-      roomId: roomState.roomId,
-    });
+    const submittedTurnNumber = roomState.turn?.turnNumber;
+    const submittedCardId = roomState.currentTrackCard?.id;
+    function isSubmittedTrackCurrent() {
+      const currentRoomState = roomStateRef.current;
+      return (
+        currentRoomState?.status === "turn" &&
+        currentRoomState.turn?.turnNumber === submittedTurnNumber &&
+        currentRoomState.currentTrackCard?.id === submittedCardId
+      );
+    }
+
+    isSkipTrackPendingRef.current = true;
+    setSkipTrackActionStatus("pending");
+    onSkipTrackWithTtIntent?.(submittedCardId ?? null);
+    try {
+      const result = await emitAction(
+        ClientToServerEvent.SkipTrackWithTt,
+        { roomId: roomState.roomId },
+        {
+          onTimeoutRetry: () => {
+            if (isSubmittedTrackCurrent()) {
+              setSkipTrackActionStatus("retrying");
+            }
+          },
+          retryOnTimeout: true,
+        },
+      );
+      const isCurrent = isSubmittedTrackCurrent();
+      if (result.status !== "ok" && isCurrent) {
+        onSkipTrackWithTtIntent?.(null);
+      }
+      setSkipTrackActionStatus(
+        result.status === "timeout" && isCurrent ? "failed" : "idle",
+      );
+    } catch {
+      const isCurrent = isSubmittedTrackCurrent();
+      if (isCurrent) {
+        onSkipTrackWithTtIntent?.(null);
+      }
+      setSkipTrackActionStatus(isCurrent ? "failed" : "idle");
+    } finally {
+      isSkipTrackPendingRef.current = false;
+    }
   }, [isCurrentPlayerTurn, onSkipTrackWithTtIntent, roomState]);
 
   const handleBuyTimelineCardWithTt = useCallback(async () => {
@@ -478,9 +524,11 @@ export function useGamePageActions({
     isConfirmRevealPending,
     isPlaceCardPending,
     isPlaceChallengePending,
+    isSkipTrackPending,
     claimChallengeActionStatus,
     confirmRevealActionStatus,
     placeCardActionStatus,
     placeChallengeActionStatus,
+    skipTrackActionStatus,
   };
 }

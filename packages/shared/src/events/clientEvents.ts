@@ -145,6 +145,7 @@ export interface ResolveChallengeWindowPayload {
 
 export interface SkipTrackWithTtPayload {
   roomId: RoomId;
+  requestId?: string;
 }
 
 export interface BuyTimelineCardWithTtPayload {

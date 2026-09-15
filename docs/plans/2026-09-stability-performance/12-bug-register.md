@@ -660,6 +660,20 @@ disabled control prevents rapid taps from starting duplicate animations or purch
 authoritative update has already moved beyond the submitted turn and card, stale timeout state
 is discarded.
 
+### Root cause #2 `skip_track_with_tt` migration (2026-09-15)
+
+`skip_track_with_tt` now uses the acknowledged action path and room-scoped replay LRU. A
+timeout retry reuses the request id, so replay returns the original success without spending
+another token, drawing another track, or rebroadcasting the mutation. Rapid presses are
+blocked synchronously and the skip control exposes localised pending, retrying, and final
+retry states.
+
+The existing preview-transition intent is retained while the request is pending so an
+authoritative replacement still animates normally. A rejection, offline result, or final
+timeout clears that intent while the submitted turn and track are still current, preventing a
+later unrelated track change from being misidentified as the skipped-card transition. Stale
+timeout UI is discarded when authoritative state has already moved forward.
+
 Root cause #2 remains **open**. The remaining action callers still use bare emits, the other
 non-idempotent actions still need replay protection, and their per-action pending/error
 experiences remain to be added. Root causes #4 and #5 also remain open; B8 therefore remains
@@ -680,11 +694,11 @@ experiences remain to be added. Root causes #4 and #5 also remain open; B8 there
   optimistic preview, acceptance preserves it until authoritative state arrives, and a
   timeout shows both automatic-retry progress and the final retry affordance. Challenge
   claim and placement have the same duplicate guard and timeout lifecycle. Timeline-card
-  purchase also blocks duplicate presses and animations, retries once, and exposes a final
-  retry affordance.
-- `roomFlow.test.ts`: replaying a successful timeline-card purchase returns the original
-  acknowledgement, calls the purchase service once, spends three tokens once, and awards one
-  card.
+  purchase and skip-track also block duplicate presses and animations, retry once, and expose
+  a final retry affordance. A failed skip clears its pending preview-transition intent.
+- `roomFlow.test.ts`: replaying successful skip-track and timeline-card purchases returns each
+  original acknowledgement. Each service is called once; the skip spends one token and draws
+  one track, then the purchase spends three tokens and awards one card.
 - `useLobbyRoomActions.test.tsx`: two quick game-start presses emit once, the real start
   control remains disabled through its automatic retry, and a final timeout exposes a fresh
   retry affordance. Lobby close uses the same lifecycle; the in-game close hook has a matching

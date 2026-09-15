@@ -194,6 +194,7 @@ export const resolveChallengeWindowPayloadSchema = z.object({
 
 export const skipTrackWithTtPayloadSchema = z.object({
   roomId: roomIdSchema,
+  requestId: z.string().uuid().optional(),
 });
 
 export const buyTimelineCardWithTtPayloadSchema = z.object({

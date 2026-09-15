@@ -60,8 +60,10 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     isBuyTimelineCardPending,
     isPlaceCardPending,
     isPlaceChallengePending,
+    isSkipTrackPending,
     placeCardActionStatus,
     placeChallengeActionStatus,
+    skipTrackActionStatus,
     roomState,
     showHelperLabels,
   } = model;
@@ -173,9 +175,11 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
         handleSkipTrackWithTt={handleSkipTrackWithTt}
         isBuyTimelineCardPending={isBuyTimelineCardPending}
         isPlaceCardPending={isPlaceCardPending}
+        isSkipTrackPending={isSkipTrackPending}
         placeCardActionStatus={placeCardActionStatus}
         onTokenSpendAnimationStart={handleTokenSpendAnimationStart}
         roomState={roomState}
+        skipTrackActionStatus={skipTrackActionStatus}
       />
     </>
   );
@@ -215,8 +219,10 @@ function areActionPanelModelsEqual(
     previousModel.isBuyTimelineCardPending === nextModel.isBuyTimelineCardPending &&
     previousModel.isPlaceCardPending === nextModel.isPlaceCardPending &&
     previousModel.isPlaceChallengePending === nextModel.isPlaceChallengePending &&
+    previousModel.isSkipTrackPending === nextModel.isSkipTrackPending &&
     previousModel.placeCardActionStatus === nextModel.placeCardActionStatus &&
     previousModel.placeChallengeActionStatus === nextModel.placeChallengeActionStatus &&
+    previousModel.skipTrackActionStatus === nextModel.skipTrackActionStatus &&
     previousModel.roomState === nextModel.roomState &&
     previousModel.showHelperLabels === nextModel.showHelperLabels
   );

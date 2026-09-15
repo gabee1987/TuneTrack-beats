@@ -282,6 +282,17 @@ function registerSkipTrackWithTtHandler(
     handle: (data) => {
       broadcastRoomState(io, roomService.skipTrackWithTt(data, socket.id));
     },
+    idempotency: {
+      find: (data) =>
+        data.requestId
+          ? roomService.getProcessedActionAck(socket.id, data.roomId, data.requestId)
+          : undefined,
+      remember: (data, ack) => {
+        if (data.requestId) {
+          roomService.rememberProcessedActionAck(data.roomId, ack);
+        }
+      },
+    },
     fallbackErrorCode: "SKIP_TRACK_WITH_TT_FAILED",
     errorMessages: skipTrackWithTtErrorMessages,
   });

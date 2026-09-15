@@ -1213,9 +1213,10 @@ describe("room flow", () => {
     ).toBe(1);
   });
 
-  it("applies a replayed timeline-card purchase once", async () => {
+  it("applies replayed token-spending actions once", async () => {
     const roomService = createTestRoomService();
     const buyTimelineCardSpy = vi.spyOn(roomService, "buyTimelineCardWithTt");
+    const skipTrackSpy = vi.spyOn(roomService, "skipTrackWithTt");
     const serverContext = await startTestServer(roomService);
     const hostSocket = createClient(serverContext.baseUrl);
 
@@ -1237,11 +1238,11 @@ describe("room flow", () => {
     const settingsPromise = waitForStateUpdate(
       hostSocket,
       (roomState) =>
-        roomState.settings.ttModeEnabled && roomState.players[0]?.ttTokenCount === 3,
+        roomState.settings.ttModeEnabled && roomState.players[0]?.ttTokenCount === 4,
     );
     hostSocket.emit(ClientToServerEvent.UpdateRoomSettings, {
       roomId: "buy-room",
-      startingTtTokenCount: 3,
+      startingTtTokenCount: 4,
       ttModeEnabled: true,
     });
     await settingsPromise;
@@ -1251,7 +1252,40 @@ describe("room flow", () => {
       (roomState) => roomState.status === "turn",
     );
     hostSocket.emit(ClientToServerEvent.StartGame, { roomId: "buy-room" });
-    await turnPromise;
+    const turnState = await turnPromise;
+
+    const skippedTrackPromise = waitForStateUpdate(
+      hostSocket,
+      (roomState) =>
+        roomState.currentTrackCard?.id !== turnState.currentTrackCard?.id &&
+        roomState.turn?.hasUsedSkipTrackWithTt === true,
+    );
+    const skipRequestId = "00000000-0000-4000-8000-000000000107";
+    const firstSkipAckPromise = hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.SkipTrackWithTt, {
+        roomId: "buy-room",
+        requestId: skipRequestId,
+      }) as Promise<ActionAck>;
+
+    const [skippedTrackState, firstSkipAck] = await Promise.all([
+      skippedTrackPromise,
+      firstSkipAckPromise,
+    ]);
+    const replaySkipAck = (await hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.SkipTrackWithTt, {
+        roomId: "buy-room",
+        requestId: skipRequestId,
+      })) as ActionAck;
+
+    expect(firstSkipAck).toEqual({ ok: true, requestId: skipRequestId });
+    expect(replaySkipAck).toEqual(firstSkipAck);
+    expect(skipTrackSpy).toHaveBeenCalledTimes(1);
+    expect(
+      skippedTrackState.players.find((player) => player.id === hostIdentity.playerId)
+        ?.ttTokenCount,
+    ).toBe(3);
 
     const revealPromise = waitForStateUpdate(
       hostSocket,

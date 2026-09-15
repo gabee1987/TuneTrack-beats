@@ -15,6 +15,7 @@ import { useI18n } from "../../../features/i18n";
 import type {
   BuyTimelineCardActionStatus,
   PlaceCardActionStatus,
+  SkipTrackActionStatus,
 } from "../GamePage.types";
 import {
   ActionDock,
@@ -57,6 +58,7 @@ interface TurnActionDockProps {
   handleSkipTrackWithTt: () => void;
   isBuyTimelineCardPending: boolean;
   isPlaceCardPending: boolean;
+  isSkipTrackPending: boolean;
   placeCardActionStatus: PlaceCardActionStatus;
   onTokenSpendAnimationStart?: (payload: {
     amount: number;
@@ -64,6 +66,7 @@ interface TurnActionDockProps {
     originY: number;
   }) => void;
   roomState: PublicRoomState;
+  skipTrackActionStatus: SkipTrackActionStatus;
 }
 
 export function TurnActionDock({
@@ -78,9 +81,11 @@ export function TurnActionDock({
   handleSkipTrackWithTt,
   isBuyTimelineCardPending,
   isPlaceCardPending,
+  isSkipTrackPending,
   placeCardActionStatus,
   onTokenSpendAnimationStart,
   roomState,
+  skipTrackActionStatus,
 }: TurnActionDockProps) {
   const { t } = useI18n();
   const reduceMotion = useReducedMotionPreference();
@@ -112,6 +117,14 @@ export function TurnActionDock({
     buyTimelineCardButtonLabel = t("game.controls.buyRetrying");
   } else if (buyTimelineCardActionStatus === "failed") {
     buyTimelineCardButtonLabel = t("game.controls.retryBuy");
+  }
+  let skipTrackButtonLabel = t("game.controls.skip");
+  if (skipTrackActionStatus === "pending") {
+    skipTrackButtonLabel = t("game.controls.skipPending");
+  } else if (skipTrackActionStatus === "retrying") {
+    skipTrackButtonLabel = t("game.controls.skipRetrying");
+  } else if (skipTrackActionStatus === "failed") {
+    skipTrackButtonLabel = t("game.controls.retrySkip");
   }
 
   function resolveSpendOrigin(
@@ -173,6 +186,7 @@ export function TurnActionDock({
                     variants={createActionButtonExitMotion(reduceMotion)}
                   >
                     <SecondaryActionButton
+                      disabled={isSkipTrackPending}
                       onClick={(event) => {
                         const origin = resolveSpendOrigin(
                           event.currentTarget,
@@ -187,7 +201,7 @@ export function TurnActionDock({
                       ttCost={SKIP_TRACK_TT_COST}
                       ttCostBadgeRef={skipCostBadgeRef}
                     >
-                      {t("game.controls.skip")}
+                      {skipTrackButtonLabel}
                     </SecondaryActionButton>
                   </motion.span>
                 ) : null}
@@ -248,6 +262,7 @@ export function TurnActionDock({
                   variants={createActionButtonExitMotion(reduceMotion)}
                 >
                   <SecondaryActionButton
+                    disabled={isSkipTrackPending}
                     onClick={(event) => {
                       const origin = resolveSpendOrigin(
                         event.currentTarget,
@@ -262,7 +277,7 @@ export function TurnActionDock({
                     ttCost={SKIP_TRACK_TT_COST}
                     ttCostBadgeRef={skipCostBadgeRef}
                   >
-                    {t("game.controls.skip")}
+                    {skipTrackButtonLabel}
                   </SecondaryActionButton>
                 </motion.span>
               ) : null}
