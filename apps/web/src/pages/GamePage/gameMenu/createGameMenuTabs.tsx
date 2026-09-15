@@ -2,7 +2,10 @@ import { type PublicRoomState } from "@tunetrack/shared";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import type { Translate } from "../../../features/i18n";
 import type { GameHistoryEntry } from "../hooks/useGameHistory";
-import type { AwardTtActionState } from "../GamePage.types";
+import type {
+  AwardTtActionState,
+  TransferHostActionState,
+} from "../GamePage.types";
 import styles from "../gamePageStyles";
 import { GameMenuPlayerItem } from "./GameMenuPlayerItem";
 import { HistoryTabContent } from "./HistoryTabContent";
@@ -14,11 +17,13 @@ export interface CreateGameMenuTabsOptions {
   historyEntries: GameHistoryEntry[];
   roomState: PublicRoomState;
   isAwardTtPending: boolean;
+  isTransferHostPending: boolean;
   onAwardTt: (playerId: string) => boolean;
   onKickPlayer: (playerId: string) => void;
   onRemoveTt: (playerId: string) => boolean;
   onTransferHost: (playerId: string) => void;
   t: Translate;
+  transferHostActionState: TransferHostActionState | null;
 }
 
 export function createGameMenuTabs({
@@ -26,12 +31,14 @@ export function createGameMenuTabs({
   currentPlayerId,
   historyEntries,
   isAwardTtPending,
+  isTransferHostPending,
   roomState,
   onAwardTt,
   onKickPlayer,
   onRemoveTt,
   onTransferHost,
   t,
+  transferHostActionState,
 }: CreateGameMenuTabsOptions): AppShellMenuTab[] {
   const isHost = roomState.hostId === currentPlayerId;
   const hasPlaybackTab =
@@ -53,6 +60,7 @@ export function createGameMenuTabs({
                 currentPlayerId={currentPlayerId}
                 key={player.id}
                 isAwardTtPending={isAwardTtPending}
+                isTransferHostPending={isTransferHostPending}
                 onAwardTt={onAwardTt}
                 onKickPlayer={onKickPlayer}
                 onRemoveTt={onRemoveTt}
@@ -60,6 +68,7 @@ export function createGameMenuTabs({
                 player={player}
                 roomState={roomState}
                 t={t}
+                transferHostActionState={transferHostActionState}
               />
             ))}
           </ul>

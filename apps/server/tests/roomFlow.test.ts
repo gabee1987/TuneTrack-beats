@@ -394,7 +394,9 @@ describe("room flow", () => {
   });
 
   it("lets the host manually transfer host controls to another connected player", async () => {
-    const serverContext = await startTestServer();
+    const roomService = createTestRoomService();
+    const transferHostSpy = vi.spyOn(roomService, "transferHost");
+    const serverContext = await startTestServer(roomService);
     const hostSocket = createClient(serverContext.baseUrl);
     const guestSocket = createClient(serverContext.baseUrl);
 
@@ -439,12 +441,30 @@ describe("room flow", () => {
       (roomState) => roomState.hostId === guestIdentity.playerId,
     );
 
-    hostSocket.emit(ClientToServerEvent.TransferHost, {
-      roomId: "xfer-room",
-      playerId: guestIdentity.playerId,
-    });
+    const requestId = "00000000-0000-4000-8000-00000000010b";
+    const firstAckPromise = hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.TransferHost, {
+        roomId: "xfer-room",
+        playerId: guestIdentity.playerId,
+        requestId,
+      }) as Promise<ActionAck>;
 
-    const transferredState = await transferredStatePromise;
+    const [transferredState, firstAck] = await Promise.all([
+      transferredStatePromise,
+      firstAckPromise,
+    ]);
+    const replayAck = (await hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.TransferHost, {
+        roomId: "xfer-room",
+        playerId: guestIdentity.playerId,
+        requestId,
+      })) as ActionAck;
+
+    expect(firstAck).toEqual({ ok: true, requestId });
+    expect(replayAck).toEqual(firstAck);
+    expect(transferHostSpy).toHaveBeenCalledTimes(1);
 
     expect(transferredState.players).toEqual([
       expect.objectContaining({

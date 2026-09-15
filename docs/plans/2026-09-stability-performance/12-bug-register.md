@@ -715,10 +715,24 @@ final retry labels appear only after acknowledgement timeouts. Submitted room, t
 and open-window phase are checked before retaining timeout feedback, preventing stale retry UI
 from leaking into a claimed window or later turn.
 
-Root cause #2 remains **open**. The replay-sensitive gameplay actions are protected, but host
-transfer, player removal, and settings callers still use bare emits and do not yet have
-per-action acknowledgement feedback. Root causes #4 and #5 also remain open; B8 therefore
-remains **Confirmed**, not Fixed.
+### Root cause #2 `transfer_host` migration (2026-09-15)
+
+`transfer_host` now uses the acknowledged action path and room-scoped replay LRU. A timeout
+retry reuses the original request id, so replay returns the initial success instead of asking
+the former host to transfer ownership again. The transfer service, audit log, ownership
+mutation, and room-state broadcast therefore run once.
+
+All player rows share one synchronous pending guard, preventing rapid presses or a second
+target from starting another transfer. The selected confirmation stays open and disabled
+while the server remains authoritative; its ordinary label does not flash transient pending
+text. Localised retrying and final retry labels appear only after acknowledgement timeouts.
+Submitted room, host, target membership, and connection state are rechecked before timeout
+feedback is retained, and the confirmation closes when authoritative state removes the old
+host's transfer controls.
+
+Root cause #2 remains **open**. Player removal and settings callers still use bare emits and
+do not yet have per-action acknowledgement feedback. Root causes #4 and #5 also remain open;
+B8 therefore remains **Confirmed**, not Fixed.
 
 ### Verification
 
@@ -741,7 +755,9 @@ remains **Confirmed**, not Fixed.
   submitted player's menu control. Manual turn skip shares that lifecycle across its host
   menu and offline-player controls without transient pending text. Challenge-window resolution
   likewise blocks duplicates, retries once, retains its normal label during a typical response,
-  and discards timeout feedback after the submitted open window is no longer current.
+  and discards timeout feedback after the submitted open window is no longer current. Host
+  transfer uses the same lifecycle in its real confirmation dialog, with one shared guard
+  across every eligible target.
 - `roomFlow.test.ts`: replaying successful skip-track and timeline-card purchases returns each
   original acknowledgement. Each service is called once; the skip spends one token and draws
   one track, then the purchase spends three tokens and awards one card. Replaying a host token
@@ -757,8 +773,9 @@ remains **Confirmed**, not Fixed.
   `claim_challenge` reserves it once; and replaying `place_challenge` resolves it once. Each
   replay returns its original acknowledgement. Replaying `resolve_challenge_window` closes the
   open window once and returns the original success after the room enters reveal. Replaying
-  `close_room` after room deletion likewise returns its original acknowledgement while the
-  close service runs once.
+  `transfer_host` returns the original success after ownership changes while the transfer
+  service runs once. Replaying `close_room` after room deletion likewise returns its original
+  acknowledgement while the close service runs once.
 - `RoomStore.test.ts`: processed-action acknowledgements are room-scoped, capped at 32, and
   removed with their room.
 - Manual M10.

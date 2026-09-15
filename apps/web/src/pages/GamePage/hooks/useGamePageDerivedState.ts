@@ -7,6 +7,7 @@ import type {
   GamePageViewPreferenceUpdater,
   TimelineCelebrationTone,
   TimelineView,
+  TransferHostActionState,
 } from "../GamePage.types";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import type { ThemeId } from "../../../features/preferences/uiPreferences";
@@ -41,6 +42,8 @@ interface UseGamePageDerivedStateOptions {
     handleKickPlayer: (playerId: string) => void;
     handleTransferHost: (playerId: string) => void;
     isAwardTtPending: boolean;
+    isTransferHostPending: boolean;
+    transferHostActionState: TransferHostActionState | null;
   };
 }
 

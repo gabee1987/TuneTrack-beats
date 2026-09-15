@@ -7,7 +7,10 @@ import {
 import { useMemo } from "react";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import { useI18n } from "../../../features/i18n";
-import type { AwardTtActionState } from "../GamePage.types";
+import type {
+  AwardTtActionState,
+  TransferHostActionState,
+} from "../GamePage.types";
 import { createGameMenuTabs } from "../gamePageMenuTabs";
 import { useGameHistory } from "./useGameHistory";
 
@@ -22,6 +25,8 @@ interface UseGamePageCapabilityStateOptions {
     handleKickPlayer: (playerId: string) => void;
     handleTransferHost: (playerId: string) => void;
     isAwardTtPending: boolean;
+    isTransferHostPending: boolean;
+    transferHostActionState: TransferHostActionState | null;
   };
   roomState: PublicRoomState | null;
 }
@@ -117,6 +122,8 @@ export function useGamePageCapabilityState({
     handleRemoveTt,
     handleTransferHost,
     isAwardTtPending,
+    isTransferHostPending,
+    transferHostActionState,
   } = handlers;
   const menuTabs = useMemo<AppShellMenuTab[]>(
     () =>
@@ -126,12 +133,14 @@ export function useGamePageCapabilityState({
             historyEntries,
             awardTtActionState,
             isAwardTtPending,
+            isTransferHostPending,
             onAwardTt: handleAwardTt,
             onKickPlayer: handleKickPlayer,
             onRemoveTt: handleRemoveTt,
             onTransferHost: handleTransferHost,
             roomState,
             t,
+            transferHostActionState,
           })
         : [],
     [
@@ -143,8 +152,10 @@ export function useGamePageCapabilityState({
       handleRemoveTt,
       handleTransferHost,
       isAwardTtPending,
+      isTransferHostPending,
       roomState,
       t,
+      transferHostActionState,
     ],
   );
 

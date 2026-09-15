@@ -31,11 +31,17 @@ export type BuyTimelineCardActionStatus = "idle" | "pending" | "retrying" | "fai
 export type SkipTrackActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type SkipTurnActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type AwardTtActionStatus = "pending" | "retrying" | "failed";
+export type TransferHostActionStatus = "pending" | "retrying" | "failed";
 
 export interface AwardTtActionState {
   amount: 1 | -1;
   playerId: string;
   status: AwardTtActionStatus;
+}
+
+export interface TransferHostActionState {
+  playerId: string;
+  status: TransferHostActionStatus;
 }
 
 export type ChallengeMarkerTone = "pending" | "success" | "failure";

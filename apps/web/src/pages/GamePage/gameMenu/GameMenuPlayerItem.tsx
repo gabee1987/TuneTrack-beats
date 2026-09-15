@@ -1,6 +1,6 @@
 import { type PublicPlayerState, type PublicRoomState } from "@tunetrack/shared";
 import { motion } from "framer-motion";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   MotionDialogPortal,
   createMeasuredDisclosureMotion,
@@ -13,13 +13,17 @@ import { CardCountAmount } from "../../../features/ui/CardCountAmount";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import styles from "../gamePageStyles";
-import type { AwardTtActionState } from "../GamePage.types";
+import type {
+  AwardTtActionState,
+  TransferHostActionState,
+} from "../GamePage.types";
 import { TokenAdjustButtons } from "./TokenAdjustButtons";
 
 interface GameMenuPlayerItemProps {
   awardTtActionState: AwardTtActionState | null;
   currentPlayerId: string | null;
   isAwardTtPending: boolean;
+  isTransferHostPending: boolean;
   onAwardTt: (playerId: string) => boolean;
   onKickPlayer: (playerId: string) => void;
   onRemoveTt: (playerId: string) => boolean;
@@ -27,12 +31,14 @@ interface GameMenuPlayerItemProps {
   player: PublicPlayerState;
   roomState: PublicRoomState;
   t: Translate;
+  transferHostActionState: TransferHostActionState | null;
 }
 
 export function GameMenuPlayerItem({
   awardTtActionState,
   currentPlayerId,
   isAwardTtPending,
+  isTransferHostPending,
   onAwardTt,
   onKickPlayer,
   onRemoveTt,
@@ -40,6 +46,7 @@ export function GameMenuPlayerItem({
   player,
   roomState,
   t,
+  transferHostActionState,
 }: GameMenuPlayerItemProps) {
   const reduceMotion = useReducedMotionPreference();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -50,12 +57,23 @@ export function GameMenuPlayerItem({
   const isCurrentPlayerHost = roomState.hostId === currentPlayerId;
   const isCurrentPlayer = player.id === currentPlayerId;
   const isDisconnected = player.connectionStatus === "disconnected";
-  const canTransferHost =
+  const hasTransferPermission =
     isCurrentPlayerHost && !isCurrentPlayer && !player.isHost && !isDisconnected;
+  const canTransferHost = hasTransferPermission && !isTransferHostPending;
   const canKickPlayer = isCurrentPlayerHost && !isCurrentPlayer;
   const hasTokenActions = roomState.settings.ttModeEnabled && isCurrentPlayerHost;
   const hasTransferAction = isCurrentPlayerHost && !isCurrentPlayer;
   const hasExpandableContent = hasTransferAction;
+  const transferActionStatus =
+    transferHostActionState?.playerId === player.id
+      ? transferHostActionState.status
+      : null;
+  const transferButtonLabel =
+    transferActionStatus === "retrying"
+      ? t("gameMenu.transferHostRetrying")
+      : transferActionStatus === "failed"
+        ? t("gameMenu.retryTransferHost")
+        : t("gameMenu.transferHost");
   const cardCount = roomState.timelines[player.id]?.length ?? 0;
   const cardCountLabel = t("gameMenu.cards", {
     count: cardCount,
@@ -84,12 +102,17 @@ export function GameMenuPlayerItem({
     };
   }, []);
 
+  useEffect(() => {
+    if (isTransferConfirmOpen && !hasTransferAction) {
+      setIsTransferConfirmOpen(false);
+    }
+  }, [hasTransferAction, isTransferConfirmOpen]);
+
   function handleTransferHost() {
     if (!canTransferHost) {
       return;
     }
     onTransferHost(player.id);
-    setIsTransferConfirmOpen(false);
   }
 
   function handleKickPlayer() {
@@ -212,7 +235,7 @@ export function GameMenuPlayerItem({
               onClick={() => setIsTransferConfirmOpen(true)}
               type="button"
             >
-              {t("gameMenu.transferHost")}
+              {transferButtonLabel}
             </button>
           ) : null}
           {canKickPlayer ? (
@@ -260,7 +283,7 @@ export function GameMenuPlayerItem({
             onClick={handleTransferHost}
             type="button"
           >
-            {t("gameMenu.transferHost")}
+            {transferButtonLabel}
           </button>
         </div>
       </MotionDialogPortal>

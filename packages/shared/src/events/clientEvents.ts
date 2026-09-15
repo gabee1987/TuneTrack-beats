@@ -106,6 +106,7 @@ export interface StartGamePayload {
 export interface TransferHostPayload {
   roomId: RoomId;
   playerId: PlayerId;
+  requestId?: string;
 }
 
 export interface KickPlayerPayload {

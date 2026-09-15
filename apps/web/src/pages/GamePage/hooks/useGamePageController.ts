@@ -100,6 +100,8 @@ export function useGamePageController({
       handleKickPlayer: actions.handleKickPlayer,
       handleTransferHost: actions.handleTransferHost,
       isAwardTtPending: actions.isAwardTtPending,
+      isTransferHostPending: actions.isTransferHostPending,
+      transferHostActionState: actions.transferHostActionState,
     },
     locallyPlacedCard,
     roomState,

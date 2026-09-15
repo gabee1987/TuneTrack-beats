@@ -155,6 +155,7 @@ export const startGamePayloadSchema = z.object({
 export const transferHostPayloadSchema = z.object({
   roomId: roomIdSchema,
   playerId: z.string().trim().min(1),
+  requestId: z.string().uuid().optional(),
 });
 
 export const kickPlayerPayloadSchema = z.object({

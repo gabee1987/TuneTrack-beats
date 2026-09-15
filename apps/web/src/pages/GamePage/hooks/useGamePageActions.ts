@@ -17,6 +17,7 @@ import type {
 import { useAwardTtAction } from "./useAwardTtAction";
 import { useResolveChallengeWindowAction } from "./useResolveChallengeWindowAction";
 import { useSkipTurnAction } from "./useSkipTurnAction";
+import { useTransferHostAction } from "./useTransferHostAction";
 
 async function emitRoomEvent<TPayload>(
   event: (typeof ClientToServerEvent)[keyof typeof ClientToServerEvent],
@@ -59,6 +60,7 @@ export function useGamePageActions({
     roomState,
   });
   const skipTurnAction = useSkipTurnAction({ currentPlayerId, roomState });
+  const transferHostAction = useTransferHostAction({ currentPlayerId, roomState });
   const isCloseRoomPendingRef = useRef(false);
   const [closeRoomActionStatus, setCloseRoomActionStatus] =
     useState<CloseRoomActionStatus>("idle");
@@ -314,24 +316,6 @@ export function useGamePageActions({
     }
   }, [currentPlayerId, roomState]);
 
-  const handleTransferHost = useCallback(
-    (playerId: string) => {
-      if (
-        !roomState ||
-        roomState.hostId !== currentPlayerId ||
-        playerId === currentPlayerId
-      ) {
-        return;
-      }
-
-      void emitRoomEvent(ClientToServerEvent.TransferHost, {
-        roomId: roomState.roomId,
-        playerId,
-      });
-    },
-    [currentPlayerId, roomState],
-  );
-
   const handleKickPlayer = useCallback(
     (playerId: string) => {
       if (
@@ -470,7 +454,7 @@ export function useGamePageActions({
       resolveChallengeWindowAction.handleResolveChallengeWindow,
     handleSkipTrackWithTt,
     handleSkipTurn: skipTurnAction.handleSkipTurn,
-    handleTransferHost,
+    handleTransferHost: transferHostAction.handleTransferHost,
     isBuyTimelineCardPending,
     isAwardTtPending: awardTtAction.isPending,
     isClaimChallengePending,
@@ -481,6 +465,7 @@ export function useGamePageActions({
     isResolveChallengeWindowPending: resolveChallengeWindowAction.isPending,
     isSkipTrackPending,
     isSkipTurnPending: skipTurnAction.isPending,
+    isTransferHostPending: transferHostAction.isPending,
     claimChallengeActionStatus,
     confirmRevealActionStatus,
     placeCardActionStatus,
@@ -488,5 +473,6 @@ export function useGamePageActions({
     resolveChallengeWindowActionStatus: resolveChallengeWindowAction.actionStatus,
     skipTrackActionStatus,
     skipTurnActionStatus: skipTurnAction.actionStatus,
+    transferHostActionState: transferHostAction.actionState,
   };
 }

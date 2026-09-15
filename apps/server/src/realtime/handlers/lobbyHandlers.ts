@@ -201,6 +201,17 @@ function registerTransferHostHandler(io: Server, socket: Socket, roomService: Ro
     handle: (data) => {
       broadcastRoomState(io, roomService.transferHost(data, socket.id));
     },
+    idempotency: {
+      find: (data) =>
+        data.requestId
+          ? roomService.getProcessedActionAck(socket.id, data.roomId, data.requestId)
+          : undefined,
+      remember: (data, ack) => {
+        if (data.requestId) {
+          roomService.rememberProcessedActionAck(data.roomId, ack);
+        }
+      },
+    },
     fallbackErrorCode: "TRANSFER_HOST_FAILED",
     errorMessages: transferHostErrorMessages,
   });

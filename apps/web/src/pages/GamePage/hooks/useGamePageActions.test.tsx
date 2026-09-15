@@ -1,7 +1,7 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { ClientToServerEvent } from "@tunetrack/shared";
 import type { EmitActionResult } from "../../../services/socket/emitAction";
-import { I18nProvider } from "../../../features/i18n";
+import { I18nProvider, useI18n } from "../../../features/i18n";
 import {
   buildChallengeRoomState,
   buildRoomSettings,
@@ -14,6 +14,7 @@ import { ChallengeActionPanel } from "../components/ChallengeActionPanel";
 import { RevealActionDock } from "../components/RevealActionDock";
 import { TurnActionDock } from "../components/TurnActionDock";
 import { TokenAdjustButtons } from "../gameMenu/TokenAdjustButtons";
+import { GameMenuPlayerItem } from "../gameMenu/GameMenuPlayerItem";
 import { useGamePageActions } from "./useGamePageActions";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -253,6 +254,49 @@ function CloseRoomHarness() {
     <button disabled={actions.isCloseRoomPending} onClick={actions.handleCloseRoom}>
       {actions.closeRoomActionStatus}
     </button>
+  );
+}
+
+function TransferHostHarnessContent() {
+  const roomState = buildTurnRoomState();
+  const { t } = useI18n();
+  const actions = useGamePageActions({
+    canClaimChallenge: false,
+    canConfirmReveal: false,
+    canResolveChallengeWindow: false,
+    canSelectChallengeSlot: false,
+    currentPlayerId: TEST_HOST_ID,
+    isCurrentPlayerTurn: true,
+    roomState,
+    selectedSlotIndex: 1,
+    setLocallyPlacedCard: vi.fn(),
+  });
+
+  return (
+    <ul>
+      <GameMenuPlayerItem
+        awardTtActionState={actions.awardTtActionState}
+        currentPlayerId={TEST_HOST_ID}
+        isAwardTtPending={actions.isAwardTtPending}
+        isTransferHostPending={actions.isTransferHostPending}
+        onAwardTt={actions.handleAwardTt}
+        onKickPlayer={actions.handleKickPlayer}
+        onRemoveTt={actions.handleRemoveTt}
+        onTransferHost={actions.handleTransferHost}
+        player={roomState.players[1]!}
+        roomState={roomState}
+        t={t}
+        transferHostActionState={actions.transferHostActionState}
+      />
+    </ul>
+  );
+}
+
+function TransferHostHarness() {
+  return (
+    <I18nProvider>
+      <TransferHostHarnessContent />
+    </I18nProvider>
   );
 }
 
@@ -729,6 +773,62 @@ describe("useGamePageActions close_room", () => {
     });
 
     expect(await screen.findByRole("button", { name: "failed" })).toBeEnabled();
+  });
+});
+
+describe("useGamePageActions transfer_host", () => {
+  beforeEach(() => {
+    emitActionMock.mockReset();
+  });
+
+  it("retries one timeout, blocks duplicate transfers, and exposes a final retry", async () => {
+    const deferred = createDeferredActionResult();
+    emitActionMock.mockReturnValueOnce(deferred.promise);
+    render(<TransferHostHarness />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /show host transfer controls/i }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: /^transfer host$/i }));
+    const dialog = screen.getByRole("dialog", { name: /transfer host controls/i });
+    const confirmButton = within(dialog).getByRole("button", {
+      name: /^transfer host$/i,
+    });
+    fireEvent.click(confirmButton);
+    fireEvent.click(confirmButton);
+
+    expect(confirmButton).toBeDisabled();
+    expect(confirmButton).toHaveTextContent(/^transfer host$/i);
+    expect(emitActionMock).toHaveBeenCalledTimes(1);
+    expect(emitActionMock).toHaveBeenCalledWith(
+      ClientToServerEvent.TransferHost,
+      { roomId: "TEST_ROOM_1", playerId: TEST_GUEST_ID },
+      expect.objectContaining({ retryOnTimeout: true }),
+    );
+
+    const options = emitActionMock.mock.calls[0]?.[2] as {
+      onTimeoutRetry?: () => void;
+    };
+    act(() => options.onTimeoutRetry?.());
+
+    expect(
+      within(dialog).getByRole("button", { name: /no response.*retrying/i }),
+    ).toBeDisabled();
+
+    await act(async () => {
+      deferred.resolve({ status: "timeout" });
+      await deferred.promise;
+    });
+
+    const retryButton = within(dialog).getByRole("button", {
+      name: /try transferring again/i,
+    });
+    expect(retryButton).toBeEnabled();
+
+    emitActionMock.mockResolvedValueOnce({ status: "ok" });
+    fireEvent.click(retryButton);
+
+    await waitFor(() => expect(emitActionMock).toHaveBeenCalledTimes(2));
   });
 });
 
