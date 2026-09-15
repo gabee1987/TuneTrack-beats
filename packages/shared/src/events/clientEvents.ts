@@ -142,6 +142,7 @@ export interface PlaceChallengePayload {
 
 export interface ResolveChallengeWindowPayload {
   roomId: RoomId;
+  requestId?: string;
 }
 
 export interface SkipTrackWithTtPayload {

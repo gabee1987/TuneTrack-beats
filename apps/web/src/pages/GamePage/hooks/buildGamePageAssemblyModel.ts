@@ -38,10 +38,13 @@ export function buildGamePageAssemblyModel(
       isConfirmRevealPending: controller.isConfirmRevealPending,
       isPlaceCardPending: controller.isPlaceCardPending,
       isPlaceChallengePending: controller.isPlaceChallengePending,
+      isResolveChallengeWindowPending: controller.isResolveChallengeWindowPending,
       isSkipTrackPending: controller.isSkipTrackPending,
       isSkipTurnPending: controller.isSkipTurnPending,
       placeCardActionStatus: controller.placeCardActionStatus,
       placeChallengeActionStatus: controller.placeChallengeActionStatus,
+      resolveChallengeWindowActionStatus:
+        controller.resolveChallengeWindowActionStatus,
       skipTrackActionStatus: controller.skipTrackActionStatus,
       skipTurnActionStatus: controller.skipTurnActionStatus,
       roomState: controller.roomState,

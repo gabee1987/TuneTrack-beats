@@ -21,6 +21,11 @@ export type PlaceCardActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type ConfirmRevealActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type ClaimChallengeActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type PlaceChallengeActionStatus = "idle" | "pending" | "retrying" | "failed";
+export type ResolveChallengeWindowActionStatus =
+  | "idle"
+  | "pending"
+  | "retrying"
+  | "failed";
 export type CloseRoomActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type BuyTimelineCardActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type SkipTrackActionStatus = "idle" | "pending" | "retrying" | "failed";
@@ -199,8 +204,10 @@ export interface GamePageActionPanelsModel
     | "isConfirmRevealPending"
     | "isPlaceCardPending"
     | "isPlaceChallengePending"
+    | "isResolveChallengeWindowPending"
     | "placeCardActionStatus"
     | "placeChallengeActionStatus"
+    | "resolveChallengeWindowActionStatus"
     | "skipTurnActionStatus"
     | "showHelperLabels"
   > {
@@ -243,6 +250,7 @@ export type GamePageController = GamePageActionHandlers & {
   isConfirmRevealPending: boolean;
   isPlaceCardPending: boolean;
   isPlaceChallengePending: boolean;
+  isResolveChallengeWindowPending: boolean;
   isSkipTrackPending: boolean;
   isSkipTurnPending: boolean;
   confirmRevealActionStatus: ConfirmRevealActionStatus;
@@ -253,6 +261,7 @@ export type GamePageController = GamePageActionHandlers & {
   skipTurnActionStatus: SkipTurnActionStatus;
   placeCardActionStatus: PlaceCardActionStatus;
   placeChallengeActionStatus: PlaceChallengeActionStatus;
+  resolveChallengeWindowActionStatus: ResolveChallengeWindowActionStatus;
   isViewingOwnTimeline: boolean;
   leadingPlayers: PublicRoomState["players"];
   menuTabs: AppShellMenuTab[];

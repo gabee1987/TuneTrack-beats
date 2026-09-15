@@ -142,7 +142,11 @@ function ChallengePlacementHarness() {
         isClaimChallengePending={actions.isClaimChallengePending}
         isCurrentPlayerTurn={false}
         isPlaceChallengePending={actions.isPlaceChallengePending}
+        isResolveChallengeWindowPending={actions.isResolveChallengeWindowPending}
         placeChallengeActionStatus={actions.placeChallengeActionStatus}
+        resolveChallengeWindowActionStatus={
+          actions.resolveChallengeWindowActionStatus
+        }
         roomState={roomState}
       />
     </I18nProvider>
@@ -179,7 +183,52 @@ function ChallengeClaimHarness() {
         isClaimChallengePending={actions.isClaimChallengePending}
         isCurrentPlayerTurn={false}
         isPlaceChallengePending={actions.isPlaceChallengePending}
+        isResolveChallengeWindowPending={actions.isResolveChallengeWindowPending}
         placeChallengeActionStatus={actions.placeChallengeActionStatus}
+        resolveChallengeWindowActionStatus={
+          actions.resolveChallengeWindowActionStatus
+        }
+        roomState={roomState}
+      />
+    </I18nProvider>
+  );
+}
+
+function ChallengeResolveHarness() {
+  const roomState = buildChallengeRoomState();
+  const actions = useGamePageActions({
+    canClaimChallenge: false,
+    canConfirmReveal: false,
+    canResolveChallengeWindow: true,
+    canSelectChallengeSlot: false,
+    currentPlayerId: TEST_HOST_ID,
+    isCurrentPlayerTurn: true,
+    roomState,
+    selectedSlotIndex: 1,
+    setLocallyPlacedCard: vi.fn(),
+  });
+
+  return (
+    <I18nProvider>
+      <ChallengeActionPanel
+        canClaimChallenge={false}
+        canConfirmBeatPlacement={false}
+        canResolveChallengeWindow
+        challengeActionBody="Close the Beat window"
+        challengeActionTitle="Beat window"
+        claimChallengeActionStatus={actions.claimChallengeActionStatus}
+        currentPlayerTtCount={1}
+        handleClaimChallenge={actions.handleClaimChallenge}
+        handlePlaceChallenge={actions.handlePlaceChallenge}
+        handleResolveChallengeWindow={actions.handleResolveChallengeWindow}
+        isClaimChallengePending={actions.isClaimChallengePending}
+        isCurrentPlayerTurn
+        isPlaceChallengePending={actions.isPlaceChallengePending}
+        isResolveChallengeWindowPending={actions.isResolveChallengeWindowPending}
+        placeChallengeActionStatus={actions.placeChallengeActionStatus}
+        resolveChallengeWindowActionStatus={
+          actions.resolveChallengeWindowActionStatus
+        }
         roomState={roomState}
       />
     </I18nProvider>
@@ -596,6 +645,53 @@ describe("useGamePageActions claim_challenge", () => {
     });
 
     const retryButton = await screen.findByRole("button", { name: /try again/i });
+    expect(retryButton).toBeEnabled();
+
+    emitActionMock.mockResolvedValueOnce({ status: "ok" });
+    fireEvent.click(retryButton);
+
+    await waitFor(() => expect(emitActionMock).toHaveBeenCalledTimes(2));
+  });
+});
+
+describe("useGamePageActions resolve_challenge_window", () => {
+  beforeEach(() => {
+    emitActionMock.mockReset();
+  });
+
+  it("retries one timeout, blocks duplicate resolutions, and exposes a final retry", async () => {
+    const deferred = createDeferredActionResult();
+    emitActionMock.mockReturnValueOnce(deferred.promise);
+    render(<ChallengeResolveHarness />);
+
+    const resolveButton = screen.getByRole("button", { name: /resolve/i });
+    fireEvent.click(resolveButton);
+    fireEvent.click(resolveButton);
+
+    expect(resolveButton).toBeDisabled();
+    expect(resolveButton).toHaveTextContent(/^resolve$/i);
+    expect(emitActionMock).toHaveBeenCalledTimes(1);
+    expect(emitActionMock).toHaveBeenCalledWith(
+      ClientToServerEvent.ResolveChallengeWindow,
+      { roomId: "TEST_ROOM_1" },
+      expect.objectContaining({ retryOnTimeout: true }),
+    );
+
+    const options = emitActionMock.mock.calls[0]?.[2] as {
+      onTimeoutRetry?: () => void;
+    };
+    act(() => options.onTimeoutRetry?.());
+
+    expect(screen.getByRole("button", { name: /no response.*retrying/i })).toBeDisabled();
+
+    await act(async () => {
+      deferred.resolve({ status: "timeout" });
+      await deferred.promise;
+    });
+
+    const retryButton = await screen.findByRole("button", {
+      name: /try resolving again/i,
+    });
     expect(retryButton).toBeEnabled();
 
     emitActionMock.mockResolvedValueOnce({ status: "ok" });

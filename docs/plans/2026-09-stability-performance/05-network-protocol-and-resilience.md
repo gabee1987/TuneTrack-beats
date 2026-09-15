@@ -215,7 +215,8 @@ Retries and the recovery-replay behaviour from Doc 04 section 2.1 make it possib
 server to see the same action twice. For most events this is harmless (settings toggles are
 idempotent by nature), but these are not: `place_card`, `confirm_reveal`,
 `place_challenge`, `buy_timeline_card_with_tt`, `skip_track_with_tt`, `award_tt`.
-Manual `skip_turn` also advances gameplay and therefore requires the same replay protection.
+Manual `skip_turn` advances gameplay, while `resolve_challenge_window` changes its phase;
+both therefore require the same replay protection for a lost acknowledgement.
 
 - Add an optional `requestId` to those payload schemas in
   `packages/shared/src/events/schemas.ts`.
@@ -240,8 +241,8 @@ Per-action feedback becomes possible for the first time:
 
 Migrate incrementally, highest-risk actions first: `place_card`, `confirm_reveal`,
 `place_challenge`, `claim_challenge`, `start_game`, `close_room`,
-`buy_timeline_card_with_tt`, `skip_track_with_tt`, `award_tt`, `skip_turn`. Settings toggles
-can stay fire-and-forget until last.
+`buy_timeline_card_with_tt`, `skip_track_with_tt`, `award_tt`, `skip_turn`,
+`resolve_challenge_window`. Settings toggles can stay fire-and-forget until last.
 
 ### Acceptance
 
@@ -275,6 +276,9 @@ can stay fire-and-forget until last.
 - [x] `skip_turn` advances or cancels an offline player's claimed challenge once when its
       acknowledged request is replayed; both host controls share duplicate blocking and expose
       retry feedback only when an acknowledgement is delayed or lost.
+- [x] `resolve_challenge_window` closes an open Beat window once when its acknowledged request
+      is replayed; its control blocks duplicate presses and exposes retry feedback only when an
+      acknowledgement is delayed or lost.
 
 ## 5. Phase 5 — Honest connection state in the UI · **S2**
 

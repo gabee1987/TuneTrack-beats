@@ -702,11 +702,23 @@ retrying and final retry labels appear only after acknowledgement timeouts. Subm
 turn, and affected-player identity are checked before retaining timeout feedback, so an
 authoritative state update cannot leak stale retry UI into a later turn.
 
-Root cause #2 remains **open**. The explicitly non-idempotent gameplay actions now have replay
-protection, but remaining actions such as challenge-window resolution, host transfer, player
-removal, and settings callers still use bare emits and do not yet have per-action
-acknowledgement feedback. Root causes #4 and #5 also remain open; B8 therefore remains
-**Confirmed**, not Fixed.
+### Root cause #2 `resolve_challenge_window` migration (2026-09-15)
+
+`resolve_challenge_window` now uses the acknowledged action path and room-scoped replay LRU.
+A timeout retry reuses the original request id, so a lost success acknowledgement returns the
+same result instead of attempting to resolve a window that has already moved to reveal. The
+room service runs once and the authoritative reveal broadcast remains the source of truth.
+
+The Resolve control blocks rapid duplicate presses synchronously and stays disabled through
+the retry. Its normal label remains stable for a successful response; localised retrying and
+final retry labels appear only after acknowledgement timeouts. Submitted room, turn, card,
+and open-window phase are checked before retaining timeout feedback, preventing stale retry UI
+from leaking into a claimed window or later turn.
+
+Root cause #2 remains **open**. The replay-sensitive gameplay actions are protected, but host
+transfer, player removal, and settings callers still use bare emits and do not yet have
+per-action acknowledgement feedback. Root causes #4 and #5 also remain open; B8 therefore
+remains **Confirmed**, not Fixed.
 
 ### Verification
 
@@ -727,7 +739,9 @@ acknowledgement feedback. Root causes #4 and #5 also remain open; B8 therefore r
   a final retry affordance. A failed skip clears its pending preview-transition intent. Host
   token adjustments share duplicate blocking and expose the same timeout lifecycle on the
   submitted player's menu control. Manual turn skip shares that lifecycle across its host
-  menu and offline-player controls without transient pending text.
+  menu and offline-player controls without transient pending text. Challenge-window resolution
+  likewise blocks duplicates, retries once, retains its normal label during a typical response,
+  and discards timeout feedback after the submitted open window is no longer current.
 - `roomFlow.test.ts`: replaying successful skip-track and timeline-card purchases returns each
   original acknowledgement. Each service is called once; the skip spends one token and draws
   one track, then the purchase spends three tokens and awards one card. Replaying a host token
@@ -741,8 +755,10 @@ acknowledgement feedback. Root causes #4 and #5 also remain open; B8 therefore r
   acknowledgement while the placement service runs once; replaying `start_game` initialises
   the game once; replaying `confirm_reveal` advances the turn once; replaying
   `claim_challenge` reserves it once; and replaying `place_challenge` resolves it once. Each
-  replay returns its original acknowledgement. Replaying `close_room` after room deletion
-  likewise returns its original acknowledgement while the close service runs once.
+  replay returns its original acknowledgement. Replaying `resolve_challenge_window` closes the
+  open window once and returns the original success after the room enters reveal. Replaying
+  `close_room` after room deletion likewise returns its original acknowledgement while the
+  close service runs once.
 - `RoomStore.test.ts`: processed-action acknowledgements are room-scoped, capped at 32, and
   removed with their room.
 - Manual M10.

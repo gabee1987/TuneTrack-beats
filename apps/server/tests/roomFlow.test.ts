@@ -722,6 +722,10 @@ describe("room flow", () => {
     const roomService = createTestRoomService();
     const claimChallengeSpy = vi.spyOn(roomService, "claimChallenge");
     const placeChallengeSpy = vi.spyOn(roomService, "placeChallenge");
+    const resolveChallengeWindowSpy = vi.spyOn(
+      roomService,
+      "resolveChallengeWindow",
+    );
     const serverContext = await startTestServer(roomService);
     const hostSocket = createClient(serverContext.baseUrl);
     const guestSocket = createClient(serverContext.baseUrl);
@@ -790,12 +794,55 @@ describe("room flow", () => {
     });
     await openChallengePromise;
 
-    const claimedChallengePromise = waitForStateUpdate(
+    const firstRevealPromise = waitForStateUpdate(
+      guestSocket,
+      (roomState) => roomState.status === "reveal",
+    );
+    const resolveRequestId = "00000000-0000-4000-8000-00000000010a";
+    const firstResolveAckPromise = hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.ResolveChallengeWindow, {
+        roomId: "beat-room",
+        requestId: resolveRequestId,
+      }) as Promise<ActionAck>;
+    const [, firstResolveAck] = await Promise.all([
+      firstRevealPromise,
+      firstResolveAckPromise,
+    ]);
+    const replayResolveAck = (await hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.ResolveChallengeWindow, {
+        roomId: "beat-room",
+        requestId: resolveRequestId,
+      })) as ActionAck;
+
+    expect(firstResolveAck).toEqual({ ok: true, requestId: resolveRequestId });
+    expect(replayResolveAck).toEqual(firstResolveAck);
+    expect(resolveChallengeWindowSpy).toHaveBeenCalledTimes(1);
+
+    const secondTurnPromise = waitForStateUpdate(
+      guestSocket,
+      (roomState) => roomState.status === "turn" && roomState.turn?.turnNumber === 2,
+    );
+    hostSocket.emit(ClientToServerEvent.ConfirmReveal, { roomId: "beat-room" });
+    await secondTurnPromise;
+
+    const secondOpenChallengePromise = waitForStateUpdate(
       hostSocket,
-      (roomState) => roomState.challengeState?.challengerPlayerId === guestIdentity.playerId,
+      (roomState) => roomState.challengeState?.phase === "open",
+    );
+    guestSocket.emit(ClientToServerEvent.PlaceCard, {
+      roomId: "beat-room",
+      selectedSlotIndex: 0,
+    });
+    await secondOpenChallengePromise;
+
+    const claimedChallengePromise = waitForStateUpdate(
+      guestSocket,
+      (roomState) => roomState.challengeState?.challengerPlayerId === hostIdentity.playerId,
     );
     const claimRequestId = "00000000-0000-4000-8000-000000000103";
-    const firstClaimAckPromise = guestSocket
+    const firstClaimAckPromise = hostSocket
       .timeout(1_000)
       .emitWithAck(ClientToServerEvent.ClaimChallenge, {
         roomId: "beat-room",
@@ -805,7 +852,7 @@ describe("room flow", () => {
       claimedChallengePromise,
       firstClaimAckPromise,
     ]);
-    const replayClaimAck = (await guestSocket
+    const replayClaimAck = (await hostSocket
       .timeout(1_000)
       .emitWithAck(ClientToServerEvent.ClaimChallenge, {
         roomId: "beat-room",
@@ -818,11 +865,11 @@ describe("room flow", () => {
     placeChallengeSpy.mockClear();
 
     const revealPromise = waitForStateUpdate(
-      hostSocket,
+      guestSocket,
       (roomState) => roomState.status === "reveal",
     );
     const requestId = "00000000-0000-4000-8000-000000000104";
-    const firstAckPromise = guestSocket
+    const firstAckPromise = hostSocket
       .timeout(1_000)
       .emitWithAck(ClientToServerEvent.PlaceChallenge, {
         roomId: "beat-room",
@@ -830,7 +877,7 @@ describe("room flow", () => {
         requestId,
       }) as Promise<ActionAck>;
     const [revealState, firstAck] = await Promise.all([revealPromise, firstAckPromise]);
-    const replayAck = (await guestSocket
+    const replayAck = (await hostSocket
       .timeout(1_000)
       .emitWithAck(ClientToServerEvent.PlaceChallenge, {
         roomId: "beat-room",
@@ -841,8 +888,8 @@ describe("room flow", () => {
     expect(firstAck).toEqual({ ok: true, requestId });
     expect(replayAck).toEqual(firstAck);
     expect(placeChallengeSpy).toHaveBeenCalledTimes(1);
-    expect(revealState.revealState?.challengerPlayerId).toBe(guestIdentity.playerId);
-    expect(revealState.revealState?.playerId).toBe(hostIdentity.playerId);
+    expect(revealState.revealState?.challengerPlayerId).toBe(hostIdentity.playerId);
+    expect(revealState.revealState?.playerId).toBe(guestIdentity.playerId);
   });
 
   it("restores the same player identity after a refresh during an active game", async () => {

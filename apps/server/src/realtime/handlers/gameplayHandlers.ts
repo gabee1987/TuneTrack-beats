@@ -230,6 +230,17 @@ function registerResolveChallengeWindowHandler(
     handle: (data) => {
       broadcastRoomState(io, roomService.resolveChallengeWindow(data, socket.id));
     },
+    idempotency: {
+      find: (data) =>
+        data.requestId
+          ? roomService.getProcessedActionAck(socket.id, data.roomId, data.requestId)
+          : undefined,
+      remember: (data, ack) => {
+        if (data.requestId) {
+          roomService.rememberProcessedActionAck(data.roomId, ack);
+        }
+      },
+    },
     fallbackErrorCode: "RESOLVE_CHALLENGE_WINDOW_FAILED",
     errorMessages: resolveChallengeWindowErrorMessages,
   });

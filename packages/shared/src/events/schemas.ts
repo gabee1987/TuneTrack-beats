@@ -191,6 +191,7 @@ export const placeChallengePayloadSchema = z.object({
 
 export const resolveChallengeWindowPayloadSchema = z.object({
   roomId: roomIdSchema,
+  requestId: z.string().uuid().optional(),
 });
 
 export const skipTrackWithTtPayloadSchema = z.object({

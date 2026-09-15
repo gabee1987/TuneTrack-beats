@@ -60,10 +60,12 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     isBuyTimelineCardPending,
     isPlaceCardPending,
     isPlaceChallengePending,
+    isResolveChallengeWindowPending,
     isSkipTrackPending,
     isSkipTurnPending,
     placeCardActionStatus,
     placeChallengeActionStatus,
+    resolveChallengeWindowActionStatus,
     skipTrackActionStatus,
     skipTurnActionStatus,
     roomState,
@@ -145,8 +147,10 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
         isCurrentPlayerTurn={isCurrentPlayerTurn}
         isClaimChallengePending={isClaimChallengePending}
         isPlaceChallengePending={isPlaceChallengePending}
+        isResolveChallengeWindowPending={isResolveChallengeWindowPending}
         onTokenSpendAnimationStart={handleTokenSpendAnimationStart}
         placeChallengeActionStatus={placeChallengeActionStatus}
+        resolveChallengeWindowActionStatus={resolveChallengeWindowActionStatus}
         roomState={roomState}
       />
 
@@ -223,10 +227,14 @@ function areActionPanelModelsEqual(
     previousModel.isBuyTimelineCardPending === nextModel.isBuyTimelineCardPending &&
     previousModel.isPlaceCardPending === nextModel.isPlaceCardPending &&
     previousModel.isPlaceChallengePending === nextModel.isPlaceChallengePending &&
+    previousModel.isResolveChallengeWindowPending ===
+      nextModel.isResolveChallengeWindowPending &&
     previousModel.isSkipTrackPending === nextModel.isSkipTrackPending &&
     previousModel.isSkipTurnPending === nextModel.isSkipTurnPending &&
     previousModel.placeCardActionStatus === nextModel.placeCardActionStatus &&
     previousModel.placeChallengeActionStatus === nextModel.placeChallengeActionStatus &&
+    previousModel.resolveChallengeWindowActionStatus ===
+      nextModel.resolveChallengeWindowActionStatus &&
     previousModel.skipTrackActionStatus === nextModel.skipTrackActionStatus &&
     previousModel.skipTurnActionStatus === nextModel.skipTurnActionStatus &&
     previousModel.roomState === nextModel.roomState &&

@@ -14,6 +14,7 @@ import { useChallengeCountdownLabel } from "../hooks/useChallengeCountdownLabel"
 import type {
   ClaimChallengeActionStatus,
   PlaceChallengeActionStatus,
+  ResolveChallengeWindowActionStatus,
 } from "../GamePage.types";
 import styles from "./gamePageActionPanelsStyles";
 import {
@@ -64,6 +65,7 @@ interface ChallengeActionPanelProps {
   isClaimChallengePending: boolean;
   isCurrentPlayerTurn: boolean;
   isPlaceChallengePending: boolean;
+  isResolveChallengeWindowPending: boolean;
   onTokenSpendAnimationStart?: (payload: {
     amount: number;
     originX: number;
@@ -71,6 +73,7 @@ interface ChallengeActionPanelProps {
   }) => void;
   roomState: PublicRoomState;
   placeChallengeActionStatus: PlaceChallengeActionStatus;
+  resolveChallengeWindowActionStatus: ResolveChallengeWindowActionStatus;
 }
 
 export function ChallengeActionPanel({
@@ -87,9 +90,11 @@ export function ChallengeActionPanel({
   isClaimChallengePending,
   isCurrentPlayerTurn,
   isPlaceChallengePending,
+  isResolveChallengeWindowPending,
   onTokenSpendAnimationStart,
   roomState,
   placeChallengeActionStatus,
+  resolveChallengeWindowActionStatus,
 }: ChallengeActionPanelProps) {
   const { t } = useI18n();
   const reduceMotion = useReducedMotionPreference();
@@ -169,6 +174,12 @@ export function ChallengeActionPanel({
         : placeChallengeActionStatus === "failed"
           ? t("game.controls.retryChallengePlacement")
           : t("game.controls.confirmBeat");
+  const resolveChallengeWindowButtonLabel =
+    resolveChallengeWindowActionStatus === "retrying"
+      ? t("game.controls.challengeResolutionRetrying")
+      : resolveChallengeWindowActionStatus === "failed"
+        ? t("game.controls.retryChallengeResolution")
+        : t("game.controls.resolve");
 
   const actionDock = isOpenChallengeWindow ? (
     canClaimChallenge || canResolveChallengeWindow ? (
@@ -194,8 +205,11 @@ export function ChallengeActionPanel({
           </PrimaryActionButton>
         ) : null}
         {canResolveChallengeWindow ? (
-          <SecondaryActionButton onClick={handleResolveChallengeWindow}>
-            {t("game.controls.resolve")}
+          <SecondaryActionButton
+            disabled={isResolveChallengeWindowPending}
+            onClick={handleResolveChallengeWindow}
+          >
+            {resolveChallengeWindowButtonLabel}
           </SecondaryActionButton>
         ) : null}
       </ActionDock>

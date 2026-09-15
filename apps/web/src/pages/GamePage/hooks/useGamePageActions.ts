@@ -15,6 +15,7 @@ import type {
   SkipTrackActionStatus,
 } from "../GamePage.types";
 import { useAwardTtAction } from "./useAwardTtAction";
+import { useResolveChallengeWindowAction } from "./useResolveChallengeWindowAction";
 import { useSkipTurnAction } from "./useSkipTurnAction";
 
 async function emitRoomEvent<TPayload>(
@@ -53,6 +54,10 @@ export function useGamePageActions({
   const roomStateRef = useRef(roomState);
   roomStateRef.current = roomState;
   const awardTtAction = useAwardTtAction({ currentPlayerId, roomState });
+  const resolveChallengeWindowAction = useResolveChallengeWindowAction({
+    canResolveChallengeWindow,
+    roomState,
+  });
   const skipTurnAction = useSkipTurnAction({ currentPlayerId, roomState });
   const isCloseRoomPendingRef = useRef(false);
   const [closeRoomActionStatus, setCloseRoomActionStatus] =
@@ -265,16 +270,6 @@ export function useGamePageActions({
     }
   }, [canSelectChallengeSlot, roomState, selectedSlotIndex]);
 
-  const handleResolveChallengeWindow = useCallback(() => {
-    if (!roomState || !canResolveChallengeWindow) {
-      return;
-    }
-
-    void emitRoomEvent(ClientToServerEvent.ResolveChallengeWindow, {
-      roomId: roomState.roomId,
-    });
-  }, [canResolveChallengeWindow, roomState]);
-
   const handleCloseRoom = useCallback(async () => {
     if (
       !roomState ||
@@ -471,7 +466,8 @@ export function useGamePageActions({
     handleKickPlayer,
     handlePlaceCard,
     handlePlaceChallenge,
-    handleResolveChallengeWindow,
+    handleResolveChallengeWindow:
+      resolveChallengeWindowAction.handleResolveChallengeWindow,
     handleSkipTrackWithTt,
     handleSkipTurn: skipTurnAction.handleSkipTurn,
     handleTransferHost,
@@ -482,12 +478,14 @@ export function useGamePageActions({
     isConfirmRevealPending,
     isPlaceCardPending,
     isPlaceChallengePending,
+    isResolveChallengeWindowPending: resolveChallengeWindowAction.isPending,
     isSkipTrackPending,
     isSkipTurnPending: skipTurnAction.isPending,
     claimChallengeActionStatus,
     confirmRevealActionStatus,
     placeCardActionStatus,
     placeChallengeActionStatus,
+    resolveChallengeWindowActionStatus: resolveChallengeWindowAction.actionStatus,
     skipTrackActionStatus,
     skipTurnActionStatus: skipTurnAction.actionStatus,
   };
