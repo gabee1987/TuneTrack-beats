@@ -22,6 +22,7 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
     handleCloseRoom,
     handleSkipTurn,
     isCloseRoomPending,
+    isSkipTurnPending,
     leadingPlayers,
     menuTabs,
     roomState,
@@ -37,6 +38,7 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
     visibleTimelinePlayerId,
     visibleTimelineTtCount,
     visibleTimelineTitle,
+    skipTurnActionStatus,
   } = model;
   const showStatusTokenCount = roomState.settings.ttModeEnabled;
   const isHost = roomState.hostId === visibleTimelinePlayerId;
@@ -57,6 +59,12 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
     closeRoomLabel = t("room.close.retrying");
   } else if (closeRoomActionStatus === "failed") {
     closeRoomLabel = t("room.close.retry");
+  }
+  let skipTurnLabel = t("game.controls.skipTurn");
+  if (skipTurnActionStatus === "retrying") {
+    skipTurnLabel = t("game.controls.skipTurnRetrying");
+  } else if (skipTurnActionStatus === "failed") {
+    skipTurnLabel = t("game.controls.retrySkipTurn");
   }
 
   return (
@@ -175,7 +183,8 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
                     ...(roomState.status === "turn"
                       ? [
                           {
-                            label: t("game.controls.skipTurn"),
+                            disabled: isSkipTurnPending,
+                            label: skipTurnLabel,
                             onClick: handleSkipTurn,
                             tone: "neutral" as const,
                           },
@@ -210,6 +219,7 @@ function areHeaderModelsEqual(
     previousModel.handleCloseRoom === nextModel.handleCloseRoom &&
     previousModel.handleSkipTurn === nextModel.handleSkipTurn &&
     previousModel.isCloseRoomPending === nextModel.isCloseRoomPending &&
+    previousModel.isSkipTurnPending === nextModel.isSkipTurnPending &&
     previousModel.leadingPlayers === nextModel.leadingPlayers &&
     previousModel.menuTabs === nextModel.menuTabs &&
     previousModel.roomState === nextModel.roomState &&
@@ -220,6 +230,7 @@ function areHeaderModelsEqual(
     previousModel.showTurnNumberChip === nextModel.showTurnNumberChip &&
     previousModel.statusBadgeText === nextModel.statusBadgeText &&
     previousModel.statusDetailText === nextModel.statusDetailText &&
+    previousModel.skipTurnActionStatus === nextModel.skipTurnActionStatus &&
     previousModel.updateViewPreferences === nextModel.updateViewPreferences &&
     previousModel.visibleTimelineCardCount === nextModel.visibleTimelineCardCount &&
     previousModel.visibleTimelinePlayerId === nextModel.visibleTimelinePlayerId &&

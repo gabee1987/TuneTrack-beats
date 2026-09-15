@@ -324,6 +324,17 @@ function registerSkipTurnHandler(io: Server, socket: Socket, roomService: RoomSe
     handle: (data) => {
       broadcastRoomState(io, roomService.skipTurn(data, socket.id));
     },
+    idempotency: {
+      find: (data) =>
+        data.requestId
+          ? roomService.getProcessedActionAck(socket.id, data.roomId, data.requestId)
+          : undefined,
+      remember: (data, ack) => {
+        if (data.requestId) {
+          roomService.rememberProcessedActionAck(data.roomId, ack);
+        }
+      },
+    },
     fallbackErrorCode: "SKIP_TURN_FAILED",
     errorMessages: skipTurnErrorMessages,
   });

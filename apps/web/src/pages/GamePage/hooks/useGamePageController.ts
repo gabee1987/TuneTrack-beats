@@ -162,11 +162,13 @@ export function useGamePageController({
     isPlaceCardPending: actions.isPlaceCardPending,
     isPlaceChallengePending: actions.isPlaceChallengePending,
     isSkipTrackPending: actions.isSkipTrackPending,
+    isSkipTurnPending: actions.isSkipTurnPending,
     claimChallengeActionStatus: actions.claimChallengeActionStatus,
     confirmRevealActionStatus: actions.confirmRevealActionStatus,
     placeCardActionStatus: actions.placeCardActionStatus,
     placeChallengeActionStatus: actions.placeChallengeActionStatus,
     skipTrackActionStatus: actions.skipTrackActionStatus,
+    skipTurnActionStatus: actions.skipTurnActionStatus,
   };
 
   const capabilityState = {

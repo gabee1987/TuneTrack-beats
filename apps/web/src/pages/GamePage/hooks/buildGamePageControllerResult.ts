@@ -31,11 +31,13 @@ interface BuildGamePageControllerResultOptions {
     | "isPlaceCardPending"
     | "isPlaceChallengePending"
     | "isSkipTrackPending"
+    | "isSkipTurnPending"
     | "claimChallengeActionStatus"
     | "confirmRevealActionStatus"
     | "placeCardActionStatus"
     | "placeChallengeActionStatus"
     | "skipTrackActionStatus"
+    | "skipTurnActionStatus"
   >;
   capabilityState: Pick<
     UseGamePageControllerResult,

@@ -16,6 +16,7 @@ import type {
   BuyTimelineCardActionStatus,
   PlaceCardActionStatus,
   SkipTrackActionStatus,
+  SkipTurnActionStatus,
 } from "../GamePage.types";
 import {
   ActionDock,
@@ -59,6 +60,7 @@ interface TurnActionDockProps {
   isBuyTimelineCardPending: boolean;
   isPlaceCardPending: boolean;
   isSkipTrackPending: boolean;
+  isSkipTurnPending: boolean;
   placeCardActionStatus: PlaceCardActionStatus;
   onTokenSpendAnimationStart?: (payload: {
     amount: number;
@@ -67,6 +69,7 @@ interface TurnActionDockProps {
   }) => void;
   roomState: PublicRoomState;
   skipTrackActionStatus: SkipTrackActionStatus;
+  skipTurnActionStatus: SkipTurnActionStatus;
 }
 
 export function TurnActionDock({
@@ -82,10 +85,12 @@ export function TurnActionDock({
   isBuyTimelineCardPending,
   isPlaceCardPending,
   isSkipTrackPending,
+  isSkipTurnPending,
   placeCardActionStatus,
   onTokenSpendAnimationStart,
   roomState,
   skipTrackActionStatus,
+  skipTurnActionStatus,
 }: TurnActionDockProps) {
   const { t } = useI18n();
   const reduceMotion = useReducedMotionPreference();
@@ -125,6 +130,12 @@ export function TurnActionDock({
     skipTrackButtonLabel = t("game.controls.skipRetrying");
   } else if (skipTrackActionStatus === "failed") {
     skipTrackButtonLabel = t("game.controls.retrySkip");
+  }
+  let skipTurnButtonLabel = t("game.controls.skipTurn");
+  if (skipTurnActionStatus === "retrying") {
+    skipTurnButtonLabel = t("game.controls.skipTurnRetrying");
+  } else if (skipTurnActionStatus === "failed") {
+    skipTurnButtonLabel = t("game.controls.retrySkipTurn");
   }
 
   function resolveSpendOrigin(
@@ -328,8 +339,11 @@ export function TurnActionDock({
                 layout="position"
                 transition={createLayoutTransition(reduceMotion)}
               >
-                <SecondaryActionButton onClick={() => handleSkipOfflinePlayer()}>
-                  {t("game.controls.skipTurn")}
+                <SecondaryActionButton
+                  disabled={isSkipTurnPending}
+                  onClick={() => handleSkipOfflinePlayer()}
+                >
+                  {skipTurnButtonLabel}
                 </SecondaryActionButton>
               </motion.span>
             ) : null}

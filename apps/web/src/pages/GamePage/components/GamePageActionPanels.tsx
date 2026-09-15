@@ -61,9 +61,11 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     isPlaceCardPending,
     isPlaceChallengePending,
     isSkipTrackPending,
+    isSkipTurnPending,
     placeCardActionStatus,
     placeChallengeActionStatus,
     skipTrackActionStatus,
+    skipTurnActionStatus,
     roomState,
     showHelperLabels,
   } = model;
@@ -176,10 +178,12 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
         isBuyTimelineCardPending={isBuyTimelineCardPending}
         isPlaceCardPending={isPlaceCardPending}
         isSkipTrackPending={isSkipTrackPending}
+        isSkipTurnPending={isSkipTurnPending}
         placeCardActionStatus={placeCardActionStatus}
         onTokenSpendAnimationStart={handleTokenSpendAnimationStart}
         roomState={roomState}
         skipTrackActionStatus={skipTrackActionStatus}
+        skipTurnActionStatus={skipTurnActionStatus}
       />
     </>
   );
@@ -220,9 +224,11 @@ function areActionPanelModelsEqual(
     previousModel.isPlaceCardPending === nextModel.isPlaceCardPending &&
     previousModel.isPlaceChallengePending === nextModel.isPlaceChallengePending &&
     previousModel.isSkipTrackPending === nextModel.isSkipTrackPending &&
+    previousModel.isSkipTurnPending === nextModel.isSkipTurnPending &&
     previousModel.placeCardActionStatus === nextModel.placeCardActionStatus &&
     previousModel.placeChallengeActionStatus === nextModel.placeChallengeActionStatus &&
     previousModel.skipTrackActionStatus === nextModel.skipTrackActionStatus &&
+    previousModel.skipTurnActionStatus === nextModel.skipTurnActionStatus &&
     previousModel.roomState === nextModel.roomState &&
     previousModel.showHelperLabels === nextModel.showHelperLabels
   );

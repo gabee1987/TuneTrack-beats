@@ -1230,10 +1230,11 @@ describe("room flow", () => {
     ).toBe(1);
   });
 
-  it("applies replayed token-spending actions once", async () => {
+  it("applies replayed turn and token-spending actions once", async () => {
     const roomService = createTestRoomService();
     const buyTimelineCardSpy = vi.spyOn(roomService, "buyTimelineCardWithTt");
     const skipTrackSpy = vi.spyOn(roomService, "skipTrackWithTt");
+    const skipTurnSpy = vi.spyOn(roomService, "skipTurn");
     const serverContext = await startTestServer(roomService);
     const hostSocket = createClient(serverContext.baseUrl);
 
@@ -1271,10 +1272,36 @@ describe("room flow", () => {
     hostSocket.emit(ClientToServerEvent.StartGame, { roomId: "buy-room" });
     const turnState = await turnPromise;
 
+    const nextTurnPromise = waitForStateUpdate(
+      hostSocket,
+      (roomState) => roomState.turn?.turnNumber === (turnState.turn?.turnNumber ?? 0) + 1,
+    );
+    const skipTurnRequestId = "00000000-0000-4000-8000-000000000109";
+    const firstSkipTurnAckPromise = hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.SkipTurn, {
+        roomId: "buy-room",
+        requestId: skipTurnRequestId,
+      }) as Promise<ActionAck>;
+    const [nextTurnState, firstSkipTurnAck] = await Promise.all([
+      nextTurnPromise,
+      firstSkipTurnAckPromise,
+    ]);
+    const replaySkipTurnAck = (await hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.SkipTurn, {
+        roomId: "buy-room",
+        requestId: skipTurnRequestId,
+      })) as ActionAck;
+
+    expect(firstSkipTurnAck).toEqual({ ok: true, requestId: skipTurnRequestId });
+    expect(replaySkipTurnAck).toEqual(firstSkipTurnAck);
+    expect(skipTurnSpy).toHaveBeenCalledTimes(1);
+
     const skippedTrackPromise = waitForStateUpdate(
       hostSocket,
       (roomState) =>
-        roomState.currentTrackCard?.id !== turnState.currentTrackCard?.id &&
+        roomState.currentTrackCard?.id !== nextTurnState.currentTrackCard?.id &&
         roomState.turn?.hasUsedSkipTrackWithTt === true,
     );
     const skipRequestId = "00000000-0000-4000-8000-000000000107";

@@ -215,6 +215,7 @@ Retries and the recovery-replay behaviour from Doc 04 section 2.1 make it possib
 server to see the same action twice. For most events this is harmless (settings toggles are
 idempotent by nature), but these are not: `place_card`, `confirm_reveal`,
 `place_challenge`, `buy_timeline_card_with_tt`, `skip_track_with_tt`, `award_tt`.
+Manual `skip_turn` also advances gameplay and therefore requires the same replay protection.
 
 - Add an optional `requestId` to those payload schemas in
   `packages/shared/src/events/schemas.ts`.
@@ -239,8 +240,8 @@ Per-action feedback becomes possible for the first time:
 
 Migrate incrementally, highest-risk actions first: `place_card`, `confirm_reveal`,
 `place_challenge`, `claim_challenge`, `start_game`, `close_room`,
-`buy_timeline_card_with_tt`, `skip_track_with_tt`, `award_tt`. Settings toggles can stay fire-and-forget
-until last.
+`buy_timeline_card_with_tt`, `skip_track_with_tt`, `award_tt`, `skip_turn`. Settings toggles
+can stay fire-and-forget until last.
 
 ### Acceptance
 
@@ -271,6 +272,9 @@ until last.
 - [x] `award_tt` adjusts a player's token balance once when its acknowledged request is
       replayed; all host token-adjust controls share duplicate blocking while the submitted
       player exposes pending, retrying, and final retry feedback.
+- [x] `skip_turn` advances or cancels an offline player's claimed challenge once when its
+      acknowledged request is replayed; both host controls share duplicate blocking and expose
+      retry feedback only when an acknowledgement is delayed or lost.
 
 ## 5. Phase 5 — Honest connection state in the UI · **S2**
 

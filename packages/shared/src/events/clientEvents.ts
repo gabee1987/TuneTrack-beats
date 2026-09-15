@@ -154,6 +154,11 @@ export interface BuyTimelineCardWithTtPayload {
   requestId?: string;
 }
 
+export interface SkipTurnPayload {
+  roomId: RoomId;
+  requestId?: string;
+}
+
 export interface ImportPlaylistPayload {
   roomId: RoomId;
   playlistUrl: string;

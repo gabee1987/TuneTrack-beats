@@ -15,6 +15,7 @@ import type {
   SkipTrackActionStatus,
 } from "../GamePage.types";
 import { useAwardTtAction } from "./useAwardTtAction";
+import { useSkipTurnAction } from "./useSkipTurnAction";
 
 async function emitRoomEvent<TPayload>(
   event: (typeof ClientToServerEvent)[keyof typeof ClientToServerEvent],
@@ -52,6 +53,7 @@ export function useGamePageActions({
   const roomStateRef = useRef(roomState);
   roomStateRef.current = roomState;
   const awardTtAction = useAwardTtAction({ currentPlayerId, roomState });
+  const skipTurnAction = useSkipTurnAction({ currentPlayerId, roomState });
   const isCloseRoomPendingRef = useRef(false);
   const [closeRoomActionStatus, setCloseRoomActionStatus] =
     useState<CloseRoomActionStatus>("idle");
@@ -456,16 +458,6 @@ export function useGamePageActions({
     }
   }, [isCurrentPlayerTurn, roomState]);
 
-  const handleSkipTurn = useCallback(() => {
-    if (!roomState || roomState.status !== "turn") {
-      return;
-    }
-
-    void emitRoomEvent(ClientToServerEvent.SkipTurn, {
-      roomId: roomState.roomId,
-    });
-  }, [roomState]);
-
   return {
     awardTtActionState: awardTtAction.actionState,
     buyTimelineCardActionStatus,
@@ -481,7 +473,7 @@ export function useGamePageActions({
     handlePlaceChallenge,
     handleResolveChallengeWindow,
     handleSkipTrackWithTt,
-    handleSkipTurn,
+    handleSkipTurn: skipTurnAction.handleSkipTurn,
     handleTransferHost,
     isBuyTimelineCardPending,
     isAwardTtPending: awardTtAction.isPending,
@@ -491,10 +483,12 @@ export function useGamePageActions({
     isPlaceCardPending,
     isPlaceChallengePending,
     isSkipTrackPending,
+    isSkipTurnPending: skipTurnAction.isPending,
     claimChallengeActionStatus,
     confirmRevealActionStatus,
     placeCardActionStatus,
     placeChallengeActionStatus,
     skipTrackActionStatus,
+    skipTurnActionStatus: skipTurnAction.actionStatus,
   };
 }

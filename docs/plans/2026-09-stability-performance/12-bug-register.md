@@ -511,8 +511,8 @@ path was missed. Both latches are now keyed on the card id.
   session; `GAME_ALREADY_STARTED` gets a recovery path; a server `instanceId` distinguishes
   a restart from a closed room.
 - Doc 05 section 3 — `t` moves to a ref; the connection effect runs exactly once per room.
-- Doc 05 section 4 — acknowledgements with request ids and server-side idempotency for the
-  five non-idempotent gameplay actions.
+- Doc 05 section 4 — acknowledgements with request ids and server-side idempotency for
+  non-idempotent gameplay actions.
 - Doc 05 section 5 — explicit reconnection policy, handshake `auth: { sessionId }`, one typed
   connection-state model, and a single localised connection banner.
 - Doc 04 section 2 — `connectionStateRecovery`, ping tuning, per-socket rate limits.
@@ -689,10 +689,24 @@ arrives. The existing fly animation starts only when a submission passes the gua
 authoritative state already changes the submitted balance or room ownership, stale timeout
 feedback is discarded.
 
+### Root cause #2 `skip_turn` migration (2026-09-15)
+
+`skip_turn` now uses the acknowledged action path and room-scoped replay LRU. A timeout retry
+reuses the original request id, so replay cannot skip past multiple players or cancel a later
+challenge state. The original success acknowledgement is returned before logging, gameplay
+mutation, timer cleanup, or rebroadcast.
+
+The host menu and offline-player dock share a synchronous duplicate guard. Both controls are
+disabled while pending without flashing transient text during a normal response; localised
+retrying and final retry labels appear only after acknowledgement timeouts. Submitted phase,
+turn, and affected-player identity are checked before retaining timeout feedback, so an
+authoritative state update cannot leak stale retry UI into a later turn.
+
 Root cause #2 remains **open**. The explicitly non-idempotent gameplay actions now have replay
-protection, but remaining action and settings callers still use bare emits and do not yet have
-per-action acknowledgement feedback. Root causes #4 and #5 also remain open; B8 therefore
-remains **Confirmed**, not Fixed.
+protection, but remaining actions such as challenge-window resolution, host transfer, player
+removal, and settings callers still use bare emits and do not yet have per-action
+acknowledgement feedback. Root causes #4 and #5 also remain open; B8 therefore remains
+**Confirmed**, not Fixed.
 
 ### Verification
 
@@ -712,11 +726,13 @@ remains **Confirmed**, not Fixed.
   purchase and skip-track also block duplicate presses and animations, retry once, and expose
   a final retry affordance. A failed skip clears its pending preview-transition intent. Host
   token adjustments share duplicate blocking and expose the same timeout lifecycle on the
-  submitted player's menu control.
+  submitted player's menu control. Manual turn skip shares that lifecycle across its host
+  menu and offline-player controls without transient pending text.
 - `roomFlow.test.ts`: replaying successful skip-track and timeline-card purchases returns each
   original acknowledgement. Each service is called once; the skip spends one token and draws
   one track, then the purchase spends three tokens and awards one card. Replaying a host token
   adjustment likewise returns its original acknowledgement and invokes the award service once.
+  A replayed manual turn skip returns its original acknowledgement and advances the turn once.
 - `useLobbyRoomActions.test.tsx`: two quick game-start presses emit once, the real start
   control remains disabled through its automatic retry, and a final timeout exposes a fresh
   retry affordance. Lobby close uses the same lifecycle; the in-game close hook has a matching

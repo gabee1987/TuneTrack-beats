@@ -205,6 +205,7 @@ export const buyTimelineCardWithTtPayloadSchema = z.object({
 
 export const skipTurnPayloadSchema = z.object({
   roomId: roomIdSchema,
+  requestId: z.string().uuid().optional(),
 });
 
 export const importPlaylistPayloadSchema = z.object({

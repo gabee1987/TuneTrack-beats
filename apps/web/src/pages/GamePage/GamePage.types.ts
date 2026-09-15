@@ -24,6 +24,7 @@ export type PlaceChallengeActionStatus = "idle" | "pending" | "retrying" | "fail
 export type CloseRoomActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type BuyTimelineCardActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type SkipTrackActionStatus = "idle" | "pending" | "retrying" | "failed";
+export type SkipTurnActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type AwardTtActionStatus = "pending" | "retrying" | "failed";
 
 export interface AwardTtActionState {
@@ -142,6 +143,7 @@ export interface GamePageHeaderModel
     | "handleCloseRoom"
     | "handleSkipTurn"
     | "isCloseRoomPending"
+    | "isSkipTurnPending"
     | "leadingPlayers"
     | "menuTabs"
     | "showMiniStandings"
@@ -151,6 +153,7 @@ export interface GamePageHeaderModel
     | "showTurnNumberChip"
     | "statusBadgeText"
     | "statusDetailText"
+    | "skipTurnActionStatus"
     | "updateViewPreferences"
     | "visibleTimelineCardCount"
     | "visibleTimelinePlayerId"
@@ -190,6 +193,7 @@ export interface GamePageActionPanelsModel
     | "handleSkipTurn"
     | "isBuyTimelineCardPending"
     | "isSkipTrackPending"
+    | "isSkipTurnPending"
     | "isCurrentPlayerTurn"
     | "isClaimChallengePending"
     | "isConfirmRevealPending"
@@ -197,6 +201,7 @@ export interface GamePageActionPanelsModel
     | "isPlaceChallengePending"
     | "placeCardActionStatus"
     | "placeChallengeActionStatus"
+    | "skipTurnActionStatus"
     | "showHelperLabels"
   > {
   roomState: PublicRoomState;
@@ -239,11 +244,13 @@ export type GamePageController = GamePageActionHandlers & {
   isPlaceCardPending: boolean;
   isPlaceChallengePending: boolean;
   isSkipTrackPending: boolean;
+  isSkipTurnPending: boolean;
   confirmRevealActionStatus: ConfirmRevealActionStatus;
   claimChallengeActionStatus: ClaimChallengeActionStatus;
   closeRoomActionStatus: CloseRoomActionStatus;
   buyTimelineCardActionStatus: BuyTimelineCardActionStatus;
   skipTrackActionStatus: SkipTrackActionStatus;
+  skipTurnActionStatus: SkipTurnActionStatus;
   placeCardActionStatus: PlaceCardActionStatus;
   placeChallengeActionStatus: PlaceChallengeActionStatus;
   isViewingOwnTimeline: boolean;
