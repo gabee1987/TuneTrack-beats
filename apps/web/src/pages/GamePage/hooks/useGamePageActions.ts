@@ -14,6 +14,7 @@ import type {
   PlaceChallengeActionStatus,
   SkipTrackActionStatus,
 } from "../GamePage.types";
+import { useAwardTtAction } from "./useAwardTtAction";
 
 async function emitRoomEvent<TPayload>(
   event: (typeof ClientToServerEvent)[keyof typeof ClientToServerEvent],
@@ -50,6 +51,7 @@ export function useGamePageActions({
 }: UseGamePageActionsOptions) {
   const roomStateRef = useRef(roomState);
   roomStateRef.current = roomState;
+  const awardTtAction = useAwardTtAction({ currentPlayerId, roomState });
   const isCloseRoomPendingRef = useRef(false);
   const [closeRoomActionStatus, setCloseRoomActionStatus] =
     useState<CloseRoomActionStatus>("idle");
@@ -315,44 +317,6 @@ export function useGamePageActions({
     }
   }, [currentPlayerId, roomState]);
 
-  const handleAwardTt = useCallback(
-    (playerId: string) => {
-      if (
-        !roomState ||
-        roomState.hostId !== currentPlayerId ||
-        !roomState.settings.ttModeEnabled
-      ) {
-        return;
-      }
-
-      void emitRoomEvent(ClientToServerEvent.AwardTt, {
-        roomId: roomState.roomId,
-        playerId,
-        amount: 1,
-      });
-    },
-    [currentPlayerId, roomState],
-  );
-
-  const handleRemoveTt = useCallback(
-    (playerId: string) => {
-      if (
-        !roomState ||
-        roomState.hostId !== currentPlayerId ||
-        !roomState.settings.ttModeEnabled
-      ) {
-        return;
-      }
-
-      void emitRoomEvent(ClientToServerEvent.AwardTt, {
-        roomId: roomState.roomId,
-        playerId,
-        amount: -1,
-      });
-    },
-    [currentPlayerId, roomState],
-  );
-
   const handleTransferHost = useCallback(
     (playerId: string) => {
       if (
@@ -503,10 +467,11 @@ export function useGamePageActions({
   }, [roomState]);
 
   return {
+    awardTtActionState: awardTtAction.actionState,
     buyTimelineCardActionStatus,
     closeRoomActionStatus,
-    handleAwardTt,
-    handleRemoveTt,
+    handleAwardTt: awardTtAction.handleAwardTt,
+    handleRemoveTt: awardTtAction.handleRemoveTt,
     handleBuyTimelineCardWithTt,
     handleClaimChallenge,
     handleCloseRoom,
@@ -519,6 +484,7 @@ export function useGamePageActions({
     handleSkipTurn,
     handleTransferHost,
     isBuyTimelineCardPending,
+    isAwardTtPending: awardTtAction.isPending,
     isClaimChallengePending,
     isCloseRoomPending,
     isConfirmRevealPending,

@@ -239,7 +239,7 @@ Per-action feedback becomes possible for the first time:
 
 Migrate incrementally, highest-risk actions first: `place_card`, `confirm_reveal`,
 `place_challenge`, `claim_challenge`, `start_game`, `close_room`,
-`buy_timeline_card_with_tt`, `skip_track_with_tt`. Settings toggles can stay fire-and-forget
+`buy_timeline_card_with_tt`, `skip_track_with_tt`, `award_tt`. Settings toggles can stay fire-and-forget
 until last.
 
 ### Acceptance
@@ -268,6 +268,9 @@ until last.
 - [x] `skip_track_with_tt` spends one token and replaces the current track once when its
       acknowledged request is replayed; the skip control blocks duplicate presses, exposes
       timeout feedback, and clears stale transition intent after a failed action.
+- [x] `award_tt` adjusts a player's token balance once when its acknowledged request is
+      replayed; all host token-adjust controls share duplicate blocking while the submitted
+      player exposes pending, retrying, and final retry feedback.
 
 ## 5. Phase 5 — Honest connection state in the UI · **S2**
 

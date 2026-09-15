@@ -93,11 +93,13 @@ export function useGamePageController({
   const derivedState = useGamePageDerivedState({
     currentPlayerId,
     handlers: {
+      awardTtActionState: actions.awardTtActionState,
       handleAwardTt: actions.handleAwardTt,
       handleRemoveTt: actions.handleRemoveTt,
       handleCloseRoom: actions.handleCloseRoom,
       handleKickPlayer: actions.handleKickPlayer,
       handleTransferHost: actions.handleTransferHost,
+      isAwardTtPending: actions.isAwardTtPending,
     },
     locallyPlacedCard,
     roomState,

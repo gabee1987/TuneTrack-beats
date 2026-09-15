@@ -1,5 +1,6 @@
 import { type PublicRoomState } from "@tunetrack/shared";
 import type {
+  AwardTtActionState,
   ChallengeMarkerTone,
   GamePageCard,
   GamePagePlayerNameResolver,
@@ -33,11 +34,13 @@ interface UseGamePageDerivedStateOptions {
   showTurnNumberChip: boolean;
   updateViewPreferences: GamePageViewPreferenceUpdater;
   handlers: {
-    handleAwardTt: (playerId: string) => void;
-    handleRemoveTt: (playerId: string) => void;
+    awardTtActionState: AwardTtActionState | null;
+    handleAwardTt: (playerId: string) => boolean;
+    handleRemoveTt: (playerId: string) => boolean;
     handleCloseRoom: () => void;
     handleKickPlayer: (playerId: string) => void;
     handleTransferHost: (playerId: string) => void;
+    isAwardTtPending: boolean;
   };
 }
 

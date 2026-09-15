@@ -13,13 +13,16 @@ import { CardCountAmount } from "../../../features/ui/CardCountAmount";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import styles from "../gamePageStyles";
+import type { AwardTtActionState } from "../GamePage.types";
 import { TokenAdjustButtons } from "./TokenAdjustButtons";
 
 interface GameMenuPlayerItemProps {
+  awardTtActionState: AwardTtActionState | null;
   currentPlayerId: string | null;
-  onAwardTt: (playerId: string) => void;
+  isAwardTtPending: boolean;
+  onAwardTt: (playerId: string) => boolean;
   onKickPlayer: (playerId: string) => void;
-  onRemoveTt: (playerId: string) => void;
+  onRemoveTt: (playerId: string) => boolean;
   onTransferHost: (playerId: string) => void;
   player: PublicPlayerState;
   roomState: PublicRoomState;
@@ -27,7 +30,9 @@ interface GameMenuPlayerItemProps {
 }
 
 export function GameMenuPlayerItem({
+  awardTtActionState,
   currentPlayerId,
+  isAwardTtPending,
   onAwardTt,
   onKickPlayer,
   onRemoveTt,
@@ -155,9 +160,12 @@ export function GameMenuPlayerItem({
       </button>
       {hasTokenActions ? (
         <TokenAdjustButtons
+          actionState={awardTtActionState}
           currentTokenCount={player.ttTokenCount}
+          isActionPending={isAwardTtPending}
           onAwardTt={() => onAwardTt(player.id)}
           onRemoveTt={() => onRemoveTt(player.id)}
+          playerId={player.id}
         />
       ) : null}
       {hasExpandableContent ? (

@@ -95,6 +95,7 @@ export interface AwardTtPayload {
   roomId: RoomId;
   playerId: PlayerId;
   amount: number;
+  requestId?: string;
 }
 
 export interface StartGamePayload {

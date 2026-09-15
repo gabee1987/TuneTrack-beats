@@ -13,6 +13,7 @@ import {
 import { ChallengeActionPanel } from "../components/ChallengeActionPanel";
 import { RevealActionDock } from "../components/RevealActionDock";
 import { TurnActionDock } from "../components/TurnActionDock";
+import { TokenAdjustButtons } from "../gameMenu/TokenAdjustButtons";
 import { useGamePageActions } from "./useGamePageActions";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -290,6 +291,36 @@ function SkipTrackHarness({
         placeCardActionStatus={actions.placeCardActionStatus}
         roomState={roomState}
         skipTrackActionStatus={actions.skipTrackActionStatus}
+      />
+    </I18nProvider>
+  );
+}
+
+function AwardTtHarness() {
+  const roomState = buildTurnRoomState({
+    settings: buildRoomSettings({ ttModeEnabled: true }),
+  });
+  const actions = useGamePageActions({
+    canClaimChallenge: false,
+    canConfirmReveal: false,
+    canResolveChallengeWindow: false,
+    canSelectChallengeSlot: false,
+    currentPlayerId: TEST_HOST_ID,
+    isCurrentPlayerTurn: true,
+    roomState,
+    selectedSlotIndex: 1,
+    setLocallyPlacedCard: vi.fn(),
+  });
+
+  return (
+    <I18nProvider>
+      <TokenAdjustButtons
+        actionState={actions.awardTtActionState}
+        currentTokenCount={1}
+        isActionPending={actions.isAwardTtPending}
+        onAwardTt={() => actions.handleAwardTt(TEST_GUEST_ID)}
+        onRemoveTt={() => actions.handleRemoveTt(TEST_GUEST_ID)}
+        playerId={TEST_GUEST_ID}
       />
     </I18nProvider>
   );
@@ -638,6 +669,54 @@ describe("useGamePageActions skip_track_with_tt", () => {
     const retryButton = await screen.findByRole("button", { name: /try again/i });
     expect(retryButton).toBeEnabled();
     expect(onSkipTrackWithTtIntent).toHaveBeenLastCalledWith(null);
+
+    emitActionMock.mockResolvedValueOnce({ status: "ok" });
+    fireEvent.click(retryButton);
+
+    await waitFor(() => expect(emitActionMock).toHaveBeenCalledTimes(2));
+  });
+});
+
+describe("useGamePageActions award_tt", () => {
+  beforeEach(() => {
+    emitActionMock.mockReset();
+  });
+
+  it("retries safely, blocks conflicting adjustments, and exposes a final retry", async () => {
+    const deferred = createDeferredActionResult();
+    emitActionMock.mockReturnValueOnce(deferred.promise);
+    render(<AwardTtHarness />);
+
+    const addButton = screen.getByRole("button", { name: /add token/i });
+    const removeButton = screen.getByRole("button", { name: /remove token/i });
+    fireEvent.click(addButton);
+    fireEvent.click(removeButton);
+    fireEvent.click(addButton);
+
+    expect(screen.queryByText(/adding token/i)).not.toBeInTheDocument();
+    expect(addButton).toBeDisabled();
+    expect(removeButton).toBeDisabled();
+    expect(emitActionMock).toHaveBeenCalledTimes(1);
+    expect(emitActionMock).toHaveBeenCalledWith(
+      ClientToServerEvent.AwardTt,
+      { roomId: "TEST_ROOM_1", playerId: TEST_GUEST_ID, amount: 1 },
+      expect.objectContaining({ retryOnTimeout: true }),
+    );
+
+    const options = emitActionMock.mock.calls[0]?.[2] as {
+      onTimeoutRetry?: () => void;
+    };
+    act(() => options.onTimeoutRetry?.());
+
+    expect(screen.getByText(/no response.*retrying/i)).toBeInTheDocument();
+
+    await act(async () => {
+      deferred.resolve({ status: "timeout" });
+      await deferred.promise;
+    });
+
+    const retryButton = screen.getByRole("button", { name: /try adding token again/i });
+    expect(retryButton).toBeEnabled();
 
     emitActionMock.mockResolvedValueOnce({ status: "ok" });
     fireEvent.click(retryButton);

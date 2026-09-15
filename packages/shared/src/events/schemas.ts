@@ -144,6 +144,7 @@ export const awardTtPayloadSchema = z.object({
     .min(-5)
     .max(5)
     .refine((amount) => amount !== 0),
+  requestId: z.string().uuid().optional(),
 });
 
 export const startGamePayloadSchema = z.object({

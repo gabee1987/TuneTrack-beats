@@ -24,6 +24,13 @@ export type PlaceChallengeActionStatus = "idle" | "pending" | "retrying" | "fail
 export type CloseRoomActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type BuyTimelineCardActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type SkipTrackActionStatus = "idle" | "pending" | "retrying" | "failed";
+export type AwardTtActionStatus = "pending" | "retrying" | "failed";
+
+export interface AwardTtActionState {
+  amount: 1 | -1;
+  playerId: string;
+  status: AwardTtActionStatus;
+}
 
 export type ChallengeMarkerTone = "pending" | "success" | "failure";
 export type TimelineCelebrationTone = "success" | "failure";

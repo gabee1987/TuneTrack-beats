@@ -674,10 +674,25 @@ timeout clears that intent while the submitted turn and track are still current,
 later unrelated track change from being misidentified as the skipped-card transition. Stale
 timeout UI is discarded when authoritative state has already moved forward.
 
-Root cause #2 remains **open**. The remaining action callers still use bare emits, the other
-non-idempotent actions still need replay protection, and their per-action pending/error
-experiences remain to be added. Root causes #4 and #5 also remain open; B8 therefore remains
-**Confirmed**, not Fixed.
+### Root cause #2 `award_tt` migration (2026-09-15)
+
+`award_tt` now uses the acknowledged action path and room-scoped replay LRU. Both host token
+adjustments reuse their request id for one timeout retry, so a lost acknowledgement cannot add
+or remove the same token twice. Replaying a successful adjustment returns the original
+acknowledgement before mutation, logging, or rebroadcast.
+
+All token-adjust controls share a synchronous pending guard because they mutate the same host-
+managed balance set. Every adjustment is disabled until the acknowledgement resolves, without
+flashing a transient pending label during normal successful taps. The submitted player's
+control exposes localised retrying and final retry feedback only when no acknowledgement
+arrives. The existing fly animation starts only when a submission passes the guard. If
+authoritative state already changes the submitted balance or room ownership, stale timeout
+feedback is discarded.
+
+Root cause #2 remains **open**. The explicitly non-idempotent gameplay actions now have replay
+protection, but remaining action and settings callers still use bare emits and do not yet have
+per-action acknowledgement feedback. Root causes #4 and #5 also remain open; B8 therefore
+remains **Confirmed**, not Fixed.
 
 ### Verification
 
@@ -695,10 +710,13 @@ experiences remain to be added. Root causes #4 and #5 also remain open; B8 there
   timeout shows both automatic-retry progress and the final retry affordance. Challenge
   claim and placement have the same duplicate guard and timeout lifecycle. Timeline-card
   purchase and skip-track also block duplicate presses and animations, retry once, and expose
-  a final retry affordance. A failed skip clears its pending preview-transition intent.
+  a final retry affordance. A failed skip clears its pending preview-transition intent. Host
+  token adjustments share duplicate blocking and expose the same timeout lifecycle on the
+  submitted player's menu control.
 - `roomFlow.test.ts`: replaying successful skip-track and timeline-card purchases returns each
   original acknowledgement. Each service is called once; the skip spends one token and draws
-  one track, then the purchase spends three tokens and awards one card.
+  one track, then the purchase spends three tokens and awards one card. Replaying a host token
+  adjustment likewise returns its original acknowledgement and invokes the award service once.
 - `useLobbyRoomActions.test.tsx`: two quick game-start presses emit once, the real start
   control remains disabled through its automatic retry, and a final timeout exposes a fresh
   retry affordance. Lobby close uses the same lifecycle; the in-game close hook has a matching

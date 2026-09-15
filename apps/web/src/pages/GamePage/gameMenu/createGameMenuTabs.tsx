@@ -2,25 +2,30 @@ import { type PublicRoomState } from "@tunetrack/shared";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import type { Translate } from "../../../features/i18n";
 import type { GameHistoryEntry } from "../hooks/useGameHistory";
+import type { AwardTtActionState } from "../GamePage.types";
 import styles from "../gamePageStyles";
 import { GameMenuPlayerItem } from "./GameMenuPlayerItem";
 import { HistoryTabContent } from "./HistoryTabContent";
 import { PlaybackTabContent } from "./PlaybackTabContent";
 
 export interface CreateGameMenuTabsOptions {
+  awardTtActionState: AwardTtActionState | null;
   currentPlayerId: string | null;
   historyEntries: GameHistoryEntry[];
   roomState: PublicRoomState;
-  onAwardTt: (playerId: string) => void;
+  isAwardTtPending: boolean;
+  onAwardTt: (playerId: string) => boolean;
   onKickPlayer: (playerId: string) => void;
-  onRemoveTt: (playerId: string) => void;
+  onRemoveTt: (playerId: string) => boolean;
   onTransferHost: (playerId: string) => void;
   t: Translate;
 }
 
 export function createGameMenuTabs({
+  awardTtActionState,
   currentPlayerId,
   historyEntries,
+  isAwardTtPending,
   roomState,
   onAwardTt,
   onKickPlayer,
@@ -44,8 +49,10 @@ export function createGameMenuTabs({
           <ul className={styles.menuPlayerList}>
             {roomState.players.map((player) => (
               <GameMenuPlayerItem
+                awardTtActionState={awardTtActionState}
                 currentPlayerId={currentPlayerId}
                 key={player.id}
+                isAwardTtPending={isAwardTtPending}
                 onAwardTt={onAwardTt}
                 onKickPlayer={onKickPlayer}
                 onRemoveTt={onRemoveTt}

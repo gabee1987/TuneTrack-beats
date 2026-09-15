@@ -1149,8 +1149,10 @@ describe("room flow", () => {
     expect(stateAfterSkip.turn?.activePlayerId).toBe(thirdJoin.playerId);
   });
 
-  it("lets the host award TT during a game", async () => {
-    const serverContext = await startTestServer();
+  it("lets the host award TT once when the request is replayed", async () => {
+    const roomService = createTestRoomService();
+    const awardTtSpy = vi.spyOn(roomService, "awardTt");
+    const serverContext = await startTestServer(roomService);
     const hostSocket = createClient(serverContext.baseUrl);
     const guestSocket = createClient(serverContext.baseUrl);
 
@@ -1200,14 +1202,29 @@ describe("room flow", () => {
         1,
     );
 
-    hostSocket.emit(ClientToServerEvent.AwardTt, {
-      roomId: "award-room",
-      playerId: guestIdentity.playerId,
-      amount: 1,
-    });
+    const requestId = "00000000-0000-4000-8000-000000000108";
+    const firstAckPromise = hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.AwardTt, {
+        roomId: "award-room",
+        playerId: guestIdentity.playerId,
+        amount: 1,
+        requestId,
+      }) as Promise<ActionAck>;
 
-    const awardState = await awardStatePromise;
+    const [awardState, firstAck] = await Promise.all([awardStatePromise, firstAckPromise]);
+    const replayAck = (await hostSocket
+      .timeout(1_000)
+      .emitWithAck(ClientToServerEvent.AwardTt, {
+        roomId: "award-room",
+        playerId: guestIdentity.playerId,
+        amount: 1,
+        requestId,
+      })) as ActionAck;
 
+    expect(firstAck).toEqual({ ok: true, requestId });
+    expect(replayAck).toEqual(firstAck);
+    expect(awardTtSpy).toHaveBeenCalledTimes(1);
     expect(
       awardState.players.find((player) => player.id === guestIdentity.playerId)?.ttTokenCount,
     ).toBe(1);

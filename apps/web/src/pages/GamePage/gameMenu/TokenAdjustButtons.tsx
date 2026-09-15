@@ -4,6 +4,7 @@ import {
 } from "@tunetrack/shared";
 import { motion } from "framer-motion";
 import { useRef, useState } from "react";
+import { useI18n } from "../../../features/i18n";
 import {
   createMenuTokenAdjustFlyoutPopTransition,
   createMenuTokenAdjustFlyoutPopVariants,
@@ -13,6 +14,7 @@ import {
 } from "../../../features/motion";
 import { TtTokenIcon } from "../../../features/ui/TtToken";
 import styles from "../gamePageStyles";
+import type { AwardTtActionState } from "../GamePage.types";
 
 type TokenFlyAnimation = "add" | "remove" | null;
 
@@ -24,16 +26,33 @@ interface TokenFlyState {
 }
 
 interface TokenAdjustButtonsProps {
+  actionState: AwardTtActionState | null;
   currentTokenCount: number;
-  onAwardTt: () => void;
-  onRemoveTt: () => void;
+  isActionPending: boolean;
+  onAwardTt: () => boolean;
+  onRemoveTt: () => boolean;
+  playerId: string;
+}
+
+function getActionStatusKey(actionState: AwardTtActionState) {
+  if (actionState.status === "pending") {
+    return null;
+  }
+  if (actionState.status === "retrying") {
+    return "gameMenu.tokenAdjustmentRetrying";
+  }
+  return "gameMenu.tokenAdjustmentFailed";
 }
 
 export function TokenAdjustButtons({
+  actionState,
   currentTokenCount,
+  isActionPending,
   onAwardTt,
   onRemoveTt,
+  playerId,
 }: TokenAdjustButtonsProps) {
+  const { t } = useI18n();
   const reduceMotion = useReducedMotionPreference();
   const animationKeyRef = useRef(0);
   const tokenActionsRef = useRef<HTMLDivElement | null>(null);
@@ -42,6 +61,19 @@ export function TokenAdjustButtons({
   const [flyAnimations, setFlyAnimations] = useState<TokenFlyState[]>([]);
   const canAddToken = currentTokenCount < MAX_STARTING_TT_TOKEN_COUNT;
   const canRemoveToken = currentTokenCount > MIN_STARTING_TT_TOKEN_COUNT;
+  const playerActionState = actionState?.playerId === playerId ? actionState : null;
+  const addButtonLabel =
+    playerActionState?.amount === 1 && playerActionState.status === "failed"
+      ? t("gameMenu.retryAddToken")
+      : t("gameMenu.addToken");
+  const removeButtonLabel =
+    playerActionState?.amount === -1 && playerActionState.status === "failed"
+      ? t("gameMenu.retryRemoveToken")
+      : t("gameMenu.removeToken");
+  const actionStatusKey = playerActionState
+    ? getActionStatusKey(playerActionState)
+    : null;
+  const actionStatusLabel = actionStatusKey ? t(actionStatusKey) : null;
 
   function getFlyAnimationOrigin(direction: Exclude<TokenFlyAnimation, null>) {
     const actionsElement = tokenActionsRef.current;
@@ -92,14 +124,16 @@ export function TokenAdjustButtons({
   return (
     <div className={styles.menuTokenActions} ref={tokenActionsRef}>
       <button
+        aria-label={addButtonLabel}
         className={`${styles.menuActionButton} ${styles.menuActionButtonAdd}`}
-        disabled={!canAddToken}
+        disabled={!canAddToken || isActionPending}
         onClick={() => {
-          if (!canAddToken) {
+          if (!canAddToken || isActionPending) {
             return;
           }
-          onAwardTt();
-          triggerFlyAnimation("add");
+          if (onAwardTt()) {
+            triggerFlyAnimation("add");
+          }
         }}
         type="button"
       >
@@ -109,14 +143,16 @@ export function TokenAdjustButtons({
         </span>
       </button>
       <button
+        aria-label={removeButtonLabel}
         className={`${styles.menuActionButton} ${styles.menuActionButtonRemove}`}
-        disabled={!canRemoveToken}
+        disabled={!canRemoveToken || isActionPending}
         onClick={() => {
-          if (!canRemoveToken) {
+          if (!canRemoveToken || isActionPending) {
             return;
           }
-          onRemoveTt();
-          triggerFlyAnimation("remove");
+          if (onRemoveTt()) {
+            triggerFlyAnimation("remove");
+          }
         }}
         type="button"
       >
@@ -125,6 +161,11 @@ export function TokenAdjustButtons({
           <TtTokenIcon className={styles.menuTokenIcon} />
         </span>
       </button>
+      {actionStatusLabel ? (
+        <span aria-live="polite" className={styles.menuTokenActionStatus}>
+          {actionStatusLabel}
+        </span>
+      ) : null}
       {flyAnimations.map((flyAnimation) => (
         <span
           className={styles.menuTokenFlyoutAnchor}
