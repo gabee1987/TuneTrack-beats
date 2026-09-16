@@ -11,10 +11,12 @@ import type {
   CloseRoomActionStatus,
   LobbyKickPlayerActionState,
   LobbyPlayerSettingsActionState,
+  RoomSettingsActionStatus,
   StartGameActionStatus,
 } from "../LobbyPage.types";
 import { useLobbyKickPlayerAction } from "./useLobbyKickPlayerAction";
 import { useLobbyPlayerSettingsAction } from "./useLobbyPlayerSettingsAction";
+import { useLobbyRoomSettingsAction } from "./useLobbyRoomSettingsAction";
 
 const DEFAULT_ENABLED_STARTING_TT_TOKEN_COUNT = 1;
 
@@ -37,9 +39,11 @@ interface UseLobbyRoomActionsResult {
   isCloseRoomPending: boolean;
   isKickPlayerPending: boolean;
   isPlayerSettingsPending: boolean;
+  isRoomSettingsPending: boolean;
   isStartGamePending: boolean;
   kickPlayerActionState: LobbyKickPlayerActionState | null;
   playerSettingsActionState: LobbyPlayerSettingsActionState | null;
+  roomSettingsActionStatus: RoomSettingsActionStatus;
   startGameActionStatus: StartGameActionStatus;
   toggleTtMode: (enabled: boolean) => void;
 }
@@ -63,6 +67,7 @@ export function useLobbyRoomActions({
     closeRoomActionStatus === "pending" || closeRoomActionStatus === "retrying";
   const kickPlayerAction = useLobbyKickPlayerAction({ isHost, roomState });
   const playerSettingsAction = useLobbyPlayerSettingsAction({ isHost, roomState });
+  const roomSettingsAction = useLobbyRoomSettingsAction({ isHost, roomState });
 
   async function emitRoomEvent<TPayload>(
     event: (typeof ClientToServerEvent)[keyof typeof ClientToServerEvent],
@@ -70,17 +75,6 @@ export function useLobbyRoomActions({
   ) {
     const socketClient = await getSocketClient();
     socketClient.emit(event, payload);
-  }
-
-  function handleRoomSettingsChange(nextSettings: PublicRoomSettings) {
-    if (!roomState || !isHost) {
-      return;
-    }
-
-    void emitRoomEvent(ClientToServerEvent.UpdateRoomSettings, {
-      roomId: roomState.roomId,
-      ...nextSettings,
-    });
   }
 
   function handleRoomRename(nextRoomId: string) {
@@ -203,7 +197,7 @@ export function useLobbyRoomActions({
   }
 
   function toggleTtMode(enabled: boolean) {
-    handleRoomSettingsChange(
+    roomSettingsAction.handleRoomSettingsChange(
       enabled
         ? {
             ...currentSettings,
@@ -227,14 +221,16 @@ export function useLobbyRoomActions({
     handlePlayerKick: kickPlayerAction.handlePlayerKick,
     handlePlayerProfileChange,
     handleRoomRename,
-    handleRoomSettingsChange,
+    handleRoomSettingsChange: roomSettingsAction.handleRoomSettingsChange,
     handleStartGame,
     isCloseRoomPending,
     isKickPlayerPending: kickPlayerAction.isPending,
     isPlayerSettingsPending: playerSettingsAction.isPending,
+    isRoomSettingsPending: roomSettingsAction.isPending,
     isStartGamePending,
     kickPlayerActionState: kickPlayerAction.actionState,
     playerSettingsActionState: playerSettingsAction.actionState,
+    roomSettingsActionStatus: roomSettingsAction.actionStatus,
     startGameActionStatus,
     toggleTtMode,
   };

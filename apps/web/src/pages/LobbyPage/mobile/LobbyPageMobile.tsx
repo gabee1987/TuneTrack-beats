@@ -16,6 +16,7 @@ import { LobbySpotifySection } from "../components/spotify/LobbySpotifySection";
 import { LobbyPlayerList } from "../components/LobbyPlayerList";
 import { LobbyRoomActions } from "../components/LobbyRoomActions";
 import { LobbySectionHeader } from "../components/LobbySectionHeader";
+import { LobbyRoomSettingsStatus } from "../components/LobbyRoomSettingsStatus";
 import styles from "./LobbyPageMobile.module.css";
 
 const ROOM_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
@@ -230,12 +231,15 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
           </SurfaceCard>
         ) : identity.isHost ? (
           <div className={styles.advancedStack}>
+            <LobbyRoomSettingsStatus actionStatus={hostSettings.roomSettingsActionStatus} />
             <LobbyHostCoreSettings
               currentSettings={hostSettings.currentSettings}
+              disabled={hostSettings.isRoomSettingsPending}
               onRoomSettingsChange={hostSettings.onRoomSettingsChange}
             />
             <LobbyHostTtSettings
               currentSettings={hostSettings.currentSettings}
+              disabled={hostSettings.isRoomSettingsPending}
               onRoomSettingsChange={hostSettings.onRoomSettingsChange}
               onToggleTtMode={hostSettings.onToggleTtMode}
             />

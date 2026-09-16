@@ -16,12 +16,14 @@ export interface LobbyAssemblyModel {
   };
   hostSettings: {
     currentSettings: PublicRoomSettings;
+    isRoomSettingsPending: boolean;
     isStartGamePending: boolean;
     onIntentToStartGame: () => void;
     onRoomSettingsChange: (nextSettings: PublicRoomSettings) => void;
     onStartGame: () => void;
     onToggleTtMode: (enabled: boolean) => void;
     startGameActionStatus: LobbyPageController["startGameActionStatus"];
+    roomSettingsActionStatus: LobbyPageController["roomSettingsActionStatus"];
   };
   players: {
     currentPlayerId: string | null;
@@ -80,12 +82,14 @@ export function buildLobbyAssemblyModel(controller: LobbyPageController): LobbyA
     },
     hostSettings: {
       currentSettings: controller.currentSettings,
+      isRoomSettingsPending: controller.isRoomSettingsPending,
       isStartGamePending: controller.isStartGamePending,
       onIntentToStartGame: controller.preloadGame,
       onRoomSettingsChange: controller.handleRoomSettingsChange,
       onStartGame: controller.handleStartGame,
       onToggleTtMode: controller.toggleTtMode,
       startGameActionStatus: controller.startGameActionStatus,
+      roomSettingsActionStatus: controller.roomSettingsActionStatus,
     },
     players: {
       currentPlayerId: controller.currentPlayerId,

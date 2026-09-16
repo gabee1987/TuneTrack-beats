@@ -4,7 +4,7 @@
 > handover is complete and verified. Subsequent B8 work was explicitly authorised in separate
 > batches; the acknowledged-action migration now includes `kick_player` from both the in-game
 > confirmation and the direct lobby player row, plus per-player lobby starting-card/token
-> settings. The live status and remaining work are tracked in
+> settings and room-wide lobby settings. The live status and remaining work are tracked in
 > `05-network-protocol-and-resilience.md` and B8 in `12-bug-register.md`.
 
 **Audience:** a fresh agent (no memory of prior sessions on this repo). Everything you

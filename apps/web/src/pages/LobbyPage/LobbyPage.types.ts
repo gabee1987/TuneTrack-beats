@@ -5,6 +5,7 @@ export type StartGameActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type CloseRoomActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type LobbyKickPlayerActionStatus = "pending" | "retrying" | "failed";
 export type LobbyPlayerSettingsActionStatus = "pending" | "retrying" | "failed";
+export type RoomSettingsActionStatus = "idle" | "pending" | "retrying" | "failed";
 
 export interface LobbyKickPlayerActionState {
   playerId: string;
@@ -38,9 +39,11 @@ export interface LobbyPageController {
   isCloseRoomPending: boolean;
   isKickPlayerPending: boolean;
   isPlayerSettingsPending: boolean;
+  isRoomSettingsPending: boolean;
   isStartGamePending: boolean;
   kickPlayerActionState: LobbyKickPlayerActionState | null;
   playerSettingsActionState: LobbyPlayerSettingsActionState | null;
+  roomSettingsActionStatus: RoomSettingsActionStatus;
   preloadGame: () => void;
   roomId: string | undefined;
   roomState: PublicRoomState | null;

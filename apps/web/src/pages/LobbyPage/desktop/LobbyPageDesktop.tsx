@@ -44,11 +44,13 @@ export function LobbyPageDesktop({ model }: LobbyPageAssemblyProps) {
           ) : room.isHost ? (
             <LobbyHostSettingsPanel
               currentSettings={hostSettings.currentSettings}
+              isRoomSettingsPending={hostSettings.isRoomSettingsPending}
               isStartGamePending={hostSettings.isStartGamePending}
               onIntentToStartGame={hostSettings.onIntentToStartGame}
               onRoomSettingsChange={hostSettings.onRoomSettingsChange}
               onStartGame={hostSettings.onStartGame}
               onToggleTtMode={hostSettings.onToggleTtMode}
+              roomSettingsActionStatus={hostSettings.roomSettingsActionStatus}
               startGameActionStatus={hostSettings.startGameActionStatus}
             />
           ) : (

@@ -5,6 +5,7 @@ interface ToggleSwitchProps {
   ariaLabel: string;
   checked: boolean;
   className?: string | undefined;
+  disabled?: boolean;
   offLabel?: string;
   onChange: (checked: boolean) => void;
   onLabel?: string;
@@ -15,6 +16,7 @@ export function ToggleSwitch({
   ariaLabel,
   checked,
   className,
+  disabled = false,
   offLabel,
   onChange,
   onLabel,
@@ -31,6 +33,7 @@ export function ToggleSwitch({
       className={`${styles.switch} ${checked ? styles.checked : ""} ${
         size === "compact" ? styles.compact : ""
       }${className ? ` ${className}` : ""}`}
+      disabled={disabled}
       onClick={() => onChange(!checked)}
       role="switch"
       type="button"

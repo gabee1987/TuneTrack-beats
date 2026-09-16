@@ -17,11 +17,13 @@ import styles from "../lobbyPageStyles";
 
 interface LobbyHostCoreSettingsProps {
   currentSettings: PublicRoomSettings;
+  disabled?: boolean;
   onRoomSettingsChange: LobbyRoomSettingsChangeHandler;
 }
 
 export function LobbyHostCoreSettings({
   currentSettings,
+  disabled = false,
   onRoomSettingsChange,
 }: LobbyHostCoreSettingsProps) {
   const { t } = useI18n();
@@ -36,6 +38,7 @@ export function LobbyHostCoreSettings({
       />
 
       <RangeField
+        disabled={disabled}
         info={t("lobby.host.cardsNeededInfo")}
         label={t("lobby.host.cardsNeeded")}
         max={MAX_TARGET_TIMELINE_CARD_COUNT}
@@ -50,6 +53,7 @@ export function LobbyHostCoreSettings({
       />
 
       <RangeField
+        disabled={disabled}
         info={t("lobby.host.defaultStartingCardsInfo")}
         label={t("lobby.host.defaultStartingCards")}
         max={MAX_STARTING_TIMELINE_CARD_COUNT}
@@ -68,6 +72,7 @@ export function LobbyHostCoreSettings({
         label={t("lobby.host.revealConfirmation")}
       >
         <AdaptiveSelect
+          disabled={disabled}
           label={t("lobby.host.revealConfirmation")}
           onChange={(nextValue) =>
             onRoomSettingsChange({

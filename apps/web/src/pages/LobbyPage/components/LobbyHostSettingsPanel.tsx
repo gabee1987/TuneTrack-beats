@@ -6,16 +6,19 @@ import { LobbyHostStartPanel } from "./LobbyHostStartPanel";
 import { LobbyHostTtSettings } from "./LobbyHostTtSettings";
 import { LobbySpotifySection } from "./spotify/LobbySpotifySection";
 import { LobbySectionHeader } from "./LobbySectionHeader";
+import { LobbyRoomSettingsStatus } from "./LobbyRoomSettingsStatus";
 import type { LobbyHostSettingsPanelProps } from "./LobbyHostSettings.types";
 import styles from "../lobbyPageStyles";
 
 export function LobbyHostSettingsPanel({
   currentSettings,
+  isRoomSettingsPending,
   isStartGamePending,
   onIntentToStartGame,
   onRoomSettingsChange,
   onStartGame,
   onToggleTtMode,
+  roomSettingsActionStatus,
   startGameActionStatus,
 }: LobbyHostSettingsPanelProps) {
   const { t } = useI18n();
@@ -27,14 +30,17 @@ export function LobbyHostSettingsPanel({
         description={t("lobby.host.description")}
         title={t("lobby.host.title")}
       />
+      <LobbyRoomSettingsStatus actionStatus={roomSettingsActionStatus} />
 
       <div className={styles.settingsGrid}>
         <LobbyHostCoreSettings
           currentSettings={currentSettings}
+          disabled={isRoomSettingsPending}
           onRoomSettingsChange={onRoomSettingsChange}
         />
         <LobbyHostTtSettings
           currentSettings={currentSettings}
+          disabled={isRoomSettingsPending}
           onRoomSettingsChange={onRoomSettingsChange}
           onToggleTtMode={onToggleTtMode}
         />

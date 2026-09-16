@@ -33,12 +33,14 @@ import styles from "../lobbyPageStyles";
 
 interface LobbyHostTtSettingsProps {
   currentSettings: PublicRoomSettings;
+  disabled?: boolean;
   onRoomSettingsChange: LobbyRoomSettingsChangeHandler;
   onToggleTtMode: (enabled: boolean) => void;
 }
 
 export function LobbyHostTtSettings({
   currentSettings,
+  disabled = false,
   onRoomSettingsChange,
   onToggleTtMode,
 }: LobbyHostTtSettingsProps) {
@@ -136,6 +138,7 @@ export function LobbyHostTtSettings({
         <ToggleSwitch
           ariaLabel={t("lobby.host.enableTokenMode")}
           checked={currentSettings.ttModeEnabled}
+          disabled={disabled}
           onChange={onToggleTtMode}
         />
       </div>
@@ -158,12 +161,13 @@ export function LobbyHostTtSettings({
         initial={false}
         style={{
           overflow: "hidden",
-          pointerEvents: currentSettings.ttModeEnabled ? "auto" : "none",
+          pointerEvents: currentSettings.ttModeEnabled && !disabled ? "auto" : "none",
         }}
         transition={createStandardTransition(reduceMotion)}
       >
         <div className={styles.conditionalGroup} ref={ttSettingsContentRef}>
           <RangeField
+            disabled={disabled}
             info={t("lobby.host.startingTokensInfo")}
             label={t("lobby.host.startingTokens")}
             max={MAX_STARTING_TT_TOKEN_COUNT}
@@ -186,6 +190,7 @@ export function LobbyHostTtSettings({
             )}
           >
             <AdaptiveSelect
+              disabled={disabled}
               label={t("lobby.host.challengeWindow")}
               onChange={(nextValue) =>
                 onRoomSettingsChange({

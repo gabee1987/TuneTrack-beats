@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MotionPresence } from "../../../features/motion";
 import { useI18n } from "../../../features/i18n";
 import { ActionButton } from "../../../features/ui/ActionButton";
@@ -13,6 +13,7 @@ export interface AdaptiveSelectOption {
 }
 
 interface AdaptiveSelectProps {
+  disabled?: boolean;
   label: string;
   onChange: (value: string) => void;
   options: AdaptiveSelectOption[];
@@ -22,17 +23,30 @@ interface AdaptiveSelectProps {
 const MOBILE_SELECT_QUERY =
   "(hover: none) and (pointer: coarse) and (max-width: 960px), (hover: none) and (pointer: coarse) and (max-height: 520px)";
 
-export function AdaptiveSelect({ label, onChange, options, value }: AdaptiveSelectProps) {
+export function AdaptiveSelect({
+  disabled = false,
+  label,
+  onChange,
+  options,
+  value,
+}: AdaptiveSelectProps) {
   const { t } = useI18n();
   const isCompactTouch = useMediaQuery(MOBILE_SELECT_QUERY);
   const [isOpen, setIsOpen] = useState(false);
   const selectedOption = options.find((option) => option.value === value) ?? options[0];
+
+  useEffect(() => {
+    if (disabled) {
+      setIsOpen(false);
+    }
+  }, [disabled]);
 
   if (!isCompactTouch) {
     return (
       <SelectInput
         aria-label={label}
         className={styles.selectInput}
+        disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
         value={value}
       >
@@ -49,6 +63,7 @@ export function AdaptiveSelect({ label, onChange, options, value }: AdaptiveSele
     <>
       <ActionButton
         className={styles.mobileSelectButton}
+        disabled={disabled}
         onClick={() => setIsOpen(true)}
         type="button"
         variant="neutral"
@@ -61,7 +76,11 @@ export function AdaptiveSelect({ label, onChange, options, value }: AdaptiveSele
         {isOpen ? (
           <AdaptiveSelectSheet
             label={label}
-            onChange={onChange}
+            onChange={(nextValue) => {
+              if (!disabled) {
+                onChange(nextValue);
+              }
+            }}
             onClose={() => setIsOpen(false)}
             options={options}
             value={value}

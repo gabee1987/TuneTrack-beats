@@ -753,9 +753,16 @@ same counts is idempotent. Normal acknowledgements remain visually quiet; locali
 and final guidance appear only after timeouts. The submitted room, host, lobby phase, player,
 and values are rechecked so an authoritative update clears stale feedback.
 
-Root cause #2 remains **open**. Room-wide settings, profile changes, and room rename still use
-bare emits and do not yet have per-action acknowledgement feedback. Root causes #4 and #5 also
-remain open; B8 therefore remains **Confirmed**, not Fixed.
+Room-wide settings now follow the same acknowledged lifecycle. One synchronous guard
+serialises full settings payloads so a delayed retry cannot overwrite a newer selection.
+Ranges, adaptive selects, and the TT-mode toggle are disabled across mobile and desktop while
+the request is pending. Normal acknowledgements remain visually quiet; localised retrying and
+final guidance appear only after timeouts. Authoritative settings are compared with the
+submitted gameplay fields before retaining feedback.
+
+Root cause #2 remains **open**. Profile changes and room rename still use bare emits and do not
+yet have per-action acknowledgement feedback. Root causes #4 and #5 also remain open; B8
+therefore remains **Confirmed**, not Fixed.
 
 ### Verification
 
@@ -793,8 +800,9 @@ remain open; B8 therefore remains **Confirmed**, not Fixed.
   real-control regression covering its shared duplicate guard, stable normal label, automatic
   timeout retry, and final retry affordance. The real player starting-card range likewise
   verifies duplicate blocking, one automatic retry, disabled pending controls, timeout-only
-  feedback, and a fresh selection retry; the in-game close hook has a matching duplicate guard
-  and final retry state regression.
+  feedback, and a fresh selection retry. The real room-settings controls verify the same
+  lifecycle across ranges and selects; the in-game close hook has a matching duplicate guard and
+  final retry state regression.
 - `roomFlow.test.ts`: replaying the same `place_card` request id returns the original success
   acknowledgement while the placement service runs once; replaying `start_game` initialises
   the game once; replaying `confirm_reveal` advances the turn once; replaying

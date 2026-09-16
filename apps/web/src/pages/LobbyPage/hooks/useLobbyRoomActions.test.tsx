@@ -5,6 +5,8 @@ import { I18nProvider } from "../../../features/i18n";
 import type { EmitActionResult } from "../../../services/socket/emitAction";
 import { buildLobbyRoomState } from "../../../test/roomStateFixtures";
 import { LobbyHostStartPanel } from "../components/LobbyHostStartPanel";
+import { LobbyHostCoreSettings } from "../components/LobbyHostCoreSettings";
+import { LobbyRoomSettingsStatus } from "../components/LobbyRoomSettingsStatus";
 import { LobbyPlayerListItem } from "../components/LobbyPlayerListItem";
 import { LobbyRoomActions } from "../components/LobbyRoomActions";
 import { useLobbyRoomActions } from "./useLobbyRoomActions";
@@ -96,6 +98,26 @@ function KickPlayerHarness() {
           roomSettings={roomState.settings}
         />
       </ul>
+    </I18nProvider>
+  );
+}
+
+function RoomSettingsHarness() {
+  const roomState = buildLobbyRoomState();
+  const actions = useLobbyRoomActions({
+    currentSettings: roomState.settings,
+    isHost: true,
+    roomState,
+  });
+
+  return (
+    <I18nProvider>
+      <LobbyHostCoreSettings
+        currentSettings={roomState.settings}
+        disabled={actions.isRoomSettingsPending}
+        onRoomSettingsChange={actions.handleRoomSettingsChange}
+      />
+      <LobbyRoomSettingsStatus actionStatus={actions.roomSettingsActionStatus} />
     </I18nProvider>
   );
 }
@@ -296,6 +318,63 @@ describe("useLobbyRoomActions update_player_settings", () => {
 
     emitActionMock.mockResolvedValueOnce({ status: "ok" });
     fireEvent.click(startingCardsButton);
+
+    await waitFor(() => expect(emitActionMock).toHaveBeenCalledTimes(2));
+  });
+});
+
+describe("useLobbyRoomActions update_room_settings", () => {
+  beforeEach(() => {
+    emitActionMock.mockReset();
+    getSocketClientMock.mockReset();
+    getSocketClientMock.mockResolvedValue({ emit: vi.fn() });
+    Object.defineProperty(HTMLElement.prototype, "scrollTo", {
+      configurable: true,
+      value: vi.fn(),
+    });
+  });
+
+  it("retries one timeout, blocks duplicate room-setting updates, and exposes a final retry", async () => {
+    const deferred = createDeferredActionResult();
+    emitActionMock.mockReturnValueOnce(deferred.promise);
+    render(<RoomSettingsHarness />);
+
+    const targetCardButton = screen.getByRole("button", {
+      name: /cards needed to win: 11/i,
+    });
+    fireEvent.click(targetCardButton);
+    fireEvent.click(targetCardButton);
+
+    expect(targetCardButton).toBeDisabled();
+    expect(screen.getByRole("combobox", { name: /reveal confirmation/i })).toBeDisabled();
+    expect(emitActionMock).toHaveBeenCalledTimes(1);
+    expect(emitActionMock).toHaveBeenCalledWith(
+      ClientToServerEvent.UpdateRoomSettings,
+      expect.objectContaining({
+        roomId: "TEST_ROOM_1",
+        targetTimelineCardCount: 11,
+      }),
+      expect.objectContaining({ retryOnTimeout: true }),
+    );
+
+    const options = emitActionMock.mock.calls[0]?.[2] as {
+      onTimeoutRetry?: () => void;
+    };
+    act(() => options.onTimeoutRetry?.());
+
+    expect(screen.getByText(/no response.*retrying/i)).toBeInTheDocument();
+    expect(targetCardButton).toBeDisabled();
+
+    await act(async () => {
+      deferred.resolve({ status: "timeout" });
+      await deferred.promise;
+    });
+
+    expect(screen.getByText(/choose the setting again to retry/i)).toBeInTheDocument();
+    expect(targetCardButton).toBeEnabled();
+
+    emitActionMock.mockResolvedValueOnce({ status: "ok" });
+    fireEvent.click(targetCardButton);
 
     await waitFor(() => expect(emitActionMock).toHaveBeenCalledTimes(2));
   });

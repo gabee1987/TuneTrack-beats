@@ -291,6 +291,9 @@ fire-and-forget until last.
 - [x] `update_player_settings` uses the acknowledged path for starting-card and token counts;
       all player-setting ranges share one duplicate guard, retry safely once, and expose
       feedback only after an acknowledgement timeout.
+- [x] `update_room_settings` serialises full room-setting payloads through the acknowledged
+      path; ranges, selects, and the TT-mode toggle share duplicate blocking and expose
+      timeout-only retry guidance on both lobby assemblies.
 
 ## 5. Phase 5 — Honest connection state in the UI · **S2**
 
