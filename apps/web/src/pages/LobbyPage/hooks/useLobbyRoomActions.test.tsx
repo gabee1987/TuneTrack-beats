@@ -86,7 +86,9 @@ function KickPlayerHarness() {
           currentPlayerId={roomState.hostId}
           isHost
           isKickPlayerPending={actions.isKickPlayerPending}
+          isPlayerSettingsPending={actions.isPlayerSettingsPending}
           kickPlayerActionState={actions.kickPlayerActionState}
+          playerSettingsActionState={actions.playerSettingsActionState}
           onPlayerKick={actions.handlePlayerKick}
           onPlayerStartingCardCountChange={actions.handlePlayerStartingCardCountChange}
           onPlayerStartingTtTokenCountChange={actions.handlePlayerStartingTtTokenCountChange}
@@ -236,6 +238,64 @@ describe("useLobbyRoomActions kick_player", () => {
 
     emitActionMock.mockResolvedValueOnce({ status: "ok" });
     fireEvent.click(retryButton);
+
+    await waitFor(() => expect(emitActionMock).toHaveBeenCalledTimes(2));
+  });
+});
+
+describe("useLobbyRoomActions update_player_settings", () => {
+  beforeEach(() => {
+    emitActionMock.mockReset();
+    getSocketClientMock.mockReset();
+    getSocketClientMock.mockResolvedValue({ emit: vi.fn() });
+    Object.defineProperty(HTMLElement.prototype, "scrollTo", {
+      configurable: true,
+      value: vi.fn(),
+    });
+  });
+
+  it("retries one timeout, blocks duplicate player-setting updates, and exposes a final retry", async () => {
+    const deferred = createDeferredActionResult();
+    emitActionMock.mockReturnValueOnce(deferred.promise);
+    render(<KickPlayerHarness />);
+
+    const startingCardsButton = screen.getByRole("button", {
+      name: /starting cards: 2/i,
+    });
+    fireEvent.click(startingCardsButton);
+    fireEvent.click(startingCardsButton);
+
+    expect(startingCardsButton).toBeDisabled();
+    expect(emitActionMock).toHaveBeenCalledTimes(1);
+    expect(emitActionMock).toHaveBeenCalledWith(
+      ClientToServerEvent.UpdatePlayerSettings,
+      {
+        playerId: "player-guest",
+        roomId: "TEST_ROOM_1",
+        startingTimelineCardCount: 2,
+        startingTtTokenCount: 0,
+      },
+      expect.objectContaining({ retryOnTimeout: true }),
+    );
+
+    const options = emitActionMock.mock.calls[0]?.[2] as {
+      onTimeoutRetry?: () => void;
+    };
+    act(() => options.onTimeoutRetry?.());
+
+    expect(screen.getByText(/no response.*retrying/i)).toBeInTheDocument();
+    expect(startingCardsButton).toBeDisabled();
+
+    await act(async () => {
+      deferred.resolve({ status: "timeout" });
+      await deferred.promise;
+    });
+
+    expect(screen.getByText(/choose the setting again to retry/i)).toBeInTheDocument();
+    expect(startingCardsButton).toBeEnabled();
+
+    emitActionMock.mockResolvedValueOnce({ status: "ok" });
+    fireEvent.click(startingCardsButton);
 
     await waitFor(() => expect(emitActionMock).toHaveBeenCalledTimes(2));
   });

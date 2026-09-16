@@ -11,6 +11,7 @@ import { SettingField } from "./SettingField";
 
 interface RangeFieldProps {
   density?: "compact" | "default" | undefined;
+  disabled?: boolean;
   info?: string;
   label: string;
   max: number;
@@ -21,6 +22,7 @@ interface RangeFieldProps {
 
 export function RangeField({
   density = "default",
+  disabled = false,
   label,
   info,
   max,
@@ -118,6 +120,10 @@ export function RangeField({
   );
 
   function commitNearestValue() {
+    if (disabled) {
+      return;
+    }
+
     const scroller = scrollerRef.current;
 
     if (!scroller) {
@@ -152,6 +158,10 @@ export function RangeField({
   }
 
   function handleScroll() {
+    if (disabled) {
+      return;
+    }
+
     if (animationFrameRef.current !== null) {
       window.cancelAnimationFrame(animationFrameRef.current);
     }
@@ -163,7 +173,7 @@ export function RangeField({
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+    if (disabled || (event.key !== "ArrowLeft" && event.key !== "ArrowRight")) {
       return;
     }
 
@@ -181,6 +191,7 @@ export function RangeField({
     >
       <div
         aria-label={label}
+        aria-disabled={disabled}
         aria-valuemax={max}
         aria-valuemin={min}
         aria-valuenow={value}
@@ -195,7 +206,7 @@ export function RangeField({
         ref={rangeRef}
         role="slider"
         style={rangeStyle}
-        tabIndex={0}
+        tabIndex={disabled ? -1 : 0}
       >
         <div aria-hidden="true" className={styles.snapRangeCenterLine} />
         <div
@@ -215,6 +226,7 @@ export function RangeField({
                   isSelected ? ` ${styles.snapRangeTickSelected}` : ""
                 }${isMajorTick ? ` ${styles.snapRangeTickMajor}` : ""}`}
                 data-range-value={rangeValue}
+                disabled={disabled}
                 key={rangeValue}
                 onClick={() => onChange(rangeValue)}
                 type="button"

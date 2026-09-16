@@ -746,9 +746,16 @@ retrying and final retry labels appear only after acknowledgement timeouts. Subm
 host, lobby phase, and target membership are rechecked before retaining lobby timeout feedback;
 authoritative removal unmounts the target row.
 
-Root cause #2 remains **open**. Settings callers still use bare emits and do not yet have
-per-action acknowledgement feedback. Root causes #4 and #5 also remain open; B8 therefore
-remains **Confirmed**, not Fixed.
+The per-player starting-card and TT-token ranges now use a separate acknowledged action. One
+synchronous guard serialises these full-payload updates across every player row, preventing an
+older timeout retry from racing a newer selection. A timeout retry is safe because setting the
+same counts is idempotent. Normal acknowledgements remain visually quiet; localised retrying
+and final guidance appear only after timeouts. The submitted room, host, lobby phase, player,
+and values are rechecked so an authoritative update clears stale feedback.
+
+Root cause #2 remains **open**. Room-wide settings, profile changes, and room rename still use
+bare emits and do not yet have per-action acknowledgement feedback. Root causes #4 and #5 also
+remain open; B8 therefore remains **Confirmed**, not Fixed.
 
 ### Verification
 
@@ -784,8 +791,10 @@ remains **Confirmed**, not Fixed.
   control remains disabled through its automatic retry, and a final timeout exposes a fresh
   retry affordance. Lobby close uses the same lifecycle. Direct lobby-row removal now has a
   real-control regression covering its shared duplicate guard, stable normal label, automatic
-  timeout retry, and final retry affordance; the in-game close hook has a matching duplicate
-  guard and final retry state regression.
+  timeout retry, and final retry affordance. The real player starting-card range likewise
+  verifies duplicate blocking, one automatic retry, disabled pending controls, timeout-only
+  feedback, and a fresh selection retry; the in-game close hook has a matching duplicate guard
+  and final retry state regression.
 - `roomFlow.test.ts`: replaying the same `place_card` request id returns the original success
   acknowledgement while the placement service runs once; replaying `start_game` initialises
   the game once; replaying `confirm_reveal` advances the turn once; replaying

@@ -66,7 +66,9 @@ export function LobbyPageDesktop({ model }: LobbyPageAssemblyProps) {
             currentPlayerId={players.currentPlayerId}
             isHost={players.isHost}
             isKickPlayerPending={players.isKickPlayerPending}
+            isPlayerSettingsPending={players.isPlayerSettingsPending}
             kickPlayerActionState={players.kickPlayerActionState}
+            playerSettingsActionState={players.playerSettingsActionState}
             onPlayerKick={players.onPlayerKick}
             onPlayerStartingCardCountChange={players.onPlayerStartingCardCountChange}
             onPlayerStartingTtTokenCountChange={players.onPlayerStartingTtTokenCountChange}

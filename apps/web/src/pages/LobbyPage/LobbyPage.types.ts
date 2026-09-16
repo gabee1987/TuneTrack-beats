@@ -4,10 +4,16 @@ import type { LobbyAssemblyModel } from "./hooks/buildLobbyAssemblyModel";
 export type StartGameActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type CloseRoomActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type LobbyKickPlayerActionStatus = "pending" | "retrying" | "failed";
+export type LobbyPlayerSettingsActionStatus = "pending" | "retrying" | "failed";
 
 export interface LobbyKickPlayerActionState {
   playerId: string;
   status: LobbyKickPlayerActionStatus;
+}
+
+export interface LobbyPlayerSettingsActionState {
+  playerId: string;
+  status: LobbyPlayerSettingsActionStatus;
 }
 
 export interface LobbyPageController {
@@ -31,8 +37,10 @@ export interface LobbyPageController {
   isHost: boolean;
   isCloseRoomPending: boolean;
   isKickPlayerPending: boolean;
+  isPlayerSettingsPending: boolean;
   isStartGamePending: boolean;
   kickPlayerActionState: LobbyKickPlayerActionState | null;
+  playerSettingsActionState: LobbyPlayerSettingsActionState | null;
   preloadGame: () => void;
   roomId: string | undefined;
   roomState: PublicRoomState | null;

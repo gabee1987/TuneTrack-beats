@@ -13,13 +13,18 @@ import { RangeField } from "../../../features/ui/RangeField";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import { getLobbyPlayerDisplayState } from "../lobbyPlayerSelectors";
 import styles from "../lobbyPageStyles";
-import type { LobbyKickPlayerActionState } from "../LobbyPage.types";
+import type {
+  LobbyKickPlayerActionState,
+  LobbyPlayerSettingsActionState,
+} from "../LobbyPage.types";
 
 interface LobbyPlayerListItemProps {
   currentPlayerId: string | null;
   isHost: boolean;
   isKickPlayerPending: boolean;
+  isPlayerSettingsPending: boolean;
   kickPlayerActionState: LobbyKickPlayerActionState | null;
+  playerSettingsActionState: LobbyPlayerSettingsActionState | null;
   onPlayerKick: (player: PublicPlayerState) => void;
   onPlayerStartingCardCountChange: (player: PublicPlayerState, nextValue: number) => void;
   onPlayerStartingTtTokenCountChange: (player: PublicPlayerState, nextValue: number) => void;
@@ -31,7 +36,9 @@ export function LobbyPlayerListItem({
   currentPlayerId,
   isHost,
   isKickPlayerPending,
+  isPlayerSettingsPending,
   kickPlayerActionState,
+  playerSettingsActionState,
   onPlayerKick,
   onPlayerStartingCardCountChange,
   onPlayerStartingTtTokenCountChange,
@@ -58,6 +65,10 @@ export function LobbyPlayerListItem({
     kickActionStatus === "retrying" || kickActionStatus === "failed"
       ? kickButtonLabel
       : t("lobby.players.kickPlayer", { playerName: displayState.primaryName });
+  const playerSettingsActionStatus =
+    playerSettingsActionState?.playerId === player.id
+      ? playerSettingsActionState.status
+      : null;
 
   return (
     <li className={styles.playerItem}>
@@ -92,6 +103,7 @@ export function LobbyPlayerListItem({
         <div className={styles.playerSettingField}>
           <RangeField
             density="compact"
+            disabled={isPlayerSettingsPending || isKickPlayerPending}
             label={displayState.startingCardsLabel}
             max={MAX_STARTING_TIMELINE_CARD_COUNT}
             min={MIN_STARTING_TIMELINE_CARD_COUNT}
@@ -101,12 +113,22 @@ export function LobbyPlayerListItem({
           {roomSettings.ttModeEnabled ? (
             <RangeField
               density="compact"
+              disabled={isPlayerSettingsPending || isKickPlayerPending}
               label={t("lobby.players.startingTokens")}
               max={MAX_STARTING_TT_TOKEN_COUNT}
               min={MIN_STARTING_TT_TOKEN_COUNT}
               onChange={(nextValue) => onPlayerStartingTtTokenCountChange(player, nextValue)}
               value={player.ttTokenCount}
             />
+          ) : null}
+          {playerSettingsActionStatus === "retrying" ? (
+            <p aria-live="polite" className={styles.settingsInlineHint}>
+              {t("lobby.players.settingsRetrying")}
+            </p>
+          ) : playerSettingsActionStatus === "failed" ? (
+            <p aria-live="polite" className={styles.settingsInlineHint}>
+              {t("lobby.players.settingsFailed")}
+            </p>
           ) : null}
         </div>
       ) : null}
@@ -116,7 +138,7 @@ export function LobbyPlayerListItem({
           <button
             aria-label={kickButtonAriaLabel}
             className={styles.playerKickButton}
-            disabled={isKickPlayerPending}
+            disabled={isKickPlayerPending || isPlayerSettingsPending}
             onClick={() => onPlayerKick(player)}
             type="button"
           >

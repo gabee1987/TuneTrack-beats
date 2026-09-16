@@ -10,9 +10,11 @@ import { getSocketClient } from "../../../services/socket/socketClient";
 import type {
   CloseRoomActionStatus,
   LobbyKickPlayerActionState,
+  LobbyPlayerSettingsActionState,
   StartGameActionStatus,
 } from "../LobbyPage.types";
 import { useLobbyKickPlayerAction } from "./useLobbyKickPlayerAction";
+import { useLobbyPlayerSettingsAction } from "./useLobbyPlayerSettingsAction";
 
 const DEFAULT_ENABLED_STARTING_TT_TOKEN_COUNT = 1;
 
@@ -34,8 +36,10 @@ interface UseLobbyRoomActionsResult {
   handleStartGame: () => void;
   isCloseRoomPending: boolean;
   isKickPlayerPending: boolean;
+  isPlayerSettingsPending: boolean;
   isStartGamePending: boolean;
   kickPlayerActionState: LobbyKickPlayerActionState | null;
+  playerSettingsActionState: LobbyPlayerSettingsActionState | null;
   startGameActionStatus: StartGameActionStatus;
   toggleTtMode: (enabled: boolean) => void;
 }
@@ -58,6 +62,7 @@ export function useLobbyRoomActions({
   const isCloseRoomPending =
     closeRoomActionStatus === "pending" || closeRoomActionStatus === "retrying";
   const kickPlayerAction = useLobbyKickPlayerAction({ isHost, roomState });
+  const playerSettingsAction = useLobbyPlayerSettingsAction({ isHost, roomState });
 
   async function emitRoomEvent<TPayload>(
     event: (typeof ClientToServerEvent)[keyof typeof ClientToServerEvent],
@@ -90,26 +95,16 @@ export function useLobbyRoomActions({
   }
 
   function handlePlayerStartingCardCountChange(player: PublicPlayerState, nextValue: number) {
-    if (!roomState || !isHost) {
-      return;
-    }
-
-    void emitRoomEvent(ClientToServerEvent.UpdatePlayerSettings, {
+    playerSettingsAction.handlePlayerSettingsChange({
       playerId: player.id,
-      roomId: roomState.roomId,
       startingTimelineCardCount: nextValue,
       startingTtTokenCount: player.ttTokenCount,
     });
   }
 
   function handlePlayerStartingTtTokenCountChange(player: PublicPlayerState, nextValue: number) {
-    if (!roomState || !isHost) {
-      return;
-    }
-
-    void emitRoomEvent(ClientToServerEvent.UpdatePlayerSettings, {
+    playerSettingsAction.handlePlayerSettingsChange({
       playerId: player.id,
-      roomId: roomState.roomId,
       startingTimelineCardCount: player.startingTimelineCardCount,
       startingTtTokenCount: nextValue,
     });
@@ -236,8 +231,10 @@ export function useLobbyRoomActions({
     handleStartGame,
     isCloseRoomPending,
     isKickPlayerPending: kickPlayerAction.isPending,
+    isPlayerSettingsPending: playerSettingsAction.isPending,
     isStartGamePending,
     kickPlayerActionState: kickPlayerAction.actionState,
+    playerSettingsActionState: playerSettingsAction.actionState,
     startGameActionStatus,
     toggleTtMode,
   };
