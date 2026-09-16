@@ -6,6 +6,12 @@ export type CloseRoomActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type LobbyKickPlayerActionStatus = "pending" | "retrying" | "failed";
 export type LobbyPlayerSettingsActionStatus = "pending" | "retrying" | "failed";
 export type RoomSettingsActionStatus = "idle" | "pending" | "retrying" | "failed";
+export type LobbyIdentityActionStatus = "pending" | "retrying" | "failed";
+
+export interface LobbyIdentityActionState {
+  kind: "profile" | "rename";
+  status: LobbyIdentityActionStatus;
+}
 
 export interface LobbyKickPlayerActionState {
   playerId: string;
@@ -31,17 +37,19 @@ export interface LobbyPageController {
   handlePlayerKick: (player: PublicPlayerState) => void;
   handlePlayerStartingCardCountChange: (player: PublicPlayerState, nextValue: number) => void;
   handlePlayerStartingTtTokenCountChange: (player: PublicPlayerState, nextValue: number) => void;
-  handlePlayerProfileChange: (displayName: string) => void;
-  handleRoomRename: (nextRoomId: string) => void;
+  handlePlayerProfileChange: (displayName: string) => Promise<boolean>;
+  handleRoomRename: (nextRoomId: string) => Promise<boolean>;
   handleRoomSettingsChange: (nextSettings: PublicRoomSettings) => void;
   handleStartGame: () => void;
   isHost: boolean;
   isCloseRoomPending: boolean;
   isKickPlayerPending: boolean;
+  isIdentityActionPending: boolean;
   isPlayerSettingsPending: boolean;
   isRoomSettingsPending: boolean;
   isStartGamePending: boolean;
   kickPlayerActionState: LobbyKickPlayerActionState | null;
+  identityActionState: LobbyIdentityActionState | null;
   playerSettingsActionState: LobbyPlayerSettingsActionState | null;
   roomSettingsActionStatus: RoomSettingsActionStatus;
   preloadGame: () => void;

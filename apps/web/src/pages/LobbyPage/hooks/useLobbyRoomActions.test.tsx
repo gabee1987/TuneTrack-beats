@@ -35,6 +35,7 @@ function createDeferredActionResult() {
 function StartGameHarness() {
   const roomState = buildLobbyRoomState();
   const actions = useLobbyRoomActions({
+    currentPlayerId: roomState.hostId,
     currentSettings: roomState.settings,
     isHost: true,
     roomState,
@@ -55,6 +56,7 @@ function StartGameHarness() {
 function CloseRoomHarness() {
   const roomState = buildLobbyRoomState();
   const actions = useLobbyRoomActions({
+    currentPlayerId: roomState.hostId,
     currentSettings: roomState.settings,
     isHost: true,
     roomState,
@@ -76,6 +78,7 @@ function CloseRoomHarness() {
 function KickPlayerHarness() {
   const roomState = buildLobbyRoomState();
   const actions = useLobbyRoomActions({
+    currentPlayerId: roomState.hostId,
     currentSettings: roomState.settings,
     isHost: true,
     roomState,
@@ -105,6 +108,7 @@ function KickPlayerHarness() {
 function RoomSettingsHarness() {
   const roomState = buildLobbyRoomState();
   const actions = useLobbyRoomActions({
+    currentPlayerId: roomState.hostId,
     currentSettings: roomState.settings,
     isHost: true,
     roomState,

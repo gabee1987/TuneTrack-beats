@@ -165,7 +165,9 @@ describe("room flow", () => {
   });
 
   it("renames a lobby room for all members and restores stale-route reconnects into the renamed room", async () => {
-    const serverContext = await startTestServer();
+    const roomService = createTestRoomService();
+    const renameRoomSpy = vi.spyOn(roomService, "renameRoom");
+    const serverContext = await startTestServer(roomService);
     const hostSocket = createClient(serverContext.baseUrl);
     const guestSocket = createClient(serverContext.baseUrl);
 
@@ -207,10 +209,12 @@ describe("room flow", () => {
       (roomState) => roomState.roomId === "renamed-room",
     );
 
-    hostSocket.emit(ClientToServerEvent.RenameRoom, {
+    const requestId = "00000000-0000-4000-8000-00000000010d";
+    const firstAckPromise = hostSocket.timeout(1_000).emitWithAck(ClientToServerEvent.RenameRoom, {
       roomId: "party-room",
       nextRoomId: "renamed-room",
-    });
+      requestId,
+    }) as Promise<ActionAck>;
 
     const [hostRenamedState, guestRenamedState] = await Promise.all([
       hostRenamedPromise,
@@ -219,6 +223,16 @@ describe("room flow", () => {
 
     expect(hostRenamedState.hostId).toBe(hostIdentity.playerId);
     expect(guestRenamedState.players.map((player) => player.id)).toContain(guestIdentity.playerId);
+    const firstAck = await firstAckPromise;
+    const replayAck = (await hostSocket.timeout(1_000).emitWithAck(ClientToServerEvent.RenameRoom, {
+      roomId: "party-room",
+      nextRoomId: "renamed-room",
+      requestId,
+    })) as ActionAck;
+
+    expect(firstAck).toEqual({ ok: true, requestId });
+    expect(replayAck).toEqual(firstAck);
+    expect(renameRoomSpy).toHaveBeenCalledTimes(1);
 
     guestSocket.disconnect();
 
@@ -315,7 +329,12 @@ describe("room flow", () => {
     );
     roomRegistry.addPlayerToRoom("reconnect-room", "Guest Player", "guest-socket", "guest-session");
 
-    roomRegistry.addPlayerToRoom("reconnect-room", "Host Player", "host-socket-new", "host-session");
+    roomRegistry.addPlayerToRoom(
+      "reconnect-room",
+      "Host Player",
+      "host-socket-new",
+      "host-session",
+    );
 
     const staleDisconnectState = roomRegistry.removePlayerBySocketId("host-socket-old");
     expect(staleDisconnectState).toBeNull();
@@ -635,25 +654,18 @@ describe("room flow", () => {
     );
 
     const requestId = "00000000-0000-4000-8000-000000000101";
-    const firstAckPromise = hostSocket
-      .timeout(1_000)
-      .emitWithAck(ClientToServerEvent.PlaceCard, {
-        roomId: "game-room",
-        selectedSlotIndex: 1,
-        requestId,
-      }) as Promise<ActionAck>;
+    const firstAckPromise = hostSocket.timeout(1_000).emitWithAck(ClientToServerEvent.PlaceCard, {
+      roomId: "game-room",
+      selectedSlotIndex: 1,
+      requestId,
+    }) as Promise<ActionAck>;
 
-    const [revealState, firstAck] = await Promise.all([
-      revealStatePromise,
-      firstAckPromise,
-    ]);
-    const replayAck = (await hostSocket
-      .timeout(1_000)
-      .emitWithAck(ClientToServerEvent.PlaceCard, {
-        roomId: "game-room",
-        selectedSlotIndex: 1,
-        requestId,
-      })) as ActionAck;
+    const [revealState, firstAck] = await Promise.all([revealStatePromise, firstAckPromise]);
+    const replayAck = (await hostSocket.timeout(1_000).emitWithAck(ClientToServerEvent.PlaceCard, {
+      roomId: "game-room",
+      selectedSlotIndex: 1,
+      requestId,
+    })) as ActionAck;
 
     expect(firstAck).toEqual({ ok: true, requestId });
     expect(replayAck).toEqual(firstAck);
@@ -742,10 +754,7 @@ describe("room flow", () => {
     const roomService = createTestRoomService();
     const claimChallengeSpy = vi.spyOn(roomService, "claimChallenge");
     const placeChallengeSpy = vi.spyOn(roomService, "placeChallenge");
-    const resolveChallengeWindowSpy = vi.spyOn(
-      roomService,
-      "resolveChallengeWindow",
-    );
+    const resolveChallengeWindowSpy = vi.spyOn(roomService, "resolveChallengeWindow");
     const serverContext = await startTestServer(roomService);
     const hostSocket = createClient(serverContext.baseUrl);
     const guestSocket = createClient(serverContext.baseUrl);
@@ -797,10 +806,7 @@ describe("room flow", () => {
     });
     await settingsPromise;
 
-    const turnPromise = waitForStateUpdate(
-      guestSocket,
-      (roomState) => roomState.status === "turn",
-    );
+    const turnPromise = waitForStateUpdate(guestSocket, (roomState) => roomState.status === "turn");
     hostSocket.emit(ClientToServerEvent.StartGame, { roomId: "beat-room" });
     await turnPromise;
 
@@ -825,10 +831,7 @@ describe("room flow", () => {
         roomId: "beat-room",
         requestId: resolveRequestId,
       }) as Promise<ActionAck>;
-    const [, firstResolveAck] = await Promise.all([
-      firstRevealPromise,
-      firstResolveAckPromise,
-    ]);
+    const [, firstResolveAck] = await Promise.all([firstRevealPromise, firstResolveAckPromise]);
     const replayResolveAck = (await hostSocket
       .timeout(1_000)
       .emitWithAck(ClientToServerEvent.ResolveChallengeWindow, {
@@ -868,10 +871,7 @@ describe("room flow", () => {
         roomId: "beat-room",
         requestId: claimRequestId,
       }) as Promise<ActionAck>;
-    const [, firstClaimAck] = await Promise.all([
-      claimedChallengePromise,
-      firstClaimAckPromise,
-    ]);
+    const [, firstClaimAck] = await Promise.all([claimedChallengePromise, firstClaimAckPromise]);
     const replayClaimAck = (await hostSocket
       .timeout(1_000)
       .emitWithAck(ClientToServerEvent.ClaimChallenge, {
@@ -1051,23 +1051,16 @@ describe("room flow", () => {
     );
 
     const requestId = "00000000-0000-4000-8000-000000000105";
-    const firstAckPromise = hostSocket
-      .timeout(1_000)
-      .emitWithAck(ClientToServerEvent.CloseRoom, {
-        roomId: "close-room",
-        requestId,
-      }) as Promise<ActionAck>;
+    const firstAckPromise = hostSocket.timeout(1_000).emitWithAck(ClientToServerEvent.CloseRoom, {
+      roomId: "close-room",
+      requestId,
+    }) as Promise<ActionAck>;
 
-    const [roomClosed, firstAck] = await Promise.all([
-      roomClosedPromise,
-      firstAckPromise,
-    ]);
-    const replayAck = (await hostSocket
-      .timeout(1_000)
-      .emitWithAck(ClientToServerEvent.CloseRoom, {
-        roomId: "close-room",
-        requestId,
-      })) as ActionAck;
+    const [roomClosed, firstAck] = await Promise.all([roomClosedPromise, firstAckPromise]);
+    const replayAck = (await hostSocket.timeout(1_000).emitWithAck(ClientToServerEvent.CloseRoom, {
+      roomId: "close-room",
+      requestId,
+    })) as ActionAck;
 
     expect(roomClosed).toEqual({
       roomId: "close-room",
@@ -1114,10 +1107,7 @@ describe("room flow", () => {
       message: string;
       reason: string;
       roomName: string;
-    }>(
-      guestSocket,
-      ServerToClientEvent.RoomClosed,
-    );
+    }>(guestSocket, ServerToClientEvent.RoomClosed);
     const hostStatePromise = waitForStateUpdate(
       hostSocket,
       (roomState) =>
@@ -1126,13 +1116,11 @@ describe("room flow", () => {
     );
 
     const requestId = "00000000-0000-4000-8000-00000000010c";
-    const firstAckPromise = hostSocket
-      .timeout(1_000)
-      .emitWithAck(ClientToServerEvent.KickPlayer, {
-        roomId: "kick-room",
-        playerId: guestIdentity.playerId,
-        requestId,
-      }) as Promise<ActionAck>;
+    const firstAckPromise = hostSocket.timeout(1_000).emitWithAck(ClientToServerEvent.KickPlayer, {
+      roomId: "kick-room",
+      playerId: guestIdentity.playerId,
+      requestId,
+    }) as Promise<ActionAck>;
 
     await expect(kickedPromise).resolves.toEqual({
       roomId: "kick-room",
@@ -1144,13 +1132,11 @@ describe("room flow", () => {
       expect.objectContaining({ roomId: "kick-room" }),
     );
     const firstAck = await firstAckPromise;
-    const replayAck = (await hostSocket
-      .timeout(1_000)
-      .emitWithAck(ClientToServerEvent.KickPlayer, {
-        roomId: "kick-room",
-        playerId: guestIdentity.playerId,
-        requestId,
-      })) as ActionAck;
+    const replayAck = (await hostSocket.timeout(1_000).emitWithAck(ClientToServerEvent.KickPlayer, {
+      roomId: "kick-room",
+      playerId: guestIdentity.playerId,
+      requestId,
+    })) as ActionAck;
 
     expect(firstAck).toEqual({ ok: true, requestId });
     expect(replayAck).toEqual(firstAck);
@@ -1231,9 +1217,9 @@ describe("room flow", () => {
     );
 
     roomRegistry.startGame("host-socket", { roomId: "skip-room" }, getTurnOrderDeck());
-    expect(roomRegistry.getRoomStateForMember("host-socket", "skip-room").turn?.activePlayerId).toBe(
-      hostJoin.playerId,
-    );
+    expect(
+      roomRegistry.getRoomStateForMember("host-socket", "skip-room").turn?.activePlayerId,
+    ).toBe(hostJoin.playerId);
 
     roomRegistry.removePlayerBySocketId("guest-socket");
 
@@ -1296,24 +1282,20 @@ describe("room flow", () => {
     );
 
     const requestId = "00000000-0000-4000-8000-000000000108";
-    const firstAckPromise = hostSocket
-      .timeout(1_000)
-      .emitWithAck(ClientToServerEvent.AwardTt, {
-        roomId: "award-room",
-        playerId: guestIdentity.playerId,
-        amount: 1,
-        requestId,
-      }) as Promise<ActionAck>;
+    const firstAckPromise = hostSocket.timeout(1_000).emitWithAck(ClientToServerEvent.AwardTt, {
+      roomId: "award-room",
+      playerId: guestIdentity.playerId,
+      amount: 1,
+      requestId,
+    }) as Promise<ActionAck>;
 
     const [awardState, firstAck] = await Promise.all([awardStatePromise, firstAckPromise]);
-    const replayAck = (await hostSocket
-      .timeout(1_000)
-      .emitWithAck(ClientToServerEvent.AwardTt, {
-        roomId: "award-room",
-        playerId: guestIdentity.playerId,
-        amount: 1,
-        requestId,
-      })) as ActionAck;
+    const replayAck = (await hostSocket.timeout(1_000).emitWithAck(ClientToServerEvent.AwardTt, {
+      roomId: "award-room",
+      playerId: guestIdentity.playerId,
+      amount: 1,
+      requestId,
+    })) as ActionAck;
 
     expect(firstAck).toEqual({ ok: true, requestId });
     expect(replayAck).toEqual(firstAck);
@@ -1348,8 +1330,7 @@ describe("room flow", () => {
 
     const settingsPromise = waitForStateUpdate(
       hostSocket,
-      (roomState) =>
-        roomState.settings.ttModeEnabled && roomState.players[0]?.ttTokenCount === 4,
+      (roomState) => roomState.settings.ttModeEnabled && roomState.players[0]?.ttTokenCount === 4,
     );
     hostSocket.emit(ClientToServerEvent.UpdateRoomSettings, {
       roomId: "buy-room",
@@ -1358,10 +1339,7 @@ describe("room flow", () => {
     });
     await settingsPromise;
 
-    const turnPromise = waitForStateUpdate(
-      hostSocket,
-      (roomState) => roomState.status === "turn",
-    );
+    const turnPromise = waitForStateUpdate(hostSocket, (roomState) => roomState.status === "turn");
     hostSocket.emit(ClientToServerEvent.StartGame, { roomId: "buy-room" });
     const turnState = await turnPromise;
 
@@ -1420,8 +1398,7 @@ describe("room flow", () => {
     expect(replaySkipAck).toEqual(firstSkipAck);
     expect(skipTrackSpy).toHaveBeenCalledTimes(1);
     expect(
-      skippedTrackState.players.find((player) => player.id === hostIdentity.playerId)
-        ?.ttTokenCount,
+      skippedTrackState.players.find((player) => player.id === hostIdentity.playerId)?.ttTokenCount,
     ).toBe(3);
 
     const revealPromise = waitForStateUpdate(

@@ -4,7 +4,10 @@
 > handover is complete and verified. Subsequent B8 work was explicitly authorised in separate
 > batches; the acknowledged-action migration now includes `kick_player` from both the in-game
 > confirmation and the direct lobby player row, plus per-player lobby starting-card/token
-> settings and room-wide lobby settings. The live status and remaining work are tracked in
+> settings, room-wide lobby settings, player profile updates, and host room rename. Room rename
+> retries replay their socket-local success acknowledgement, and combined name/room edits route
+> with the authoritative player name. Root cause #2 is complete; root causes #4 and #5 remain.
+> The live status and remaining work are tracked in
 > `05-network-protocol-and-resilience.md` and B8 in `12-bug-register.md`.
 
 **Audience:** a fresh agent (no memory of prior sessions on this repo). Everything you
@@ -37,11 +40,14 @@ function handleConnect(socketClient: Awaited<ReturnType<typeof getSocketClient>>
   setConnectionStatus("Connected");
   setErrorCode(null);
   setErrorMessage(null);
-  socketClient.emit(intent === "create" ? ClientToServerEvent.CreateRoom : ClientToServerEvent.JoinRoom, {
-    displayName,
-    roomId,
-    sessionId: playerSessionId,
-  });
+  socketClient.emit(
+    intent === "create" ? ClientToServerEvent.CreateRoom : ClientToServerEvent.JoinRoom,
+    {
+      displayName,
+      roomId,
+      sessionId: playerSessionId,
+    },
+  );
 }
 ```
 
@@ -119,7 +125,7 @@ same-session recreate of the same room is treated as a rejoin instead of an erro
   still lists that player as a member, delegate to
   `this.connection.restorePlayerSession(roomId, existingSessionMembership.playerId, socketId, sessionId)`
   and return its result.
-- Only throw `ROOM_ALREADY_EXISTS` when the room exists and belongs to a *different*
+- Only throw `ROOM_ALREADY_EXISTS` when the room exists and belongs to a _different_
   session (or the same session's membership doesn't check out) — i.e. a genuine
   room-id collision.
 - Leave every other branch of `createRoom` (the `MAX_ACTIVE_ROOM_COUNT` check, the
@@ -130,7 +136,7 @@ Why both sides: the client fix alone isn't sufficient — a stale second tab, a
 double-tap, or a client bug elsewhere could still fire a second `CreateRoom` for a room
 that already exists, and the server must not treat that as a hard failure for its own
 owning session. The server change is the actual safety net; the client change is what
-stops the *common* case (an ordinary reconnect) from depending on it at all.
+stops the _common_ case (an ordinary reconnect) from depending on it at all.
 
 This design (both sides) already exists in more detail in
 `docs/plans/2026-09-stability-performance/05-network-protocol-and-resilience.md`,
@@ -188,6 +194,7 @@ then restore the fix and confirm it passes again. Don't skip this — it's the o
 to know a test actually has teeth rather than passing by accident.
 
 Before handing back:
+
 - `npm run typecheck`
 - `npm run lint`
 - `npm run test`
@@ -205,8 +212,8 @@ e.g. "X server + Y web + Z engine tests passing").
   working tree. This is this project's standing convention — the user (not the agent)
   owns every git operation.
 - Keep the fix minimal. No refactors, no renames beyond what's needed, no comments
-  explaining *what* the code does (names should do that) — only a comment where the
-  *why* is genuinely non-obvious (the existing `createRoom`/`addPlayerToRoom` code has
+  explaining _what_ the code does (names should do that) — only a comment where the
+  _why_ is genuinely non-obvious (the existing `createRoom`/`addPlayerToRoom` code has
   examples of the right level of comment density; match it).
 - When done, update the B8 entry in
   `docs/plans/2026-09-stability-performance/12-bug-register.md`: this fix addresses only

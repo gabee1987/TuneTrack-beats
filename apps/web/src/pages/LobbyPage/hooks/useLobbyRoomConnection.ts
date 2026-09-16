@@ -16,11 +16,7 @@ import {
   resetPlayerSession,
 } from "../../../services/session/playerSession";
 import { rememberRoomEventToast } from "../../../services/session/roomEventToast";
-import {
-
-  getSocketClient,
-  resetSocketClient,
-} from "../../../services/socket/socketClient";
+import { getSocketClient, resetSocketClient } from "../../../services/socket/socketClient";
 
 interface UseLobbyRoomConnectionOptions {
   displayName: string;
@@ -58,9 +54,7 @@ export function getLobbyRoomStateUpdateDecision({
 } {
   const isStateForRequestedRoom = nextRoomId === requestedRoomId;
   const isRenameFromJoinedRoom =
-    nextStatus === "lobby" &&
-    joinedRoomId === requestedRoomId &&
-    !isStateForRequestedRoom;
+    nextStatus === "lobby" && joinedRoomId === requestedRoomId && !isStateForRequestedRoom;
 
   return {
     accept: isStateForRequestedRoom || isRenameFromJoinedRoom,
@@ -149,9 +143,12 @@ export function useLobbyRoomConnection({
       setRoomState(payload.roomState);
 
       if (updateDecision.shouldNavigateToRoom) {
+        const authoritativeDisplayName =
+          payload.roomState.players.find((player) => player.id === currentPlayerIdRef.current)
+            ?.displayName ?? displayName;
         navigate(
           `/lobby/${encodeURIComponent(payload.roomState.roomId)}?playerName=${encodeURIComponent(
-            displayName,
+            authoritativeDisplayName,
           )}`,
           { replace: true },
         );

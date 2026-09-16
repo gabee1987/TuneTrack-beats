@@ -18,9 +18,7 @@ const settings: PublicRoomSettings = {
   spotifyPlaybackGeneration: 0,
 };
 
-function createController(
-  overrides: Partial<LobbyPageController> = {},
-): LobbyPageController {
+function createController(overrides: Partial<LobbyPageController> = {}): LobbyPageController {
   const roomState: PublicRoomState = {
     roomId: "ROOM1",
     status: "lobby",
@@ -62,17 +60,19 @@ function createController(
     handlePlayerKick: () => undefined,
     handlePlayerStartingCardCountChange: () => undefined,
     handlePlayerStartingTtTokenCountChange: () => undefined,
-    handlePlayerProfileChange: () => undefined,
-    handleRoomRename: () => undefined,
+    handlePlayerProfileChange: async () => true,
+    handleRoomRename: async () => true,
     handleRoomSettingsChange: () => undefined,
     handleStartGame: () => undefined,
     isHost: true,
     isCloseRoomPending: false,
     isKickPlayerPending: false,
+    isIdentityActionPending: false,
     isPlayerSettingsPending: false,
     isRoomSettingsPending: false,
     isStartGamePending: true,
     kickPlayerActionState: null,
+    identityActionState: null,
     playerSettingsActionState: null,
     roomSettingsActionStatus: "idle",
     preloadGame: () => undefined,
@@ -100,6 +100,8 @@ describe("buildLobbyAssemblyModel", () => {
     expect(model.roomActions.isCloseRoomPending).toBe(false);
     expect(model.roomActions.isStartGamePending).toBe(true);
     expect(model.identity.startGameActionStatus).toBe("retrying");
+    expect(model.identity.identityActionState).toBeNull();
+    expect(model.identity.isIdentityActionPending).toBe(false);
     expect(model.identity.resolvedRoomId).toBe("ROOM1");
   });
 

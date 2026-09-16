@@ -6,14 +6,15 @@ import {
 } from "@tunetrack/shared";
 import { useRef, useState } from "react";
 import { emitAction } from "../../../services/socket/emitAction";
-import { getSocketClient } from "../../../services/socket/socketClient";
 import type {
   CloseRoomActionStatus,
+  LobbyIdentityActionState,
   LobbyKickPlayerActionState,
   LobbyPlayerSettingsActionState,
   RoomSettingsActionStatus,
   StartGameActionStatus,
 } from "../LobbyPage.types";
+import { useLobbyIdentityActions } from "./useLobbyIdentityActions";
 import { useLobbyKickPlayerAction } from "./useLobbyKickPlayerAction";
 import { useLobbyPlayerSettingsAction } from "./useLobbyPlayerSettingsAction";
 import { useLobbyRoomSettingsAction } from "./useLobbyRoomSettingsAction";
@@ -21,6 +22,7 @@ import { useLobbyRoomSettingsAction } from "./useLobbyRoomSettingsAction";
 const DEFAULT_ENABLED_STARTING_TT_TOKEN_COUNT = 1;
 
 interface UseLobbyRoomActionsOptions {
+  currentPlayerId: string | null;
   currentSettings: PublicRoomSettings;
   isHost: boolean;
   roomState: PublicRoomState | null;
@@ -31,17 +33,19 @@ interface UseLobbyRoomActionsResult {
   handleCloseRoom: () => void;
   handlePlayerStartingCardCountChange: (player: PublicPlayerState, nextValue: number) => void;
   handlePlayerStartingTtTokenCountChange: (player: PublicPlayerState, nextValue: number) => void;
-  handlePlayerProfileChange: (displayName: string) => void;
+  handlePlayerProfileChange: (displayName: string) => Promise<boolean>;
   handlePlayerKick: (player: PublicPlayerState) => void;
-  handleRoomRename: (nextRoomId: string) => void;
+  handleRoomRename: (nextRoomId: string) => Promise<boolean>;
   handleRoomSettingsChange: (nextSettings: PublicRoomSettings) => void;
   handleStartGame: () => void;
   isCloseRoomPending: boolean;
   isKickPlayerPending: boolean;
+  isIdentityActionPending: boolean;
   isPlayerSettingsPending: boolean;
   isRoomSettingsPending: boolean;
   isStartGamePending: boolean;
   kickPlayerActionState: LobbyKickPlayerActionState | null;
+  identityActionState: LobbyIdentityActionState | null;
   playerSettingsActionState: LobbyPlayerSettingsActionState | null;
   roomSettingsActionStatus: RoomSettingsActionStatus;
   startGameActionStatus: StartGameActionStatus;
@@ -49,6 +53,7 @@ interface UseLobbyRoomActionsResult {
 }
 
 export function useLobbyRoomActions({
+  currentPlayerId,
   currentSettings,
   isHost,
   roomState,
@@ -56,37 +61,17 @@ export function useLobbyRoomActions({
   const roomStateRef = useRef(roomState);
   roomStateRef.current = roomState;
   const isCloseRoomPendingRef = useRef(false);
-  const [closeRoomActionStatus, setCloseRoomActionStatus] =
-    useState<CloseRoomActionStatus>("idle");
+  const [closeRoomActionStatus, setCloseRoomActionStatus] = useState<CloseRoomActionStatus>("idle");
   const isStartGamePendingRef = useRef(false);
-  const [startGameActionStatus, setStartGameActionStatus] =
-    useState<StartGameActionStatus>("idle");
+  const [startGameActionStatus, setStartGameActionStatus] = useState<StartGameActionStatus>("idle");
   const isStartGamePending =
     startGameActionStatus === "pending" || startGameActionStatus === "retrying";
   const isCloseRoomPending =
     closeRoomActionStatus === "pending" || closeRoomActionStatus === "retrying";
   const kickPlayerAction = useLobbyKickPlayerAction({ isHost, roomState });
+  const identityAction = useLobbyIdentityActions({ currentPlayerId, isHost, roomState });
   const playerSettingsAction = useLobbyPlayerSettingsAction({ isHost, roomState });
   const roomSettingsAction = useLobbyRoomSettingsAction({ isHost, roomState });
-
-  async function emitRoomEvent<TPayload>(
-    event: (typeof ClientToServerEvent)[keyof typeof ClientToServerEvent],
-    payload: TPayload,
-  ) {
-    const socketClient = await getSocketClient();
-    socketClient.emit(event, payload);
-  }
-
-  function handleRoomRename(nextRoomId: string) {
-    if (!roomState || !isHost) {
-      return;
-    }
-
-    void emitRoomEvent(ClientToServerEvent.RenameRoom, {
-      nextRoomId,
-      roomId: roomState.roomId,
-    });
-  }
 
   function handlePlayerStartingCardCountChange(player: PublicPlayerState, nextValue: number) {
     playerSettingsAction.handlePlayerSettingsChange({
@@ -101,17 +86,6 @@ export function useLobbyRoomActions({
       playerId: player.id,
       startingTimelineCardCount: player.startingTimelineCardCount,
       startingTtTokenCount: nextValue,
-    });
-  }
-
-  function handlePlayerProfileChange(displayName: string) {
-    if (!roomState) {
-      return;
-    }
-
-    void emitRoomEvent(ClientToServerEvent.UpdatePlayerProfile, {
-      displayName,
-      roomId: roomState.roomId,
     });
   }
 
@@ -166,8 +140,7 @@ export function useLobbyRoomActions({
     function isSubmittedRoomCurrent() {
       const currentRoomState = roomStateRef.current;
       return (
-        currentRoomState?.roomId === submittedRoomId &&
-        currentRoomState.hostId === submittedHostId
+        currentRoomState?.roomId === submittedRoomId && currentRoomState.hostId === submittedHostId
       );
     }
 
@@ -219,16 +192,18 @@ export function useLobbyRoomActions({
     handlePlayerStartingCardCountChange,
     handlePlayerStartingTtTokenCountChange,
     handlePlayerKick: kickPlayerAction.handlePlayerKick,
-    handlePlayerProfileChange,
-    handleRoomRename,
+    handlePlayerProfileChange: identityAction.handlePlayerProfileChange,
+    handleRoomRename: identityAction.handleRoomRename,
     handleRoomSettingsChange: roomSettingsAction.handleRoomSettingsChange,
     handleStartGame,
     isCloseRoomPending,
     isKickPlayerPending: kickPlayerAction.isPending,
+    isIdentityActionPending: identityAction.isPending,
     isPlayerSettingsPending: playerSettingsAction.isPending,
     isRoomSettingsPending: roomSettingsAction.isPending,
     isStartGamePending,
     kickPlayerActionState: kickPlayerAction.actionState,
+    identityActionState: identityAction.actionState,
     playerSettingsActionState: playerSettingsAction.actionState,
     roomSettingsActionStatus: roomSettingsAction.actionStatus,
     startGameActionStatus,

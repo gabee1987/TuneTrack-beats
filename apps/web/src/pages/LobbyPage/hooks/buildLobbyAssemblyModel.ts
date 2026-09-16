@@ -51,10 +51,12 @@ export interface LobbyAssemblyModel {
   identity: {
     displayName: string;
     hasStartedJoinError: boolean;
+    identityActionState: LobbyPageController["identityActionState"];
     isHost: boolean;
+    isIdentityActionPending: boolean;
     isStartGamePending: boolean;
-    onPlayerProfileChange: (displayName: string) => void;
-    onRoomRename: (nextRoomId: string) => void;
+    onPlayerProfileChange: (displayName: string) => Promise<boolean>;
+    onRoomRename: (nextRoomId: string) => Promise<boolean>;
     onStartGame: () => void;
     preloadGame: () => void;
     resolvedRoomId: string;
@@ -117,7 +119,9 @@ export function buildLobbyAssemblyModel(controller: LobbyPageController): LobbyA
     identity: {
       displayName: controller.displayName,
       hasStartedJoinError,
+      identityActionState: controller.identityActionState,
       isHost: controller.isHost,
+      isIdentityActionPending: controller.isIdentityActionPending,
       isStartGamePending: controller.isStartGamePending,
       onPlayerProfileChange: controller.handlePlayerProfileChange,
       onRoomRename: controller.handleRoomRename,

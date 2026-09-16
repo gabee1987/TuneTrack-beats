@@ -113,6 +113,7 @@ export const updateRoomSettingsPayloadSchema = z.object({
 export const renameRoomPayloadSchema = z.object({
   roomId: roomIdSchema,
   nextRoomId: roomIdSchema,
+  requestId: z.string().uuid().optional(),
 });
 
 export const updatePlayerSettingsPayloadSchema = z.object({

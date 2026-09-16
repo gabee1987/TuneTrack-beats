@@ -49,18 +49,18 @@ export function useLobbyPageController(): LobbyPageController {
     handleClosedRoomReset,
     hasClosedRoomReset,
     roomState,
-  } =
-    useLobbyRoomConnection({
-      displayName,
-      intent,
-      navigate,
-      playerSessionId,
-      roomId,
-    });
+  } = useLobbyRoomConnection({
+    displayName,
+    intent,
+    navigate,
+    playerSessionId,
+    roomId,
+  });
 
   const isHost = roomState?.hostId === currentPlayerId;
   const currentSettings = roomState?.settings ?? fallbackRoomSettings;
   const actions = useLobbyRoomActions({
+    currentPlayerId,
     currentSettings,
     isHost,
     roomState,
@@ -83,6 +83,7 @@ export function useLobbyPageController(): LobbyPageController {
     handleClosedRoomReset,
     handleCloseRoom: actions.handleCloseRoom,
     hasClosedRoomReset,
+    identityActionState: actions.identityActionState,
     handlePlayerKick: actions.handlePlayerKick,
     handlePlayerStartingCardCountChange: actions.handlePlayerStartingCardCountChange,
     handlePlayerStartingTtTokenCountChange: actions.handlePlayerStartingTtTokenCountChange,
@@ -93,6 +94,7 @@ export function useLobbyPageController(): LobbyPageController {
     isHost,
     isCloseRoomPending: actions.isCloseRoomPending,
     isKickPlayerPending: actions.isKickPlayerPending,
+    isIdentityActionPending: actions.isIdentityActionPending,
     isPlayerSettingsPending: actions.isPlayerSettingsPending,
     isRoomSettingsPending: actions.isRoomSettingsPending,
     isStartGamePending: actions.isStartGamePending,

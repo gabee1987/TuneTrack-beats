@@ -77,6 +77,7 @@ export interface UpdateRoomSettingsPayload {
 export interface RenameRoomPayload {
   roomId: RoomId;
   nextRoomId: RoomId;
+  requestId?: string;
 }
 
 export interface UpdatePlayerSettingsPayload {

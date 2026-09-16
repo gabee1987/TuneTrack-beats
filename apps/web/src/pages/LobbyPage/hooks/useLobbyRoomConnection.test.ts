@@ -4,6 +4,7 @@ import { createElement, type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { I18nProvider, useI18n } from "../../../features/i18n";
 import { getSharedFakeSocket, resetSharedFakeSocket } from "../../../test/fakeSocket";
+import { buildLobbyRoomState, TEST_HOST_ID } from "../../../test/roomStateFixtures";
 import { getLobbyRoomStateUpdateDecision, useLobbyRoomConnection } from "./useLobbyRoomConnection";
 
 vi.mock("../../../services/socket/socketClient", async () => {
@@ -144,5 +145,45 @@ describe("useLobbyRoomConnection", () => {
     expect(view.result.current.connection.errorMessage).toBe(
       "Csak a host indíthatja el a játékot.",
     );
+  });
+
+  it("uses the authoritative player name when a room rename changes the route", async () => {
+    const socket = getSharedFakeSocket();
+    const navigate = vi.fn();
+
+    renderHook(
+      () =>
+        useLobbyRoomConnection({
+          displayName: "Old Name",
+          intent: "join",
+          navigate,
+          playerSessionId: "TEST_SESSION_1",
+          roomId: "TEST_ROOM_1",
+        }),
+      { wrapper: I18nTestWrapper },
+    );
+
+    await waitFor(() => {
+      expect(socket.listenerCount(ServerToClientEvent.StateUpdate)).toBe(1);
+    });
+
+    act(() => {
+      socket.serverEmit(ServerToClientEvent.PlayerIdentity, { playerId: TEST_HOST_ID });
+      socket.serverEmit(ServerToClientEvent.StateUpdate, {
+        roomState: buildLobbyRoomState(),
+      });
+      socket.serverEmit(ServerToClientEvent.StateUpdate, {
+        roomState: buildLobbyRoomState({
+          roomId: "renamed-room",
+          players: buildLobbyRoomState().players.map((player) =>
+            player.id === TEST_HOST_ID ? { ...player, displayName: "Updated Host" } : player,
+          ),
+        }),
+      });
+    });
+
+    expect(navigate).toHaveBeenCalledWith("/lobby/renamed-room?playerName=Updated%20Host", {
+      replace: true,
+    });
   });
 });

@@ -99,8 +99,8 @@ itself the first time a deployment happens mid-session.
 
 `resetPlayerSession()` (`apps/web/src/services/session/playerSession.ts` lines 66-69)
 deletes the durable `tunetrack.playerSessionId`. It is called from both
-`handleClosedRoomReset` implementations. Clearing a *room* must not clear the *device
-identity*, because that identity is the only thing that makes reconnect possible.
+`handleClosedRoomReset` implementations. Clearing a _room_ must not clear the _device
+identity_, because that identity is the only thing that makes reconnect possible.
 
 Change:
 
@@ -127,7 +127,7 @@ Doc 09 section 2 builds the player profile on top of this helper, so do it here.
 ### Acceptance
 
 - [ ] Closing a room and returning home preserves `tunetrack.playerSessionId`.
-- [ ] Rejoining a *different* room after a close reuses the same session id.
+- [ ] Rejoining a _different_ room after a close reuses the same session id.
 - [ ] Every storage access is inside a try/catch; a test with a throwing storage stub
       renders the app without error.
 - [ ] Existing `playerSession.test.ts` extended, not replaced.
@@ -148,14 +148,14 @@ Change (identical in both hooks):
 
 While in these files, audit the remaining dependencies:
 
-| Dependency | Stable? | Action |
-| --- | --- | --- |
-| `navigate` | Stable in react-router v6 | keep |
-| `playerSessionId` | `useMemo(..., [])` | keep |
-| `roomId` | Route param | keep |
-| `displayName` (lobby) | Derived from a query param, **changes on rename** | remove — Doc 09 section 3 stops the rename from changing it |
-| `intent` (lobby) | Derived from a query param | keep, but see Phase 1.1 which strips it after use |
-| `rememberedDisplayName` (game) | `useMemo(..., [])` | keep |
+| Dependency                     | Stable?                                           | Action                                                      |
+| ------------------------------ | ------------------------------------------------- | ----------------------------------------------------------- |
+| `navigate`                     | Stable in react-router v6                         | keep                                                        |
+| `playerSessionId`              | `useMemo(..., [])`                                | keep                                                        |
+| `roomId`                       | Route param                                       | keep                                                        |
+| `displayName` (lobby)          | Derived from a query param, **changes on rename** | remove — Doc 09 section 3 stops the rename from changing it |
+| `intent` (lobby)               | Derived from a query param                        | keep, but see Phase 1.1 which strips it after use           |
+| `rememberedDisplayName` (game) | `useMemo(..., [])`                                | keep                                                        |
 
 The goal is that the connection effect runs **exactly once per room id**, for the whole
 lifetime of that room. Anything that re-runs it is a bug.
@@ -205,7 +205,7 @@ Client side, in `apps/web/src/services/socket/`:
   - generates a `requestId`;
   - uses `socket.timeout(ms).emitWithAck(...)` (Socket.IO 4.6+) with a default 8 s timeout;
   - resolves to a discriminated result `{ status: "ok" } | { status: "rejected", code } |
-    { status: "timeout" } | { status: "offline" }`;
+{ status: "timeout" } | { status: "offline" }`;
   - returns `"offline"` immediately when `socket.connected === false`, rather than letting
     Socket.IO buffer the emit indefinitely.
 
@@ -294,6 +294,11 @@ fire-and-forget until last.
 - [x] `update_room_settings` serialises full room-setting payloads through the acknowledged
       path; ranges, selects, and the TT-mode toggle share duplicate blocking and expose
       timeout-only retry guidance on both lobby assemblies.
+- [x] Lobby profile updates and host room renames share one acknowledged identity-action
+      lifecycle, blocking overlapping Apply submissions and exposing retry guidance only after
+      acknowledgement timeouts.
+- [x] Replaying a successful `rename_room` request returns its original socket-local
+      acknowledgement without attempting the terminal room-key change or broadcasting it twice.
 
 ## 5. Phase 5 — Honest connection state in the UI · **S2**
 
@@ -347,7 +352,7 @@ Replace the three hardcoded English strings (`"Connecting"`, `"Connected"`,
   a single subscription rather than per-page state.
 - Rendered by one app-level `ConnectionBanner` in the overlay host from Doc 06 section 4,
   so every screen gets the same treatment. `GamePageReconnectToast` already exists for
-  *other players'* reconnects — keep that, it answers a different question ("who is back?"),
+  _other players'_ reconnects — keep that, it answers a different question ("who is back?"),
   and make sure the two are visually distinct.
 - All copy goes through i18n keys in both `en.properties` and `hu.properties`.
 
@@ -393,12 +398,12 @@ with Socket.IO recovery replay.
 Instead, add a small number of **narrow, named** events for the high-frequency mutations
 that touch one field, and keep `state_update` as the full-state fallback:
 
-| New event | Payload | Replaces a full broadcast for |
-| --- | --- | --- |
+| New event                   | Payload                                                             | Replaces a full broadcast for    |
+| --------------------------- | ------------------------------------------------------------------- | -------------------------------- |
 | `player_connection_changed` | `{ roomId, playerId, connectionStatus, reconnectExpiresAtEpochMs }` | connect / disconnect / reconnect |
-| `player_tokens_changed` | `{ roomId, playerId, ttTokenCount }` | award / remove / spend TT |
-| `room_settings_changed` | `{ roomId, settings }` | every host settings toggle |
-| `turn_changed` | `{ roomId, turn, currentTrackCard }` | turn advance |
+| `player_tokens_changed`     | `{ roomId, playerId, ttTokenCount }`                                | award / remove / spend TT        |
+| `room_settings_changed`     | `{ roomId, settings }`                                              | every host settings toggle       |
+| `turn_changed`              | `{ roomId, turn, currentTrackCard }`                                | turn advance                     |
 
 Rules:
 
@@ -433,10 +438,10 @@ Rules:
 
 ## 7. Risk register
 
-| Risk | Mitigation |
-| --- | --- |
-| Idempotent `create_room` masks a genuine collision | Only the owning session is treated as a rejoin; a different session still gets `ROOM_ALREADY_EXISTS`, and there is a test for it. |
-| `connectionStateRecovery` replays packets the client is not ready for | Full `state_update` is last-write-wins, so replay is safe today; the `revision` guard in Phase 6 keeps it safe after narrow events land. |
-| Acks change error surfacing and hide errors a page currently shows | Keep emitting the legacy `Error` event through the whole migration; remove it only when every action is acknowledged. |
-| Narrow events drift out of sync with full state | `revision` guard plus a rule that any ambiguity sends full state. Add a test that applies a random interleaving of narrow and full updates and asserts the client state equals the server's. |
-| `reconnectionAttempts: Infinity` masks a dead server | The `server_restarting` state and the `instanceId` check give the user an honest message; the banner shows elapsed offline time. |
+| Risk                                                                  | Mitigation                                                                                                                                                                                   |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Idempotent `create_room` masks a genuine collision                    | Only the owning session is treated as a rejoin; a different session still gets `ROOM_ALREADY_EXISTS`, and there is a test for it.                                                            |
+| `connectionStateRecovery` replays packets the client is not ready for | Full `state_update` is last-write-wins, so replay is safe today; the `revision` guard in Phase 6 keeps it safe after narrow events land.                                                     |
+| Acks change error surfacing and hide errors a page currently shows    | Keep emitting the legacy `Error` event through the whole migration; remove it only when every action is acknowledged.                                                                        |
+| Narrow events drift out of sync with full state                       | `revision` guard plus a rule that any ambiguity sends full state. Add a test that applies a random interleaving of narrow and full updates and asserts the client state equals the server's. |
+| `reconnectionAttempts: Infinity` masks a dead server                  | The `server_restarting` state and the `instanceId` check give the user an honest message; the banner shows elapsed offline time.                                                             |

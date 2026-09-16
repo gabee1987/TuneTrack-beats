@@ -55,19 +55,21 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
   const hasRoomChange = trimmedRoomId !== resolvedRoomId;
   const hasSetupChanges = hasNameChange || hasRoomChange;
 
-  function applySetupChanges() {
-    if (!canApplySetup) {
+  async function applySetupChanges() {
+    if (!canApplySetup || identity.isIdentityActionPending) {
       return false;
     }
 
+    if (hasNameChange) {
+      const didUpdateProfile = await identity.onPlayerProfileChange(trimmedDisplayName);
+      if (!didUpdateProfile) {
+        return false;
+      }
+    }
     rememberPlayerDisplayName(trimmedDisplayName);
 
-    if (hasNameChange) {
-      identity.onPlayerProfileChange(trimmedDisplayName);
-    }
-
     if (hasRoomChange && identity.isHost) {
-      identity.onRoomRename(trimmedRoomId);
+      await identity.onRoomRename(trimmedRoomId);
       return false;
     }
 
@@ -93,10 +95,10 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
     return true;
   }
 
-  function handleSetupSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSetupSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const canContinue = applySetupChanges();
+    const canContinue = await applySetupChanges();
 
     if (canContinue && identity.isHost) {
       identity.onStartGame();
@@ -119,8 +121,15 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
     startGameButtonLabel = t("lobby.startGame.retry");
   }
 
+  let applySetupButtonLabel = t("lobby.setup.apply");
+  if (identity.identityActionState?.status === "retrying") {
+    applySetupButtonLabel = t("lobby.setup.applyRetrying");
+  } else if (identity.identityActionState?.status === "failed") {
+    applySetupButtonLabel = t("lobby.setup.retryApply");
+  }
+
   const primaryActionLabel = hasSetupChanges
-    ? t("lobby.setup.apply")
+    ? applySetupButtonLabel
     : hasStartedJoinError
       ? t("lobby.setup.gameAlreadyStarted")
       : identity.isHost
@@ -157,6 +166,7 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
               </span>
               <TextInput
                 autoComplete="nickname"
+                disabled={identity.isIdentityActionPending}
                 maxLength={32}
                 onChange={(event) => setDraftDisplayName(event.target.value)}
                 placeholder={t("lobby.setup.playerNamePlaceholder")}
@@ -180,6 +190,7 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
               <TextInput
                 autoCapitalize="none"
                 autoComplete="off"
+                disabled={identity.isIdentityActionPending}
                 inputMode="text"
                 maxLength={24}
                 onChange={(event) => setDraftRoomId(event.target.value)}
@@ -196,6 +207,7 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
             <Button
               disabled={
                 identity.isStartGamePending ||
+                identity.isIdentityActionPending ||
                 !canApplySetup ||
                 (!identity.isHost && !hasSetupChanges)
               }

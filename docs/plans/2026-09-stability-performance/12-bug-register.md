@@ -182,33 +182,34 @@ Three factors compound:
 
 ### Fix
 
-1. **Add a `TouchSensor` for coarse pointers** with a press-and-hold constraint, which is
-   dnd-kit's documented remedy for exactly this conflict:
+1.  **Add a `TouchSensor` for coarse pointers** with a press-and-hold constraint, which is
+    dnd-kit's documented remedy for exactly this conflict:
 
-       useSensor(TouchSensor, {
-         activationConstraint: { delay: 180, tolerance: 8 },
-       })
+        useSensor(TouchSensor, {
+          activationConstraint: { delay: 180, tolerance: 8 },
+        })
 
-   Select sensors by pointer type: `TouchSensor` on coarse pointers, `PointerSensor` on fine
-   pointers. Use the viewport store from Doc 03 section 4 for the pointer-type signal so
-   there is one source of truth.
-   180 ms is short enough to feel immediate and long enough that a flick is unambiguously a
-   scroll. Tune on device between 150 and 250 ms.
-2. **Move `touch-action: none` up to the element that carries the drag listeners.** Verify
-   in the DOM which node receives `attributes`/`listeners` from `useSortable` — currently
-   `PreviewCard` — and set `touch-action: none` there and on its interactive descendants.
-3. **Replace `-webkit-overflow-scrolling: touch`.** It has been unnecessary since iOS 13 for
-   momentum scrolling and is actively harmful here. Remove it and re-test scrolling feel.
-4. **Reconsider `scroll-snap-type: y proximity`** on a container that is also a drop target.
-   Snap points fight a drag that ends between them. Try removing it; if the snapping is
-   wanted, restrict it to when no drag is active by toggling a class on drag start.
-5. **Add a visible press-and-hold affordance.** With a delay constraint, the user needs
-   feedback that the hold registered: a small scale or shadow change on the card at
-   activation. Without it, a delay sensor feels broken rather than deliberate. Use
-   `transform` only.
-6. **Re-test with the global pointer listener removed** (F-10, Doc 03 section 6). A
-   capture-phase `pointerdown` listener on `window` is a plausible additional contributor and
-   is being removed anyway.
+    Select sensors by pointer type: `TouchSensor` on coarse pointers, `PointerSensor` on fine
+    pointers. Use the viewport store from Doc 03 section 4 for the pointer-type signal so
+    there is one source of truth.
+    180 ms is short enough to feel immediate and long enough that a flick is unambiguously a
+    scroll. Tune on device between 150 and 250 ms.
+
+2.  **Move `touch-action: none` up to the element that carries the drag listeners.** Verify
+    in the DOM which node receives `attributes`/`listeners` from `useSortable` — currently
+    `PreviewCard` — and set `touch-action: none` there and on its interactive descendants.
+3.  **Replace `-webkit-overflow-scrolling: touch`.** It has been unnecessary since iOS 13 for
+    momentum scrolling and is actively harmful here. Remove it and re-test scrolling feel.
+4.  **Reconsider `scroll-snap-type: y proximity`** on a container that is also a drop target.
+    Snap points fight a drag that ends between them. Try removing it; if the snapping is
+    wanted, restrict it to when no drag is active by toggling a class on drag start.
+5.  **Add a visible press-and-hold affordance.** With a delay constraint, the user needs
+    feedback that the hold registered: a small scale or shadow change on the card at
+    activation. Without it, a delay sensor feels broken rather than deliberate. Use
+    `transform` only.
+6.  **Re-test with the global pointer listener removed** (F-10, Doc 03 section 6). A
+    capture-phase `pointerdown` listener on `window` is a plausible additional contributor and
+    is being removed anyway.
 
 ### Verification
 
@@ -230,7 +231,7 @@ before the dim finished.
 ### Root cause
 
 The dominant cause was not in the original analysis for this entry, and only surfaced from
-the device description of *both* directions:
+the device description of _both_ directions:
 
 **Nested opacity.** The scrim wrapped the sheet, and both animated `opacity`. Opacity
 multiplies down the tree, so halfway through the enter the sheet rendered at 0.5 × 0.5 =
@@ -293,7 +294,7 @@ In `apps/web/src/pages/GamePage/gamePageChrome.module.css`:
 
 `overflow-x: auto` makes the element a scroll container in **both** axes — the computed
 `overflow-y` becomes `auto` too — so content painted outside the content box in the block
-direction is clipped. An `outline` paints *outside* the border box by definition. The strip
+direction is clipped. An `outline` paints _outside_ the border box by definition. The strip
 has no block padding, so the chip's bottom outline edge falls in the clipped region.
 
 ### Fix
@@ -378,7 +379,7 @@ never stop, so every press of play was swallowed for the duration.
 4. The retry ladder breaks immediately on an autoplay block, and exposes a cancel handle that
    `restart()` calls before issuing its own play, so anything user-initiated wins.
 5. `HostPlaybackProvider`'s existing pointerdown handler now re-issues the blocked track after
-   arming the element, so the first gesture that *could* start audio does start it.
+   arming the element, so the first gesture that _could_ start audio does start it.
 
 ### Deviation from the plan
 
@@ -404,7 +405,7 @@ fixed, so all four causes are real and independent.
 **Part 4 — `resume()` resumes whatever the device is holding.** `player.resume()` acts on the
 track loaded in the device, and nothing checked that it was the track the room is on. A card
 change Spotify never received left the previous track loaded and paused part-way, so the
-host's play button resumed *that* — the mid-song start, arriving by a path `position_ms` does
+host's play button resumed _that_ — the mid-song start, arriving by a path `position_ms` does
 not touch. `resume()` now compares the device's `currentTrackUri` against the room's current
 card and re-issues rather than resuming when they differ. The free-tier path gained the same
 check against `audio.src`.
@@ -434,13 +435,13 @@ exactly like a working one.
 ### Third pass — the mid-song start had two more causes (2026-09-10)
 
 The reload failure was confirmed fixed by manual testing. Mid-song starts survived, now
-reported precisely: a new card *sometimes* begins part-way through. "Sometimes" was the tell —
+reported precisely: a new card _sometimes_ begins part-way through. "Sometimes" was the tell —
 both remaining causes are races, and neither goes through `position_ms`.
 
 **Part 6 — the Connect transfer raced the play request, on every single card.**
 `SpotifyAuthService.playTrackOnHostDevice` called `transferPlaybackToDevice(device, false)`
-immediately before `playTracksOnDevice`. Spotify defines `play: false` on a transfer as *keep
-the current playback state* — so that call hands the device the **previous** track at its
+immediately before `playTracksOnDevice`. Spotify defines `play: false` on a transfer as _keep
+the current playback state_ — so that call hands the device the **previous** track at its
 current position. The two commands then settle in whatever order Spotify applies them.
 Usually the play wins. When the transfer won, the device was left playing the last song from
 some arbitrary point, and nothing corrected it until the client's 10 s confirmation timeout.
@@ -760,9 +761,21 @@ the request is pending. Normal acknowledgements remain visually quiet; localised
 final guidance appear only after timeouts. Authoritative settings are compared with the
 submitted gameplay fields before retaining feedback.
 
-Root cause #2 remains **open**. Profile changes and room rename still use bare emits and do not
-yet have per-action acknowledgement feedback. Root causes #4 and #5 also remain open; B8
-therefore remains **Confirmed**, not Fixed.
+Player profile updates and host room rename now share one acknowledged identity-action
+lifecycle. A synchronous guard prevents rapid Apply presses or a rename from overlapping a
+profile update; combined edits are applied in profile-then-room order. Normal acknowledgements
+keep the existing Apply label, while localised retrying and final retry text appears only after
+timeouts. Profile updates are naturally idempotent. Room rename retains the socket's latest
+successful acknowledgement by previous room, next room, and request id, so a lost
+acknowledgement can be retried without applying or broadcasting the terminal room-key change
+twice. If the authoritative broadcast lands first, stale timeout feedback is discarded.
+
+Rename-route navigation now reads the current player's authoritative display name from that
+broadcast. A combined name and room edit therefore cannot restore the stale pre-edit query name
+while moving every client to the renamed room.
+
+Root cause #2 is **complete**. Root causes #4 and #5 remain open, so B8 remains **Confirmed**,
+not Fixed.
 
 ### Verification
 
@@ -774,6 +787,11 @@ therefore remains **Confirmed**, not Fixed.
   service errors, and compatibility with callers that omit the callback.
 - `emitAction.test.ts`: accepted, rejected, timed-out, and offline outcomes; a timeout retry
   reuses its request id, stops after one retry, and is not buffered after a disconnect.
+- `useLobbyIdentityActions.test.tsx`: profile and rename use acknowledged timeout retries,
+  identity mutations share duplicate blocking, final retry state is actionable, and an
+  authoritative profile update wins over a lost acknowledgement.
+- `roomFlow.test.ts`: replaying a successful room rename returns the original acknowledgement
+  and calls the rename service once.
 - `useGamePageActions.test.tsx`: two quick placement confirmations emit once, the real
   confirmation control stays disabled until acknowledgement, rejection rolls back the
   optimistic preview, acceptance preserves it until authoritative state arrives, and a
@@ -907,7 +925,7 @@ Three things combine, and the defect needs all three:
 1. `ActionDock` portals itself into `document.body`, but **only** on mobile
    (`MOBILE_CONTROL_MEDIA_QUERY`). Desktop renders it inline, which is why desktop never
    reproduced it.
-2. The page transition slides the *page wrapper* out with a transform. A portaled child is
+2. The page transition slides the _page wrapper_ out with a transform. A portaled child is
    not inside that wrapper, so the transform does not carry it away: the game page's body
    leaves the screen while its dock stays exactly where it was.
 3. The dock's exit animates to `opacity: 0`. An opacity-0 element still receives clicks.
@@ -944,7 +962,7 @@ Two earlier explanations were wrong and cost several cycles:
    their own (see [B17](#b17--the-hardening-branch-itself-destabilised-the-app)).
 2. **A pending navigation.** The reasoning was that the settings panel opening proved input
    worked, so only navigation could be dead, and `lazyRoute.ts` returning a never-settling
-   promise was the mechanism. The premise was the flaw: *some* input worked. Nobody checked
+   promise was the mechanism. The premise was the flaw: _some_ input worked. Nobody checked
    whether the working control and the dead one were in the same region of the screen.
    `elementFromPoint` answered in one line what two rounds of deduction did not.
 
@@ -961,12 +979,12 @@ All four danger controls resolve to the same three semantic tokens
 (`--color-status-danger-surface`, `--color-status-danger-text`,
 `--color-status-danger-border`):
 
-| Control | Class / component |
-| --- | --- |
-| Player remove (kick) | `.menuActionButton .menuKickPlayerButton` (`gamePageMenu.module.css`) |
-| Token remove | `.menuActionButton .menuActionButtonRemove` (same file) |
-| Close room, game menu footer | `Button variant="danger"` (`primitives/Button.module.css`) |
-| Close room, lobby | `.dangerAction` via `RoomDangerActionButton` |
+| Control                                     | Class / component                                                           |
+| ------------------------------------------- | --------------------------------------------------------------------------- |
+| Player remove (kick)                        | `.menuActionButton .menuKickPlayerButton` (`gamePageMenu.module.css`)       |
+| Token remove                                | `.menuActionButton .menuActionButtonRemove` (same file)                     |
+| Close room, game menu footer                | `Button variant="danger"` (`primitives/Button.module.css`)                  |
+| Close room, lobby                           | `.dangerAction` via `RoomDangerActionButton`                                |
 | Playlist batch delete, track-details cancel | `ActionButton variant="danger"` (`FormControls.module.css` `.buttonDanger`) |
 
 Player remove and token remove are now **byte-for-byte identical** in their danger
@@ -974,12 +992,12 @@ declarations, so those two match.
 
 ### Geometry and typography — still inconsistent
 
-| Control | Radius | Min height | Padding | Font size |
-| --- | --- | --- | --- | --- |
-| Player remove / token remove | `--radius-pill` | 44 px | 10px 14px | `clamp(10px, 9cqw, 14px)` (container query) |
-| Close room (lobby) | `--radius-pill` | 44 px | 12px 14px | inherited, weight 800 |
-| Close room (game menu footer) | `--button-radius` | `--button-min-height` | `--space-3 --space-5` | `--type-label-size` |
-| `ActionButton variant="danger"` | `--radius-button` (**not pill**) | none | none | `clamp(11px, 3.8vw, 16px)` |
+| Control                         | Radius                           | Min height            | Padding               | Font size                                   |
+| ------------------------------- | -------------------------------- | --------------------- | --------------------- | ------------------------------------------- |
+| Player remove / token remove    | `--radius-pill`                  | 44 px                 | 10px 14px             | `clamp(10px, 9cqw, 14px)` (container query) |
+| Close room (lobby)              | `--radius-pill`                  | 44 px                 | 12px 14px             | inherited, weight 800                       |
+| Close room (game menu footer)   | `--button-radius`                | `--button-min-height` | `--space-3 --space-5` | `--type-label-size`                         |
+| `ActionButton variant="danger"` | `--radius-button` (**not pill**) | none                  | none                  | `clamp(11px, 3.8vw, 16px)`                  |
 
 So four different shapes and four different type rules for the same semantic action. The
 44 px min-height is also below the 48 px touch target that `CLAUDE.md` specifies and that
@@ -1186,7 +1204,7 @@ the shared client without ever checking `connected`, so:
 
 1. A tap on a slot emitted `place_card`. With the socket down, the packet was **buffered,
    not sent** — and the caller could not tell the difference.
-2. `handlePlaceCard` set `locallyPlacedCard` *before* emitting. That optimistic card is
+2. `handlePlaceCard` set `locallyPlacedCard` _before_ emitting. That optimistic card is
    cleared only by a reveal, and a reveal can only arrive over the socket. With nothing
    coming back, the board stayed locked. **This is the reported freeze.**
 3. Further taps buffered further packets, still with no feedback.
@@ -1307,7 +1325,7 @@ symptom to a change was guesswork.
    correct and ignores every tap until a reload. This is the best available explanation for
    "many times the app becomes not interactible". **Not provable in jsdom** — framer-motion
    writes no inline styles there, so a test asserting it passes vacuously. Any re-land must
-   declare `pointerEvents` in *every* variant.
+   declare `pointerEvents` in _every_ variant.
 2. **`contain: layout paint` on the page-transition wrapper.** Made it the containing block
    for every non-portaled `position: fixed` descendant and clipped them to its box — the
    game toast stack, the reconnect toast, the timeline panel's fixed layer, the lobby's
@@ -1403,11 +1421,11 @@ from the bought card. Two failure shapes follow from that:
    recorded in `lastCorrectPlacementAnimationKeyRef`, so the effect bails out and the
    bought card gets no glow at all.
 2. If the tt_buy reveal lands inside that ~1.1 s window (a tester clicking through turns
-   quickly reproduces this easily), the *stale, still-active* animation state is read as
+   quickly reproduces this easily), the _stale, still-active_ animation state is read as
    "still running" and is shown against whichever card now sits at `originalChosenSlotIndex`
    — the bought card, coincidentally in the right place but for the wrong reason.
 
-Neither path touches the *next* genuine placement's own key, which is why a single
+Neither path touches the _next_ genuine placement's own key, which is why a single
 follow-up placement was never actually at risk — its key differs by turn number regardless.
 What manual testing read as "every placement after" was, on inspection, the tt_buy turn
 itself misbehaving, tested repeatedly.
@@ -1431,31 +1449,31 @@ consistent with a real placement; there was no principled reason it shouldn't.
 
 ## Cross-reference
 
-| Reported item | Register entry | Primary plan |
-| --- | --- | --- |
-| Song editor under previous modal | B1 | Doc 06 section 5 |
-| Back-to-home modal, consistent navigation, phone back | B2 | Doc 06 |
-| Settings panel should close on browser back | B2 | Doc 06 section 4.2 |
-| Robust consistent design system | B3 | Doc 07 |
-| Drag/scroll conflict on iPhone | B4 | Doc 12 B4, Doc 03 section 6 |
-| Settings panel flicker | B5 | Doc 06 section 6 |
-| Leaderboard chip clipped border | B6 | Doc 12 B6, Doc 07 phase 1 |
-| Inconsistent playback start | B7 | Doc 08 phases 1-2 · **fixed** |
-| Network inconsistencies | B8 | Doc 04, Doc 05 |
-| Cannot restart a finished track | B9 | Doc 08 phase 2 |
-| Home unresponsive after closing a room | B10 | Doc 06 sections 3-4 |
-| Player remove button design | B11 | Doc 07 phase 1 |
-| Player name separate from room flow, remembered | B12 | Doc 09 phases 1-3 |
-| Back from the game screen needs a confirmation | B13 | Doc 12 B13 |
-| Theme switch leaves the app inert | B14 | Doc 12 B14 (undiagnosed) |
-| Interactive first-run hints | (feature) | Doc 10 |
-| Skeleton loading for all pages | (feature) | Doc 07 phase 5 |
-| Host override for wrong metadata | (feature) | Doc 09 phase 4 |
-| Gameplay area frozen, stale actions replayed | B15 | Doc 12 B15 |
-| Audit records misattributed under load | B16 | Doc 12 B16 |
-| TT-bought card and the next placement miss the correct-placement glow | B19 | Doc 12 B19 · **fixed** |
-| Bundle size and lazy loading | (programme) | Doc 02 |
-| More tests | (programme) | Doc 11 |
-| Room creation flow | (programme) | Doc 09 |
-| Game session handling, disconnects, reconnects | (programme) | Doc 04, Doc 05 |
-| Spotify login session persistence | (programme) | Doc 08 phase 3 |
+| Reported item                                                         | Register entry | Primary plan                  |
+| --------------------------------------------------------------------- | -------------- | ----------------------------- |
+| Song editor under previous modal                                      | B1             | Doc 06 section 5              |
+| Back-to-home modal, consistent navigation, phone back                 | B2             | Doc 06                        |
+| Settings panel should close on browser back                           | B2             | Doc 06 section 4.2            |
+| Robust consistent design system                                       | B3             | Doc 07                        |
+| Drag/scroll conflict on iPhone                                        | B4             | Doc 12 B4, Doc 03 section 6   |
+| Settings panel flicker                                                | B5             | Doc 06 section 6              |
+| Leaderboard chip clipped border                                       | B6             | Doc 12 B6, Doc 07 phase 1     |
+| Inconsistent playback start                                           | B7             | Doc 08 phases 1-2 · **fixed** |
+| Network inconsistencies                                               | B8             | Doc 04, Doc 05                |
+| Cannot restart a finished track                                       | B9             | Doc 08 phase 2                |
+| Home unresponsive after closing a room                                | B10            | Doc 06 sections 3-4           |
+| Player remove button design                                           | B11            | Doc 07 phase 1                |
+| Player name separate from room flow, remembered                       | B12            | Doc 09 phases 1-3             |
+| Back from the game screen needs a confirmation                        | B13            | Doc 12 B13                    |
+| Theme switch leaves the app inert                                     | B14            | Doc 12 B14 (undiagnosed)      |
+| Interactive first-run hints                                           | (feature)      | Doc 10                        |
+| Skeleton loading for all pages                                        | (feature)      | Doc 07 phase 5                |
+| Host override for wrong metadata                                      | (feature)      | Doc 09 phase 4                |
+| Gameplay area frozen, stale actions replayed                          | B15            | Doc 12 B15                    |
+| Audit records misattributed under load                                | B16            | Doc 12 B16                    |
+| TT-bought card and the next placement miss the correct-placement glow | B19            | Doc 12 B19 · **fixed**        |
+| Bundle size and lazy loading                                          | (programme)    | Doc 02                        |
+| More tests                                                            | (programme)    | Doc 11                        |
+| Room creation flow                                                    | (programme)    | Doc 09                        |
+| Game session handling, disconnects, reconnects                        | (programme)    | Doc 04, Doc 05                |
+| Spotify login session persistence                                     | (programme)    | Doc 08 phase 3                |

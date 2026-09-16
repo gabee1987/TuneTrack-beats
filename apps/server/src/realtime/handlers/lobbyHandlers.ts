@@ -29,11 +29,7 @@ import {
   transferHostErrorMessages,
 } from "../errorMessages.js";
 
-export function registerLobbyHandlers(
-  io: Server,
-  socket: Socket,
-  roomService: RoomService,
-): void {
+export function registerLobbyHandlers(io: Server, socket: Socket, roomService: RoomService): void {
   registerCreateRoomHandler(io, socket, roomService);
   registerJoinRoomHandler(io, socket, roomService);
   registerListRoomsHandler(socket, roomService);
@@ -49,6 +45,15 @@ export function registerLobbyHandlers(
 }
 
 function registerRenameRoomHandler(io: Server, socket: Socket, roomService: RoomService): void {
+  let lastSuccessfulRename:
+    | {
+        previousRoomId: string;
+        nextRoomId: string;
+        requestId: string;
+        ack: ActionAck;
+      }
+    | undefined;
+
   createSocketHandler({
     socket,
     event: ClientToServerEvent.RenameRoom,
@@ -73,6 +78,25 @@ function registerRenameRoomHandler(io: Server, socket: Socket, roomService: Room
       io.in(previousRoomId).socketsJoin(roomState.roomId);
       io.in(previousRoomId).socketsLeave(previousRoomId);
       broadcastRoomState(io, roomState);
+    },
+    idempotency: {
+      find: (data) =>
+        data.requestId &&
+        lastSuccessfulRename?.previousRoomId === data.roomId &&
+        lastSuccessfulRename.nextRoomId === data.nextRoomId &&
+        lastSuccessfulRename.requestId === data.requestId
+          ? lastSuccessfulRename.ack
+          : undefined,
+      remember: (data, ack) => {
+        if (data.requestId) {
+          lastSuccessfulRename = {
+            previousRoomId: data.roomId,
+            nextRoomId: data.nextRoomId,
+            requestId: data.requestId,
+            ack,
+          };
+        }
+      },
     },
     fallbackErrorCode: "RENAME_ROOM_FAILED",
     errorMessages: renameRoomErrorMessages,
@@ -331,9 +355,7 @@ function registerUpdateRoomSettingsHandler(
 }
 
 function registerCloseRoomHandler(io: Server, socket: Socket, roomService: RoomService): void {
-  let lastSuccessfulClose:
-    | { roomId: string; requestId: string; ack: ActionAck }
-    | undefined;
+  let lastSuccessfulClose: { roomId: string; requestId: string; ack: ActionAck } | undefined;
 
   createSocketHandler({
     socket,
