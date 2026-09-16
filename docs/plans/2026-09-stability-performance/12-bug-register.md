@@ -1026,7 +1026,7 @@ variant (`size="fit"`) rather than as a bespoke class.
 
 ## B12 · Player name lives in the room flow and is not remembered
 
-**Severity:** S2 · **Status:** Confirmed · **Finding:** F-40 · **Effort:** medium
+**Severity:** S2 · **Status:** In progress · **Finding:** F-40 · **Effort:** medium
 
 ### Root cause
 
@@ -1047,8 +1047,8 @@ of the device, which is also why renaming yourself in the lobby re-navigates and
 
 ### Fix
 
-Doc 09 phases 1-3: a `features/profile` store owning name and avatar, persisted through the
-hardened storage helper, edited from one sheet reachable from Home, settings and the lobby.
+Doc 09 phases 1-3: a `features/profile` store owning the name, persisted through hardened
+storage access and edited from one inline field on Play, direct invite join and the lobby.
 Identity leaves the URL. Renaming in the lobby emits `UpdatePlayerProfile` only, with no
 navigation. Room codes come from the server, so the create form collapses to a single
 action.
@@ -1062,6 +1062,26 @@ action.
 - Test: the legacy `tunetrack.playerDisplayName` value is migrated into the new store.
 - E2E E1.
 - Manual M12.
+
+### Phase 1 first batch (2026-09-16)
+
+Player identity now has a persisted device-level store. It migrates the existing
+`tunetrack.playerDisplayName` value, validates stored data, and remains usable in memory when
+browser storage is unavailable. Home contains no identity control and Start always opens
+Play. Play has one inline name field, independent of both room forms, with a checkmark save
+action; room actions remain disabled until a valid name has been saved. Direct invite join
+reuses the same compact field because it bypasses Play.
+
+The saved identity is used for every create or join action. New lobby paths contain only the
+room id and the temporary create intent; they no longer expose the player name. Legacy name
+query parameters remain accepted as a one-release migration input.
+
+Successful in-lobby profile updates persist the same device profile without navigating.
+Changing that profile updates a ref used by future reconnect handshakes instead of rebuilding
+the live socket effect, so renaming does not emit another join or replace listeners.
+
+B12 remains **In progress** until the shared inline profile field replaces the lobby's
+combined name/room form. Server-generated room codes are also still open under Doc 09 Phase 2.
 
 ---
 

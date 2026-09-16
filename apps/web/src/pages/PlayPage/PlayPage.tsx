@@ -1,5 +1,6 @@
 import { AppPageShell } from "../../features/mobile-shell/AppPageShell";
 import { useI18n } from "../../features/i18n";
+import { PlayerNameField } from "../../features/profile/PlayerNameField";
 import { TextInput } from "../../features/ui/TextInput";
 import { Button, EmptyState } from "../../features/ui/primitives";
 import { usePlayPageController } from "./hooks/usePlayPageController";
@@ -19,6 +20,10 @@ export function PlayPage() {
         </header>
 
         <section className={styles.setupCard}>
+          <PlayerNameField
+            displayName={controller.displayName}
+            onSave={controller.setDisplayName}
+          />
           <form className={styles.form} onSubmit={controller.handleCreateRoomSubmit}>
             <div className={styles.sectionHeader}>
               <h2>{t("home.createRoomAction")}</h2>
@@ -38,18 +43,8 @@ export function PlayPage() {
               />
             </label>
 
-            <label className={styles.field}>
-              <span className={styles.labelRow}>{t("home.playerNameLabel")}</span>
-              <TextInput
-                autoComplete="nickname"
-                maxLength={24}
-                onChange={(event) => controller.setDisplayName(event.target.value)}
-                placeholder={t("home.playerNamePlaceholder")}
-                value={controller.displayName}
-              />
-            </label>
-
             <Button
+              disabled={!controller.hasCompletedSetup}
               fullWidth
               haptic
               onFocus={controller.preloadLobby}
@@ -84,6 +79,7 @@ export function PlayPage() {
             </label>
 
             <Button
+              disabled={!controller.hasCompletedSetup}
               fullWidth
               onFocus={controller.preloadLobby}
               onMouseEnter={controller.preloadLobby}
@@ -118,6 +114,7 @@ export function PlayPage() {
               controller.rooms.map((room) => (
                 <button
                   className={styles.roomListItem}
+                  disabled={!controller.hasCompletedSetup}
                   key={room.roomId}
                   onClick={() => controller.handleSelectRoom(room.roomId)}
                   type="button"

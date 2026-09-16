@@ -147,6 +147,46 @@ describe("useLobbyRoomConnection", () => {
     );
   });
 
+  it("keeps the connection mounted when the saved player name changes", async () => {
+    const socket = getSharedFakeSocket();
+    const navigate = vi.fn();
+    const onSpy = vi.spyOn(socket, "on");
+    const offSpy = vi.spyOn(socket, "off");
+    const view = renderHook(
+      ({ displayName }) =>
+        useLobbyRoomConnection({
+          displayName,
+          intent: "join",
+          navigate,
+          playerSessionId: "TEST_SESSION_1",
+          roomId: "TEST_ROOM_1",
+        }),
+      { initialProps: { displayName: "Old Name" }, wrapper: I18nTestWrapper },
+    );
+
+    await waitFor(() => {
+      expect(socket.emittedFor(ClientToServerEvent.JoinRoom)).toHaveLength(1);
+    });
+    socket.clearEmitted();
+    const listenerRegistrationCount = onSpy.mock.calls.length;
+
+    view.rerender({ displayName: "Updated Host" });
+
+    expect(socket.emitted).toHaveLength(0);
+    expect(onSpy).toHaveBeenCalledTimes(listenerRegistrationCount);
+    expect(offSpy).not.toHaveBeenCalled();
+
+    act(() => socket.simulateReconnect());
+
+    expect(socket.emittedFor(ClientToServerEvent.JoinRoom)).toEqual([
+      {
+        displayName: "Updated Host",
+        roomId: "TEST_ROOM_1",
+        sessionId: "TEST_SESSION_1",
+      },
+    ]);
+  });
+
   it("uses the authoritative player name when a room rename changes the route", async () => {
     const socket = getSharedFakeSocket();
     const navigate = vi.fn();
@@ -182,7 +222,7 @@ describe("useLobbyRoomConnection", () => {
       });
     });
 
-    expect(navigate).toHaveBeenCalledWith("/lobby/renamed-room?playerName=Updated%20Host", {
+    expect(navigate).toHaveBeenCalledWith("/lobby/renamed-room", {
       replace: true,
     });
   });

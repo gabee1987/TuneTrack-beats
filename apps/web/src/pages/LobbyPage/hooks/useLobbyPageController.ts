@@ -7,10 +7,8 @@ import {
 } from "@tunetrack/shared";
 import { useEffect, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import {
-  getOrCreatePlayerSessionId,
-  getRememberedPlayerDisplayName,
-} from "../../../services/session/playerSession";
+import { usePlayerProfileStore } from "../../../features/profile/playerProfile";
+import { getOrCreatePlayerSessionId } from "../../../services/session/playerSession";
 import { preloadGameRuntime } from "../../../app/preloadRoutes";
 import type { LobbyPageController } from "../LobbyPage.types";
 import { useLobbyRoomActions } from "./useLobbyRoomActions";
@@ -35,10 +33,10 @@ export function useLobbyPageController(): LobbyPageController {
   const navigate = useNavigate();
   const { roomId } = useParams<{ roomId: string }>();
   const [searchParams] = useSearchParams();
-  const displayName = useMemo(
-    () => searchParams.get("playerName")?.trim() ?? getRememberedPlayerDisplayName(),
-    [searchParams],
-  );
+  const storedDisplayName = usePlayerProfileStore((state) => state.displayName);
+  const setDisplayName = usePlayerProfileStore((state) => state.setDisplayName);
+  const queryDisplayName = searchParams.get("playerName")?.trim() ?? "";
+  const displayName = storedDisplayName || queryDisplayName;
   const intent = searchParams.get("intent") === "create" ? "create" : "join";
   const playerSessionId = useMemo(() => getOrCreatePlayerSessionId(), []);
   const {
@@ -67,6 +65,20 @@ export function useLobbyPageController(): LobbyPageController {
   });
 
   useEffect(() => {
+    if (!storedDisplayName && queryDisplayName) {
+      setDisplayName(queryDisplayName);
+    }
+  }, [queryDisplayName, setDisplayName, storedDisplayName]);
+
+  async function handlePlayerProfileChange(nextDisplayName: string) {
+    const didUpdateProfile = await actions.handlePlayerProfileChange(nextDisplayName);
+    if (didUpdateProfile) {
+      setDisplayName(nextDisplayName);
+    }
+    return didUpdateProfile;
+  }
+
+  useEffect(() => {
     if (roomState?.status === "lobby") {
       preloadGameRuntime();
     }
@@ -87,7 +99,7 @@ export function useLobbyPageController(): LobbyPageController {
     handlePlayerKick: actions.handlePlayerKick,
     handlePlayerStartingCardCountChange: actions.handlePlayerStartingCardCountChange,
     handlePlayerStartingTtTokenCountChange: actions.handlePlayerStartingTtTokenCountChange,
-    handlePlayerProfileChange: actions.handlePlayerProfileChange,
+    handlePlayerProfileChange,
     handleRoomRename: actions.handleRoomRename,
     handleRoomSettingsChange: actions.handleRoomSettingsChange,
     handleStartGame: actions.handleStartGame,

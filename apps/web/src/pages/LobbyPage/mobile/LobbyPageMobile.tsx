@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { AppPageShell } from "../../../features/mobile-shell/AppPageShell";
 import { useI18n } from "../../../features/i18n";
 import { MotionDialogPortal } from "../../../features/motion";
-import { rememberPlayerDisplayName } from "../../../services/session/playerSession";
 import { StatusBanner } from "../../../features/ui/StatusBanner";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { TextInput } from "../../../features/ui/TextInput";
@@ -66,29 +65,17 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
         return false;
       }
     }
-    rememberPlayerDisplayName(trimmedDisplayName);
-
     if (hasRoomChange && identity.isHost) {
       await identity.onRoomRename(trimmedRoomId);
       return false;
     }
 
     if (hasRoomChange) {
-      navigate(
-        `/lobby/${encodeURIComponent(trimmedRoomId)}?playerName=${encodeURIComponent(
-          trimmedDisplayName,
-        )}`,
-      );
+      navigate(`/lobby/${encodeURIComponent(trimmedRoomId)}`);
       return false;
     }
 
     if (hasNameChange) {
-      navigate(
-        `/lobby/${encodeURIComponent(resolvedRoomId)}?playerName=${encodeURIComponent(
-          trimmedDisplayName,
-        )}`,
-        { replace: true },
-      );
       return false;
     }
 

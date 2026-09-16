@@ -1,0 +1,54 @@
+.form {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.label {
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+  font-weight: var(--type-label-weight);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fieldRow {
+  position: relative;
+}
+
+.input {
+  padding-right: 52px;
+}
+
+.saveButton {
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-accent-brand);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.saveButton:disabled {
+  color: var(--color-text-muted);
+  cursor: default;
+  opacity: 0.45;
+}
+
+.saveButton:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -4px;
+}
+
+.saveButton svg {
+  width: 24px;
+  height: 24px;
+}

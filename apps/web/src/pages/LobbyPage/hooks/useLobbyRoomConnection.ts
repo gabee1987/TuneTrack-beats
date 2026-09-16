@@ -72,6 +72,8 @@ export function useLobbyRoomConnection({
   const { t } = useI18n();
   const translateRef = useRef(t);
   translateRef.current = t;
+  const displayNameRef = useRef(displayName);
+  displayNameRef.current = displayName;
   const [connectionStatus, setConnectionStatus] = useState("Connecting");
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
   const currentPlayerIdRef = useRef<string | null>(null);
@@ -116,7 +118,7 @@ export function useLobbyRoomConnection({
       socketClient.emit(
         shouldCreateRoom ? ClientToServerEvent.CreateRoom : ClientToServerEvent.JoinRoom,
         {
-          displayName,
+          displayName: displayNameRef.current,
           roomId,
           sessionId: playerSessionId,
         },
@@ -143,15 +145,7 @@ export function useLobbyRoomConnection({
       setRoomState(payload.roomState);
 
       if (updateDecision.shouldNavigateToRoom) {
-        const authoritativeDisplayName =
-          payload.roomState.players.find((player) => player.id === currentPlayerIdRef.current)
-            ?.displayName ?? displayName;
-        navigate(
-          `/lobby/${encodeURIComponent(payload.roomState.roomId)}?playerName=${encodeURIComponent(
-            authoritativeDisplayName,
-          )}`,
-          { replace: true },
-        );
+        navigate(`/lobby/${encodeURIComponent(payload.roomState.roomId)}`, { replace: true });
         return;
       }
 
@@ -239,7 +233,7 @@ export function useLobbyRoomConnection({
       isDisposed = true;
       cleanupSocketListeners?.();
     };
-  }, [displayName, intent, navigate, playerSessionId, roomId]);
+  }, [intent, navigate, playerSessionId, roomId]);
 
   return {
     hasClosedRoomReset,

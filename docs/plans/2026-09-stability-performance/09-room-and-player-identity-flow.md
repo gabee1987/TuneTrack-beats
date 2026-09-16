@@ -1,5 +1,14 @@
 # 09 — Room Creation Flow, Player Identity and In-Game Metadata Override
 
+> **Current implementation state (2026-09-16):** The Phase 1 profile foundation is
+> implemented. A persisted device-level profile migrates the legacy remembered name. Home
+> remains an entry screen and always continues to Play, where one inline name field with a
+> checkmark saves the profile independently of room creation or joining. Direct invite
+> joining reuses the same field when needed. Generated lobby URLs no longer include
+> `playerName`, and lobby profile updates no longer navigate or remount the socket
+> connection. Separating the lobby's combined player/room form remains open under Phase 3;
+> server-generated room codes and the rest of Phases 2-5 also remain open.
+
 > Addresses findings **F-40 – F-43**, plus the requested manual metadata override.
 > Owning layers: `apps/web/src/pages/{HomePage,PlayPage,JoinRoomPage,LobbyPage}`,
 > `apps/web/src/features/profile` (new), `apps/web/src/services/session`,
@@ -40,8 +49,7 @@ New feature module, sibling to `features/preferences`:
 
     apps/web/src/features/profile/
       playerProfile.ts          // zustand store, persisted
-      PlayerProfileSheet.tsx    // the edit surface (overlay-host entry)
-      usePlayerProfile.ts       // read/update hook
+      PlayerNameField.tsx       // inline name field with checkmark save action
       playerProfile.test.ts
 
     interface PlayerProfile {
@@ -63,43 +71,41 @@ Rules:
 
 ### 2.2 Where the profile is edited
 
-One surface, reachable from three places, always the same component:
+The owner decision on 2026-09-16 places the editing surface after Start rather than on Home:
 
-- **Home screen**, as a visible identity row: avatar, name, and a tap to edit. This is the
-  primary discovery point and it makes the name feel like a setting rather than a form field.
-- **App shell menu**, as a "You" section at the top of the settings sheet.
-- **Lobby**, for the in-room case — but here it edits the profile *and* emits
+- **Play screen**, as one always-visible text field with a checkmark save action. This is
+  independent of both the create and join forms, so a player can change their name without
+  entering a room.
+- **Direct invite join**, using the same compact field because this route bypasses Play.
+- **Lobby**, for the in-room case — here it edits the profile *and* emits
   `UpdatePlayerProfile`, with **no navigation**. Fixing defect 3.
-
-`PlayerProfileSheet` is an overlay-host entry (Doc 06 section 4), so back closes it.
 
 ### 2.3 First-run naming
 
-If `hasCompletedSetup` is false when the user first presses Start, prompt for a name once,
-inline, before continuing. Prefill with a friendly default (`Player`) rather than
-`"Player 1"`, which reads like a placeholder that was never filled in. After that, never
-ask again — the name shows on Home where it can be changed at any time.
+Start always opens Play. If `hasCompletedSetup` is false, room actions remain disabled until
+the player saves a valid name in the inline field. Use a friendly placeholder (`Player`)
+rather than `"Player 1"`, which reads like a value that was never chosen. After that, the
+saved value is reused and can be changed from the same field without entering a room.
 
 This replaces the current situation where the name field appears in every room form.
 
 ### Acceptance
 
-- [ ] The display name is set once and survives an app restart, a room close and a
+- [x] The display name is set once and survives an app restart, a room close and a
       device rotation.
-- [ ] The name never appears in a URL.
-- [ ] Editing the name in the lobby emits `UpdatePlayerProfile` and does **not** navigate or
+- [x] The name never appears in newly generated URLs. Legacy `playerName` URLs remain accepted
+      for one migration release.
+- [x] Editing the name in the lobby emits `UpdatePlayerProfile` and does **not** navigate or
       reconnect. Asserted by a component test counting socket emits and navigations.
-- [ ] The existing `tunetrack.playerDisplayName` value is migrated, not discarded.
-- [ ] Back closes the profile sheet.
+- [x] The existing `tunetrack.playerDisplayName` value is migrated, not discarded.
+- [x] Home contains no player-name control; the inline field is on Play after Start.
 
 ## 3. Phase 2 — Rebuild the room entry flow · **S2**
 
 ### 3.1 Target flow
 
-    Home  ──▶  Play  ──┬── Host a game  ──▶  Lobby(:roomCode)  ──▶  Game
-     │                 └── Join a game   ──▶  Lobby(:roomCode)  ──▶  Game
-     │
-     └── identity row (name + avatar), editable in place
+    Home  ──▶  Play (inline player name)  ──┬── Host a game  ──▶  Lobby(:roomCode)  ──▶  Game
+                                           └── Join a game  ──▶  Lobby(:roomCode)  ──▶  Game
 
     Invite link  ──▶  Join(:roomCode)  ──▶  Lobby(:roomCode)   (name already known)
 
@@ -110,8 +116,8 @@ Key changes:
    the live room map. Keep a "use a custom code" affordance for the host who wants a
    memorable one, validated server-side. This removes defect 4 entirely, and it removes a
    decision from the fast path — the host presses "Host a game" and is in a lobby.
-2. **The name is no longer a field on this screen.** It is shown as context ("Hosting as
-   Player One") with a tap to change, reading from the Phase 1 store.
+2. **The name is independent of both room forms.** One inline field above them reads and
+   writes the Phase 1 store; its checkmark saves a changed value.
 3. **Identity leaves the URL.** `/lobby/:roomId` takes no query parameters. The client
    sends `displayName` in the `join_room` / `create_room` payload, which it already does —
    the query parameter was only ever a way to pass state between screens, and the profile
@@ -188,7 +194,7 @@ branches that navigate. This is the most confusing control flow in the frontend.
 
 Restructure into three clearly separated sections, each with a single responsibility:
 
-1. **You** — avatar, name (via `PlayerProfileSheet`), your starting card and token counts
+1. **You** — name (via the shared inline `PlayerNameField`), your starting card and token counts
    if the host has allowed per-player overrides.
 2. **Room** — code with a copy/share action, rename (host only), player list, close room
    (host only).

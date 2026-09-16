@@ -17,9 +17,7 @@ export function useHomePageController(): HomePageController {
 
   const showRoomEventToast = useCallback(
     (roomEventToast: { reason: "kicked"; roomName: string }) => {
-      setToastMessage(
-        t("home.toast.kickedFromRoom", { roomName: roomEventToast.roomName }),
-      );
+      setToastMessage(t("home.toast.kickedFromRoom", { roomName: roomEventToast.roomName }));
 
       return window.setTimeout(() => {
         setToastMessage(null);
@@ -77,9 +75,7 @@ export function useHomePageController(): HomePageController {
   };
 }
 
-function readRoomEventToast(
-  state: unknown,
-): { reason: "kicked"; roomName: string } | null {
+function readRoomEventToast(state: unknown): { reason: "kicked"; roomName: string } | null {
   if (
     !state ||
     typeof state !== "object" ||

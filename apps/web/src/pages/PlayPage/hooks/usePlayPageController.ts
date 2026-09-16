@@ -1,34 +1,32 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { preloadLobbyRuntime } from "../../../app/preloadRoutes";
-import { rememberPlayerDisplayName } from "../../../services/session/playerSession";
-import {
-  DEFAULT_DISPLAY_NAME,
-  DEFAULT_ROOM_ID,
-  buildHomePageNavigationTarget,
-} from "../../HomePage/homePageNavigation";
+import { usePlayerProfileStore } from "../../../features/profile/playerProfile";
+import { DEFAULT_ROOM_ID, buildHomePageNavigationTarget } from "../../HomePage/homePageNavigation";
 import { createSuggestedRoomCode } from "../../HomePage/roomCode";
 import { useRoomDirectory } from "../../HomePage/hooks/useRoomDirectory";
 
 export function usePlayPageController() {
   const navigate = useNavigate();
+  const displayName = usePlayerProfileStore((state) => state.displayName);
+  const hasCompletedSetup = usePlayerProfileStore((state) => state.hasCompletedSetup);
+  const setDisplayName = usePlayerProfileStore((state) => state.setDisplayName);
   const [createRoomId, setCreateRoomId] = useState(createSuggestedRoomCode);
   const [joinRoomId, setJoinRoomId] = useState(DEFAULT_ROOM_ID);
-  const [displayName, setDisplayName] = useState(DEFAULT_DISPLAY_NAME);
   const { refreshRooms, rooms } = useRoomDirectory();
 
   function openLobby(intent: "create" | "join", roomId: string) {
+    if (!hasCompletedSetup) return;
+
     preloadLobbyRuntime();
 
     const navigationTarget = buildHomePageNavigationTarget({
-      displayName,
       intent,
       roomId,
     });
 
     if (!navigationTarget) return;
 
-    rememberPlayerDisplayName(navigationTarget.displayName);
     navigate(navigationTarget.path);
   }
 
@@ -50,6 +48,7 @@ export function usePlayPageController() {
   return {
     createRoomId,
     displayName,
+    hasCompletedSetup,
     handleCreateRoomSubmit,
     handleJoinRoomSubmit,
     handleSelectRoom,
