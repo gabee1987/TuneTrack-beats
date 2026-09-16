@@ -1026,7 +1026,7 @@ variant (`size="fit"`) rather than as a bespoke class.
 
 ## B12 · Player name lives in the room flow and is not remembered
 
-**Severity:** S2 · **Status:** In progress · **Finding:** F-40 · **Effort:** medium
+**Severity:** S2 · **Status:** Fixed (2026-09-16) · **Finding:** F-40 · **Effort:** medium
 
 ### Root cause
 
@@ -1080,8 +1080,14 @@ Successful in-lobby profile updates persist the same device profile without navi
 Changing that profile updates a ref used by future reconnect handshakes instead of rebuilding
 the live socket effect, so renaming does not emit another join or replace listeners.
 
-B12 remains **In progress** until the shared inline profile field replaces the lobby's
-combined name/room form. Server-generated room codes are also still open under Doc 09 Phase 2.
+The mobile lobby now reuses the same inline profile field independently from its room form.
+Only hosts can edit the room name; saving a player name cannot rename, navigate or start the
+room, and a room rename cannot save a draft player name. Focused component tests cover all
+three boundaries, while the connection tests continue to prove that profile changes do not
+rejoin and server-confirmed room renames still redirect correctly.
+
+B12 is **Fixed**. Server-generated room codes and the remaining lobby layout work are still
+open under Doc 09 Phases 2-3, but are separate from player identity persistence and editing.
 
 ---
 

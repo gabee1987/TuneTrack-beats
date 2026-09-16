@@ -1,8 +1,8 @@
-import { type FormEvent, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { AppPageShell } from "../../../features/mobile-shell/AppPageShell";
 import { useI18n } from "../../../features/i18n";
 import { MotionDialogPortal } from "../../../features/motion";
+import { PlayerNameField } from "../../../features/profile/PlayerNameField";
 import { StatusBanner } from "../../../features/ui/StatusBanner";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { TextInput } from "../../../features/ui/TextInput";
@@ -32,64 +32,45 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
   const hasStartedJoinError = identity.hasStartedJoinError;
   const currentPlayer = room.players.find((player) => player.id === room.currentPlayerId);
   const visibleDisplayName = currentPlayer?.displayName ?? identity.displayName;
-  const navigate = useNavigate();
   const advancedSectionRef = useRef<HTMLElement | null>(null);
-  const [draftDisplayName, setDraftDisplayName] = useState(visibleDisplayName);
+  const roomNameInputId = useId();
   const [draftRoomId, setDraftRoomId] = useState(resolvedRoomId);
   const [infoContent, setInfoContent] = useState<InfoContent | null>(null);
-
-  useEffect(() => {
-    setDraftDisplayName(visibleDisplayName);
-  }, [visibleDisplayName]);
 
   useEffect(() => {
     setDraftRoomId(resolvedRoomId);
   }, [resolvedRoomId]);
 
-  const trimmedDisplayName = draftDisplayName.trim();
   const trimmedRoomId = draftRoomId.trim();
   const isRoomIdValid = ROOM_ID_PATTERN.test(trimmedRoomId);
-  const canApplySetup = Boolean(trimmedDisplayName && trimmedRoomId && isRoomIdValid);
-  const hasNameChange = trimmedDisplayName !== visibleDisplayName;
+  const canApplyRoomChange = Boolean(trimmedRoomId && isRoomIdValid);
   const hasRoomChange = trimmedRoomId !== resolvedRoomId;
-  const hasSetupChanges = hasNameChange || hasRoomChange;
 
-  async function applySetupChanges() {
-    if (!canApplySetup || identity.isIdentityActionPending) {
-      return false;
+  async function applyRoomChange() {
+    if (
+      !identity.isHost ||
+      !canApplyRoomChange ||
+      identity.isIdentityActionPending ||
+      !hasRoomChange
+    ) {
+      return;
     }
 
-    if (hasNameChange) {
-      const didUpdateProfile = await identity.onPlayerProfileChange(trimmedDisplayName);
-      if (!didUpdateProfile) {
-        return false;
-      }
-    }
-    if (hasRoomChange && identity.isHost) {
-      await identity.onRoomRename(trimmedRoomId);
-      return false;
-    }
-
-    if (hasRoomChange) {
-      navigate(`/lobby/${encodeURIComponent(trimmedRoomId)}`);
-      return false;
-    }
-
-    if (hasNameChange) {
-      return false;
-    }
-
-    return true;
+    await identity.onRoomRename(trimmedRoomId);
   }
 
   async function handleSetupSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const canContinue = await applySetupChanges();
-
-    if (canContinue && identity.isHost) {
+    if (hasRoomChange) {
+      await applyRoomChange();
+    } else if (identity.isHost) {
       identity.onStartGame();
     }
+  }
+
+  function handlePlayerNameSave(displayName: string) {
+    void identity.onPlayerProfileChange(displayName);
   }
 
   function scrollToAdvancedSettings() {
@@ -109,13 +90,19 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
   }
 
   let applySetupButtonLabel = t("lobby.setup.apply");
-  if (identity.identityActionState?.status === "retrying") {
+  if (
+    identity.identityActionState?.kind === "rename" &&
+    identity.identityActionState.status === "retrying"
+  ) {
     applySetupButtonLabel = t("lobby.setup.applyRetrying");
-  } else if (identity.identityActionState?.status === "failed") {
+  } else if (
+    identity.identityActionState?.kind === "rename" &&
+    identity.identityActionState.status === "failed"
+  ) {
     applySetupButtonLabel = t("lobby.setup.retryApply");
   }
 
-  const primaryActionLabel = hasSetupChanges
+  const primaryActionLabel = hasRoomChange
     ? applySetupButtonLabel
     : hasStartedJoinError
       ? t("lobby.setup.gameAlreadyStarted")
@@ -128,7 +115,7 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
       {shell.errorMessage ? <StatusBanner>{shell.errorMessage}</StatusBanner> : null}
 
       <section className={styles.setupScreen} aria-labelledby="lobby-setup-title">
-        <form className={styles.setupCard} onSubmit={handleSetupSubmit}>
+        <div className={styles.setupCard}>
           <div className={styles.setupHeader}>
             <p className={styles.eyebrow}>{t("lobby.setup.eyebrow")}</p>
             <h1 className={styles.title} id="lobby-setup-title">
@@ -138,56 +125,42 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
           </div>
 
           <div className={styles.requiredFields}>
-            <label className={styles.field}>
-              <span className={styles.labelRow}>
-                <span>{t("lobby.setup.playerName")}</span>
-                <InfoButton
-                  label={t("lobby.setup.playerNameInfoLabel")}
-                  onClick={() =>
-                    setInfoContent({
-                      title: t("lobby.setup.playerName"),
-                      body: t("lobby.setup.playerNameInfoBody"),
-                    })
-                  }
-                />
-              </span>
-              <TextInput
-                autoComplete="nickname"
-                disabled={identity.isIdentityActionPending}
-                maxLength={32}
-                onChange={(event) => setDraftDisplayName(event.target.value)}
-                placeholder={t("lobby.setup.playerNamePlaceholder")}
-                value={draftDisplayName}
-              />
-            </label>
+            <PlayerNameField
+              disabled={identity.isIdentityActionPending}
+              displayName={visibleDisplayName}
+              onSave={handlePlayerNameSave}
+            />
 
-            <label className={styles.field}>
-              <span className={styles.labelRow}>
-                <span>{t("lobby.setup.roomName")}</span>
-                <InfoButton
-                  label={t("lobby.setup.roomNameInfoLabel")}
-                  onClick={() =>
-                    setInfoContent({
-                      title: t("lobby.setup.roomName"),
-                      body: t("lobby.setup.roomNameInfoBody"),
-                    })
-                  }
+            <form id="lobby-room-setup-form" onSubmit={handleSetupSubmit}>
+              <div className={styles.field}>
+                <div className={styles.labelRow}>
+                  <label htmlFor={roomNameInputId}>{t("lobby.setup.roomName")}</label>
+                  <InfoButton
+                    label={t("lobby.setup.roomNameInfoLabel")}
+                    onClick={() =>
+                      setInfoContent({
+                        title: t("lobby.setup.roomName"),
+                        body: t("lobby.setup.roomNameInfoBody"),
+                      })
+                    }
+                  />
+                </div>
+                <TextInput
+                  autoCapitalize="none"
+                  autoComplete="off"
+                  disabled={!identity.isHost || identity.isIdentityActionPending}
+                  id={roomNameInputId}
+                  inputMode="text"
+                  maxLength={24}
+                  onChange={(event) => setDraftRoomId(event.target.value)}
+                  placeholder={t("lobby.setup.roomNamePlaceholder")}
+                  value={draftRoomId}
                 />
-              </span>
-              <TextInput
-                autoCapitalize="none"
-                autoComplete="off"
-                disabled={identity.isIdentityActionPending}
-                inputMode="text"
-                maxLength={24}
-                onChange={(event) => setDraftRoomId(event.target.value)}
-                placeholder={t("lobby.setup.roomNamePlaceholder")}
-                value={draftRoomId}
-              />
-              {!isRoomIdValid && trimmedRoomId ? (
-                <span className={styles.fieldError}>{t("lobby.setup.roomNameInvalid")}</span>
-              ) : null}
-            </label>
+                {!isRoomIdValid && trimmedRoomId ? (
+                  <span className={styles.fieldError}>{t("lobby.setup.roomNameInvalid")}</span>
+                ) : null}
+              </div>
+            </form>
           </div>
 
           <div className={styles.setupFooter}>
@@ -195,9 +168,10 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
               disabled={
                 identity.isStartGamePending ||
                 identity.isIdentityActionPending ||
-                !canApplySetup ||
-                (!identity.isHost && !hasSetupChanges)
+                !canApplyRoomChange ||
+                (!identity.isHost && !hasRoomChange)
               }
+              form="lobby-room-setup-form"
               fullWidth
               haptic
               onFocus={identity.preloadGame}
@@ -213,7 +187,7 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
               {t("lobby.setup.moreSettings")} ↓
             </Button>
           </div>
-        </form>
+        </div>
       </section>
 
       <section

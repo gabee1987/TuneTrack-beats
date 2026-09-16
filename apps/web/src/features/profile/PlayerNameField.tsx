@@ -5,16 +5,17 @@ import { TextInput } from "../ui/TextInput";
 import styles from "./PlayerNameField.module.css";
 
 interface PlayerNameFieldProps {
+  disabled?: boolean;
   displayName: string;
   onSave: (displayName: string) => void;
 }
 
-export function PlayerNameField({ displayName, onSave }: PlayerNameFieldProps) {
+export function PlayerNameField({ disabled = false, displayName, onSave }: PlayerNameFieldProps) {
   const { t } = useI18n();
   const inputId = useId();
   const [draftDisplayName, setDraftDisplayName] = useState(displayName);
   const trimmedDisplayName = draftDisplayName.trim();
-  const canSave = Boolean(trimmedDisplayName) && trimmedDisplayName !== displayName;
+  const canSave = !disabled && Boolean(trimmedDisplayName) && trimmedDisplayName !== displayName;
 
   useEffect(() => {
     setDraftDisplayName(displayName);
@@ -36,6 +37,7 @@ export function PlayerNameField({ displayName, onSave }: PlayerNameFieldProps) {
         <TextInput
           autoComplete="nickname"
           className={styles.input}
+          disabled={disabled}
           id={inputId}
           maxLength={PLAYER_NAME_MAX_LENGTH}
           onChange={(event) => setDraftDisplayName(event.target.value)}

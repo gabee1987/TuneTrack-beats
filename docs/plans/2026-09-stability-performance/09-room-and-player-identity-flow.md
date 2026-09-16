@@ -6,8 +6,9 @@
 > checkmark saves the profile independently of room creation or joining. Direct invite
 > joining reuses the same field when needed. Generated lobby URLs no longer include
 > `playerName`, and lobby profile updates no longer navigate or remount the socket
-> connection. Separating the lobby's combined player/room form remains open under Phase 3;
-> server-generated room codes and the rest of Phases 2-5 also remain open.
+> connection. The mobile lobby now reuses the inline profile field independently from its
+> host-only room rename form; guests see the room identity as read-only. The remaining
+> Phase 3 layout work, server-generated room codes, and the rest of Phases 2-5 remain open.
 
 > Addresses findings **F-40 – F-43**, plus the requested manual metadata override.
 > Owning layers: `apps/web/src/pages/{HomePage,PlayPage,JoinRoomPage,LobbyPage}`,
@@ -213,9 +214,9 @@ Note that `getLobbyRoomStateUpdateDecision` is already exported and unit-tested 
 
 ### Acceptance
 
-- [ ] `LobbyPageMobile` has no navigation calls other than the game-start redirect driven
+- [x] `LobbyPageMobile` has no navigation calls other than the game-start redirect driven
       by the server.
-- [ ] Room rename still redirects both host and guests to the new code (existing tests pass).
+- [x] Room rename still redirects both host and guests to the new code (existing tests pass).
 - [ ] The mobile lobby fits the three sections without a scroll on a 667 px-tall viewport
       for a two-player room.
 - [ ] Desktop lobby not regressed.
