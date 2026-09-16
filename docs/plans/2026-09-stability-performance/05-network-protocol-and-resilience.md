@@ -286,8 +286,8 @@ fire-and-forget until last.
       all player-row controls share duplicate blocking and the selected confirmation exposes
       retry feedback only when an acknowledgement is delayed or lost.
 - [x] `kick_player` removes the selected player and sends its terminal notification once when
-      an acknowledged request is replayed; all player-row removal controls share duplicate
-      blocking and the selected confirmation exposes timeout-only retry feedback.
+      an acknowledged request is replayed; both the in-game confirmation and direct lobby-row
+      controls share duplicate blocking, stable normal text, and timeout-only retry feedback.
 
 ## 5. Phase 5 — Honest connection state in the UI · **S2**
 

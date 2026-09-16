@@ -730,7 +730,7 @@ Submitted room, host, target membership, and connection state are rechecked befo
 feedback is retained, and the confirmation closes when authoritative state removes the old
 host's transfer controls.
 
-### Root cause #2 `kick_player` migration (2026-09-15)
+### Root cause #2 `kick_player` migration (2026-09-15; lobby follow-up 2026-09-16)
 
 `kick_player` now uses the acknowledged action path and room-scoped replay LRU. Its single
 timeout retry reuses the original request id, so replay returns the original success without
@@ -738,11 +738,13 @@ removing the target again, sending another kicked-room notification, logging ano
 or rebroadcasting unchanged membership. The host remains a room member, so the successful
 acknowledgement remains available after the target is removed.
 
-All player rows share a synchronous removal guard. The selected destructive confirmation
-stays open and disabled while awaiting authoritative state, retaining its normal label for a
-typical response. Localised retrying and final retry labels appear only after acknowledgement
-timeouts. Submitted room, host, and target membership are rechecked before retaining timeout
-feedback; authoritative removal unmounts the target row and its confirmation.
+All in-game player rows share a synchronous removal guard. The selected destructive
+confirmation stays open and disabled while awaiting authoritative state, retaining its normal
+label for a typical response. The direct lobby-row control now uses the same acknowledged
+lifecycle and disables every eligible removal control while one target is pending. Localised
+retrying and final retry labels appear only after acknowledgement timeouts. Submitted room,
+host, lobby phase, and target membership are rechecked before retaining lobby timeout feedback;
+authoritative removal unmounts the target row.
 
 Root cause #2 remains **open**. Settings callers still use bare emits and do not yet have
 per-action acknowledgement feedback. Root causes #4 and #5 also remain open; B8 therefore
@@ -780,8 +782,10 @@ remains **Confirmed**, not Fixed.
   A replayed manual turn skip returns its original acknowledgement and advances the turn once.
 - `useLobbyRoomActions.test.tsx`: two quick game-start presses emit once, the real start
   control remains disabled through its automatic retry, and a final timeout exposes a fresh
-  retry affordance. Lobby close uses the same lifecycle; the in-game close hook has a matching
-  duplicate guard and final retry state regression.
+  retry affordance. Lobby close uses the same lifecycle. Direct lobby-row removal now has a
+  real-control regression covering its shared duplicate guard, stable normal label, automatic
+  timeout retry, and final retry affordance; the in-game close hook has a matching duplicate
+  guard and final retry state regression.
 - `roomFlow.test.ts`: replaying the same `place_card` request id returns the original success
   acknowledgement while the placement service runs once; replaying `start_game` initialises
   the game once; replaying `confirm_reveal` advances the turn once; replaying

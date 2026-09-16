@@ -253,6 +253,8 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
         <LobbyPlayerList
           currentPlayerId={players.currentPlayerId}
           isHost={players.isHost}
+          isKickPlayerPending={players.isKickPlayerPending}
+          kickPlayerActionState={players.kickPlayerActionState}
           onPlayerKick={players.onPlayerKick}
           onPlayerStartingCardCountChange={players.onPlayerStartingCardCountChange}
           onPlayerStartingTtTokenCountChange={players.onPlayerStartingTtTokenCountChange}

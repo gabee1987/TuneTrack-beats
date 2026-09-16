@@ -7,7 +7,12 @@ import {
 import { useRef, useState } from "react";
 import { emitAction } from "../../../services/socket/emitAction";
 import { getSocketClient } from "../../../services/socket/socketClient";
-import type { CloseRoomActionStatus, StartGameActionStatus } from "../LobbyPage.types";
+import type {
+  CloseRoomActionStatus,
+  LobbyKickPlayerActionState,
+  StartGameActionStatus,
+} from "../LobbyPage.types";
+import { useLobbyKickPlayerAction } from "./useLobbyKickPlayerAction";
 
 const DEFAULT_ENABLED_STARTING_TT_TOKEN_COUNT = 1;
 
@@ -28,7 +33,9 @@ interface UseLobbyRoomActionsResult {
   handleRoomSettingsChange: (nextSettings: PublicRoomSettings) => void;
   handleStartGame: () => void;
   isCloseRoomPending: boolean;
+  isKickPlayerPending: boolean;
   isStartGamePending: boolean;
+  kickPlayerActionState: LobbyKickPlayerActionState | null;
   startGameActionStatus: StartGameActionStatus;
   toggleTtMode: (enabled: boolean) => void;
 }
@@ -50,6 +57,7 @@ export function useLobbyRoomActions({
     startGameActionStatus === "pending" || startGameActionStatus === "retrying";
   const isCloseRoomPending =
     closeRoomActionStatus === "pending" || closeRoomActionStatus === "retrying";
+  const kickPlayerAction = useLobbyKickPlayerAction({ isHost, roomState });
 
   async function emitRoomEvent<TPayload>(
     event: (typeof ClientToServerEvent)[keyof typeof ClientToServerEvent],
@@ -114,17 +122,6 @@ export function useLobbyRoomActions({
 
     void emitRoomEvent(ClientToServerEvent.UpdatePlayerProfile, {
       displayName,
-      roomId: roomState.roomId,
-    });
-  }
-
-  function handlePlayerKick(player: PublicPlayerState) {
-    if (!roomState || !isHost || player.id === roomState.hostId) {
-      return;
-    }
-
-    void emitRoomEvent(ClientToServerEvent.KickPlayer, {
-      playerId: player.id,
       roomId: roomState.roomId,
     });
   }
@@ -232,13 +229,15 @@ export function useLobbyRoomActions({
     handleCloseRoom,
     handlePlayerStartingCardCountChange,
     handlePlayerStartingTtTokenCountChange,
-    handlePlayerKick,
+    handlePlayerKick: kickPlayerAction.handlePlayerKick,
     handlePlayerProfileChange,
     handleRoomRename,
     handleRoomSettingsChange,
     handleStartGame,
     isCloseRoomPending,
+    isKickPlayerPending: kickPlayerAction.isPending,
     isStartGamePending,
+    kickPlayerActionState: kickPlayerAction.actionState,
     startGameActionStatus,
     toggleTtMode,
   };

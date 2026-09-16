@@ -1,5 +1,11 @@
 # Handover — B8 root cause #1: host reconnect issues the wrong command
 
+> **Current implementation state (2026-09-16):** The original reconnect scope in this
+> handover is complete and verified. Subsequent B8 work was explicitly authorised in separate
+> batches; the acknowledged-action migration now includes `kick_player` from both the in-game
+> confirmation and the direct lobby player row. The live status and remaining work are tracked
+> in `05-network-protocol-and-resilience.md` and B8 in `12-bug-register.md`.
+
 **Audience:** a fresh agent (no memory of prior sessions on this repo). Everything you
 need is below or linked. Read `CLAUDE.md` at the repo root first — it is the binding
 style/architecture guide for this project and this handover assumes it.

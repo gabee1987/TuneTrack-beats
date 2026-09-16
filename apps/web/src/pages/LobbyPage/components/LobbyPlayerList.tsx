@@ -4,10 +4,13 @@ import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { LobbyPlayerListItem } from "./LobbyPlayerListItem";
 import { LobbySectionHeader } from "./LobbySectionHeader";
 import styles from "../lobbyPageStyles";
+import type { LobbyKickPlayerActionState } from "../LobbyPage.types";
 
 interface LobbyPlayerListProps {
   currentPlayerId: string | null;
   isHost: boolean;
+  isKickPlayerPending: boolean;
+  kickPlayerActionState: LobbyKickPlayerActionState | null;
   players: PublicPlayerState[];
   roomSettings: PublicRoomSettings;
   onPlayerKick: (player: PublicPlayerState) => void;
@@ -18,6 +21,8 @@ interface LobbyPlayerListProps {
 export function LobbyPlayerList({
   currentPlayerId,
   isHost,
+  isKickPlayerPending,
+  kickPlayerActionState,
   players,
   roomSettings,
   onPlayerKick,
@@ -38,6 +43,8 @@ export function LobbyPlayerList({
           <LobbyPlayerListItem
             currentPlayerId={currentPlayerId}
             isHost={isHost}
+            isKickPlayerPending={isKickPlayerPending}
+            kickPlayerActionState={kickPlayerActionState}
             onPlayerKick={onPlayerKick}
             key={player.id}
             onPlayerStartingCardCountChange={onPlayerStartingCardCountChange}

@@ -13,10 +13,13 @@ import { RangeField } from "../../../features/ui/RangeField";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import { getLobbyPlayerDisplayState } from "../lobbyPlayerSelectors";
 import styles from "../lobbyPageStyles";
+import type { LobbyKickPlayerActionState } from "../LobbyPage.types";
 
 interface LobbyPlayerListItemProps {
   currentPlayerId: string | null;
   isHost: boolean;
+  isKickPlayerPending: boolean;
+  kickPlayerActionState: LobbyKickPlayerActionState | null;
   onPlayerKick: (player: PublicPlayerState) => void;
   onPlayerStartingCardCountChange: (player: PublicPlayerState, nextValue: number) => void;
   onPlayerStartingTtTokenCountChange: (player: PublicPlayerState, nextValue: number) => void;
@@ -27,6 +30,8 @@ interface LobbyPlayerListItemProps {
 export function LobbyPlayerListItem({
   currentPlayerId,
   isHost,
+  isKickPlayerPending,
+  kickPlayerActionState,
   onPlayerKick,
   onPlayerStartingCardCountChange,
   onPlayerStartingTtTokenCountChange,
@@ -41,6 +46,18 @@ export function LobbyPlayerListItem({
     t,
   });
   const canKickPlayer = isHost && player.id !== currentPlayerId;
+  const kickActionStatus =
+    kickPlayerActionState?.playerId === player.id ? kickPlayerActionState.status : null;
+  const kickButtonLabel =
+    kickActionStatus === "retrying"
+      ? t("lobby.players.kickRetrying")
+      : kickActionStatus === "failed"
+        ? t("lobby.players.retryKick")
+        : t("lobby.players.kick");
+  const kickButtonAriaLabel =
+    kickActionStatus === "retrying" || kickActionStatus === "failed"
+      ? kickButtonLabel
+      : t("lobby.players.kickPlayer", { playerName: displayState.primaryName });
 
   return (
     <li className={styles.playerItem}>
@@ -97,12 +114,13 @@ export function LobbyPlayerListItem({
       {canKickPlayer ? (
         <div className={styles.playerActionRow}>
           <button
-            aria-label={t("lobby.players.kickPlayer", { playerName: displayState.primaryName })}
+            aria-label={kickButtonAriaLabel}
             className={styles.playerKickButton}
+            disabled={isKickPlayerPending}
             onClick={() => onPlayerKick(player)}
             type="button"
           >
-            {t("lobby.players.kick")}
+            {kickButtonLabel}
           </button>
         </div>
       ) : null}

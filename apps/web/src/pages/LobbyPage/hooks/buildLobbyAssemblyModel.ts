@@ -26,6 +26,8 @@ export interface LobbyAssemblyModel {
   players: {
     currentPlayerId: string | null;
     isHost: boolean;
+    isKickPlayerPending: boolean;
+    kickPlayerActionState: LobbyPageController["kickPlayerActionState"];
     onPlayerKick: (player: PublicPlayerState) => void;
     onPlayerStartingCardCountChange: (player: PublicPlayerState, nextValue: number) => void;
     onPlayerStartingTtTokenCountChange: (player: PublicPlayerState, nextValue: number) => void;
@@ -86,6 +88,8 @@ export function buildLobbyAssemblyModel(controller: LobbyPageController): LobbyA
     players: {
       currentPlayerId: controller.currentPlayerId,
       isHost: controller.isHost,
+      isKickPlayerPending: controller.isKickPlayerPending,
+      kickPlayerActionState: controller.kickPlayerActionState,
       onPlayerKick: controller.handlePlayerKick,
       onPlayerStartingCardCountChange: controller.handlePlayerStartingCardCountChange,
       onPlayerStartingTtTokenCountChange: controller.handlePlayerStartingTtTokenCountChange,
