@@ -9,8 +9,12 @@
 > connection. The mobile lobby now reuses the inline profile field independently from its
 > host-only room rename form; guests see the room identity as read-only. The server now
 > accepts room creation without a client code and generates a collision-safe friendly code,
-> with bounded retries and a base32 fallback. Wiring that contract into Play's one-action
-> host flow, the remaining Phase 3 layout work, and the rest of Phases 2-5 remain open.
+> with bounded retries and a base32 fallback. Play's one-action host flow now uses that
+> contract, carries creation intent in route state, and replaces the code-less lobby URL
+> with the server-confirmed code. Each mounted lobby freezes its entry intent so the outgoing
+> code-less route cannot redirect Home while its exit animation overlaps the authoritative
+> route. The optional custom-code affordance, live room-directory updates, module relocation,
+> remaining Phase 3 layout work, and Phases 4-5 remain open.
 
 > Addresses findings **F-40 – F-43**, plus the requested manual metadata override.
 > Owning layers: `apps/web/src/pages/{HomePage,PlayPage,JoinRoomPage,LobbyPage}`,
@@ -134,12 +138,23 @@ Key changes:
    same join action and the same profile row. The duplicated name field and validation go
    away.
 
+**Implementation state (2026-09-17):** The fast host path is implemented. Play no longer
+asks for or generates a room code: “Host a game” opens the code-less `/lobby` route with
+creation intent in navigation state. The lobby emits `create_room` without `roomId`, accepts
+the server-authoritative room state, then replaces the route with `/lobby/:roomId` and
+clears the creation state. If the connection drops before that redirect, it safely retries
+generated creation; the server restores the session's existing room rather than creating a
+second one. Reconnects after the authoritative route use `join_room` as normal.
+The entry intent is captured once per mounted lobby instance; this prevents the exiting
+code-less lobby from observing the next route's cleared navigation state and incorrectly
+redirecting to Home during the animated handoff.
+
 ### 3.2 Room code generation
 
 **Implementation state (2026-09-17):** The server-side generator and optional `roomId`
-`create_room` contract are implemented and covered at generator, registry, schema, and
-realtime integration boundaries. The existing custom-code path remains compatible. The Play
-screen does not use generated creation yet; that is the next batch.
+`create_room` contract are implemented and covered at generator, registry, schema, realtime,
+and Play-to-lobby boundaries. The existing custom-code contract remains compatible, but an
+optional custom-code UI affordance is not implemented yet.
 
 Server-side, in a new `apps/server/src/rooms/roomCodeGenerator.ts`:
 
@@ -183,10 +198,11 @@ once the app is exposed beyond a trusted network.
 
 ### Acceptance
 
-- [ ] Pressing "Host a game" reaches a lobby with a server-generated code in at most one
+- [x] Pressing "Host a game" reaches a lobby with a server-generated code in at most one
       further interaction.
-- [ ] No route in the app carries `playerName` or `intent` as a query parameter.
-- [ ] Two clients hosting simultaneously never collide on a room code (test with a stubbed
+- [x] No newly generated route in the app carries `playerName` or `intent` as a query
+      parameter. Legacy `playerName` input remains accepted for migration.
+- [x] Two clients hosting simultaneously never collide on a room code (test with a stubbed
       generator forced to collide, asserting retry then fallback).
 - [ ] The room list updates without a manual refresh when another player creates a room.
 - [ ] The invite-link flow still works: opening `/join/:roomId` shows the room, and joining

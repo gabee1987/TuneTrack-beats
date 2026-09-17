@@ -44,7 +44,7 @@ export const router = createBrowserRouter([
         },
       },
       {
-        path: "lobby/:roomId",
+        path: "lobby/:roomId?",
         lazy: async () => {
           const { LobbyPage } = await loadLazyRoute(() =>
             import("../pages/LobbyPage/LobbyPage"),

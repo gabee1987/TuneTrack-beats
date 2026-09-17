@@ -1,28 +1,32 @@
-export const DEFAULT_ROOM_ID = "";
-
 interface HomePageNavigationInput {
-  roomId: string;
+  roomId?: string | undefined;
   intent?: "create" | "join";
 }
 
 export interface HomePageNavigationResult {
   path: string;
+  state?: { intent: "create" };
 }
 
 export function buildHomePageNavigationTarget({
   intent = "join",
   roomId,
 }: HomePageNavigationInput): HomePageNavigationResult | null {
-  const trimmedRoomId = roomId.trim();
+  const trimmedRoomId = roomId?.trim() ?? "";
+
+  if (intent === "create") {
+    return {
+      path: trimmedRoomId ? `/lobby/${encodeURIComponent(trimmedRoomId)}` : "/lobby",
+      state: { intent: "create" },
+    };
+  }
 
   if (!trimmedRoomId) {
     return null;
   }
 
   return {
-    path: `/lobby/${encodeURIComponent(trimmedRoomId)}${
-      intent === "create" ? "?intent=create" : ""
-    }`,
+    path: `/lobby/${encodeURIComponent(trimmedRoomId)}`,
   };
 }
 

@@ -1,11 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_ROOM_ID, buildHomePageNavigationTarget } from "./homePageNavigation";
+import { buildHomePageNavigationTarget } from "./homePageNavigation";
 
 describe("homePageNavigation", () => {
-  it("exports stable defaults for the initial join form", () => {
-    expect(DEFAULT_ROOM_ID).toBe("");
-  });
-
   it("returns null when the room code is blank after trimming", () => {
     expect(
       buildHomePageNavigationTarget({
@@ -24,14 +20,26 @@ describe("homePageNavigation", () => {
     });
   });
 
-  it("adds the create intent when creating a room", () => {
+  it("carries custom-code creation intent in route state instead of the URL", () => {
     expect(
       buildHomePageNavigationTarget({
         intent: "create",
         roomId: "host-room",
       }),
     ).toEqual({
-      path: "/lobby/host-room?intent=create",
+      path: "/lobby/host-room",
+      state: { intent: "create" },
+    });
+  });
+
+  it("opens the code-less lobby route for server-generated creation", () => {
+    expect(
+      buildHomePageNavigationTarget({
+        intent: "create",
+      }),
+    ).toEqual({
+      path: "/lobby",
+      state: { intent: "create" },
     });
   });
 });

@@ -26,22 +26,9 @@ export function PlayPage() {
           />
           <form className={styles.form} onSubmit={controller.handleCreateRoomSubmit}>
             <div className={styles.sectionHeader}>
-              <h2>{t("home.createRoomAction")}</h2>
+              <h2>{t("play.hostAction")}</h2>
               <p>{t("play.createDescription")}</p>
             </div>
-
-            <label className={styles.field}>
-              <span className={styles.labelRow}>{t("home.createRoomCodeLabel")}</span>
-              <TextInput
-                autoCapitalize="none"
-                autoComplete="off"
-                autoCorrect="off"
-                inputMode="text"
-                onChange={(event) => controller.setCreateRoomId(event.target.value)}
-                placeholder={t("home.roomCodePlaceholder")}
-                value={controller.createRoomId}
-              />
-            </label>
 
             <Button
               disabled={!controller.hasCompletedSetup}
@@ -53,7 +40,7 @@ export function PlayPage() {
               size="lg"
               type="submit"
             >
-              {t("home.createRoomAction")}
+              {t("play.hostAction")}
             </Button>
           </form>
 

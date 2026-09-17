@@ -1086,9 +1086,12 @@ room, and a room rename cannot save a draft player name. Focused component tests
 three boundaries, while the connection tests continue to prove that profile changes do not
 rejoin and server-confirmed room renames still redirect correctly.
 
-B12 is **Fixed**. The server-generated room-code contract is now implemented, while its Play
-screen integration and the remaining lobby layout work stay open under Doc 09 Phases 2-3;
-both are separate from player identity persistence and editing.
+B12 is **Fixed**. The server-generated room-code contract and Play's one-action host flow are
+implemented, including a full animated-route regression test for the code-less-to-generated
+lobby handoff. Lobby entry intent is frozen per mounted route so an exiting creator cannot
+reinterpret itself as a join route and redirect Home. The optional custom-code UI, live
+room-directory updates, module relocation, and remaining lobby layout work stay open under
+Doc 09 Phases 2-3; they are separate from player identity persistence and editing.
 
 ---
 

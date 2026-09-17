@@ -37,6 +37,7 @@ interface UseLobbyRoomConnectionResult {
 }
 
 interface LobbyRoomStateUpdateDecisionOptions {
+  isCreatingRoom: boolean;
   joinedRoomId: string | null;
   nextRoomId: string;
   nextStatus: PublicRoomState["status"];
@@ -44,6 +45,7 @@ interface LobbyRoomStateUpdateDecisionOptions {
 }
 
 export function getLobbyRoomStateUpdateDecision({
+  isCreatingRoom,
   joinedRoomId,
   nextRoomId,
   nextStatus,
@@ -53,12 +55,19 @@ export function getLobbyRoomStateUpdateDecision({
   shouldNavigateToRoom: boolean;
 } {
   const isStateForRequestedRoom = nextRoomId === requestedRoomId;
+  const isStateForJoinedRoom = requestedRoomId === undefined && nextRoomId === joinedRoomId;
+  const isInitialGeneratedRoom =
+    isCreatingRoom && requestedRoomId === undefined && joinedRoomId === null;
   const isRenameFromJoinedRoom =
     nextStatus === "lobby" && joinedRoomId === requestedRoomId && !isStateForRequestedRoom;
 
   return {
-    accept: isStateForRequestedRoom || isRenameFromJoinedRoom,
-    shouldNavigateToRoom: isRenameFromJoinedRoom,
+    accept:
+      isStateForRequestedRoom ||
+      isStateForJoinedRoom ||
+      isInitialGeneratedRoom ||
+      isRenameFromJoinedRoom,
+    shouldNavigateToRoom: isInitialGeneratedRoom || isRenameFromJoinedRoom,
   };
 }
 
@@ -100,7 +109,7 @@ export function useLobbyRoomConnection({
     let cleanupSocketListeners: (() => void) | null = null;
     hasAttemptedCreateRef.current = false;
 
-    if (!roomId || !displayName) {
+    if (!displayName || (intent === "join" && !roomId)) {
       navigate("/");
       return;
     }
@@ -111,18 +120,25 @@ export function useLobbyRoomConnection({
       setConnectionStatus("Connected");
       setErrorCode(null);
       setErrorMessage(null);
-      const shouldCreateRoom = intent === "create" && !hasAttemptedCreateRef.current;
+      const shouldCreateRoom =
+        intent === "create" && (!hasAttemptedCreateRef.current || roomId === undefined);
       if (intent === "create") {
         hasAttemptedCreateRef.current = true;
       }
-      socketClient.emit(
-        shouldCreateRoom ? ClientToServerEvent.CreateRoom : ClientToServerEvent.JoinRoom,
-        {
+      if (shouldCreateRoom) {
+        socketClient.emit(ClientToServerEvent.CreateRoom, {
           displayName: displayNameRef.current,
-          roomId,
+          ...(roomId ? { roomId } : {}),
           sessionId: playerSessionId,
-        },
-      );
+        });
+        return;
+      }
+
+      socketClient.emit(ClientToServerEvent.JoinRoom, {
+        displayName: displayNameRef.current,
+        roomId: roomId!,
+        sessionId: playerSessionId,
+      });
     }
 
     function handleDisconnect() {
@@ -131,6 +147,7 @@ export function useLobbyRoomConnection({
 
     function handleStateUpdate(payload: StateUpdatePayload) {
       const updateDecision = getLobbyRoomStateUpdateDecision({
+        isCreatingRoom: intent === "create",
         joinedRoomId: joinedRoomIdRef.current,
         nextRoomId: payload.roomState.roomId,
         nextStatus: payload.roomState.status,
@@ -145,7 +162,10 @@ export function useLobbyRoomConnection({
       setRoomState(payload.roomState);
 
       if (updateDecision.shouldNavigateToRoom) {
-        navigate(`/lobby/${encodeURIComponent(payload.roomState.roomId)}`, { replace: true });
+        navigate(`/lobby/${encodeURIComponent(payload.roomState.roomId)}`, {
+          replace: true,
+          state: null,
+        });
         return;
       }
 

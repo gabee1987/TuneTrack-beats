@@ -2,8 +2,7 @@ import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { preloadLobbyRuntime } from "../../../app/preloadRoutes";
 import { usePlayerProfileStore } from "../../../features/profile/playerProfile";
-import { DEFAULT_ROOM_ID, buildHomePageNavigationTarget } from "../../HomePage/homePageNavigation";
-import { createSuggestedRoomCode } from "../../HomePage/roomCode";
+import { buildHomePageNavigationTarget } from "../../HomePage/homePageNavigation";
 import { useRoomDirectory } from "../../HomePage/hooks/useRoomDirectory";
 
 export function usePlayPageController() {
@@ -11,11 +10,10 @@ export function usePlayPageController() {
   const displayName = usePlayerProfileStore((state) => state.displayName);
   const hasCompletedSetup = usePlayerProfileStore((state) => state.hasCompletedSetup);
   const setDisplayName = usePlayerProfileStore((state) => state.setDisplayName);
-  const [createRoomId, setCreateRoomId] = useState(createSuggestedRoomCode);
-  const [joinRoomId, setJoinRoomId] = useState(DEFAULT_ROOM_ID);
+  const [joinRoomId, setJoinRoomId] = useState("");
   const { refreshRooms, rooms } = useRoomDirectory();
 
-  function openLobby(intent: "create" | "join", roomId: string) {
+  function openLobby(intent: "create" | "join", roomId?: string) {
     if (!hasCompletedSetup) return;
 
     preloadLobbyRuntime();
@@ -27,12 +25,12 @@ export function usePlayPageController() {
 
     if (!navigationTarget) return;
 
-    navigate(navigationTarget.path);
+    navigate(navigationTarget.path, { state: navigationTarget.state });
   }
 
   function handleCreateRoomSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    openLobby("create", createRoomId);
+    openLobby("create");
   }
 
   function handleJoinRoomSubmit(event: FormEvent<HTMLFormElement>) {
@@ -46,7 +44,6 @@ export function usePlayPageController() {
   }
 
   return {
-    createRoomId,
     displayName,
     hasCompletedSetup,
     handleCreateRoomSubmit,
@@ -56,7 +53,6 @@ export function usePlayPageController() {
     preloadLobby: preloadLobbyRuntime,
     refreshRooms,
     rooms,
-    setCreateRoomId,
     setDisplayName,
     setJoinRoomId,
   };

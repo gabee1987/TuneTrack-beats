@@ -5,8 +5,8 @@ import {
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
   type PublicRoomSettings,
 } from "@tunetrack/shared";
-import { useEffect, useMemo } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useRef } from "react";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { usePlayerProfileStore } from "../../../features/profile/playerProfile";
 import { getOrCreatePlayerSessionId } from "../../../services/session/playerSession";
 import { preloadGameRuntime } from "../../../app/preloadRoutes";
@@ -31,13 +31,18 @@ const fallbackRoomSettings: PublicRoomSettings = {
 
 export function useLobbyPageController(): LobbyPageController {
   const navigate = useNavigate();
+  const location = useLocation();
   const { roomId } = useParams<{ roomId: string }>();
   const [searchParams] = useSearchParams();
   const storedDisplayName = usePlayerProfileStore((state) => state.displayName);
   const setDisplayName = usePlayerProfileStore((state) => state.setDisplayName);
   const queryDisplayName = searchParams.get("playerName")?.trim() ?? "";
   const displayName = storedDisplayName || queryDisplayName;
-  const intent = searchParams.get("intent") === "create" ? "create" : "join";
+  const routeState = (location.state ?? {}) as { intent?: "create" };
+  const intentRef = useRef<"create" | "join">(
+    routeState.intent === "create" ? "create" : "join",
+  );
+  const intent = intentRef.current;
   const playerSessionId = useMemo(() => getOrCreatePlayerSessionId(), []);
   const {
     connectionStatus,
