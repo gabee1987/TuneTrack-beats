@@ -6,7 +6,7 @@ import { usePlayerProfileStore } from "../../features/profile/playerProfile";
 import { AppPageShell } from "../../features/mobile-shell/AppPageShell";
 import { StatusBanner } from "../../features/ui/StatusBanner";
 import { Button, Skeleton } from "../../features/ui/primitives";
-import { buildInviteJoinPath } from "../HomePage/homePageNavigation";
+import { buildInviteJoinPath } from "../../features/rooms/roomNavigation";
 import { useJoinRoomPreview } from "./hooks/useJoinRoomPreview";
 import styles from "./JoinRoomPage.module.css";
 

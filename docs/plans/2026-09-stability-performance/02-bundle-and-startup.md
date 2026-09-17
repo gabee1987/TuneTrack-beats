@@ -278,6 +278,12 @@ on a user's device.
 
 **Finding:** F-42 (see Doc 01 and Doc 09 section 6).
 
+**Implementation state (2026-09-17):** The unused `JoinRoomForm`, its dedicated Home CSS,
+and the lobby Spotify re-export shim are removed. Room navigation and directory ownership
+now live under `features/rooms`; the obsolete client room-code suggestion was deleted with
+the generated-room flow. The remaining acceptance checks are covered by the current web
+verification and manual Home/Play/Join regression pass.
+
 - Delete `apps/web/src/pages/HomePage/components/JoinRoomForm.tsx` (no importers).
 - Prune the now-unused classes from `apps/web/src/pages/HomePage/HomePage.module.css`
   (409 lines; the desktop hero and top bar remain in use).
@@ -293,8 +299,8 @@ changes.
 
 ### Acceptance
 
-- [ ] `npm run lint` reports no unused exports in the touched files.
-- [ ] `npm run typecheck` passes.
+- [x] `npm run lint` reports no unused exports in the touched files.
+- [x] `npm run typecheck` passes.
 - [ ] No visual change on Home, Play or Join.
 
 ## 9. Verification harness for this document

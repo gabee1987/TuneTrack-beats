@@ -1,17 +1,17 @@
-interface HomePageNavigationInput {
+interface RoomNavigationInput {
   roomId?: string | undefined;
   intent?: "create" | "join";
 }
 
-export interface HomePageNavigationResult {
+export interface RoomNavigationResult {
   path: string;
   state?: { intent: "create" };
 }
 
-export function buildHomePageNavigationTarget({
+export function buildRoomNavigationTarget({
   intent = "join",
   roomId,
-}: HomePageNavigationInput): HomePageNavigationResult | null {
+}: RoomNavigationInput): RoomNavigationResult | null {
   const trimmedRoomId = roomId?.trim() ?? "";
 
   if (intent === "create") {
@@ -31,5 +31,5 @@ export function buildHomePageNavigationTarget({
 }
 
 export function buildInviteJoinPath(roomId: string): string | null {
-  return buildHomePageNavigationTarget({ roomId, intent: "join" })?.path ?? null;
+  return buildRoomNavigationTarget({ roomId, intent: "join" })?.path ?? null;
 }

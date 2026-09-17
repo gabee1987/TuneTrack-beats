@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildHomePageNavigationTarget } from "./homePageNavigation";
+import { buildRoomNavigationTarget } from "./roomNavigation";
 
-describe("homePageNavigation", () => {
+describe("roomNavigation", () => {
   it("returns null when the room code is blank after trimming", () => {
     expect(
-      buildHomePageNavigationTarget({
+      buildRoomNavigationTarget({
         roomId: "   ",
       }),
     ).toBeNull();
@@ -12,7 +12,7 @@ describe("homePageNavigation", () => {
 
   it("builds the encoded lobby path without putting player identity in the URL", () => {
     expect(
-      buildHomePageNavigationTarget({
+      buildRoomNavigationTarget({
         roomId: " room / 42 ",
       }),
     ).toEqual({
@@ -22,7 +22,7 @@ describe("homePageNavigation", () => {
 
   it("carries custom-code creation intent in route state instead of the URL", () => {
     expect(
-      buildHomePageNavigationTarget({
+      buildRoomNavigationTarget({
         intent: "create",
         roomId: "host-room",
       }),
@@ -34,7 +34,7 @@ describe("homePageNavigation", () => {
 
   it("opens the code-less lobby route for server-generated creation", () => {
     expect(
-      buildHomePageNavigationTarget({
+      buildRoomNavigationTarget({
         intent: "create",
       }),
     ).toEqual({

@@ -1,11 +1,11 @@
 import {
   ClientToServerEvent,
   type PublicRoomSummary,
-  ServerToClientEvent,
   type RoomListPayload,
+  ServerToClientEvent,
 } from "@tunetrack/shared";
 import { useEffect, useState } from "react";
-import { getSocketClient } from "../../../services/socket/socketClient";
+import { getSocketClient } from "../../services/socket/socketClient";
 
 interface UseRoomDirectoryResult {
   rooms: PublicRoomSummary[];

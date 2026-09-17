@@ -13,8 +13,10 @@
 > contract, carries creation intent in route state, and replaces the code-less lobby URL
 > with the server-confirmed code. Each mounted lobby freezes its entry intent so the outgoing
 > code-less route cannot redirect Home while its exit animation overlaps the authoritative
-> route. The optional custom-code affordance, live room-directory updates, module relocation,
-> remaining Phase 3 layout work, and Phases 4-5 remain open.
+> route. Room navigation and directory ownership now live under `features/rooms`, and the
+> obsolete Home room form and client code suggestion are removed. The optional custom-code
+> affordance, live room-directory updates, remaining Phase 3 layout work, Phase 4, and the
+> remaining Phase 5 compatibility cleanup stay open.
 
 > Addresses findings **F-40 – F-43**, plus the requested manual metadata override.
 > Owning layers: `apps/web/src/pages/{HomePage,PlayPage,JoinRoomPage,LobbyPage}`,
@@ -169,6 +171,10 @@ Server-side, in a new `apps/server/src/rooms/roomCodeGenerator.ts`:
   suggestion; otherwise delete it (`pages/HomePage/roomCode.ts`).
 
 ### 3.3 Module relocation
+
+**Implementation state (2026-09-17):** Complete. `roomNavigation` and its tests plus
+`useRoomDirectory` now live in `features/rooms`. The client room-code suggestion and dead
+`JoinRoomForm` were deleted, along with the form-only Home styles and translation keys.
 
 Fixing defect 7. Move out of `pages/HomePage/`:
 
@@ -363,13 +369,13 @@ In the reveal action dock, host only:
 
 Sequenced last, per `AGENT.md` section 5 — removal is confined to its own step.
 
-- `pages/HomePage/components/JoinRoomForm.tsx`
-- Dead classes in `pages/HomePage/HomePage.module.css`
-- `pages/LobbyPage/hooks/useLobbySpotify.ts` (two-line re-export shim)
-- `DEFAULT_DISPLAY_NAME`, `DEFAULT_ROOM_ID`
+- [x] `pages/HomePage/components/JoinRoomForm.tsx`
+- [x] Dead classes in `pages/HomePage/HomePage.module.css`
+- [x] `pages/LobbyPage/hooks/useLobbySpotify.ts` (two-line re-export shim)
+- [x] `DEFAULT_DISPLAY_NAME`, `DEFAULT_ROOM_ID`
 - `getRememberedPlayerDisplayName` / `rememberPlayerDisplayName` once the profile store owns
   the name (keep the storage key migration)
-- `createSuggestedRoomCode` if the custom-code affordance does not need it
+- [x] `createSuggestedRoomCode` if the custom-code affordance does not need it
 - Query-parameter parsing in `useLobbyPageController` once identity leaves the URL
 
 ### Acceptance

@@ -2,8 +2,8 @@ import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { preloadLobbyRuntime } from "../../../app/preloadRoutes";
 import { usePlayerProfileStore } from "../../../features/profile/playerProfile";
-import { buildHomePageNavigationTarget } from "../../HomePage/homePageNavigation";
-import { useRoomDirectory } from "../../HomePage/hooks/useRoomDirectory";
+import { buildRoomNavigationTarget } from "../../../features/rooms/roomNavigation";
+import { useRoomDirectory } from "../../../features/rooms/useRoomDirectory";
 
 export function usePlayPageController() {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ export function usePlayPageController() {
 
     preloadLobbyRuntime();
 
-    const navigationTarget = buildHomePageNavigationTarget({
+    const navigationTarget = buildRoomNavigationTarget({
       intent,
       roomId,
     });

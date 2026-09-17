@@ -16,7 +16,7 @@ vi.mock("../../app/preloadRoutes", () => ({
   preloadLobbyRuntime: vi.fn(),
 }));
 
-vi.mock("../HomePage/hooks/useRoomDirectory", () => ({
+vi.mock("../../features/rooms/useRoomDirectory", () => ({
   useRoomDirectory: () => ({ refreshRooms: vi.fn(), rooms: [] }),
 }));
 
@@ -33,7 +33,9 @@ function LobbyRouteProbe() {
 
 function ConnectedLobbyRouteProbe() {
   const controller = useLobbyPageController();
-  return <p>{`lobby:${controller.roomId ?? "pending"}:${controller.roomState?.roomId ?? "empty"}`}</p>;
+  return (
+    <p>{`lobby:${controller.roomId ?? "pending"}:${controller.roomState?.roomId ?? "empty"}`}</p>
+  );
 }
 
 describe("PlayPage", () => {

@@ -1090,8 +1090,9 @@ B12 is **Fixed**. The server-generated room-code contract and Play's one-action 
 implemented, including a full animated-route regression test for the code-less-to-generated
 lobby handoff. Lobby entry intent is frozen per mounted route so an exiting creator cannot
 reinterpret itself as a join route and redirect Home. The optional custom-code UI, live
-room-directory updates, module relocation, and remaining lobby layout work stay open under
-Doc 09 Phases 2-3; they are separate from player identity persistence and editing.
+room-directory updates, and remaining lobby layout work stay open under Doc 09 Phases 2-3.
+Shared room navigation and directory code now live under `features/rooms`, and the dead Home
+room form is removed. The open work is separate from player identity persistence and editing.
 
 ---
 
