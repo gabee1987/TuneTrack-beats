@@ -1086,8 +1086,9 @@ room, and a room rename cannot save a draft player name. Focused component tests
 three boundaries, while the connection tests continue to prove that profile changes do not
 rejoin and server-confirmed room renames still redirect correctly.
 
-B12 is **Fixed**. Server-generated room codes and the remaining lobby layout work are still
-open under Doc 09 Phases 2-3, but are separate from player identity persistence and editing.
+B12 is **Fixed**. The server-generated room-code contract is now implemented, while its Play
+screen integration and the remaining lobby layout work stay open under Doc 09 Phases 2-3;
+both are separate from player identity persistence and editing.
 
 ---
 

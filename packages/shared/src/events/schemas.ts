@@ -73,7 +73,9 @@ export const joinRoomPayloadSchema = z.object({
   sessionId: z.string().trim().min(1),
 });
 
-export const createRoomPayloadSchema = joinRoomPayloadSchema;
+export const createRoomPayloadSchema = joinRoomPayloadSchema.extend({
+  roomId: roomIdSchema.optional(),
+});
 
 export const getRoomPreviewPayloadSchema = z.object({
   roomId: roomIdSchema,

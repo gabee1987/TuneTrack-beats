@@ -26,11 +26,7 @@ import {
 import { RoomConnectionService } from "./RoomConnectionService.js";
 import { RoomGameplayService } from "./RoomGameplayService.js";
 import { RoomLobbyService } from "./RoomLobbyService.js";
-import {
-  type JoinRoomResult,
-  type KickPlayerResult,
-  RoomStore,
-} from "./RoomStore.js";
+import { type JoinRoomResult, type KickPlayerResult, RoomStore } from "./RoomStore.js";
 import { RoomTimerCoordinator } from "./RoomTimerCoordinator.js";
 
 export type { JoinRoomResult, KickPlayerResult } from "./RoomStore.js";
@@ -107,7 +103,7 @@ export class RoomRegistry {
   }
 
   public createRoom(
-    roomId: RoomId,
+    roomId: RoomId | undefined,
     displayName: string,
     socketId: string,
     sessionId: string,

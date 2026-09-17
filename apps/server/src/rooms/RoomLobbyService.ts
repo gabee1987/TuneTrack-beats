@@ -27,6 +27,7 @@ import {
   buildUpdatedSettingsRoomState,
 } from "./roomLobbyBuilders.js";
 import { mapGameStateToPublicRoomState } from "./roomStateMappers.js";
+import { generateUniqueRoomCode } from "./roomCodeGenerator.js";
 import type { JoinRoomResult, RoomStore } from "./RoomStore.js";
 import type { RoomTimerCoordinator } from "./RoomTimerCoordinator.js";
 
@@ -44,13 +45,32 @@ export class RoomLobbyService {
   ) {}
 
   public createRoom(
-    roomId: RoomId,
+    requestedRoomId: RoomId | undefined,
     displayName: string,
     socketId: string,
     sessionId: string,
   ): JoinRoomResult {
-    const existingRoomRecord = this.store.getRoom(roomId);
     const existingSessionMembership = this.store.getSessionMembership(sessionId);
+
+    if (!requestedRoomId && existingSessionMembership) {
+      const existingSessionRoom = this.store.getRoom(existingSessionMembership.roomId);
+      if (
+        existingSessionRoom?.roomState.players.some(
+          (player) => player.id === existingSessionMembership.playerId,
+        )
+      ) {
+        return this.connection.restorePlayerSession(
+          existingSessionMembership.roomId,
+          existingSessionMembership.playerId,
+          socketId,
+          sessionId,
+        );
+      }
+    }
+
+    const roomId =
+      requestedRoomId ?? generateUniqueRoomCode((candidate) => this.store.hasRoom(candidate));
+    const existingRoomRecord = this.store.getRoom(roomId);
 
     if (
       existingRoomRecord &&

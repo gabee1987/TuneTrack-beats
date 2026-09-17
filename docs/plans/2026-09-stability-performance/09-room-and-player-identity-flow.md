@@ -1,14 +1,16 @@
 # 09 — Room Creation Flow, Player Identity and In-Game Metadata Override
 
-> **Current implementation state (2026-09-16):** The Phase 1 profile foundation is
+> **Current implementation state (2026-09-17):** The Phase 1 profile foundation is
 > implemented. A persisted device-level profile migrates the legacy remembered name. Home
 > remains an entry screen and always continues to Play, where one inline name field with a
 > checkmark saves the profile independently of room creation or joining. Direct invite
 > joining reuses the same field when needed. Generated lobby URLs no longer include
 > `playerName`, and lobby profile updates no longer navigate or remount the socket
 > connection. The mobile lobby now reuses the inline profile field independently from its
-> host-only room rename form; guests see the room identity as read-only. The remaining
-> Phase 3 layout work, server-generated room codes, and the rest of Phases 2-5 remain open.
+> host-only room rename form; guests see the room identity as read-only. The server now
+> accepts room creation without a client code and generates a collision-safe friendly code,
+> with bounded retries and a base32 fallback. Wiring that contract into Play's one-action
+> host flow, the remaining Phase 3 layout work, and the rest of Phases 2-5 remain open.
 
 > Addresses findings **F-40 – F-43**, plus the requested manual metadata override.
 > Owning layers: `apps/web/src/pages/{HomePage,PlayPage,JoinRoomPage,LobbyPage}`,
@@ -133,6 +135,11 @@ Key changes:
    away.
 
 ### 3.2 Room code generation
+
+**Implementation state (2026-09-17):** The server-side generator and optional `roomId`
+`create_room` contract are implemented and covered at generator, registry, schema, and
+realtime integration boundaries. The existing custom-code path remains compatible. The Play
+screen does not use generated creation yet; that is the next batch.
 
 Server-side, in a new `apps/server/src/rooms/roomCodeGenerator.ts`:
 

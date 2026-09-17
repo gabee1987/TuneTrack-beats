@@ -55,7 +55,7 @@ export interface JoinRoomPayload {
 }
 
 export interface CreateRoomPayload {
-  roomId: RoomId;
+  roomId?: RoomId;
   displayName: string;
   sessionId: string;
 }

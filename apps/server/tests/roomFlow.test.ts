@@ -45,6 +45,25 @@ afterEach(async () => {
 });
 
 describe("room flow", () => {
+  it("creates a room with a server-generated code when the client omits roomId", async () => {
+    const serverContext = await startTestServer();
+    const hostSocket = createClient(serverContext.baseUrl);
+    const roomStatePromise = waitForStateUpdate(hostSocket, () => true);
+    hostSocket.connect();
+    await waitForEvent(hostSocket, "connect");
+
+    hostSocket.emit(ClientToServerEvent.CreateRoom, {
+      displayName: "Host Player",
+      sessionId: "host-session",
+    });
+
+    const roomState = await roomStatePromise;
+    expect(roomState.roomId).toMatch(/^[a-z0-9-]{3,12}$/);
+    expect(roomState.players).toEqual([
+      expect.objectContaining({ displayName: "Host Player", isHost: true }),
+    ]);
+  });
+
   it("lets two clients join one room, updates settings as host, and preserves lobby host while reconnecting", async () => {
     const serverContext = await startTestServer();
     const hostSocket = createClient(serverContext.baseUrl);
