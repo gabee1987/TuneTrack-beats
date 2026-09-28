@@ -17,19 +17,16 @@ const testDeckCardSchema = z.object({
 const testDeckSchema = z.array(testDeckCardSchema).min(1);
 
 type ParsedTestDeckCard = z.output<typeof testDeckCardSchema>;
+type RandomSource = () => number;
 
 export class DeckService {
   public constructor(
-    private readonly testDecksDirectoryPath = resolve(
-      process.cwd(),
-      "src",
-      "decks",
-      "test-decks",
-    ),
+    private readonly testDecksDirectoryPath = resolve(process.cwd(), "src", "decks", "test-decks"),
+    private readonly randomSource: RandomSource = Math.random,
   ) {}
 
   public createShuffledDeckFromCards(cards: GameTrackCard[]): GameTrackCard[] {
-    return shuffleDeckCards([...cards]);
+    return shuffleDeckCards([...cards], this.randomSource);
   }
 
   public createShuffledDeck(): GameTrackCard[] {
@@ -46,7 +43,7 @@ export class DeckService {
       }
     }
 
-    const cards = shuffleDeckCards([...deckCardsById.values()]);
+    const cards = shuffleDeckCards([...deckCardsById.values()], this.randomSource);
     logger.info({ fileCount: fileNames.length, cardCount: cards.length }, "test deck loaded");
     return cards;
   }
@@ -70,15 +67,11 @@ function mapParsedDeckCard(deckCard: ParsedTestDeckCard): GameTrackCard {
   };
 }
 
-function shuffleDeckCards(deckCards: GameTrackCard[]): GameTrackCard[] {
+function shuffleDeckCards(deckCards: GameTrackCard[], randomSource: RandomSource): GameTrackCard[] {
   const shuffledDeckCards = [...deckCards];
 
-  for (
-    let currentIndex = shuffledDeckCards.length - 1;
-    currentIndex > 0;
-    currentIndex -= 1
-  ) {
-    const randomIndex = Math.floor(Math.random() * (currentIndex + 1));
+  for (let currentIndex = shuffledDeckCards.length - 1; currentIndex > 0; currentIndex -= 1) {
+    const randomIndex = Math.floor(randomSource() * (currentIndex + 1));
     const currentCard = shuffledDeckCards[currentIndex];
     const randomCard = shuffledDeckCards[randomIndex];
 

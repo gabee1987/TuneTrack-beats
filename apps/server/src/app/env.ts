@@ -11,7 +11,7 @@ if (
   Boolean(process.env.SPOTIFY_CLIENT_ID?.trim())
 ) {
   console.warn(
-    "[env] SPOTIFY_CLIENT_ID is empty in apps/server/.env; using an inherited Windows/shell value. If Spotify shows \"client_id Invalid\", paste the current Client ID and Secret from https://developer.spotify.com/dashboard into apps/server/.env and restart the server.",
+    '[env] SPOTIFY_CLIENT_ID is empty in apps/server/.env; using an inherited Windows/shell value. If Spotify shows "client_id Invalid", paste the current Client ID and Secret from https://developer.spotify.com/dashboard into apps/server/.env and restart the server.',
   );
 }
 
@@ -27,6 +27,8 @@ const envSchema = z
     CLIENT_ORIGIN: z.string().url().default("http://localhost:5173"),
     SPOTIFY_CLIENT_ID: trimmedNonEmptyString,
     SPOTIFY_CLIENT_SECRET: trimmedNonEmptyString,
+    SPOTIFY_ACCOUNTS_BASE_URL: z.string().url().optional(),
+    SPOTIFY_API_BASE_URL: z.string().url().optional(),
     SPOTIFY_REDIRECT_URI: z
       .string()
       .transform((value) => value.trim())
@@ -68,11 +70,25 @@ const envSchema = z
       .default("false")
       .transform((value) => value === "true"),
     TEST_RUN_ID: z.string().trim().min(1).optional(),
+    TEST_DECK_RANDOM_VALUE: z.coerce.number().min(0).lt(1).optional(),
     AXIOM_TOKEN: z.string().trim().min(1).optional(),
     AXIOM_DATASET: z.string().trim().min(1).optional(),
     AXIOM_DOMAIN: z.string().url().default("https://us-east-1.aws.edge.axiom.co"),
   })
   .superRefine((value, ctx) => {
+    if (
+      value.NODE_ENV !== "test" &&
+      (value.SPOTIFY_ACCOUNTS_BASE_URL ||
+        value.SPOTIFY_API_BASE_URL ||
+        value.TEST_DECK_RANDOM_VALUE !== undefined)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Test endpoint and deck overrides require NODE_ENV=test.",
+        path: ["NODE_ENV"],
+      });
+    }
+
     if (Boolean(value.AXIOM_TOKEN) === Boolean(value.AXIOM_DATASET)) return;
 
     ctx.addIssue({

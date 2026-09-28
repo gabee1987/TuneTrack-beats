@@ -6,6 +6,32 @@ describe("SpotifyApiClient", () => {
     vi.unstubAllGlobals();
   });
 
+  it("uses injected API and accounts endpoints", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ access_token: "test-token", token_type: "Bearer", expires_in: 3600 }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "test-user", product: "premium" }), { status: 200 }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const client = new SpotifyApiClient({
+      accountsBaseUrl: "http://127.0.0.1:3102/accounts",
+      apiBaseUrl: "http://127.0.0.1:3102/api",
+    });
+
+    await client.getClientCredentialsToken();
+    await client.getUserProfile("test-token");
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("http://127.0.0.1:3102/accounts/api/token");
+    expect(fetchMock.mock.calls[1]?.[0]).toBe("http://127.0.0.1:3102/api/me");
+  });
+
   describe("searchPlaylists", () => {
     it("filters null playlist search results returned by Spotify", async () => {
       const fetchMock = vi.fn().mockResolvedValue(

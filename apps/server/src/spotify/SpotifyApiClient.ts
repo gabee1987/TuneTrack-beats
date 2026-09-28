@@ -101,6 +101,11 @@ interface SpotifyPlaylistMetadata {
   name: string;
 }
 
+interface SpotifyApiClientOptions {
+  accountsBaseUrl?: string;
+  apiBaseUrl?: string;
+}
+
 export class SpotifyApiError extends Error {
   public constructor(
     public readonly code:
@@ -118,15 +123,20 @@ export class SpotifyApiError extends Error {
 }
 
 export class SpotifyApiClient {
-  private static readonly BASE_URL = "https://api.spotify.com/v1";
-  private static readonly ACCOUNTS_URL = "https://accounts.spotify.com";
+  private readonly accountsBaseUrl: string;
+  private readonly apiBaseUrl: string;
+
+  public constructor(options: SpotifyApiClientOptions = {}) {
+    this.accountsBaseUrl = options.accountsBaseUrl ?? "https://accounts.spotify.com";
+    this.apiBaseUrl = options.apiBaseUrl ?? "https://api.spotify.com/v1";
+  }
 
   public async getClientCredentialsToken(): Promise<SpotifyTokenResponse> {
     const credentials = Buffer.from(
       `${env.SPOTIFY_CLIENT_ID}:${env.SPOTIFY_CLIENT_SECRET}`,
     ).toString("base64");
 
-    const response = await fetch(`${SpotifyApiClient.ACCOUNTS_URL}/api/token`, {
+    const response = await fetch(`${this.accountsBaseUrl}/api/token`, {
       method: "POST",
       headers: {
         Authorization: `Basic ${credentials}`,
@@ -160,7 +170,7 @@ export class SpotifyApiClient {
       redirect_uri: redirectUri,
     });
 
-    const response = await fetch(`${SpotifyApiClient.ACCOUNTS_URL}/api/token`, {
+    const response = await fetch(`${this.accountsBaseUrl}/api/token`, {
       method: "POST",
       headers: {
         Authorization: `Basic ${credentials}`,
@@ -190,7 +200,7 @@ export class SpotifyApiClient {
       refresh_token: refreshToken,
     });
 
-    const response = await fetch(`${SpotifyApiClient.ACCOUNTS_URL}/api/token`, {
+    const response = await fetch(`${this.accountsBaseUrl}/api/token`, {
       method: "POST",
       headers: {
         Authorization: `Basic ${credentials}`,
@@ -212,7 +222,7 @@ export class SpotifyApiClient {
   }
 
   public async getUserProfile(accessToken: string): Promise<SpotifyUserProfile> {
-    const response = await fetch(`${SpotifyApiClient.BASE_URL}/me`, {
+    const response = await fetch(`${this.apiBaseUrl}/me`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
@@ -224,10 +234,9 @@ export class SpotifyApiClient {
   }
 
   public async getPlaylistName(playlistId: string, accessToken: string): Promise<string> {
-    const response = await fetch(
-      `${SpotifyApiClient.BASE_URL}/playlists/${playlistId}?fields=name`,
-      { headers: { Authorization: `Bearer ${accessToken}` } },
-    );
+    const response = await fetch(`${this.apiBaseUrl}/playlists/${playlistId}?fields=name`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
 
     if (!response.ok) {
       throw new SpotifyApiError("api_error", "Failed to fetch playlist metadata", response.status);
@@ -242,7 +251,7 @@ export class SpotifyApiClient {
     accessToken: string,
   ): Promise<SpotifyPlaylistSearchItem> {
     const response = await fetch(
-      `${SpotifyApiClient.BASE_URL}/playlists/${playlistId}?fields=id,name,owner(display_name),images,tracks(total)`,
+      `${this.apiBaseUrl}/playlists/${playlistId}?fields=id,name,owner(display_name),images,tracks(total)`,
       { headers: { Authorization: `Bearer ${accessToken}` } },
     );
 
@@ -283,7 +292,7 @@ export class SpotifyApiClient {
       offset: String(offset),
     });
 
-    const response = await fetch(`${SpotifyApiClient.BASE_URL}/search?${params.toString()}`, {
+    const response = await fetch(`${this.apiBaseUrl}/search?${params.toString()}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
@@ -312,7 +321,7 @@ export class SpotifyApiClient {
       offset: String(offset),
     });
 
-    const response = await fetch(`${SpotifyApiClient.BASE_URL}/search?${params.toString()}`, {
+    const response = await fetch(`${this.apiBaseUrl}/search?${params.toString()}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
@@ -341,7 +350,7 @@ export class SpotifyApiClient {
       offset: String(offset),
     });
 
-    const response = await fetch(`${SpotifyApiClient.BASE_URL}/search?${params.toString()}`, {
+    const response = await fetch(`${this.apiBaseUrl}/search?${params.toString()}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
@@ -370,7 +379,7 @@ export class SpotifyApiClient {
       offset: String(offset),
     });
 
-    const response = await fetch(`${SpotifyApiClient.BASE_URL}/search?${params.toString()}`, {
+    const response = await fetch(`${this.apiBaseUrl}/search?${params.toString()}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
@@ -388,7 +397,7 @@ export class SpotifyApiClient {
 
   public async getAlbumTracks(albumId: string, accessToken: string): Promise<SpotifyApiTrack[]> {
     const response = await fetch(
-      `${SpotifyApiClient.BASE_URL}/albums/${albumId}?fields=id,name,artists,images,release_date,uri,total_tracks,tracks(items(id,name,artists,preview_url,uri))`,
+      `${this.apiBaseUrl}/albums/${albumId}?fields=id,name,artists,images,release_date,uri,total_tracks,tracks(items(id,name,artists,preview_url,uri))`,
       { headers: { Authorization: `Bearer ${accessToken}` } },
     );
 
@@ -435,7 +444,7 @@ export class SpotifyApiClient {
   ): Promise<SpotifyApiTrack[]> {
     const params = new URLSearchParams({ market: "US" });
     const response = await fetch(
-      `${SpotifyApiClient.BASE_URL}/artists/${artistId}/top-tracks?${params.toString()}`,
+      `${this.apiBaseUrl}/artists/${artistId}/top-tracks?${params.toString()}`,
       { headers: { Authorization: `Bearer ${accessToken}` } },
     );
 
@@ -465,7 +474,7 @@ export class SpotifyApiClient {
   ): Promise<SpotifyApiTrack[]> {
     const tracks: SpotifyApiTrack[] = [];
     let nextUrl: string | null =
-      `${SpotifyApiClient.BASE_URL}/playlists/${playlistId}/tracks?limit=100&fields=next,total,items(track(id,name,artists,album,preview_url,uri))`;
+      `${this.apiBaseUrl}/playlists/${playlistId}/tracks?limit=100&fields=next,total,items(track(id,name,artists,album,preview_url,uri))`;
 
     while (nextUrl) {
       const response = await fetch(nextUrl, {
@@ -518,7 +527,7 @@ export class SpotifyApiClient {
       ].join(" "),
     });
 
-    return `${SpotifyApiClient.ACCOUNTS_URL}/authorize?${params.toString()}`;
+    return `${this.accountsBaseUrl}/authorize?${params.toString()}`;
   }
 
   /**
@@ -532,7 +541,7 @@ export class SpotifyApiClient {
     positionMs = 0,
   ): Promise<void> {
     const response = await fetch(
-      `${SpotifyApiClient.BASE_URL}/me/player/play?device_id=${encodeURIComponent(deviceId)}`,
+      `${this.apiBaseUrl}/me/player/play?device_id=${encodeURIComponent(deviceId)}`,
       {
         method: "PUT",
         headers: {
@@ -560,7 +569,7 @@ export class SpotifyApiClient {
     deviceId: string,
     play = false,
   ): Promise<void> {
-    const response = await fetch(`${SpotifyApiClient.BASE_URL}/me/player`, {
+    const response = await fetch(`${this.apiBaseUrl}/me/player`, {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -585,7 +594,7 @@ export class SpotifyApiClient {
   }
 
   public async pausePlayback(accessToken: string): Promise<void> {
-    const response = await fetch(`${SpotifyApiClient.BASE_URL}/me/player/pause`, {
+    const response = await fetch(`${this.apiBaseUrl}/me/player/pause`, {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -606,7 +615,7 @@ export class SpotifyApiClient {
   }
 
   public async listPlaybackDevices(accessToken: string): Promise<SpotifyPlaybackDevice[]> {
-    const response = await fetch(`${SpotifyApiClient.BASE_URL}/me/player/devices`, {
+    const response = await fetch(`${this.apiBaseUrl}/me/player/devices`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -649,30 +658,28 @@ function isSpotifyPlaylistSearchItem(
 function isSpotifyApiTrack(track: SpotifyApiTrack | null): track is SpotifyApiTrack {
   return Boolean(
     track?.id &&
-      track.name &&
-      Array.isArray(track.artists) &&
-      track.album &&
-      Array.isArray(track.album.images) &&
-      track.uri,
+    track.name &&
+    Array.isArray(track.artists) &&
+    track.album &&
+    Array.isArray(track.album.images) &&
+    track.uri,
   );
 }
 
 function isSpotifyApiAlbum(album: SpotifyApiAlbum | null): album is SpotifyApiAlbum {
   return Boolean(
     album?.id &&
-      album.name &&
-      Array.isArray(album.artists) &&
-      Array.isArray(album.images) &&
-      album.release_date &&
-      album.uri &&
-      typeof album.total_tracks === "number",
+    album.name &&
+    Array.isArray(album.artists) &&
+    Array.isArray(album.images) &&
+    album.release_date &&
+    album.uri &&
+    typeof album.total_tracks === "number",
   );
 }
 
 function isSpotifyApiArtist(artist: SpotifyApiArtist | null): artist is SpotifyApiArtist {
-  return Boolean(
-    artist?.id && artist.name && Array.isArray(artist.images) && artist.uri,
-  );
+  return Boolean(artist?.id && artist.name && Array.isArray(artist.images) && artist.uri);
 }
 
 async function parseSpotifyTokenError(response: Response): Promise<string | null> {

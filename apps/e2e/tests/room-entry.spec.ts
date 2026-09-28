@@ -2,6 +2,12 @@ import { expect, test, type Browser, type BrowserContext, type Page } from "@pla
 
 const playerProfileStorageKey = "tunetrack.playerProfile.v1";
 
+test.afterEach(async ({ request }) => {
+  const response = await request.get("http://127.0.0.1:3102/requests");
+  await expect(response).toBeOK();
+  await expect(response.json()).resolves.toEqual({ unexpectedRequests: [] });
+});
+
 test("a guest joins a newly hosted room from the live directory", async ({ browser }) => {
   const guest = await createNamedPage(browser, "Guest Player");
   const host = await createNamedPage(browser, "Host Player");
@@ -50,6 +56,39 @@ test("the host starts the game for both players", async ({ browser }) => {
   }
 });
 
+test("a correct placement is revealed before the turn advances", async ({ browser }) => {
+  const guest = await createNamedPage(browser, "Core Guest");
+  const host = await createNamedPage(browser, "Core Host");
+
+  try {
+    await guest.page.goto("/play");
+    const roomId = await hostRoom(host.page);
+    const directoryRoom = guest.page.getByRole("button", {
+      name: new RegExp(escapeRegex(roomId)),
+    });
+
+    await expect(directoryRoom).toBeVisible();
+    await directoryRoom.click();
+    await expectLobbyPlayerCount(guest.page, 2);
+    await expectLobbyPlayerCount(host.page, 2);
+
+    await host.page.getByRole("button", { name: "Start Game" }).first().click();
+    await expectGamePage(host.page, roomId);
+    await expectGamePage(guest.page, roomId);
+
+    await host.page.getByRole("button", { name: "Confirm", exact: true }).click();
+
+    await expect(host.page.getByText("Correct placement.", { exact: true }).first()).toBeVisible();
+    await expect(host.page.getByLabel("2 cards").first()).toBeVisible();
+    await host.page.getByRole("button", { name: "Next song", exact: true }).click();
+
+    await expect(host.page.getByText("Core Guest's turn", { exact: true }).first()).toBeVisible();
+    await expect(guest.page.getByText("Your turn", { exact: true }).first()).toBeVisible();
+  } finally {
+    await Promise.all([host.context.close(), guest.context.close()]);
+  }
+});
+
 test("a saved player profile joins from a direct invite in one action", async ({ browser }) => {
   const host = await createNamedPage(browser, "Invite Host");
   const guest = await createNamedPage(browser, "Invite Guest");
@@ -77,6 +116,48 @@ async function createNamedPage(
   displayName: string,
 ): Promise<{ context: BrowserContext; page: Page }> {
   const context = await browser.newContext();
+  await context.addInitScript(() => {
+    class FakeSpotifyPlayer {
+      private readonly listeners = new Map<string, (payload: unknown) => void>();
+
+      public activateElement(): Promise<void> {
+        return Promise.resolve();
+      }
+
+      public addListener(eventName: string, listener: (payload: unknown) => void): boolean {
+        this.listeners.set(eventName, listener);
+        return true;
+      }
+
+      public connect(): Promise<boolean> {
+        queueMicrotask(() => this.listeners.get("ready")?.({ device_id: "E2E_DEVICE" }));
+        return Promise.resolve(true);
+      }
+
+      public disconnect(): void {}
+
+      public getCurrentState(): Promise<null> {
+        return Promise.resolve(null);
+      }
+
+      public pause(): Promise<void> {
+        return Promise.resolve();
+      }
+
+      public resume(): Promise<void> {
+        return Promise.resolve();
+      }
+
+      public seek(): Promise<void> {
+        return Promise.resolve();
+      }
+    }
+
+    Object.defineProperty(window, "Spotify", {
+      configurable: true,
+      value: { Player: FakeSpotifyPlayer },
+    });
+  });
   await context.addInitScript(
     ({ name, storageKey }) => {
       if (window.location.protocol === "about:") {

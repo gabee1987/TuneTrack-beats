@@ -24,7 +24,10 @@ const { app, httpServer } = createHttpServer();
 const io = createSocketServer(httpServer);
 
 const spotifyTokenStore = new SpotifyTokenStore();
-const spotifyApiClient = new SpotifyApiClient();
+const spotifyApiClient = new SpotifyApiClient({
+  ...(env.SPOTIFY_ACCOUNTS_BASE_URL ? { accountsBaseUrl: env.SPOTIFY_ACCOUNTS_BASE_URL } : {}),
+  ...(env.SPOTIFY_API_BASE_URL ? { apiBaseUrl: env.SPOTIFY_API_BASE_URL } : {}),
+});
 const spotifyAuthService = new SpotifyAuthService(spotifyApiClient, spotifyTokenStore);
 const spotifyPlaybackSessions = new SpotifyPlaybackSessionStore();
 const playlistImportService = new PlaylistImportService(spotifyApiClient, spotifyTokenStore);
@@ -33,7 +36,11 @@ const spotifyMusicSearchService = new SpotifyMusicSearchService(
   spotifyApiClient,
   spotifyTokenStore,
 );
-const deckService = new DeckService();
+const testDeckRandomValue = env.TEST_DECK_RANDOM_VALUE;
+const deckService = new DeckService(
+  undefined,
+  testDeckRandomValue === undefined ? undefined : () => testDeckRandomValue,
+);
 const roomRegistry = new RoomRegistry();
 const roomService = new RoomService(
   roomRegistry,
