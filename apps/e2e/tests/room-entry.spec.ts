@@ -89,6 +89,53 @@ test("a correct placement is revealed before the turn advances", async ({ browse
   }
 });
 
+test("an incorrect placement is discarded before the turn advances", async ({ browser }) => {
+  const guest = await createNamedPage(browser, "Discard Guest");
+  const host = await createNamedPage(browser, "Discard Host");
+
+  try {
+    await guest.page.goto("/play");
+    const roomId = await hostRoom(host.page);
+    const directoryRoom = guest.page.getByRole("button", {
+      name: new RegExp(escapeRegex(roomId)),
+    });
+
+    await expect(directoryRoom).toBeVisible();
+    await directoryRoom.click();
+    await expectLobbyPlayerCount(guest.page, 2);
+    await expectLobbyPlayerCount(host.page, 2);
+
+    await host.page.getByRole("button", { name: "Start Game" }).first().click();
+    await expectGamePage(host.page, roomId);
+    await expectGamePage(guest.page, roomId);
+
+    await host.page.getByRole("button", { name: "Confirm", exact: true }).click();
+    await expect(host.page.getByText("Correct placement.", { exact: true }).first()).toBeVisible();
+    await host.page.getByRole("button", { name: "Next song", exact: true }).click();
+    await expect(guest.page.getByText("Your turn", { exact: true }).first()).toBeVisible();
+
+    await guest.page.getByRole("button", { name: "Confirm", exact: true }).click();
+    await expect(guest.page.getByText("Correct placement.", { exact: true }).first()).toBeVisible();
+    await host.page.getByRole("button", { name: "Next song", exact: true }).click();
+    await expect(host.page.getByText("Your turn", { exact: true }).first()).toBeVisible();
+
+    await host.page.getByRole("button", { name: "Confirm", exact: true }).click();
+
+    await expect(host.page.getByText("Wrong placement.", { exact: true }).first()).toBeVisible();
+    await expect(guest.page.getByText("Wrong placement.", { exact: true }).first()).toBeVisible();
+    await expect(host.page.getByLabel("2 cards").first()).toBeVisible();
+    await expect(guest.page.getByLabel("2 cards").first()).toBeVisible();
+    await host.page.getByRole("button", { name: "Next song", exact: true }).click();
+
+    await expect(
+      host.page.getByText("Discard Guest's turn", { exact: true }).first(),
+    ).toBeVisible();
+    await expect(guest.page.getByText("Your turn", { exact: true }).first()).toBeVisible();
+  } finally {
+    await Promise.all([host.context.close(), guest.context.close()]);
+  }
+});
+
 test("a saved player profile joins from a direct invite in one action", async ({ browser }) => {
   const host = await createNamedPage(browser, "Invite Host");
   const guest = await createNamedPage(browser, "Invite Guest");

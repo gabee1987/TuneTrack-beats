@@ -164,9 +164,10 @@ A fifth, in `apps/web`:
 > E1 is covered through both live-directory discovery and a direct invite with a saved
 > profile. E2 verifies that one host action moves both clients into the game. E3 uses an
 > injected deterministic deck random source to verify a correct placement, reveal, card
-> award, and turn advancement. Server Spotify endpoints target a local fail-loud sentinel,
-> every scenario asserts it received zero requests, and browser contexts install a fake
-> Spotify SDK. WebKit and E4-E15 remain open.
+> award, and turn advancement. E4 continues through a deterministic incorrect placement
+> and verifies the card is discarded before the next turn. Server Spotify endpoints target
+> a local fail-loud sentinel, every scenario asserts it received zero requests, and browser
+> contexts install a fake Spotify SDK. WebKit and E5-E15 remain open.
 
 ### 5.1 Tooling
 
