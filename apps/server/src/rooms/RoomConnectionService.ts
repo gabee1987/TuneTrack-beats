@@ -20,6 +20,7 @@ import type { RoomTimerCoordinator } from "./RoomTimerCoordinator.js";
 
 type RoomStateChangedEmitter = (roomState: PublicRoomState) => void;
 type SpotifyPlaybackHandoffEmitter = (roomId: RoomId) => void;
+type RoomDirectoryChangedEmitter = () => void;
 
 export class RoomConnectionService {
   private static readonly IN_GAME_RECONNECT_DISPLAY_MS = 180_000;
@@ -30,6 +31,7 @@ export class RoomConnectionService {
     private readonly gameFlowService: GameFlowService,
     private readonly emitRoomStateChanged: RoomStateChangedEmitter,
     private readonly emitSpotifyPlaybackHandoff: SpotifyPlaybackHandoffEmitter = () => undefined,
+    private readonly emitRoomDirectoryChanged: RoomDirectoryChangedEmitter = () => undefined,
   ) {}
 
   public removePlayerBySocketId(socketId: string): PublicRoomState | null {
@@ -193,6 +195,7 @@ export class RoomConnectionService {
       this.timers.clearForRoom(membership.roomId);
       this.store.deleteRoom(membership.roomId);
       this.store.clearRoomRedirects(membership.roomId);
+      this.emitRoomDirectoryChanged();
       return null;
     }
 

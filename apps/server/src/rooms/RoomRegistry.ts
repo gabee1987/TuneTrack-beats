@@ -42,6 +42,7 @@ export class RoomRegistry {
   private readonly gameplay: RoomGameplayService;
   private readonly connection: RoomConnectionService;
   private roomStateChangedListener: ((roomState: PublicRoomState) => void) | null = null;
+  private roomDirectoryChangedListener: (() => void) | null = null;
   private spotifyPlaybackHandoffListener: ((roomId: RoomId) => void) | null = null;
 
   public constructor(
@@ -55,6 +56,9 @@ export class RoomRegistry {
     };
     const emitSpotifyPlaybackHandoff = (roomId: RoomId): void => {
       this.spotifyPlaybackHandoffListener?.(roomId);
+    };
+    const emitRoomDirectoryChanged = (): void => {
+      this.roomDirectoryChangedListener?.();
     };
 
     this.store = new RoomStore();
@@ -70,6 +74,7 @@ export class RoomRegistry {
       this.gameFlowService,
       emitRoomStateChanged,
       emitSpotifyPlaybackHandoff,
+      emitRoomDirectoryChanged,
     );
     this.lobby = new RoomLobbyService(
       this.store,
@@ -88,6 +93,10 @@ export class RoomRegistry {
 
   public setRoomStateChangedListener(listener: (roomState: PublicRoomState) => void): void {
     this.roomStateChangedListener = listener;
+  }
+
+  public setRoomDirectoryChangedListener(listener: () => void): void {
+    this.roomDirectoryChangedListener = listener;
   }
 
   public setSpotifyPlaybackHandoffListener(listener: (roomId: RoomId) => void): void {

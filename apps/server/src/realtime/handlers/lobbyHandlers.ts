@@ -16,6 +16,7 @@ import {
 import type { Server, Socket } from "socket.io";
 import { logger } from "../../app/logger.js";
 import type { RoomService } from "../../rooms/RoomService.js";
+import { broadcastRoomDirectory } from "../broadcastRoomDirectory.js";
 import { broadcastRoomState, createSocketHandler } from "../createSocketHandler.js";
 import {
   closeRoomErrorMessages,
@@ -78,6 +79,7 @@ function registerRenameRoomHandler(io: Server, socket: Socket, roomService: Room
       io.in(previousRoomId).socketsJoin(roomState.roomId);
       io.in(previousRoomId).socketsLeave(previousRoomId);
       broadcastRoomState(io, roomState);
+      broadcastRoomDirectory(io, roomService);
     },
     idempotency: {
       find: (data) =>
@@ -133,6 +135,7 @@ function registerJoinRoomHandler(io: Server, socket: Socket, roomService: RoomSe
       socket.join(roomState.roomId);
       socket.emit(ServerToClientEvent.PlayerIdentity, { playerId });
       broadcastRoomState(io, roomState);
+      broadcastRoomDirectory(io, roomService);
     },
     fallbackErrorCode: "JOIN_ROOM_FAILED",
     errorMessages: joinRoomErrorMessages,
@@ -169,6 +172,7 @@ function registerCreateRoomHandler(io: Server, socket: Socket, roomService: Room
       socket.join(roomState.roomId);
       socket.emit(ServerToClientEvent.PlayerIdentity, { playerId });
       broadcastRoomState(io, roomState);
+      broadcastRoomDirectory(io, roomService);
     },
     fallbackErrorCode: "CREATE_ROOM_FAILED",
     errorMessages: createRoomErrorMessages,
@@ -224,6 +228,7 @@ function registerTransferHostHandler(io: Server, socket: Socket, roomService: Ro
     },
     handle: (data) => {
       broadcastRoomState(io, roomService.transferHost(data, socket.id));
+      broadcastRoomDirectory(io, roomService);
     },
     idempotency: {
       find: (data) =>
@@ -274,6 +279,7 @@ function registerKickPlayerHandler(io: Server, socket: Socket, roomService: Room
       }
 
       broadcastRoomState(io, roomState);
+      broadcastRoomDirectory(io, roomService);
     },
     idempotency: {
       find: (data) =>
@@ -327,6 +333,7 @@ function registerUpdatePlayerProfileHandler(
     },
     handle: (data) => {
       broadcastRoomState(io, roomService.updatePlayerProfile(data, socket.id));
+      broadcastRoomDirectory(io, roomService);
     },
     fallbackErrorCode: "PLAYER_PROFILE_UPDATE_FAILED",
     errorMessages: playerProfileErrorMessages,
@@ -376,6 +383,7 @@ function registerCloseRoomHandler(io: Server, socket: Socket, roomService: RoomS
         message: "The host closed this room.",
       });
       io.in(roomId).socketsLeave(roomId);
+      broadcastRoomDirectory(io, roomService);
     },
     idempotency: {
       find: (data) =>

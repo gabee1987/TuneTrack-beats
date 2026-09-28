@@ -329,6 +329,25 @@ Reason:
 - this preserves the architectural goal that backend-driven UI sequencing should
   be explicit and verifiable
 
+### Room-directory visibility on trusted networks
+
+The room directory intentionally exposes each lobby's room code, host display name, player
+count, and status to connected players who are not currently inside a room.
+
+Current rule:
+
+- keep `PublicRoomSummary` limited to those four fields
+- push directory changes only to sockets outside rooms
+- treat this visibility as appropriate for the current trusted LAN/party deployment
+- reassess authentication and whether public discovery should exist before exposing the app
+  as an unrestricted internet service
+
+Reason:
+
+- a recognizable host name helps nearby players choose the correct party room
+- room members already receive richer authoritative room state and do not need directory pushes
+- limiting the payload and audience avoids broadcasting gameplay or profile details unnecessarily
+
 ## Still Open
 
 ### Room code generation rules

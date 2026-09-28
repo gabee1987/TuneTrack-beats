@@ -1,6 +1,6 @@
 # 09 — Room Creation Flow, Player Identity and In-Game Metadata Override
 
-> **Current implementation state (2026-09-17):** The Phase 1 profile foundation is
+> **Current implementation state (2026-09-28):** The Phase 1 profile foundation is
 > implemented. A persisted device-level profile migrates the legacy remembered name. Home
 > remains an entry screen and always continues to Play, where one inline name field with a
 > checkmark saves the profile independently of room creation or joining. Direct invite
@@ -14,9 +14,10 @@
 > with the server-confirmed code. Each mounted lobby freezes its entry intent so the outgoing
 > code-less route cannot redirect Home while its exit animation overlaps the authoritative
 > route. Room navigation and directory ownership now live under `features/rooms`, and the
-> obsolete Home room form and client code suggestion are removed. The optional custom-code
-> affordance, live room-directory updates, remaining Phase 3 layout work, Phase 4, and the
-> remaining Phase 5 compatibility cleanup stay open.
+> obsolete Home room form and client code suggestion are removed. The room directory now
+> updates connected players outside rooms when lobby summaries change, a game starts, a room
+> closes, or an abandoned lobby expires. The optional custom-code affordance, remaining Phase
+> 3 layout work, Phase 4, and the remaining Phase 5 compatibility cleanup stay open.
 
 > Addresses findings **F-40 – F-43**, plus the requested manual metadata override.
 > Owning layers: `apps/web/src/pages/{HomePage,PlayPage,JoinRoomPage,LobbyPage}`,
@@ -190,6 +191,12 @@ disappears with server-generated codes.
 
 ### 3.4 Room directory improvements
 
+**Implementation state (2026-09-28):** Complete. The realtime boundary publishes the current
+lobby summaries only to sockets that are not members of a room after directory-visible lobby
+changes, game start, explicit close, and automatic removal of an abandoned lobby. Existing
+manual refresh remains available as a fallback. Server integration tests cover create, start,
+close, membership filtering, and reconnect-grace expiry.
+
 `useRoomDirectory` requests `list_rooms` on connect and on manual refresh only. In practice
 a player waiting on the Play screen watches a stale list. Since the server already
 broadcasts room state changes, add a lightweight push: emit an updated room list to all
@@ -210,7 +217,7 @@ once the app is exposed beyond a trusted network.
       parameter. Legacy `playerName` input remains accepted for migration.
 - [x] Two clients hosting simultaneously never collide on a room code (test with a stubbed
       generator forced to collide, asserting retry then fallback).
-- [ ] The room list updates without a manual refresh when another player creates a room.
+- [x] The room list updates without a manual refresh when another player creates a room.
 - [ ] The invite-link flow still works: opening `/join/:roomId` shows the room, and joining
       needs one tap when a name is already set.
 - [ ] E2E covers host-and-join in both directions (Doc 11 section 5).

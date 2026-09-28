@@ -2,6 +2,7 @@ import { ServerToClientEvent } from "@tunetrack/shared";
 import type { Server } from "socket.io";
 import { logger } from "../app/logger.js";
 import type { RoomService } from "../rooms/RoomService.js";
+import { broadcastRoomDirectory } from "./broadcastRoomDirectory.js";
 import { registerGameplayHandlers } from "./handlers/gameplayHandlers.js";
 import { registerLobbyHandlers } from "./handlers/lobbyHandlers.js";
 import { registerPlaylistHandlers } from "./handlers/playlistHandlers.js";
@@ -17,6 +18,12 @@ export function registerSocketHandlers(io: Server, roomService: RoomService): vo
     io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
       roomState,
     });
+    if (roomState.status === "lobby") {
+      broadcastRoomDirectory(io, roomService);
+    }
+  });
+  roomService.setRoomDirectoryChangedListener(() => {
+    broadcastRoomDirectory(io, roomService);
   });
 
   io.on("connection", (socket) => {

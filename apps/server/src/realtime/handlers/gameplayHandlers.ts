@@ -14,6 +14,7 @@ import {
 import type { Server, Socket } from "socket.io";
 import { logger } from "../../app/logger.js";
 import type { RoomService } from "../../rooms/RoomService.js";
+import { broadcastRoomDirectory } from "../broadcastRoomDirectory.js";
 import { broadcastRoomState, createSocketHandler } from "../createSocketHandler.js";
 import {
   awardTtErrorMessages,
@@ -59,6 +60,7 @@ function registerStartGameHandler(io: Server, socket: Socket, roomService: RoomS
     },
     handle: (data) => {
       broadcastRoomState(io, roomService.startGame(data, socket.id));
+      broadcastRoomDirectory(io, roomService);
     },
     idempotency: {
       find: (data) =>

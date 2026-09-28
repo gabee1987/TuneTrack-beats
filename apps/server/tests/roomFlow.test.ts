@@ -5,6 +5,7 @@ import {
   type ActionAck,
   type PlayerIdentityPayload,
   type PlaylistTracksPayload,
+  type RoomListPayload,
   type PublicRoomState,
   type ServerErrorPayload,
   type StateUpdatePayload,
@@ -45,6 +46,100 @@ afterEach(async () => {
 });
 
 describe("room flow", () => {
+  it("pushes room directory changes only to sockets outside rooms", async () => {
+    const serverContext = await startTestServer();
+    const directorySocket = createClient(serverContext.baseUrl);
+    const hostSocket = createClient(serverContext.baseUrl);
+    const hostRoomLists: RoomListPayload[] = [];
+
+    hostSocket.on(ServerToClientEvent.RoomList, (payload: RoomListPayload) => {
+      hostRoomLists.push(payload);
+    });
+
+    const directoryConnectedPromise = waitForEvent(directorySocket, "connect");
+    directorySocket.connect();
+    await directoryConnectedPromise;
+
+    const createdDirectoryPromise = waitForRoomList(
+      directorySocket,
+      (payload) => payload.rooms.length === 1,
+    );
+    const hostConnectedPromise = waitForEvent(hostSocket, "connect");
+    hostSocket.connect();
+    await hostConnectedPromise;
+    hostSocket.emit(ClientToServerEvent.CreateRoom, {
+      roomId: "listed-room",
+      displayName: "Host Player",
+      sessionId: "host-session",
+    });
+
+    await expect(createdDirectoryPromise).resolves.toEqual({
+      rooms: [
+        {
+          hostName: "Host Player",
+          playerCount: 1,
+          roomId: "listed-room",
+          status: "lobby",
+        },
+      ],
+    });
+
+    const startedDirectoryPromise = waitForRoomList(
+      directorySocket,
+      (payload) => payload.rooms.length === 0,
+    );
+    hostSocket.emit(ClientToServerEvent.StartGame, { roomId: "listed-room" });
+
+    await expect(startedDirectoryPromise).resolves.toEqual({ rooms: [] });
+    expect(hostRoomLists).toEqual([]);
+
+    const closedDirectoryPromise = waitForEvent<RoomListPayload>(
+      directorySocket,
+      ServerToClientEvent.RoomList,
+    );
+    const hostClosedDirectoryPromise = waitForEvent<RoomListPayload>(
+      hostSocket,
+      ServerToClientEvent.RoomList,
+    );
+    hostSocket.emit(ClientToServerEvent.CloseRoom, { roomId: "listed-room" });
+
+    await expect(closedDirectoryPromise).resolves.toEqual({ rooms: [] });
+    await expect(hostClosedDirectoryPromise).resolves.toEqual({ rooms: [] });
+    expect(hostRoomLists).toEqual([{ rooms: [] }]);
+  });
+
+  it("pushes a room directory update when an abandoned lobby expires", async () => {
+    const serverContext = await startTestServer(createTestRoomService(25));
+    const directorySocket = createClient(serverContext.baseUrl);
+    const hostSocket = createClient(serverContext.baseUrl);
+
+    const directoryConnectedPromise = waitForEvent(directorySocket, "connect");
+    directorySocket.connect();
+    await directoryConnectedPromise;
+
+    const createdDirectoryPromise = waitForRoomList(
+      directorySocket,
+      (payload) => payload.rooms.length === 1,
+    );
+    const hostConnectedPromise = waitForEvent(hostSocket, "connect");
+    hostSocket.connect();
+    await hostConnectedPromise;
+    hostSocket.emit(ClientToServerEvent.CreateRoom, {
+      roomId: "abandoned",
+      displayName: "Host Player",
+      sessionId: "host-session",
+    });
+    await createdDirectoryPromise;
+
+    const removedDirectoryPromise = waitForRoomList(
+      directorySocket,
+      (payload) => payload.rooms.length === 0,
+    );
+    hostSocket.disconnect();
+
+    await expect(removedDirectoryPromise).resolves.toEqual({ rooms: [] });
+  });
+
   it("creates a room with a server-generated code when the client omits roomId", async () => {
     const serverContext = await startTestServer();
     const hostSocket = createClient(serverContext.baseUrl);
@@ -1653,11 +1748,11 @@ function buildCuratedTrack(id: string, title: string, spotifyTrackUri: string) {
   };
 }
 
-function createTestRoomService(): RoomService {
+function createTestRoomService(reconnectGracePeriodMs = 500): RoomService {
   const tokenStore = new SpotifyTokenStore();
   const apiClient = new SpotifyApiClient();
   return new RoomService(
-    new RoomRegistry(undefined, 500, 25, 25),
+    new RoomRegistry(undefined, reconnectGracePeriodMs, 25, 25),
     new TestDeckService(),
     new SpotifyAuthService(apiClient, tokenStore),
     new PlaylistImportService(apiClient, tokenStore),
@@ -1788,6 +1883,19 @@ async function waitForStateUpdate(
 
     if (isTargetState(payload.roomState)) {
       return payload.roomState;
+    }
+  }
+}
+
+async function waitForRoomList(
+  socket: Socket,
+  isTargetList: (payload: RoomListPayload) => boolean,
+): Promise<RoomListPayload> {
+  while (true) {
+    const payload = await waitForEvent<RoomListPayload>(socket, ServerToClientEvent.RoomList);
+
+    if (isTargetList(payload)) {
+      return payload;
     }
   }
 }

@@ -105,6 +105,10 @@ export class RoomService {
     this.roomRegistry.setRoomStateChangedListener(listener);
   }
 
+  public setRoomDirectoryChangedListener(listener: () => void): void {
+    this.roomRegistry.setRoomDirectoryChangedListener(listener);
+  }
+
   public joinRoom(joinRoomPayload: JoinRoomPayloadParsed, socketId: string): JoinRoomResult {
     const result = this.roomRegistry.addPlayerToRoom(
       joinRoomPayload.roomId,
