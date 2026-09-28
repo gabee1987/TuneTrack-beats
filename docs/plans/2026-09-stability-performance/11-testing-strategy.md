@@ -162,7 +162,8 @@ A fifth, in `apps/web`:
 > implemented. `npm run e2e` builds the real server and web app, serves the production web
 > build through Vite preview, and runs isolated host and guest browser contexts in Chromium.
 > E1 is covered through both live-directory discovery and a direct invite with a saved
-> profile. WebKit, the Spotify fake, the deterministic gameplay deck, and E2-E15 remain open.
+> profile. E2 verifies that one host action moves both clients into the game. WebKit, the
+> Spotify fake, the deterministic gameplay deck, and E3-E15 remain open.
 
 ### 5.1 Tooling
 

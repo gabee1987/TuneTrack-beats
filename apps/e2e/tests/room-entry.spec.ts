@@ -24,6 +24,32 @@ test("a guest joins a newly hosted room from the live directory", async ({ brows
   }
 });
 
+test("the host starts the game for both players", async ({ browser }) => {
+  const guest = await createNamedPage(browser, "Game Guest");
+  const host = await createNamedPage(browser, "Game Host");
+
+  try {
+    await guest.page.goto("/play");
+    const roomId = await hostRoom(host.page);
+    const directoryRoom = guest.page.getByRole("button", {
+      name: new RegExp(escapeRegex(roomId)),
+    });
+
+    await expect(directoryRoom).toBeVisible();
+    await directoryRoom.click();
+    await expect(guest.page).toHaveURL(`/lobby/${roomId}`);
+    await expectLobbyPlayerCount(guest.page, 2);
+    await expectLobbyPlayerCount(host.page, 2);
+
+    await host.page.getByRole("button", { name: "Start Game" }).first().click();
+
+    await expectGamePage(host.page, roomId);
+    await expectGamePage(guest.page, roomId);
+  } finally {
+    await Promise.all([host.context.close(), guest.context.close()]);
+  }
+});
+
 test("a saved player profile joins from a direct invite in one action", async ({ browser }) => {
   const host = await createNamedPage(browser, "Invite Host");
   const guest = await createNamedPage(browser, "Invite Guest");
@@ -91,6 +117,16 @@ async function expectLobbyPlayers(
   await expect(
     page.getByRole("listitem").filter({ hasText: otherDisplayName }).first(),
   ).toBeVisible();
+}
+
+async function expectGamePage(page: Page, roomId: string): Promise<void> {
+  await expect(page).toHaveURL(`/game/${roomId}`);
+  await expect(page.getByRole("button", { name: /leaderboard/i }).first()).toBeVisible();
+}
+
+async function expectLobbyPlayerCount(page: Page, count: number): Promise<void> {
+  const playerCountMetric = page.getByText("Players here", { exact: true }).locator("..");
+  await expect(playerCountMetric.getByText(String(count), { exact: true }).first()).toBeVisible();
 }
 
 function escapeRegex(value: string): string {
