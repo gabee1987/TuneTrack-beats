@@ -5,6 +5,18 @@ import { VitePWA } from "vite-plugin-pwa";
 import { darkThemeDefinition } from "./src/features/theme/darkThemeTokens";
 
 const defaultThemeColor = darkThemeDefinition.cssVariables["color-bg-app"] as string;
+const backendProxyTarget = process.env.TUNETRACK_BACKEND_PROXY_TARGET ?? "http://localhost:3001";
+const backendProxy = {
+  "/api": {
+    target: backendProxyTarget,
+    changeOrigin: true,
+  },
+  "/socket.io": {
+    target: backendProxyTarget,
+    ws: true,
+    changeOrigin: true,
+  },
+};
 
 export default defineConfig({
   plugins: [
@@ -84,7 +96,11 @@ export default defineConfig({
           if (id.includes("react-dom")) {
             return "vendor-react-dom";
           }
-          if (id.includes("/react/") || id.includes("react/jsx-runtime") || id.includes("scheduler")) {
+          if (
+            id.includes("/react/") ||
+            id.includes("react/jsx-runtime") ||
+            id.includes("scheduler")
+          ) {
             return "vendor-react";
           }
           return "vendor";
@@ -97,17 +113,10 @@ export default defineConfig({
     // (npm often swallows CLI `--host` before Vite sees it.)
     host: true,
     port: 5173,
-    proxy: {
-      // Forward socket.io traffic to the HTTP server so HTTPS pages avoid mixed-content
-      "/api": {
-        target: "http://localhost:3001",
-        changeOrigin: true,
-      },
-      "/socket.io": {
-        target: "http://localhost:3001",
-        ws: true,
-        changeOrigin: true,
-      },
-    },
+    // Forward backend traffic so HTTPS pages avoid mixed-content requests.
+    proxy: backendProxy,
+  },
+  preview: {
+    proxy: backendProxy,
   },
 });

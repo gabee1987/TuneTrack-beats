@@ -16,8 +16,10 @@
 > route. Room navigation and directory ownership now live under `features/rooms`, and the
 > obsolete Home room form and client code suggestion are removed. The room directory now
 > updates connected players outside rooms when lobby summaries change, a game starts, a room
-> closes, or an abandoned lobby expires. The optional custom-code affordance, remaining Phase
-> 3 layout work, Phase 4, and the remaining Phase 5 compatibility cleanup stay open.
+> closes, or an abandoned lobby expires. Chromium E2E coverage now verifies host-and-join
+> through both the live directory and a direct invite with a saved player profile. The
+> optional custom-code affordance, remaining Phase 3 layout work, Phase 4, broader E2E
+> coverage, and the remaining Phase 5 compatibility cleanup stay open.
 
 > Addresses findings **F-40 – F-43**, plus the requested manual metadata override.
 > Owning layers: `apps/web/src/pages/{HomePage,PlayPage,JoinRoomPage,LobbyPage}`,
@@ -218,9 +220,10 @@ once the app is exposed beyond a trusted network.
 - [x] Two clients hosting simultaneously never collide on a room code (test with a stubbed
       generator forced to collide, asserting retry then fallback).
 - [x] The room list updates without a manual refresh when another player creates a room.
-- [ ] The invite-link flow still works: opening `/join/:roomId` shows the room, and joining
+- [x] The invite-link flow still works: opening `/join/:roomId` shows the room, and joining
       needs one tap when a name is already set.
-- [ ] E2E covers host-and-join in both directions (Doc 11 section 5).
+- [x] E2E covers host-and-join through the live directory and direct invite routes (Doc 11
+      section 5).
 
 ## 4. Phase 3 — Lobby setup surface cleanup · **S3**
 

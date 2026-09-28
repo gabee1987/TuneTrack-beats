@@ -11,6 +11,8 @@
     "predev": "npm run build -w @tunetrack/shared && npm run build -w @tunetrack/game-engine",
     "dev": "concurrently \"npm run dev -w apps/server\" \"npm run dev -w apps/web\"",
     "build": "npm run build --workspaces --if-present",
+    "e2e": "npm run test:e2e -w @tunetrack/e2e",
+    "e2e:headed": "npm run test:e2e:headed -w @tunetrack/e2e",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",

@@ -1,0 +1,16 @@
+{
+  "name": "@tunetrack/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "pretest:e2e": "npm run build -w @tunetrack/server && npm run build -w @tunetrack/web",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint tests playwright.config.ts --ext .ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0"
+  }
+}

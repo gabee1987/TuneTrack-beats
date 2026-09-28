@@ -158,6 +158,12 @@ A fifth, in `apps/web`:
 
 **Finding:** F-45.
 
+> **Implementation state (2026-09-28):** The initial `apps/e2e` Playwright workspace is
+> implemented. `npm run e2e` builds the real server and web app, serves the production web
+> build through Vite preview, and runs isolated host and guest browser contexts in Chromium.
+> E1 is covered through both live-directory discovery and a direct invite with a saved
+> profile. WebKit, the Spotify fake, the deterministic gameplay deck, and E2-E15 remain open.
+
 ### 5.1 Tooling
 
 Playwright, as a development dependency in a new `apps/e2e` workspace so it never enters
