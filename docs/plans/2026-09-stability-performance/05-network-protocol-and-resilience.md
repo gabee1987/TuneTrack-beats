@@ -17,6 +17,11 @@ found four independent causes, in rough order of impact:
 
 **Findings:** F-13, F-24.
 
+> **Implementation state (2026-09-29):** Chromium E2E E8 now drops and restores an in-game
+> host, verifies that no `ROOM_ALREADY_EXISTS` or room-recovery UI appears, and proves the
+> restored player retains host-only reveal authority. The remaining Phase 1 acceptance
+> items stay open.
+
 ### 1.1 Client: separate "first connect" from "reconnect"
 
 `apps/web/src/pages/LobbyPage/hooks/useLobbyRoomConnection.ts` registers `handleConnect`

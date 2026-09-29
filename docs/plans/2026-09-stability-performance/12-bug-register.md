@@ -779,9 +779,10 @@ not Fixed.
 
 ### Verification
 
-- Chromium E2E E7 passes through the existing session-id rejoin path: the host observes the
-  same guest disconnect and reconnect, and the restored guest completes the following turn
-  without room-recovery UI. E8 to E12 remain open and continue to gate the related fixes.
+- Chromium E2E E7 and E8 pass through the existing session-id rejoin path. E7 proves a
+  restored guest completes the following turn without room-recovery UI. E8 proves a
+  restored host triggers neither room-exists nor room-recovery UI and retains host-only
+  reveal authority. E9 to E12 remain open and continue to gate the related fixes.
 - Server tests per Doc 11 section 6.
 - `useLobbyRoomConnection.test.ts` and `useGameRoomConnection.test.ts`: a language change
   emits nothing, replaces no listener, and subsequent server errors use the current language.

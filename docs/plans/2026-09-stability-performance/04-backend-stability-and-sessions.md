@@ -134,10 +134,11 @@ New file `apps/server/tests/rooms/disconnectLifecycle.test.ts` with fake timers:
 
 **Finding:** F-16.
 
-> **Implementation state (2026-09-29):** Chromium E2E E7 now proves that the existing
-> session-id rejoin path restores a guest inside a short in-game network interruption and
-> allows that guest to complete the following turn. Socket.IO `connectionStateRecovery`,
-> heartbeat tuning, rate limiting, and their server integration coverage remain open.
+> **Implementation state (2026-09-29):** Chromium E2E E7 and E8 now prove that the existing
+> session-id rejoin path restores either a guest or host inside a short in-game network
+> interruption. The guest can complete the following turn, while the host retains host-only
+> reveal authority. Socket.IO `connectionStateRecovery`, heartbeat tuning, rate limiting,
+> and their server integration coverage remain open.
 
 `apps/server/src/app/createSocketServer.ts` currently sets only `cors` and
 `maxHttpBufferSize`.

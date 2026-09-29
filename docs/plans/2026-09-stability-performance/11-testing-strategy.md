@@ -174,9 +174,12 @@ A fifth, in `apps/web`:
 > E7 takes the guest offline during a game, verifies that the host observes the same player
 > disconnect and reconnect, then proves the restored guest can complete the following turn
 > without room-recovery UI.
+> E8 takes the host offline during a game, verifies the guest observes the same host
+> reconnect, rejects room-exists and room-recovery UI, and proves the restored host retains
+> host-only reveal authority.
 > Server Spotify endpoints target a local fail-loud sentinel, every scenario asserts it
 > received zero requests, and browser contexts install a fake Spotify SDK. WebKit and
-> E8-E15 remain open.
+> E9-E15 remain open.
 
 ### 5.1 Tooling
 
