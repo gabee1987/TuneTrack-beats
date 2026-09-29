@@ -199,6 +199,71 @@ test("a guest challenge is resolved by the server before the turn advances", asy
   }
 });
 
+test("both players see the winner when the target card count is reached", async ({ browser }) => {
+  const guest = await createNamedPage(browser, "Win Guest");
+  const host = await createNamedPage(browser, "Win Host");
+
+  try {
+    await guest.page.goto("/play");
+    const roomId = await hostRoom(host.page);
+    const directoryRoom = guest.page.getByRole("button", {
+      name: new RegExp(escapeRegex(roomId)),
+    });
+
+    await expect(directoryRoom).toBeVisible();
+    await directoryRoom.click();
+    await expectLobbyPlayerCount(guest.page, 2);
+    await expectLobbyPlayerCount(host.page, 2);
+
+    await host.page
+      .getByRole("button", { name: "Cards needed to win: 3", exact: true })
+      .first()
+      .click();
+    await expect(
+      host.page.getByRole("slider", { name: "Cards needed to win" }).first(),
+    ).toHaveAttribute("aria-valuenow", "3");
+    await host.page
+      .getByRole("button", { name: "Default starting cards: 2", exact: true })
+      .first()
+      .click();
+    await expect(
+      host.page.getByRole("slider", { name: "Default starting cards" }).first(),
+    ).toHaveAttribute("aria-valuenow", "2");
+    const tokenModeSwitch = host.page.getByRole("switch", { name: "Enable token mode" }).first();
+    await tokenModeSwitch.click();
+    await expect(tokenModeSwitch).toHaveAttribute("aria-checked", "true");
+    await host.page
+      .getByRole("button", {
+        name: "Starting tokens for every player: 3",
+        exact: true,
+      })
+      .first()
+      .click();
+    await expect(
+      host.page.getByRole("slider", { name: "Starting tokens for every player" }).first(),
+    ).toHaveAttribute("aria-valuenow", "3");
+
+    await host.page.getByRole("button", { name: "Start Game" }).first().click();
+    await expectGamePage(host.page, roomId);
+    await expectGamePage(guest.page, roomId);
+    await expect(host.page.getByLabel("2 cards").first()).toBeVisible();
+
+    await host.page.getByRole("button", { name: /^Buy/ }).click();
+
+    await expect(host.page.getByLabel("3 cards").first()).toBeVisible();
+    await expect(guest.page.getByLabel("3 cards").first()).toBeVisible();
+    await expect(host.page.getByText("Game finished", { exact: true }).first()).toBeVisible();
+    await expect(guest.page.getByText("Game finished", { exact: true }).first()).toBeVisible();
+
+    await host.page.getByRole("button", { name: "Next song", exact: true }).click();
+
+    await expect(host.page.getByRole("heading", { name: "You won the game!" })).toBeVisible();
+    await expect(guest.page.getByRole("heading", { name: "Win Host won the game!" })).toBeVisible();
+  } finally {
+    await Promise.all([host.context.close(), guest.context.close()]);
+  }
+});
+
 test("a saved player profile joins from a direct invite in one action", async ({ browser }) => {
   const host = await createNamedPage(browser, "Invite Host");
   const guest = await createNamedPage(browser, "Invite Guest");

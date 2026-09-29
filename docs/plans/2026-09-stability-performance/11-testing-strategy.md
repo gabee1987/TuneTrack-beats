@@ -168,9 +168,12 @@ A fifth, in `apps/web`:
 > and verifies the card is discarded before the next turn. E5 enables token mode and a
 > manual challenge window, then verifies a guest claim, alternate-slot placement,
 > server-authoritative challenge failure, TT deduction, card award, and turn advancement.
+> E6 configures a three-card win target and two starting cards, then uses a deterministic
+> TT purchase to verify synchronized winner-pending state and the same final winner on both
+> clients.
 > Server Spotify endpoints target a local fail-loud sentinel, every scenario asserts it
 > received zero requests, and browser contexts install a fake Spotify SDK. WebKit and
-> E6-E15 remain open.
+> E7-E15 remain open.
 
 ### 5.1 Tooling
 
