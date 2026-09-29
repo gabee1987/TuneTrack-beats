@@ -171,9 +171,12 @@ A fifth, in `apps/web`:
 > E6 configures a three-card win target and two starting cards, then uses a deterministic
 > TT purchase to verify synchronized winner-pending state and the same final winner on both
 > clients.
+> E7 takes the guest offline during a game, verifies that the host observes the same player
+> disconnect and reconnect, then proves the restored guest can complete the following turn
+> without room-recovery UI.
 > Server Spotify endpoints target a local fail-loud sentinel, every scenario asserts it
 > received zero requests, and browser contexts install a fake Spotify SDK. WebKit and
-> E7-E15 remain open.
+> E8-E15 remain open.
 
 ### 5.1 Tooling
 

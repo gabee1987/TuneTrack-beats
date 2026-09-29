@@ -264,6 +264,55 @@ test("both players see the winner when the target card count is reached", async 
   }
 });
 
+test("a guest reconnects inside the recovery window and continues playing", async ({ browser }) => {
+  const guest = await createNamedPage(browser, "Recovery Guest");
+  const host = await createNamedPage(browser, "Recovery Host");
+
+  try {
+    await guest.page.goto("/play");
+    const roomId = await hostRoom(host.page);
+    const directoryRoom = guest.page.getByRole("button", {
+      name: new RegExp(escapeRegex(roomId)),
+    });
+
+    await expect(directoryRoom).toBeVisible();
+    await directoryRoom.click();
+    await expectLobbyPlayerCount(guest.page, 2);
+    await expectLobbyPlayerCount(host.page, 2);
+
+    await host.page.getByRole("button", { name: "Start Game" }).first().click();
+    await expectGamePage(host.page, roomId);
+    await expectGamePage(guest.page, roomId);
+
+    await guest.context.setOffline(true);
+    await expect(
+      host.page.getByText("Recovery Guest went offline", { exact: true }).first(),
+    ).toBeVisible();
+
+    await guest.context.setOffline(false);
+    await expect(
+      host.page.getByText("Recovery Guest reconnected", { exact: true }).first(),
+    ).toBeVisible();
+    await expectGamePage(guest.page, roomId);
+    await expect(
+      guest.page.getByRole("heading", { name: "This room is no longer available" }),
+    ).toHaveCount(0);
+
+    await host.page.getByRole("button", { name: "Confirm", exact: true }).click();
+    await expect(host.page.getByText("Correct placement.", { exact: true }).first()).toBeVisible();
+    await expect(guest.page.getByText("Correct placement.", { exact: true }).first()).toBeVisible();
+
+    await host.page.getByRole("button", { name: "Next song", exact: true }).click();
+    await expect(guest.page.getByText("Your turn", { exact: true }).first()).toBeVisible();
+    await guest.page.getByRole("button", { name: "Confirm", exact: true }).click();
+
+    await expect(host.page.getByText("Correct placement.", { exact: true }).first()).toBeVisible();
+    await expect(guest.page.getByText("Correct placement.", { exact: true }).first()).toBeVisible();
+  } finally {
+    await Promise.all([host.context.close(), guest.context.close()]);
+  }
+});
+
 test("a saved player profile joins from a direct invite in one action", async ({ browser }) => {
   const host = await createNamedPage(browser, "Invite Host");
   const guest = await createNamedPage(browser, "Invite Guest");
