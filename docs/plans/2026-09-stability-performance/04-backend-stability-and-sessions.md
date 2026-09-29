@@ -268,6 +268,12 @@ shutdown.
 
 **Finding:** F-20.
 
+> **Implementation state (2026-09-29):** `MAX_ACTIVE_ROOMS` is validated in `env`, keeps
+> the production default of 5, and is injected through `RoomRegistry` into
+> `RoomLobbyService`. The E2E server uses a higher explicit capacity so independent game
+> scenarios can coexist during reconnect grace periods. Grace-period environment wiring
+> remains open.
+
 - Move `MAX_ACTIVE_ROOM_COUNT` out of `RoomLobbyService` into `env` as
   `MAX_ACTIVE_ROOMS` (Zod: positive int, default 5) and pass it down through the
   `RoomRegistry` constructor, alongside the grace periods which are already parameters but

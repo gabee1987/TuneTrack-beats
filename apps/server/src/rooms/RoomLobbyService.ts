@@ -34,14 +34,13 @@ import type { RoomTimerCoordinator } from "./RoomTimerCoordinator.js";
 type RoomStateChangedEmitter = (roomState: PublicRoomState) => void;
 
 export class RoomLobbyService {
-  private static readonly MAX_ACTIVE_ROOM_COUNT = 5;
-
   public constructor(
     private readonly store: RoomStore,
     private readonly timers: RoomTimerCoordinator,
     private readonly gameFlowService: GameFlowService,
     private readonly connection: RoomConnectionService,
     private readonly emitRoomStateChanged: RoomStateChangedEmitter,
+    private readonly maxActiveRoomCount: number,
   ) {}
 
   public createRoom(
@@ -98,7 +97,7 @@ export class RoomLobbyService {
       }
     }
 
-    if (this.store.roomCount >= RoomLobbyService.MAX_ACTIVE_ROOM_COUNT) {
+    if (this.store.roomCount >= this.maxActiveRoomCount) {
       throw new Error("ROOM_LIMIT_REACHED");
     }
 

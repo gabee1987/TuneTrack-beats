@@ -35,6 +35,7 @@ export class RoomRegistry {
   private static readonly DEFAULT_RECONNECT_GRACE_PERIOD_MS = 30_000;
   private static readonly DEFAULT_HOST_TRANSFER_GRACE_PERIOD_MS = 15_000;
   private static readonly DEFAULT_TURN_SKIP_GRACE_PERIOD_MS = 60_000;
+  private static readonly DEFAULT_MAX_ACTIVE_ROOM_COUNT = 5;
 
   private readonly store: RoomStore;
   private readonly timers: RoomTimerCoordinator;
@@ -50,6 +51,7 @@ export class RoomRegistry {
     reconnectGracePeriodMs = RoomRegistry.DEFAULT_RECONNECT_GRACE_PERIOD_MS,
     hostTransferGracePeriodMs = RoomRegistry.DEFAULT_HOST_TRANSFER_GRACE_PERIOD_MS,
     turnSkipGracePeriodMs = RoomRegistry.DEFAULT_TURN_SKIP_GRACE_PERIOD_MS,
+    maxActiveRoomCount = RoomRegistry.DEFAULT_MAX_ACTIVE_ROOM_COUNT,
   ) {
     const emitRoomStateChanged = (roomState: PublicRoomState): void => {
       this.roomStateChangedListener?.(roomState);
@@ -82,6 +84,7 @@ export class RoomRegistry {
       this.gameFlowService,
       this.connection,
       emitRoomStateChanged,
+      maxActiveRoomCount,
     );
     this.gameplay = new RoomGameplayService(
       this.store,

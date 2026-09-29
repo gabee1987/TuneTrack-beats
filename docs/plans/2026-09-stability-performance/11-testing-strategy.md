@@ -158,16 +158,19 @@ A fifth, in `apps/web`:
 
 **Finding:** F-45.
 
-> **Implementation state (2026-09-28):** The initial `apps/e2e` Playwright workspace is
+> **Implementation state (2026-09-29):** The initial `apps/e2e` Playwright workspace is
 > implemented. `npm run e2e` builds the real server and web app, serves the production web
 > build through Vite preview, and runs isolated host and guest browser contexts in Chromium.
 > E1 is covered through both live-directory discovery and a direct invite with a saved
 > profile. E2 verifies that one host action moves both clients into the game. E3 uses an
 > injected deterministic deck random source to verify a correct placement, reveal, card
 > award, and turn advancement. E4 continues through a deterministic incorrect placement
-> and verifies the card is discarded before the next turn. Server Spotify endpoints target
-> a local fail-loud sentinel, every scenario asserts it received zero requests, and browser
-> contexts install a fake Spotify SDK. WebKit and E5-E15 remain open.
+> and verifies the card is discarded before the next turn. E5 enables token mode and a
+> manual challenge window, then verifies a guest claim, alternate-slot placement,
+> server-authoritative challenge failure, TT deduction, card award, and turn advancement.
+> Server Spotify endpoints target a local fail-loud sentinel, every scenario asserts it
+> received zero requests, and browser contexts install a fake Spotify SDK. WebKit and
+> E6-E15 remain open.
 
 ### 5.1 Tooling
 

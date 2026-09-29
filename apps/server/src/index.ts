@@ -41,7 +41,13 @@ const deckService = new DeckService(
   undefined,
   testDeckRandomValue === undefined ? undefined : () => testDeckRandomValue,
 );
-const roomRegistry = new RoomRegistry();
+const roomRegistry = new RoomRegistry(
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  env.MAX_ACTIVE_ROOMS,
+);
 const roomService = new RoomService(
   roomRegistry,
   deckService,

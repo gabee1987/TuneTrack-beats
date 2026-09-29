@@ -34,6 +34,7 @@ export default defineConfig({
       env: {
         ...process.env,
         CLIENT_ORIGIN: "https://127.0.0.1:4173",
+        MAX_ACTIVE_ROOMS: "20",
         NODE_ENV: "test",
         PORT: "3101",
         SPOTIFY_ACCOUNTS_BASE_URL: "http://127.0.0.1:3102/accounts",

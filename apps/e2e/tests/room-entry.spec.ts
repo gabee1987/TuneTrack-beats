@@ -136,6 +136,69 @@ test("an incorrect placement is discarded before the turn advances", async ({ br
   }
 });
 
+test("a guest challenge is resolved by the server before the turn advances", async ({
+  browser,
+}) => {
+  const guest = await createNamedPage(browser, "Challenge Guest");
+  const host = await createNamedPage(browser, "Challenge Host");
+
+  try {
+    await guest.page.goto("/play");
+    const roomId = await hostRoom(host.page);
+    const directoryRoom = guest.page.getByRole("button", {
+      name: new RegExp(escapeRegex(roomId)),
+    });
+
+    await expect(directoryRoom).toBeVisible();
+    await directoryRoom.click();
+    await expectLobbyPlayerCount(guest.page, 2);
+    await expectLobbyPlayerCount(host.page, 2);
+
+    const tokenModeSwitch = host.page.getByRole("switch", { name: "Enable token mode" }).first();
+    await tokenModeSwitch.click();
+    await expect(tokenModeSwitch).toHaveAttribute("aria-checked", "true");
+    const challengeWindowSelect = host.page
+      .getByRole("combobox", { name: "Challenge window", exact: true })
+      .first();
+    await challengeWindowSelect.selectOption("manual");
+    await expect(challengeWindowSelect).toHaveValue("manual");
+
+    await host.page.getByRole("button", { name: "Start Game" }).first().click();
+    await expectGamePage(host.page, roomId);
+    await expectGamePage(guest.page, roomId);
+
+    await host.page.getByRole("button", { name: "Confirm", exact: true }).click();
+    const beatButton = guest.page.getByRole("button", { name: /^Beat!/ });
+    await expect(beatButton).toBeVisible();
+    await beatButton.click();
+
+    await expect(
+      guest.page.getByText("Choose the slot you believe is right, then confirm.", {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await moveCurrentCardAfterTimelineCard(guest.page);
+    await guest.page.getByRole("button", { name: "Confirm Beat", exact: true }).click();
+
+    await expect(host.page.getByText("Challenge failed.", { exact: true }).first()).toBeVisible();
+    await expect(guest.page.getByText("Challenge failed.", { exact: true }).first()).toBeVisible();
+    await expect(host.page.getByLabel("2 cards").first()).toBeVisible();
+    await guest.page.getByRole("button", { name: "Show leaderboard" }).first().click();
+    const guestLeaderboardEntry = guest.page
+      .locator("article")
+      .filter({ hasText: "Challenge Guest" });
+    await expect(guestLeaderboardEntry.getByLabel("0 TT tokens")).toBeVisible();
+
+    await host.page.getByRole("button", { name: "Next song", exact: true }).click();
+    await expect(
+      host.page.getByText("Challenge Guest's turn", { exact: true }).first(),
+    ).toBeVisible();
+    await expect(guest.page.getByText("Your turn", { exact: true }).first()).toBeVisible();
+  } finally {
+    await Promise.all([host.context.close(), guest.context.close()]);
+  }
+});
+
 test("a saved player profile joins from a direct invite in one action", async ({ browser }) => {
   const host = await createNamedPage(browser, "Invite Host");
   const guest = await createNamedPage(browser, "Invite Guest");
@@ -255,6 +318,47 @@ async function expectGamePage(page: Page, roomId: string): Promise<void> {
 async function expectLobbyPlayerCount(page: Page, count: number): Promise<void> {
   const playerCountMetric = page.getByText("Players here", { exact: true }).locator("..");
   await expect(playerCountMetric.getByText(String(count), { exact: true }).first()).toBeVisible();
+}
+
+async function moveCurrentCardAfterTimelineCard(page: Page): Promise<void> {
+  const currentCard = page.getByRole("button", { name: "Hidden Until Reveal" });
+  const timelineCard = page.locator("article[data-timeline-card='true']");
+  const isCurrentCardAfterTimelineCard = () =>
+    timelineCard.evaluate(
+      (card) =>
+        card.parentElement?.nextElementSibling?.querySelector(
+          "[aria-label='Hidden Until Reveal']",
+        ) !== null,
+    );
+
+  await expect(currentCard).toHaveCount(1);
+  await expect(timelineCard).toHaveCount(1);
+
+  const currentCardBox = await currentCard.boundingBox();
+  const timelineCardBox = await timelineCard.boundingBox();
+  if (!currentCardBox || !timelineCardBox) {
+    throw new Error("The timeline cards must be visible before dragging.");
+  }
+
+  await page.mouse.move(
+    currentCardBox.x + currentCardBox.width / 2,
+    currentCardBox.y + currentCardBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    timelineCardBox.x + timelineCardBox.width - 4,
+    timelineCardBox.y + timelineCardBox.height / 2,
+    { steps: 10 },
+  );
+  await expect.poll(isCurrentCardAfterTimelineCard).toBe(true);
+  await page.mouse.up();
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      }),
+  );
+  await expect.poll(isCurrentCardAfterTimelineCard).toBe(true);
 }
 
 function escapeRegex(value: string): string {

@@ -66,4 +66,13 @@ describe("RoomLobbyService.createRoom", () => {
       roomRegistry.createRoom("TEST_ROOM_1", "Player Two", "TEST_SOCKET_2", "TEST_SESSION_2"),
     ).toThrow("ROOM_ALREADY_EXISTS");
   });
+
+  it("uses the configured active room limit", () => {
+    const roomRegistry = new RoomRegistry(undefined, undefined, undefined, undefined, 1);
+    roomRegistry.createRoom("TEST_ROOM_1", "Player One", "TEST_SOCKET_1", "TEST_SESSION_1");
+
+    expect(() =>
+      roomRegistry.createRoom("TEST_ROOM_2", "Player Two", "TEST_SOCKET_2", "TEST_SESSION_2"),
+    ).toThrow("ROOM_LIMIT_REACHED");
+  });
 });
