@@ -1314,32 +1314,64 @@ describe("room flow", () => {
     );
   });
 
-  it("skips a manual host skip over a disconnected player to the next connected one", () => {
-    const roomRegistry = new RoomRegistry();
-    const hostJoin = roomRegistry.createRoom(
-      "skip-room",
-      "Host Player",
-      "host-socket",
-      "host-session",
-    );
-    roomRegistry.addPlayerToRoom("skip-room", "Guest Player", "guest-socket", "guest-session");
-    const thirdJoin = roomRegistry.addPlayerToRoom(
-      "skip-room",
-      "Third Player",
-      "third-socket",
-      "third-session",
-    );
+  it("retains a disconnected player after the host manually skips their turn", () => {
+    vi.useFakeTimers();
 
-    roomRegistry.startGame("host-socket", { roomId: "skip-room" }, getTurnOrderDeck());
-    expect(
-      roomRegistry.getRoomStateForMember("host-socket", "skip-room").turn?.activePlayerId,
-    ).toBe(hostJoin.playerId);
+    try {
+      const roomRegistry = new RoomRegistry();
+      roomRegistry.createRoom("skip-room", "Host Player", "host-socket", "host-session");
+      const guestJoin = roomRegistry.addPlayerToRoom(
+        "skip-room",
+        "Guest Player",
+        "guest-socket",
+        "guest-session",
+      );
+      const thirdJoin = roomRegistry.addPlayerToRoom(
+        "skip-room",
+        "Third Player",
+        "third-socket",
+        "third-session",
+      );
 
-    roomRegistry.removePlayerBySocketId("guest-socket");
+      roomRegistry.startGame("host-socket", { roomId: "skip-room" }, getTurnOrderDeck());
+      roomRegistry.placeCard("host-socket", { roomId: "skip-room", selectedSlotIndex: 1 });
+      const guestTurnState = roomRegistry.confirmReveal("host-socket", {
+        roomId: "skip-room",
+      });
+      expect(guestTurnState.turn?.activePlayerId).toBe(guestJoin.playerId);
 
-    const stateAfterSkip = roomRegistry.skipTurn("host-socket", { roomId: "skip-room" });
+      const disconnectedState = roomRegistry.removePlayerBySocketId("guest-socket");
+      expect(disconnectedState?.players.find((player) => player.id === guestJoin.playerId)).toEqual(
+        expect.objectContaining({
+          connectionStatus: "disconnected",
+          reconnectExpiresAtEpochMs: null,
+        }),
+      );
 
-    expect(stateAfterSkip.turn?.activePlayerId).toBe(thirdJoin.playerId);
+      const stateAfterSkip = roomRegistry.skipTurn("host-socket", { roomId: "skip-room" });
+      expect(stateAfterSkip.turn?.activePlayerId).toBe(thirdJoin.playerId);
+      expect(stateAfterSkip.players.map((player) => player.id)).toContain(guestJoin.playerId);
+
+      vi.advanceTimersByTime(24 * 60 * 60 * 1_000);
+
+      const retainedState = roomRegistry.getRoomStateForMember("host-socket", "skip-room");
+      expect(retainedState.players.find((player) => player.id === guestJoin.playerId)).toEqual(
+        expect.objectContaining({ connectionStatus: "disconnected" }),
+      );
+
+      const restoredGuest = roomRegistry.addPlayerToRoom(
+        "skip-room",
+        "Guest Player",
+        "restored-guest-socket",
+        "guest-session",
+      );
+      expect(restoredGuest.playerId).toBe(guestJoin.playerId);
+      expect(
+        restoredGuest.roomState.players.find((player) => player.id === guestJoin.playerId),
+      ).toEqual(expect.objectContaining({ connectionStatus: "connected" }));
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("lets the host award TT once when the request is replayed", async () => {

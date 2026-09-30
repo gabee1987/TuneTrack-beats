@@ -181,9 +181,12 @@ A fifth, in `apps/web`:
 > proves the connected guest receives host-only controls. Production now defaults host
 > transfer to 30 seconds; E2E explicitly uses five seconds so E8 retains a realistic
 > reconnect window.
+> E10 disconnects a guest on their turn, proves all remaining clients see that they are
+> offline, proves only the host can skip the turn, and proves the guest remains reserved
+> after play advances.
 > Server Spotify endpoints target a local fail-loud sentinel, every scenario asserts it
 > received zero requests, and browser contexts install a fake Spotify SDK. WebKit and
-> E10-E15 remain open.
+> E11-E15 remain open.
 
 ### 5.1 Tooling
 
@@ -226,8 +229,8 @@ service. The harness must therefore:
 | E7 | Guest's socket is dropped and restored inside the recovery window; play continues with no error | Doc 04 section 2, Doc 05 section 1 |
 | E8 | Host's socket is dropped and restored; host is still host, no `ROOM_ALREADY_EXISTS` | **F-13** |
 | E9 | Host disconnects permanently; host role transfers within the grace period | Doc 04 section 1 |
-| E10 | Guest disconnects permanently mid-game; is evicted after the in-game grace period; the room survives | **F-12** |
-| E11 | All players disconnect; the room is removed (assert via the room list) | **F-12** |
+| E10 | Guest disconnects during their turn; all remaining clients see the offline state; only the host manually skips; the guest remains reserved | Owner decision 2026-09-30, **F-12** |
+| E11 | All players disconnect; room lifecycle follows a separately approved all-offline policy without automatically evicting individual players | **Open owner decision** |
 | E12 | Host closes the room; both clients land on Home and Start is immediately usable | **F-27c** |
 | E13 | Open settings on the game page; press browser back; the panel closes and the game remains | **F-27** |
 | E14 | Open the playlist editor, open a song editor from it, edit the year, save, close both with back | **F-25**, **F-27** |
@@ -265,7 +268,7 @@ The iOS drag defect (F-35) is the hardest thing here to automate. Approach:
 
 | New file | Covers | Plan reference |
 | --- | --- | --- |
-| `tests/rooms/disconnectLifecycle.test.ts` | In-game eviction, room deletion, host transfer on eviction, active-player and challenger eviction, `finished` immediate eviction, the pure policy table | Doc 04 section 1.4 |
+| `tests/rooms/disconnectLifecycle.test.ts` | In-game identity retention, reconnect without expiry, host transfer, manual and safety turn recovery, and explicit host kick | Doc 04 section 1.3 |
 | `tests/app/createSocketServer.test.ts` | Recovery window, ping values, buffer size, CORS wiring | Doc 04 section 2 |
 | `tests/realtime/rateLimit.test.ts` | Buckets, refill, per-socket isolation, `RATE_LIMITED`, no disconnect | Doc 04 section 2.4 |
 | `tests/app/shutdown.test.ts` | `SIGTERM` sequence, timer clearing, sink flush, idempotency, unhandled rejection | Doc 04 section 3.1 |

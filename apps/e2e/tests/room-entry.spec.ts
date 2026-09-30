@@ -408,6 +408,79 @@ test("a permanent host disconnect transfers host controls after the grace period
   }
 });
 
+test("an offline guest stays in the game while the host manually skips their turn", async ({
+  browser,
+}) => {
+  const observer = await createNamedPage(browser, "Turn Observer");
+  const guest = await createNamedPage(browser, "Turn Break Guest");
+  const host = await createNamedPage(browser, "Turn Break Host");
+
+  try {
+    await Promise.all([observer.page.goto("/play"), guest.page.goto("/play")]);
+    const roomId = await hostRoom(host.page);
+
+    for (const page of [guest.page, observer.page]) {
+      const directoryRoom = page.getByRole("button", {
+        name: new RegExp(escapeRegex(roomId)),
+      });
+      await expect(directoryRoom).toBeVisible();
+      await directoryRoom.click();
+    }
+
+    await expectLobbyPlayerCount(host.page, 3);
+    await expectLobbyPlayerCount(guest.page, 3);
+    await expectLobbyPlayerCount(observer.page, 3);
+
+    await host.page.getByRole("button", { name: "Start Game" }).first().click();
+    await expectGamePage(host.page, roomId);
+    await expectGamePage(guest.page, roomId);
+    await expectGamePage(observer.page, roomId);
+
+    await host.page.getByRole("button", { name: "Confirm", exact: true }).click();
+    await expect(host.page.getByText(/^(Correct|Wrong) placement\.$/).first()).toBeVisible();
+    await host.page.getByRole("button", { name: "Next song", exact: true }).click();
+    await expect(guest.page.getByText("Your turn", { exact: true }).first()).toBeVisible();
+
+    await guest.context.close();
+    for (const page of [host.page, observer.page]) {
+      await expect(
+        page.getByText("Turn Break Guest went offline", { exact: true }).first(),
+      ).toBeVisible();
+      await expect(
+        page.getByText("Turn Break Guest is offline", { exact: true }).first(),
+      ).toBeVisible();
+    }
+
+    const skipTurnButton = host.page.getByRole("button", { name: "Skip Turn", exact: true });
+    await expect(skipTurnButton).toBeVisible();
+    await expect(observer.page.getByRole("button", { name: "Skip Turn", exact: true })).toHaveCount(
+      0,
+    );
+    await skipTurnButton.click();
+
+    await expect(
+      host.page.getByText("Turn Observer's turn", { exact: true }).first(),
+    ).toBeVisible();
+    await expect(observer.page.getByText("Your turn", { exact: true }).first()).toBeVisible();
+
+    await host.page.getByRole("button", { name: "Open game menu", exact: true }).click();
+    const retainedGuest = host.page.getByRole("listitem").filter({ hasText: "Turn Break Guest" });
+    await expect(retainedGuest).toBeVisible();
+    await expect(retainedGuest.getByText("Offline", { exact: true })).toBeVisible();
+    await retainedGuest
+      .getByRole("button", {
+        name: "Show host transfer controls for Turn Break Guest",
+        exact: true,
+      })
+      .click();
+    await expect(
+      retainedGuest.getByRole("button", { name: "Kick player", exact: true }),
+    ).toBeVisible();
+  } finally {
+    await Promise.all([host.context.close(), guest.context.close(), observer.context.close()]);
+  }
+});
+
 test("a saved player profile joins from a direct invite in one action", async ({ browser }) => {
   const host = await createNamedPage(browser, "Invite Host");
   const guest = await createNamedPage(browser, "Invite Guest");

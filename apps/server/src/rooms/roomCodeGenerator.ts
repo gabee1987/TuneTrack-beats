@@ -1,5 +1,5 @@
 import { randomInt as cryptoRandomInt } from "node:crypto";
-import type { RoomId } from "@tunetrack/shared";
+import { ROOM_CODE_MAX_LENGTH, type RoomId } from "@tunetrack/shared";
 
 const FRIENDLY_CODE_ATTEMPT_COUNT = 5;
 const FALLBACK_ALPHABET = "23456789abcdefghijkmnpqrstuvwxyz";
@@ -84,7 +84,7 @@ export function generateUniqueRoomCode(
 ): RoomId {
   for (let attempt = 0; attempt < FRIENDLY_CODE_ATTEMPT_COUNT; attempt += 1) {
     const roomCode = createFriendlyRoomCode(randomInt);
-    if (!isRoomCodeTaken(roomCode)) {
+    if (roomCode.length <= ROOM_CODE_MAX_LENGTH && !isRoomCodeTaken(roomCode)) {
       return roomCode;
     }
   }

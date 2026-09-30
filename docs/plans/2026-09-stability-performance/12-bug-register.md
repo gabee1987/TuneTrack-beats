@@ -783,8 +783,10 @@ not Fixed.
   restored guest completes the following turn without room-recovery UI. E8 proves a
   restored host triggers neither room-exists nor room-recovery UI and retains host-only
   reveal authority. E9 proves a permanently disconnected host transfers ownership to the
-  connected guest after the configured grace period. E10 to E12 remain open and continue
-  to gate the related fixes.
+  connected guest after the configured grace period. E10 proves a disconnected guest stays
+  in the game, all remaining clients see the offline state, only the host can skip the
+  offline turn, and play advances without removing that guest. E11 and E12 remain open;
+  E11 now requires a separate owner decision for all-players-offline room cleanup.
 - Server tests per Doc 11 section 6.
 - `useLobbyRoomConnection.test.ts` and `useGameRoomConnection.test.ts`: a language change
   emits nothing, replaces no listener, and subsequent server errors use the current language.
@@ -1166,9 +1168,9 @@ report is unproven — but it is a real app-wide defect that was introduced here
 
 ### Ruled out by evidence
 
-- **Server-side room closure.** A brief disconnect does not close a room: the server keeps
-  a 180 s in-game reconnect window and transfers the host after the owner-directed 30 s
-  production grace period.
+- **Server-side room closure.** A disconnect does not close a room: the server reserves
+  in-game identity without a reconnect expiry and transfers the host after the
+  owner-directed 30 s production grace period.
 - **A theme-driven remount.** `applyTheme` writes CSS custom properties and `data-theme`;
   nothing keys off the theme id.
 - **An exiting page re-running its effects against the new route.** The hypothesis was that
@@ -1484,6 +1486,31 @@ consistent with a real placement; there was no principled reason it shouldn't.
 
 ---
 
+## B20 · Generated room codes can be rejected by the join schema
+
+**Severity:** S1 · **Status:** **Fixed** (2026-09-30)
+
+### Report
+
+Multi-client E2E intermittently reached a lobby with zero players and showed "Room code or
+display name is invalid" after selecting a room from the live directory.
+
+### Root cause
+
+The friendly generator can combine two five-letter words with a two-digit suffix, producing
+codes such as `mint-retro-90` or `retro-retro-10`. Those codes are 13-14 characters long,
+while the shared event schema permits at most 12. Room creation bypassed that payload
+schema, so the server advertised a room code that its own join event rejected.
+
+### Fix and verification
+
+The generator now discards an over-length friendly candidate and retries before falling
+back to its existing six-character code. A deterministic unit test reproduces the
+`retro-retro-10` case and requires the next valid candidate. The full server and Chromium
+E2E suites verify generated codes remain joinable.
+
+---
+
 ## Cross-reference
 
 | Reported item                                                         | Register entry | Primary plan                  |
@@ -1509,6 +1536,7 @@ consistent with a real placement; there was no principled reason it shouldn't.
 | Gameplay area frozen, stale actions replayed                          | B15            | Doc 12 B15                    |
 | Audit records misattributed under load                                | B16            | Doc 12 B16                    |
 | TT-bought card and the next placement miss the correct-placement glow | B19            | Doc 12 B19 · **fixed**        |
+| Generated room code is rejected when a guest joins                    | B20            | Doc 12 B20 · **fixed**        |
 | Bundle size and lazy loading                                          | (programme)    | Doc 02                        |
 | More tests                                                            | (programme)    | Doc 11                        |
 | Room creation flow                                                    | (programme)    | Doc 09                        |

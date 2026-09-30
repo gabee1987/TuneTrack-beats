@@ -60,10 +60,11 @@ stating what shipped, what did not, and what superseded them. Kept because they 
 
 Two of the archived headers matter even if you never open the file:
 
-- `reconnect_and_host_transfer_plan.md` was only **partially** implemented. Its in-game
-  eviction timer was never wired up, which is why an abandoned in-game player is never
-  removed and the room never gets deleted. That is finding F-12, now owned by the live
-  programme.
+- `reconnect_and_host_transfer_plan.md` was only **partially** implemented. Its proposed
+  in-game eviction timer was deliberately superseded by the 2026-09-30 owner decision:
+  an offline in-game player remains reserved until they reconnect, the host removes them,
+  or the room closes. The separate all-players-offline room-lifecycle policy is still open
+  in the live programme.
 - `playlist_metadata_curation_plan.md` shipped phases 1-3 only. Its phase 4 (in-game host
   correction of a wrong release year) is unimplemented and is now owned by the live
   programme.

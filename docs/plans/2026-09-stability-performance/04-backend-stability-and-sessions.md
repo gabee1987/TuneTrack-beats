@@ -5,137 +5,66 @@
 > `packages/game-engine` stays pure; nothing in this document adds transport, timers or
 > logging to it.
 
-This is the highest-priority wave in the programme. F-12 loses player state and leaks
-memory; everything else in the reconnect story depends on the server's ownership model
-being correct first.
+This is the highest-priority wave in the programme. Reconnect behavior depends on the
+server making transport loss, host transfer, turn recovery and explicit removal separate
+policies.
 
-## 1. Phase 1 — Fix in-game disconnect lifecycle · **S1**
+## 1. Phase 1 — Retain in-game identities without stalling play · **S1**
 
-**Finding:** F-12.
+**Finding:** F-12, superseded in part by owner decision 2026-09-30.
 
-### 1.1 The defect
+### 1.1 Owner decision
 
-`apps/server/src/rooms/RoomConnectionService.ts` `removePlayerBySocketId`:
+An in-game socket disconnect is temporary absence, not leaving the room:
 
-    const roomState = this.markPlayerDisconnected(membership);
+- no timer automatically kicks or evicts the disconnected player;
+- the player's identity, timeline, tokens and turn position stay reserved while the room
+  exists;
+- `reconnectExpiresAtEpochMs` is `null` in-game because there is no reconnect deadline;
+- reconnecting with the same session restores the same player, even much later;
+- only the host's explicit kick or room closure removes the player from the running game;
+- if the offline player owns the active turn, every remaining client sees the offline
+  state and the host can skip that turn immediately;
+- the existing 60-second turn auto-skip remains as a safety fallback;
+- host transfer is separate and still occurs after 30 seconds when the host is offline.
 
-    if (roomState?.status === "lobby") {
-      this.timers.scheduleReconnect(
-        membership.sessionId,
-        this.timers.reconnectGracePeriodMs,
-        () => { /* remove player, emit */ },
-      );
-    }
+The lobby's 30-second reconnect-and-removal behavior is unchanged. `CLAUDE.md`'s "Last
+player leaves" rule means an explicit leave, kick or close, not a temporary transport
+disconnect. Cleanup of a completely unattended room is a separate room-lifecycle policy
+that requires owner approval; it must not be implemented as automatic player eviction.
 
-    return roomState;
+### 1.2 Current implementation
 
-An in-game disconnect takes the `markPlayerDisconnected` path, which sets
-`reconnectExpiresAtEpochMs = now + IN_GAME_RECONNECT_DISPLAY_MS` (180 000 ms) and schedules
-a host-transfer timer and, if relevant, a turn-skip timer — but **never** schedules the
-player's own removal. Results:
+| Period or action | Purpose | Policy |
+| --- | --- | --- |
+| **Turn skip** | Keep play moving past an offline active player | Host may skip immediately; 60 s safety timer remains |
+| **Host transfer** | Move authority away from an offline host | 30 s, scheduled (owner decision 2026-09-29) |
+| **Lobby removal** | Remove a player who abandons the lobby | 30 s, scheduled |
+| **In-game removal** | Remove a player from a running game | Host action only; never scheduled |
+| **In-game reconnect** | Restore an offline player | No expiry while the room exists |
 
-- the client counts down to an expiry that has no server-side effect;
-- an abandoned player stays in `players` and `timelines` for the process lifetime;
-- the room is never deleted, because deletion only happens inside
-  `removePlayerBySessionId`, which is reached only from the lobby timer;
-- `CLAUDE.md`'s rule "Last player leaves → room removed" does not hold in-game.
+`RoomConnectionService` therefore marks an in-game player disconnected and schedules only
+the relevant host-transfer and turn-recovery timers. It publishes no false reconnect
+deadline. The existing host-only kick remains the explicit removal path.
 
-### 1.2 The design
+### 1.3 Verification
 
-Three distinct grace periods, all currently conflated:
-
-| Period | Purpose | Current | Proposed |
-| --- | --- | --- | --- |
-| **Turn skip** | Advance play past a disconnected active player | 60 s, scheduled | unchanged |
-| **Host transfer** | Move host role away from a disconnected host | 15 s, scheduled | **30 s, scheduled (owner decision 2026-09-29)** |
-| **Session eviction (lobby)** | Remove a player who left the lobby | 30 s, scheduled | unchanged |
-| **Session eviction (in game)** | Remove a player who abandoned a running game | 180 s, **not scheduled** | 180 s, **scheduled** |
-
-Rules for in-game eviction, all of which must be re-checked inside the timer callback
-because state may have moved on (per `CLAUDE.md`: timers always recheck state before
-mutating):
-
-1. Fire only if the player is still `connectionStatus === "disconnected"`.
-2. Fire only if the room still exists and still contains that player.
-3. Remove the player from `roomState.players`, `roomState.timelines` and
-   `gameState.players` / `gameState.timelines` (the existing private
-   `removePlayerFromGameState` helper already does the game-state half).
-4. If the removed player was the active turn player, advance the turn first — reuse
-   `advanceTurnIfDisconnectedActivePlayer`, which already handles this.
-5. If the removed player was a claimed challenger, cancel the challenge first — reuse
-   `cancelChallengeIfDisconnectedChallenger`.
-6. If the removed player was the host, transfer host — reuse `applyHostTransfer` with
-   `requireConnectedTarget: true`; if no connected candidate exists, the room is
-   effectively empty, so go to rule 7.
-7. If no players remain, clear all timers for the room, delete the room, clear its
-   redirects, clear its memberships, clear its Spotify tokens and playback session, and
-   emit nothing (there is nobody to emit to).
-8. If the game had already reached `finished`, evict immediately with no grace period —
-   there is nothing to reconnect into.
-
-### 1.3 Implementation shape
-
-Rather than adding another branch to `removePlayerBySocketId`, extract the policy so it is
-readable and testable in isolation:
-
-- New pure module `apps/server/src/rooms/disconnectPolicy.ts`:
-
-      export interface DisconnectPolicy {
-        evictionDelayMs: number | null;   // null = never evict automatically
-        scheduleHostTransfer: boolean;
-        scheduleTurnSkip: boolean;
-      }
-
-      export function resolveDisconnectPolicy(input: {
-        roomStatus: RoomStatus;
-        isHost: boolean;
-        isActiveTurnPlayer: boolean;
-        isClaimedChallenger: boolean;
-        grace: { lobbyMs: number; inGameMs: number; hostTransferMs: number; turnSkipMs: number };
-      }): DisconnectPolicy;
-
-- `RoomConnectionService.removePlayerBySocketId` calls `resolveDisconnectPolicy`, then
-  schedules exactly what the policy says. The orchestration stays explicit and the
-  decision table becomes unit-testable without any timers.
-- Add `evictSessionFromRoom(sessionId)` as a named private method implementing rules 3-8,
-  so the timer callback is one line.
-
-`IN_GAME_RECONNECT_DISPLAY_MS` should be renamed `IN_GAME_RECONNECT_GRACE_PERIOD_MS` and
-moved next to the other grace periods in `RoomRegistry`, because after this change it is
-no longer display-only.
-
-### 1.4 Tests (see Doc 11 section 6)
-
-New file `apps/server/tests/rooms/disconnectLifecycle.test.ts` with fake timers:
-
-- lobby disconnect evicts after 30 s;
-- in-game disconnect evicts after 180 s;
-- in-game disconnect that reconnects at 179 s is **not** evicted and keeps its timeline,
-  TT tokens and turn position;
-- evicting the active player advances the turn;
-- evicting a claimed challenger cancels the challenge and returns the TT token per the
-  engine's existing rule;
-- evicting the host transfers host to the first remaining connected player;
-- evicting the last player deletes the room and clears its timers, redirects and
-  memberships (assert `roomStore.roomCount === 0`);
-- a `finished` game evicts immediately;
-- `resolveDisconnectPolicy` decision table covered exhaustively as a pure test.
+- Server fake-timer coverage disconnects a guest, manually skips their turn, advances 24
+  simulated hours, and proves the same session restores the same retained player identity.
+- Chromium E2E E10 uses host, guest and observer clients. Both remaining clients see the
+  guest's offline turn; only the host receives `Skip Turn`; after the host skips, the next
+  connected player receives the turn and the guest remains visible as offline.
+- Lobby disconnect tests remain unchanged and green.
 
 ### Acceptance
 
-> **Implementation state (2026-09-29):** Chromium E2E E9 permanently disconnects an
-> in-game host and proves that the first connected guest receives host controls after the
-> configured grace period. The production default is now 30 seconds by owner decision;
-> E2E uses a five-second override so reconnect coverage remains representative while the
-> permanent-disconnect scenario stays fast. The remaining in-game eviction acceptance
-> items stay open.
-
-- [ ] All tests above pass.
-- [ ] `RoomStore.roomCount` returns to 0 after every test file completes — add this as an
-      `afterEach` assertion in the existing integration suites too, which turns any future
-      leak into a test failure.
-- [ ] No behavioural change to the lobby path (existing `roomFlow.test.ts` and
-      `hostTransfer.test.ts` pass unmodified).
+- [x] In-game room state publishes no reconnect expiry.
+- [x] In-game disconnect never automatically removes the player.
+- [x] All remaining clients see the active player's offline state.
+- [x] Only the host can manually skip the offline turn.
+- [x] A later reconnect restores the retained identity and game state.
+- [ ] Define and verify cleanup for a room whose players are all offline, without silently
+      kicking individual players (E11 owner decision).
 
 ## 2. Phase 2 — Configure Socket.IO for mobile networks · **S2**
 
@@ -400,9 +329,9 @@ the primary maps. That test makes the optimisation safe.
 - Server authority is preserved: no client input is trusted for correctness, membership or
   permission at any point.
 - Logging stays at the levels `CLAUDE.md` allows: startup, shutdown, socket
-  connect/disconnect, unexpected errors, notable room lifecycle events. The new eviction
-  and shutdown paths qualify as notable lifecycle events; the rate limiter logs at `warn`
-  only on breach.
+  connect/disconnect, unexpected errors, notable room lifecycle events. Explicit player
+  removal and shutdown qualify as notable lifecycle events; the rate limiter logs at
+  `warn` only on breach.
 - Audit events go through the existing `logAuditEvent` sink so the Axiom pipeline
   documented in `docs/axiom_logging_setup.md` keeps working. Note that audit records carry
   `roomId`, `socketId` and `displayName`-free metadata today; keep it that way —

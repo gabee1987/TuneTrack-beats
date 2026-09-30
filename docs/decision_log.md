@@ -7,6 +7,22 @@ do not stay hidden in code.
 
 ## Decided
 
+### In-game disconnect retention and manual recovery (2026-09-30)
+
+An in-game socket disconnect is temporary absence, not an automatic leave or kick.
+
+- The disconnected player's identity, timeline, tokens and turn position remain reserved
+  without a reconnect expiry while the room exists.
+- Only a host's explicit kick or room closure removes that player from the running game.
+- All remaining clients see when the active player is offline.
+- The host can skip an offline active player's turn immediately so play does not stall.
+- The existing 60-second safety auto-skip remains as a fallback.
+- Host transfer remains a separate 30-second rule when the disconnected player is the host.
+
+This lets somebody step away briefly and return to the same game state. How to reclaim an
+entire room after every player is offline remains a separate room-lifecycle decision; it
+must not be implemented by silently evicting individual players.
+
 ### Documentation reorganisation (2026-09-08)
 
 `docs/` held 26 files, roughly 10 400 lines, mostly completed or superseded iteration
@@ -29,9 +45,10 @@ as the index.
   `plans/gamepage-remaining-refactors.md`; five of nine were already done.
 
 **Rationale:** a contributor or agent opening `docs/` could not tell which documents were
-authoritative. Two archived plans were actively misleading — the reconnect plan was only
-partially implemented (its missing in-game eviction timer is finding F-12) and the
-performance plan was paused mid-way with a Phase 8 that is deliberately not being resumed.
+authoritative. Two archived plans were actively misleading — the reconnect plan mixed
+shipped reconnect behavior with an unapproved eviction proposal later superseded by the
+2026-09-30 owner decision, and the performance plan was paused mid-way with a Phase 8 that
+is deliberately not being resumed.
 
 ---
 

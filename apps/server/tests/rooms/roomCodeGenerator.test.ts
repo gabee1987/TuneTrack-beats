@@ -13,6 +13,17 @@ describe("generateUniqueRoomCode", () => {
     expect(roomCode.length).toBeLessThanOrEqual(12);
   });
 
+  it("retries when friendly words would exceed the shared room-code limit", () => {
+    const randomValues = [40, 40, 0, 0, 1, 0];
+    const roomCode = generateUniqueRoomCode(
+      () => false,
+      () => randomValues.shift() ?? 0,
+    );
+
+    expect(roomCode).toBe("aqua-bass-10");
+    expect(roomCode.length).toBeLessThanOrEqual(12);
+  });
+
   it("retries friendly collisions five times then advances from a colliding base32 fallback", () => {
     const randomValues = [...Array.from({ length: 15 }, () => 0), 0];
     const roomCode = generateUniqueRoomCode(

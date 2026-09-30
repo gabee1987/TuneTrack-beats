@@ -23,8 +23,6 @@ type SpotifyPlaybackHandoffEmitter = (roomId: RoomId) => void;
 type RoomDirectoryChangedEmitter = () => void;
 
 export class RoomConnectionService {
-  private static readonly IN_GAME_RECONNECT_DISPLAY_MS = 180_000;
-
   public constructor(
     private readonly store: RoomStore,
     private readonly timers: RoomTimerCoordinator,
@@ -217,11 +215,9 @@ export class RoomConnectionService {
 
     const disconnectedAtEpochMs = Date.now();
     const isGameInProgress = roomRecord.roomState.status !== "lobby";
-    const reconnectExpiresAtEpochMs =
-      disconnectedAtEpochMs +
-      (isGameInProgress
-        ? RoomConnectionService.IN_GAME_RECONNECT_DISPLAY_MS
-        : this.timers.reconnectGracePeriodMs);
+    const reconnectExpiresAtEpochMs = isGameInProgress
+      ? null
+      : disconnectedAtEpochMs + this.timers.reconnectGracePeriodMs;
 
     const disconnectedRoomState = buildDisconnectedRoomState(
       roomRecord.roomState,

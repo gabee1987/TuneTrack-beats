@@ -4,13 +4,18 @@ export function buildDisconnectedRoomState(
   roomState: PublicRoomState,
   playerId: string,
   disconnectedAtEpochMs: number,
-  reconnectExpiresAtEpochMs: number,
+  reconnectExpiresAtEpochMs: number | null,
 ): PublicRoomState {
   return {
     ...roomState,
     players: roomState.players.map((player) =>
       player.id === playerId
-        ? { ...player, connectionStatus: "disconnected", disconnectedAtEpochMs, reconnectExpiresAtEpochMs }
+        ? {
+            ...player,
+            connectionStatus: "disconnected",
+            disconnectedAtEpochMs,
+            reconnectExpiresAtEpochMs,
+          }
         : player,
     ),
   };
@@ -31,7 +36,12 @@ export function buildConnectedRoomState(
     ...roomState,
     players: roomState.players.map((player) =>
       player.id === playerId
-        ? { ...player, connectionStatus: "connected", disconnectedAtEpochMs: null, reconnectExpiresAtEpochMs: null }
+        ? {
+            ...player,
+            connectionStatus: "connected",
+            disconnectedAtEpochMs: null,
+            reconnectExpiresAtEpochMs: null,
+          }
         : player,
     ),
     ...(shouldClearSkipDeadline && roomState.turn
@@ -69,17 +79,14 @@ export function buildPlayerRemovedRoomState(
   delete timelines[playerId];
 
   const nextHostId =
-    roomState.hostId === playerId
-      ? (players[0]?.id ?? roomState.hostId)
-      : roomState.hostId;
+    roomState.hostId === playerId ? (players[0]?.id ?? roomState.hostId) : roomState.hostId;
 
   if (players.length === 0) {
     return { nextRoomState: null, nextHostId };
   }
 
   const hostChanged = nextHostId !== roomState.hostId;
-  const shouldHandOffPlayback =
-    hostChanged && roomState.settings.spotifyAuthStatus === "connected";
+  const shouldHandOffPlayback = hostChanged && roomState.settings.spotifyAuthStatus === "connected";
 
   return {
     nextRoomState: {
@@ -113,9 +120,7 @@ export function selectNextConnectedTurnPlayer(
   return null;
 }
 
-export function selectAutomaticHostCandidate(
-  roomState: PublicRoomState,
-): PublicPlayerState | null {
+export function selectAutomaticHostCandidate(roomState: PublicRoomState): PublicPlayerState | null {
   return (
     roomState.players.find(
       (p) => p.id !== roomState.hostId && p.connectionStatus === "connected",

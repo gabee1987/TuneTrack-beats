@@ -94,8 +94,11 @@ E2E smoke suite once W0 is in place.
 - [ ] Browser and Android hardware back close the topmost overlay, never navigate past it.
 - [ ] A host reconnect after a network drop rejoins the same room and identity with no
       user-visible error, verified by an automated integration test.
-- [ ] An in-game disconnect that never returns is cleaned up by a server timer, and an
-      emptied room is removed, verified by an automated integration test.
+- [x] An in-game disconnect remains reserved without an expiry, all clients see the
+      offline state, and the host can manually skip the offline player's turn, verified by
+      server integration and multi-client E2E tests.
+- [ ] The separate all-players-offline room-lifecycle policy is approved and verified
+      without automatically kicking individual players.
 - [ ] Spotify Premium authorisation survives an app restart and a new room, subject to
       the security and data-protection controls in Doc 08 section 6.
 - [ ] Playback can be started, paused, resumed and restarted at any point in a turn,

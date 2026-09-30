@@ -156,7 +156,12 @@ ten-card timelines this is a multi-kilobyte payload per event on a mobile connec
 
 ## 3. Backend stability and session ownership
 
-### F-12 · S1 · In-game disconnects are never cleaned up
+### F-12 · S1 · In-game disconnect policy was undefined and the UI showed a false expiry
+
+> **Superseded in part by owner decision (2026-09-30):** an in-game disconnect is not a
+> leave or kick. The player remains reserved without an expiry until they reconnect, the
+> host removes them, or the room closes. The all-players-offline room-lifecycle policy is
+> a separate open decision.
 
 `apps/server/src/rooms/RoomConnectionService.ts` lines 35-59:
 
@@ -168,18 +173,12 @@ ten-card timelines this is a multi-kilobyte payload per event on a mobile connec
 
     return roomState;
 
-A player who disconnects **during a game** is marked disconnected and given a 180-second
-`reconnectExpiresAtEpochMs` (from `IN_GAME_RECONNECT_DISPLAY_MS`, line 25) but **no timer
-is ever scheduled**. Consequences:
-
-- the UI counts down to an expiry that never happens;
-- a player who closes the tab and never returns remains in `players` and `timelines`
-  indefinitely, still counted in the player list and standings;
-- the room is never removed, because removal only happens inside
-  `removePlayerBySessionId` when the last player leaves — a path that is only reached from
-  the lobby timer. This is an unbounded in-memory leak per abandoned game.
-
-This also contradicts the `CLAUDE.md` rule "Last player leaves → room removed".
+The implementation mixed two incompatible signals: the player was intentionally retained,
+but `reconnectExpiresAtEpochMs` advertised a 180-second expiry even though no removal timer
+existed. The false countdown is the defect. The retained identity is now explicit product
+behavior, with host-controlled removal and turn recovery. `CLAUDE.md`'s "Last player
+leaves" rule applies to an explicit leave, kick or room close, not a temporary transport
+disconnect.
 
 ### F-13 · S1 · A host reconnect re-issues `create_room` and fails
 
@@ -293,8 +292,8 @@ session with no server-side membership tries to join a running game. On the clie
 `useGameRoomConnection.handleError` only special-cases `ROOM_NOT_FOUND` and
 `ROOM_MEMBERSHIP_NOT_FOUND` (`isClosedRoomError`, line 158). `GAME_ALREADY_STARTED`
 becomes an ordinary error toast on a page with no room state, leaving the player on a
-dead screen. This is reachable whenever the server has restarted, or after F-12's missing
-cleanup finally gets implemented.
+dead screen. This is reachable whenever the server has restarted or the session is no
+longer a member of the requested game.
 
 ---
 
@@ -634,7 +633,7 @@ Server tests cover room flow, challenge flow, host transfer, TT actions, playbac
 mappers, `RoomStore`, the socket-handler factory, playlist import and several Spotify
 helpers. Not covered:
 
-- `RoomConnectionService` disconnect/reconnect **during a game** (the F-12 defect area);
+- `RoomConnectionService` disconnect/reconnect **during a game** (the F-12 policy area);
 - `SpotifyAuthService`, `SpotifyDiscoveryService`, `SpotifyMusicSearchService`;
 - `realtime/handlers/*` wiring beyond the generic factory;
 - `createSocketServer` configuration;
