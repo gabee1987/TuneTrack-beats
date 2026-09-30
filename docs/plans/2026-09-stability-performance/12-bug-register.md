@@ -14,7 +14,7 @@ Status meanings:
 
 | ID  | Severity | Status                             | Next proof                                                             |
 | --- | -------- | ---------------------------------- | ---------------------------------------------------------------------- |
-| B2  | S1       | Open                               | E12-E14 and overlay/navigation component tests                         |
+| B2  | S1       | Open                               | E13-E14 and overlay/navigation component tests                         |
 | B8  | S1       | Partially fixed                    | Explicit client recovery state and server transport tuning             |
 | B14 | S1       | Needs reproduction                 | Capture route, connection state and overlays when the UI becomes inert |
 | B18 | S2       | Open                               | Reproduce and instrument a page exit that never completes              |
@@ -24,7 +24,7 @@ Status meanings:
 
 ## B2 · Navigation and overlays behave inconsistently
 
-**Severity:** S1 · **Status:** Open · **Plans:** Doc 06, E12-E14
+**Severity:** S1 · **Status:** Open · **Plans:** Doc 06, E13-E14
 
 ### Remaining problem
 
@@ -42,7 +42,7 @@ that initiated navigation.
 
 ### Verification
 
-- E12: host closes a room; both clients reach Home and Start works immediately.
+- [x] E12: host closes a room; both clients reach Home and Start works immediately.
 - E13: back closes game settings without leaving the game.
 - E14: back closes the track editor, then its parent playlist editor.
 - Component coverage for stack order, focus restoration, scroll locking and blocking entries.
@@ -149,7 +149,7 @@ removed from the live register on 2026-09-30. They remain in git history.
 | B6  | 2026-09-09 | Leaderboard chip border clipping fixed.                                              |
 | B7  | 2026-09-09 | Playback starts deterministically with retry/device transfer coverage.               |
 | B9  | 2026-09-09 | Finished tracks can be restarted.                                                    |
-| B10 | 2026-09-09 | Home is interactive after room closure; E12 remains as regression coverage.          |
+| B10 | 2026-09-09 | Home is interactive after room closure; E12 provides regression coverage.            |
 | B12 | 2026-09-16 | Player profile is separate from room identity and persists locally.                  |
 | B13 | 2026-09-09 | Leaving an active game requires confirmation.                                        |
 | B15 | 2026-09-09 | Socket reset no longer replays stale buffered actions or returns an orphaned client. |

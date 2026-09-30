@@ -29,15 +29,15 @@ challenge and reveal flows. Neither exists yet.
 
 ## 2. Target shape
 
-| Layer | Tool | What it proves | Target count |
-| --- | --- | --- | --- |
-| Engine rules | Vitest, pure | Placement, challenge, reveal, turn progression, same-year edges, the new metadata override | 31 to approximately 90 |
+| Layer                | Tool                           | What it proves                                                                                             | Target count             |
+| -------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------- | ------------------------ |
+| Engine rules         | Vitest, pure                   | Placement, challenge, reveal, turn progression, same-year edges, the new metadata override                 | 31 to approximately 90   |
 | Server orchestration | Vitest + real Socket.IO client | Room lifecycle, disconnect/reconnect, host transfer, authorisation, timers, rate limits, acks, idempotency | 108 to approximately 180 |
-| Shared contracts | Vitest, pure | Zod schemas accept valid and reject invalid payloads; contract-shape guards | new, approximately 40 |
-| Web pure logic | Vitest, pure | Selectors, mappers, reducers, the overlay stack, the hint scheduler | 101 to approximately 150 |
-| Web components | Vitest + jsdom + RTL | Every primitive, every overlay, every controller-driven page section | new, approximately 120 |
-| Web guards | Vitest, filesystem | z-index tokens, no hex literals, no CSS barrels, i18n key parity | new, approximately 8 |
-| End to end | Playwright | The multiplayer loop across two browser contexts, plus reconnect | new, approximately 15 |
+| Shared contracts     | Vitest, pure                   | Zod schemas accept valid and reject invalid payloads; contract-shape guards                                | new, approximately 40    |
+| Web pure logic       | Vitest, pure                   | Selectors, mappers, reducers, the overlay stack, the hint scheduler                                        | 101 to approximately 150 |
+| Web components       | Vitest + jsdom + RTL           | Every primitive, every overlay, every controller-driven page section                                       | new, approximately 120   |
+| Web guards           | Vitest, filesystem             | z-index tokens, no hex literals, no CSS barrels, i18n key parity                                           | new, approximately 8     |
+| End to end           | Playwright                     | The multiplayer loop across two browser contexts, plus reconnect                                           | new, approximately 15    |
 
 ## 3. Phase 1 — Turn on component testing · **blocking**
 
@@ -61,19 +61,19 @@ Replace `apps/web/vitest.config.js` (currently a bare object literal) with a pro
 `apps/web/vitest.setup.ts` must provide the browser APIs this app uses, all of which are
 absent or incomplete in jsdom:
 
-| API | Why it is needed | Approach |
-| --- | --- | --- |
-| `matchMedia` | `useMediaQuery`, `usePageLayoutMode`, framer-motion's reduced-motion, `AppShellMenuDialog` | Configurable stub with a helper to set matches per query |
-| `ResizeObserver` | `AppShellMenuSheet`, `useTimelineOverflowState` | Stub with a manual trigger |
-| `IntersectionObserver` | Hint anchors (Doc 10) | Stub with a manual trigger |
-| `visualViewport` | Viewport store (Doc 03 section 4) | Stub |
-| `navigator.vibrate` | `triggerPressHaptic` | `vi.fn()` |
-| `crypto.randomUUID` | `sessionId`, request ids | Deterministic sequence so ids are assertable |
-| `localStorage` / `sessionStorage` | Profile, preferences, hints | In-memory implementation **plus** a throwing variant, because the throwing case is a real defect class (Doc 05 section 2) |
-| `window.Spotify` | Playback SDK | Full fake player — see 3.4 |
-| `Element.prototype.scrollIntoView` | Lobby advanced-settings scroll | `vi.fn()` |
-| `HTMLMediaElement` play/pause | Free-tier preview playback | Stubs that drive the real event listeners |
-| `requestAnimationFrame` | Coalesced viewport updates | jsdom has it; expose a flush helper |
+| API                                | Why it is needed                                                                           | Approach                                                                                                                  |
+| ---------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `matchMedia`                       | `useMediaQuery`, `usePageLayoutMode`, framer-motion's reduced-motion, `AppShellMenuDialog` | Configurable stub with a helper to set matches per query                                                                  |
+| `ResizeObserver`                   | `AppShellMenuSheet`, `useTimelineOverflowState`                                            | Stub with a manual trigger                                                                                                |
+| `IntersectionObserver`             | Hint anchors (Doc 10)                                                                      | Stub with a manual trigger                                                                                                |
+| `visualViewport`                   | Viewport store (Doc 03 section 4)                                                          | Stub                                                                                                                      |
+| `navigator.vibrate`                | `triggerPressHaptic`                                                                       | `vi.fn()`                                                                                                                 |
+| `crypto.randomUUID`                | `sessionId`, request ids                                                                   | Deterministic sequence so ids are assertable                                                                              |
+| `localStorage` / `sessionStorage`  | Profile, preferences, hints                                                                | In-memory implementation **plus** a throwing variant, because the throwing case is a real defect class (Doc 05 section 2) |
+| `window.Spotify`                   | Playback SDK                                                                               | Full fake player — see 3.4                                                                                                |
+| `Element.prototype.scrollIntoView` | Lobby advanced-settings scroll                                                             | `vi.fn()`                                                                                                                 |
+| `HTMLMediaElement` play/pause      | Free-tier preview playback                                                                 | Stubs that drive the real event listeners                                                                                 |
+| `requestAnimationFrame`            | Coalesced viewport updates                                                                 | jsdom has it; expose a flush helper                                                                                       |
 
 Also import `@testing-library/jest-dom/vitest` and add an `afterEach` that calls
 `cleanup()` and resets all stubs.
@@ -139,12 +139,12 @@ Order them so they cover the parts the programme is about to change:
 Small tests that make the conventions in this programme self-enforcing, rather than relying
 on review discipline. All four go in `apps/web/src/test/guards/`.
 
-| Guard | Asserts | Protects |
-| --- | --- | --- |
-| `zIndexScale.test.ts` | Every `z-index` in `**/*.module.css` is `var(--z-*)` or an integer in `[-1, 9]` | Doc 06 Phase 1 |
-| `noHardcodedColors.test.ts` | No hex literal in `**/*.module.css`, with a shrinking allowlist | Doc 07 Phase 3 |
-| `noCssBarrels.test.ts` | No module spread-merges CSS-module imports | Doc 02 Phase 4, and the latent collision risk |
-| `i18nKeyParity.test.ts` | `en` and `hu` have identical key sets; every `HintId` has title and body keys in both | Doc 02 Phase 3, Doc 10 step 7 |
+| Guard                       | Asserts                                                                               | Protects                                      |
+| --------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `zIndexScale.test.ts`       | Every `z-index` in `**/*.module.css` is `var(--z-*)` or an integer in `[-1, 9]`       | Doc 06 Phase 1                                |
+| `noHardcodedColors.test.ts` | No hex literal in `**/*.module.css`, with a shrinking allowlist                       | Doc 07 Phase 3                                |
+| `noCssBarrels.test.ts`      | No module spread-merges CSS-module imports                                            | Doc 02 Phase 4, and the latent collision risk |
+| `i18nKeyParity.test.ts`     | `en` and `hu` have identical key sets; every `HintId` has title and body keys in both | Doc 02 Phase 3, Doc 10 step 7                 |
 
 Write each one **before** the migration it guards, so it starts red and turns green as the
 work proceeds. That converts each phase into a measurable countdown instead of a judgement
@@ -186,9 +186,11 @@ A fifth, in `apps/web`:
 > after play advances.
 > E11 takes every client in a running game offline, waits through the configured E2E room
 > expiry, and proves a later reconnect receives the room-unavailable recovery state.
+> E12 has the host close a running game, proves both clients land on Home, and immediately
+> presses Start on each client to guard against a stale exiting page intercepting input.
 > Server Spotify endpoints target a local fail-loud sentinel, every scenario asserts it
 > received zero requests, and browser contexts install a fake Spotify SDK. WebKit and
-> E12-E15 remain open.
+> E13-E15 remain open.
 
 ### 5.1 Tooling
 
@@ -220,23 +222,23 @@ service. The harness must therefore:
 
 ### 5.3 Scenario list
 
-| # | Scenario | Proves |
-| --- | --- | --- |
-| E1 | Host creates a room; guest joins; both see two players | Room creation and join (Doc 09) |
-| E2 | Host starts the game; both reach the game screen | Game start and navigation |
-| E3 | Active player places a card correctly; reveal confirms; turn advances | Core loop |
-| E4 | Active player places incorrectly; card is discarded | Core loop |
-| E5 | Guest challenges before reveal; challenge resolves server-side | Challenge flow |
-| E6 | Play to the target card count; winner is declared | Win condition |
-| E7 | Guest's socket is dropped and restored inside the recovery window; play continues with no error | Doc 04 section 2, Doc 05 section 1 |
-| E8 | Host's socket is dropped and restored; host is still host, no `ROOM_ALREADY_EXISTS` | **F-13** |
-| E9 | Host disconnects permanently; host role transfers within the grace period | Doc 04 section 1 |
+| #   | Scenario                                                                                                                                   | Proves                              |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------- |
+| E1  | Host creates a room; guest joins; both see two players                                                                                     | Room creation and join (Doc 09)     |
+| E2  | Host starts the game; both reach the game screen                                                                                           | Game start and navigation           |
+| E3  | Active player places a card correctly; reveal confirms; turn advances                                                                      | Core loop                           |
+| E4  | Active player places incorrectly; card is discarded                                                                                        | Core loop                           |
+| E5  | Guest challenges before reveal; challenge resolves server-side                                                                             | Challenge flow                      |
+| E6  | Play to the target card count; winner is declared                                                                                          | Win condition                       |
+| E7  | Guest's socket is dropped and restored inside the recovery window; play continues with no error                                            | Doc 04 section 2, Doc 05 section 1  |
+| E8  | Host's socket is dropped and restored; host is still host, no `ROOM_ALREADY_EXISTS`                                                        | **F-13**                            |
+| E9  | Host disconnects permanently; host role transfers within the grace period                                                                  | Doc 04 section 1                    |
 | E10 | Guest disconnects during their turn; all remaining clients see the offline state; only the host manually skips; the guest remains reserved | Owner decision 2026-09-30, **F-12** |
-| E11 | All players disconnect; after one configurable hour the abandoned room closes atomically; any earlier reconnect cancels cleanup | Owner decision 2026-09-30 |
-| E12 | Host closes the room; both clients land on Home and Start is immediately usable | **F-27c** |
-| E13 | Open settings on the game page; press browser back; the panel closes and the game remains | **F-27** |
-| E14 | Open the playlist editor, open a song editor from it, edit the year, save, close both with back | **F-25**, **F-27** |
-| E15 | First-run session sees the timeline-tap hint after receiving a card | Doc 10 |
+| E11 | All players disconnect; after one configurable hour the abandoned room closes atomically; any earlier reconnect cancels cleanup            | Owner decision 2026-09-30           |
+| E12 | Host closes the room; both clients land on Home and Start is immediately usable                                                            | **F-27c**                           |
+| E13 | Open settings on the game page; press browser back; the panel closes and the game remains                                                  | **F-27**                            |
+| E14 | Open the playlist editor, open a song editor from it, edit the year, save, close both with back                                            | **F-25**, **F-27**                  |
+| E15 | First-run session sees the timeline-tap hint after receiving a card                                                                        | Doc 10                              |
 
 E7 to E12 are the scenarios that would have caught the current stability defects, and they
 are the reason this harness is worth building.
@@ -261,26 +263,26 @@ The iOS drag defect (F-35) is the hardest thing here to automate. Approach:
 - [ ] Runtime under 4 minutes on a developer machine, so it is actually run.
 - [x] Zero real Spotify calls (assert by pointing the fake at a port that fails loudly if
       bypassed).
-- [ ] E7 to E12 fail against the current code and pass after Doc 04 and Doc 05 land. Record
-      that transition; it is the evidence that the stability work worked.
+- [x] E7 to E12 pass against the hardened code and protect the reconnect, transfer,
+      disconnect, expiry and explicit-close boundaries.
 
 ## 6. Phase 4 — Close the server coverage holes
 
 **Finding:** F-46. Detailed test lists live with their changes; consolidated here:
 
-| New file | Covers | Plan reference |
-| --- | --- | --- |
-| `tests/rooms/disconnectLifecycle.test.ts` | In-game identity retention, reconnect without expiry, host transfer, manual and safety turn recovery, and explicit host kick | Doc 04 section 1.3 |
-| `tests/app/createSocketServer.test.ts` | Recovery window, ping values, buffer size, CORS wiring | Doc 04 section 2 |
-| `tests/realtime/rateLimit.test.ts` | Buckets, refill, per-socket isolation, `RATE_LIMITED`, no disconnect | Doc 04 section 2.4 |
-| `tests/app/shutdown.test.ts` | `SIGTERM` sequence, timer clearing, sink flush, idempotency, unhandled rejection | Doc 04 section 3.1 |
-| `tests/rooms/roomCodeGenerator.test.ts` | Uniqueness, collision retry, base32 fallback, curated word list | Doc 09 section 3.2 |
-| `tests/rooms/metadataOverride.test.ts` | Host-only, reveal-only, current-track-only, idempotency, deck update, broadcast | Doc 09 section 5.4 |
-| `tests/spotify/SpotifyAuthService.test.ts` | Callback handling, single-use `state`, expiry, account-type detection, error mapping | Doc 08 section 4.4 |
-| `tests/spotify/spotifyCredentialStore.test.ts` | Encryption round-trip, wrong key fails closed, absolute and idle expiry, sweep, scope invalidation | Doc 08 section 4.4 |
-| `tests/spotify/noSecretsInLogs.test.ts` | Token-shaped values never reach a log or audit payload | Doc 08 section 4.4 item 6 |
-| `tests/realtime/actionAcks.test.ts` | Ack on success/rejection/schema failure; absent-ack compatibility; idempotent replay | Doc 05 section 4 |
-| `tests/rooms/statePayload.test.ts` | `releaseYear` absent during `turn`/`challenge`; narrow-event `revision` gap handling | Doc 05 section 6 |
+| New file                                       | Covers                                                                                                                       | Plan reference            |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `tests/rooms/disconnectLifecycle.test.ts`      | In-game identity retention, reconnect without expiry, host transfer, manual and safety turn recovery, and explicit host kick | Doc 04 section 1.3        |
+| `tests/app/createSocketServer.test.ts`         | Recovery window, ping values, buffer size, CORS wiring                                                                       | Doc 04 section 2          |
+| `tests/realtime/rateLimit.test.ts`             | Buckets, refill, per-socket isolation, `RATE_LIMITED`, no disconnect                                                         | Doc 04 section 2.4        |
+| `tests/app/shutdown.test.ts`                   | `SIGTERM` sequence, timer clearing, sink flush, idempotency, unhandled rejection                                             | Doc 04 section 3.1        |
+| `tests/rooms/roomCodeGenerator.test.ts`        | Uniqueness, collision retry, base32 fallback, curated word list                                                              | Doc 09 section 3.2        |
+| `tests/rooms/metadataOverride.test.ts`         | Host-only, reveal-only, current-track-only, idempotency, deck update, broadcast                                              | Doc 09 section 5.4        |
+| `tests/spotify/SpotifyAuthService.test.ts`     | Callback handling, single-use `state`, expiry, account-type detection, error mapping                                         | Doc 08 section 4.4        |
+| `tests/spotify/spotifyCredentialStore.test.ts` | Encryption round-trip, wrong key fails closed, absolute and idle expiry, sweep, scope invalidation                           | Doc 08 section 4.4        |
+| `tests/spotify/noSecretsInLogs.test.ts`        | Token-shaped values never reach a log or audit payload                                                                       | Doc 08 section 4.4 item 6 |
+| `tests/realtime/actionAcks.test.ts`            | Ack on success/rejection/schema failure; absent-ack compatibility; idempotent replay                                         | Doc 05 section 4          |
+| `tests/rooms/statePayload.test.ts`             | `releaseYear` absent during `turn`/`challenge`; narrow-event `revision` gap handling                                         | Doc 05 section 6          |
 
 Also add to every existing server integration suite an `afterEach` asserting
 `roomCount === 0`, which turns any future room leak into an immediate test failure rather
@@ -301,12 +303,12 @@ numbers, then raise them by a few points per wave.
 
 Proposed eventual floors, to be confirmed against the first measurement:
 
-| Workspace | Statements | Branches | Rationale |
-| --- | --- | --- | --- |
-| `packages/game-engine` | 95 % | 90 % | `CLAUDE.md`: the engine gets the deepest tests |
-| `packages/shared` | 90 % | 85 % | Mostly types; the schemas are the testable part |
-| `apps/server` | 85 % | 75 % | Orchestration and boundaries |
-| `apps/web` | 70 % | 60 % | Excluding `*.module.css`, generated files and `DesignSystemPage` |
+| Workspace              | Statements | Branches | Rationale                                                        |
+| ---------------------- | ---------- | -------- | ---------------------------------------------------------------- |
+| `packages/game-engine` | 95 %       | 90 %     | `CLAUDE.md`: the engine gets the deepest tests                   |
+| `packages/shared`      | 90 %       | 85 %     | Mostly types; the schemas are the testable part                  |
+| `apps/server`          | 85 %       | 75 %     | Orchestration and boundaries                                     |
+| `apps/web`             | 70 %       | 60 %     | Excluding `*.module.css`, generated files and `DesignSystemPage` |
 
 Exclude from web coverage: `main.tsx`, `vite.config.ts`, `src/test/**`,
 `pages/DesignSystemPage/**`.
@@ -346,26 +348,26 @@ of done for the waves that touch them, and belongs in the repository so it is ac
 Devices: one iPhone (Safari, plus installed PWA), one mid-range Android (Chrome, plus
 installed PWA), one desktop browser.
 
-| # | Check | Related |
-| --- | --- | --- |
-| M1 | Drag a card with a slow hold — it drags, the timeline does not scroll | F-35 |
-| M2 | Swipe the timeline quickly — it scrolls, no card is picked up | F-35 |
-| M3 | Drag near the edge — edge auto-scroll works and the card stays under the finger | F-35 |
-| M4 | Open settings from the game page — one smooth animation, no flicker | F-29 |
-| M5 | Press the phone's back button with settings open — the panel closes | F-27 |
-| M6 | Press the phone's back button with the song editor open — it closes, the playlist editor stays | F-25, F-27 |
-| M7 | Leaderboard chips — bottom border fully visible while scrolling the strip | F-32 |
-| M8 | Let a track finish during a placement, then press play — it restarts | F-38 |
-| M9 | Draw a previously heard track — it starts from the beginning | F-37 |
-| M10 | Turn Wi-Fi off for 10 s mid-game, then on — play resumes with no error toast | F-13, F-16 |
-| M11 | Close the room, land on Home, press Start immediately | F-27c |
-| M12 | Set a name, force-quit the app, reopen — the name is still there | F-40 |
-| M13 | Connect Spotify, close the room, create a new one — no re-login | F-36 |
-| M14 | Rotate the device on every screen — layout adapts with no stuck overlay | F-08 |
-| M15 | Open the keyboard on the lobby name field — the field stays visible | Doc 03 section 4.2 |
-| M16 | First-run hints appear once; reset in settings brings them back | Doc 10 |
-| M17 | Install as a PWA and repeat M4 to M11 — installed-app navigation behaves the same | F-27 |
-| M18 | Enable the OS reduced-motion setting — all motion degrades, nothing breaks | `CLAUDE.md` |
+| #   | Check                                                                                          | Related            |
+| --- | ---------------------------------------------------------------------------------------------- | ------------------ |
+| M1  | Drag a card with a slow hold — it drags, the timeline does not scroll                          | F-35               |
+| M2  | Swipe the timeline quickly — it scrolls, no card is picked up                                  | F-35               |
+| M3  | Drag near the edge — edge auto-scroll works and the card stays under the finger                | F-35               |
+| M4  | Open settings from the game page — one smooth animation, no flicker                            | F-29               |
+| M5  | Press the phone's back button with settings open — the panel closes                            | F-27               |
+| M6  | Press the phone's back button with the song editor open — it closes, the playlist editor stays | F-25, F-27         |
+| M7  | Leaderboard chips — bottom border fully visible while scrolling the strip                      | F-32               |
+| M8  | Let a track finish during a placement, then press play — it restarts                           | F-38               |
+| M9  | Draw a previously heard track — it starts from the beginning                                   | F-37               |
+| M10 | Turn Wi-Fi off for 10 s mid-game, then on — play resumes with no error toast                   | F-13, F-16         |
+| M11 | Close the room, land on Home, press Start immediately                                          | F-27c              |
+| M12 | Set a name, force-quit the app, reopen — the name is still there                               | F-40               |
+| M13 | Connect Spotify, close the room, create a new one — no re-login                                | F-36               |
+| M14 | Rotate the device on every screen — layout adapts with no stuck overlay                        | F-08               |
+| M15 | Open the keyboard on the lobby name field — the field stays visible                            | Doc 03 section 4.2 |
+| M16 | First-run hints appear once; reset in settings brings them back                                | Doc 10             |
+| M17 | Install as a PWA and repeat M4 to M11 — installed-app navigation behaves the same              | F-27               |
+| M18 | Enable the OS reduced-motion setting — all motion degrades, nothing breaks                     | `CLAUDE.md`        |
 
 ## 9. Test-quality rules
 
@@ -390,11 +392,11 @@ To keep the new tests from becoming a maintenance burden:
 
 ## 10. Sequencing
 
-| Step | Blocking? | Effort |
-| --- | --- | --- |
-| Phase 1 (jsdom + RTL + utilities + fake socket + fake Spotify) | **Yes** — most of the programme depends on it | small to medium |
-| Phase 2 (guard tests) | No, but write each before its migration | small |
-| Phase 3 (Playwright harness + E1 to E6) | **Yes** for Doc 04 and Doc 05 | medium |
-| Phase 3 (E7 to E15) | Alongside the work they cover | medium |
-| Phase 4 (server holes) | With Doc 04, Doc 05, Doc 08, Doc 09 | medium |
-| Phase 5 (coverage + CI) | No, but do it early so the ratchet has somewhere to start | small |
+| Step                                                           | Blocking?                                                 | Effort          |
+| -------------------------------------------------------------- | --------------------------------------------------------- | --------------- |
+| Phase 1 (jsdom + RTL + utilities + fake socket + fake Spotify) | **Yes** — most of the programme depends on it             | small to medium |
+| Phase 2 (guard tests)                                          | No, but write each before its migration                   | small           |
+| Phase 3 (Playwright harness + E1 to E6)                        | **Yes** for Doc 04 and Doc 05                             | medium          |
+| Phase 3 (E7 to E15)                                            | Alongside the work they cover                             | medium          |
+| Phase 4 (server holes)                                         | With Doc 04, Doc 05, Doc 08, Doc 09                       | medium          |
+| Phase 5 (coverage + CI)                                        | No, but do it early so the ratchet has somewhere to start | small           |

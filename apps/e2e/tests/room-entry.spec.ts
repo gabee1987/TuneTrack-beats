@@ -518,6 +518,48 @@ test("an in-game room closes after every player stays offline", async ({ browser
   }
 });
 
+test("the host closes the room and both players can start again immediately", async ({
+  browser,
+}) => {
+  const guest = await createNamedPage(browser, "Close Guest");
+  const host = await createNamedPage(browser, "Close Host");
+
+  try {
+    await guest.page.goto("/play");
+    const roomId = await hostRoom(host.page);
+    const directoryRoom = guest.page.getByRole("button", {
+      name: new RegExp(escapeRegex(roomId)),
+    });
+
+    await expect(directoryRoom).toBeVisible();
+    await directoryRoom.click();
+    await expectLobbyPlayerCount(host.page, 2);
+    await expectLobbyPlayerCount(guest.page, 2);
+
+    await host.page.getByRole("button", { name: "Start Game" }).first().click();
+    await expectGamePage(host.page, roomId);
+    await expectGamePage(guest.page, roomId);
+
+    const gameMenuButton = host.page.getByRole("button", {
+      name: "Open game menu",
+      exact: true,
+    });
+    await expect(gameMenuButton).toHaveCount(1);
+    await gameMenuButton.click();
+    await host.page.getByRole("button", { name: "Close Room", exact: true }).click();
+
+    for (const page of [host.page, guest.page]) {
+      await expect(page).toHaveURL("/");
+      const startButton = page.getByRole("button", { name: "Start", exact: true });
+      await expect(startButton).toBeVisible();
+      await startButton.click();
+      await expect(page).toHaveURL("/play");
+    }
+  } finally {
+    await Promise.all([host.context.close(), guest.context.close()]);
+  }
+});
+
 test("a saved player profile joins from a direct invite in one action", async ({ browser }) => {
   const host = await createNamedPage(browser, "Invite Host");
   const guest = await createNamedPage(browser, "Invite Guest");
