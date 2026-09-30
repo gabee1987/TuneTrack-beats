@@ -1,8 +1,48 @@
 import type { GameTrackCard } from "@tunetrack/game-engine";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { RoomRegistry } from "../src/rooms/RoomRegistry.js";
 
 describe("host transfer", () => {
+  it("waits 30 seconds before transferring an in-game host by default", () => {
+    vi.useFakeTimers();
+
+    try {
+      const roomRegistry = new RoomRegistry();
+      const hostJoin = roomRegistry.createRoom(
+        "default-transfer-grace-room",
+        "Host Player",
+        "host-socket",
+        "host-session",
+      );
+      const guestJoin = roomRegistry.addPlayerToRoom(
+        "default-transfer-grace-room",
+        "Guest Player",
+        "guest-socket",
+        "guest-session",
+      );
+      roomRegistry.startGame(
+        "host-socket",
+        { roomId: "default-transfer-grace-room" },
+        getHostTransferDeck(),
+      );
+
+      roomRegistry.removePlayerBySocketId("host-socket");
+      vi.advanceTimersByTime(29_999);
+
+      expect(
+        roomRegistry.getRoomStateForMember("guest-socket", "default-transfer-grace-room").hostId,
+      ).toBe(hostJoin.playerId);
+
+      vi.advanceTimersByTime(1);
+
+      expect(
+        roomRegistry.getRoomStateForMember("guest-socket", "default-transfer-grace-room").hostId,
+      ).toBe(guestJoin.playerId);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("does not automatically transfer lobby host while they are reconnecting", async () => {
     const roomRegistry = new RoomRegistry(undefined, 1_000, 10);
     const changedRoomStates: string[] = [];

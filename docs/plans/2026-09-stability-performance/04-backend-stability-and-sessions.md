@@ -47,7 +47,7 @@ Three distinct grace periods, all currently conflated:
 | Period | Purpose | Current | Proposed |
 | --- | --- | --- | --- |
 | **Turn skip** | Advance play past a disconnected active player | 60 s, scheduled | unchanged |
-| **Host transfer** | Move host role away from a disconnected host | 15 s, scheduled | unchanged |
+| **Host transfer** | Move host role away from a disconnected host | 15 s, scheduled | **30 s, scheduled (owner decision 2026-09-29)** |
 | **Session eviction (lobby)** | Remove a player who left the lobby | 30 s, scheduled | unchanged |
 | **Session eviction (in game)** | Remove a player who abandoned a running game | 180 s, **not scheduled** | 180 s, **scheduled** |
 
@@ -122,6 +122,13 @@ New file `apps/server/tests/rooms/disconnectLifecycle.test.ts` with fake timers:
 - `resolveDisconnectPolicy` decision table covered exhaustively as a pure test.
 
 ### Acceptance
+
+> **Implementation state (2026-09-29):** Chromium E2E E9 permanently disconnects an
+> in-game host and proves that the first connected guest receives host controls after the
+> configured grace period. The production default is now 30 seconds by owner decision;
+> E2E uses a five-second override so reconnect coverage remains representative while the
+> permanent-disconnect scenario stays fast. The remaining in-game eviction acceptance
+> items stay open.
 
 - [ ] All tests above pass.
 - [ ] `RoomStore.roomCount` returns to 0 after every test file completes — add this as an
@@ -276,9 +283,9 @@ shutdown.
 
 > **Implementation state (2026-09-29):** `MAX_ACTIVE_ROOMS` is validated in `env`, keeps
 > the production default of 5, and is injected through `RoomRegistry` into
-> `RoomLobbyService`. The E2E server uses a higher explicit capacity so independent game
-> scenarios can coexist during reconnect grace periods. Grace-period environment wiring
-> remains open.
+> `RoomLobbyService`. `HOST_TRANSFER_GRACE_MS` is also validated and injected, with the
+> owner-directed 30-second production default and a five-second E2E override. The remaining
+> grace-period environment wiring stays open.
 
 - Move `MAX_ACTIVE_ROOM_COUNT` out of `RoomLobbyService` into `env` as
   `MAX_ACTIVE_ROOMS` (Zod: positive int, default 5) and pass it down through the

@@ -25,6 +25,7 @@ const envSchema = z
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     PORT: z.coerce.number().int().positive().default(3001),
     MAX_ACTIVE_ROOMS: z.coerce.number().int().positive().default(5),
+    HOST_TRANSFER_GRACE_MS: z.coerce.number().int().positive().default(30_000),
     CLIENT_ORIGIN: z.string().url().default("http://localhost:5173"),
     SPOTIFY_CLIENT_ID: trimmedNonEmptyString,
     SPOTIFY_CLIENT_SECRET: trimmedNonEmptyString,

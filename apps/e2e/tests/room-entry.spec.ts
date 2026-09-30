@@ -367,6 +367,47 @@ test("a host reconnects inside the recovery window and remains host", async ({ b
   }
 });
 
+test("a permanent host disconnect transfers host controls after the grace period", async ({
+  browser,
+}) => {
+  const guest = await createNamedPage(browser, "Transfer Guest");
+  const host = await createNamedPage(browser, "Transfer Host");
+
+  try {
+    await guest.page.goto("/play");
+    const roomId = await hostRoom(host.page);
+    const directoryRoom = guest.page.getByRole("button", {
+      name: new RegExp(escapeRegex(roomId)),
+    });
+
+    await expect(directoryRoom).toBeVisible();
+    await directoryRoom.click();
+    await expectLobbyPlayerCount(guest.page, 2);
+    await expectLobbyPlayerCount(host.page, 2);
+
+    await host.page.getByRole("button", { name: "Start Game" }).first().click();
+    await expectGamePage(host.page, roomId);
+    await expectGamePage(guest.page, roomId);
+
+    await host.page.getByRole("button", { name: "Confirm", exact: true }).click();
+    await expect(host.page.getByText("Correct placement.", { exact: true }).first()).toBeVisible();
+    await host.page.getByRole("button", { name: "Next song", exact: true }).click();
+    await expect(guest.page.getByText("Your turn", { exact: true }).first()).toBeVisible();
+
+    await host.context.close();
+    await expect(
+      guest.page.getByText("Transfer Host went offline", { exact: true }).first(),
+    ).toBeVisible();
+    await expect(guest.page.getByText("Host", { exact: true }).first()).toBeVisible();
+
+    await guest.page.getByRole("button", { name: "Confirm", exact: true }).click();
+    await expect(guest.page.getByText("Correct placement.", { exact: true }).first()).toBeVisible();
+    await expect(guest.page.getByRole("button", { name: "Next song", exact: true })).toBeVisible();
+  } finally {
+    await Promise.all([host.context.close(), guest.context.close()]);
+  }
+});
+
 test("a saved player profile joins from a direct invite in one action", async ({ browser }) => {
   const host = await createNamedPage(browser, "Invite Host");
   const guest = await createNamedPage(browser, "Invite Guest");

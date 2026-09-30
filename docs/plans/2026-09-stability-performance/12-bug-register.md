@@ -782,7 +782,9 @@ not Fixed.
 - Chromium E2E E7 and E8 pass through the existing session-id rejoin path. E7 proves a
   restored guest completes the following turn without room-recovery UI. E8 proves a
   restored host triggers neither room-exists nor room-recovery UI and retains host-only
-  reveal authority. E9 to E12 remain open and continue to gate the related fixes.
+  reveal authority. E9 proves a permanently disconnected host transfers ownership to the
+  connected guest after the configured grace period. E10 to E12 remain open and continue
+  to gate the related fixes.
 - Server tests per Doc 11 section 6.
 - `useLobbyRoomConnection.test.ts` and `useGameRoomConnection.test.ts`: a language change
   emits nothing, replaces no listener, and subsequent server errors use the current language.
@@ -1165,7 +1167,8 @@ report is unproven — but it is a real app-wide defect that was introduced here
 ### Ruled out by evidence
 
 - **Server-side room closure.** A brief disconnect does not close a room: the server keeps
-  a 180 s in-game reconnect window and only transfers the host after 15 s.
+  a 180 s in-game reconnect window and transfers the host after the owner-directed 30 s
+  production grace period.
 - **A theme-driven remount.** `applyTheme` writes CSS custom properties and `data-theme`;
   nothing keys off the theme id.
 - **An exiting page re-running its effects against the new route.** The hypothesis was that

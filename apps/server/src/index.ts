@@ -44,7 +44,7 @@ const deckService = new DeckService(
 const roomRegistry = new RoomRegistry(
   undefined,
   undefined,
-  undefined,
+  env.HOST_TRANSFER_GRACE_MS,
   undefined,
   env.MAX_ACTIVE_ROOMS,
 );

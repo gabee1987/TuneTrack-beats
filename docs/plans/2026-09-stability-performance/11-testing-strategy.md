@@ -177,9 +177,13 @@ A fifth, in `apps/web`:
 > E8 takes the host offline during a game, verifies the guest observes the same host
 > reconnect, rejects room-exists and room-recovery UI, and proves the restored host retains
 > host-only reveal authority.
+> E9 permanently disconnects the host, waits through the configured E2E grace period, and
+> proves the connected guest receives host-only controls. Production now defaults host
+> transfer to 30 seconds; E2E explicitly uses five seconds so E8 retains a realistic
+> reconnect window.
 > Server Spotify endpoints target a local fail-loud sentinel, every scenario asserts it
 > received zero requests, and browser contexts install a fake Spotify SDK. WebKit and
-> E9-E15 remain open.
+> E10-E15 remain open.
 
 ### 5.1 Tooling
 
