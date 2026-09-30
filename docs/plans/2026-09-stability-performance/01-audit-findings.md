@@ -160,8 +160,8 @@ ten-card timelines this is a multi-kilobyte payload per event on a mobile connec
 
 > **Superseded in part by owner decision (2026-09-30):** an in-game disconnect is not a
 > leave or kick. The player remains reserved without an expiry until they reconnect, the
-> host removes them, or the room closes. The all-players-offline room-lifecycle policy is
-> a separate open decision.
+> host removes them, or the room closes. If every player stays offline continuously for
+> one configurable hour, the server closes the abandoned room as a unit.
 
 `apps/server/src/rooms/RoomConnectionService.ts` lines 35-59:
 

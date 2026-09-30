@@ -114,6 +114,17 @@ After the project is created you will see a canvas with a service card in it.
 | `SPOTIFY_CLIENT_SECRET` | _(your client secret)_                             | Copy from the Spotify developer dashboard                                                                   |
 | `SPOTIFY_REDIRECT_URI`  | `https://YOUR-RAILWAY-DOMAIN/api/spotify/callback` | Replace with the domain you generated in A2                                                                 |
 
+Room lifecycle variables are optional. When omitted, the server uses these production
+defaults:
+
+| Key                               | Default   | Purpose |
+| --------------------------------- | --------- | ------- |
+| `MAX_ACTIVE_ROOMS`                | `5`       | Maximum rooms held by one server process |
+| `RECONNECT_GRACE_MS`              | `30000`   | Lobby reconnect window before removal |
+| `HOST_TRANSFER_GRACE_MS`          | `30000`   | Delay before an offline in-game host transfers |
+| `TURN_SKIP_GRACE_MS`              | `60000`   | Safety delay before an offline active turn advances |
+| `ALL_PLAYERS_OFFLINE_ROOM_TTL_MS` | `3600000` | Continuous all-offline time before the whole room closes |
+
 Example with a real domain:
 
 ```
@@ -379,6 +390,11 @@ Both services watch your `main` branch and redeploy automatically when you push.
 | `SPOTIFY_CLIENT_ID`     | `abc123def456`                                                 | From Spotify developer dashboard                      |
 | `SPOTIFY_CLIENT_SECRET` | `xyz789...`                                                    | From Spotify developer dashboard — keep private       |
 | `SPOTIFY_REDIRECT_URI`  | `https://tunetrack-abc123.up.railway.app/api/spotify/callback` | Must be registered in Spotify dashboard               |
+| `MAX_ACTIVE_ROOMS` | `5` | Optional; defaults to 5 |
+| `RECONNECT_GRACE_MS` | `30000` | Optional lobby reconnect window |
+| `HOST_TRANSFER_GRACE_MS` | `30000` | Optional in-game host-transfer delay |
+| `TURN_SKIP_GRACE_MS` | `60000` | Optional offline-turn safety delay |
+| `ALL_PLAYERS_OFFLINE_ROOM_TTL_MS` | `3600000` | Optional all-offline room expiry |
 
 ### Render Static Site (frontend) — baked in at build time
 

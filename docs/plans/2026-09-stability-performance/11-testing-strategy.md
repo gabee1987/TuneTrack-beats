@@ -184,9 +184,11 @@ A fifth, in `apps/web`:
 > E10 disconnects a guest on their turn, proves all remaining clients see that they are
 > offline, proves only the host can skip the turn, and proves the guest remains reserved
 > after play advances.
+> E11 takes every client in a running game offline, waits through the configured E2E room
+> expiry, and proves a later reconnect receives the room-unavailable recovery state.
 > Server Spotify endpoints target a local fail-loud sentinel, every scenario asserts it
 > received zero requests, and browser contexts install a fake Spotify SDK. WebKit and
-> E11-E15 remain open.
+> E12-E15 remain open.
 
 ### 5.1 Tooling
 
@@ -230,7 +232,7 @@ service. The harness must therefore:
 | E8 | Host's socket is dropped and restored; host is still host, no `ROOM_ALREADY_EXISTS` | **F-13** |
 | E9 | Host disconnects permanently; host role transfers within the grace period | Doc 04 section 1 |
 | E10 | Guest disconnects during their turn; all remaining clients see the offline state; only the host manually skips; the guest remains reserved | Owner decision 2026-09-30, **F-12** |
-| E11 | All players disconnect; room lifecycle follows a separately approved all-offline policy without automatically evicting individual players | **Open owner decision** |
+| E11 | All players disconnect; after one configurable hour the abandoned room closes atomically; any earlier reconnect cancels cleanup | Owner decision 2026-09-30 |
 | E12 | Host closes the room; both clients land on Home and Start is immediately usable | **F-27c** |
 | E13 | Open settings on the game page; press browser back; the panel closes and the game remains | **F-27** |
 | E14 | Open the playlist editor, open a song editor from it, edit the year, save, close both with back | **F-25**, **F-27** |

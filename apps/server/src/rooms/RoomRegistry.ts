@@ -36,6 +36,7 @@ export class RoomRegistry {
   private static readonly DEFAULT_HOST_TRANSFER_GRACE_PERIOD_MS = 30_000;
   private static readonly DEFAULT_TURN_SKIP_GRACE_PERIOD_MS = 60_000;
   private static readonly DEFAULT_MAX_ACTIVE_ROOM_COUNT = 5;
+  private static readonly DEFAULT_ALL_PLAYERS_OFFLINE_ROOM_TTL_MS = 60 * 60 * 1_000;
 
   private readonly store: RoomStore;
   private readonly timers: RoomTimerCoordinator;
@@ -44,6 +45,7 @@ export class RoomRegistry {
   private readonly connection: RoomConnectionService;
   private roomStateChangedListener: ((roomState: PublicRoomState) => void) | null = null;
   private roomDirectoryChangedListener: (() => void) | null = null;
+  private roomExpiredListener: ((roomId: RoomId) => void) | null = null;
   private spotifyPlaybackHandoffListener: ((roomId: RoomId) => void) | null = null;
 
   public constructor(
@@ -52,6 +54,7 @@ export class RoomRegistry {
     hostTransferGracePeriodMs = RoomRegistry.DEFAULT_HOST_TRANSFER_GRACE_PERIOD_MS,
     turnSkipGracePeriodMs = RoomRegistry.DEFAULT_TURN_SKIP_GRACE_PERIOD_MS,
     maxActiveRoomCount = RoomRegistry.DEFAULT_MAX_ACTIVE_ROOM_COUNT,
+    allPlayersOfflineRoomTtlMs = RoomRegistry.DEFAULT_ALL_PLAYERS_OFFLINE_ROOM_TTL_MS,
   ) {
     const emitRoomStateChanged = (roomState: PublicRoomState): void => {
       this.roomStateChangedListener?.(roomState);
@@ -62,6 +65,9 @@ export class RoomRegistry {
     const emitRoomDirectoryChanged = (): void => {
       this.roomDirectoryChangedListener?.();
     };
+    const emitRoomExpired = (roomId: RoomId): void => {
+      this.roomExpiredListener?.(roomId);
+    };
 
     this.store = new RoomStore();
     this.timers = new RoomTimerCoordinator(
@@ -69,6 +75,7 @@ export class RoomRegistry {
       reconnectGracePeriodMs,
       hostTransferGracePeriodMs,
       turnSkipGracePeriodMs,
+      allPlayersOfflineRoomTtlMs,
     );
     this.connection = new RoomConnectionService(
       this.store,
@@ -77,6 +84,7 @@ export class RoomRegistry {
       emitRoomStateChanged,
       emitSpotifyPlaybackHandoff,
       emitRoomDirectoryChanged,
+      emitRoomExpired,
     );
     this.lobby = new RoomLobbyService(
       this.store,
@@ -100,6 +108,10 @@ export class RoomRegistry {
 
   public setRoomDirectoryChangedListener(listener: () => void): void {
     this.roomDirectoryChangedListener = listener;
+  }
+
+  public setRoomExpiredListener(listener: (roomId: RoomId) => void): void {
+    this.roomExpiredListener = listener;
   }
 
   public setSpotifyPlaybackHandoffListener(listener: (roomId: RoomId) => void): void {

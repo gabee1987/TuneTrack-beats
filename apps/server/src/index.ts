@@ -43,10 +43,11 @@ const deckService = new DeckService(
 );
 const roomRegistry = new RoomRegistry(
   undefined,
-  undefined,
+  env.RECONNECT_GRACE_MS,
   env.HOST_TRANSFER_GRACE_MS,
-  undefined,
+  env.TURN_SKIP_GRACE_MS,
   env.MAX_ACTIVE_ROOMS,
+  env.ALL_PLAYERS_OFFLINE_ROOM_TTL_MS,
 );
 const roomService = new RoomService(
   roomRegistry,

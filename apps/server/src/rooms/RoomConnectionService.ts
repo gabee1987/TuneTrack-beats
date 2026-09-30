@@ -21,6 +21,7 @@ import type { RoomTimerCoordinator } from "./RoomTimerCoordinator.js";
 type RoomStateChangedEmitter = (roomState: PublicRoomState) => void;
 type SpotifyPlaybackHandoffEmitter = (roomId: RoomId) => void;
 type RoomDirectoryChangedEmitter = () => void;
+type RoomExpiredEmitter = (roomId: RoomId) => void;
 
 export class RoomConnectionService {
   public constructor(
@@ -30,6 +31,7 @@ export class RoomConnectionService {
     private readonly emitRoomStateChanged: RoomStateChangedEmitter,
     private readonly emitSpotifyPlaybackHandoff: SpotifyPlaybackHandoffEmitter = () => undefined,
     private readonly emitRoomDirectoryChanged: RoomDirectoryChangedEmitter = () => undefined,
+    private readonly emitRoomExpired: RoomExpiredEmitter = () => undefined,
   ) {}
 
   public removePlayerBySocketId(socketId: string): PublicRoomState | null {
@@ -151,6 +153,7 @@ export class RoomConnectionService {
       throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
     }
 
+    this.timers.clearAllPlayersOffline(roomId);
     this.store.clearOtherSocketMembershipsForSession(sessionId, socketId);
     const connectedRoomState = this.markPlayerConnected(roomId, playerId);
     this.store.setSocketMembership(socketId, { playerId, roomId, sessionId });
@@ -295,7 +298,33 @@ export class RoomConnectionService {
       });
     }
 
+    if (
+      effectiveRoomState.status !== "lobby" &&
+      effectiveRoomState.players.every((player) => player.connectionStatus === "disconnected")
+    ) {
+      this.timers.scheduleAllPlayersOffline(membership.roomId, () => {
+        this.closeRoomIfEveryPlayerIsOffline(membership.roomId);
+      });
+    }
+
     return effectiveRoomState;
+  }
+
+  private closeRoomIfEveryPlayerIsOffline(roomId: RoomId): void {
+    const roomRecord = this.store.getRoom(roomId);
+    if (
+      !roomRecord ||
+      roomRecord.roomState.status === "lobby" ||
+      roomRecord.roomState.players.some((player) => player.connectionStatus === "connected")
+    ) {
+      return;
+    }
+
+    this.timers.clearForRoom(roomId);
+    this.store.clearMembershipsForRoom(roomId);
+    this.store.deleteRoom(roomId);
+    this.store.clearRoomRedirects(roomId);
+    this.emitRoomExpired(roomId);
   }
 
   private markPlayerConnected(roomId: RoomId, playerId: string): PublicRoomState {

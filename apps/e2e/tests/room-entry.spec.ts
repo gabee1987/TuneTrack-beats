@@ -481,6 +481,43 @@ test("an offline guest stays in the game while the host manually skips their tur
   }
 });
 
+test("an in-game room closes after every player stays offline", async ({ browser }) => {
+  const guest = await createNamedPage(browser, "Expiry Guest");
+  const host = await createNamedPage(browser, "Expiry Host");
+
+  try {
+    await guest.page.goto("/play");
+    const roomId = await hostRoom(host.page);
+    const directoryRoom = guest.page.getByRole("button", {
+      name: new RegExp(escapeRegex(roomId)),
+    });
+
+    await expect(directoryRoom).toBeVisible();
+    await directoryRoom.click();
+    await expectLobbyPlayerCount(host.page, 2);
+    await expectLobbyPlayerCount(guest.page, 2);
+
+    await host.page.getByRole("button", { name: "Start Game" }).first().click();
+    await expectGamePage(host.page, roomId);
+    await expectGamePage(guest.page, roomId);
+
+    await guest.context.setOffline(true);
+    await expect(
+      host.page.getByText("Expiry Guest went offline", { exact: true }).first(),
+    ).toBeVisible();
+    await host.context.setOffline(true);
+
+    await new Promise((resolve) => setTimeout(resolve, 2_500));
+    await guest.context.setOffline(false);
+
+    await expect(
+      guest.page.getByRole("heading", { name: "This room is no longer available" }),
+    ).toBeVisible();
+  } finally {
+    await Promise.all([host.context.close(), guest.context.close()]);
+  }
+});
+
 test("a saved player profile joins from a direct invite in one action", async ({ browser }) => {
   const host = await createNamedPage(browser, "Invite Host");
   const guest = await createNamedPage(browser, "Invite Guest");

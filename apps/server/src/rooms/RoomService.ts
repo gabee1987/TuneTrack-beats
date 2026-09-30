@@ -99,6 +99,11 @@ export class RoomService {
       });
       void this.spotifyAuthService.pauseRoomPlayback(roomId);
     });
+    this.roomRegistry.setRoomExpiredListener((roomId) => {
+      this.spotifyAuthService.clearHostTokens(roomId);
+      this.spotifyPlaybackSessions.clearRoom(roomId);
+      logger.info({ roomId }, "offline room expired");
+    });
   }
 
   public setRoomStateChangedListener(listener: (roomState: PublicRoomState) => void): void {

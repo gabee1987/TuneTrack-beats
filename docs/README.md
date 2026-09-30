@@ -16,36 +16,36 @@ implementing something twice or reverting a deliberate change.
 
 ## Normative rules
 
-| File | Scope |
-| --- | --- |
-| [`../CLAUDE.md`](../CLAUDE.md) | Product, game rules, architecture principles, layer ownership, coding principles. Wins over everything in this folder. |
-| [`rules/backend_engineering_rules.md`](rules/backend_engineering_rules.md) | `apps/server`, backend contracts and orchestration. |
-| [`rules/frontend_engineering_rules.md`](rules/frontend_engineering_rules.md) | `apps/web`, layering, file structure, CSS rules. |
-| [`rules/design_system.md`](rules/design_system.md) | Tokens, scales, layering, shared components, accessibility, performance guardrails. |
+| File                                                                         | Scope                                                                                                                  |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| [`../CLAUDE.md`](../CLAUDE.md)                                               | Product, game rules, architecture principles, layer ownership, coding principles. Wins over everything in this folder. |
+| [`rules/backend_engineering_rules.md`](rules/backend_engineering_rules.md)   | `apps/server`, backend contracts and orchestration.                                                                    |
+| [`rules/frontend_engineering_rules.md`](rules/frontend_engineering_rules.md) | `apps/web`, layering, file structure, CSS rules.                                                                       |
+| [`rules/design_system.md`](rules/design_system.md)                           | Tokens, scales, layering, shared components, accessibility, performance guardrails.                                    |
 
 Where two rules disagree, prefer the stricter one and raise the conflict.
 
 ## Architecture
 
-| File | Scope |
-| --- | --- |
-| [`architecture/tunetrack_full_architecture.md`](architecture/tunetrack_full_architecture.md) | The product vision and system design. Fixed base rules. |
+| File                                                                                                                 | Scope                                                                                                     |
+| -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| [`architecture/tunetrack_full_architecture.md`](architecture/tunetrack_full_architecture.md)                         | The product vision and system design. Fixed base rules.                                                   |
 | [`architecture/tunetrack_technical_implementation_plan.md`](architecture/tunetrack_technical_implementation_plan.md) | Longer-form engineering rationale and the extension roadmap. `CLAUDE.md` is normative where they overlap. |
 
 ## Live plans
 
-| File | Scope |
-| --- | --- |
-| [`plans/2026-09-stability-performance/`](plans/2026-09-stability-performance/) | **The current programme.** Stability, performance, UX and testing. 14 documents; start at `00-index.md`. |
+| File                                                                             | Scope                                                                                                                              |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| [`plans/2026-09-stability-performance/`](plans/2026-09-stability-performance/)   | **The current programme.** Stability, performance, UX and testing. 13 numbered documents; start at `00-index.md`.                  |
 | [`plans/gamepage-remaining-refactors.md`](plans/gamepage-remaining-refactors.md) | Low-priority GamePage cleanup carried over from a completed refactor. Four open items, three of them owned by the programme above. |
 
 ## Operations
 
-| File | Scope |
-| --- | --- |
+| File                                                                             | Scope                                                                                         |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | [`operations/deploy-railway-frontend.md`](operations/deploy-railway-frontend.md) | **The current deployment path:** Railway (Socket.IO backend) + Render Static Site (frontend). |
-| [`operations/deploy-self-hosted.md`](operations/deploy-self-hosted.md) | Self-hosting from home, including the HTTPS and Spotify-callback problem for LAN play. |
-| [`operations/axiom_logging_setup.md`](operations/axiom_logging_setup.md) | Collecting realtime audit logs during test sessions. |
+| [`operations/deploy-self-hosted.md`](operations/deploy-self-hosted.md)           | Self-hosting from home, including the HTTPS and Spotify-callback problem for LAN play.        |
+| [`operations/axiom_logging_setup.md`](operations/axiom_logging_setup.md)         | Collecting realtime audit logs during test sessions.                                          |
 
 ## Decision log
 
@@ -56,15 +56,15 @@ questions, so they do not stay hidden in code. Append to it; do not rewrite it.
 
 [`archive/`](archive/) holds 15 completed or superseded plans, unedited apart from a header
 stating what shipped, what did not, and what superseded them. Kept because they explain
-*why* the code is shaped as it is.
+_why_ the code is shaped as it is.
 
 Two of the archived headers matter even if you never open the file:
 
 - `reconnect_and_host_transfer_plan.md` was only **partially** implemented. Its proposed
   in-game eviction timer was deliberately superseded by the 2026-09-30 owner decision:
   an offline in-game player remains reserved until they reconnect, the host removes them,
-  or the room closes. The separate all-players-offline room-lifecycle policy is still open
-  in the live programme.
+  or the room closes. If every player stays offline continuously for one hour, the server
+  closes the abandoned room as a unit; deployments can tune that timeout through `env`.
 - `playlist_metadata_curation_plan.md` shipped phases 1-3 only. Its phase 4 (in-game host
   correction of a wrong release year) is unimplemented and is now owned by the live
   programme.

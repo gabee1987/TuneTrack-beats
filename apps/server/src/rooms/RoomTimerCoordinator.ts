@@ -4,6 +4,7 @@ import { DisconnectTimerManager } from "./DisconnectTimerManager.js";
 import type { RoomStore } from "./RoomStore.js";
 
 export class RoomTimerCoordinator {
+  private readonly allPlayersOfflineTimers = new DisconnectTimerManager();
   private readonly challengeTimers = new ChallengeTimerManager();
   private readonly disconnectTimers = new DisconnectTimerManager();
   private readonly hostTransferTimers = new DisconnectTimerManager();
@@ -14,9 +15,11 @@ export class RoomTimerCoordinator {
     public readonly reconnectGracePeriodMs: number,
     public readonly hostTransferGracePeriodMs: number,
     public readonly turnSkipGracePeriodMs: number,
+    public readonly allPlayersOfflineRoomTtlMs: number,
   ) {}
 
   public clearForRoom(roomId: RoomId): void {
+    this.allPlayersOfflineTimers.clear(roomId);
     this.challengeTimers.clear(roomId);
     this.hostTransferTimers.clear(roomId);
     for (const sessionId of this.store.getSessionIdsInRoom(roomId)) {
@@ -63,5 +66,13 @@ export class RoomTimerCoordinator {
 
   public clearTurnSkip(sessionId: string): void {
     this.turnSkipTimers.clear(sessionId);
+  }
+
+  public scheduleAllPlayersOffline(roomId: RoomId, callback: () => void): void {
+    this.allPlayersOfflineTimers.schedule(roomId, this.allPlayersOfflineRoomTtlMs, callback);
+  }
+
+  public clearAllPlayersOffline(roomId: RoomId): void {
+    this.allPlayersOfflineTimers.clear(roomId);
   }
 }

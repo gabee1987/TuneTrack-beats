@@ -35,6 +35,7 @@ export default defineConfig({
         ...process.env,
         CLIENT_ORIGIN: "https://127.0.0.1:4173",
         HOST_TRANSFER_GRACE_MS: "5000",
+        ALL_PLAYERS_OFFLINE_ROOM_TTL_MS: "2000",
         MAX_ACTIVE_ROOMS: "20",
         NODE_ENV: "test",
         PORT: "3101",

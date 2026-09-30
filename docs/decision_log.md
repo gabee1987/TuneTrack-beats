@@ -19,9 +19,22 @@ An in-game socket disconnect is temporary absence, not an automatic leave or kic
 - The existing 60-second safety auto-skip remains as a fallback.
 - Host transfer remains a separate 30-second rule when the disconnected player is the host.
 
-This lets somebody step away briefly and return to the same game state. How to reclaim an
-entire room after every player is offline remains a separate room-lifecycle decision; it
+This lets somebody step away briefly and return to the same game state. Reclaiming an
+entire room after every player is offline is governed by the separate decision below; it
 must not be implemented by silently evicting individual players.
+
+### All-players-offline room expiry (2026-09-30)
+
+If every player in an in-progress room remains offline continuously for one hour, the
+server closes the entire abandoned room.
+
+- Any player reconnecting before the deadline cancels cleanup.
+- If everyone disconnects again later, a fresh one-hour timeout starts.
+- Cleanup deletes the room, memberships, redirects, timers, Spotify tokens and playback
+  session together; it does not kick or delete players one by one.
+- `ALL_PLAYERS_OFFLINE_ROOM_TTL_MS` configures the timeout and defaults to `3600000`.
+- `RECONNECT_GRACE_MS`, `HOST_TRANSFER_GRACE_MS` and `TURN_SKIP_GRACE_MS` likewise expose
+  their existing defaults through validated environment configuration.
 
 ### Documentation reorganisation (2026-09-08)
 
@@ -108,10 +121,9 @@ Only the host can change this setting in the lobby.
 
 ### Host disconnect behavior
 
-If the host disconnects during the current lobby skeleton, host role is assigned
-to the first remaining player in the room.
-
-If the last player leaves, the in-memory room is removed.
+The disconnected host retains the role during the configured 30-second transfer grace.
+A reconnect cancels transfer. If the grace expires, the first connected remaining player
+becomes host. In-game host identity remains reserved like every other offline player.
 
 ### MVP room storage
 
@@ -138,15 +150,6 @@ Current default is `host_only`.
 
 If a player places a card into a wrong slot, the card is discarded and the
 player gains no card from that turn.
-
-### Temporary timeline interaction model
-
-Iteration 02 uses a slot-click timeline with a separate placement confirmation
-button. Drag-and-drop and challenge/veto interactions are intentionally left
-for later iterations.
-
-All clients can see the active player's timeline during a turn, but only the
-active player can interact with slot selection and placement confirmation.
 
 ### MVP test deck format
 
@@ -175,17 +178,17 @@ The browser now stores a stable per-tab player session in `sessionStorage`.
 Current behavior:
 
 - refreshing the same tab keeps the same player identity
-- lobby and in-progress games can be rejoined during a short reconnect grace
-  period
+- lobby players can rejoin during the configured reconnect grace
+- in-progress players remain reserved without an individual expiry while the room exists
 - different browser tabs get different player sessions, so multi-tab local
   testing still works
 
 Current server rule:
 
-- disconnected players stay reserved for a short grace period before they are
-  removed from the room
-- if they reconnect in time with the same session, they regain the same player
-  identity and host role if applicable
+- a lobby disconnect is removed after `RECONNECT_GRACE_MS` unless it reconnects first
+- an in-game disconnect is removed only by an explicit host kick or room closure
+- a continuously all-offline in-progress room closes after
+  `ALL_PLAYERS_OFFLINE_ROOM_TTL_MS`
 
 ### Beat challenge reward rule
 
@@ -219,7 +222,7 @@ Reason:
 
 - this supports party-style manual judging for song/artist callouts before
   automated token earning exists
-- TT's can be eraned by guessing the current cards artist and song name correctly
+- TT can be earned by guessing the current card's artist and song title correctly
 - TT is awarded by the host manually to the players
 
 ### TT spending actions in MVP
@@ -367,16 +370,6 @@ Reason:
 
 ## Still Open
 
-### Room code generation rules
-
-Current implementation lets the player type any valid room code and creates the
-room if it does not exist.
-
-Still to decide:
-
-- Should host-created rooms generate a short random code automatically?
-- Should room codes be uppercase-only for easier party sharing?
-
 ### Duplicate player names
 
 Current implementation allows duplicate display names.
@@ -385,17 +378,6 @@ Still to decide:
 
 - Should duplicate names be blocked within one room?
 - Or should we keep allowing them and rely on internal player IDs only?
-
-### Challenge timing authority
-
-Still to decide:
-
-- What is the exact server-authoritative timing model for the challenge window?
-- Should late client challenge clicks be rejected based on server timestamps only?
-
-Recommendation:
-
-- Yes, resolve challenge timing with server-side timestamps only.
 
 ---
 

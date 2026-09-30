@@ -30,8 +30,9 @@ An in-game socket disconnect is temporary absence, not leaving the room:
 
 The lobby's 30-second reconnect-and-removal behavior is unchanged. `CLAUDE.md`'s "Last
 player leaves" rule means an explicit leave, kick or close, not a temporary transport
-disconnect. Cleanup of a completely unattended room is a separate room-lifecycle policy
-that requires owner approval; it must not be implemented as automatic player eviction.
+disconnect. If every player remains offline continuously for one hour, the server closes
+the abandoned room as a unit. Any reconnect cancels that cleanup. This is room lifecycle
+cleanup, not automatic player eviction.
 
 ### 1.2 Current implementation
 
@@ -42,6 +43,7 @@ that requires owner approval; it must not be implemented as automatic player evi
 | **Lobby removal** | Remove a player who abandons the lobby | 30 s, scheduled |
 | **In-game removal** | Remove a player from a running game | Host action only; never scheduled |
 | **In-game reconnect** | Restore an offline player | No expiry while the room exists |
+| **All-offline room expiry** | Reclaim a completely abandoned room | 1 h by default; cancelled by any reconnect |
 
 `RoomConnectionService` therefore marks an in-game player disconnected and schedules only
 the relevant host-transfer and turn-recovery timers. It publishes no false reconnect
@@ -54,6 +56,10 @@ deadline. The existing host-only kick remains the explicit removal path.
 - Chromium E2E E10 uses host, guest and observer clients. Both remaining clients see the
   guest's offline turn; only the host receives `Skip Turn`; after the host skips, the next
   connected player receives the turn and the guest remains visible as offline.
+- Server fake-timer coverage proves all-offline cleanup occurs at exactly one hour, a
+  reconnect cancels it, and a later all-offline transition starts a fresh timeout.
+- Chromium E2E E11 uses a two-second override, takes every client offline, and proves a
+  reconnect after expiry receives the room-unavailable recovery state.
 - Lobby disconnect tests remain unchanged and green.
 
 ### Acceptance
@@ -63,8 +69,8 @@ deadline. The existing host-only kick remains the explicit removal path.
 - [x] All remaining clients see the active player's offline state.
 - [x] Only the host can manually skip the offline turn.
 - [x] A later reconnect restores the retained identity and game state.
-- [ ] Define and verify cleanup for a room whose players are all offline, without silently
-      kicking individual players (E11 owner decision).
+- [x] A room whose players remain offline for one configurable hour is closed atomically,
+      without silently kicking individual players.
 
 ## 2. Phase 2 — Configure Socket.IO for mobile networks · **S2**
 
@@ -210,19 +216,20 @@ shutdown.
 
 **Finding:** F-20.
 
-> **Implementation state (2026-09-29):** `MAX_ACTIVE_ROOMS` is validated in `env`, keeps
-> the production default of 5, and is injected through `RoomRegistry` into
-> `RoomLobbyService`. `HOST_TRANSFER_GRACE_MS` is also validated and injected, with the
-> owner-directed 30-second production default and a five-second E2E override. The remaining
-> grace-period environment wiring stays open.
+> **Implementation state (2026-09-30):** `MAX_ACTIVE_ROOMS`, `RECONNECT_GRACE_MS`,
+> `HOST_TRANSFER_GRACE_MS`, `TURN_SKIP_GRACE_MS` and
+> `ALL_PLAYERS_OFFLINE_ROOM_TTL_MS` are validated in `env` and injected through
+> `RoomRegistry`. Production defaults remain 5 rooms, 30 seconds, 30 seconds, 60 seconds
+> and one hour respectively. E2E overrides only the long waits it exercises.
 
 - Move `MAX_ACTIVE_ROOM_COUNT` out of `RoomLobbyService` into `env` as
   `MAX_ACTIVE_ROOMS` (Zod: positive int, default 5) and pass it down through the
   `RoomRegistry` constructor, alongside the grace periods which are already parameters but
   never wired to configuration.
-- Add `RECONNECT_GRACE_MS`, `IN_GAME_RECONNECT_GRACE_MS`, `HOST_TRANSFER_GRACE_MS`,
-  `TURN_SKIP_GRACE_MS` to `env` with the current values as defaults, so a deployment can
-  tune them without a code change.
+- Add `RECONNECT_GRACE_MS`, `HOST_TRANSFER_GRACE_MS`, `TURN_SKIP_GRACE_MS` and
+  `ALL_PLAYERS_OFFLINE_ROOM_TTL_MS` to `env` with the current values as defaults, so a
+  deployment can tune them without a code change. There is deliberately no individual
+  in-game reconnect-expiry variable.
 - Keep validation in `apps/server/src/app/env.ts`; it is already the single validated
   boundary and its error formatting is good.
 

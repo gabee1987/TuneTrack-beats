@@ -3,7 +3,8 @@
 > automatic host transfer (now 30 seconds), and the 60-second turn skip for a disconnected active player.
 > **Superseded:** the proposed in-game eviction timer and countdown. By owner decision on
 > 2026-09-30, an offline in-game player remains reserved without expiry until reconnect,
-> explicit host kick, or room closure; all-players-offline cleanup is a separate open policy.
+> explicit host kick, or room closure. A continuously all-offline room closes as a unit
+> after one configurable hour.
 > The current behavior is documented in
 > `../plans/2026-09-stability-performance/04-backend-stability-and-sessions.md` section 1.
 > Superseded by docs 04 and 05 of that programme. Do not follow this plan.

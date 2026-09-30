@@ -1,7 +1,7 @@
 # TuneTrack Beats — Stability, Performance & UX Hardening Programme
 
 > **Created:** 2026-09-08
-> **Status:** Planning complete. No implementation performed.
+> **Status:** Active implementation. E1-E11 are complete; E12 is the next bounded batch.
 > **Authority:** This programme is subordinate to [`CLAUDE.md`](../../../CLAUDE.md) and
 > [`AGENT.md`](../../../AGENT.md). Where this programme and those documents disagree,
 > the stricter rule applies and the conflict must be raised before implementation.
@@ -25,20 +25,20 @@ The programme addresses five objectives stated by the product owner:
 
 Recorded so every later claim of improvement is falsifiable.
 
-| Metric | Value |
-| --- | --- |
-| Workspace typecheck | passes |
-| Workspace tests | 240 passing (server 108 / 17 files, web 101 / 28 files, engine 31 / 2 files) |
-| Web component tests | **0** (no `jsdom` environment configured) |
-| Web E2E tests | **0** |
-| Coverage thresholds | none configured in any workspace |
-| Initial JS + CSS critical path (home screen) | **454 kB raw / approx. 145 kB gzip** before the route chunk loads |
-| Largest single chunk | `vendor-react-dom` 130.18 kB (41.84 kB gzip) |
-| Largest avoidable chunk | `vendor-motion` 116.84 kB (39.01 kB gzip), eagerly loaded |
-| Fully unused shipped chunk | `vendor-zod` 54.88 kB (12.61 kB gzip) |
-| Largest feature chunk | `LobbyRoomActions` 79.84 kB JS + 68.96 kB CSS |
-| Hardcoded hex colours in CSS modules | 94 |
-| Page components importing the primitives layer | 9 of 69 |
+| Metric                                         | Value                                                                        |
+| ---------------------------------------------- | ---------------------------------------------------------------------------- |
+| Workspace typecheck                            | passes                                                                       |
+| Workspace tests                                | 240 passing (server 108 / 17 files, web 101 / 28 files, engine 31 / 2 files) |
+| Web component tests                            | **0** (no `jsdom` environment configured)                                    |
+| Web E2E tests                                  | **0**                                                                        |
+| Coverage thresholds                            | none configured in any workspace                                             |
+| Initial JS + CSS critical path (home screen)   | **454 kB raw / approx. 145 kB gzip** before the route chunk loads            |
+| Largest single chunk                           | `vendor-react-dom` 130.18 kB (41.84 kB gzip)                                 |
+| Largest avoidable chunk                        | `vendor-motion` 116.84 kB (39.01 kB gzip), eagerly loaded                    |
+| Fully unused shipped chunk                     | `vendor-zod` 54.88 kB (12.61 kB gzip)                                        |
+| Largest feature chunk                          | `LobbyRoomActions` 79.84 kB JS + 68.96 kB CSS                                |
+| Hardcoded hex colours in CSS modules           | 94                                                                           |
+| Page components importing the primitives layer | 9 of 69                                                                      |
 
 Reproduce with:
 
@@ -48,37 +48,36 @@ Reproduce with:
 
 ## 3. Reading order
 
-| # | Document | Scope |
-| --- | --- | --- |
-| 01 | [`01-audit-findings.md`](./01-audit-findings.md) | Full findings register with evidence and severity. Read first. |
-| 02 | [`02-bundle-and-startup.md`](./02-bundle-and-startup.md) | Bundle size, code splitting, what loads when. |
-| 03 | [`03-runtime-and-motion-performance.md`](./03-runtime-and-motion-performance.md) | Render cost, animation cost, battery. |
-| 04 | [`04-backend-stability-and-sessions.md`](./04-backend-stability-and-sessions.md) | Server lifecycle, room/session ownership, leaks, timers. |
-| 05 | [`05-network-protocol-and-resilience.md`](./05-network-protocol-and-resilience.md) | Transport contract, acknowledgements, reconnect, idempotency. |
-| 06 | [`06-navigation-and-overlays.md`](./06-navigation-and-overlays.md) | Back-button behaviour, overlay layering, z-index scale. |
-| 07 | [`07-design-system-consolidation.md`](./07-design-system-consolidation.md) | Single component system, tokens, skeletons, loading states. |
-| 08 | [`08-spotify-session-and-playback.md`](./08-spotify-session-and-playback.md) | Persistent Spotify login, deterministic playback, transport controls. |
-| 09 | [`09-room-and-player-identity-flow.md`](./09-room-and-player-identity-flow.md) | Room creation flow rework, player profile separation, in-game metadata override. |
-| 10 | [`10-onboarding-hint-system.md`](./10-onboarding-hint-system.md) | First-run interactive hints and tutorials. |
-| 11 | [`11-testing-strategy.md`](./11-testing-strategy.md) | Test pyramid, tooling, coverage gates, CI. |
-| 12 | [`12-bug-register.md`](./12-bug-register.md) | Each reported defect: root cause, fix, verification. |
-| 13 | [`13-docs-cleanup.md`](./13-docs-cleanup.md) | Which existing documents to keep, archive or delete. |
+| #   | Document                                                                           | Scope                                                                            |
+| --- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 01  | [`01-audit-findings.md`](./01-audit-findings.md)                                   | Full findings register with evidence and severity. Read first.                   |
+| 02  | [`02-bundle-and-startup.md`](./02-bundle-and-startup.md)                           | Bundle size, code splitting, what loads when.                                    |
+| 03  | [`03-runtime-and-motion-performance.md`](./03-runtime-and-motion-performance.md)   | Render cost, animation cost, battery.                                            |
+| 04  | [`04-backend-stability-and-sessions.md`](./04-backend-stability-and-sessions.md)   | Server lifecycle, room/session ownership, leaks, timers.                         |
+| 05  | [`05-network-protocol-and-resilience.md`](./05-network-protocol-and-resilience.md) | Transport contract, acknowledgements, reconnect, idempotency.                    |
+| 06  | [`06-navigation-and-overlays.md`](./06-navigation-and-overlays.md)                 | Back-button behaviour, overlay layering, z-index scale.                          |
+| 07  | [`07-design-system-consolidation.md`](./07-design-system-consolidation.md)         | Single component system, tokens, skeletons, loading states.                      |
+| 08  | [`08-spotify-session-and-playback.md`](./08-spotify-session-and-playback.md)       | Persistent Spotify login, deterministic playback, transport controls.            |
+| 09  | [`09-room-and-player-identity-flow.md`](./09-room-and-player-identity-flow.md)     | Room creation flow rework, player profile separation, in-game metadata override. |
+| 10  | [`10-onboarding-hint-system.md`](./10-onboarding-hint-system.md)                   | First-run interactive hints and tutorials.                                       |
+| 11  | [`11-testing-strategy.md`](./11-testing-strategy.md)                               | Test pyramid, tooling, coverage gates, CI.                                       |
+| 12  | [`12-bug-register.md`](./12-bug-register.md)                                       | Active defects plus a compact resolved ledger.                                   |
 
 ## 4. Recommended execution sequence
 
 The sequence is chosen so that safety nets precede risky work, and so that shared
 foundations land before the features that depend on them.
 
-| Wave | Work | Rationale |
-| --- | --- | --- |
-| **W0 — Safety nets** | Doc 11 sections 3 (jsdom + RTL wiring), 5 (Playwright harness), 7 (coverage gates). Re-verify Doc 01 evidence as failing tests. | Nothing else is safe to change without regression cover. |
-| **W1 — Cheap, isolated defect fixes** | Doc 12 items B1, B2, B4, B8, B11 | High user-visible value, low blast radius, provable with the W0 harness. |
-| **W2 — Shared foundations** | Doc 06 (overlay + navigation layer), Doc 07 phases 1-2 (z-index scale, single button/icon-button system) | Later UX work depends on these primitives. |
-| **W3 — Startup performance** | Doc 02 phases 1-4 | Independent of behaviour; measurable per phase. |
-| **W4 — Stability** | Doc 04, then Doc 05 | Server ownership must be correct before the client protocol is tightened. |
-| **W5 — Runtime performance** | Doc 03 | Benefits from W2's consolidated components. |
-| **W6 — Feature UX** | Doc 09, Doc 08, Doc 07 phases 3-4 (skeletons), Doc 10 | Depends on all of the above. |
-| **W7 — Cleanup** | Doc 13, plus removal of the dead code listed in Doc 01 section 7 | Last, so nothing in flight is disturbed. |
+| Wave                                  | Work                                                                                                                            | Rationale                                                                          |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **W0 — Safety nets**                  | Doc 11 sections 3 (jsdom + RTL wiring), 5 (Playwright harness), 7 (coverage gates). Re-verify Doc 01 evidence as failing tests. | Nothing else is safe to change without regression cover.                           |
+| **W1 — Cheap, isolated defect fixes** | Doc 12 items B1, B2, B4, B8, B11                                                                                                | High user-visible value, low blast radius, provable with the W0 harness.           |
+| **W2 — Shared foundations**           | Doc 06 (overlay + navigation layer), Doc 07 phases 1-2 (z-index scale, single button/icon-button system)                        | Later UX work depends on these primitives.                                         |
+| **W3 — Startup performance**          | Doc 02 phases 1-4                                                                                                               | Independent of behaviour; measurable per phase.                                    |
+| **W4 — Stability**                    | Doc 04, then Doc 05                                                                                                             | Server ownership must be correct before the client protocol is tightened.          |
+| **W5 — Runtime performance**          | Doc 03                                                                                                                          | Benefits from W2's consolidated components.                                        |
+| **W6 — Feature UX**                   | Doc 09, Doc 08, Doc 07 phases 3-4 (skeletons), Doc 10                                                                           | Depends on all of the above.                                                       |
+| **W7 — Cleanup**                      | Remove the dead code listed in Doc 01 section 7                                                                                 | Last, so nothing in flight is disturbed. Documentation reorganisation is complete. |
 
 Each wave must end green on `npm run typecheck && npm run lint && npm test`, plus the
 E2E smoke suite once W0 is in place.
@@ -97,8 +96,8 @@ E2E smoke suite once W0 is in place.
 - [x] An in-game disconnect remains reserved without an expiry, all clients see the
       offline state, and the host can manually skip the offline player's turn, verified by
       server integration and multi-client E2E tests.
-- [ ] The separate all-players-offline room-lifecycle policy is approved and verified
-      without automatically kicking individual players.
+- [x] If all players remain offline continuously for one configurable hour, the server
+      closes the abandoned room as a unit; any reconnect cancels cleanup.
 - [ ] Spotify Premium authorisation survives an app restart and a new room, subject to
       the security and data-protection controls in Doc 08 section 6.
 - [ ] Playback can be started, paused, resumed and restarted at any point in a turn,
