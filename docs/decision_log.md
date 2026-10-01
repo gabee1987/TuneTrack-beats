@@ -95,6 +95,18 @@ navigation.
 
 ---
 
+### Settings back-button history (2026-10-01)
+
+Opening `AppShellMenu` pushes a same-path React Router state entry. Browser or Android back
+removes that entry and closes Settings without leaving the current page. Programmatic close
+uses the same history path, and menu footer actions run only after the entry is removed.
+
+Route transitions are keyed by pathname rather than the opaque history key, so a same-path
+overlay entry updates router state without remounting the page or rebuilding its socket
+connection.
+
+---
+
 ### Equal release-year placement
 
 If a candidate track has the same release year as one or more adjacent timeline

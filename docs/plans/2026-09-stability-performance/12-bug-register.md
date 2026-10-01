@@ -14,7 +14,7 @@ Status meanings:
 
 | ID  | Severity | Status                             | Next proof                                                             |
 | --- | -------- | ---------------------------------- | ---------------------------------------------------------------------- |
-| B2  | S1       | Open                               | E13-E14 and overlay/navigation component tests                         |
+| B2  | S1       | Open                               | E14 and remaining overlay-stack component tests                        |
 | B8  | S1       | Partially fixed                    | Explicit client recovery state and server transport tuning             |
 | B14 | S1       | Needs reproduction                 | Capture route, connection state and overlays when the UI becomes inert |
 | B18 | S2       | Open                               | Reproduce and instrument a page exit that never completes              |
@@ -24,7 +24,7 @@ Status meanings:
 
 ## B2 · Navigation and overlays behave inconsistently
 
-**Severity:** S1 · **Status:** Open · **Plans:** Doc 06, E13-E14
+**Severity:** S1 · **Status:** Open · **Plans:** Doc 06, E14
 
 ### Remaining problem
 
@@ -43,7 +43,7 @@ that initiated navigation.
 ### Verification
 
 - [x] E12: host closes a room; both clients reach Home and Start works immediately.
-- E13: back closes game settings without leaving the game.
+- [x] E13: back closes game settings without leaving or remounting the game.
 - E14: back closes the track editor, then its parent playlist editor.
 - Component coverage for stack order, focus restoration, scroll locking and blocking entries.
 

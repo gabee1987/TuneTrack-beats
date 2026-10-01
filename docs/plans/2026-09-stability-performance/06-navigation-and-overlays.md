@@ -13,19 +13,19 @@ Doc 09 (room flow) and Doc 10 (hints), so it belongs early.
 
 ## 1. Current inventory of overlays
 
-| Overlay | Implementation | Portal target | z-index | Back button |
-| --- | --- | --- | --- | --- |
-| App shell menu (settings) | `features/app-shell/components/AppShellMenuDialog.tsx` | `document.body` | 1200 | ignores |
-| Room reset / recovery | `features/ui/RoomResetModal.tsx` via `MotionDialogPortal` | `document.body` | 1500 | ignores |
-| App loading overlay | `features/loading/AppLoadingOverlay.tsx` | in-tree | 1600 | ignores |
-| Playlist editor | `pages/LobbyPage/components/PlaylistEditModal.tsx` (bespoke portal) | `document.body` | 1200 | ignores |
-| Song editor (track details) | `pages/LobbyPage/components/PlaylistTrackDetailsSheet.tsx` | in-tree **or** `document.body` | 2 **or** 1400 | ignores |
-| Spotify setup | `pages/LobbyPage/components/spotify/SpotifySetupModal.tsx` | via `MotionDialogPortal` | 130 | ignores |
-| Song info | `pages/GamePage/components/SongInfoModal.tsx` | in-tree | 1100 | ignores |
-| Kick confirmation | `pages/GamePage/gameMenu/GameMenuPlayerItem.tsx` via `MotionDialogPortal` | `document.body` | 1600 | ignores |
-| Adaptive select sheet | `pages/LobbyPage/components/AdaptiveSelectSheet.tsx` via `BottomSheet` | in-tree | `--z-sheet` (400) | ignores |
-| Generic dialog | `features/ui/primitives/Dialog.tsx` via `MotionDialogPortal` | `document.body` | `--z-dialog` (500) | ignores |
-| Toasts | `features/toast/AppToastStack.tsx`, `pages/GamePage/components/GamePageToastStack.tsx` | in-tree | `--z-toast` (600) | n/a |
+| Overlay                     | Implementation                                                                         | Portal target                  | z-index            | Back button |
+| --------------------------- | -------------------------------------------------------------------------------------- | ------------------------------ | ------------------ | ----------- |
+| App shell menu (settings)   | `features/app-shell/components/AppShellMenuDialog.tsx`                                 | `document.body`                | 1200               | ignores     |
+| Room reset / recovery       | `features/ui/RoomResetModal.tsx` via `MotionDialogPortal`                              | `document.body`                | 1500               | ignores     |
+| App loading overlay         | `features/loading/AppLoadingOverlay.tsx`                                               | in-tree                        | 1600               | ignores     |
+| Playlist editor             | `pages/LobbyPage/components/PlaylistEditModal.tsx` (bespoke portal)                    | `document.body`                | 1200               | ignores     |
+| Song editor (track details) | `pages/LobbyPage/components/PlaylistTrackDetailsSheet.tsx`                             | in-tree **or** `document.body` | 2 **or** 1400      | ignores     |
+| Spotify setup               | `pages/LobbyPage/components/spotify/SpotifySetupModal.tsx`                             | via `MotionDialogPortal`       | 130                | ignores     |
+| Song info                   | `pages/GamePage/components/SongInfoModal.tsx`                                          | in-tree                        | 1100               | ignores     |
+| Kick confirmation           | `pages/GamePage/gameMenu/GameMenuPlayerItem.tsx` via `MotionDialogPortal`              | `document.body`                | 1600               | ignores     |
+| Adaptive select sheet       | `pages/LobbyPage/components/AdaptiveSelectSheet.tsx` via `BottomSheet`                 | in-tree                        | `--z-sheet` (400)  | ignores     |
+| Generic dialog              | `features/ui/primitives/Dialog.tsx` via `MotionDialogPortal`                           | `document.body`                | `--z-dialog` (500) | ignores     |
+| Toasts                      | `features/toast/AppToastStack.tsx`, `pages/GamePage/components/GamePageToastStack.tsx` | in-tree                        | `--z-toast` (600)  | n/a         |
 
 Nine different overlays, six different z-index conventions, two of which are below the
 page content they are supposed to cover. No back-button handling anywhere.
@@ -40,21 +40,21 @@ page content they are supposed to cover. No back-button handling anywhere.
 `celebration: 700`. The scale needs a layer for each real stacking context, with gaps for
 in-component stacking:
 
-| Token | Value | Purpose |
-| --- | --- | --- |
-| `--z-base` | 0 | Page content |
-| `--z-raised` | 10 | Cards, chips, elevated surfaces within a page |
-| `--z-sticky` | 100 | Sticky headers, scroll fades |
-| `--z-nav` | 200 | Bottom docks, action bars |
-| `--z-overlay` | 300 | Scrims below sheets |
-| `--z-sheet` | 400 | Bottom sheets, side sheets |
-| `--z-sheet-nested` | 450 | A sheet opened from a sheet — **fixes F-25** |
-| `--z-dialog` | 500 | Modal dialogs |
-| `--z-dialog-nested` | 550 | Confirmation opened from a dialog |
-| `--z-hint` | 600 | Onboarding coach marks (Doc 10) |
-| `--z-toast` | 700 | Toasts and banners |
-| `--z-celebration` | 800 | Win/celebration effects |
-| `--z-blocking` | 900 | App loading overlay, recovery modal — nothing may cover these |
+| Token               | Value | Purpose                                                       |
+| ------------------- | ----- | ------------------------------------------------------------- |
+| `--z-base`          | 0     | Page content                                                  |
+| `--z-raised`        | 10    | Cards, chips, elevated surfaces within a page                 |
+| `--z-sticky`        | 100   | Sticky headers, scroll fades                                  |
+| `--z-nav`           | 200   | Bottom docks, action bars                                     |
+| `--z-overlay`       | 300   | Scrims below sheets                                           |
+| `--z-sheet`         | 400   | Bottom sheets, side sheets                                    |
+| `--z-sheet-nested`  | 450   | A sheet opened from a sheet — **fixes F-25**                  |
+| `--z-dialog`        | 500   | Modal dialogs                                                 |
+| `--z-dialog-nested` | 550   | Confirmation opened from a dialog                             |
+| `--z-hint`          | 600   | Onboarding coach marks (Doc 10)                               |
+| `--z-toast`         | 700   | Toasts and banners                                            |
+| `--z-celebration`   | 800   | Win/celebration effects                                       |
+| `--z-blocking`      | 900   | App loading overlay, recovery modal — nothing may cover these |
 
 Within a component, stacking must stay in the 1-9 range so it can never escape its layer.
 
@@ -67,22 +67,22 @@ as the one exception.
 
 Notable remappings:
 
-| Location | Current | Becomes |
-| --- | --- | --- |
-| `playlistEditChrome.module.css` `.overlay` | 1200 | `--z-sheet` |
-| `playlistEditChrome.module.css` `.detailsOverlay` | 2 | `--z-sheet-nested` **and `position: fixed`** (see Phase 5) |
-| `playlistEditChrome.module.css` `.header` | 4 | 4 (local, inside the sheet) |
-| `gamePageActionPanelsDock.module.css` | 5000, 900, 154 | `--z-nav` |
-| `gamePageActionPanelsChallenge.module.css` | 880 | `--z-nav` |
-| `SongInfoModal.module.css` | 1100 | `--z-dialog` |
-| `AppShellMenu.module.css` `.menuOverlay` | 1200 | `--z-sheet` |
-| `gamePageMenu.module.css` (kick confirm) | 1600 | `--z-dialog-nested` |
-| `RoomResetModal.module.css` | 1500 | `--z-blocking` |
-| `AppLoadingOverlay.module.css` | 1600 | `--z-blocking` |
-| `SettingField.module.css` | 1600 | `--z-sheet-nested` |
-| `spotifySetupShell.module.css` | 130 | `--z-sheet` |
-| `timelinePanelShell.module.css` | 1400 | `--z-raised` (it is in-page content, not an overlay) |
-| `timelineCelebration.module.css` | 30 | `--z-celebration` |
+| Location                                          | Current        | Becomes                                                    |
+| ------------------------------------------------- | -------------- | ---------------------------------------------------------- |
+| `playlistEditChrome.module.css` `.overlay`        | 1200           | `--z-sheet`                                                |
+| `playlistEditChrome.module.css` `.detailsOverlay` | 2              | `--z-sheet-nested` **and `position: fixed`** (see Phase 5) |
+| `playlistEditChrome.module.css` `.header`         | 4              | 4 (local, inside the sheet)                                |
+| `gamePageActionPanelsDock.module.css`             | 5000, 900, 154 | `--z-nav`                                                  |
+| `gamePageActionPanelsChallenge.module.css`        | 880            | `--z-nav`                                                  |
+| `SongInfoModal.module.css`                        | 1100           | `--z-dialog`                                               |
+| `AppShellMenu.module.css` `.menuOverlay`          | 1200           | `--z-sheet`                                                |
+| `gamePageMenu.module.css` (kick confirm)          | 1600           | `--z-dialog-nested`                                        |
+| `RoomResetModal.module.css`                       | 1500           | `--z-blocking`                                             |
+| `AppLoadingOverlay.module.css`                    | 1600           | `--z-blocking`                                             |
+| `SettingField.module.css`                         | 1600           | `--z-sheet-nested`                                         |
+| `spotifySetupShell.module.css`                    | 130            | `--z-sheet`                                                |
+| `timelinePanelShell.module.css`                   | 1400           | `--z-raised` (it is in-page content, not an overlay)       |
+| `timelineCelebration.module.css`                  | 30             | `--z-celebration`                                          |
 
 ### 2.3 Enforcement
 
@@ -138,17 +138,17 @@ including the phone's back button."
 Current state: navigation is a mix of `navigate(path)`, `navigate(path, { replace: true })`
 and `navigate("/")`, chosen inconsistently. Concretely:
 
-| Call site | Current | Should be |
-| --- | --- | --- |
-| `usePlayPageController.openLobby` | push | push (correct) |
-| `useHomePageController.handleStart` | push to `/play` | push (correct) |
+| Call site                                             | Current             | Should be                                                                                                       |
+| ----------------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `usePlayPageController.openLobby`                     | push                | push (correct)                                                                                                  |
+| `useHomePageController.handleStart`                   | push to `/play`     | push (correct)                                                                                                  |
 | `useLobbyRoomConnection.handleStateUpdate` game start | push to `/game/:id` | **replace** — the lobby is gone once the game starts, so back should leave the game, not return to a dead lobby |
-| `useLobbyRoomConnection.handleStateUpdate` rename | replace | replace (correct) |
-| `useLobbyRoomConnection.handleRoomClosed` | push to `/` | **replace** — the room no longer exists |
-| `useGameRoomConnection.handleRoomClosed` | push to `/` | **replace** |
-| `handleClosedRoomReset` (both) | replace | replace (correct) |
-| `LobbyPageMobile.applySetupChanges` rename | push / replace | **remove entirely** — Doc 09 section 3 |
-| `JoinRoomPage.handleSubmit` | push to lobby | replace, so back returns to the invite context rather than re-entering it |
+| `useLobbyRoomConnection.handleStateUpdate` rename     | replace             | replace (correct)                                                                                               |
+| `useLobbyRoomConnection.handleRoomClosed`             | push to `/`         | **replace** — the room no longer exists                                                                         |
+| `useGameRoomConnection.handleRoomClosed`              | push to `/`         | **replace**                                                                                                     |
+| `handleClosedRoomReset` (both)                        | replace             | replace (correct)                                                                                               |
+| `LobbyPageMobile.applySetupChanges` rename            | push / replace      | **remove entirely** — Doc 09 section 3                                                                          |
+| `JoinRoomPage.handleSubmit`                           | push to lobby       | replace, so back returns to the invite context rather than re-entering it                                       |
 
 Rule to document in `docs/decision_log.md`: **a navigation caused by state that no longer
 exists uses `replace`; a navigation caused by a user choosing to go somewhere uses `push`.**
@@ -220,6 +220,11 @@ Behaviour:
 
 ### 4.2 Back-button integration
 
+> **Implementation state (2026-10-01):** `AppShellMenu` is the first migrated overlay. It
+> uses a same-path React Router state entry, so browser and Android back close Settings
+> without leaving or remounting the current page. Programmatic close removes the history
+> entry before a footer action runs. The general nested overlay stack remains open.
+
 `overlayHistory.ts`:
 
 - When the stack goes from empty to non-empty, `history.pushState({ overlayDepth: n }, "")`.
@@ -271,7 +276,7 @@ imported by pages.
       closes the top entry only; back closes the top entry and does not navigate; a
       non-dismissible entry ignores all three; focus returns to the trigger; body scroll is
       locked while open and restored after.
-- [ ] E2E: open settings on the game page, press browser back, panel closes and the game is
+- [x] E2E: open settings on the game page, press browser back, panel closes and the game is
       still on screen.
 - [ ] E2E: open the playlist editor, open a song editor from it, press back twice, and land
       back on the lobby.
@@ -350,7 +355,7 @@ wrong for dialogs, which should animate in every time.
   edge masks. The fades are decorative; they do not need a JS observer. Measure both and
   keep the simpler one.
 - Remove the mount animation on the active-tab pill (`AppShellMenuSheet` lines 130-144).
-  The active tab is not a state *change* on open — it is the initial state. Animate it only
+  The active tab is not a state _change_ on open — it is the initial state. Animate it only
   when the user switches tabs, by keying the `AnimatePresence` on a "has interacted" flag or
   by using framer-motion's `layoutId` on the pill so it slides between tabs instead of
   fading in.
@@ -388,10 +393,10 @@ Once the host exists, write the rules down where implementers will see them, in
 
 ## 8. Risk register
 
-| Risk | Mitigation |
-| --- | --- |
-| Overlay history fights react-router's history | Decide by experiment at the start of Phase 3 between raw `pushState` and router state; record the decision. Both are viable; the reducer is agnostic. |
-| Body scroll locking breaks iOS momentum scrolling inside sheets | Lock via `overflow: hidden` plus `position: fixed` with a preserved `top` offset on `body`, the well-known iOS-safe pattern; test on a device, and cover it with an E2E scroll assertion. |
-| Focus trapping breaks the drag interaction on the game page | The timeline is not inside an overlay; the trap applies only to open entries. Verify with the Doc 12 item B4 drag tests. |
-| Migrating nine overlays at once regresses several screens | One overlay per commit, keeping existing props; component test added with each. |
-| Changing `MotionPresence`'s default animates something that should not animate | Only two call sites rely on the old default and both are explicitly updated in the same change; audit the rest as a checklist item. |
+| Risk                                                                           | Mitigation                                                                                                                                                                                |
+| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Overlay history fights react-router's history                                  | Decide by experiment at the start of Phase 3 between raw `pushState` and router state; record the decision. Both are viable; the reducer is agnostic.                                     |
+| Body scroll locking breaks iOS momentum scrolling inside sheets                | Lock via `overflow: hidden` plus `position: fixed` with a preserved `top` offset on `body`, the well-known iOS-safe pattern; test on a device, and cover it with an E2E scroll assertion. |
+| Focus trapping breaks the drag interaction on the game page                    | The timeline is not inside an overlay; the trap applies only to open entries. Verify with the Doc 12 item B4 drag tests.                                                                  |
+| Migrating nine overlays at once regresses several screens                      | One overlay per commit, keeping existing props; component test added with each.                                                                                                           |
+| Changing `MotionPresence`'s default animates something that should not animate | Only two call sites rely on the old default and both are explicitly updated in the same change; audit the rest as a checklist item.                                                       |

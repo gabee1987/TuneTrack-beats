@@ -188,9 +188,11 @@ A fifth, in `apps/web`:
 > expiry, and proves a later reconnect receives the room-unavailable recovery state.
 > E12 has the host close a running game, proves both clients land on Home, and immediately
 > presses Start on each client to guard against a stale exiting page intercepting input.
+> E13 opens the shared game Settings menu, drives browser back, and proves the menu closes
+> without navigating away from or remounting the active game route.
 > Server Spotify endpoints target a local fail-loud sentinel, every scenario asserts it
 > received zero requests, and browser contexts install a fake Spotify SDK. WebKit and
-> E13-E15 remain open.
+> E14-E15 remain open.
 
 ### 5.1 Tooling
 

@@ -1,7 +1,10 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useId, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useI18n } from "../i18n";
 import type { AppShellMenuProps } from "./AppShellMenu.types";
 import styles from "./AppShellMenu.module.css";
+
+const appShellMenuHistoryStateKey = "tunetrackAppShellMenuEntry";
 
 async function loadAppShellMenuDialog() {
   const module = await import("./components/AppShellMenuDialog");
@@ -17,8 +20,60 @@ export function AppShellMenu({
   subtitle,
   tabs,
 }: AppShellMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
   const { t } = useI18n();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const historyEntryId = useId();
+  const pendingActionRef = useRef<(() => void) | null>(null);
+  const wasOpenRef = useRef(false);
+  const locationState = isRecord(location.state) ? location.state : {};
+  const isOpen = locationState[appShellMenuHistoryStateKey] === historyEntryId;
+
+  useEffect(() => {
+    if (isOpen) {
+      wasOpenRef.current = true;
+      return;
+    }
+
+    if (!wasOpenRef.current) {
+      return;
+    }
+
+    wasOpenRef.current = false;
+    const pendingAction = pendingActionRef.current;
+    pendingActionRef.current = null;
+    pendingAction?.();
+  }, [isOpen]);
+
+  function openMenu() {
+    if (isOpen) {
+      return;
+    }
+
+    navigate(
+      {
+        hash: location.hash,
+        pathname: location.pathname,
+        search: location.search,
+      },
+      {
+        state: {
+          ...locationState,
+          [appShellMenuHistoryStateKey]: historyEntryId,
+        },
+      },
+    );
+  }
+
+  function closeMenu(afterClose?: () => void) {
+    if (!isOpen) {
+      afterClose?.();
+      return;
+    }
+
+    pendingActionRef.current = afterClose ?? null;
+    navigate(-1);
+  }
 
   return (
     <>
@@ -31,7 +86,7 @@ export function AppShellMenu({
         onMouseEnter={() => {
           void loadAppShellMenuDialog();
         }}
-        onClick={() => setIsOpen(true)}
+        onClick={openMenu}
         onTouchStart={() => {
           void loadAppShellMenuDialog();
         }}
@@ -49,7 +104,7 @@ export function AppShellMenu({
       <Suspense fallback={null}>
         <AppShellMenuDialog
           isOpen={isOpen}
-          onClose={() => setIsOpen(false)}
+          onClose={closeMenu}
           subtitle={subtitle}
           tabs={tabs}
           title={title}
@@ -61,3 +116,7 @@ export function AppShellMenu({
   );
 }
 export type { AppShellMenuTab } from "./AppShellMenu.types";
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}

@@ -560,6 +560,32 @@ test("the host closes the room and both players can start again immediately", as
   }
 });
 
+test("browser back closes game settings without leaving the game", async ({ browser }) => {
+  const host = await createNamedPage(browser, "Settings Host");
+
+  try {
+    const roomId = await hostRoom(host.page);
+    await host.page.getByRole("button", { name: "Start Game" }).first().click();
+    await expectGamePage(host.page, roomId);
+
+    const gameMenuButton = host.page.getByRole("button", {
+      name: "Open game menu",
+      exact: true,
+    });
+    await expect(gameMenuButton).toHaveCount(1);
+    await gameMenuButton.click();
+    await expect(host.page.getByRole("button", { name: "Close menu", exact: true })).toBeVisible();
+
+    await host.page.evaluate(() => window.history.back());
+
+    await expect(host.page.getByRole("button", { name: "Close menu", exact: true })).toHaveCount(0);
+    await expectGamePage(host.page, roomId);
+    await expect(host.page.getByRole("button", { name: /leaderboard/i }).first()).toBeVisible();
+  } finally {
+    await host.context.close();
+  }
+});
+
 test("a saved player profile joins from a direct invite in one action", async ({ browser }) => {
   const host = await createNamedPage(browser, "Invite Host");
   const guest = await createNamedPage(browser, "Invite Guest");

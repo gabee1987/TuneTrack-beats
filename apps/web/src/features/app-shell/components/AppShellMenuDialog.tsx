@@ -14,7 +14,7 @@ import styles from "../AppShellMenu.module.css";
 
 interface AppShellMenuDialogProps extends AppShellMenuProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose: (afterClose?: () => void) => void;
 }
 
 export function AppShellMenuDialog({
@@ -29,9 +29,7 @@ export function AppShellMenuDialog({
   const reduceMotion = useReducedMotionPreference();
   const preferencesState = useAppShellMenuPreferencesState();
   const availableTabs = useMemo(() => tabs, [tabs]);
-  const activeTabId = availableTabs.some(
-    (tab) => tab.id === preferencesState.lastOpenedMenuTab,
-  )
+  const activeTabId = availableTabs.some((tab) => tab.id === preferencesState.lastOpenedMenuTab)
     ? preferencesState.lastOpenedMenuTab
     : availableTabs[0]?.id;
   const activeTab = availableTabs.find((tab) => tab.id === activeTabId) ?? null;
@@ -54,7 +52,7 @@ export function AppShellMenuDialog({
             className={styles.menuScrim}
             exit="exit"
             initial="initial"
-            onClick={onClose}
+            onClick={() => onClose()}
             transition={createAppShellMenuTransition(reduceMotion)}
             variants={createFadeMotion(reduceMotion)}
           />

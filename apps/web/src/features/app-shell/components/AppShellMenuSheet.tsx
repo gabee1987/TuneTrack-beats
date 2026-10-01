@@ -21,7 +21,7 @@ interface AppShellMenuSheetProps {
   activeTabId: AppShellMenuTab["id"] | undefined;
   footerAction?: AppShellMenuFooterAction;
   footerActions?: AppShellMenuFooterAction[];
-  onClose: () => void;
+  onClose: (afterClose?: () => void) => void;
   preferencesState: AppShellMenuPreferencesState;
   subtitle: string;
   tabs: AppShellMenuTab[];
@@ -90,10 +90,12 @@ export function AppShellMenuSheet({
     };
   }, [activeTabId, updatePanelFadeState]);
 
-  const handleFooterActionClick = useCallback((action: AppShellMenuFooterAction) => {
-    onClose();
-    action.onClick();
-  }, [onClose]);
+  const handleFooterActionClick = useCallback(
+    (action: AppShellMenuFooterAction) => {
+      onClose(action.onClick);
+    },
+    [onClose],
+  );
 
   return (
     <motion.aside
@@ -111,7 +113,7 @@ export function AppShellMenuSheet({
         <button
           aria-label={t("appShell.menu.close")}
           className={`${styles.menuTrigger} ${styles.menuCloseButton}`}
-          onClick={onClose}
+          onClick={() => onClose()}
           title={t("appShell.menu.close")}
           type="button"
         >

@@ -1,11 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { useEffect } from "react";
-import {
-  createMemoryRouter,
-  RouterProvider,
-  useNavigate,
-  useParams,
-} from "react-router-dom";
+import { createMemoryRouter, RouterProvider, useNavigate, useParams } from "react-router-dom";
 import { beforeAll, describe, expect, it } from "vitest";
 import { AppRoutes } from "./AppRoutes";
 
@@ -68,6 +63,29 @@ describe("AppRoutes page transitions", () => {
 
     // The assertion is only meaningful while both pages are mounted together.
     expect(screen.queryByText("room TEST_ROOM_1")).not.toBeNull();
+    expect(roomIdSeenByEffect).toEqual(["TEST_ROOM_1"]);
+  });
+
+  it("does not remount a route for a same-path history state entry", async () => {
+    roomIdSeenByEffect.length = 0;
+
+    const router = createMemoryRouter(
+      [
+        {
+          path: "/",
+          element: <AppRoutes />,
+          children: [{ path: "game/:roomId", element: <RoomPage /> }],
+        },
+      ],
+      { initialEntries: ["/game/TEST_ROOM_1"] },
+    );
+
+    render(<RouterProvider router={router} />);
+    await screen.findByText("room TEST_ROOM_1");
+
+    await router.navigate(".", { state: { overlay: "settings" } });
+    await waitFor(() => expect(router.state.location.state).toEqual({ overlay: "settings" }));
+
     expect(roomIdSeenByEffect).toEqual(["TEST_ROOM_1"]);
   });
 });

@@ -48,10 +48,7 @@ export function AppRoutes() {
       }}
     >
       <MotionPresence mode="sync">
-        <PageTransition
-          direction={direction}
-          key={location.key}
-        >
+        <PageTransition direction={direction} key={location.pathname}>
           {outlet}
         </PageTransition>
       </MotionPresence>
