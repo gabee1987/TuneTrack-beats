@@ -195,9 +195,10 @@ A fifth, in `apps/web`:
 > one at a time while the lobby remains active. The fake Spotify server now
 > serves only the canned E14 OAuth/import requests and continues to fail loudly on every
 > unexpected request.
-> E15 starts a fresh two-client game, verifies the local player's first timeline card gains
-> the delayed timeline-details hint, dismisses it, reloads, and proves the persisted hint
-> does not appear again. Server Spotify endpoints target a local fail-loud sentinel, every
+> E15 starts a fresh two-client game, verifies the local player's draggable mystery card
+> gains the delayed chronological-placement hint before lower-priority guidance, dismisses
+> it, reloads, and proves that persisted hint does not appear again. Server Spotify
+> endpoints target a local fail-loud sentinel, every
 > scenario asserts it received zero unexpected requests, and browser contexts install a
 > fake Spotify SDK. Chromium E1-E15 are complete; WebKit remains open.
 
@@ -247,7 +248,7 @@ service. The harness must therefore:
 | E12 | Host closes the room; both clients land on Home and Start is immediately usable                                                            | **F-27c**                           |
 | E13 | Open settings on the game page; press browser back; the panel closes and the game remains                                                  | **F-27**                            |
 | E14 | Open Music Setup, then playlist and song editors; edit and save the year; close each layer back to room settings                           | **F-25**, **F-27**                  |
-| E15 | First-run session sees the timeline-tap hint after receiving a card                                                                        | Doc 10                              |
+| E15 | First-run session sees the placement-rules hint first; dismissal persists across reload                                                    | Doc 10                              |
 
 E7 to E12 are the scenarios that would have caught the current stability defects, and they
 are the reason this harness is worth building.

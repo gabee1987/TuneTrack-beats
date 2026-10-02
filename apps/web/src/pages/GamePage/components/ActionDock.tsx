@@ -80,6 +80,7 @@ export function ActionDock({ children, className }: ActionDockProps) {
 }
 
 interface ActionButtonProps {
+  buttonRef?: React.Ref<HTMLButtonElement>;
   children: React.ReactNode;
   disabled?: boolean;
   onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
@@ -88,6 +89,7 @@ interface ActionButtonProps {
 }
 
 export function PrimaryActionButton({
+  buttonRef,
   children,
   disabled,
   onClick,
@@ -96,6 +98,7 @@ export function PrimaryActionButton({
 }: ActionButtonProps) {
   return (
     <button
+      ref={buttonRef}
       className={styles.floatingPrimaryButton}
       disabled={disabled}
       onClick={onClick}
@@ -112,6 +115,7 @@ export function PrimaryActionButton({
 }
 
 export function SecondaryActionButton({
+  buttonRef,
   children,
   disabled,
   onClick,
@@ -120,6 +124,7 @@ export function SecondaryActionButton({
 }: ActionButtonProps) {
   return (
     <button
+      ref={buttonRef}
       className={styles.floatingSecondaryButton}
       disabled={disabled}
       onClick={onClick}

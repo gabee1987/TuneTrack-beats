@@ -1,5 +1,6 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import { AppShellMenu } from "../../../features/app-shell/AppShellMenu";
+import { FirstRunHint } from "../../../features/hints/FirstRunHint";
 import { useI18n } from "../../../features/i18n";
 import { CardCountAmount } from "../../../features/ui/CardCountAmount";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
@@ -16,6 +17,8 @@ interface GamePageHeaderProps {
 function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
   const { t } = useI18n();
   const layoutMode = usePageLayoutMode();
+  const [menuHintAnchor, setMenuHintAnchor] = useState<HTMLElement | null>(null);
+  const [tokenHintAnchor, setTokenHintAnchor] = useState<HTMLElement | null>(null);
   const {
     closeRoomActionStatus,
     currentPlayerId,
@@ -120,7 +123,9 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
                   <span aria-hidden="true" className={styles.statusBadgeCounterSeparator}>
                     ·
                   </span>
-                  <TokenCountAmount amount={visibleTimelineTtCount} />
+                  <span ref={setTokenHintAnchor}>
+                    <TokenCountAmount amount={visibleTimelineTtCount} />
+                  </span>
                 </>
               ) : null}
             </span>
@@ -177,6 +182,7 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
             subtitle={t("gameMenu.lobbyNameSubtitle")}
             tabs={menuTabs}
             title={roomState.roomId}
+            triggerRef={setMenuHintAnchor}
             {...(roomState.hostId === currentPlayerId
               ? {
                   footerActions: [
@@ -205,6 +211,16 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
           <p className={styles.statusCaption}>{statusDetailText}</p>
         ) : null}
       </div>
+      <FirstRunHint
+        anchor={tokenHintAnchor}
+        id="game-tokens"
+        isEligible={
+          roomState.settings.ttModeEnabled &&
+          visibleTimelinePlayerId === currentPlayerId &&
+          visibleTimelineTtCount > 0
+        }
+      />
+      <FirstRunHint anchor={menuHintAnchor} id="game-menu" isEligible />
     </header>
   );
 }

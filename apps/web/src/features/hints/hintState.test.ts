@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import { MemoryStorage, ThrowingStorage } from "../../test/stubs/storage";
 import {
   hasSeenHint,
+  isHintsEnabled,
   hintStateStorageKey,
   markHintSeen,
   readHintState,
   resetHints,
+  setHintsEnabled,
 } from "./hintState";
 
 describe("hintState", () => {
@@ -17,7 +19,7 @@ describe("hintState", () => {
     expect(hasSeenHint("game-timeline-tap", storage)).toBe(true);
 
     resetHints(storage);
-    expect(storage.getItem(hintStateStorageKey)).toBeNull();
+    expect(readHintState(storage).seenCounts).toEqual({});
   });
 
   it("resets incompatible persisted versions", () => {
@@ -36,5 +38,18 @@ describe("hintState", () => {
     expect(readHintState(storage).seenCounts).toEqual({});
     expect(() => markHintSeen("game-timeline-tap", storage)).not.toThrow();
     expect(() => resetHints(storage)).not.toThrow();
+  });
+
+  it("persists the master switch without erasing seen hints", () => {
+    const storage = new MemoryStorage();
+    markHintSeen("game-drag-preview", storage);
+
+    setHintsEnabled(false, storage);
+    expect(isHintsEnabled(storage)).toBe(false);
+    expect(hasSeenHint("game-drag-preview", storage)).toBe(true);
+
+    setHintsEnabled(true, storage);
+    expect(isHintsEnabled(storage)).toBe(true);
+    expect(hasSeenHint("game-drag-preview", storage)).toBe(true);
   });
 });

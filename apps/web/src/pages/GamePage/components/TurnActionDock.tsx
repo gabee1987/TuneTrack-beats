@@ -12,6 +12,7 @@ import {
   useReducedMotionPreference,
 } from "../../../features/motion";
 import { useI18n } from "../../../features/i18n";
+import { FirstRunHint } from "../../../features/hints/FirstRunHint";
 import type {
   BuyTimelineCardActionStatus,
   PlaceCardActionStatus,
@@ -96,6 +97,7 @@ export function TurnActionDock({
   const reduceMotion = useReducedMotionPreference();
   const skipCostBadgeRef = useRef<HTMLSpanElement | null>(null);
   const buyCostBadgeRef = useRef<HTMLSpanElement | null>(null);
+  const [confirmHintAnchor, setConfirmHintAnchor] = useState<HTMLElement | null>(null);
   const offlinePlayerId =
     roomState.status === "challenge"
       ? roomState.challengeState?.challengerPlayerId
@@ -250,6 +252,7 @@ export function TurnActionDock({
               transition={createLayoutTransition(reduceMotion)}
             >
               <PrimaryActionButton
+                buttonRef={setConfirmHintAnchor}
                 disabled={isPlaceCardPending}
                 onClick={() => handlePlaceCard()}
               >
@@ -326,6 +329,7 @@ export function TurnActionDock({
                 transition={createLayoutTransition(reduceMotion)}
               >
                 <PrimaryActionButton
+                  buttonRef={setConfirmHintAnchor}
                   disabled={isPlaceCardPending}
                   onClick={() => handlePlaceCard()}
                 >
@@ -350,6 +354,11 @@ export function TurnActionDock({
           </>
         )}
       </ActionDock>
+      <FirstRunHint
+        anchor={confirmHintAnchor}
+        id="game-confirm"
+        isEligible={roomState.status === "turn" && canConfirmTurnPlacement}
+      />
     </>
   );
 }

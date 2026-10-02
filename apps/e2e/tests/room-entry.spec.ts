@@ -264,7 +264,7 @@ test("both players see the winner when the target card count is reached", async 
   }
 });
 
-test("a first-run player sees the timeline card details hint", async ({ browser }) => {
+test("a first-run player sees the placement rules before timeline details", async ({ browser }) => {
   const guest = await createNamedPage(browser, "Hint Guest");
   const host = await createNamedPage(browser, "Hint Host");
 
@@ -283,17 +283,19 @@ test("a first-run player sees the timeline card details hint", async ({ browser 
     await host.page.getByRole("button", { name: "Start Game" }).first().click();
     await expectGamePage(host.page, roomId);
 
-    const timelineHint = host.page.getByRole("dialog", {
-      name: "Your timeline",
+    const placementHint = host.page.getByRole("dialog", {
+      name: "Place the song",
     });
-    await expect(timelineHint).toContainText("Tap a placed card to see its track details.");
-    await timelineHint.getByRole("button", { name: "Dismiss hint" }).click();
-    await expect(timelineHint).toHaveCount(0);
+    await expect(placementHint).toContainText(
+      "Drag the mystery card to where its release year belongs in your timeline.",
+    );
+    await placementHint.getByRole("button", { name: "Dismiss hint" }).click();
+    await expect(placementHint).toHaveCount(0);
 
     await host.page.reload();
     await expectGamePage(host.page, roomId);
     await host.page.waitForTimeout(2_000);
-    await expect(timelineHint).toHaveCount(0);
+    await expect(placementHint).toHaveCount(0);
   } finally {
     await Promise.all([host.context.close(), guest.context.close()]);
   }

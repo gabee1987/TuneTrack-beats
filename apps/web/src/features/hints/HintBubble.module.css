@@ -27,6 +27,18 @@
   transform: translate(-50%, 6px) rotate(45deg);
 }
 
+.bubble[data-placement="above"]::before {
+  top: 100%;
+  bottom: auto;
+  border-top: 0;
+  border-right: 1px solid
+    color-mix(in srgb, var(--color-accent-brand) 48%, var(--color-border-subtle));
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--color-accent-brand) 48%, var(--color-border-subtle));
+  border-left: 0;
+  transform: translate(-50%, -6px) rotate(45deg);
+}
+
 .copy {
   min-width: 0;
   padding: 3px 4px 2px 0;

@@ -13,9 +13,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import { HintBubble } from "../../../features/hints/HintBubble";
-import { useFirstRunHint } from "../../../features/hints/useFirstRunHint";
-import { useI18n } from "../../../features/i18n";
+import { FirstRunHint } from "../../../features/hints/FirstRunHint";
 import {
   MotionPresence,
   timelineCelebrationTransitionContract,
@@ -45,7 +43,6 @@ interface TimelinePanelProps {
 }
 
 export function TimelinePanel({ model }: TimelinePanelProps) {
-  const { t } = useI18n();
   const layoutMode = usePageLayoutMode();
   const timelineView = model.render.timelineView ?? "active";
   const {
@@ -90,11 +87,9 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
   const previewSlotIndex = dragModel.previewSlotIndex;
 
   const [cardForInfo, setCardForInfo] = useState<GamePageCard | null>(null);
-  const [hintAnchor, setHintAnchor] = useState<HTMLElement | null>(null);
-  const timelineTapHint = useFirstRunHint(
-    "game-timeline-tap",
-    model.render.isOwnTimeline && model.render.timelineCards.length > 0 && hintAnchor !== null,
-  );
+  const [timelineCardHintAnchor, setTimelineCardHintAnchor] =
+    useState<HTMLElement | null>(null);
+  const [previewHintAnchor, setPreviewHintAnchor] = useState<HTMLElement | null>(null);
   const [dragOverlaySize, setDragOverlaySize] = useState<{
     height: number;
     width: number;
@@ -281,13 +276,14 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
           ref={timelineRowRef}
         >
           <TimelinePanelItems
-            hintAnchorRef={setHintAnchor}
+            hintAnchorRef={setTimelineCardHintAnchor}
             isDraggingPreviewCard={isDraggingPreviewCard}
             model={itemsModel}
             onCardInfoRequest={(card) => setCardForInfo(card)}
             orderedItemIds={orderedItemIds}
             onPreviewCardRef={(node) => {
               previewCardElementRef.current = node;
+              setPreviewHintAnchor(node);
             }}
             timelineItemMap={timelineItemMap}
           />
@@ -319,15 +315,24 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
           ) : null}
         </DragOverlay>
       </DndContext>
-      {timelineTapHint.isVisible && hintAnchor ? (
-        <HintBubble
-          anchor={hintAnchor}
-          body={t("hints.gameTimelineTap.body")}
-          dismissLabel={t("hints.dismiss")}
-          onDismiss={timelineTapHint.dismiss}
-          title={t("hints.gameTimelineTap.title")}
-        />
-      ) : null}
+      <FirstRunHint
+        anchor={previewHintAnchor}
+        id="game-drag-preview"
+        isEligible={
+          model.render.isOwnTimeline &&
+          model.interaction.selectable &&
+          previewCard !== null
+        }
+      />
+      <FirstRunHint
+        anchor={timelineCardHintAnchor}
+        id="game-timeline-tap"
+        isEligible={
+          model.render.isOwnTimeline &&
+          model.render.timelineCards.length > 0 &&
+          previewCard === null
+        }
+      />
       <TimelinePanelFlyAnimation
         flyAnimationState={flyAnimationState}
         showDevAlbumInfo={model.render.showDevAlbumInfo}

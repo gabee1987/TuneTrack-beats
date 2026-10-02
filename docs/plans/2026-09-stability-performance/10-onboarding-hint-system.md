@@ -1,12 +1,16 @@
 # 10 — Interactive First-Run Hint System
 
-> **Implementation state (2026-10-02):** The first vertical slice is live. A fresh player
-> sees the `game-timeline-tap` hint on their own first placed card after the 1.5-second
-> quiet period. It is anchored to the live card, persists its seen state safely, dismisses
-> by button, outside interaction, Escape, anchor interaction, or a 12-second timeout, and
-> can be reset from Settings. English and Hungarian copy and Chromium E15 coverage are in
-> place. The shared registry/scheduler, master toggle, history-back dismissal, remaining
-> catalogue, two-per-visit cap, and dedicated bubble/anchor component coverage remain open.
+> **Implementation state (2026-10-02):** The first gameplay walkthrough is live. Per the
+> owner's 2026-10-02 correction, the first hint teaches the core placement rule on the
+> draggable mystery card; timeline-card details are follow-up discovery, not the opening
+> lesson. Six contextual game hints now cover placement, confirmation, challenges, TT
+> tokens, placed-card details, and the game menu. A shared priority scheduler shows one at
+> a time after the 1.5-second quiet period and caps each game-page visit at two hints. Seen
+> state and the master enabled switch persist safely; Settings can disable all hints
+> immediately without erasing progress or reset the walkthrough. English and Hungarian
+> copy and Chromium E15 coverage are in place. Home/lobby hints, history-back dismissal,
+> IntersectionObserver-backed anchor visibility, replay/count UI, and dedicated
+> bubble/anchor component coverage remain open.
 
 > New capability. Nothing comparable exists in the codebase: a search for
 > `onboard`, `tutorial`, `coachmark`, `firstRun` and `hintSystem` across
@@ -133,8 +137,8 @@ obstacle. Start with these, measure whether they are needed, and add only on evi
 | `profile-name` | Identity row on Home | `anchor_visible`, only when the name is still the default | This is how everyone sees you — tap to change it. |
 | `lobby-spotify` | Spotify section in the lobby | `anchor_visible`, host only, no playlist imported | Connect Spotify to play real tracks. |
 | `lobby-start` | Start-game dock | `anchor_visible`, host only, at least two players | Everyone is in — start when ready. |
-| `game-timeline-tap` | Any placed timeline card | `game_phase: "turn"`, first time the player has a card | **The example the owner gave:** tap a placed card for track details. |
-| `game-drag-preview` | Preview card | `first_time_condition: "first_own_turn"` | Drag the card into the right place on your timeline. |
+| `game-timeline-tap` | Any placed timeline card | `game_phase: "turn"`, first time the player has a card | Follow-up discovery: tap a placed card for track details. |
+| `game-drag-preview` | Preview card | `first_time_condition: "first_own_turn"` | **First gameplay hint:** drag by release year into the chronological timeline. |
 | `game-confirm` | Confirm action in the turn dock | `first_time_condition: "first_slot_selected"` | Confirm when you are happy with the spot. |
 | `game-challenge` | Challenge action | `game_phase: "challenge"`, first time, requires at least one TT token | Spend a token to challenge this placement. |
 | `game-tokens` | Token counter in the header | `first_time_condition: "first_token_received"`, TT mode on | Tokens buy skips, extra cards and challenges. |
@@ -225,19 +229,21 @@ that, the catalogue is too large.
 
 ## 9. Acceptance criteria
 
-- [ ] A fresh install shows at most two hints per screen, none within 1.5 s of arrival.
-- [ ] Each hint appears exactly once and never again.
-- [ ] "Reset hints" makes all ten eligible again.
-- [ ] "Show hints" off suppresses everything immediately.
+- [x] A fresh install shows at most two implemented hints per game-page visit, none within
+      1.5 s of arrival.
+- [x] Each implemented hint appears exactly once and never again.
+- [x] "Reset hints" makes all implemented hints eligible again.
+- [x] "Show hints" off suppresses everything immediately without erasing seen progress.
 - [ ] Every hint dismisses via button, outside tap, Escape, back, and interaction with its
       anchor.
 - [ ] No hint covers the control it describes or the screen's primary action.
-- [ ] Every hint has copy in both `en` and `hu`; the guard test enforces it.
-- [ ] Under `prefers-reduced-motion` hints fade rather than move.
-- [ ] Blocked storage degrades to enabled-but-unremembered with no error.
+- [x] Every implemented hint has copy in both `en` and `hu`; catalogue parity is covered by
+      the existing i18n key-parity guard.
+- [x] Under `prefers-reduced-motion` hints fade rather than move.
+- [x] Blocked storage degrades to enabled-but-unremembered with no error.
 - [ ] Feature chunk under 6 kB gzip and lazily loaded.
-- [x] E2E: a first-run session reaches a placed card, sees `game-timeline-tap`, dismisses
-      it, and does not see it again after reload.
+- [x] E2E: a first-run session starts a game, sees `game-drag-preview` before timeline
+      details, dismisses it, and does not see that hint again after reload.
 
 ## 10. Risk register
 

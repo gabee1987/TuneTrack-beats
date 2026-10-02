@@ -19,6 +19,7 @@ export function AppShellMenu({
   title,
   subtitle,
   tabs,
+  triggerRef,
 }: AppShellMenuProps) {
   const { t } = useI18n();
   const location = useLocation();
@@ -78,6 +79,7 @@ export function AppShellMenu({
   return (
     <>
       <button
+        ref={triggerRef}
         aria-label={t("appShell.menu.open")}
         className={styles.menuTrigger}
         onFocus={() => {

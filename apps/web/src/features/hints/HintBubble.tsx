@@ -15,18 +15,21 @@ interface HintBubbleProps {
 
 interface HintPosition {
   left: number;
+  placement: "above" | "below";
   top: number;
 }
 
 const BUBBLE_HALF_WIDTH_PX = 140;
 const VIEWPORT_GUTTER_PX = 16;
 const ANCHOR_GAP_PX = 12;
+const BUBBLE_ESTIMATED_HEIGHT_PX = 112;
 
 export function HintBubble({ anchor, body, dismissLabel, onDismiss, title }: HintBubbleProps) {
   const reduceMotion = useReducedMotionPreference();
   const titleId = useId();
   const bodyId = useId();
   const [position, setPosition] = useState<HintPosition>(() => getPosition(anchor));
+  const verticalPosition = position.placement === "above" ? "-100%" : "0%";
 
   useLayoutEffect(() => {
     const updatePosition = () => setPosition(getPosition(anchor));
@@ -68,16 +71,25 @@ export function HintBubble({ anchor, body, dismissLabel, onDismiss, title }: Hin
 
   return createPortal(
     <motion.aside
-      animate={{ opacity: 1, x: "-50%", y: 0 }}
+      animate={{ opacity: 1, x: "-50%", y: verticalPosition }}
       aria-describedby={bodyId}
       aria-labelledby={titleId}
       aria-live="polite"
       className={styles.bubble}
       data-hint-bubble="true"
-      exit={{ opacity: 0, x: "-50%", y: reduceMotion ? 0 : -6 }}
-      initial={{ opacity: 0, x: "-50%", y: reduceMotion ? 0 : 8 }}
+      data-placement={position.placement}
+      exit={{
+        opacity: 0,
+        x: "-50%",
+        y: getExitY(position.placement, reduceMotion),
+      }}
+      initial={{
+        opacity: 0,
+        x: "-50%",
+        y: getInitialY(position.placement, reduceMotion),
+      }}
       role="dialog"
-      style={position}
+      style={{ left: position.left, top: position.top }}
       transition={{
         ...createStandardTransition(reduceMotion),
         ease: reduceMotion ? motionEasings.standard : motionEasings.emphasized,
@@ -107,8 +119,26 @@ export function HintBubble({ anchor, body, dismissLabel, onDismiss, title }: Hin
   );
 }
 
+function getInitialY(placement: HintPosition["placement"], reduceMotion: boolean) {
+  if (placement === "above") {
+    return reduceMotion ? "-100%" : "calc(-100% + 8px)";
+  }
+  return reduceMotion ? 0 : 8;
+}
+
+function getExitY(placement: HintPosition["placement"], reduceMotion: boolean) {
+  if (placement === "above") {
+    return reduceMotion ? "-100%" : "calc(-100% - 6px)";
+  }
+  return reduceMotion ? 0 : -6;
+}
+
 function getPosition(anchor: HTMLElement): HintPosition {
   const rect = anchor.getBoundingClientRect();
+  const placement =
+    rect.bottom + ANCHOR_GAP_PX + BUBBLE_ESTIMATED_HEIGHT_PX > window.innerHeight
+      ? "above"
+      : "below";
   const left = Math.min(
     window.innerWidth - BUBBLE_HALF_WIDTH_PX - VIEWPORT_GUTTER_PX,
     Math.max(BUBBLE_HALF_WIDTH_PX + VIEWPORT_GUTTER_PX, rect.left + rect.width / 2),
@@ -116,6 +146,7 @@ function getPosition(anchor: HTMLElement): HintPosition {
 
   return {
     left,
-    top: rect.bottom + ANCHOR_GAP_PX,
+    placement,
+    top: placement === "above" ? rect.top - ANCHOR_GAP_PX : rect.bottom + ANCHOR_GAP_PX,
   };
 }

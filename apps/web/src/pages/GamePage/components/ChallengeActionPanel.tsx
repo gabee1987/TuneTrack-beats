@@ -1,6 +1,6 @@
 import { CHALLENGE_TT_COST, type PublicRoomState } from "@tunetrack/shared";
 import { motion, useIsPresent } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   MotionPresence,
@@ -9,6 +9,7 @@ import {
   useReducedMotionPreference,
 } from "../../../features/motion";
 import { useI18n } from "../../../features/i18n";
+import { FirstRunHint } from "../../../features/hints/FirstRunHint";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import { useChallengeCountdownLabel } from "../hooks/useChallengeCountdownLabel";
 import type {
@@ -101,6 +102,8 @@ export function ChallengeActionPanel({
   const portalTarget = useMobileControlPortalTarget();
   const isPresent = useIsPresent();
   const beatCostBadgeRef = useRef<HTMLSpanElement | null>(null);
+  const [challengeHintAnchor, setChallengeHintAnchor] =
+    useState<HTMLElement | null>(null);
 
   const challengeState = roomState.status === "challenge" ? roomState.challengeState : null;
   const isOpenChallengeWindow = challengeState?.phase === "open";
@@ -186,6 +189,7 @@ export function ChallengeActionPanel({
       <ActionDock className={nestedDockClassName}>
         {canClaimChallenge ? (
           <PrimaryActionButton
+            buttonRef={setChallengeHintAnchor}
             disabled={isClaimChallengePending}
             onClick={(event) => {
               const origin = resolveSpendOrigin(
@@ -270,17 +274,30 @@ export function ChallengeActionPanel({
     return null;
   }
 
+  const challengeHint = (
+    <FirstRunHint
+      anchor={challengeHintAnchor}
+      id="game-challenge"
+      isEligible={canClaimChallenge}
+    />
+  );
+
   return portalTarget ? (
     <>
       {createPortal(challengeCallout, portalTarget)}
       {challengeState ? actionDock : null}
+      {challengeHint}
     </>
   ) : actionDock ? (
     <div className={styles.challengeActionStack}>
       {challengeCallout}
       {actionDock}
+      {challengeHint}
     </div>
   ) : (
-    challengeCallout
+    <>
+      {challengeCallout}
+      {challengeHint}
+    </>
   );
 }

@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { resetHints } from "../../hints/hintState";
+import {
+  isHintsEnabled,
+  resetHints,
+  setHintsEnabled,
+} from "../../hints/hintState";
 import type { ViewPreferences } from "../../preferences/uiPreferences";
 import type { AppShellMenuPreferencesState, AppShellMenuTab } from "../AppShellMenu.types";
 import { useI18n } from "../../i18n";
@@ -52,6 +56,7 @@ const developerFields: Array<{
 export function AppShellMenuPanels({ activeTab, preferencesState }: AppShellMenuPanelsProps) {
   const { availableLanguages, languageId, setLanguage, t } = useI18n();
   const [hasResetHints, setHasResetHints] = useState(false);
+  const [hintsEnabled, setHintsEnabledState] = useState(isHintsEnabled);
 
   if (activeTab?.id === "language") {
     return (
@@ -161,6 +166,18 @@ export function AppShellMenuPanels({ activeTab, preferencesState }: AppShellMenu
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>{t("appShell.menu.hintsTitle")}</h3>
           <p className={styles.sectionDescription}>{t("appShell.menu.hintsDescription")}</p>
+          <div className={styles.fieldGroup}>
+            <ToggleField
+              checked={hintsEnabled}
+              hint={t("appShell.menu.showHintsHint")}
+              label={t("appShell.menu.showHints")}
+              onChange={(enabled) => {
+                setHintsEnabled(enabled);
+                setHintsEnabledState(enabled);
+                setHasResetHints(false);
+              }}
+            />
+          </div>
           <Button
             onClick={() => {
               resetHints();

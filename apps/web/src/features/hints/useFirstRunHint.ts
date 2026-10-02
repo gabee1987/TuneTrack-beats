@@ -1,28 +1,27 @@
-import { useCallback, useEffect, useState } from "react";
-import { hasSeenHint, markHintSeen, type HintId } from "./hintState";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
+import {
+  dismissActiveHint,
+  getActiveHintId,
+  registerHintCandidate,
+  subscribeActiveHint,
+} from "./hintCoordinator";
+import type { HintId } from "./hintState";
 
-const HINT_DELAY_MS = 1_500;
 const HINT_AUTO_DISMISS_MS = 12_000;
 
 export function useFirstRunHint(id: HintId, isEligible: boolean) {
-  const [isVisible, setIsVisible] = useState(false);
+  const activeHintId = useSyncExternalStore(subscribeActiveHint, getActiveHintId, () => null);
+  const isVisible = activeHintId === id;
 
   const dismiss = useCallback(() => {
-    setIsVisible(false);
-  }, []);
+    dismissActiveHint(id);
+  }, [id]);
 
   useEffect(() => {
-    if (!isEligible || hasSeenHint(id)) {
-      setIsVisible(false);
+    if (!isEligible) {
       return;
     }
-
-    const timeoutId = window.setTimeout(() => {
-      markHintSeen(id);
-      setIsVisible(true);
-    }, HINT_DELAY_MS);
-
-    return () => window.clearTimeout(timeoutId);
+    return registerHintCandidate(id);
   }, [id, isEligible]);
 
   useEffect(() => {
