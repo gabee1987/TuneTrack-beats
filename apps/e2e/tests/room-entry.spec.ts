@@ -586,6 +586,64 @@ test("browser back closes game settings without leaving the game", async ({ brow
   }
 });
 
+test("nested playlist editors close one level at a time without leaving the lobby", async ({
+  browser,
+}) => {
+  const host = await createNamedPage(browser, "Playlist Host");
+
+  try {
+    const roomId = await hostRoom(host.page);
+    await host.page.getByRole("button", { name: "Open music setup", exact: true }).first().click();
+
+    const popupPromise = host.page.waitForEvent("popup");
+    await host.page
+      .getByRole("button", { name: "Connect with Spotify", exact: true })
+      .first()
+      .click();
+    const popup = await popupPromise;
+    await expect.poll(() => popup.isClosed()).toBe(true);
+    await expect(host.page.getByText("Connected", { exact: true }).first()).toBeVisible();
+
+    await host.page
+      .getByPlaceholder("Paste playlist link or search playlist name")
+      .first()
+      .fill("spotify:playlist:TESTPLAYLIST1234567890");
+    await host.page.getByRole("button", { name: "Import", exact: true }).first().click();
+    await expect(host.page.getByText("10 tracks queued up", { exact: true }).first()).toBeVisible();
+    await host.page.getByRole("button", { name: "Edit playlist", exact: true }).first().click();
+
+    await expect(host.page.getByRole("dialog", { name: "Edit playlist" })).toBeVisible();
+    const firstTrack = host.page.getByRole("button", { name: /^E2E Track 1/ }).first();
+    await firstTrack.click();
+
+    const releaseYearField = host.page.getByRole("spinbutton", {
+      name: "Album Release Year",
+      exact: true,
+    });
+    await releaseYearField.fill("1977");
+    await host.page.getByRole("button", { name: "Save track", exact: true }).click();
+    await expect(releaseYearField).toHaveCount(0);
+
+    await firstTrack.click();
+    await expect(releaseYearField).toHaveValue("1977");
+
+    await host.page.goBack();
+    await expect(releaseYearField).toHaveCount(0);
+    await expect(host.page.getByRole("dialog", { name: "Edit playlist" })).toBeVisible();
+
+    await host.page.getByRole("button", { name: "Close playlist editor", exact: true }).click();
+    await expect(host.page.getByRole("dialog", { name: "Edit playlist" })).not.toBeVisible();
+    await expect(host.page.getByRole("dialog", { name: "Spotify music setup" })).toBeVisible();
+
+    await host.page.getByRole("button", { name: "Close music setup", exact: true }).click();
+    await expect(host.page.getByRole("dialog", { name: "Spotify music setup" })).not.toBeVisible();
+    await expect(host.page).toHaveURL(`/lobby/${roomId}`);
+    await expect(host.page.getByRole("button", { name: "Start Game" }).first()).toBeVisible();
+  } finally {
+    await host.context.close();
+  }
+});
+
 test("a saved player profile joins from a direct invite in one action", async ({ browser }) => {
   const host = await createNamedPage(browser, "Invite Host");
   const guest = await createNamedPage(browser, "Invite Guest");

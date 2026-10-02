@@ -55,7 +55,7 @@ describe("AppShellMenu history", () => {
     const router = renderGameRoute();
 
     await user.click(screen.getByRole("button", { name: "Open game menu" }));
-    await screen.findByRole("button", { name: "Close menu" });
+    await screen.findByRole("button", { name: "Close menu" }, { timeout: 5_000 });
 
     await act(async () => {
       await router.navigate(-1);

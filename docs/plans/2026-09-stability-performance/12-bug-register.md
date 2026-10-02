@@ -14,7 +14,7 @@ Status meanings:
 
 | ID  | Severity | Status                             | Next proof                                                             |
 | --- | -------- | ---------------------------------- | ---------------------------------------------------------------------- |
-| B2  | S1       | Open                               | E14 and remaining overlay-stack component tests                        |
+| B2  | S1       | Open                               | Remaining overlay-stack component tests                                |
 | B8  | S1       | Partially fixed                    | Explicit client recovery state and server transport tuning             |
 | B14 | S1       | Needs reproduction                 | Capture route, connection state and overlays when the UI becomes inert |
 | B18 | S2       | Open                               | Reproduce and instrument a page exit that never completes              |
@@ -24,7 +24,7 @@ Status meanings:
 
 ## B2 · Navigation and overlays behave inconsistently
 
-**Severity:** S1 · **Status:** Open · **Plans:** Doc 06, E14
+**Severity:** S1 · **Status:** Open · **Plan:** Doc 06
 
 ### Remaining problem
 
@@ -37,14 +37,16 @@ that initiated navigation.
 - Back closes only the topmost dismissible overlay.
 - Blocking overlays ignore back, Escape and scrim dismissal.
 - Room closure uses replacement navigation and leaves Home immediately interactive.
-- Nested playlist and track editors close in stack order.
+- Music Setup and nested playlist and track editors close one level at a time in stack
+  order.
 - Focus and body-scroll state are restored when an overlay closes.
 
 ### Verification
 
 - [x] E12: host closes a room; both clients reach Home and Start works immediately.
 - [x] E13: back closes game settings without leaving or remounting the game.
-- E14: back closes the track editor, then its parent playlist editor.
+- [x] E14: back/close unwinds track editor, playlist editor, and Music Setup one level at a
+      time without leaving the lobby.
 - Component coverage for stack order, focus restoration, scroll locking and blocking entries.
 
 ## B8 · Network recovery needs final hardening

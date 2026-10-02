@@ -220,10 +220,12 @@ Behaviour:
 
 ### 4.2 Back-button integration
 
-> **Implementation state (2026-10-01):** `AppShellMenu` is the first migrated overlay. It
-> uses a same-path React Router state entry, so browser and Android back close Settings
-> without leaving or remounting the current page. Programmatic close removes the history
-> entry before a footer action runs. The general nested overlay stack remains open.
+> **Implementation state (2026-10-02):** `AppShellMenu`, Spotify Music Setup, and the
+> nested playlist/track editors now use same-path history entries. Browser and Android
+> back close only the topmost migrated overlay without leaving or remounting the current
+> page. Programmatic close follows the same history path, and closed playlist portals are
+> removed from the DOM. The general overlay host, focus restoration, scroll locking, and
+> blocking-entry behavior remain open.
 
 `overlayHistory.ts`:
 
@@ -278,8 +280,9 @@ imported by pages.
       locked while open and restored after.
 - [x] E2E: open settings on the game page, press browser back, panel closes and the game is
       still on screen.
-- [ ] E2E: open the playlist editor, open a song editor from it, press back twice, and land
-      back on the lobby.
+- [x] E2E: open Music Setup, then the playlist and song editors; close each layer and
+      verify playlist close reveals Music Setup before Music Setup close returns to room
+      settings.
 
 ## 5. Phase 4 — Fix the song-editor layering explicitly · **S1**
 

@@ -1,12 +1,11 @@
 import { ServerToClientEvent, type PublicTrackInfo } from "@tunetrack/shared";
-import { act, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  getSharedFakeSocket,
-  resetSharedFakeSocket,
-} from "../../../test/fakeSocket";
-import { renderWithProviders } from "../../../test/renderWithProviders";
+import { createMemoryRouter, RouterProvider, useLocation, useNavigate } from "react-router-dom";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { I18nProvider } from "../../../features/i18n";
+import { getSharedFakeSocket, resetSharedFakeSocket } from "../../../test/fakeSocket";
+import { isHistoryState, playlistEditorHistoryStateKey } from "../hooks/playlistEditorHistory";
 import { PlaylistEditModal } from "./PlaylistEditModal";
 
 vi.mock("../../../services/socket/socketClient", async () => {
@@ -35,7 +34,27 @@ function buildTrack(overrides: Partial<PublicTrackInfo> = {}): PublicTrackInfo {
 }
 
 async function renderOpenEditor(tracks: PublicTrackInfo[]) {
-  const result = renderWithProviders(<PlaylistEditModal isOpen onClose={vi.fn()} />);
+  const router = createMemoryRouter(
+    [
+      {
+        path: "*",
+        element: (
+          <I18nProvider>
+            <PlaylistEditModal isOpen onClose={vi.fn()} />
+          </I18nProvider>
+        ),
+      },
+    ],
+    {
+      initialEntries: [
+        {
+          pathname: "/lobby/TEST_ROOM_1",
+          state: { [playlistEditorHistoryStateKey]: "TEST_PLAYLIST_EDITOR" },
+        },
+      ],
+    },
+  );
+  const result = render(<RouterProvider router={router} />);
 
   await act(async () => {
     await Promise.resolve();
@@ -48,7 +67,64 @@ async function renderOpenEditor(tracks: PublicTrackInfo[]) {
   return result;
 }
 
+async function renderHistoryBackedEditor(tracks: PublicTrackInfo[]) {
+  function PlaylistEditorScreen() {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const locationState = isHistoryState(location.state) ? location.state : {};
+    const isOpen = locationState[playlistEditorHistoryStateKey] === "TEST_PLAYLIST_EDITOR";
+
+    return (
+      <I18nProvider>
+        <p>Lobby screen</p>
+        <PlaylistEditModal isOpen={isOpen} onClose={() => navigate(-1)} />
+      </I18nProvider>
+    );
+  }
+
+  const router = createMemoryRouter(
+    [
+      { path: "/", element: <p>Home screen</p> },
+      { path: "/lobby/:roomId", element: <PlaylistEditorScreen /> },
+    ],
+    {
+      initialEntries: [
+        "/",
+        "/lobby/TEST_ROOM_1",
+        {
+          pathname: "/lobby/TEST_ROOM_1",
+          state: { [playlistEditorHistoryStateKey]: "TEST_PLAYLIST_EDITOR" },
+        },
+      ],
+      initialIndex: 2,
+    },
+  );
+
+  render(<RouterProvider router={router} />);
+
+  await act(async () => {
+    await Promise.resolve();
+  });
+
+  act(() => {
+    socket.serverEmit(ServerToClientEvent.PlaylistTracks, { roomId: "TEST_ROOM_1", tracks });
+  });
+
+  return router;
+}
+
 describe("PlaylistEditModal", () => {
+  beforeAll(() => {
+    class PassthroughRequest {
+      readonly url: string;
+
+      constructor(url: string) {
+        this.url = url;
+      }
+    }
+    Reflect.set(globalThis, "Request", PassthroughRequest);
+  });
+
   beforeEach(() => {
     resetSharedFakeSocket();
   });
@@ -134,5 +210,31 @@ describe("PlaylistEditModal", () => {
         ]);
       });
     });
+  });
+
+  it("closes the track editor and playlist editor in browser-back order", async () => {
+    const router = await renderHistoryBackedEditor([buildTrack()]);
+
+    await userEvent.click(await screen.findByRole("button", { name: /^Test Track One/ }));
+    await screen.findByDisplayValue("Test Track One");
+
+    await act(async () => {
+      await router.navigate(-1);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByDisplayValue("Test Track One")).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole("dialog", { name: "Edit playlist" })).toBeInTheDocument();
+
+    await act(async () => {
+      await router.navigate(-1);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Edit playlist" })).not.toBeInTheDocument();
+    });
+    expect(screen.getByText("Lobby screen")).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/lobby/TEST_ROOM_1");
   });
 });

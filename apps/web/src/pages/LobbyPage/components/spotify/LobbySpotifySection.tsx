@@ -1,12 +1,17 @@
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import type { PublicRoomSettings } from "@tunetrack/shared";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useI18n } from "../../../../features/i18n";
 import { ActionButton } from "../../../../features/ui/ActionButton";
 import { SettingInfoButton } from "../../../../features/ui/SettingField";
 import { SurfaceCard } from "../../../../features/ui/SurfaceCard";
 import { LobbySectionHeader } from "../LobbySectionHeader";
 import { PlaylistEditModal } from "../PlaylistEditModal";
+import {
+  spotifySetupHistoryStateKey,
+  useCurrentHistoryState,
+} from "../../hooks/playlistEditorHistory";
 import { useLobbySpotify } from "../../hooks/spotify/useLobbySpotify";
 import { SpotifyLogo } from "./spotifySetupIcons";
 import { SpotifySetupModal } from "./SpotifySetupModal";
@@ -20,7 +25,11 @@ interface LobbySpotifySectionProps {
 
 export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProps) {
   const { t } = useI18n();
-  const [isSetupOpen, setIsSetupOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const setupHistoryEntryId = useId();
+  const historyState = useCurrentHistoryState(location.state);
+  const isSetupOpen = historyState[spotifySetupHistoryStateKey] === setupHistoryEntryId;
   const [activeSource, setActiveSource] = useState<SpotifySetupSource>("playlistUrl");
   const spotifyState = useLobbySpotify();
   const isConnected = currentSettings.spotifyAuthStatus === "connected";
@@ -33,6 +42,28 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
       setActiveSource("playlistUrl");
     }
   }, [isSetupOpen, spotifyState.savedPlaylists.generatedPlaylistMessage]);
+
+  function openSetup() {
+    if (isSetupOpen) return;
+
+    navigate(
+      {
+        hash: location.hash,
+        pathname: location.pathname,
+        search: location.search,
+      },
+      {
+        state: {
+          ...historyState,
+          [spotifySetupHistoryStateKey]: setupHistoryEntryId,
+        },
+      },
+    );
+  }
+
+  function closeSetup() {
+    if (isSetupOpen) navigate(-1);
+  }
 
   const connectHint = isConnected
     ? accountType === "premium"
@@ -117,7 +148,7 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
 
           <ActionButton
             className={styles.spotifySetupOpenBtn}
-            onClick={() => setIsSetupOpen(true)}
+            onClick={openSetup}
             type="button"
             variant="neutral"
           >
@@ -131,7 +162,7 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
         activeSource={activeSource}
         currentSettings={currentSettings}
         isOpen={isSetupOpen}
-        onClose={() => setIsSetupOpen(false)}
+        onClose={closeSetup}
         onSourceChange={setActiveSource}
         spotifyState={spotifyState}
       />

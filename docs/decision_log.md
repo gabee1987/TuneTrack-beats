@@ -380,6 +380,26 @@ Reason:
 - room members already receive richer authoritative room state and do not need directory pushes
 - limiting the payload and audience avoids broadcasting gameplay or profile details unnecessarily
 
+### Music setup and nested playlist editors use one history record per depth
+
+The lobby Music Setup, playlist editor, and nested track editor participate in same-path
+browser history, matching the Settings behavior established by E13.
+
+Current rule:
+
+- opening Music Setup pushes one same-path router-state entry
+- opening the playlist editor pushes one same-path router-state entry
+- opening a track pushes a second entry owned by that playlist editor
+- save, cancel, close, browser Back, and Android Back remove only the top entry
+- closing the playlist editor removes its portal instead of leaving hidden interactive DOM
+
+Reason:
+
+- the stack unwinds one level at a time: track editor, playlist editor, Music Setup, then
+  room settings
+- programmatic and hardware/browser dismissal share the same ordering
+- removing closed portals reduces the risk of stale UI intercepting input
+
 ## Still Open
 
 ### Duplicate player names

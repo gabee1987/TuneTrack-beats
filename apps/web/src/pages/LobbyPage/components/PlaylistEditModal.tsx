@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { createPortal } from "react-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useI18n } from "../../../features/i18n";
 import {
   createFadeMotion,
@@ -9,6 +10,12 @@ import {
 } from "../../../features/motion";
 import { ActionButton } from "../../../features/ui/ActionButton";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
+import {
+  isHistoryState,
+  playlistEditorHistoryStateKey,
+  playlistTrackHistoryStateKey,
+  useCurrentHistoryState,
+} from "../hooks/playlistEditorHistory";
 import { usePlaylistEditor, type SortField } from "../hooks/usePlaylistEditor";
 import { PlaylistTrackDetailsSheet } from "./PlaylistTrackDetailsSheet";
 import { PlaylistTrackList } from "./PlaylistTrackList";
@@ -35,7 +42,13 @@ function createSheetMotion(reduceMotion: boolean) {
 export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
   const { t } = useI18n();
   const reduceMotion = useReducedMotionPreference();
-  const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const locationState = useCurrentHistoryState(location.state);
+  const historyEntryId = locationState[playlistEditorHistoryStateKey];
+  const selectedTrackId =
+    typeof historyEntryId === "string" ? getSelectedTrackId(locationState, historyEntryId) : null;
+  const isHistoryOpen = isOpen && typeof historyEntryId === "string";
 
   const {
     isLoading,
@@ -56,20 +69,51 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
   );
 
   const portalTarget = typeof document !== "undefined" ? document.body : null;
-  if (!portalTarget) return null;
+  if (!portalTarget || !isHistoryOpen) return null;
+
+  function navigateCurrentPath(state: Record<string, unknown>) {
+    navigate(
+      {
+        hash: location.hash,
+        pathname: location.pathname,
+        search: location.search,
+      },
+      { state },
+    );
+  }
+
+  function closePlaylistEditor() {
+    onClose();
+  }
+
+  function openTrackEditor(trackId: string) {
+    if (typeof historyEntryId !== "string") return;
+
+    navigateCurrentPath({
+      ...locationState,
+      [playlistEditorHistoryStateKey]: historyEntryId,
+      [playlistTrackHistoryStateKey]: { historyEntryId, trackId },
+    });
+  }
+
+  function closeTrackEditor() {
+    if (selectedTrackId) {
+      navigate(-1);
+    }
+  }
 
   return createPortal(
     <motion.div
-      animate={isOpen ? "animate" : "exit"}
+      animate="animate"
       className={styles.overlay}
       initial={false}
-      onClick={onClose}
-      style={{ pointerEvents: isOpen ? "auto" : "none" }}
+      onClick={closePlaylistEditor}
+      style={{ pointerEvents: "auto" }}
       transition={createStandardTransition(reduceMotion)}
       variants={createFadeMotion(reduceMotion)}
     >
       <motion.div
-        animate={isOpen ? "animate" : "exit"}
+        animate="animate"
         aria-label={t("lobby.playlist.editLabel")}
         aria-modal="true"
         className={styles.sheet}
@@ -89,7 +133,7 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
             )}
           </div>
           <div className={styles.headerActions}>
-            <CloseIconButton ariaLabel={t("lobby.playlist.close")} onClick={onClose} />
+            <CloseIconButton ariaLabel={t("lobby.playlist.close")} onClick={closePlaylistEditor} />
           </div>
         </div>
 
@@ -104,7 +148,7 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
           <div className={styles.emptyState}>{t("lobby.playlist.empty")}</div>
         ) : (
           <PlaylistTrackList
-            onOpenTrack={(track) => setSelectedTrackId(track.id)}
+            onOpenTrack={(track) => openTrackEditor(track.id)}
             onRemoveTrack={removeTrack}
             onToggleSelection={toggleSelection}
             selectedIds={selectedIds}
@@ -126,7 +170,7 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
         )}
 
         <PlaylistTrackDetailsSheet
-          onClose={() => setSelectedTrackId(null)}
+          onClose={closeTrackEditor}
           onSave={updateTrack}
           track={selectedTrack}
         />
@@ -134,6 +178,18 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
     </motion.div>,
     portalTarget,
   );
+}
+
+function getSelectedTrackId(
+  locationState: Record<string, unknown>,
+  historyEntryId: string,
+): string | null {
+  const entry = locationState[playlistTrackHistoryStateKey];
+  if (!isHistoryState(entry) || entry["historyEntryId"] !== historyEntryId) {
+    return null;
+  }
+
+  return typeof entry["trackId"] === "string" ? entry["trackId"] : null;
 }
 
 interface PlaylistSortBarProps {

@@ -190,9 +190,14 @@ A fifth, in `apps/web`:
 > presses Start on each client to guard against a stale exiting page intercepting input.
 > E13 opens the shared game Settings menu, drives browser back, and proves the menu closes
 > without navigating away from or remounting the active game route.
+> E14 completes a deterministic local Spotify authorization and playlist import, edits and
+> saves a track year, then proves the nested track, playlist, and Music Setup layers close
+> one at a time while the lobby remains active. The fake Spotify server now
+> serves only the canned E14 OAuth/import requests and continues to fail loudly on every
+> unexpected request.
 > Server Spotify endpoints target a local fail-loud sentinel, every scenario asserts it
-> received zero requests, and browser contexts install a fake Spotify SDK. WebKit and
-> E14-E15 remain open.
+> received zero unexpected requests, and browser contexts install a fake Spotify SDK. WebKit and
+> E15 remain open.
 
 ### 5.1 Tooling
 
@@ -239,7 +244,7 @@ service. The harness must therefore:
 | E11 | All players disconnect; after one configurable hour the abandoned room closes atomically; any earlier reconnect cancels cleanup            | Owner decision 2026-09-30           |
 | E12 | Host closes the room; both clients land on Home and Start is immediately usable                                                            | **F-27c**                           |
 | E13 | Open settings on the game page; press browser back; the panel closes and the game remains                                                  | **F-27**                            |
-| E14 | Open the playlist editor, open a song editor from it, edit the year, save, close both with back                                            | **F-25**, **F-27**                  |
+| E14 | Open Music Setup, then playlist and song editors; edit and save the year; close each layer back to room settings                           | **F-25**, **F-27**                  |
 | E15 | First-run session sees the timeline-tap hint after receiving a card                                                                        | Doc 10                              |
 
 E7 to E12 are the scenarios that would have caught the current stability defects, and they

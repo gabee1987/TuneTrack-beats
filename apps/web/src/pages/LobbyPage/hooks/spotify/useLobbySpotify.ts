@@ -1,7 +1,12 @@
 import { ServerToClientEvent, type PlaylistTracksPayload } from "@tunetrack/shared";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getSocketClient } from "../../../../services/socket/socketClient";
+import {
+  getHistoryStateFromPopState,
+  isHistoryState,
+  playlistEditorHistoryStateKey,
+} from "../playlistEditorHistory";
 import type { UseLobbySpotifyResult } from "./lobbySpotify.types";
 import {
   getQueuedTrackIdsFromPlaylistTracks,
@@ -17,6 +22,10 @@ import { useSpotifySmartSearch } from "./useSpotifySmartSearch";
 
 export function useLobbySpotify(): UseLobbySpotifyResult {
   const { roomId } = useParams<{ roomId: string }>();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const playlistEditorHistoryEntryId = useId();
+  const locationState = isHistoryState(location.state) ? location.state : {};
 
   const [queuedTrackIds, setQueuedTrackIds] = useState<Set<string>>(() => new Set());
   const [smartSearchQueuedTrackIds, setSmartSearchQueuedTrackIds] = useState<Set<string>>(
@@ -29,6 +38,16 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
 
   const currentPlaylistNameRef = useRef<string | undefined>(undefined);
   const generatedPlaylistMessageTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    function handlePopState(event: PopStateEvent) {
+      const userState = getHistoryStateFromPopState(event.state);
+      setIsEditModalOpen(userState[playlistEditorHistoryStateKey] === playlistEditorHistoryEntryId);
+    }
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [playlistEditorHistoryEntryId]);
 
   const showGeneratedPlaylistMessage = useCallback((message: string) => {
     if (generatedPlaylistMessageTimerRef.current) {
@@ -261,9 +280,28 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
       switchToSaveAsNew: savedPlaylists.switchToSaveAsNew,
     },
     queue: {
-      closeEditModal: () => setIsEditModalOpen(false),
+      closeEditModal: () => {
+        if (isEditModalOpen) navigate(-1);
+      },
       isEditModalOpen,
-      openEditModal: () => setIsEditModalOpen(true),
+      openEditModal: () => {
+        if (isEditModalOpen) return;
+
+        navigate(
+          {
+            hash: location.hash,
+            pathname: location.pathname,
+            search: location.search,
+          },
+          {
+            state: {
+              ...locationState,
+              [playlistEditorHistoryStateKey]: playlistEditorHistoryEntryId,
+            },
+          },
+        );
+        setIsEditModalOpen(true);
+      },
     },
   };
 }
