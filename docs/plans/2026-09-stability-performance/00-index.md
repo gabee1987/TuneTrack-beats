@@ -1,7 +1,8 @@
 # TuneTrack Beats — Stability, Performance & UX Hardening Programme
 
 > **Created:** 2026-09-08
-> **Status:** Active implementation. E1-E14 are complete; E15 is the next bounded batch.
+> **Status:** Active implementation. E1-E15 are complete in Chromium; WebKit coverage and
+> the remaining programme work stay open.
 > **Authority:** This programme is subordinate to [`CLAUDE.md`](../../../CLAUDE.md) and
 > [`AGENT.md`](../../../AGENT.md). Where this programme and those documents disagree,
 > the stricter rule applies and the conflict must be raised before implementation.

@@ -13,6 +13,9 @@ import {
   useState,
   type CSSProperties,
 } from "react";
+import { HintBubble } from "../../../features/hints/HintBubble";
+import { useFirstRunHint } from "../../../features/hints/useFirstRunHint";
+import { useI18n } from "../../../features/i18n";
 import {
   MotionPresence,
   timelineCelebrationTransitionContract,
@@ -42,6 +45,7 @@ interface TimelinePanelProps {
 }
 
 export function TimelinePanel({ model }: TimelinePanelProps) {
+  const { t } = useI18n();
   const layoutMode = usePageLayoutMode();
   const timelineView = model.render.timelineView ?? "active";
   const {
@@ -86,6 +90,11 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
   const previewSlotIndex = dragModel.previewSlotIndex;
 
   const [cardForInfo, setCardForInfo] = useState<GamePageCard | null>(null);
+  const [hintAnchor, setHintAnchor] = useState<HTMLElement | null>(null);
+  const timelineTapHint = useFirstRunHint(
+    "game-timeline-tap",
+    model.render.isOwnTimeline && model.render.timelineCards.length > 0 && hintAnchor !== null,
+  );
   const [dragOverlaySize, setDragOverlaySize] = useState<{
     height: number;
     width: number;
@@ -272,6 +281,7 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
           ref={timelineRowRef}
         >
           <TimelinePanelItems
+            hintAnchorRef={setHintAnchor}
             isDraggingPreviewCard={isDraggingPreviewCard}
             model={itemsModel}
             onCardInfoRequest={(card) => setCardForInfo(card)}
@@ -309,6 +319,15 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
           ) : null}
         </DragOverlay>
       </DndContext>
+      {timelineTapHint.isVisible && hintAnchor ? (
+        <HintBubble
+          anchor={hintAnchor}
+          body={t("hints.gameTimelineTap.body")}
+          dismissLabel={t("hints.dismiss")}
+          onDismiss={timelineTapHint.dismiss}
+          title={t("hints.gameTimelineTap.title")}
+        />
+      ) : null}
       <TimelinePanelFlyAnimation
         flyAnimationState={flyAnimationState}
         showDevAlbumInfo={model.render.showDevAlbumInfo}

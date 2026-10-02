@@ -1,0 +1,46 @@
+.bubble {
+  position: fixed;
+  z-index: var(--z-hint);
+  display: flex;
+  width: min(280px, calc(100vw - 32px));
+  padding: 10px 8px 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--color-accent-brand) 48%, var(--color-border-subtle));
+  border-radius: var(--radius-md);
+  background: var(--color-surface-elevated-solid);
+  box-shadow: var(--shadow-overlay);
+  color: var(--color-text-primary);
+  user-select: text;
+}
+
+.bubble::before {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  border-top: 1px solid
+    color-mix(in srgb, var(--color-accent-brand) 48%, var(--color-border-subtle));
+  border-left: 1px solid
+    color-mix(in srgb, var(--color-accent-brand) 48%, var(--color-border-subtle));
+  background: var(--color-surface-elevated-solid);
+  content: "";
+  transform: translate(-50%, 6px) rotate(45deg);
+}
+
+.copy {
+  min-width: 0;
+  padding: 3px 4px 2px 0;
+}
+
+.title {
+  display: block;
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
+}
+
+.body {
+  margin: 2px 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+}

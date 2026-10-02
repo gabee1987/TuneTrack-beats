@@ -1,5 +1,13 @@
 # 10 — Interactive First-Run Hint System
 
+> **Implementation state (2026-10-02):** The first vertical slice is live. A fresh player
+> sees the `game-timeline-tap` hint on their own first placed card after the 1.5-second
+> quiet period. It is anchored to the live card, persists its seen state safely, dismisses
+> by button, outside interaction, Escape, anchor interaction, or a 12-second timeout, and
+> can be reset from Settings. English and Hungarian copy and Chromium E15 coverage are in
+> place. The shared registry/scheduler, master toggle, history-back dismissal, remaining
+> catalogue, two-per-visit cap, and dedicated bubble/anchor component coverage remain open.
+
 > New capability. Nothing comparable exists in the codebase: a search for
 > `onboard`, `tutorial`, `coachmark`, `firstRun` and `hintSystem` across
 > `apps/web/src` returns no results.
@@ -228,7 +236,8 @@ that, the catalogue is too large.
 - [ ] Under `prefers-reduced-motion` hints fade rather than move.
 - [ ] Blocked storage degrades to enabled-but-unremembered with no error.
 - [ ] Feature chunk under 6 kB gzip and lazily loaded.
-- [ ] E2E: a first-run session reaches a placed card and sees `game-timeline-tap`.
+- [x] E2E: a first-run session reaches a placed card, sees `game-timeline-tap`, dismisses
+      it, and does not see it again after reload.
 
 ## 10. Risk register
 

@@ -40,6 +40,7 @@ function buildModel(overrides: {
       showDevGenreInfo: false,
       showDevYearInfo: false,
       showHint: false,
+      isOwnTimeline: true,
       theme: "dark",
       timelineCards: overrides.timelineCards,
       timelineView: "active",

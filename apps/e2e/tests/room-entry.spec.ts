@@ -264,6 +264,41 @@ test("both players see the winner when the target card count is reached", async 
   }
 });
 
+test("a first-run player sees the timeline card details hint", async ({ browser }) => {
+  const guest = await createNamedPage(browser, "Hint Guest");
+  const host = await createNamedPage(browser, "Hint Host");
+
+  try {
+    await guest.page.goto("/play");
+    const roomId = await hostRoom(host.page);
+    const directoryRoom = guest.page.getByRole("button", {
+      name: new RegExp(escapeRegex(roomId)),
+    });
+
+    await expect(directoryRoom).toBeVisible();
+    await directoryRoom.click();
+    await expectLobbyPlayerCount(guest.page, 2);
+    await expectLobbyPlayerCount(host.page, 2);
+
+    await host.page.getByRole("button", { name: "Start Game" }).first().click();
+    await expectGamePage(host.page, roomId);
+
+    const timelineHint = host.page.getByRole("dialog", {
+      name: "Your timeline",
+    });
+    await expect(timelineHint).toContainText("Tap a placed card to see its track details.");
+    await timelineHint.getByRole("button", { name: "Dismiss hint" }).click();
+    await expect(timelineHint).toHaveCount(0);
+
+    await host.page.reload();
+    await expectGamePage(host.page, roomId);
+    await host.page.waitForTimeout(2_000);
+    await expect(timelineHint).toHaveCount(0);
+  } finally {
+    await Promise.all([host.context.close(), guest.context.close()]);
+  }
+});
+
 test("a guest reconnects inside the recovery window and continues playing", async ({ browser }) => {
   const guest = await createNamedPage(browser, "Recovery Guest");
   const host = await createNamedPage(browser, "Recovery Host");

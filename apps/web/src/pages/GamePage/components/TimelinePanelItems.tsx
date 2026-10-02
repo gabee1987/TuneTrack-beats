@@ -5,6 +5,7 @@ import { buildTimelineSortableItemViewModels } from "../gamePageTimelineItemView
 import { TimelineSortableItem } from "./TimelineSortableItem";
 
 interface TimelinePanelItemsProps {
+  hintAnchorRef?: (node: HTMLElement | null) => void;
   isDraggingPreviewCard: boolean;
   model: TimelinePanelItemsModel;
   onCardInfoRequest?: (card: GamePageCard) => void;
@@ -24,6 +25,7 @@ interface TimelinePanelItemsProps {
 }
 
 function TimelinePanelItemsComponent({
+  hintAnchorRef,
   isDraggingPreviewCard,
   model,
   onCardInfoRequest,
@@ -35,6 +37,7 @@ function TimelinePanelItemsComponent({
     () => buildTimelineSortableItemViewModels(orderedItemIds, timelineItemMap, model),
     [model, orderedItemIds, timelineItemMap],
   );
+  const firstTimelineItemId = itemViewModels.find((item) => !item.isPreview)?.id;
 
   return (
     <SortableContext
@@ -48,6 +51,7 @@ function TimelinePanelItemsComponent({
           hiddenCardMode={model.hiddenCardMode}
           revealedCardMode={model.revealedCardMode}
           id={item.id}
+          {...(item.id === firstTimelineItemId && hintAnchorRef ? { hintAnchorRef } : {})}
           isChallengeSlot={item.isChallengeSlot}
           isDraggingPreviewCard={isDraggingPreviewCard}
           isOriginalSlot={item.isOriginalSlot}

@@ -21,6 +21,7 @@ interface TimelineSortableItemProps {
   hiddenCardMode: HiddenCardMode;
   revealedCardMode: RevealedCardMode;
   id: string;
+  hintAnchorRef?: (node: HTMLElement | null) => void;
   isChallengeSlot: boolean;
   isDraggingPreviewCard: boolean;
   isOriginalSlot: boolean;
@@ -46,6 +47,7 @@ function TimelineSortableItemComponent({
   hiddenCardMode,
   revealedCardMode,
   id,
+  hintAnchorRef,
   isChallengeSlot,
   isDraggingPreviewCard,
   isOriginalSlot,
@@ -104,7 +106,10 @@ function TimelineSortableItemComponent({
 
   return (
     <div
-      ref={setNodeRef}
+      ref={(node) => {
+        setNodeRef(node);
+        hintAnchorRef?.(node);
+      }}
       className={`${styles.timelineItem} ${
         isPreview ? styles.timelineItemPreview : ""
       } ${isDragging && isPreview ? styles.timelineItemPreviewDragging : ""} ${

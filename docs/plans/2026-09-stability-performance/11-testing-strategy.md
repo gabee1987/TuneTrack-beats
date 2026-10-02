@@ -195,9 +195,11 @@ A fifth, in `apps/web`:
 > one at a time while the lobby remains active. The fake Spotify server now
 > serves only the canned E14 OAuth/import requests and continues to fail loudly on every
 > unexpected request.
-> Server Spotify endpoints target a local fail-loud sentinel, every scenario asserts it
-> received zero unexpected requests, and browser contexts install a fake Spotify SDK. WebKit and
-> E15 remain open.
+> E15 starts a fresh two-client game, verifies the local player's first timeline card gains
+> the delayed timeline-details hint, dismisses it, reloads, and proves the persisted hint
+> does not appear again. Server Spotify endpoints target a local fail-loud sentinel, every
+> scenario asserts it received zero unexpected requests, and browser contexts install a
+> fake Spotify SDK. Chromium E1-E15 are complete; WebKit remains open.
 
 ### 5.1 Tooling
 

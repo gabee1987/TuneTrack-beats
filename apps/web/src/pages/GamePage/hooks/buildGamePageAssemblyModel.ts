@@ -110,6 +110,9 @@ export function buildGamePageAssemblyModel(
         showDevYearInfo: controller.isHost && controller.showDevYearInfo,
         showHint:
           controller.showTimelineHints && controller.visibleTimelineHint.length > 0,
+        isOwnTimeline:
+          controller.currentPlayerId !== null &&
+          controller.visibleTimelinePlayerId === controller.currentPlayerId,
         theme: controller.theme,
         timelineCards: controller.visibleTimelineCards,
         timelineView: controller.timelineView,

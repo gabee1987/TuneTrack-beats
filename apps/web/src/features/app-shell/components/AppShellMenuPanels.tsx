@@ -1,7 +1,10 @@
+import { useState } from "react";
+import { resetHints } from "../../hints/hintState";
 import type { ViewPreferences } from "../../preferences/uiPreferences";
 import type { AppShellMenuPreferencesState, AppShellMenuTab } from "../AppShellMenu.types";
 import { useI18n } from "../../i18n";
 import { ToggleSwitch } from "../../ui/ToggleSwitch";
+import { Button } from "../../ui/primitives";
 import styles from "../AppShellMenu.module.css";
 
 interface AppShellMenuPanelsProps {
@@ -48,6 +51,7 @@ const developerFields: Array<{
 
 export function AppShellMenuPanels({ activeTab, preferencesState }: AppShellMenuPanelsProps) {
   const { availableLanguages, languageId, setLanguage, t } = useI18n();
+  const [hasResetHints, setHasResetHints] = useState(false);
 
   if (activeTab?.id === "language") {
     return (
@@ -152,6 +156,26 @@ export function AppShellMenuPanels({ activeTab, preferencesState }: AppShellMenu
               <span className={styles.cardStylePreviewTitle}>Example Track</span>
             </div>
           </div>
+        </div>
+
+        <div className={styles.section}>
+          <h3 className={styles.sectionTitle}>{t("appShell.menu.hintsTitle")}</h3>
+          <p className={styles.sectionDescription}>{t("appShell.menu.hintsDescription")}</p>
+          <Button
+            onClick={() => {
+              resetHints();
+              setHasResetHints(true);
+            }}
+            type="button"
+            variant="secondary"
+          >
+            {t("appShell.menu.resetHints")}
+          </Button>
+          {hasResetHints ? (
+            <p aria-live="polite" className={styles.sectionDescription}>
+              {t("appShell.menu.hintsResetConfirmation")}
+            </p>
+          ) : null}
         </div>
       </>
     );

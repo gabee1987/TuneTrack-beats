@@ -114,6 +114,7 @@ export interface TimelinePanelRenderModel {
   showDevGenreInfo: boolean;
   showDevYearInfo: boolean;
   showHint: boolean;
+  isOwnTimeline: boolean;
   theme: ThemeId;
   timelineCards: TimelineCardPublic[];
   timelineView?: TimelineView;
