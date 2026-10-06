@@ -1,0 +1,166 @@
+# TuneTrack Beats — Project Review Programme (2026-10)
+
+> **Created:** 2026-10-06 on branch `fix/stability-hardening` at `629dc8a`.
+> **Status:** Phases 1 (review + roadmap), 2 (documentation reset) and 3 (agent skills and tooling, `03-agent-skills-and-tooling.md`) complete. Phases 4–6
+> produce documents only; code changes are handed to implementation agents from those documents.
+> **Authority:** subordinate to [`CLAUDE.md`](../../../CLAUDE.md). Where this programme and
+> `CLAUDE.md` disagree, the stricter rule applies and the conflict is raised, not resolved
+> silently.
+> **Relationship to the 2026-09 programme:** this review re-audited every open item of the
+> 2026-09 remediation programme. On 2026-10-06 its documents were trimmed to open work, renumbered
+> `10`–`20` and moved into this folder (§8); the original folder is archived under
+> `docs/archive/2026-09-stability-performance/` and must not be read.
+
+## 1. Purpose
+
+A full review of the codebase, the product experience and the documentation, followed by a set of
+implementation-ready documents that let coding agents work consistently and cheaply on:
+
+1. **Stability and security** of the realtime backend.
+2. **Performance** of the mobile client (startup, render churn, motion, viewport).
+3. **A host creation flow that a first-time host understands without help.**
+4. **Documentation and skills** that give an agent maximum signal per token.
+5. **Codebase structure and tests** that keep all of the above true.
+
+## 2. Reading order for an agent
+
+1. `CLAUDE.md` (auto-loaded).
+2. This file.
+3. [`01-review-findings.md`](./01-review-findings.md) — the findings register. Every finding has
+   an ID (`B-`, `F-`, `U-`, `D-`, `T-`), a priority and an owning phase.
+4. The document that owns your task: the phase document (§4) once it exists, the
+   work-breakdown document `10`–`19` (§8), or `20-bug-register.md` for a defect.
+5. `docs/rules/*.md` only for the layer you are changing.
+
+Do not read `review-input/` unless you are **authoring** a phase document; it is raw audit material
+and is deleted when Phase 6 is written. Do not read `docs/archive/`.
+
+## 3. Verified baseline (2026-10-06)
+
+| Check                      | Result                                                                                |
+| -------------------------- | ------------------------------------------------------------------------------------- |
+| `npm run build`            | passes                                                                                |
+| `npm run typecheck`        | passes (server and engine **tests** are not typechecked, see T-03)                    |
+| `npm run lint`             | passes (no boundary rules, see T-02)                                                  |
+| `npm test`                 | 400 passing: server 137/23 files, web 230/58, engine 31/2, shared 2/1                 |
+| E2E                        | 16 Playwright scenarios, Chromium desktop only                                        |
+| Eager home-screen JS + CSS | 462 kB raw / ~147 kB gzip (framer-motion and router eager)                            |
+| P0 findings                | 2 (both verified in code): B-01 OAuth state forgery, B-02 kick-during-challenge crash |
+
+Full numbers and the per-finding evidence are in `01-review-findings.md` §1.
+
+## 4. Phases
+
+Each phase ends with a document set the owner verifies, after which the session can be compacted.
+Phases 2–6 are documentation deliverables. Implementation of any phase's content is a separate,
+agent-executed step driven by that phase's document.
+
+| Phase | Deliverable                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Owns findings                                                               | Verification by owner                                                                                                                                                                         |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1** | **Review and roadmap** (this folder: `00-index.md`, `01-review-findings.md`, `review-input/`). Done.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | —                                                                           | Read §5 decisions; confirm or amend them.                                                                                                                                                     |
+| **2** | **Documentation reset. Done 2026-10-06.** Rewrite `CLAUDE.md` (≈170 lines: corrected layer tables incl. `spotify/`, `features/*`, `apps/e2e`; one file-size rule; one touch-target rule; disconnect/host-transfer/all-offline rule stated; absorb AGENT.md's unique working-agreement rules). Delete `AGENT.md`. Trim both engineering-rules files to layer-specific rules only and fix links. Correct `decision_log.md`. Archive the two architecture docs, `01-audit-findings.md`, `gamepage-remaining-refactors.md` with the required headers. Fold the 2026-09 programme into one live plan: each numbered doc reduced to open phases plus a 3–5-line "shipped" note; corrected exit criteria; current numbers. Fix the two confidentiality defects in the Railway doc. Trim root `README.md` and `docs/README.md`.                                                                                                                                          | D-01 … D-05                                                                 | `docs/README.md` reading order ≤ 4 steps; every path in CLAUDE.md and rules resolves; no contradiction list item remains.                                                                     |
+| **3** | **Agent skills and tooling.** **Done 2026-10-06** → `03-agent-skills-and-tooling.md`; eleven skills under `.claude/skills/` (the ten below plus `device-checklist`), `.claude/settings.json`, lint and `verify` specs. Original brief: create `.claude/skills/<name>/SKILL.md` for: `verify` (green gate, build-before-run trap, E2E harness facts), `add-socket-action` (shared event + schema + ack + idempotency + i18n + tests), `add-ui-component` (primitives, tokens, motion contract, component test), `add-hint`, `write-tests` (per-layer patterns, fixtures, no real sleeps), `e2e-scenario`, `plan-status` (how to mark work shipped without creating changelog bloat), `archive-doc`, `design-token-migration`, `perf-check` (bundle/render measurement protocol). Commit a project `.claude/settings.json` with the read-only allow rules. Specify (not implement) the boundary-lint ruleset and root `verify` script for an implementation agent. | D-06, T-01, T-02                                                            | Each skill ≤ 150 lines, names only files that exist, and has a trigger description an agent would match.                                                                                      |
+| **4** | **Host creation flow UX specification (streamline, not restructure — decision 5).** Keeps the existing screens and navigation. Specifies, screen by screen for the mobile and desktop assemblies: one Start button; read-only room code with Copy/Share; players and music status visible on the first lobby screen; explicit reasons on every disabled primary action; a state and feedback matrix (loading/success/error/empty/offline); a terminology glossary and i18n key plan; honest Spotify login and Free-tier copy; the deck-size indicator and warning (decision 6); Start gating with the explicit practice-deck choice (decision 7); curation aids ("Needs check" filter and stepper, "Release year" label); guest lobby copy and handover; hints catalogue changes; accessibility requirements; acceptance criteria and E2E scenarios; rollout order.                                                                                              | U-01 … U-14, F-06 (back-button coverage), F-16 (lobby assembly logic), F-24 | Primary host actions reachable on a 667 px viewport without scrolling; every screen has all five states defined; exactly one Start control per lobby; no screen or route is added or removed. |
+| **5** | **Performance and robustness plan.** Budgets (eager gzip ≤ 200 kB; no `layout`-animated page containers; motion ≤ 500 ms; one viewport store; zero per-event layout reads during drag), measurement protocol, and ordered work packages with acceptance tests for: backend P0/P1 (B-01 … B-07, B-09 … B-12, B-14 … B-20, B-24, B-26, B-27), client connection state machine and game-page disconnect feedback (F-02, F-17, F-20, F-21), render churn (F-08, F-09, F-12, F-13), viewport (F-10), playback runtime cost (F-11), startup (F-14), motion budget (F-03, F-04, F-15), z-index scale (F-05), overlay host (F-06), narrow-event protocol (B-16). Corrects the items in documents `10`–`16` that the review marked "now wrong" and sets their numeric budgets.                                                                                                                                                                                            | listed                                                                      | Every work package names its proving test; budgets are numeric and reproducible with a documented command.                                                                                    |
+| **6** | **Codebase structure and test plan.** File splits (B-29, F-26), façade collapse (B-08), duplication removal (B-21, B-22), shared-contract derivation from schemas (B-13, B-23), dead code (F-23, F-07 dead buttons, B-17), test additions and restructuring (T-03 … T-12), CI workflow, coverage ratchet. Packaged as agent-sized work items with "before/after" verification. Deletes `review-input/`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | listed                                                                      | No source file > 700 lines after the plan executes (decision 3); every work item ≤ one agent session.                                                                                         |
+
+### Hotfix track (independent of the phases, ready now)
+
+These findings are small, isolated and fully specified in `01-review-findings.md`. They can be
+handed to an implementation agent immediately, each with its own test:
+
+| ID   | Fix                                                                                                                                    | Proof                                                                                                                                    |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| B-01 | Host + member check on `request_spotify_auth_url`; server-side single-use nonce for OAuth `state`; re-check host in the callback.      | Server test: forged/garbage state and non-host completion are rejected; no `setHostTokens` call.                                         |
+| B-02 | Engine `removePlayer` handles `challenge` and `reveal` phases; `rooms/` uses only the engine function.                                 | Engine + server tests: kick the placer during open and claimed challenge and during reveal; timer fires without throwing; game advances. |
+| B-11 | Guard every timer callback (log, never throw); add `uncaughtException`/`unhandledRejection` handlers that log and exit cleanly.        | Server test: a throwing timer callback is logged and the process survives.                                                               |
+| B-03 | Move the Spotify token/session clear after the host check in `closeRoom`.                                                              | Server test: non-host `close_room` leaves tokens intact.                                                                                 |
+| B-27 | Restrict `artworkUrl`/`previewUrl` schemas to `https:`.                                                                                | Schema contract test.                                                                                                                    |
+| F-01 | Reuse the `sessionId.ts` UUID fallback in `emitAction`.                                                                                | Unit test with `crypto.randomUUID` undefined.                                                                                            |
+| D-03 | Replace the production hostname and the pasted chat text in the Railway doc; replace the LAN address in `apps/server/vitest.setup.ts`. | Grep shows placeholders only.                                                                                                            |
+
+## 5. Owner decisions (taken 2026-10-06)
+
+These are binding for Phases 2–6 and for every implementation agent working from this programme.
+Where a decision changes a product rule, Phase 2 writes it into `CLAUDE.md` and `decision_log.md`.
+
+| #   | Decision                                                                                        | Outcome                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| --- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | One live plan or two?                                                                           | **One.** Phase 2 moves the trimmed 2026-09 remediation docs into this folder (renumbered), archives the old folder with a header, and this `00-index.md` becomes the single entry point.                                                                                                                                                                                                                                                                            |
+| 2   | Touch-target rule.                                                                              | **48 px**, stated once (matches `--size-touch-target` and `design_system.md`). The 44 px figure is removed from `CLAUDE.md`.                                                                                                                                                                                                                                                                                                                                        |
+| 3   | File-size rule.                                                                                 | **700 lines = must split**, stated once. Soft limits per type stay as guidance (component ~200, controller hook ~300, service ~300, utility ~150). Today only `RoomService.ts` (718) and `useSpotifyPlaybackSdk.ts` (746) violate the hard rule; the other splits in B-29/F-26 are maintainability work, not rule violations.                                                                                                                                       |
+| 4   | `AGENT.md`.                                                                                     | **Merge its unique rules into `CLAUDE.md` and delete it.**                                                                                                                                                                                                                                                                                                                                                                                                          |
+| 5   | Host creation flow (Phase 4 scope).                                                             | **Streamline, do not restructure.** Keep the current screens and navigation (Home → Play → Lobby → Music setup). Phase 4 specifies targeted clarity fixes within that structure: one Start button, read-only code with Copy/Share, players and music status visible without scrolling, clear disabled-state reasons, consistent terminology, honest Spotify login copy, better feedback and curation aids. No one-tap-host redesign, no wizard, no deck-first flow. |
+| 6   | Deck exhaustion (B-06, game rule).                                                              | **Reshuffle.** When the deck is empty, all cards discarded during the game (wrong placements and TT skips) are reshuffled into a new deck; cards on timelines stay out. In addition the lobby shows **how many cards the deck needs** for the current player count and win target, and warns when the deck is smaller.                                                                                                                                              |
+| 7   | Start with no deck (U-01).                                                                      | **Block Start until a deck exists**, with an explicit "Practice deck (no audio, 40 songs)" option the host must choose; never a silent fallback.                                                                                                                                                                                                                                                                                                                    |
+| 8   | Host `skip_turn` scope (B-25).                                                                  | **Any player, any time.** The host may skip the active turn regardless of connection state. Recorded in `CLAUDE.md` and `decision_log.md` (2026-10-06); `12-backend-stability-and-sessions.md` §1 wording corrected.                                                                                                                                                                                                                                                |
+| 9   | PII in logs and audit (B-18).                                                                   | **Keep as is** for the current trusted-party deployment. Revisit before any public or client-facing deployment; the compliance note in §6 stands. Dropping the unused `user-read-email` scope remains recommended as a no-cost minimisation and is left to Phase 5 to propose.                                                                                                                                                                                      |
+| 10  | Spotify login persistence beyond one room (`16-spotify-session-and-playback.md`, tokens phase). | **Stays per room**, gated on compliance review. Phase 4 makes the per-room login explicit in the UI.                                                                                                                                                                                                                                                                                                                                                                |
+
+## 6. Compliance and security notes
+
+- Spotify remains a third-party processor; Axiom is a third-party US-hosted log sink. Any change
+  that broadens what is stored or shipped about a player (tokens beyond a room lifetime, display
+  names or queries in audit events) is new processing and needs review before a client-facing
+  deployment (GDPR Art. 5(1)(c), Art. 32, Art. 44; ISO/IEC 27001 Annex A.8).
+- B-01 is an authorisation and integrity defect in an OAuth flow and should be fixed before any
+  further external test session.
+- Test fixtures, documentation and examples use placeholder data only (`TEST_ROOM_1`, `12345`,
+  `Player One`, `YOUR-RAILWAY-DOMAIN`). D-03 lists the current exceptions.
+- No new third-party service is proposed by this programme. GitHub Actions (Phase 6, CI) runs on
+  infrastructure the repository already lives on and needs no secrets because Spotify is fully
+  stubbed; note it in the compliance file regardless.
+
+## 7. What this programme deliberately does not do
+
+- No gameplay rule changes beyond decisions 6 (deck reshuffle and deck-size indicator) and 8 (host
+  may skip any turn), and the already-planned in-game metadata correction
+  (`17-room-and-player-identity-flow.md` Phase 4).
+- No persistence layer for room state; in-memory ownership is fixed, not replaced.
+- No desktop redesign; desktop must not regress while the mobile host flow is reworked.
+- No implementation inside this programme's sessions; every phase hands documents to agents.
+
+## 8. Work-breakdown documents (folded from the 2026-09 programme on 2026-10-06)
+
+Each document keeps its open phases in full and reduces shipped phases to a short "Shipped"
+note with the proving test. Phase 5 and Phase 6 of this programme set budgets, order and
+acceptance tests on top of these documents; they do not replace them. When a phase of one of
+these documents ships, update that document (shipped note + proving test), this table, and
+`20-bug-register.md`; do not append changelogs.
+
+| Doc                                     | Was (2026-09) | Status (2026-10-06)                                                                                                                                                                                                           |
+| --------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `10-bundle-and-startup.md`              | 02            | Phases 1–5 open (no `LazyMotion`, `vendor-zod` branch and 6 CSS barrels remain, both i18n catalogues eager). Phase 6 shipped 2026-09-17. Re-measure before starting; budgets come from Phase 5.                               |
+| `11-runtime-and-motion-performance.md`  | 03            | All phases open; nothing started. Cleanest remaining plan.                                                                                                                                                                    |
+| `12-backend-stability-and-sessions.md`  | 04            | Phase 1 shipped (`disconnectLifecycle.test.ts`, E10/E11). Phases 2, 3.1, 3.2, 4, 5 open; 3.3 shipped. Hotfix items B-01, B-02, B-03, B-11 overlap this document and may land first.                                           |
+| `13-network-protocol-and-resilience.md` | 05            | Phase 1 partial, Phase 2 **open and small** (durable session id still deleted on room close), Phases 3–4 shipped (acks + `requestId`), Phases 5–6 open.                                                                       |
+| `14-navigation-and-overlays.md`         | 06            | Phase 1 open; 3.1 and 3.3 open, 3.2 shipped; overlay host open (four overlays outside history); Phases 4–5 shipped; Phase 6 contract unwritten.                                                                               |
+| `15-design-system-consolidation.md`     | 07            | Phases 1–5 open; Phase 6 partial (`/dev/ui` exists). Guard tests exist with allowlists.                                                                                                                                       |
+| `16-spotify-session-and-playback.md`    | 08            | Phases 1–2 shipped except Free-tier parity (3.5) and Media Session (3.6). Phase 3 gated by decision 10. Phase 4 open (`useSpotifyPlaybackSdk.ts` 746 lines).                                                                  |
+| `17-room-and-player-identity-flow.md`   | 09            | Phases 1–2 shipped, Phase 3 two layout items open, Phase 4 (in-game metadata correction) open — the only engine change in the programme, Phase 5 three stale references.                                                      |
+| `18-onboarding-hint-system.md`          | 10            | Shipped (11 hints, settings, en/hu, E15). Open: history-back dismissal, anchor visibility, replay UI, bubble tests, `home-start` hint, budget check. Catalogue rules remain normative.                                        |
+| `19-testing-strategy.md`                | 11            | Phase 1 shipped; Phase 2 three of four guards; Phase 3 Chromium only, one 848-line spec to split; Phase 4 two of eleven files; Phase 5 (coverage, CI, root `verify`) open. Phase 3 of this programme turns §8/§9 into skills. |
+| `20-bug-register.md`                    | 12            | Accurate. B2, B8, B14, B18, B4, B3, B11 active; thirteen resolved; three tech-debt notes added.                                                                                                                               |
+
+### Programme exit criteria (corrected 2026-10-06)
+
+- [ ] Eager home-screen bundle ≤ 200 kB gzip with framer-motion off the eager path (`10`).
+- [ ] `vendor-zod` absent from the web bundle (`10`).
+- [ ] No raw `z-index` literal in CSS modules; `zIndexScale` guard exists (`14`).
+- [ ] One button, one icon-button and one dialog/sheet component in use (`15`).
+- [ ] Browser and Android Back close the topmost overlay — partial: settings, Music Setup,
+      playlist and track editors done; `SongInfoModal`, kick confirm, `RoomResetModal`,
+      `BottomSheet` open (`14`).
+- [x] Host reconnect rejoins the same room and identity — proven by E2E E8. [ ] Server
+      integration test still missing (`12`, `13`).
+- [x] In-game disconnect retained, offline state visible, host can skip (E10,
+      `disconnectLifecycle.test.ts`).
+- [x] All-players-offline room closes after one hour (E11).
+- [ ] Spotify authorisation beyond one room — gated by decision 10 (`16`).
+- [x] Playback can be started, paused, resumed and restarted at any point (B7/B9, 2026-09-09).
+- [x] Display name is set outside the room flow and persists (B12, 2026-09-16).
+- [x] First-run hints appear once, are dismissible and resettable (E15).
+- [ ] Every page shows a structure-matching skeleton while loading (`15`).
+- [ ] Test suite: component tests for every primitive and overlay (partial); integration tests for
+      connect/disconnect/reconnect/transfer/close (server + E2E done); E2E create, join, place,
+      challenge, reveal, win (done, Chromium only) (`19`).

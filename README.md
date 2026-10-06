@@ -1,151 +1,56 @@
 # TuneTrack Beats
 
-TuneTrack Beats is a real-time multiplayer music party game where players place
-songs into a timeline based on their release date. Built with a mobile-first,
-browser-based experience and smooth, interactive gameplay.
+TuneTrack Beats is a real-time multiplayer music party game: players place songs on a
+timeline by release year. It is mobile-first, runs in the browser with no install, and the
+server is the single source of truth for every room.
 
-## Vision
-
-TuneTrack Beats aims to create a frictionless digital party-game experience that
-feels tactile, social, and easy to start from any browser.
-
-Core product goals:
-- zero-install browser gameplay
-- mobile-first party UX
-- realtime multiplayer rooms
-- server-authoritative game state
-- timeline-based music guessing gameplay
-- extensible playback and storage architecture
-
-## Tech Stack
-
-Frontend:
-- React
-- TypeScript
-- Vite
-- Framer Motion
-- Socket.IO Client
-- Zustand
-- CSS Modules
-
-Backend:
-- Node.js
-- TypeScript
-- Express
-- Socket.IO
-- Zod
-- Pino
-
-Shared/domain:
-- npm workspaces monorepo
-- shared DTO/event/schema package
-- framework-independent game-engine package
-
-Testing/tooling:
-- Vitest
-- ESLint
-- Prettier
-
-## Project Structure
+## Project structure
 
 ```txt
 apps/
-  web/             # React/Vite frontend
+  web/             # React + Vite frontend (PWA)
   server/          # Express + Socket.IO backend
+  e2e/             # Playwright scenarios against a fake Spotify server
 packages/
-  shared/          # Shared DTOs, event names, schemas, constants
+  shared/          # Shared contracts, event names, Zod schemas, constants
   game-engine/     # Framework-independent gameplay rules
-docs/              # See docs/README.md - rules, architecture, live plans, archive
+docs/              # Start at docs/README.md: rules, live plan, operations, archive
 ```
 
-## Local Development
+## Local development
 
-### Prerequisites
-
-- Node.js 20+
-- npm 10+
-
-### Install Dependencies
+Prerequisites: Node.js 20+, npm 10+.
 
 ```bash
 npm install
+npm run dev          # builds packages/shared and packages/game-engine, then starts server + web
 ```
 
-### Start The App
+- Web app: `http://localhost:5173`
+- Backend health: `http://localhost:3001/health`
+- Spotify features need the variables in `apps/server/.env.example` copied to
+  `apps/server/.env` with your own development app values.
 
-Start frontend and backend together from the repo root:
+`packages/shared` and `packages/game-engine` are consumed from `dist/` at runtime. After
+editing either package, rebuild it (`npm run build -w @tunetrack/shared`) before running the
+server or the E2E suite; `npm run dev` and `npm run e2e` do this automatically.
 
-```bash
-npm run dev
-```
-
-Open the web app:
-
-```txt
-http://localhost:5173
-```
-
-Backend health endpoint:
-
-```txt
-http://localhost:3001/health
-```
-
-### Useful Commands
-
-Run all validation commands from the repo root:
+## Commands (repo root)
 
 ```bash
 npm run typecheck
 npm run lint
-npm run test
+npm test
 npm run build
+npm run e2e          # Playwright, builds server and web first
+npm run e2e:headed
+npm run format       # Prettier, includes markdown
 ```
 
-Run one workspace directly:
-
-```bash
-npm run dev -w apps/web
-npm run dev -w apps/server
-```
-
-## Development Principles
-
-- Keep game rules in `packages/game-engine`, not in React components or Socket.IO
-  handlers.
-- Keep shared event names, payload types, and validation schemas in
-  `packages/shared`.
-- Treat the server as the source of truth for room/game state.
-- Prefer small, feature-scoped commits.
-- Validate external input with Zod at backend boundaries.
-- Keep the UI mobile-first and touch-friendly.
-
-## Realtime Event Contract
-
-Primary client to server events:
-- `join_room`
-- `start_game`
-- `place_card`
-- `confirm_reveal`
-- `update_room_settings`
-- `update_player_settings`
-
-Primary server to client events:
-- `player_identity`
-- `state_update`
-- `error`
-
-Shared event names and payload contracts live in `packages/shared`.
+Run one workspace directly with `-w`, for example `npm run dev -w apps/web`.
 
 ## Documentation
 
-Start at [docs/README.md](docs/README.md) - it is the index and says which documents are
-normative, which plan is live, and what is archived.
-
-- [Documentation index](docs/README.md)
-- [Full architecture](docs/architecture/tunetrack_full_architecture.md)
-- [Backend engineering rules](docs/rules/backend_engineering_rules.md)
-- [Frontend engineering rules](docs/rules/frontend_engineering_rules.md)
-- [Design system contract](docs/rules/design_system.md)
-- [Live plan: stability, performance and UX](docs/plans/2026-09-stability-performance/00-index.md)
-- [Decision log](docs/decision_log.md)
+- [docs/README.md](docs/README.md) — the index: what is normative, what is live, what is archived.
+- [CLAUDE.md](CLAUDE.md) — product, game and engineering rules every change must follow.
+- [Live plan](docs/plans/2026-10-project-review/00-index.md) — the review programme and its work breakdown.

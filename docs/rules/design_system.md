@@ -9,7 +9,7 @@
 > This document is the single source of truth for **tokens and shared components**.
 >
 > **In flight:** the consolidation work described in section 8 is being executed by
-> `../plans/2026-09-stability-performance/07-design-system-consolidation.md`. Where this
+> `../plans/2026-10-project-review/15-design-system-consolidation.md`. Where this
 > document describes a target that the code has not reached yet, it is marked
 > **(target)**.
 
@@ -51,15 +51,15 @@ A strict three-layer hierarchy. This is what makes a new theme a token swap.
 
 ### Where the tokens live
 
-| Concern | File |
-| --- | --- |
-| Raw scales | `apps/web/src/features/theme/tokens/primitives.ts` |
-| Component tokens | `apps/web/src/features/theme/tokens/components.ts` |
-| Dark theme (canonical) | `apps/web/src/features/theme/darkThemeTokens.ts` |
-| Light theme | `apps/web/src/features/theme/lightThemeTokens.ts` |
-| Public contract | `apps/web/src/features/theme/tokenContract.ts` |
-| Runtime application | `apps/web/src/features/theme/themeRegistry.ts` |
-| Structural emission | `apps/web/src/app/styles/globals.css` |
+| Concern                | File                                               |
+| ---------------------- | -------------------------------------------------- |
+| Raw scales             | `apps/web/src/features/theme/tokens/primitives.ts` |
+| Component tokens       | `apps/web/src/features/theme/tokens/components.ts` |
+| Dark theme (canonical) | `apps/web/src/features/theme/darkThemeTokens.ts`   |
+| Light theme            | `apps/web/src/features/theme/lightThemeTokens.ts`  |
+| Public contract        | `apps/web/src/features/theme/tokenContract.ts`     |
+| Runtime application    | `apps/web/src/features/theme/themeRegistry.ts`     |
+| Structural emission    | `apps/web/src/app/styles/globals.css`              |
 
 `SemanticColorTokens` in `darkThemeTokens.ts` is a TypeScript type derived from the dark
 theme, so **a theme that forgets a token fails typecheck**. Dark is canonical; every other
@@ -73,14 +73,14 @@ z-index. That duplication is deliberate (TS for compile-time completeness, CSS f
 
 Use these; do not invent values.
 
-| Scale | Values |
-| --- | --- |
-| Space | `--space-0..12` (0, 4, 8, 12, 16, 20, 24, 32, 40, 48 px) plus aliases `--space-screen-gutter`, `--space-card-padding`, `--space-stack-gap` |
-| Radius | `--radius-{xs,sm,md,lg,xl,pill,circle}` (8, 12, 16, 24, 28 px, 999px, 50%) |
-| Type | `--type-{display,title-lg,title-md,body-lg,body,label,caption,micro}-{size,leading,weight,tracking}` |
-| Motion duration | `--motion-{quick,standard,screen,expressive}-duration` (160, 240, 320, 460 ms) |
-| Motion easing | `--motion-ease-{standard,emphasized,decelerate,accelerate}` |
-| Touch target | `--size-touch-target` (48px) |
+| Scale           | Values                                                                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Space           | `--space-0..12` (0, 4, 8, 12, 16, 20, 24, 32, 40, 48 px) plus aliases `--space-screen-gutter`, `--space-card-padding`, `--space-stack-gap` |
+| Radius          | `--radius-{xs,sm,md,lg,xl,pill,circle}` (8, 12, 16, 24, 28 px, 999px, 50%)                                                                 |
+| Type            | `--type-{display,title-lg,title-md,body-lg,body,label,caption,micro}-{size,leading,weight,tracking}`                                       |
+| Motion duration | `--motion-{quick,standard,screen,expressive}-duration` (160, 240, 320, 460 ms)                                                             |
+| Motion easing   | `--motion-ease-{standard,emphasized,decelerate,accelerate}`                                                                                |
+| Touch target    | `--size-touch-target` (48px)                                                                                                               |
 
 Legacy radii (`--radius-{card,panel,input,button}`) exist for the components still being
 migrated. Do not use them in new code.
@@ -90,15 +90,15 @@ migrated. Do not use them in new code.
 Semantic roles only. The full set is the key set of `SemanticColorTokens`; the roles that
 matter most in review:
 
-| Role | Intent |
-| --- | --- |
-| `--color-bg-app` | App base, deepest surface |
+| Role                                                                         | Intent                            |
+| ---------------------------------------------------------------------------- | --------------------------------- |
+| `--color-bg-app`                                                             | App base, deepest surface         |
 | `--color-surface`, `--color-surface-elevated`, `--color-surface-interactive` | Cards, panels, pressable surfaces |
-| `--color-text-{primary,secondary,muted}` | Text hierarchy |
-| `--color-accent-brand`, `--color-accent-primary` | The single reserved accent |
-| `--color-border-subtle` | Hairlines |
-| `--color-status-danger-{surface,text,border}` and siblings | State only |
-| `--shadow-{none,raised,overlay,dialog}` | Elevation |
+| `--color-text-{primary,secondary,muted}`                                     | Text hierarchy                    |
+| `--color-accent-brand`, `--color-accent-primary`                             | The single reserved accent        |
+| `--color-border-subtle`                                                      | Hairlines                         |
+| `--color-status-danger-{surface,text,border}` and siblings                   | State only                        |
+| `--shadow-{none,raised,overlay,dialog}`                                      | Elevation                         |
 
 ### The two permitted literal-colour cases
 
@@ -110,7 +110,7 @@ matter most in review:
    high-contrast or sepia theme can redirect them. **(target)**
 
 Everything else is a defect. A guard test enforces this
-(`apps/web/src/test/guards/noHardcodedColors.test.ts`, **target**).
+(`apps/web/src/test/guards/noHardcodedColors.test.ts`; the guard exists and carries a pending-migration allowlist that may only shrink).
 
 ## 5. Motion
 
@@ -140,29 +140,31 @@ a component.
 One scale, one meaning per layer. **(target — the extended scale and the migration are
 Doc 06 section 2 of the live plan.)**
 
-| Token | Value | Layer |
-| --- | --- | --- |
-| `--z-base` | 0 | Page content |
-| `--z-raised` | 10 | Cards, chips, elevated in-page surfaces |
-| `--z-sticky` | 100 | Sticky headers, scroll fades |
-| `--z-nav` | 200 | Bottom docks, action bars |
-| `--z-overlay` | 300 | Scrims below sheets |
-| `--z-sheet` | 400 | Bottom and side sheets |
-| `--z-sheet-nested` | 450 | A sheet opened from a sheet |
-| `--z-dialog` | 500 | Modal dialogs |
-| `--z-dialog-nested` | 550 | Confirmation opened from a dialog |
-| `--z-hint` | 600 | Onboarding coach marks |
-| `--z-toast` | 700 | Toasts and connection banners |
-| `--z-celebration` | 800 | Win and celebration effects |
-| `--z-blocking` | 900 | Loading and recovery overlays; nothing may cover these |
+| Token               | Value | Layer                                                  |
+| ------------------- | ----- | ------------------------------------------------------ |
+| `--z-base`          | 0     | Page content                                           |
+| `--z-raised`        | 10    | Cards, chips, elevated in-page surfaces                |
+| `--z-sticky`        | 100   | Sticky headers, scroll fades                           |
+| `--z-nav`           | 200   | Bottom docks, action bars                              |
+| `--z-overlay`       | 300   | Scrims below sheets                                    |
+| `--z-sheet`         | 400   | Bottom and side sheets                                 |
+| `--z-sheet-nested`  | 450   | A sheet opened from a sheet                            |
+| `--z-dialog`        | 500   | Modal dialogs                                          |
+| `--z-dialog-nested` | 550   | Confirmation opened from a dialog                      |
+| `--z-hint`          | 600   | Onboarding coach marks                                 |
+| `--z-toast`         | 700   | Toasts and connection banners                          |
+| `--z-celebration`   | 800   | Win and celebration effects                            |
+| `--z-blocking`      | 900   | Loading and recovery overlays; nothing may cover these |
 
 ### The one permitted literal
+
 Integers `-1` to `9` for stacking **within** a single component, so local stacking can
 never escape its layer. Any other literal is a defect, enforced by
 `apps/web/src/test/guards/zIndexScale.test.ts` (**target**).
 
 Overlay components never set their own `z-index`. The overlay host assigns it from the
-stack depth and the entry kind.
+stack depth and the entry kind. **(target)** No overlay host exists yet; until it does, overlays
+take their layer from the `--z-*` tokens directly.
 
 ## 7. Layout
 
@@ -237,7 +239,7 @@ The shared library is `apps/web/src/features/ui/primitives/`. Everything else in
 - Preserve the manual vendor chunking in `apps/web/vite.config.ts`.
 - **Never spread-merge CSS modules into a barrel.** It defeats per-component CSS splitting
   and silently resolves duplicate class names by import order. Guarded by
-  `apps/web/src/test/guards/noCssBarrels.test.ts` (**target**).
+  `apps/web/src/test/guards/noCssBarrels.test.ts` (exists, with a pending-migration allowlist that may only shrink).
 - Token migration must not add runtime cost; custom properties are cheap and injection
   happens once per theme change.
 - Skeletons for perceived performance, matching the real page structure — a generic

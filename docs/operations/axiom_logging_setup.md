@@ -7,6 +7,12 @@ The backend writes normal structured logs to stdout for Railway, and when Axiom 
 configured it also sends realtime audit events directly to Axiom. This avoids relying
 on Railway log retention for weekend or family tests.
 
+> **Compliance note.** Axiom is a third-party, US-hosted log processor. Enabling it, and in
+> particular enabling `EVENT_AUDIT_INCLUDE_PAYLOADS` (payloads can contain display names and
+> search queries), is new processing of personal data and requires compliance review before any
+> client-facing deployment (GDPR Art. 28, Art. 44; ISO/IEC 27001 Annex A.8). Use it for
+> internal test sessions only until that review exists.
+
 ## What Gets Logged
 
 Realtime audit logs are emitted only when `ENABLE_EVENT_AUDIT=true`.

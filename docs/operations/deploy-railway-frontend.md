@@ -35,7 +35,7 @@ Browser (phone / laptop)
         ▼
 ┌───────────────────────────┐
 │  Railway Web Service      │  ← Node.js + Express + Socket.IO, always on
-│  tunetrack.up.railway.app │
+│  YOUR-RAILWAY-DOMAIN.up.railway.app │
 └───────────────────────────┘
         │
         │  OAuth callback
@@ -54,8 +54,7 @@ Before starting, make sure you have:
 - [ ] Your TuneTrack code pushed to a **GitHub repository** (public or private)
 - [ ] A **Spotify Developer app** — if you do not have one yet, see [Appendix A](#appendix-a--creating-a-spotify-developer-app) at the bottom of this guide
 - [ ] A free **Railway account** — sign up at [railway.app](https://railway.app) (use "Login with GitHub" for the easiest setup)
-- [ ] A free **Render account** — sign up at [render.com](Ok, lets do this, I want this to be automated as possible, and consistent of course.
-      ) (use "Login with GitHub" for the easiest setup)
+- [ ] A free **Render account** — sign up at [render.com](https://render.com) (use "Login with GitHub" for the easiest setup)
 
 ---
 
@@ -92,7 +91,7 @@ After the project is created you will see a canvas with a service card in it.
 4. Scroll down to the **Deploy** section and set:
    - **Start Command:** `node apps/server/dist/index.js`
 5. Scroll up to the **Networking** section:
-   - Click **Generate Domain** — Railway will assign you a public HTTPS URL like `tunetrack-abc123.up.railway.app`
+   - Click **Generate Domain** — Railway will assign you a public HTTPS URL like `YOUR-RAILWAY-DOMAIN.up.railway.app`
    - Copy this URL. You will need it for env vars and Spotify.
 
 > **Why `npm install && npm run build`?**
@@ -117,18 +116,18 @@ After the project is created you will see a canvas with a service card in it.
 Room lifecycle variables are optional. When omitted, the server uses these production
 defaults:
 
-| Key                               | Default   | Purpose |
-| --------------------------------- | --------- | ------- |
-| `MAX_ACTIVE_ROOMS`                | `5`       | Maximum rooms held by one server process |
-| `RECONNECT_GRACE_MS`              | `30000`   | Lobby reconnect window before removal |
-| `HOST_TRANSFER_GRACE_MS`          | `30000`   | Delay before an offline in-game host transfers |
-| `TURN_SKIP_GRACE_MS`              | `60000`   | Safety delay before an offline active turn advances |
+| Key                               | Default   | Purpose                                                  |
+| --------------------------------- | --------- | -------------------------------------------------------- |
+| `MAX_ACTIVE_ROOMS`                | `5`       | Maximum rooms held by one server process                 |
+| `RECONNECT_GRACE_MS`              | `30000`   | Lobby reconnect window before removal                    |
+| `HOST_TRANSFER_GRACE_MS`          | `30000`   | Delay before an offline in-game host transfers           |
+| `TURN_SKIP_GRACE_MS`              | `60000`   | Safety delay before an offline active turn advances      |
 | `ALL_PLAYERS_OFFLINE_ROOM_TTL_MS` | `3600000` | Continuous all-offline time before the whole room closes |
 
 Example with a real domain:
 
 ```
-SPOTIFY_REDIRECT_URI = https://tunetrack-abc123.up.railway.app/api/spotify/callback
+SPOTIFY_REDIRECT_URI = https://YOUR-RAILWAY-DOMAIN.up.railway.app/api/spotify/callback
 ```
 
 3. After adding all variables, click **Deploy** (or Railway may redeploy automatically)
@@ -188,7 +187,7 @@ Add one variable:
 Example:
 
 ```
-VITE_SERVER_URL = https://tunetrack-abc123.up.railway.app
+VITE_SERVER_URL = https://YOUR-RAILWAY-DOMAIN.up.railway.app
 ```
 
 > **Important:** `VITE_SERVER_URL` is prefixed with `VITE_` which means Vite bakes it
@@ -228,7 +227,7 @@ While you are in the Railway Variables tab, confirm that `SPOTIFY_REDIRECT_URI` 
 your Railway domain (not localhost):
 
 ```
-SPOTIFY_REDIRECT_URI = https://tunetrack-beats-production.up.railway.app/api/spotify/callback
+SPOTIFY_REDIRECT_URI = https://YOUR-RAILWAY-DOMAIN.up.railway.app/api/spotify/callback
 ```
 
 ---
@@ -263,7 +262,7 @@ Open in your browser:
 https://YOUR-RAILWAY-DOMAIN/health
 ```
 
-https://tunetrack-beats-production.up.railway.app/health
+https://YOUR-RAILWAY-DOMAIN.up.railway.app/health
 
 You should get a JSON response like `{ "status": "ok" }`. If you get a "This site
 can't be reached" or a Railway error page, the server is not running — check the
@@ -382,25 +381,25 @@ Both services watch your `main` branch and redeploy automatically when you push.
 
 ### Railway (backend) — set in the Variables tab
 
-| Variable                | Example value                                                  | Notes                                                 |
-| ----------------------- | -------------------------------------------------------------- | ----------------------------------------------------- |
-| `NODE_ENV`              | `production`                                                   | Required — affects logging and CORS behaviour         |
-| `PORT`                  | `3001`                                                         | Railway also injects this automatically               |
-| `CLIENT_ORIGIN`         | `https://tunetrack-web.onrender.com`                           | CORS allowed origin — must match frontend URL exactly |
-| `SPOTIFY_CLIENT_ID`     | `abc123def456`                                                 | From Spotify developer dashboard                      |
-| `SPOTIFY_CLIENT_SECRET` | `xyz789...`                                                    | From Spotify developer dashboard — keep private       |
-| `SPOTIFY_REDIRECT_URI`  | `https://tunetrack-abc123.up.railway.app/api/spotify/callback` | Must be registered in Spotify dashboard               |
-| `MAX_ACTIVE_ROOMS` | `5` | Optional; defaults to 5 |
-| `RECONNECT_GRACE_MS` | `30000` | Optional lobby reconnect window |
-| `HOST_TRANSFER_GRACE_MS` | `30000` | Optional in-game host-transfer delay |
-| `TURN_SKIP_GRACE_MS` | `60000` | Optional offline-turn safety delay |
-| `ALL_PLAYERS_OFFLINE_ROOM_TTL_MS` | `3600000` | Optional all-offline room expiry |
+| Variable                          | Example value                                                     | Notes                                                 |
+| --------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------- |
+| `NODE_ENV`                        | `production`                                                      | Required — affects logging and CORS behaviour         |
+| `PORT`                            | `3001`                                                            | Railway also injects this automatically               |
+| `CLIENT_ORIGIN`                   | `https://tunetrack-web.onrender.com`                              | CORS allowed origin — must match frontend URL exactly |
+| `SPOTIFY_CLIENT_ID`               | `abc123def456`                                                    | From Spotify developer dashboard                      |
+| `SPOTIFY_CLIENT_SECRET`           | `xyz789...`                                                       | From Spotify developer dashboard — keep private       |
+| `SPOTIFY_REDIRECT_URI`            | `https://YOUR-RAILWAY-DOMAIN.up.railway.app/api/spotify/callback` | Must be registered in Spotify dashboard               |
+| `MAX_ACTIVE_ROOMS`                | `5`                                                               | Optional; defaults to 5                               |
+| `RECONNECT_GRACE_MS`              | `30000`                                                           | Optional lobby reconnect window                       |
+| `HOST_TRANSFER_GRACE_MS`          | `30000`                                                           | Optional in-game host-transfer delay                  |
+| `TURN_SKIP_GRACE_MS`              | `60000`                                                           | Optional offline-turn safety delay                    |
+| `ALL_PLAYERS_OFFLINE_ROOM_TTL_MS` | `3600000`                                                         | Optional all-offline room expiry                      |
 
 ### Render Static Site (frontend) — baked in at build time
 
-| Variable          | Example value                             | Notes                                                          |
-| ----------------- | ----------------------------------------- | -------------------------------------------------------------- |
-| `VITE_SERVER_URL` | `https://tunetrack-abc123.up.railway.app` | Compiled into the JS bundle — changing it requires a new build |
+| Variable          | Example value                                | Notes                                                          |
+| ----------------- | -------------------------------------------- | -------------------------------------------------------------- |
+| `VITE_SERVER_URL` | `https://YOUR-RAILWAY-DOMAIN.up.railway.app` | Compiled into the JS bundle — changing it requires a new build |
 
 ---
 

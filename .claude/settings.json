@@ -1,0 +1,47 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run typecheck*)",
+      "Bash(npm run lint*)",
+      "Bash(npm run test*)",
+      "Bash(npm test*)",
+      "Bash(npm run build -w @tunetrack/shared*)",
+      "Bash(npm run build -w @tunetrack/game-engine*)",
+      "Bash(npm run build -w @tunetrack/web*)",
+      "Bash(npm run e2e*)",
+      "Bash(npm ls*)",
+      "Bash(npx vitest run*)",
+      "Bash(npx tsc --noEmit*)",
+      "Bash(npx tsc -p * --noEmit*)",
+      "Bash(npx prettier --check*)",
+      "Bash(npx playwright test*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git blame*)",
+      "Bash(git branch*)"
+    ],
+    "deny": [
+      "Bash(git commit*)",
+      "Bash(git push*)",
+      "Bash(git rebase*)",
+      "Bash(git reset*)",
+      "Bash(git checkout*)",
+      "Bash(git switch*)",
+      "Bash(git restore*)",
+      "Bash(git stash*)",
+      "Bash(git clean*)",
+      "Bash(git merge*)",
+      "Bash(git cherry-pick*)",
+      "Bash(git tag*)",
+      "Bash(npm publish*)",
+      "Bash(npm version*)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./apps/server/.env)",
+      "Read(./apps/server/.env.*)",
+      "Read(./docs/archive/**)"
+    ]
+  }
+}

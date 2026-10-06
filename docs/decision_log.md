@@ -1,416 +1,164 @@
 # TuneTrack — Decision Log
 
-This file records concrete implementation decisions and open questions so they
-do not stay hidden in code.
+Concrete implementation decisions and open questions, so they do not stay hidden in code.
+Append dated entries; do not rewrite history. Exception recorded below: on 2026-10-06 the log
+was consolidated once (duplicates of `CLAUDE.md` game rules removed, one wrong entry
+corrected, five GamePage entries merged, dates added from git history).
+
+Game rules themselves live in [`CLAUDE.md`](../CLAUDE.md) → Game Rules and are not repeated
+here; this log records _why_ and _when_ they were decided.
 
 ---
 
 ## Decided
 
-### In-game disconnect retention and manual recovery (2026-09-30)
+### Documentation reset and owner decisions (2026-10-06)
 
-An in-game socket disconnect is temporary absence, not an automatic leave or kick.
+Phase 2 of the review programme (`docs/plans/2026-10-project-review/00-index.md`) rewrote
+`CLAUDE.md`, merged `AGENT.md` into it and deleted that file, trimmed both engineering-rules
+files to layer-specific rules, folded the trimmed 2026-09 remediation documents into the
+review folder as documents 10–20 and archived the originals, archived both architecture
+documents and the GamePage refactor list, and consolidated this log. Product decisions taken
+the same day:
 
-- The disconnected player's identity, timeline, tokens and turn position remain reserved
-  without a reconnect expiry while the room exists.
-- Only a host's explicit kick or room closure removes that player from the running game.
-- All remaining clients see when the active player is offline.
-- The host can skip an offline active player's turn immediately so play does not stall.
-- The existing 60-second safety auto-skip remains as a fallback.
-- Host transfer remains a separate 30-second rule when the disconnected player is the host.
+- **Host may skip any turn, any time**, regardless of the active player's connection state.
+  The 60 s safety auto-skip stays as a fallback. (Previous wording limited the manual skip to
+  offline players; the code never did.)
+- **Deck exhaustion → reshuffle.** Discarded cards (wrong placements and TT skips) are
+  reshuffled into a new deck; cards on timelines stay out. The lobby shows how many cards the
+  deck needs for the player count and win target and warns when the deck is smaller.
+  Implementation pending (finding B-06).
+- **No silent practice deck.** Start is blocked until a deck exists; the practice deck is an
+  explicit host choice. Implementation pending (finding U-01).
+- **Touch target 48 × 48 px** everywhere (matches `--size-touch-target`); the 44 px figure
+  is retired.
+- **File-size hard limit 700 lines** = must split; type-specific soft limits remain guidance.
+- **Host creation flow is streamlined, not restructured:** existing screens and navigation
+  stay; no one-tap-host redesign, no wizard.
+- **Spotify login stays per room** pending compliance review; the UI must say so.
+- **PII in logs and audit stays as is** for the trusted-party deployment; revisit before any
+  public deployment.
+- **Keep `react-router-dom`.** A hand-rolled router was rejected: the saving does not justify
+  the risk; bundle work targets lazy loading and `LazyMotion` instead.
+- **No offline action queue.** Actions issued while disconnected are rejected with visible
+  feedback; acknowledged actions with bounded retry are the recovery mechanism.
+- **Overlay history uses same-path router-state entries**, not raw `pushState` (decided by
+  the shipped Settings and Music Setup implementations, E13/E14).
 
-This lets somebody step away briefly and return to the same game state. Reclaiming an
-entire room after every player is offline is governed by the separate decision below; it
-must not be implemented by silently evicting individual players.
+### Music setup and nested playlist editors use one history record per depth (2026-10-02)
 
-### All-players-offline room expiry (2026-09-30)
-
-If every player in an in-progress room remains offline continuously for one hour, the
-server closes the entire abandoned room.
-
-- Any player reconnecting before the deadline cancels cleanup.
-- If everyone disconnects again later, a fresh one-hour timeout starts.
-- Cleanup deletes the room, memberships, redirects, timers, Spotify tokens and playback
-  session together; it does not kick or delete players one by one.
-- `ALL_PLAYERS_OFFLINE_ROOM_TTL_MS` configures the timeout and defaults to `3600000`.
-- `RECONNECT_GRACE_MS`, `HOST_TRANSFER_GRACE_MS` and `TURN_SKIP_GRACE_MS` likewise expose
-  their existing defaults through validated environment configuration.
-
-### Documentation reorganisation (2026-09-08)
-
-`docs/` held 26 files, roughly 10 400 lines, mostly completed or superseded iteration
-plans, with no index and inconsistent status markers. Restructured into
-`architecture/`, `rules/`, `operations/`, `plans/` and `archive/`, with `docs/README.md`
-as the index.
-
-- 15 plans archived unedited, each with a header stating what shipped, what did not, and
-  what superseded it.
-- Deleted `deploy-render.md` (documented a deployment path the project moved away from,
-  and its only unique content — the cold-start warning — is already in
-  `deploy-railway-frontend.md`) and `frontend_rework_sequence_plan.md` (sequencing for a
-  finished phase). Both remain in git history.
-- Extracted the still-authoritative token and component contract from
-  `ui_overhaul_design_system_spotify.md` into `rules/design_system.md`.
-- Folded the product rules from `playlist_metadata_curation_plan.md` into `CLAUDE.md`
-  (Game Rules -> Track Metadata), since `CLAUDE.md` is the file actually loaded each
-  session.
-- Extracted the still-open items from `gamepage_refactor_handoff.md` section 4 into
-  `plans/gamepage-remaining-refactors.md`; five of nine were already done.
-
-**Rationale:** a contributor or agent opening `docs/` could not tell which documents were
-authoritative. Two archived plans were actively misleading — the reconnect plan mixed
-shipped reconnect behavior with an unapproved eviction proposal later superseded by the
-2026-09-30 owner decision, and the performance plan was paused mid-way with a Phase 8 that
-is deliberately not being resumed.
-
----
-
-### Navigation: push vs. replace (2026-09-08)
-
-Rule: a navigation caused by state that no longer exists uses `replace`; a navigation
-caused by a user choosing to go somewhere uses `push`.
-
-Applied in this pass (`docs/plans/2026-09-stability-performance/06-navigation-and-overlays.md`
-section 3.2):
-
-- Lobby -> game on game start now replaces. The lobby is gone once the game starts, so
-  back should leave the game rather than return to a dead lobby.
-- Room-closed redirects to home (both the lobby and the game connection hooks) now
-  replace. The room no longer exists, so back should not return to it.
-- Join-room submit now replaces when it pushes the lobby route, so back returns to the
-  invite context rather than re-entering the join form.
-- Route order for the page-transition direction was extended to
-  `/ -> 0, /join/:id -> 1, /play -> 1, /lobby/:id -> 2, /game/:id -> 3` so Home <-> Play
-  has a direction (previously both sat at 0).
-
-Still push (correct, unchanged): opening the lobby from Play, starting from Home, and
-the lobby's own rename replace (already correct).
-
-**Rationale:** the phone's hardware back button and the browser's back button must
-always return to where the user actually came from; leaving a `push` entry pointing at
-state that no longer exists (a closed room, a lobby that already started its game) is
-what produced the unresponsive-home-screen defect (B10 in
-`docs/plans/2026-09-stability-performance/12-bug-register.md`) and dead-lobby back
-navigation.
-
----
+Music Setup, the playlist editor and the nested track editor each push one same-path
+router-state entry. Save, cancel, close, browser Back and Android Back remove only the top
+entry, so the stack unwinds one level at a time. Closing the playlist editor removes its
+portal rather than leaving hidden interactive DOM.
 
 ### Settings back-button history (2026-10-01)
 
-Opening `AppShellMenu` pushes a same-path React Router state entry. Browser or Android back
-removes that entry and closes Settings without leaving the current page. Programmatic close
-uses the same history path, and menu footer actions run only after the entry is removed.
+Opening `AppShellMenu` pushes a same-path React Router state entry; Back removes it and closes
+Settings without leaving the page. Route transitions are keyed by pathname, so a same-path
+entry never remounts the page or rebuilds its socket connection.
 
-Route transitions are keyed by pathname rather than the opaque history key, so a same-path
-overlay entry updates router state without remounting the page or rebuilding its socket
-connection.
+### In-game disconnect retention and manual recovery (2026-09-30)
+
+An in-game socket disconnect is temporary absence, not a leave or a kick. The player's
+identity, timeline, tokens and turn position stay reserved while the room exists; only a
+host kick or room closure removes them. All clients see that the active player is offline and
+the host can skip the turn. Host transfer remains a separate 30 s rule. Whole-room reclaim is
+governed by the next entry and must never be implemented by evicting players one by one.
+
+### All-players-offline room expiry (2026-09-30)
+
+If every player in an in-progress room stays offline continuously for one hour the server
+closes the whole room: memberships, redirects, timers, Spotify tokens and playback session
+together. Any reconnect cancels the cleanup; a later all-offline period starts a fresh hour.
+`ALL_PLAYERS_OFFLINE_ROOM_TTL_MS` (default `3600000`), `RECONNECT_GRACE_MS`,
+`HOST_TRANSFER_GRACE_MS` and `TURN_SKIP_GRACE_MS` are validated environment settings.
+
+### Room-directory visibility on trusted networks (2026-09-28)
+
+The room directory exposes each lobby's room code, host display name, player count and
+status to connected players who are not in a room, and only to them. Keep
+`PublicRoomSummary` to those four fields. Appropriate for the trusted LAN/party deployment;
+reassess authentication and public discovery before any unrestricted internet deployment.
+
+### Navigation: push vs. replace (2026-09-08, corrected 2026-10-06)
+
+A navigation caused by state that no longer exists uses `replace`; a navigation the user
+chose uses `push`. Applied: lobby → game on start replaces; room-closed redirects replace;
+join-room submit replaces when it opens the lobby. Rationale: a `push` entry pointing at a
+closed room or a dead lobby produced the unresponsive-home defect (B10) and dead back
+navigation.
+
+**Correction:** the original entry claimed the page-transition route order had been extended
+to `/ → 0, /join → 1, /play → 1, /lobby → 2, /game → 3`. That change was reverted with the
+other unverified hardening (B17) and `AppRoutes.tsx` still uses `/game → 2, /lobby → 1, else
+0`. The extension remains open work in `14-navigation-and-overlays.md` §3.3.
+
+### Documentation reorganisation (2026-09-08)
+
+`docs/` held 26 files with no index. Restructured into `rules/`, `operations/`, `plans/` and
+`archive/` with `docs/README.md` as the index; 15 plans archived with headers stating what
+shipped, what did not and what superseded them; `deploy-render.md` and
+`frontend_rework_sequence_plan.md` deleted (in git history); the token contract extracted into
+`rules/design_system.md`; the metadata product rules folded into `CLAUDE.md`.
+
+### Backend-driven UI transition pattern (2026-04-24)
+
+Frontend animation that reacts to confirmed server state follows one pattern instead of
+component-local timer guessing:
+
+- the controller, or a dedicated transition-event hook built on **pure detector helpers**,
+  emits a typed transition event (for example `skip_track_replace`, celebration, reveal
+  preview);
+- a dedicated coordinator hook (`usePreviewCardTransition`,
+  `useTimelinePanelCelebrationState`, the reveal-preview coordinator) owns the displayed data
+  and the animation phase and decides when the new server data becomes visible;
+- components render the coordinator output as one displayed model, not several raw props;
+- motion variants and cleanup timing live in `features/motion`, grouped by transition
+  responsibility (preview replacement, celebration, action surfaces, token flyouts), with
+  `features/motion/index.ts` as the stable API.
+
+Rationale: realtime data arrives asynchronously; the pattern keeps animation stable,
+unit-testable and traceable. The 2026-04 note that hook-level tests had to wait for a DOM
+runtime is superseded: jsdom and React Testing Library are wired and component tests exist.
+
+### Beat challenge and TT rules (2026-04-07)
+
+The reward, penalty, timing and spending rules are stated in `CLAUDE.md` → Game Rules.
+Rationale recorded here: a successful challenge steals the card so the challenger does not
+guess twice; TT never goes below zero; only the claim is timed so the challenger's placement
+is not rushed; manual host awarding of TT supports party-style judging of artist and title
+callouts before automated earning exists; a TT-buy turn opens no challenge window because
+the placement is server-computed.
+
+### Session identity (2026-04-04, amended 2026-09-30)
+
+The browser stores a stable per-tab player session in `sessionStorage`, so refreshing the
+same tab keeps the player identity while different tabs stay distinct for local multi-tab
+testing. Lobby players may rejoin during the reconnect grace; in-game players stay reserved
+(see the 2026-09-30 entries). The host keeps the role during the 30 s transfer grace.
+
+### MVP room storage and test deck format (2026-04-04)
+
+Rooms are stored in memory only. Local JSON test decks live in
+`apps/server/src/decks/test-decks/`; the server loads every `.json` file there and expects
+`id`, `releaseYear`, `title`, `artist`, `albumTitle` and optional `genre` per card. Duplicate
+`id`s keep the latest loaded card.
+
+### Configurable game rules (2026-04-04)
+
+Win target (3–30, default 10), per-player starting cards with a room default, reveal
+confirmation mode (`host_only` default) and the same-year placement rule were made
+configurable or explicit at this point; definitions are in `CLAUDE.md`. Rationale: a 10-card
+race is too long for a short party round, and same-year ambiguity had to be a rule rather
+than a bug report.
+
+## Still open
+
+### Duplicate player names (2026-04-04)
 
----
-
-### Equal release-year placement
-
-If a candidate track has the same release year as one or more adjacent timeline
-cards, every slot inside that same-year block counts as a correct placement.
-
-Example:
-
-- Timeline years: `1988, 1990, 1990, 1990, 1994`
-- Candidate year: `1990`
-- Valid slot indexes: `1, 2, 3, 4`
-
-### Target timeline size
-
-The number of cards needed to win is configurable per room instead of being
-hardcoded to 10.
-
-Current limits:
-
-- Minimum: `3`
-- Default: `10`
-- Maximum: `30`
-
-Only the host can change this setting in the lobby.
-
-### Host disconnect behavior
-
-The disconnected host retains the role during the configured 30-second transfer grace.
-A reconnect cancels transfer. If the grace expires, the first connected remaining player
-becomes host. In-game host identity remains reserved like every other offline player.
-
-### MVP room storage
-
-Rooms are stored in memory only for the current foundation iteration.
-
-### Starting cards per player
-
-Each player starts with 1 revealed timeline card by default, but the host can
-override `startingTimelineCardCount` individually per player in the lobby.
-
-The room also stores `defaultStartingTimelineCardCount`, which is used for
-newly joined players.
-
-### Reveal confirmation rule
-
-Reveal confirmation is configurable by room:
-
-- `host_only`
-- `host_or_active_player`
-
-Current default is `host_only`.
-
-### Wrong placement penalty
-
-If a player places a card into a wrong slot, the card is discarded and the
-player gains no card from that turn.
-
-### MVP test deck format
-
-Local JSON test decks live in
-`apps/server/src/decks/test-decks/`.
-
-The server loads every `.json` file from that folder and expects each card to
-contain:
-
-- `id`
-- `releaseYear`
-- `title`
-- `artist`
-- `albumTitle`
-- `genre` (optional)
-
-Duplicate `id` values are deduplicated by keeping the latest loaded card with
-that ID.
-
----
-
-### Reconnect/session identity strategy
-
-The browser now stores a stable per-tab player session in `sessionStorage`.
-
-Current behavior:
-
-- refreshing the same tab keeps the same player identity
-- lobby players can rejoin during the configured reconnect grace
-- in-progress players remain reserved without an individual expiry while the room exists
-- different browser tabs get different player sessions, so multi-tab local
-  testing still works
-
-Current server rule:
-
-- a lobby disconnect is removed after `RECONNECT_GRACE_MS` unless it reconnects first
-- an in-game disconnect is removed only by an explicit host kick or room closure
-- a continuously all-offline in-progress room closes after
-  `ALL_PLAYERS_OFFLINE_ROOM_TTL_MS`
-
-### Beat challenge reward rule
-
-If a `Beat!` challenge succeeds:
-
-- the challenged card is stolen into the challenger's own timeline
-- the challenger does not need to guess a second time on their own timeline
-
-If a `Beat!` challenge fails:
-
-- the challenger loses `1 TT`
-- TT can never go below `0`
-
-### Beat timing rule
-
-The challenge timer only gates the initial `Beat!` claim.
-
-Current behavior:
-
-- if nobody claims before the deadline, the server auto-resolves the original
-  placement
-- if a player claims `Beat!` in time, the timer stops immediately
-- after claim, there is currently no extra timer for the challenger's slot
-  placement
-
-### MVP TT awarding
-
-For MVP testing, the host can manually award TT during a game.
-
-Reason:
-
-- this supports party-style manual judging for song/artist callouts before
-  automated token earning exists
-- TT can be earned by guessing the current card's artist and song title correctly
-- TT is awarded by the host manually to the players
-
-### TT spending actions in MVP
-
-When TT mode is enabled, players can spend TT during their own turn:
-
-- spend `1 TT` to skip the current track and draw the next one
-- a player can only skip once per turn
-- spend `3 TT` to claim the current song immediately, place it into the
-  correct slot on their own timeline automatically, and continue to manual
-  reveal
-- a TT-buy turn does not open a Beat window
-
-Current enforcement:
-
-- both actions are server-authoritative
-- both actions require the acting player to be the active player
-- both actions are blocked when TT mode is disabled
-
-### Backend-driven preview-card transition architecture
-
-Frontend animation for preview-card replacement now follows an explicit
-backend-driven transition pattern instead of component-local timer guessing.
-
-Current rule:
-
-- the controller emits a typed UI transition event when a server-confirmed skip
-  replaces the current preview card
-- a dedicated coordinator hook owns temporary displayed card state during the
-  animation
-- the component renders coordinator output instead of immediately rendering the
-  new incoming server data
-- preview-card replacement motion is defined in a dedicated motion transition
-  module with an explicit contract
-
-Reason:
-
-- this keeps animation behavior stable even when realtime/backend data changes
-  arrive asynchronously
-- this is the intended pattern for future server-driven UI transitions,
-  including later Spotify-backed card data updates
-
-### GamePage transition-event layer and celebration coordinator
-
-GamePage now has a dedicated transition-event detection layer and a dedicated
-timeline celebration coordinator.
-
-Current rule:
-
-- `useGamePageTransitionEvents` detects meaningful backend-confirmed UI changes
-  and emits typed transition events
-- `useGamePageController` passes those events through the page/controller model
-  instead of forwarding loose celebration fields and local timer assumptions
-- `useTimelinePanelCelebrationState` owns temporary celebration visibility and
-  fly-animation cleanup using a named motion contract
-- celebration motion variants and cleanup timing live in a dedicated motion
-  transition module instead of a generic motion bucket file
-
-Reason:
-
-- this reduces controller coupling
-- this makes backend-driven animation behavior easier to trace and reuse
-- this creates a cleaner teaching example for future Spotify-backed,
-  server-driven UI transitions
-
-### Pure transition detectors and reveal-preview coordinator
-
-GamePage transition detection now prefers pure detector helpers plus thin hook
-orchestration, and reveal-preview state now follows the same event/coordinator
-pattern as other backend-driven transitions.
-
-Current rule:
-
-- backend-driven event semantics such as skip replacement, celebration, and
-  reveal preview detection should live in pure helpers when possible
-- the React hook layer should manage deduplication and event-key sequencing, but
-  not hide the underlying decision logic in opaque effects
-- reveal preview state should pass through a dedicated coordinator so the panel
-  consumes one displayed preview model instead of several synchronized raw props
-
-Reason:
-
-- this makes the transition rules directly unit-testable
-- this improves confidence when backend data flow becomes more complex
-- this keeps the codebase teachable by making animation/event semantics explicit
-
-### Motion layer split by transition responsibility
-
-The shared frontend motion layer now avoids a catch-all gameplay motion token
-file for reusable transitions.
-
-Current rule:
-
-- reusable motion exports are grouped by named transition responsibility
-- examples now include preview replacement, timeline celebration, action
-  surfaces, and token flyouts
-- `features/motion/index.ts` remains the stable shared API surface
-
-Reason:
-
-- this makes motion ownership easier to find
-- this prevents unrelated animation concerns from drifting into one large file
-- this keeps the motion layer aligned with the same explicit-boundary rules used
-  elsewhere in the frontend architecture
-
-### Coordinator test strategy without a DOM-heavy runner
-
-GamePage coordinator coverage now favors pure state helpers when the current
-test runtime does not provide the right DOM environment for hook-level animation
-tests by default.
-
-Current rule:
-
-- extract coordinator decision logic into pure helpers when practical
-- test transition snapshots, display-state derivation, and fly-animation
-  eligibility directly in unit tests
-- treat higher-level hook/component animation tests as a later enhancement, not
-  a reason to hide logic inside untestable effects
-
-Reason:
-
-- this keeps test coverage growing without introducing avoidable test-runtime
-  complexity into the repo
-- this preserves the architectural goal that backend-driven UI sequencing should
-  be explicit and verifiable
-
-### Room-directory visibility on trusted networks
-
-The room directory intentionally exposes each lobby's room code, host display name, player
-count, and status to connected players who are not currently inside a room.
-
-Current rule:
-
-- keep `PublicRoomSummary` limited to those four fields
-- push directory changes only to sockets outside rooms
-- treat this visibility as appropriate for the current trusted LAN/party deployment
-- reassess authentication and whether public discovery should exist before exposing the app
-  as an unrestricted internet service
-
-Reason:
-
-- a recognizable host name helps nearby players choose the correct party room
-- room members already receive richer authoritative room state and do not need directory pushes
-- limiting the payload and audience avoids broadcasting gameplay or profile details unnecessarily
-
-### Music setup and nested playlist editors use one history record per depth
-
-The lobby Music Setup, playlist editor, and nested track editor participate in same-path
-browser history, matching the Settings behavior established by E13.
-
-Current rule:
-
-- opening Music Setup pushes one same-path router-state entry
-- opening the playlist editor pushes one same-path router-state entry
-- opening a track pushes a second entry owned by that playlist editor
-- save, cancel, close, browser Back, and Android Back remove only the top entry
-- closing the playlist editor removes its portal instead of leaving hidden interactive DOM
-
-Reason:
-
-- the stack unwinds one level at a time: track editor, playlist editor, Music Setup, then
-  room settings
-- programmatic and hardware/browser dismissal share the same ordering
-- removing closed portals reduces the risk of stale UI intercepting input
-
-## Still Open
-
-### Duplicate player names
-
-Current implementation allows duplicate display names.
-
-Still to decide:
-
-- Should duplicate names be blocked within one room?
-- Or should we keep allowing them and rely on internal player IDs only?
-
----
+Duplicate display names are allowed within a room; players are distinguished by internal
+ids. Decide whether to block duplicates per room or keep relying on ids. Phase 4 of the review
+programme (host-flow specification) should propose the answer.
 
 # End of Decision Log
