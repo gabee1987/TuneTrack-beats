@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ActionDock } from "./ActionDock";
 import { setMediaQuery } from "../../../test/stubs/matchMedia";
@@ -29,6 +29,14 @@ describe("ActionDock", () => {
 
     expect(document.body.textContent).toContain("dock content");
     expect(container.textContent).not.toContain("dock content");
+  });
+
+  it("exposes the whole dock as the anchor for hints above its button stack", () => {
+    const containerRef = vi.fn();
+
+    render(<ActionDock containerRef={containerRef}>dock content</ActionDock>);
+
+    expect(containerRef).toHaveBeenCalledWith(screen.getByText("dock content"));
   });
 
   /**

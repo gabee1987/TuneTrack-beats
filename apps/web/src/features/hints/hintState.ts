@@ -1,8 +1,13 @@
 export type HintId =
+  | "profile-name"
+  | "lobby-spotify"
+  | "lobby-start"
   | "game-drag-preview"
   | "game-confirm"
   | "game-challenge"
+  | "game-next-song"
   | "game-timeline-tap"
+  | "game-timeline-switch"
   | "game-tokens"
   | "game-menu";
 

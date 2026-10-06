@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { FirstRunHint } from "../../../features/hints/FirstRunHint";
 import { useI18n } from "../../../features/i18n";
 import { Button } from "../../../features/ui/primitives";
 import styles from "../lobbyPageStyles";
@@ -17,6 +19,7 @@ export function LobbyHostStartPanel({
   startGameActionStatus,
 }: LobbyHostStartPanelProps) {
   const { t } = useI18n();
+  const [startHintAnchor, setStartHintAnchor] = useState<HTMLElement | null>(null);
   let startGameButtonLabel = t("lobby.host.startGame");
   if (startGameActionStatus === "pending") {
     startGameButtonLabel = t("lobby.startGame.pending");
@@ -27,7 +30,7 @@ export function LobbyHostStartPanel({
   }
 
   return (
-    <div className={styles.primaryActionBar}>
+    <div className={styles.primaryActionBar} ref={setStartHintAnchor}>
       <div>
         <h3 className={styles.primaryActionTitle}>{t("lobby.host.readyTitle")}</h3>
         <p className={styles.primaryActionDescription}>{t("lobby.host.readyDescription")}</p>
@@ -45,6 +48,7 @@ export function LobbyHostStartPanel({
       >
         {startGameButtonLabel}
       </Button>
+      <FirstRunHint anchor={startHintAnchor} id="lobby-start" isEligible />
     </div>
   );
 }

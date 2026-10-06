@@ -104,7 +104,8 @@ E2E smoke suite once W0 is in place.
 - [ ] Playback can be started, paused, resumed and restarted at any point in a turn,
       including after the track has ended.
 - [ ] Player display name is set outside the room flow and persists across app restarts.
-- [ ] First-run hints appear once, are dismissible, and are resettable from settings.
+- [x] First-run hints appear once, are dismissible, and are resettable from the View
+      settings.
 - [ ] Every page presents a structure-matching skeleton while loading.
 - [ ] Test suite: component tests for all shared primitives and every overlay; integration
       tests for connect/disconnect/reconnect/host-transfer/close-room; E2E for

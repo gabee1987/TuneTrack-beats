@@ -188,6 +188,16 @@
   margin-top: 12px;
 }
 
+.hintSettingsSection {
+  margin-top: var(--space-5);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.hintSettingsActions {
+  margin-top: var(--space-4);
+}
+
 .sectionTitle {
   margin: 0;
   font-size: 16px;
@@ -268,7 +278,11 @@
 
 .segmentedButtonActive {
   border: 1px solid color-mix(in srgb, var(--color-accent-brand) 48%, var(--color-border-subtle));
-  background: color-mix(in srgb, var(--color-accent-brand) 18%, var(--color-surface-elevated-solid));
+  background: color-mix(
+    in srgb,
+    var(--color-accent-brand) 18%,
+    var(--color-surface-elevated-solid)
+  );
   color: var(--color-text-primary);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent-brand) 16%, transparent);
 }
@@ -379,11 +393,7 @@
   right: 0;
   bottom: 0;
   padding: var(--space-8) var(--space-5) var(--space-5);
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    var(--color-bg-app) 42%
-  );
+  background: linear-gradient(to bottom, transparent, var(--color-bg-app) 42%);
   pointer-events: none;
 }
 

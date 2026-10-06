@@ -1,16 +1,19 @@
 # 10 — Interactive First-Run Hint System
 
-> **Implementation state (2026-10-02):** The first gameplay walkthrough is live. Per the
+> **Implementation state (2026-10-06):** The first-run walkthrough is live. Per the
 > owner's 2026-10-02 correction, the first hint teaches the core placement rule on the
 > draggable mystery card; timeline-card details are follow-up discovery, not the opening
-> lesson. Six contextual game hints now cover placement, confirmation, challenges, TT
-> tokens, placed-card details, and the game menu. A shared priority scheduler shows one at
-> a time after the 1.5-second quiet period and caps each game-page visit at two hints. Seen
-> state and the master enabled switch persist safely; Settings can disable all hints
-> immediately without erasing progress or reset the walkthrough. English and Hungarian
-> copy and Chromium E15 coverage are in place. Home/lobby hints, history-back dismissal,
-> IntersectionObserver-backed anchor visibility, replay/count UI, and dedicated
-> bubble/anchor component coverage remain open.
+> lesson. Eleven contextual hints now cover profile naming, lobby music setup and game
+> start, placement, confirmation, challenges, TT tokens, placed-card details, the game
+> menu, advancing after a reveal, and switching timelines. A shared priority scheduler
+> shows one at a time after the 1.5-second quiet period and caps each page visit at two
+> hints. Seen state and the master enabled switch persist safely; the View tab contains a
+> separately spaced Help and hints section that can disable all hints without erasing
+> progress or reset the walkthrough. The confirmation hint anchors above the entire action
+> dock, whose mobile layer now follows the navigation token, so the Skip action cannot
+> cover its copy. English and Hungarian copy and Chromium E15 coverage are in place. The
+> Home start hint, history-back dismissal, IntersectionObserver-backed anchor visibility,
+> replay/count UI, and dedicated bubble/anchor component coverage remain open.
 
 > New capability. Nothing comparable exists in the codebase: a search for
 > `onboard`, `tutorial`, `coachmark`, `firstRun` and `hintSystem` across
@@ -131,20 +134,22 @@ Per the "subtle" constraint, and consistent with Doc 07:
 Deliberately small. A first-run experience with 15 hints is not onboarding, it is an
 obstacle. Start with these, measure whether they are needed, and add only on evidence.
 
-| id | Anchor | Trigger | Message intent |
-| --- | --- | --- | --- |
-| `home-start` | Start button on Home | `anchor_visible`, only when `!hasCompletedSetup` | Host or join a game from here. |
-| `profile-name` | Identity row on Home | `anchor_visible`, only when the name is still the default | This is how everyone sees you — tap to change it. |
-| `lobby-spotify` | Spotify section in the lobby | `anchor_visible`, host only, no playlist imported | Connect Spotify to play real tracks. |
-| `lobby-start` | Start-game dock | `anchor_visible`, host only, at least two players | Everyone is in — start when ready. |
-| `game-timeline-tap` | Any placed timeline card | `game_phase: "turn"`, first time the player has a card | Follow-up discovery: tap a placed card for track details. |
-| `game-drag-preview` | Preview card | `first_time_condition: "first_own_turn"` | **First gameplay hint:** drag by release year into the chronological timeline. |
-| `game-confirm` | Confirm action in the turn dock | `first_time_condition: "first_slot_selected"` | Confirm when you are happy with the spot. |
-| `game-challenge` | Challenge action | `game_phase: "challenge"`, first time, requires at least one TT token | Spend a token to challenge this placement. |
-| `game-tokens` | Token counter in the header | `first_time_condition: "first_token_received"`, TT mode on | Tokens buy skips, extra cards and challenges. |
-| `game-menu` | Menu trigger in the game header | `anchor_visible`, first game | Settings, players and history live here. |
+| id                     | Anchor                          | Trigger                                                               | Message intent                                                                 |
+| ---------------------- | ------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `home-start`           | Start button on Home            | `anchor_visible`, only when `!hasCompletedSetup`                      | Host or join a game from here.                                                 |
+| `profile-name`         | Identity row on Home            | `anchor_visible`, only when the name is still the default             | This is how everyone sees you — tap to change it.                              |
+| `lobby-spotify`        | Spotify section in the lobby    | `anchor_visible`, host only, no playlist imported                     | Connect Spotify to play real tracks.                                           |
+| `lobby-start`          | Start-game dock                 | `anchor_visible`, host only, at least two players                     | Everyone is in — start when ready.                                             |
+| `game-timeline-tap`    | Any placed timeline card        | `game_phase: "turn"`, first time the player has a card                | Follow-up discovery: tap a placed card for track details.                      |
+| `game-drag-preview`    | Preview card                    | `first_time_condition: "first_own_turn"`                              | **First gameplay hint:** drag by release year into the chronological timeline. |
+| `game-confirm`         | Confirm action in the turn dock | `first_time_condition: "first_slot_selected"`                         | Confirm when you are happy with the spot.                                      |
+| `game-challenge`       | Challenge action                | `game_phase: "challenge"`, first time, requires at least one TT token | Spend a token to challenge this placement.                                     |
+| `game-tokens`          | Token counter in the header     | `first_time_condition: "first_token_received"`, TT mode on            | Tokens buy skips, extra cards and challenges.                                  |
+| `game-menu`            | Menu trigger in the game header | `anchor_visible`, first game                                          | Settings, players and history live here.                                       |
+| `game-next-song`       | Next-song action dock           | `anchor_visible`, first reveal                                        | Continue when everyone has seen the result.                                    |
+| `game-timeline-switch` | Mine/all timeline switcher      | `anchor_visible`, when multiple timelines are available               | Switch between your cards and the table view.                                  |
 
-Ten hints, each one line, each anchored to a real control, each answering a question a
+Twelve planned hints, each one line, each anchored to a real control, each answering a question a
 first-time player actually has.
 
 Rules for the catalogue:
@@ -159,7 +164,7 @@ Rules for the catalogue:
 
 ## 4. Settings integration
 
-In the app shell menu, a "Help and hints" section:
+In the app shell menu's View tab, a separately divided "Help and hints" section:
 
 - **Show hints** toggle (`enabled`) — some players will want them off immediately.
 - **Reset hints** action — sets all `seenCounts` to 0 and shows a confirmation toast. This
@@ -173,15 +178,15 @@ styling.
 
 ## 5. Implementation sequence
 
-| Step | Work | Verification |
-| --- | --- | --- |
-| 1 | `hintState.ts`, `hintRegistry.ts` (empty catalogue), `hintScheduler.ts` | Pure unit tests for the scheduler: gating, priority, once-only, disabled, version reset, storage failure |
-| 2 | `HintAnchor` / `useHintAnchor` + the shared `IntersectionObserver` | Component test: anchor registers and unregisters; visibility drives the store |
-| 3 | `HintBubble` + overlay-host integration | Component test: renders, positions to each placement, dismisses on all five gestures, respects reduced motion |
-| 4 | Settings section | Component test: toggle, reset, count |
-| 5 | Add the three Home / Lobby hints and their anchors | Component tests per hint trigger |
-| 6 | Add the six Game hints and their anchors | Component tests; E2E for `game-timeline-tap` since it is the owner's stated example |
-| 7 | Copy pass in `en.properties` and `hu.properties` | A test asserting every `HintId` in the registry has both a title and a body key present in **both** catalogues — this is the guard that stops a hint shipping with a raw key visible |
+| Step | Work                                                                    | Verification                                                                                                                                                                         |
+| ---- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1    | `hintState.ts`, `hintRegistry.ts` (empty catalogue), `hintScheduler.ts` | Pure unit tests for the scheduler: gating, priority, once-only, disabled, version reset, storage failure                                                                             |
+| 2    | `HintAnchor` / `useHintAnchor` + the shared `IntersectionObserver`      | Component test: anchor registers and unregisters; visibility drives the store                                                                                                        |
+| 3    | `HintBubble` + overlay-host integration                                 | Component test: renders, positions to each placement, dismisses on all five gestures, respects reduced motion                                                                        |
+| 4    | Settings section                                                        | Component test: toggle, reset, count                                                                                                                                                 |
+| 5    | Add the four Home / Lobby hints and their anchors                       | Component tests per hint trigger                                                                                                                                                     |
+| 6    | Add the eight Game hints and their anchors                              | Component tests; E2E for `game-drag-preview` since it is the owner's revised opening lesson                                                                                          |
+| 7    | Copy pass in `en.properties` and `hu.properties`                        | A test asserting every `HintId` in the registry has both a title and a body key present in **both** catalogues — this is the guard that stops a hint shipping with a raw key visible |
 
 Steps 1-4 build the mechanism with no product surface, which means they can land safely and
 early. Steps 5-6 are then cheap and reviewable one hint at a time.
@@ -190,20 +195,20 @@ early. Steps 5-6 are then cheap and reviewable one hint at a time.
 
 Each is a one-line addition, listed so the work is visible:
 
-| Component | Anchor id |
-| --- | --- |
-| `pages/HomePage/mobile/HomePageMobile.tsx` (Start button) | `home-start` |
-| Home identity row (new, Doc 09 section 2.2) | `profile-name` |
-| `pages/LobbyPage/components/spotify/LobbySpotifySection.tsx` | `lobby-spotify` |
-| `pages/LobbyPage/components/LobbyHostStartPanel.tsx` | `lobby-start` |
+| Component                                                                     | Anchor id           |
+| ----------------------------------------------------------------------------- | ------------------- |
+| `pages/HomePage/mobile/HomePageMobile.tsx` (Start button)                     | `home-start`        |
+| Home identity row (new, Doc 09 section 2.2)                                   | `profile-name`      |
+| `pages/LobbyPage/components/spotify/LobbySpotifySection.tsx`                  | `lobby-spotify`     |
+| `pages/LobbyPage/components/LobbyHostStartPanel.tsx`                          | `lobby-start`       |
 | `pages/GamePage/components/TimelineSortableItem.tsx` (first non-preview card) | `game-timeline-tap` |
-| `pages/GamePage/components/PreviewCard.tsx` | `game-drag-preview` |
-| `pages/GamePage/components/TurnActionDock.tsx` | `game-confirm` |
-| `pages/GamePage/components/ChallengeActionPanel.tsx` | `game-challenge` |
-| `pages/GamePage/components/GamePageHeader.tsx` (token counter) | `game-tokens` |
-| `features/app-shell/AppShellMenu.tsx` (trigger) | `game-menu` |
+| `pages/GamePage/components/PreviewCard.tsx`                                   | `game-drag-preview` |
+| `pages/GamePage/components/TurnActionDock.tsx`                                | `game-confirm`      |
+| `pages/GamePage/components/ChallengeActionPanel.tsx`                          | `game-challenge`    |
+| `pages/GamePage/components/GamePageHeader.tsx` (token counter)                | `game-tokens`       |
+| `features/app-shell/AppShellMenu.tsx` (trigger)                               | `game-menu`         |
 
-`game-timeline-tap` needs care: it must anchor to *one* card, not all of them. Anchor to the
+`game-timeline-tap` needs care: it must anchor to _one_ card, not all of them. Anchor to the
 first placed card by index, and only when the viewed timeline is the player's own.
 
 ## 7. Accessibility
@@ -247,10 +252,10 @@ that, the catalogue is too large.
 
 ## 10. Risk register
 
-| Risk | Mitigation |
-| --- | --- |
-| Hints obstruct gameplay at exactly the wrong moment | One at a time; never over the anchor or the primary action; auto-dismiss; dismiss on anchor interaction; hard cap of two per screen visit. |
-| The catalogue grows into a tutorial nobody reads | The "not discoverable from the UI" rule, applied at review. Adding a hint should prompt the question of whether the UI itself should be clearer. |
-| Anchors drift as components are refactored | Anchor ids are registered by the component that owns the control, so a moved component takes its anchor with it. A test asserts every registry `anchorId` is registered somewhere at runtime in the E2E first-run flow. |
-| Hint state resets unexpectedly and re-teaches an experienced player | `version` bumps are deliberate and reviewed; storage failures degrade to unremembered rather than to a reset loop, and the cap prevents a barrage. |
-| Copy ships as raw keys | The both-catalogues guard test in step 7. |
+| Risk                                                                | Mitigation                                                                                                                                                                                                              |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hints obstruct gameplay at exactly the wrong moment                 | One at a time; never over the anchor or the primary action; auto-dismiss; dismiss on anchor interaction; hard cap of two per screen visit.                                                                              |
+| The catalogue grows into a tutorial nobody reads                    | The "not discoverable from the UI" rule, applied at review. Adding a hint should prompt the question of whether the UI itself should be clearer.                                                                        |
+| Anchors drift as components are refactored                          | Anchor ids are registered by the component that owns the control, so a moved component takes its anchor with it. A test asserts every registry `anchorId` is registered somewhere at runtime in the E2E first-run flow. |
+| Hint state resets unexpectedly and re-teaches an experienced player | `version` bumps are deliberate and reviewed; storage failures degrade to unremembered rather than to a reset loop, and the cap prevents a barrage.                                                                      |
+| Copy ships as raw keys                                              | The both-catalogues guard test in step 7.                                                                                                                                                                               |

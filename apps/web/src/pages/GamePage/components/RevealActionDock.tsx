@@ -1,4 +1,6 @@
 import type { PublicRoomState } from "@tunetrack/shared";
+import { useState } from "react";
+import { FirstRunHint } from "../../../features/hints/FirstRunHint";
 import { useI18n } from "../../../features/i18n";
 import type { ConfirmRevealActionStatus } from "../GamePage.types";
 import { ActionDock, PrimaryActionButton } from "./ActionDock";
@@ -19,6 +21,7 @@ export function RevealActionDock({
   roomState,
 }: RevealActionDockProps) {
   const { t } = useI18n();
+  const [nextSongHintAnchor, setNextSongHintAnchor] = useState<HTMLElement | null>(null);
 
   if (roomState.status !== "reveal" || !canConfirmReveal) {
     return null;
@@ -34,13 +37,11 @@ export function RevealActionDock({
   }
 
   return (
-    <ActionDock>
-      <PrimaryActionButton
-        disabled={isConfirmRevealPending}
-        onClick={handleConfirmReveal}
-      >
+    <ActionDock containerRef={setNextSongHintAnchor}>
+      <PrimaryActionButton disabled={isConfirmRevealPending} onClick={handleConfirmReveal}>
         {buttonLabel}
       </PrimaryActionButton>
+      <FirstRunHint anchor={nextSongHintAnchor} id="game-next-song" isEligible />
     </ActionDock>
   );
 }

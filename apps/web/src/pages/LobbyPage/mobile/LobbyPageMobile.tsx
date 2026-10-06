@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { AppPageShell } from "../../../features/mobile-shell/AppPageShell";
+import { FirstRunHint } from "../../../features/hints/FirstRunHint";
 import { useI18n } from "../../../features/i18n";
 import { MotionDialogPortal } from "../../../features/motion";
 import { PlayerNameField } from "../../../features/profile/PlayerNameField";
@@ -33,6 +34,7 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
   const currentPlayer = room.players.find((player) => player.id === room.currentPlayerId);
   const visibleDisplayName = currentPlayer?.displayName ?? identity.displayName;
   const advancedSectionRef = useRef<HTMLElement | null>(null);
+  const [startHintAnchor, setStartHintAnchor] = useState<HTMLElement | null>(null);
   const roomNameInputId = useId();
   const [draftRoomId, setDraftRoomId] = useState(resolvedRoomId);
   const [infoContent, setInfoContent] = useState<InfoContent | null>(null);
@@ -163,7 +165,7 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
             </form>
           </div>
 
-          <div className={styles.setupFooter}>
+          <div className={styles.setupFooter} ref={setStartHintAnchor}>
             <Button
               disabled={
                 identity.isStartGamePending ||
@@ -186,6 +188,11 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
             <Button onClick={scrollToAdvancedSettings} type="button" variant="ghost">
               {t("lobby.setup.moreSettings")} ↓
             </Button>
+            <FirstRunHint
+              anchor={startHintAnchor}
+              id="lobby-start"
+              isEligible={identity.isHost && room.players.length >= 2}
+            />
           </div>
         </div>
       </section>

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useEffect, useId, useState } from "react";
 import type { PublicRoomSettings } from "@tunetrack/shared";
 import { useLocation, useNavigate } from "react-router-dom";
+import { FirstRunHint } from "../../../../features/hints/FirstRunHint";
 import { useI18n } from "../../../../features/i18n";
 import { ActionButton } from "../../../../features/ui/ActionButton";
 import { SettingInfoButton } from "../../../../features/ui/SettingField";
@@ -31,6 +32,7 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
   const historyState = useCurrentHistoryState(location.state);
   const isSetupOpen = historyState[spotifySetupHistoryStateKey] === setupHistoryEntryId;
   const [activeSource, setActiveSource] = useState<SpotifySetupSource>("playlistUrl");
+  const [spotifyHintAnchor, setSpotifyHintAnchor] = useState<HTMLElement | null>(null);
   const spotifyState = useLobbySpotify();
   const isConnected = currentSettings.spotifyAuthStatus === "connected";
   const isImported = currentSettings.playlistImported;
@@ -146,17 +148,21 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
             </div>
           ) : null}
 
-          <ActionButton
-            className={styles.spotifySetupOpenBtn}
-            onClick={openSetup}
-            type="button"
-            variant="neutral"
-          >
-            <SpotifyLogo />
-            {isImported ? t("lobby.spotify.openSetupReady") : t("lobby.spotify.openSetup")}
-          </ActionButton>
+          <div ref={setSpotifyHintAnchor}>
+            <ActionButton
+              className={styles.spotifySetupOpenBtn}
+              onClick={openSetup}
+              type="button"
+              variant="neutral"
+            >
+              <SpotifyLogo />
+              {isImported ? t("lobby.spotify.openSetupReady") : t("lobby.spotify.openSetup")}
+            </ActionButton>
+          </div>
         </div>
       </SurfaceCard>
+
+      <FirstRunHint anchor={spotifyHintAnchor} id="lobby-spotify" isEligible={!isImported} />
 
       <SpotifySetupModal
         activeSource={activeSource}

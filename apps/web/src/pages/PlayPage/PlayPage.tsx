@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { FirstRunHint } from "../../features/hints/FirstRunHint";
 import { AppPageShell } from "../../features/mobile-shell/AppPageShell";
 import { useI18n } from "../../features/i18n";
 import { PlayerNameField } from "../../features/profile/PlayerNameField";
@@ -9,6 +11,7 @@ import styles from "./PlayPage.module.css";
 export function PlayPage() {
   const { t } = useI18n();
   const controller = usePlayPageController();
+  const [profileHintAnchor, setProfileHintAnchor] = useState<HTMLElement | null>(null);
 
   return (
     <AppPageShell panelClassName={styles.panelShell} screenClassName={styles.screenShell}>
@@ -20,9 +23,16 @@ export function PlayPage() {
         </header>
 
         <section className={styles.setupCard}>
-          <PlayerNameField
-            displayName={controller.displayName}
-            onSave={controller.setDisplayName}
+          <div ref={setProfileHintAnchor}>
+            <PlayerNameField
+              displayName={controller.displayName}
+              onSave={controller.setDisplayName}
+            />
+          </div>
+          <FirstRunHint
+            anchor={profileHintAnchor}
+            id="profile-name"
+            isEligible={!controller.hasCompletedSetup}
           />
           <form className={styles.form} onSubmit={controller.handleCreateRoomSubmit}>
             <div className={styles.sectionHeader}>

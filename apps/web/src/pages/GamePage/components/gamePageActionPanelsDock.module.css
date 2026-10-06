@@ -151,12 +151,12 @@
 }
 
 @media (max-width: 720px), (hover: none) and (pointer: coarse) {
-.floatingActionDock {
-  position: fixed;
+  .floatingActionDock {
+    position: fixed;
     left: calc(var(--safe-area-left) + 14px);
     right: calc(var(--safe-area-right) + 14px);
     bottom: calc(var(--safe-area-bottom) + 10px);
-    z-index: 900;
+    z-index: var(--z-nav);
     margin-top: 0;
     padding: 8px;
     box-sizing: border-box;
@@ -172,88 +172,85 @@
     /* backdrop-filter: blur(18px) saturate(1.08); */
     /* -webkit-backdrop-filter: blur(18px) saturate(1.08); */
     /* box-shadow: 0 18px 44px rgb(0 0 0 / 42%); */
-}
+  }
 
-.floatingActionDockStacked {
-  width: auto;
+  .floatingActionDockStacked {
+    width: auto;
     border-radius: 28px;
-}
+  }
 
-.floatingActionSecondaryRow {
-  gap: 8px;
-}
+  .floatingActionSecondaryRow {
+    gap: 8px;
+  }
 
-.floatingPrimaryButton,
+  .floatingPrimaryButton,
   .floatingSecondaryButton,
   .actionButtonMotionWrap {
-  flex: 1;
-}
+    flex: 1;
+  }
 
-.floatingPrimaryButton,
+  .floatingPrimaryButton,
   .floatingSecondaryButton {
-  min-height: 54px;
+    min-height: 54px;
     min-width: 0;
     padding: 13px 12px;
     font-size: 15px;
-}
+  }
 
-.ttCostBadge {
-  margin-left: auto;
+  .ttCostBadge {
+    margin-left: auto;
     font-size: 12px;
+  }
 }
-}
-
 
 @media (max-width: 720px) and (max-height: 700px),
   (hover: none) and (pointer: coarse) and (max-height: 700px) {
-.floatingActionDock {
-  bottom: calc(var(--safe-area-bottom) + 8px);
+  .floatingActionDock {
+    bottom: calc(var(--safe-area-bottom) + 8px);
     gap: 6px;
     padding: 4px 6px;
-}
+  }
 
-.floatingActionDockStacked {
-  border-radius: 24px;
-}
+  .floatingActionDockStacked {
+    border-radius: 24px;
+  }
 
-.floatingActionSecondaryRow {
-  gap: 6px;
-}
+  .floatingActionSecondaryRow {
+    gap: 6px;
+  }
 
-.floatingPrimaryButton,
+  .floatingPrimaryButton,
   .floatingSecondaryButton {
-  min-height: 46px;
+    min-height: 46px;
     padding: 10px 10px;
     font-size: 14px;
-}
+  }
 
-.ttCostBadge {
-  min-width: 24px;
+  .ttCostBadge {
+    min-width: 24px;
     font-size: 11px;
+  }
 }
-}
-
 
 @media (max-height: 420px) and (orientation: landscape) {
-.floatingActionDock {
-  left: calc(var(--safe-area-left) + 10px);
+  .floatingActionDock {
+    left: calc(var(--safe-area-left) + 10px);
     right: calc(var(--safe-area-right) + 10px);
     bottom: calc(var(--safe-area-bottom) + 4px);
     gap: 5px;
     padding: 2px 4px;
-}
+  }
 
-.floatingPrimaryButton,
+  .floatingPrimaryButton,
   .floatingSecondaryButton {
-  min-height: 40px;
+    min-height: 40px;
     padding: 8px 9px;
     font-size: 13px;
+  }
 }
-}
-
 
 @media (prefers-reduced-motion: reduce) {
-.tokenSpendFlyout {
-  display: none;
-}
+  .tokenSpendFlyout {
+    display: none;
+  }
 }

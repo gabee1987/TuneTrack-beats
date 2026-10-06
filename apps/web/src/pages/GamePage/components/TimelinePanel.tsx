@@ -6,18 +6,9 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { FirstRunHint } from "../../../features/hints/FirstRunHint";
-import {
-  MotionPresence,
-  timelineCelebrationTransitionContract,
-} from "../../../features/motion";
+import { MotionPresence, timelineCelebrationTransitionContract } from "../../../features/motion";
 import { usePageLayoutMode } from "../../../hooks/usePageLayoutMode";
 import type {
   GamePageCard,
@@ -87,9 +78,11 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
   const previewSlotIndex = dragModel.previewSlotIndex;
 
   const [cardForInfo, setCardForInfo] = useState<GamePageCard | null>(null);
-  const [timelineCardHintAnchor, setTimelineCardHintAnchor] =
-    useState<HTMLElement | null>(null);
+  const [timelineCardHintAnchor, setTimelineCardHintAnchor] = useState<HTMLElement | null>(null);
   const [previewHintAnchor, setPreviewHintAnchor] = useState<HTMLElement | null>(null);
+  const [timelineSwitchHintAnchor, setTimelineSwitchHintAnchor] = useState<HTMLElement | null>(
+    null,
+  );
   const [dragOverlaySize, setDragOverlaySize] = useState<{
     height: number;
     width: number;
@@ -97,12 +90,12 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
   const timelineRowRef = useRef<HTMLDivElement | null>(null);
   const previewCardElementRef = useRef<HTMLElement | null>(null);
   const lastCorrectPlacementAnimationKeyRef = useRef<string | null>(null);
-  const [activeCorrectPlacementAnimationKey, setActiveCorrectPlacementAnimationKey] =
-    useState<string | null>(null);
+  const [activeCorrectPlacementAnimationKey, setActiveCorrectPlacementAnimationKey] = useState<
+    string | null
+  >(null);
   const correctPlacementCard =
-    displayShowCorrectPlacementPreview &&
-    model.interaction.originalChosenSlotIndex !== null
-      ? model.render.timelineCards[model.interaction.originalChosenSlotIndex] ?? null
+    displayShowCorrectPlacementPreview && model.interaction.originalChosenSlotIndex !== null
+      ? (model.render.timelineCards[model.interaction.originalChosenSlotIndex] ?? null)
       : null;
   // Derived from this render's own reveal, never from the toast celebration event: that
   // event only exists for revealType "placement" and sits in state indefinitely once one
@@ -121,15 +114,11 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
             : correctPlacementCard.releaseYear,
         ].join(":")
       : null;
-  const {
-    activeCelebrationEvent,
-    flyAnimationState,
-    mineButtonRef,
-    previewCardRectRef,
-  } = useTimelinePanelCelebrationState({
-    timelineView,
-    transitionEvent: model.render.timelineCelebrationTransitionEvent,
-  });
+  const { activeCelebrationEvent, flyAnimationState, mineButtonRef, previewCardRectRef } =
+    useTimelinePanelCelebrationState({
+      timelineView,
+      transitionEvent: model.render.timelineCelebrationTransitionEvent,
+    });
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -149,11 +138,14 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
     lastCorrectPlacementAnimationKeyRef.current = correctPlacementAnimationKey;
     setActiveCorrectPlacementAnimationKey(correctPlacementAnimationKey);
 
-    const timeoutId = window.setTimeout(() => {
-      setActiveCorrectPlacementAnimationKey((currentKey) =>
-        currentKey === correctPlacementAnimationKey ? null : currentKey,
-      );
-    }, timelineCelebrationTransitionContract.correctPlacementHeroDurationSeconds * 1000 + 250);
+    const timeoutId = window.setTimeout(
+      () => {
+        setActiveCorrectPlacementAnimationKey((currentKey) =>
+          currentKey === correctPlacementAnimationKey ? null : currentKey,
+        );
+      },
+      timelineCelebrationTransitionContract.correctPlacementHeroDurationSeconds * 1000 + 250,
+    );
 
     return () => {
       window.clearTimeout(timeoutId);
@@ -201,9 +193,7 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
     });
   }
 
-  function handleDragStart(
-    ...args: Parameters<typeof completeDragStart>
-  ) {
+  function handleDragStart(...args: Parameters<typeof completeDragStart>) {
     captureDragOverlaySize();
     completeDragStart(...args);
   }
@@ -232,8 +222,7 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
       return;
     }
 
-    previewCardRectRef.current =
-      previewCardElementRef.current.getBoundingClientRect();
+    previewCardRectRef.current = previewCardElementRef.current.getBoundingClientRect();
   }, [orderedItemIds, previewCard, previewSlotIndex, timelineView]);
 
   return (
@@ -246,11 +235,10 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
         model={model.header}
         onMineButtonRef={(node) => {
           mineButtonRef.current = node;
+          setTimelineSwitchHintAnchor(node);
         }}
       />
-      {model.render.showHint ? (
-        <p className={styles.timelineHint}>{model.render.hint}</p>
-      ) : null}
+      {model.render.showHint ? <p className={styles.timelineHint}>{model.render.hint}</p> : null}
       <MotionPresence mode="sync">
         {activeCelebrationEvent ? (
           <TimelineCelebration
@@ -319,9 +307,7 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
         anchor={previewHintAnchor}
         id="game-drag-preview"
         isEligible={
-          model.render.isOwnTimeline &&
-          model.interaction.selectable &&
-          previewCard !== null
+          model.render.isOwnTimeline && model.interaction.selectable && previewCard !== null
         }
       />
       <FirstRunHint
@@ -332,6 +318,11 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
           model.render.timelineCards.length > 0 &&
           previewCard === null
         }
+      />
+      <FirstRunHint
+        anchor={timelineSwitchHintAnchor}
+        id="game-timeline-switch"
+        isEligible={Boolean(model.header.canToggleView)}
       />
       <TimelinePanelFlyAnimation
         flyAnimationState={flyAnimationState}

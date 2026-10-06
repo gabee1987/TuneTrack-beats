@@ -6,13 +6,13 @@ import { I18nProvider } from "../../i18n";
 import { useAppShellMenuPreferencesState } from "../hooks/useAppShellMenuPreferencesState";
 import { AppShellMenuPanels } from "./AppShellMenuPanels";
 
-function SettingsPanel() {
+function MenuPanel({ tabId = "view" }: { tabId?: "settings" | "view" }) {
   const preferencesState = useAppShellMenuPreferencesState();
 
   return (
     <I18nProvider>
       <AppShellMenuPanels
-        activeTab={{ id: "settings", label: "Settings", content: null }}
+        activeTab={{ id: tabId, label: tabId, content: null }}
         preferencesState={preferencesState}
       />
     </I18nProvider>
@@ -24,7 +24,7 @@ describe("AppShellMenuPanels hints settings", () => {
     const user = userEvent.setup();
     markHintSeen("game-drag-preview");
 
-    render(<SettingsPanel />);
+    render(<MenuPanel />);
     const toggle = screen.getByRole("switch", { name: "Show hints" });
 
     await user.click(toggle);
@@ -41,10 +41,19 @@ describe("AppShellMenuPanels hints settings", () => {
     markHintSeen("game-drag-preview");
     expect(hasSeenHint("game-drag-preview")).toBe(true);
 
-    render(<SettingsPanel />);
+    render(<MenuPanel />);
     await user.click(screen.getByRole("button", { name: "Reset hints" }));
 
     expect(hasSeenHint("game-drag-preview")).toBe(false);
     expect(screen.getByText("Hints will appear again when they are relevant.")).toBeVisible();
+  });
+
+  it("keeps hint controls in View instead of general Settings", () => {
+    const { rerender } = render(<MenuPanel tabId="settings" />);
+    expect(screen.queryByRole("heading", { name: "Help and hints" })).not.toBeInTheDocument();
+
+    rerender(<MenuPanel tabId="view" />);
+    expect(screen.getByRole("heading", { name: "Help and hints" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Reset hints" })).toBeVisible();
   });
 });

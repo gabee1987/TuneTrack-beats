@@ -1,9 +1,5 @@
 import { useState } from "react";
-import {
-  isHintsEnabled,
-  resetHints,
-  setHintsEnabled,
-} from "../../hints/hintState";
+import { isHintsEnabled, resetHints, setHintsEnabled } from "../../hints/hintState";
 import type { ViewPreferences } from "../../preferences/uiPreferences";
 import type { AppShellMenuPreferencesState, AppShellMenuTab } from "../AppShellMenu.types";
 import { useI18n } from "../../i18n";
@@ -80,28 +76,43 @@ export function AppShellMenuPanels({ activeTab, preferencesState }: AppShellMenu
 
   if (activeTab?.id === "view") {
     return (
-      <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>{t("appShell.menu.viewTitle")}</h3>
-        <p className={styles.sectionDescription}>{t("appShell.menu.viewDescription")}</p>
-        <div className={styles.fieldGroup}>
-          {viewPreferenceFields.map((field) => {
-            const label = t(`appShell.viewPreferences.${field.key}.label`);
-            return (
-              <ToggleField
-                checked={preferencesState.view[field.key]}
-                hint={t(`appShell.viewPreferences.${field.key}.hint`)}
-                key={field.key}
-                label={label}
-                onChange={(checked) =>
-                  preferencesState.updateViewPreferences({
-                    [field.key]: checked,
-                  })
-                }
-              />
-            );
-          })}
+      <>
+        <div className={styles.section}>
+          <h3 className={styles.sectionTitle}>{t("appShell.menu.viewTitle")}</h3>
+          <p className={styles.sectionDescription}>{t("appShell.menu.viewDescription")}</p>
+          <div className={styles.fieldGroup}>
+            {viewPreferenceFields.map((field) => {
+              const label = t(`appShell.viewPreferences.${field.key}.label`);
+              return (
+                <ToggleField
+                  checked={preferencesState.view[field.key]}
+                  hint={t(`appShell.viewPreferences.${field.key}.hint`)}
+                  key={field.key}
+                  label={label}
+                  onChange={(checked) =>
+                    preferencesState.updateViewPreferences({
+                      [field.key]: checked,
+                    })
+                  }
+                />
+              );
+            })}
+          </div>
         </div>
-      </div>
+        <HintSettingsSection
+          hasResetHints={hasResetHints}
+          hintsEnabled={hintsEnabled}
+          onEnabledChange={(enabled) => {
+            setHintsEnabled(enabled);
+            setHintsEnabledState(enabled);
+            setHasResetHints(false);
+          }}
+          onReset={() => {
+            resetHints();
+            setHasResetHints(true);
+          }}
+        />
+      </>
     );
   }
 
@@ -129,9 +140,7 @@ export function AppShellMenuPanels({ activeTab, preferencesState }: AppShellMenu
 
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>{t("appShell.menu.revealedCardTitle")}</h3>
-          <p className={styles.sectionDescription}>
-            {t("appShell.menu.revealedCardDescription")}
-          </p>
+          <p className={styles.sectionDescription}>{t("appShell.menu.revealedCardDescription")}</p>
           <div className={styles.segmentedRow}>
             <SegmentedButton
               activeValue={preferencesState.revealedCardMode}
@@ -161,38 +170,6 @@ export function AppShellMenuPanels({ activeTab, preferencesState }: AppShellMenu
               <span className={styles.cardStylePreviewTitle}>Example Track</span>
             </div>
           </div>
-        </div>
-
-        <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>{t("appShell.menu.hintsTitle")}</h3>
-          <p className={styles.sectionDescription}>{t("appShell.menu.hintsDescription")}</p>
-          <div className={styles.fieldGroup}>
-            <ToggleField
-              checked={hintsEnabled}
-              hint={t("appShell.menu.showHintsHint")}
-              label={t("appShell.menu.showHints")}
-              onChange={(enabled) => {
-                setHintsEnabled(enabled);
-                setHintsEnabledState(enabled);
-                setHasResetHints(false);
-              }}
-            />
-          </div>
-          <Button
-            onClick={() => {
-              resetHints();
-              setHasResetHints(true);
-            }}
-            type="button"
-            variant="secondary"
-          >
-            {t("appShell.menu.resetHints")}
-          </Button>
-          {hasResetHints ? (
-            <p aria-live="polite" className={styles.sectionDescription}>
-              {t("appShell.menu.hintsResetConfirmation")}
-            </p>
-          ) : null}
         </div>
       </>
     );
@@ -226,6 +203,52 @@ export function AppShellMenuPanels({ activeTab, preferencesState }: AppShellMenu
   }
 
   return activeTab?.content ?? null;
+}
+
+interface HintSettingsSectionProps {
+  hasResetHints: boolean;
+  hintsEnabled: boolean;
+  onEnabledChange: (enabled: boolean) => void;
+  onReset: () => void;
+}
+
+function HintSettingsSection({
+  hasResetHints,
+  hintsEnabled,
+  onEnabledChange,
+  onReset,
+}: HintSettingsSectionProps) {
+  const { t } = useI18n();
+
+  return (
+    <section
+      aria-labelledby="hint-settings-title"
+      className={`${styles.section} ${styles.hintSettingsSection}`}
+    >
+      <h3 className={styles.sectionTitle} id="hint-settings-title">
+        {t("appShell.menu.hintsTitle")}
+      </h3>
+      <p className={styles.sectionDescription}>{t("appShell.menu.hintsDescription")}</p>
+      <div className={styles.fieldGroup}>
+        <ToggleField
+          checked={hintsEnabled}
+          hint={t("appShell.menu.showHintsHint")}
+          label={t("appShell.menu.showHints")}
+          onChange={onEnabledChange}
+        />
+      </div>
+      <div className={styles.hintSettingsActions}>
+        <Button onClick={onReset} type="button" variant="secondary">
+          {t("appShell.menu.resetHints")}
+        </Button>
+      </div>
+      {hasResetHints ? (
+        <p aria-live="polite" className={styles.sectionDescription}>
+          {t("appShell.menu.hintsResetConfirmation")}
+        </p>
+      ) : null}
+    </section>
+  );
 }
 
 function ToggleField({ checked, hint, label, onChange }: ToggleFieldProps) {

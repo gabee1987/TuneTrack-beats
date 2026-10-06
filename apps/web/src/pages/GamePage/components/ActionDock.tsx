@@ -17,8 +17,7 @@ export function useMobileControlPortalTarget(): HTMLElement | null {
   useEffect(() => {
     function updatePortalTarget() {
       const shouldPortal =
-        typeof window !== "undefined" &&
-        window.matchMedia(MOBILE_CONTROL_MEDIA_QUERY).matches;
+        typeof window !== "undefined" && window.matchMedia(MOBILE_CONTROL_MEDIA_QUERY).matches;
 
       setPortalTarget(shouldPortal ? document.body : null);
     }
@@ -43,9 +42,10 @@ export function useMobileControlPortalTarget(): HTMLElement | null {
 interface ActionDockProps {
   children: React.ReactNode;
   className?: string | undefined;
+  containerRef?: React.Ref<HTMLDivElement>;
 }
 
-export function ActionDock({ children, className }: ActionDockProps) {
+export function ActionDock({ children, className, containerRef }: ActionDockProps) {
   const reduceMotion = useReducedMotionPreference();
   const portalTarget = useMobileControlPortalTarget();
   const isPresent = useIsPresent();
@@ -64,6 +64,7 @@ export function ActionDock({ children, className }: ActionDockProps) {
 
   const dock = (
     <motion.div
+      ref={containerRef}
       animate="animate"
       className={`${styles.floatingActionDock}${className ? ` ${className}` : ""}`}
       exit="exit"

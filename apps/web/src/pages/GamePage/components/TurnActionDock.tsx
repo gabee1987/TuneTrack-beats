@@ -19,11 +19,7 @@ import type {
   SkipTrackActionStatus,
   SkipTurnActionStatus,
 } from "../GamePage.types";
-import {
-  ActionDock,
-  PrimaryActionButton,
-  SecondaryActionButton,
-} from "./ActionDock";
+import { ActionDock, PrimaryActionButton, SecondaryActionButton } from "./ActionDock";
 import styles from "./gamePageActionPanelsStyles";
 
 function useTurnSkipCountdown(deadlineEpochMs: number | null): string | null {
@@ -156,7 +152,13 @@ export function TurnActionDock({
   if (roomState.status !== "turn" && !isChallengePhasSkip) {
     return null;
   }
-  if (roomState.status === "turn" && !canUseSkipTrack && !canUseBuyCard && !canConfirmTurnPlacement && !canSkipOfflinePlayer) {
+  if (
+    roomState.status === "turn" &&
+    !canUseSkipTrack &&
+    !canUseBuyCard &&
+    !canConfirmTurnPlacement &&
+    !canSkipOfflinePlayer
+  ) {
     return null;
   }
   const hasTurnSecondaryActions = canUseSkipTrack || canUseBuyCard;
@@ -168,9 +170,7 @@ export function TurnActionDock({
       {canSkipOfflinePlayer && offlinePlayerName ? (
         <div className={styles.offlinePlayerPanel}>
           <div className={styles.offlinePlayerInfo}>
-            <span className={styles.offlinePlayerLabel}>
-              {t("game.controls.waitingFor")}
-            </span>
+            <span className={styles.offlinePlayerLabel}>{t("game.controls.waitingFor")}</span>
             <span className={styles.offlinePlayerName}>{offlinePlayerName}</span>
             <span className={styles.offlinePlayerStatus}>{t("gameMenu.offline")}</span>
           </div>
@@ -181,7 +181,10 @@ export function TurnActionDock({
           ) : null}
         </div>
       ) : null}
-      <ActionDock className={useStackedTurnActions ? styles.floatingActionDockStacked : ""}>
+      <ActionDock
+        className={useStackedTurnActions ? styles.floatingActionDockStacked : ""}
+        containerRef={setConfirmHintAnchor}
+      >
         {useStackedTurnActions ? (
           <>
             <div className={styles.floatingActionSecondaryRow}>
@@ -251,11 +254,7 @@ export function TurnActionDock({
               layout="position"
               transition={createLayoutTransition(reduceMotion)}
             >
-              <PrimaryActionButton
-                buttonRef={setConfirmHintAnchor}
-                disabled={isPlaceCardPending}
-                onClick={() => handlePlaceCard()}
-              >
+              <PrimaryActionButton disabled={isPlaceCardPending} onClick={() => handlePlaceCard()}>
                 {placeCardButtonLabel}
               </PrimaryActionButton>
             </motion.span>
@@ -305,10 +304,7 @@ export function TurnActionDock({
                 <SecondaryActionButton
                   disabled={isBuyTimelineCardPending}
                   onClick={(event) => {
-                    const origin = resolveSpendOrigin(
-                      event.currentTarget,
-                      buyCostBadgeRef.current,
-                    );
+                    const origin = resolveSpendOrigin(event.currentTarget, buyCostBadgeRef.current);
                     onTokenSpendAnimationStart?.({
                       amount: -BUY_TIMELINE_CARD_TT_COST,
                       ...origin,
@@ -329,7 +325,6 @@ export function TurnActionDock({
                 transition={createLayoutTransition(reduceMotion)}
               >
                 <PrimaryActionButton
-                  buttonRef={setConfirmHintAnchor}
                   disabled={isPlaceCardPending}
                   onClick={() => handlePlaceCard()}
                 >
