@@ -11,6 +11,7 @@
       "Bash(npm run e2e*)",
       "Bash(npm ls*)",
       "Bash(npx vitest run*)",
+      "Bash(npm exec -w @tunetrack/* -- vitest run*)",
       "Bash(npx tsc --noEmit*)",
       "Bash(npx tsc -p * --noEmit*)",
       "Bash(npx prettier --check*)",

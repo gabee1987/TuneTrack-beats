@@ -215,22 +215,6 @@ export class TurnFlowService {
     };
   }
 
-  public removePlayer(gameState: GameState, playerId: string): GameState {
-    if (!gameState.players.some((player) => player.id === playerId)) {
-      throw new Error("PLAYER_NOT_FOUND");
-    }
-
-    const players = gameState.players.filter((player) => player.id !== playerId);
-    const timelines = { ...gameState.timelines };
-    delete timelines[playerId];
-
-    return {
-      ...gameState,
-      players,
-      timelines,
-    };
-  }
-
   public skipOfflinePlayerTurn(gameState: GameState): GameState {
     if (gameState.phase !== "turn" || !gameState.turn) {
       throw new Error("GAME_NOT_IN_TURN_PHASE");

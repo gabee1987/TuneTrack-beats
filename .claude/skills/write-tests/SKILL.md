@@ -68,9 +68,9 @@ Server: `apps/server/vitest.setup.ts` sets the Spotify env; construct `RoomRegis
 ## 4. Run
 
 ```
-npx vitest run --config apps/web/vitest.config.ts <file>
-npx vitest run --config apps/server/vitest.config.ts <file>
-npx vitest run --root packages/game-engine <file>
+npm exec -w @tunetrack/web -- vitest run <file>
+npm exec -w @tunetrack/server -- vitest run <file>
+npm exec -w @tunetrack/game-engine -- vitest run <file>
 ```
 
 Then `/verify` at the matching scope. Report the test count before and after.

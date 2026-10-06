@@ -45,9 +45,13 @@ npm run test -w @tunetrack/web
 Single file while iterating (no build needed):
 
 ```
-npx vitest run --config apps/web/vitest.config.ts apps/web/src/path/to/file.test.tsx
-npx vitest run --config apps/server/vitest.config.ts apps/server/tests/rooms/RoomStore.test.ts
+npm exec -w @tunetrack/web -- vitest run src/path/to/file.test.tsx
+npm exec -w @tunetrack/server -- vitest run tests/rooms/RoomStore.test.ts
+npm exec -w @tunetrack/game-engine -- vitest run tests/gameFlow.test.ts
 ```
+
+Paths are relative to the workspace. Run from the workspace, never with `--config` from the
+root: the server setup file and the web guard tests resolve paths from the working directory.
 
 Server tests live under `apps/server/tests/` mirroring `src/` (`tests/rooms/`,
 `tests/realtime/`, `tests/spotify/`, `tests/decks/`); web tests sit beside the source file;

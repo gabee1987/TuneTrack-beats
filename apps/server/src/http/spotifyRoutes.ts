@@ -40,7 +40,13 @@ async function handleSpotifyCallback(
     },
   });
 
-  const { authResult, roomId, socketId } = await spotifyAuthService.handleCallback(code, state, error);
+  const { authResult, roomId, socketId } = await spotifyAuthService.handleCallback(
+    code,
+    state,
+    error,
+    (callbackRoomId, callbackSocketId) =>
+      roomService.isRoomHostSocket(callbackRoomId, callbackSocketId),
+  );
   logAuditEvent({
     auditKind: "spotify_auth",
     action: "oauth_callback_completed",

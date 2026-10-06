@@ -308,6 +308,15 @@ export class RoomRegistry {
     }
   }
 
+  public isHost(socketId: string, roomId: RoomId): boolean {
+    try {
+      this.requireHost(socketId, roomId);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   public requireSpotifyPlaybackOwner(socketId: string, roomId: RoomId): void {
     const membership = this.store.requireMembership(socketId);
     const roomRecord = this.store.getRoomRecordForMember(socketId, roomId);

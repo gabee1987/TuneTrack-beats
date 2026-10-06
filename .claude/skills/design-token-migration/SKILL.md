@@ -58,7 +58,7 @@ cases") and §6 ("The one permitted literal"). Anything else is a defect.
 ## 6. Finish
 
 1. Remove the file from `PENDING_MIGRATION`; the guard's second test fails if you forget.
-2. `npx vitest run --config apps/web/vitest.config.ts apps/web/src/test/guards` then
+2. `npm exec -w @tunetrack/web -- vitest run src/test/guards` then
    `/verify` for `@tunetrack/web`.
 3. Check the component on `/dev/ui` or its page in both themes if the change touched a
    primitive.

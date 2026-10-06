@@ -1,6 +1,7 @@
 import type { GameState } from "../domain/GameState.js";
 import { ChallengeFlowService } from "./ChallengeFlowService.js";
 import type { PlaceCardOptions, StartGameInput } from "./gameFlowTypes.js";
+import { PlayerRemovalService } from "./PlayerRemovalService.js";
 import { TtActionService } from "./TtActionService.js";
 import { TurnFlowService } from "./TurnFlowService.js";
 
@@ -14,6 +15,7 @@ export class GameFlowService {
   private readonly turnFlow = new TurnFlowService();
   private readonly challengeFlow = new ChallengeFlowService();
   private readonly ttActions = new TtActionService();
+  private readonly playerRemoval = new PlayerRemovalService(this.challengeFlow);
 
   public startGame(startGameInput: StartGameInput): GameState {
     return this.turnFlow.startGame(startGameInput);
@@ -68,7 +70,7 @@ export class GameFlowService {
   }
 
   public removePlayer(gameState: GameState, playerId: string): GameState {
-    return this.turnFlow.removePlayer(gameState, playerId);
+    return this.playerRemoval.removePlayer(gameState, playerId);
   }
 
   public skipCurrentTrackWithTt(

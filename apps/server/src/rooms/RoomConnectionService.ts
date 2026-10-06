@@ -1,4 +1,4 @@
-import { GameFlowService, type GameState } from "@tunetrack/game-engine";
+import { GameFlowService } from "@tunetrack/game-engine";
 import type { PublicRoomState, RoomId, TransferHostPayloadParsed } from "@tunetrack/shared";
 import {
   buildConnectedRoomState,
@@ -94,18 +94,10 @@ export class RoomConnectionService {
       payload.playerId,
     );
 
-    const isActivePlayer =
-      !!roomRecord.gameState &&
-      roomRecord.gameState.phase === "turn" &&
-      roomRecord.gameState.turn?.activePlayerId === payload.playerId;
-
-    let gameState = roomRecord.gameState;
-    if (isActivePlayer && gameState) {
-      gameState = this.gameFlowService.skipOfflinePlayerTurn(gameState);
-    }
-    if (gameState) {
-      gameState = removePlayerFromGameState(gameState, payload.playerId);
-    }
+    const gameState = roomRecord.gameState
+      ? this.gameFlowService.removePlayer(roomRecord.gameState, payload.playerId)
+      : null;
+    if (gameState?.phase !== "challenge") this.timers.clearChallenge(payload.roomId);
 
     const { nextRoomState: baseRoomState } = buildPlayerRemovedRoomState(
       roomRecord.roomState,
@@ -441,16 +433,4 @@ export class RoomConnectionService {
 
     return nextRoomState;
   }
-}
-
-function removePlayerFromGameState(gameState: GameState, playerId: string): GameState {
-  const players = gameState.players.filter((player) => player.id !== playerId);
-  const timelines = { ...gameState.timelines };
-  delete timelines[playerId];
-
-  return {
-    ...gameState,
-    players,
-    timelines,
-  };
 }

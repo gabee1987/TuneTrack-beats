@@ -346,9 +346,9 @@ export class RoomService {
   }
 
   public closeRoom(closeRoomPayload: CloseRoomPayloadParsed, socketId: string): string {
-    this.spotifyAuthService.clearHostTokens(closeRoomPayload.roomId);
-    this.spotifyPlaybackSessions.clearRoom(closeRoomPayload.roomId);
     const roomId = this.roomRegistry.closeRoom(socketId, closeRoomPayload);
+    this.spotifyAuthService.clearHostTokens(roomId);
+    this.spotifyPlaybackSessions.clearRoom(roomId);
     logger.info({ roomId, socketId }, "room closed");
     return roomId;
   }
@@ -414,7 +414,12 @@ export class RoomService {
     payload: RequestSpotifyAuthUrlPayloadParsed,
     socketId: string,
   ): string {
+    this.roomRegistry.requireHost(socketId, payload.roomId);
     return this.spotifyAuthService.buildAuthUrl(payload.roomId, socketId, payload.clientOrigin);
+  }
+
+  public isRoomHostSocket(roomId: string, socketId: string): boolean {
+    return this.roomRegistry.isHost(socketId, roomId);
   }
 
   public searchSpotifyPlaylists(

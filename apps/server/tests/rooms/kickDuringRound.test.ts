@@ -1,0 +1,107 @@
+import type { GameTrackCard } from "@tunetrack/game-engine";
+import { updateRoomSettingsPayloadSchema } from "@tunetrack/shared";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { RoomRegistry } from "../../src/rooms/RoomRegistry.js";
+
+const TEST_ROOM_ID = "TEST_ROOM_1";
+const CHALLENGE_WINDOW_SECONDS = 10;
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+function buildDeck(): GameTrackCard[] {
+  return [1980, 1990, 2000, 2010, 2020, 2030, 2040].map((releaseYear, index) => ({
+    id: `kick-track-${index + 1}`,
+    title: `Track ${index + 1}`,
+    artist: "Test Artist",
+    albumTitle: "Test Album",
+    releaseYear,
+  }));
+}
+
+/** Host, Player Two and Player Three; Player Two holds the turn and Player Three has 1 TT. */
+function startGameWithGuestOnTurn(options: { isChallengeEnabled: boolean }) {
+  const roomRegistry = new RoomRegistry();
+  roomRegistry.createRoom(TEST_ROOM_ID, "Player One", "host-socket", "host-session");
+  const placer = roomRegistry.addPlayerToRoom(
+    TEST_ROOM_ID,
+    "Player Two",
+    "placer-socket",
+    "placer-session",
+  );
+  const challenger = roomRegistry.addPlayerToRoom(
+    TEST_ROOM_ID,
+    "Player Three",
+    "challenger-socket",
+    "challenger-session",
+  );
+  roomRegistry.updateRoomSettings(
+    "host-socket",
+    TEST_ROOM_ID,
+    updateRoomSettingsPayloadSchema.parse({
+      roomId: TEST_ROOM_ID,
+      ttModeEnabled: options.isChallengeEnabled,
+      challengeWindowDurationSeconds: CHALLENGE_WINDOW_SECONDS,
+    }),
+  );
+  roomRegistry.updatePlayerSettings("host-socket", {
+    roomId: TEST_ROOM_ID,
+    playerId: challenger.playerId,
+    startingTimelineCardCount: 1,
+    startingTtTokenCount: 1,
+  });
+  roomRegistry.startGame("host-socket", { roomId: TEST_ROOM_ID }, buildDeck());
+  roomRegistry.skipTurn("host-socket", { roomId: TEST_ROOM_ID });
+
+  return { roomRegistry, placerId: placer.playerId, challengerId: challenger.playerId };
+}
+
+describe("kicking a player in the middle of a round", () => {
+  it("survives the challenge deadline after the placing player is kicked from an open challenge", () => {
+    vi.useFakeTimers();
+    const { roomRegistry, placerId, challengerId } = startGameWithGuestOnTurn({
+      isChallengeEnabled: true,
+    });
+    roomRegistry.placeCard("placer-socket", { roomId: TEST_ROOM_ID, selectedSlotIndex: 1 });
+
+    roomRegistry.kickPlayer("host-socket", { roomId: TEST_ROOM_ID, playerId: placerId });
+    vi.advanceTimersByTime(CHALLENGE_WINDOW_SECONDS * 1_000 + 1);
+
+    const roomState = roomRegistry.getRoomStateForMember("host-socket", TEST_ROOM_ID);
+    expect(roomState.status).toBe("turn");
+    expect(roomState.challengeState).toBeNull();
+    expect(roomState.turn?.activePlayerId).toBe(challengerId);
+  });
+
+  it("ends a claimed challenge and moves on when the placing player is kicked", () => {
+    vi.useFakeTimers();
+    const { roomRegistry, placerId, challengerId } = startGameWithGuestOnTurn({
+      isChallengeEnabled: true,
+    });
+    roomRegistry.placeCard("placer-socket", { roomId: TEST_ROOM_ID, selectedSlotIndex: 1 });
+    roomRegistry.claimChallenge("challenger-socket", { roomId: TEST_ROOM_ID });
+
+    roomRegistry.kickPlayer("host-socket", { roomId: TEST_ROOM_ID, playerId: placerId });
+    vi.advanceTimersByTime(CHALLENGE_WINDOW_SECONDS * 1_000 + 1);
+
+    const roomState = roomRegistry.getRoomStateForMember("host-socket", TEST_ROOM_ID);
+    expect(roomState.status).toBe("turn");
+    expect(roomState.turn?.activePlayerId).toBe(challengerId);
+    expect(roomState.players.find((player) => player.id === challengerId)?.ttTokenCount).toBe(1);
+  });
+
+  it("does not leave the game stuck in the reveal when the revealed player is kicked", () => {
+    const { roomRegistry, placerId, challengerId } = startGameWithGuestOnTurn({
+      isChallengeEnabled: false,
+    });
+    roomRegistry.placeCard("placer-socket", { roomId: TEST_ROOM_ID, selectedSlotIndex: 1 });
+
+    roomRegistry.kickPlayer("host-socket", { roomId: TEST_ROOM_ID, playerId: placerId });
+
+    const roomState = roomRegistry.getRoomStateForMember("host-socket", TEST_ROOM_ID);
+    expect(roomState.status).toBe("turn");
+    expect(roomState.revealState).toBeNull();
+    expect(roomState.turn?.activePlayerId).toBe(challengerId);
+  });
+});
