@@ -34,7 +34,7 @@ and room rename still redirects host and guests to the new code (existing tests 
       two-player room.
 - [ ] Desktop lobby not regressed.
 
-Both items are now specified by Phase 4 of the review programme (`00-index.md` §4: primary host
+Both items are now specified by `04-host-flow-ux-spec.md` §3.3–§3.5 and §10 (`00-index.md` §4: primary host
 actions reachable on a 667 px viewport without scrolling; exactly one Start control per lobby,
 U-04). Do not implement them from this document.
 
