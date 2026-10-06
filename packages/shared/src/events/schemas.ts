@@ -54,6 +54,14 @@ const MAX_SPOTIFY_SMART_SEARCH_OFFSET = 950;
 const playlistQueueUpdateModeSchema = z.enum(["append", "replace"]);
 const spotifySmartSearchTypeSchema = z.enum(["track", "album", "artist"]);
 
+// Rendered as <img>/<audio> src on every player's device, so only https media is accepted.
+const httpsMediaUrlSchema = z
+  .string()
+  .trim()
+  .url()
+  .max(1_000)
+  .refine((value) => new URL(value).protocol === "https:", { message: "URL must use https." });
+
 const curatedPlaylistTrackSchema = z.object({
   id: z.string().trim().min(1).max(200),
   title: z.string().trim().min(1).max(200),
@@ -62,8 +70,8 @@ const curatedPlaylistTrackSchema = z.object({
   releaseYear: releaseYearSchema,
   sourceReleaseYear: releaseYearSchema.optional(),
   metadataStatus: trackMetadataStatusSchema.default("imported"),
-  artworkUrl: z.string().trim().url().max(1_000).optional(),
-  previewUrl: z.string().trim().url().max(1_000).optional(),
+  artworkUrl: httpsMediaUrlSchema.optional(),
+  previewUrl: httpsMediaUrlSchema.optional(),
   spotifyTrackUri: z.string().trim().min(1).max(300).optional(),
 });
 

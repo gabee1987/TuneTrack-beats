@@ -1,4 +1,5 @@
 import type { ActionAck, ClientToServerEventName } from "@tunetrack/shared";
+import { createSessionId } from "../session/sessionId";
 import { getSocketClient } from "./socketClient";
 
 const DEFAULT_ACTION_TIMEOUT_MS = 8_000;
@@ -21,7 +22,7 @@ export async function emitAction<TPayload extends object>(
   options: EmitActionOptions = {},
 ): Promise<EmitActionResult> {
   const socketClient = await getSocketClient();
-  const requestId = crypto.randomUUID();
+  const requestId = createSessionId(globalThis.crypto);
   const actionPayload = { ...payload, requestId };
   const attemptCount = options.retryOnTimeout ? 2 : 1;
 

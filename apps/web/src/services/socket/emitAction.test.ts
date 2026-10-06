@@ -126,4 +126,28 @@ describe("emitAction", () => {
     expect(socket.timeout).not.toHaveBeenCalled();
     expect(socket.emitWithAck).not.toHaveBeenCalled();
   });
+
+  it("creates a UUID request id where crypto.randomUUID is unavailable (plain-http LAN page)", async () => {
+    const realCrypto = globalThis.crypto;
+    vi.stubGlobal("crypto", {
+      getRandomValues: (array: Uint8Array) => realCrypto.getRandomValues(array),
+    });
+    socket.emitWithAck.mockResolvedValue({ ok: true, requestId: "unused" });
+
+    try {
+      await expect(
+        emitAction(ClientToServerEvent.StartGame, { roomId: "TEST_ROOM_1" }),
+      ).resolves.toEqual({ status: "ok" });
+      expect(socket.emitWithAck).toHaveBeenCalledWith(
+        ClientToServerEvent.StartGame,
+        expect.objectContaining({
+          requestId: expect.stringMatching(
+            /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+          ),
+        }),
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });

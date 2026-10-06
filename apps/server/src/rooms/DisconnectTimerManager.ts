@@ -1,11 +1,15 @@
+import { runGuardedTimerCallback, type RoomTimerKind } from "./guardedTimerCallback.js";
+
 export class DisconnectTimerManager {
   private readonly timers = new Map<string, NodeJS.Timeout>();
+
+  public constructor(private readonly timerKind: RoomTimerKind) {}
 
   schedule(sessionId: string, delayMs: number, callback: () => void): void {
     this.clear(sessionId);
     const handle = setTimeout(() => {
       this.timers.delete(sessionId);
-      callback();
+      runGuardedTimerCallback(this.timerKind, sessionId, callback);
     }, delayMs);
     handle.unref();
     this.timers.set(sessionId, handle);

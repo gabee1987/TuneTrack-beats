@@ -17,8 +17,8 @@ describe("spotifyRedirectUri", () => {
   });
 
   it("resolves Vite-proxied callback for a configured client origin", () => {
-    expect(resolveSpotifyRedirectUri("https://192.168.1.83:5173")).toBe(
-      "https://192.168.1.83:5173/api/spotify/callback",
+    expect(resolveSpotifyRedirectUri("https://192.168.0.100:5173")).toBe(
+      "https://192.168.0.100:5173/api/spotify/callback",
     );
   });
 

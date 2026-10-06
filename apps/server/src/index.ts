@@ -3,6 +3,7 @@ import { createSocketServer } from "./app/createSocketServer.js";
 import { logAuditEvent } from "./app/auditLogger.js";
 import { env } from "./app/env.js";
 import { logger } from "./app/logger.js";
+import { registerProcessFatalHandlers } from "./app/processFatalHandlers.js";
 import { DeckService } from "./decks/DeckService.js";
 import { PlaylistImportService } from "./decks/PlaylistImportService.js";
 import { registerSpotifyRoutes } from "./http/spotifyRoutes.js";
@@ -19,6 +20,8 @@ import {
   getConfiguredSpotifyRedirectUris,
   listSuggestedLanSpotifyRedirectUris,
 } from "./spotify/spotifyRedirectUri.js";
+
+registerProcessFatalHandlers(process, logger, (code) => process.exit(code));
 
 const { app, httpServer } = createHttpServer();
 const io = createSocketServer(httpServer);

@@ -4,11 +4,11 @@ import { DisconnectTimerManager } from "./DisconnectTimerManager.js";
 import type { RoomStore } from "./RoomStore.js";
 
 export class RoomTimerCoordinator {
-  private readonly allPlayersOfflineTimers = new DisconnectTimerManager();
+  private readonly allPlayersOfflineTimers = new DisconnectTimerManager("all_players_offline");
   private readonly challengeTimers = new ChallengeTimerManager();
-  private readonly disconnectTimers = new DisconnectTimerManager();
-  private readonly hostTransferTimers = new DisconnectTimerManager();
-  private readonly turnSkipTimers = new DisconnectTimerManager();
+  private readonly disconnectTimers = new DisconnectTimerManager("reconnect");
+  private readonly hostTransferTimers = new DisconnectTimerManager("host_transfer");
+  private readonly turnSkipTimers = new DisconnectTimerManager("turn_skip");
 
   public constructor(
     private readonly store: RoomStore,

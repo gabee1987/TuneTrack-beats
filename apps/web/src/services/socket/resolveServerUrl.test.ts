@@ -6,7 +6,7 @@ describe("resolveServerUrl", () => {
     expect(
       resolveServerUrl({
         envServerUrl: "http://10.0.0.5:3001",
-        locationHostname: "192.168.1.108",
+        locationHostname: "192.168.0.100",
         locationProtocol: "http:",
       }),
     ).toBe("http://10.0.0.5:3001");
@@ -15,16 +15,16 @@ describe("resolveServerUrl", () => {
   it("uses the current hostname for LAN testing when env is absent", () => {
     expect(
       resolveServerUrl({
-        locationHostname: "192.168.1.108",
+        locationHostname: "192.168.0.100",
         locationProtocol: "http:",
       }),
-    ).toBe("http://192.168.1.108:3001");
+    ).toBe("http://192.168.0.100:3001");
   });
 
   it("routes through the Vite proxy when served over HTTPS to avoid mixed content", () => {
     expect(
       resolveServerUrl({
-        locationHostname: "192.168.1.108",
+        locationHostname: "192.168.0.100",
         locationProtocol: "https:",
       }),
     ).toBe("/");

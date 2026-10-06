@@ -1,13 +1,15 @@
 import type { RoomId } from "@tunetrack/shared";
+import { runGuardedTimerCallback } from "./guardedTimerCallback.js";
 
 export class ChallengeTimerManager {
   private readonly timers = new Map<RoomId, NodeJS.Timeout>();
+  private readonly timerKind = "challenge";
 
   schedule(roomId: RoomId, delayMs: number, callback: () => void): void {
     this.clear(roomId);
     const handle = setTimeout(() => {
       this.timers.delete(roomId);
-      callback();
+      runGuardedTimerCallback(this.timerKind, roomId, callback);
     }, delayMs);
     handle.unref();
     this.timers.set(roomId, handle);
