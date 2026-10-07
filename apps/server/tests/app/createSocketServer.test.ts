@@ -38,6 +38,10 @@ describe("createSocketServer", () => {
     expect(options.maxHttpBufferSize).toBe(5 * 1024 * 1024);
   });
 
+  it("compresses messages above 4 kB, such as full state updates (05 A10)", () => {
+    expect(createTestSocketServer()._opts.perMessageDeflate).toEqual({ threshold: 4 * 1024 });
+  });
+
   it("leaves connection state recovery off", () => {
     expect(createTestSocketServer()._opts.connectionStateRecovery).toBeUndefined();
   });

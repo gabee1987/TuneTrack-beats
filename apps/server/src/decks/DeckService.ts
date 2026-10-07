@@ -1,6 +1,7 @@
 import type { GameTrackCard } from "@tunetrack/game-engine";
 import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { logger } from "../app/logger.js";
 
@@ -19,17 +20,31 @@ const testDeckSchema = z.array(testDeckCardSchema).min(1);
 type ParsedTestDeckCard = z.output<typeof testDeckCardSchema>;
 type RandomSource = () => number;
 
+// Beside this module in src/ and in dist/ (the build copies the folder), whatever the cwd (B-24).
+const DEFAULT_TEST_DECKS_DIRECTORY = fileURLToPath(new URL("./test-decks", import.meta.url));
+
 export class DeckService {
   public constructor(
-    private readonly testDecksDirectoryPath = resolve(process.cwd(), "src", "decks", "test-decks"),
+    private readonly testDecksDirectoryPath = DEFAULT_TEST_DECKS_DIRECTORY,
     private readonly randomSource: RandomSource = Math.random,
   ) {}
+
+  private testDeckCards: GameTrackCard[] | null = null;
 
   public createShuffledDeckFromCards(cards: GameTrackCard[]): GameTrackCard[] {
     return shuffleDeckCards([...cards], this.randomSource);
   }
 
   public createShuffledDeck(): GameTrackCard[] {
+    this.testDeckCards ??= this.loadTestDeckCards();
+    return shuffleDeckCards(
+      this.testDeckCards.map((card) => ({ ...card })),
+      this.randomSource,
+    );
+  }
+
+  /** Read and validated once per process; every game shuffles its own copy. */
+  private loadTestDeckCards(): GameTrackCard[] {
     const deckCardsById = new Map<string, GameTrackCard>();
     const fileNames = this.getDeckFileNames();
 
@@ -43,7 +58,7 @@ export class DeckService {
       }
     }
 
-    const cards = shuffleDeckCards([...deckCardsById.values()], this.randomSource);
+    const cards = [...deckCardsById.values()];
     logger.info({ fileCount: fileNames.length, cardCount: cards.length }, "test deck loaded");
     return cards;
   }

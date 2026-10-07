@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "prebuild": "npm run build -w @tunetrack/shared && npm run build -w @tunetrack/game-engine",
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && node -e \"require('node:fs').cpSync('src/decks/test-decks', 'dist/decks/test-decks', { recursive: true })\"",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
     "lint": "eslint src tests vitest.config.ts vitest.setup.ts --ext .ts",
     "test": "vitest run --config vitest.config.ts --passWithNoTests"

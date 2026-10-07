@@ -183,8 +183,8 @@ function registerUpdatePlaylistTrackHandler(
       );
     },
     handle: (data) => {
-      const { roomState, tracks } = roomService.updatePlaylistTrack(data, socket.id);
-      socket.emit(ServerToClientEvent.PlaylistTracks, { tracks });
+      const { roomState, track } = roomService.updatePlaylistTrack(data, socket.id);
+      socket.emit(ServerToClientEvent.PlaylistTrackUpdated, { track });
       broadcastRoomState(io, roomState);
     },
     fallbackErrorCode: "UPDATE_PLAYLIST_TRACK_FAILED",

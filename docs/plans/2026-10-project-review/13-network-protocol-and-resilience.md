@@ -1,6 +1,6 @@
 # 13 — Network Protocol and Client Resilience
 
-> **Status (2026-10-07):** Phase 1 partially shipped (first-connect/reconnect split, idempotent `create_room`), Phases 2, 3 and 4 shipped (durable session id and never-throwing storage; connection effects independent of `t`; acknowledged, idempotent actions). Phase 5 shipped (socket client policy and connection-state model). Open: the `GAME_ALREADY_STARTED` recovery dialog and `instanceId` (Phase 1), narrow events and `revision` (Phase 6).
+> **Status (2026-10-07):** Phase 1 partially shipped (first-connect/reconnect split, idempotent `create_room`), Phases 2, 3 and 4 shipped (durable session id and never-throwing storage; connection effects independent of `t`; acknowledged, idempotent actions). Phase 5 shipped (socket client policy and connection-state model). Phase 6 partly shipped as `05` A10 (compression above 4 kB, one-track edit reply). Open: the `GAME_ALREADY_STARTED` recovery dialog and `instanceId` (Phase 1), narrow events and `revision` (Phase 6).
 > **Folded from** `docs/plans/2026-09-stability-performance/05-network-protocol-and-resilience.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
 >
 > **Binding budgets, order and corrections (2026-10-07):** `05-performance-and-robustness-plan.md` §2 (budgets), §8 (rollout order), §9 (corrections to this document). Where they differ, `05` wins.
@@ -120,7 +120,7 @@ room hooks hold `navigate` in a ref. `auth: { sessionId }` is deferred until the
 (plan 12 §2). Proof: `services/socket/connectionState.test.ts`,
 `pages/GamePage/hooks/useGameRoomConnection.test.ts`, E2E `connection-status.spec.ts`.
 
-## 6. Phase 6 — Shrink the broadcast payload · **S2** · open
+## 6. Phase 6 — Shrink the broadcast payload · **S2** · partly shipped (`05` A10)
 
 **Review finding:** B-16. Sequenced last because it is the riskiest change and because
 `11-runtime-and-motion-performance.md` §7 (client-side slice diffing) is its natural
@@ -168,8 +168,9 @@ Rules:
 - `history` is already capped at 30. Consider moving it behind an explicit
   `get_game_history` request, since it is only rendered in the game menu's History tab
   (`gameMenu/HistoryTabContent.tsx`). That removes the largest field from the common path.
-- Playlist-editor edits should acknowledge the change and send the edited track, not the
-  whole deck (B-16).
+- Shipped 2026-10-07 (`05` A10): a track edit is answered with `playlist_track_updated`
+  (the edited track); removals keep the full list. Per-message compression above 4 kB cuts the
+  largest state from 117 kB to 13 kB on the wire (`network-baseline.md`).
 - Data-minimisation check: confirm no field in `PublicRoomState` reveals information a
   player should not have. `currentTrackCard.releaseYear` is already omitted during
   `turn`/`challenge` — add a test that locks this in, because a regression here would leak

@@ -12,6 +12,7 @@ import { SpotifyApiClient, SpotifyApiError } from "./SpotifyApiClient.js";
 import { mapSpotifyTrackToGameCard } from "./SpotifyTrackMapper.js";
 import { SpotifyTokenStore } from "./SpotifyTokenStore.js";
 import { parseSpotifySmartSearchQuery } from "./SpotifySmartSearchParser.js";
+import { getClientCredentialsAccessToken } from "./clientCredentialsToken.js";
 
 export class SpotifyMusicSearchService {
   public constructor(
@@ -220,15 +221,8 @@ export class SpotifyMusicSearchService {
   }
 
   private async getOrRefreshClientCredentialsToken(): Promise<string> {
-    if (!this.tokenStore.isClientCredentialsExpired()) {
-      const record = this.tokenStore.getClientCredentials();
-      if (record) return record.token;
-    }
-
     try {
-      const tokenResponse = await this.apiClient.getClientCredentialsToken();
-      this.tokenStore.setClientCredentials(tokenResponse.access_token, tokenResponse.expires_in);
-      return tokenResponse.access_token;
+      return await getClientCredentialsAccessToken(this.apiClient, this.tokenStore);
     } catch (err) {
       if (err instanceof SpotifyApiError) throw err;
       throw new SpotifyApiError("api_error", "Failed to obtain client credentials token");

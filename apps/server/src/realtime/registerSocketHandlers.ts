@@ -2,7 +2,7 @@ import { ServerToClientEvent } from "@tunetrack/shared";
 import type { Server } from "socket.io";
 import { logger } from "../app/logger.js";
 import type { RoomService } from "../rooms/RoomService.js";
-import { broadcastRoomDirectory } from "./broadcastRoomDirectory.js";
+import { broadcastRoomDirectory, trackRoomDirectoryWatchers } from "./broadcastRoomDirectory.js";
 import { registerGameplayHandlers } from "./handlers/gameplayHandlers.js";
 import { registerLobbyHandlers } from "./handlers/lobbyHandlers.js";
 import { registerPlaylistHandlers } from "./handlers/playlistHandlers.js";
@@ -11,6 +11,7 @@ import { registerSocketRateLimit } from "./rateLimit.js";
 import { logRoomStateBroadcast, registerSocketAuditMiddleware } from "./realtimeAuditLogger.js";
 
 export function registerSocketHandlers(io: Server, roomService: RoomService): void {
+  trackRoomDirectoryWatchers(io);
   roomService.setRoomStateChangedListener((roomState) => {
     logRoomStateBroadcast(ServerToClientEvent.StateUpdate, roomState);
     io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {

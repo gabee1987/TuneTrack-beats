@@ -1,6 +1,7 @@
 import {
   ClientToServerEvent,
   ServerToClientEvent,
+  type PlaylistTrackUpdatedPayload,
   type PlaylistTracksPayload,
   type PublicTrackInfo,
   type TrackMetadataStatus,
@@ -71,10 +72,19 @@ export function usePlaylistEditor(isOpen: boolean): UsePlaylistEditorResult {
         setIsLoading(false);
       }
 
+      // An edit is answered with that track alone; the optimistic copy is replaced by the server's.
+      function handleTrackUpdated({ track }: PlaylistTrackUpdatedPayload) {
+        setRawTracks((current) => current.map((item) => (item.id === track.id ? track : item)));
+      }
+
       socket.on(ServerToClientEvent.PlaylistTracks, handleTracks);
+      socket.on(ServerToClientEvent.PlaylistTrackUpdated, handleTrackUpdated);
       socket.emit(ClientToServerEvent.GetPlaylistTracks, { roomId });
 
-      off = () => socket.off(ServerToClientEvent.PlaylistTracks, handleTracks);
+      off = () => {
+        socket.off(ServerToClientEvent.PlaylistTracks, handleTracks);
+        socket.off(ServerToClientEvent.PlaylistTrackUpdated, handleTrackUpdated);
+      };
     });
 
     return () => {

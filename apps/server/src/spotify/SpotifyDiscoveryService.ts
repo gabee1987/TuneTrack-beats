@@ -15,6 +15,7 @@ import { mapSpotifyTrackToGameCard } from "./SpotifyTrackMapper.js";
 import { SpotifyTokenStore } from "./SpotifyTokenStore.js";
 import { mapWithConcurrency } from "./mapWithConcurrency.js";
 import { extractSpotifyPlaylistId } from "./spotifyUrlParser.js";
+import { getClientCredentialsAccessToken } from "./clientCredentialsToken.js";
 
 const CANDIDATE_SESSION_TTL_MS = 30 * 60 * 1000;
 /** `05` §2.4: bounds the Spotify fan-out and the cards held per room. */
@@ -395,15 +396,8 @@ export class SpotifyDiscoveryService {
     };
   }
 
-  private async getOrRefreshClientCredentialsToken(): Promise<string> {
-    if (!this.tokenStore.isClientCredentialsExpired()) {
-      const record = this.tokenStore.getClientCredentials();
-      if (record) return record.token;
-    }
-
-    const tokenResponse = await this.apiClient.getClientCredentialsToken();
-    this.tokenStore.setClientCredentials(tokenResponse.access_token, tokenResponse.expires_in);
-    return tokenResponse.access_token;
+  private getOrRefreshClientCredentialsToken(): Promise<string> {
+    return getClientCredentialsAccessToken(this.apiClient, this.tokenStore);
   }
 
   private async searchUsablePlaylists(

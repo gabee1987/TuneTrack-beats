@@ -679,12 +679,10 @@ export class RoomService {
   public updatePlaylistTrack(
     payload: UpdatePlaylistTrackPayloadParsed,
     socketId: string,
-  ): { roomState: PublicRoomState; tracks: PublicTrackInfo[] } {
-    const roomState = this.roomRegistry.updateImportedDeckTrack(socketId, payload);
+  ): { roomState: PublicRoomState; track: PublicTrackInfo } {
+    const { roomState, track } = this.roomRegistry.updateImportedDeckTrack(socketId, payload);
     logger.info({ roomId: payload.roomId, trackId: payload.trackId }, "playlist track updated");
-    const deck = this.roomRegistry.getImportedDeck(payload.roomId);
-    const tracks = (deck ?? []).map(cardToPublicTrackInfo);
-    return { roomState, tracks };
+    return { roomState, track: cardToPublicTrackInfo(track) };
   }
 
   public updateSpotifyAuthStatus(

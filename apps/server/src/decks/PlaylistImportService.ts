@@ -6,6 +6,7 @@ import { SpotifyApiClient, SpotifyApiError } from "../spotify/SpotifyApiClient.j
 import { SpotifyTokenStore } from "../spotify/SpotifyTokenStore.js";
 import { mapSpotifyTrackToGameCard } from "../spotify/SpotifyTrackMapper.js";
 import { extractSpotifyPlaylistId } from "../spotify/spotifyUrlParser.js";
+import { getClientCredentialsAccessToken } from "../spotify/clientCredentialsToken.js";
 
 const MIN_IMPORTABLE_TRACK_COUNT = 10;
 
@@ -215,15 +216,8 @@ export class PlaylistImportService {
     }
   }
 
-  private async getOrRefreshClientCredentialsToken(): Promise<string> {
-    if (!this.tokenStore.isClientCredentialsExpired()) {
-      const record = this.tokenStore.getClientCredentials();
-      if (record) return record.token;
-    }
-
-    const tokenResponse = await this.apiClient.getClientCredentialsToken();
-    this.tokenStore.setClientCredentials(tokenResponse.access_token, tokenResponse.expires_in);
-    return tokenResponse.access_token;
+  private getOrRefreshClientCredentialsToken(): Promise<string> {
+    return getClientCredentialsAccessToken(this.apiClient, this.tokenStore);
   }
 }
 

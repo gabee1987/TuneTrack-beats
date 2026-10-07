@@ -1,5 +1,7 @@
 import type { GameTrackCard } from "@tunetrack/game-engine";
-import { describe, expect, it } from "vitest";
+import { tmpdir } from "node:os";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { logger } from "../../src/app/logger.js";
 import { DeckService } from "../../src/decks/DeckService.js";
 
 function createCard(id: string, releaseYear: number): GameTrackCard {
@@ -28,5 +30,39 @@ describe("DeckService", () => {
       "a",
       "b",
     ]);
+  });
+
+  describe("practice deck (B-24)", () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("reads and validates the deck files once for several games", () => {
+      const deckLoaded = vi.spyOn(logger, "info");
+      const deckService = new DeckService();
+
+      const firstDeck = deckService.createShuffledDeck();
+      const secondDeck = deckService.createShuffledDeck();
+
+      expect(firstDeck.length).toBeGreaterThan(0);
+      expect(secondDeck).toHaveLength(firstDeck.length);
+      expect(
+        deckLoaded.mock.calls.filter(([, message]) => message === "test deck loaded"),
+      ).toHaveLength(1);
+    });
+
+    it("gives every game its own card objects", () => {
+      const deckService = new DeckService(undefined, () => 0);
+      const [firstCard] = deckService.createShuffledDeck();
+      const secondDeck = deckService.createShuffledDeck();
+
+      expect(secondDeck.find((card) => card.id === firstCard?.id)).not.toBe(firstCard);
+    });
+
+    it("finds the deck files whatever the working directory", () => {
+      vi.spyOn(process, "cwd").mockReturnValue(tmpdir());
+
+      expect(new DeckService().createShuffledDeck().length).toBeGreaterThan(0);
+    });
   });
 });

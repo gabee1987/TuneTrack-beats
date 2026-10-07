@@ -12,6 +12,15 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Broadcast size: compress, keep the full state (2026-10-07)
+
+- **Socket.IO per-message compression above 4 kB; `state_update` stays a full state with
+  history.** Why: the largest state is 117 kB raw and history is only 22.6 kB of it, so the
+  planned history request would still leave 94 kB; deflate brings the same message to 13 kB
+  with no protocol change (`00-index.md` decision 20, `network-baseline.md`).
+- **`user-read-email` stays in the Spotify scopes.** Why: the Web Playback SDK requires it,
+  although the app never reads the email.
+
 ### Animation feel over the motion budget (2026-10-07)
 
 - **The animations shortened or removed in `05` C7 are restored**: the TT settings and

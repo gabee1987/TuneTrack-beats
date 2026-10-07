@@ -26,6 +26,11 @@ export class SpotifyAuthService {
     private readonly oauthStates = new SpotifyOAuthStateStore(),
   ) {}
 
+  private readonly hostRefreshesInFlight = new Map<
+    RoomId,
+    Promise<SpotifyRefreshHostTokenResult>
+  >();
+
   public buildAuthUrl(roomId: RoomId, socketId: string, clientOrigin?: string): string {
     const redirectUri = resolveSpotifyRedirectUri(clientOrigin);
     const state = this.oauthStates.issue({ roomId, socketId, redirectUri });
@@ -171,7 +176,19 @@ export class SpotifyAuthService {
     }
   }
 
-  public async refreshHostToken(roomId: RoomId): Promise<SpotifyRefreshHostTokenResult> {
+  /** Concurrent refreshes for one room share a request, so a rotated token is never raced (B-19). */
+  public refreshHostToken(roomId: RoomId): Promise<SpotifyRefreshHostTokenResult> {
+    const pending = this.hostRefreshesInFlight.get(roomId);
+    if (pending) return pending;
+
+    const refresh = this.performHostTokenRefresh(roomId).finally(() =>
+      this.hostRefreshesInFlight.delete(roomId),
+    );
+    this.hostRefreshesInFlight.set(roomId, refresh);
+    return refresh;
+  }
+
+  private async performHostTokenRefresh(roomId: RoomId): Promise<SpotifyRefreshHostTokenResult> {
     const record = this.tokenStore.getHostTokenRecord(roomId);
     if (!record) return { success: false, reason: "failed" };
 
@@ -182,6 +199,7 @@ export class SpotifyAuthService {
         roomId,
         tokenResponse.access_token,
         tokenResponse.expires_in,
+        tokenResponse.refresh_token,
       );
       logAuditEvent({
         auditKind: "spotify_auth",

@@ -18,3 +18,8 @@ export interface PublicTrackInfo {
 export interface PlaylistTracksPayload {
   tracks: PublicTrackInfo[];
 }
+
+/** The reply to one track edit: only that track, not the whole deck (05 A10, B-16). */
+export interface PlaylistTrackUpdatedPayload {
+  track: PublicTrackInfo;
+}

@@ -366,7 +366,7 @@ export class RoomLobbyService {
   public updateImportedDeckTrack(
     socketId: string,
     payload: UpdatePlaylistTrackPayloadParsed,
-  ): PublicRoomState {
+  ): { roomState: PublicRoomState; track: GameTrackCard } {
     const roomRecord = this.requireHostInLobby(
       socketId,
       payload.roomId,
@@ -374,11 +374,10 @@ export class RoomLobbyService {
     );
     if (!roomRecord.importedDeck) throw new DomainError("NO_PLAYLIST_IMPORTED");
 
-    let didUpdateTrack = false;
+    let updatedTrack: GameTrackCard | null = null;
     const nextDeck = roomRecord.importedDeck.map((card) => {
       if (card.id !== payload.trackId) return card;
 
-      didUpdateTrack = true;
       const nextReleaseYear = payload.releaseYear ?? card.releaseYear;
       const didChangeMetadata =
         payload.title !== undefined ||
@@ -386,7 +385,7 @@ export class RoomLobbyService {
         payload.albumTitle !== undefined ||
         payload.releaseYear !== undefined;
 
-      return {
+      updatedTrack = {
         ...card,
         ...(payload.title !== undefined ? { title: payload.title } : {}),
         ...(payload.artist !== undefined ? { artist: payload.artist } : {}),
@@ -397,9 +396,10 @@ export class RoomLobbyService {
           payload.metadataStatus ??
           (didChangeMetadata ? "edited" : (card.metadataStatus ?? "imported")),
       };
+      return updatedTrack;
     });
 
-    if (!didUpdateTrack) throw new DomainError("PLAYLIST_TRACK_NOT_FOUND");
+    if (!updatedTrack) throw new DomainError("PLAYLIST_TRACK_NOT_FOUND");
 
     const nextRoomState = buildImportedDeckRoomState(roomRecord.roomState, nextDeck);
     this.store.setRoom(payload.roomId, {
@@ -407,7 +407,7 @@ export class RoomLobbyService {
       roomState: nextRoomState,
       importedDeck: nextDeck,
     });
-    return nextRoomState;
+    return { roomState: nextRoomState, track: updatedTrack };
   }
 
   public closeRoom(socketId: string, payload: CloseRoomPayloadParsed): RoomId {

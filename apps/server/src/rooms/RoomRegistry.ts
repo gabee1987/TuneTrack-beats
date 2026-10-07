@@ -230,7 +230,7 @@ export class RoomRegistry {
   public updateImportedDeckTrack(
     socketId: string,
     payload: UpdatePlaylistTrackPayloadParsed,
-  ): PublicRoomState {
+  ): { roomState: PublicRoomState; track: GameTrackCard } {
     return this.lobby.updateImportedDeckTrack(socketId, payload);
   }
 

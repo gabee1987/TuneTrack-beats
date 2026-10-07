@@ -1,7 +1,7 @@
 # 05 — Performance and Robustness Plan
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 5 of `00-index.md` §4).
-> **Status (2026-10-07):** A1–A8, B1, B2, C1–C7, D0–D5 and E1 shipped; every other package is open. Every finding below
+> **Status (2026-10-07):** A1–A10, B1, B2, C1–C7, D0–D5 and E1 shipped; every other package is open. Every finding below
 > was re-verified in code on 2026-10-07 (line numbers drift; file and symbol names are the
 > stable reference).
 > **Authority:** this document sets the **binding numeric budgets** and the **order** of the
@@ -239,29 +239,34 @@ because `io.close()` discards their buffer; B2 treats that disconnect as `reconn
 `apps/server/tests/app/shutdown.test.ts` (one sequence for repeated signals, zero pending timers,
 drain bound, deadline and failure exits) and `tests/app/axiomLogSink.test.ts`.
 
-### A9 · Small server costs (B-24, B-26, B-19, B-18 scope)
+### A9 · Small server costs (B-24, B-26, B-19, B-18 scope) — **shipped 2026-10-07**
 
-- `DeckService` loads and validates the practice deck once (lazily), path from
-  `import.meta.url`, not `process.cwd()` (B-24).
-- Directory watchers join a Socket.IO `directory` room; emits are coalesced per tick, so a
-  lobby join broadcasts once (B-26).
-- Token refresh keeps a rotated `refresh_token`, and concurrent refreshes per room share one
-  in-flight promise; the client-credentials fetch is coalesced the same way (B-19, and the
-  in-flight half of B-22).
-- Drop the unused `user-read-email` scope (decision 9 left this proposal to Phase 5:
-  **proposed, no-cost minimisation**). Display-name logging stays as decided.
-- **Proof:** `DeckService.test.ts` (one disk read for two starts; works from another cwd);
-  directory test counting emits; new `SpotifyAuthService.test.ts` (rotation kept; two parallel
-  refreshes → one token request); OAuth test asserts the scope list.
+**Shipped 2026-10-07.** `DeckService` resolves the deck folder from `import.meta.url`, the
+server build copies it to `dist/decks/test-decks`, and the deck is read and validated once
+per process (every game gets its own card copies). Directory watchers are the Socket.IO room
+`directory:watchers`, kept in step with game-room membership through the adapter's join and
+leave events; `broadcastRoomDirectory` sends once per tick. A host token refresh keeps a
+rotated `refresh_token`, and concurrent refreshes of a room share one request; the
+client-credentials token is shared the same way (`spotify/clientCredentialsToken.ts`, used by
+import, discovery and search). The `user-read-email` scope stays (§9).
 
-### A10 · Broadcast size — measure, then decide (B-16)
+**Proof:** `tests/decks/DeckService.test.ts` (one load for two games, own card copies, any
+cwd), `tests/realtime/roomDirectoryBroadcast.test.ts` (a lobby player moving rooms: one list,
+was two), `tests/spotify/SpotifyAuthService.test.ts`.
 
-- Add a test helper that serialises the `state_update` payload for 6 players × 30 cards with
-  artwork and preview URLs and 30 history entries; record the size in
-  `network-baseline.md`. If it exceeds **64 kB**, first move `history` behind an explicit
-  request (plan 13 §6.3); narrow events with `revision` (plan 13 §6.2) stay deferred.
-- Playlist edits answer with the edited track only, not the whole deck (the true half of B-16).
-- **Proof:** the size test itself; `roomFlow.test.ts` asserts the edit response shape.
+### A10 · Broadcast size — measure, then decide (B-16) — **shipped 2026-10-07**
+
+**Shipped 2026-10-07.** The largest state (6 players × 30 cards, 30 history entries) is
+117 kB raw, history 22.6 kB of it, so moving history out would have left 94 kB. Decision 20:
+Socket.IO per-message compression above 4 kB instead; the same state is 13 kB deflated
+(`network-baseline.md`). History stays in the update; narrow events stay deferred. A track
+edit is answered with `playlist_track_updated` (the edited track) instead of the whole deck;
+removals keep the full-list reply, which six client flows use to rebuild their queued sets.
+
+**Proof:** `tests/rooms/stateUpdateSize.test.ts` (gate on the deflated size),
+`tests/app/createSocketServer.test.ts` (compression threshold),
+`tests/realtime/playlistTrackEdit.test.ts` (one-track reply, no deck),
+`PlaylistEditModal.test.tsx` (the reply replaces the optimistic copy).
 
 ## 5. Track B — Client connection robustness
 
@@ -349,10 +354,10 @@ their files do not overlap.
 | 8     | **C3**–**C6** (shipped 2026-10-07)                  | C1                                | `perf-check`                            | Drag, viewport, playback                          |
 | 9     | **D1**–**D3** (shipped 2026-10-07)                  | D0                                | `perf-check`                            | Eager gate                                        |
 | 10    | **C7**, **D4**, **D5**, **E1** (shipped 2026-10-07) | D1 (C7)                           | `design-token-migration`, `perf-check`  | Motion and CSS budgets                            |
-| 11    | A9, A10                                             | A2                                | `write-tests`                           | Small server costs, measured broadcast decision   |
+| 11    | **A9**, **A10** (shipped 2026-10-07)                | A2                                | `write-tests`                           | Small server costs, measured broadcast decision   |
 | 12    | E2                                                  | E1                                | `add-ui-component`                      | Largest UI refactor last                          |
 
-A1–A8, B1, B2, C1–C7, D0–D5 and E1 shipped on 2026-10-07; A9 and A10 are next.
+A1–A10, B1, B2, C1–C7, D0–D5 and E1 shipped on 2026-10-07; E2 is next.
 
 ## 9. Corrections to the work-breakdown documents
 
@@ -384,6 +389,10 @@ A1–A8, B1, B2, C1–C7, D0–D5 and E1 shipped on 2026-10-07; A9 and A10 are n
 | `10` §6 acceptance            | largest CSS ≤ 20 kB                                                                                 | ≤ 42 kB (decision 18): CSS follows JS chunks; the remaining files hold styles that load together                                |
 | `11` §2                       | rows re-spring on every scroll tick                                                                 | a row's `start` changes only on reorder or removal; the spring ran then, and is removed anyway                                  |
 | `11` §3                       | `DRAG_EDGE_SCROLL_ZONE_PX` 120 → 96                                                                 | gone since C3 (dnd-kit auto-scroll, `TIMELINE_AUTO_SCROLL`)                                                                     |
+| `05` A9 scope                 | drop `user-read-email` (unused)                                                                     | kept: the Web Playback SDK requires it                                                                                          |
+| `01` B-26                     | directory broadcast twice per lobby join                                                            | twice when a lobby player moves to another room (the old room's state listener plus the handler); a plain join sent once        |
+| `05` A10 gate                 | 64 kB raw; move history out first                                                                   | 64 kB compressed (decision 20); history stays, it is a fifth of the payload                                                     |
+| `13` §6.3                     | playlist edits send the edited track                                                                | edits do (`playlist_track_updated`); removals keep the full list                                                                |
 
 ## 10. Compliance and security notes
 
@@ -393,8 +402,9 @@ A1–A8, B1, B2, C1–C7, D0–D5 and E1 shipped on 2026-10-07; A9 and A10 are n
   capacity management, A.8.20 network security). It is implemented in-house; no new third-party
   package or service. Client addresses for the OAuth callback limit stay in memory for the
   window only and are never logged or shipped to the audit sink (GDPR Art. 5(1)(c), (e)).
-- A9 drops the unused `user-read-email` scope (data minimisation, GDPR Art. 5(1)(c);
-  decision 9). Display-name logging and payload auditing to Axiom stay as decided and remain
+- A9 keeps the `user-read-email` scope: the app never reads the email, but Spotify's Web
+  Playback SDK lists it as a required scope, so dropping it would risk host playback (§9).
+  The data-minimisation question moves to the compliance review of Spotify as a processor. Display-name logging and payload auditing to Axiom stay as decided and remain
   subject to review before any client-facing deployment.
 - A8's `server_stopped` audit event carries no personal data.
 - No change in this document broadens the personal data stored, logged or shipped.

@@ -212,6 +212,23 @@ describe("PlaylistEditModal", () => {
     });
   });
 
+  it("shows the server's copy of an edited track from the single-track reply (05 A10)", async () => {
+    await renderOpenEditor([
+      buildTrack(),
+      buildTrack({ id: "track-2", title: "Test Track Two", releaseYear: 1997 }),
+    ]);
+    expect(await screen.findByText("Test Track One")).toBeInTheDocument();
+
+    act(() => {
+      socket.serverEmit(ServerToClientEvent.PlaylistTrackUpdated, {
+        track: buildTrack({ title: "Test Track One (Corrected)", metadataStatus: "edited" }),
+      });
+    });
+
+    expect(await screen.findByText("Test Track One (Corrected)")).toBeInTheDocument();
+    expect(screen.getByText("Test Track Two")).toBeInTheDocument();
+  });
+
   it("closes the track editor and playlist editor in browser-back order", async () => {
     const router = await renderHistoryBackedEditor([buildTrack()]);
 

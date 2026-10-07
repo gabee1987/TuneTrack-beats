@@ -17,6 +17,7 @@ export const ServerToClientEvent = {
   PlayerIdentity: "player_identity",
   PlaylistImportResult: "playlist_import_result",
   PlaylistTracks: "playlist_tracks",
+  PlaylistTrackUpdated: "playlist_track_updated",
   RoomList: "room_list",
   RoomPreview: "room_preview",
   RoomClosed: "room_closed",
@@ -99,7 +100,10 @@ export type SpotifyPlaybackResultPayload =
     };
 
 export type { ImportPlaylistResultPayload, SpotifyAuthResultPayload };
-export type { PlaylistTracksPayload } from "../spotify/playlistTracks.js";
+export type {
+  PlaylistTrackUpdatedPayload,
+  PlaylistTracksPayload,
+} from "../spotify/playlistTracks.js";
 export type {
   SpotifyCandidatesAppliedPayload,
   SpotifyCandidatesGeneratedPayload,
