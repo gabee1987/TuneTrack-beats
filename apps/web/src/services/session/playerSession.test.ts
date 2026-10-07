@@ -1,72 +1,51 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import {
-  getOrCreatePlayerSessionId,
-  getRememberedPlayerDisplayName,
-  rememberPlayerDisplayName,
-} from "./playerSession";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { useThrowingStorage } from "../../test/stubs/storage";
 
-class MemoryStorage {
-  private readonly values = new Map<string, string>();
-
-  public getItem(key: string): string | null {
-    return this.values.get(key) ?? null;
-  }
-
-  public setItem(key: string, value: string): void {
-    this.values.set(key, value);
-  }
-}
-
-function stubWindowStorage() {
-  const sessionStorage = new MemoryStorage();
-  const localStorage = new MemoryStorage();
-  const crypto = {
-    randomUUID: () => "stable-session-id",
-  };
-
-  vi.stubGlobal("window", {
-    crypto,
-    localStorage,
-    sessionStorage,
-  });
-
-  return {
-    localStorage,
-    sessionStorage,
-  };
+// The module keeps a page-load fallback id, so every case starts from a fresh module.
+async function loadPlayerSession() {
+  vi.resetModules();
+  return import("./playerSession");
 }
 
 describe("playerSession", () => {
+  beforeEach(() => {
+    vi.stubGlobal("crypto", { randomUUID: () => "stable-session-id" });
+  });
+
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
-  it("persists new player sessions to local and tab storage", () => {
-    const { localStorage, sessionStorage } = stubWindowStorage();
+  it("persists new player sessions to local and tab storage", async () => {
+    const { getOrCreatePlayerSessionId } = await loadPlayerSession();
 
     expect(getOrCreatePlayerSessionId()).toBe("stable-session-id");
-    expect(localStorage.getItem("tunetrack.playerSessionId")).toBe("stable-session-id");
-    expect(sessionStorage.getItem("tunetrack.playerSessionId")).toBe("stable-session-id");
+    expect(window.localStorage.getItem("tunetrack.playerSessionId")).toBe("stable-session-id");
+    expect(window.sessionStorage.getItem("tunetrack.playerSessionId")).toBe("stable-session-id");
   });
 
-  it("restores player sessions from durable local storage", () => {
-    const { localStorage, sessionStorage } = stubWindowStorage();
-    localStorage.setItem("tunetrack.playerSessionId", "persisted-session-id");
+  it("restores player sessions from durable local storage", async () => {
+    window.localStorage.setItem("tunetrack.playerSessionId", "persisted-session-id");
+    const { getOrCreatePlayerSessionId } = await loadPlayerSession();
 
     expect(getOrCreatePlayerSessionId()).toBe("persisted-session-id");
-    expect(sessionStorage.getItem("tunetrack.playerSessionId")).toBe("persisted-session-id");
+    expect(window.sessionStorage.getItem("tunetrack.playerSessionId")).toBe("persisted-session-id");
   });
 
-  it("persists remembered display names across browser restarts", () => {
-    const { localStorage, sessionStorage } = stubWindowStorage();
+  it("backfills durable storage from the tab cache", async () => {
+    window.sessionStorage.setItem("tunetrack.playerSessionId", "tab-session-id");
+    const { getOrCreatePlayerSessionId } = await loadPlayerSession();
 
-    rememberPlayerDisplayName("DJ Nova");
+    expect(getOrCreatePlayerSessionId()).toBe("tab-session-id");
+    expect(window.localStorage.getItem("tunetrack.playerSessionId")).toBe("tab-session-id");
+  });
 
-    expect(localStorage.getItem("tunetrack.playerDisplayName")).toBe("DJ Nova");
-    expect(sessionStorage.getItem("tunetrack.playerDisplayName")).toBe("DJ Nova");
+  it("keeps one session id for the page load when storage throws", async () => {
+    useThrowingStorage();
+    const { getOrCreatePlayerSessionId } = await loadPlayerSession();
 
-    sessionStorage.setItem("tunetrack.playerDisplayName", "");
-
-    expect(getRememberedPlayerDisplayName()).toBe("DJ Nova");
+    expect(getOrCreatePlayerSessionId()).toBe("stable-session-id");
+    vi.stubGlobal("crypto", { randomUUID: () => "another-session-id" });
+    expect(getOrCreatePlayerSessionId()).toBe("stable-session-id");
   });
 });

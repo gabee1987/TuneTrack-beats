@@ -1,6 +1,6 @@
 # 13 — Network Protocol and Client Resilience
 
-> **Status (2026-10-06):** Phase 1 partially shipped (first-connect/reconnect split, idempotent `create_room`), Phases 3 and 4 shipped (connection effects independent of `t`; acknowledged, idempotent actions). Open: the `GAME_ALREADY_STARTED` recovery dialog and `instanceId` (Phase 1), the durable session id still cleared on room close (Phase 2, the next proof for B8), socket client policy and connection-state model (Phase 5), narrow events and `revision` (Phase 6).
+> **Status (2026-10-07):** Phase 1 partially shipped (first-connect/reconnect split, idempotent `create_room`), Phases 2, 3 and 4 shipped (durable session id and never-throwing storage; connection effects independent of `t`; acknowledged, idempotent actions). Open: the `GAME_ALREADY_STARTED` recovery dialog and `instanceId` (Phase 1), socket client policy and connection-state model (Phase 5), narrow events and `revision` (Phase 6).
 > **Folded from** `docs/plans/2026-09-stability-performance/05-network-protocol-and-resilience.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
 >
 > **Binding budgets, order and corrections (2026-10-07):** `05-performance-and-robustness-plan.md` §2 (budgets), §8 (rollout order), §9 (corrections to this document). Where they differ, `05` wins.
@@ -77,52 +77,11 @@ itself the first time a deployment happens mid-session.
       `GAME_ALREADY_STARTED` and the client shows the in-progress recovery dialog.
 - [ ] Manual: reload a `/lobby/:id?intent=create` URL and confirm no error.
 
-## 2. Phase 2 — Stabilise the client session identity · **S1** · open — next proof for B8
+## 2. Phase 2 — Stabilise the client session identity · **S1** · shipped 2026-10-07
 
-**Review finding:** F-17. **Bug register:** B8 ("Remaining").
-
-`resetPlayerSession()` (`apps/web/src/services/session/playerSession.ts`) deletes the
-durable `tunetrack.playerSessionId`. It is still called from the room-closed handlers of
-both `apps/web/src/pages/GamePage/hooks/useGameRoomConnection.ts` and
-`apps/web/src/pages/LobbyPage/hooks/useLobbyRoomConnection.ts` (verified 2026-10-06).
-Clearing a _room_ must not clear the _device identity_, because that identity is the only
-thing that makes reconnect possible. B8's "Completed" list implies session handling is
-finished; it is not until this phase lands, which is why it is B8's next proof.
-
-Change:
-
-- Remove `resetPlayerSession()` from both room-closed handlers.
-- Keep the function, but restrict it to a deliberate user action ("forget this device" in
-  settings) and to a schema-version bump. It is a legitimate capability, just not part of
-  ordinary room teardown.
-- Introduce an explicit `clearRoomSession()` that clears only room-scoped client state:
-  the cached `roomState`, `currentPlayerId`, and any room-scoped `sessionStorage` keys.
-  Recovery should call this.
-
-Additionally, `playerSession.ts` mirrors every value into both `localStorage` and
-`sessionStorage` with a read-through that back-fills. That is more machinery than the
-problem needs and doubles the failure surface: no access in this file is wrapped in
-try/catch, so storage-disabled Safari crashes the game page in `useMemo` (F-17). Rework as:
-
-- one `deviceStorage` helper with try/catch on every access, returning `null` on failure;
-- `localStorage` as the source of truth, `sessionStorage` used only as a same-tab cache;
-- a `SCHEMA_VERSION` prefix on keys so a future shape change can be migrated rather than
-  silently mis-parsed.
-
-The player profile (`apps/web/src/features/profile/playerProfile.ts`,
-`17-room-and-player-identity-flow.md`) shipped before this helper existed and keeps its own
-storage access; F-17 notes that it and `playerSession.ts` own the same
-`tunetrack.playerDisplayName` key with opposite notions of which is legacy. Move the profile
-store onto `deviceStorage` and settle key ownership in this phase.
-
-### Acceptance
-
-- [ ] Closing a room and returning home preserves `tunetrack.playerSessionId`.
-- [ ] Rejoining a _different_ room after a close reuses the same session id.
-- [ ] Every storage access is inside a try/catch; a test with a throwing storage stub
-      renders the app without error.
-- [ ] Existing `playerSession.test.ts` extended, not replaced.
-- [ ] One module owns `tunetrack.playerDisplayName`.
+Shipped as `05` B1: one never-throwing `deviceStorage` helper, the profile as sole owner of
+`tunetrack.playerDisplayName`, and room close no longer deletes `tunetrack.playerSessionId`.
+Deviations and proof are recorded in `05` B1.
 
 ## 3. Phase 3 — Remove `t` from the connection effects · **S2** · shipped
 

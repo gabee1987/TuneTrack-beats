@@ -1,7 +1,7 @@
 # 05 — Performance and Robustness Plan
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 5 of `00-index.md` §4).
-> **Status (2026-10-07):** A1–A4 shipped; every other package is open. Every finding below
+> **Status (2026-10-07):** A1–A4 and B1 shipped; every other package is open. Every finding below
 > was re-verified in code on 2026-10-07 (line numbers drift; file and symbol names are the
 > stable reference).
 > **Authority:** this document sets the **binding numeric budgets** and the **order** of the
@@ -256,15 +256,20 @@ and a `hu` entry).
 
 ## 5. Track B — Client connection robustness
 
-### B1 · Device storage and durable session (F-17, plan 13 Phase 2)
+### B1 · Device storage and durable session (F-17, plan 13 Phase 2) — **shipped 2026-10-07**
 
-- One `deviceStorage` helper (try/catch on every access, `null` on failure) used by
-  `playerSession.ts`, `playerProfile.ts` and the `main.tsx` theme read. `playerProfile` owns
-  `tunetrack.playerDisplayName`; `playerSession` stops writing it.
-- Room close no longer calls `resetPlayerSession()`; `clearRoomSession()` clears room-scoped
-  state only.
-- **Proof:** `playerSession.test.ts` and `playerProfile.test.ts` with a throwing storage stub;
-  E2E: close a room, rejoin another, same session id.
+`services/storage/deviceStorage.ts` reads and writes browser storage without ever throwing;
+`playerSession.ts`, `playerProfile.ts` and the `main.tsx` theme read use it, and the session id
+falls back to one in-memory id per page load when storage is unavailable. The profile is the
+only owner of `tunetrack.playerDisplayName`; the game page reads the name from the profile
+store. The room-closed handlers no longer delete the session id, and `resetPlayerSession` is
+gone because nothing else called it. No `clearRoomSession()` was added: no room-scoped storage
+key exists, and the handlers already clear `roomState`, `currentPlayerId` and the socket. The
+plan-13 `SCHEMA_VERSION` key prefix was not adopted, because renaming the key would orphan every
+existing session. Proof: `services/session/playerSession.test.ts` and
+`features/profile/playerProfile.test.ts` (throwing storage), E2E
+`apps/e2e/tests/session-identity.spec.ts` (close a room, join another, same session id for host
+and guest). The shared E2E helpers moved to `apps/e2e/tests/support/roomPages.ts`.
 
 ### B2 · One connection-state model (F-02, F-20, F-21)
 
@@ -319,22 +324,22 @@ drop it on coarse pointers only if the trace shows paint cost.
 One package = one agent session. Packages in the same row can run in parallel sessions only if
 their files do not overlap.
 
-| Order | Packages                        | Depends on                        | Skills                                  | Why this order                                    |
-| ----- | ------------------------------- | --------------------------------- | --------------------------------------- | ------------------------------------------------- |
-| 1     | **A1** (shipped 2026-10-07)     | —                                 | `write-tests`, `verify`                 | Answer leak and unauthenticated third-party calls |
-| 2     | **A2** (shipped 2026-10-07)     | —                                 | `write-tests`                           | Ghost players, silent lobby loss, rename breakage |
-| 3     | **A3** (shipped 2026-10-07)     | `04` WP 2 (deck contract) or none | `write-tests`                           | Game soft-lock; decision 6                        |
-| 4     | **A4** (shipped 2026-10-07), B1 | —                                 | `add-socket-action` (A4), `write-tests` | Error contract feeds B2's toasts                  |
-| 5     | A8, B2                          | A4                                | `add-socket-action`, `e2e-scenario`     | Honest connection state end to end                |
-| 6     | A5, A6, A7                      | A1                                | `write-tests`                           | Abuse limits and transport                        |
-| 7     | D0, C1, C2                      | —                                 | `perf-check`                            | Largest runtime win, measurable                   |
-| 8     | C3, C4, C5, C6                  | C1                                | `perf-check`                            | Drag, viewport, playback                          |
-| 9     | D1, D2, D3                      | D0                                | `perf-check`                            | Eager gate                                        |
-| 10    | C7, D4, D5, E1                  | D1 (C7)                           | `design-token-migration`, `perf-check`  | Motion and CSS budgets                            |
-| 11    | A9, A10                         | A2                                | `write-tests`                           | Small server costs, measured broadcast decision   |
-| 12    | E2                              | E1                                | `add-ui-component`                      | Largest UI refactor last                          |
+| Order | Packages                            | Depends on                        | Skills                                  | Why this order                                    |
+| ----- | ----------------------------------- | --------------------------------- | --------------------------------------- | ------------------------------------------------- |
+| 1     | **A1** (shipped 2026-10-07)         | —                                 | `write-tests`, `verify`                 | Answer leak and unauthenticated third-party calls |
+| 2     | **A2** (shipped 2026-10-07)         | —                                 | `write-tests`                           | Ghost players, silent lobby loss, rename breakage |
+| 3     | **A3** (shipped 2026-10-07)         | `04` WP 2 (deck contract) or none | `write-tests`                           | Game soft-lock; decision 6                        |
+| 4     | **A4**, **B1** (shipped 2026-10-07) | —                                 | `add-socket-action` (A4), `write-tests` | Error contract feeds B2's toasts                  |
+| 5     | A8, B2                              | A4                                | `add-socket-action`, `e2e-scenario`     | Honest connection state end to end                |
+| 6     | A5, A6, A7                          | A1                                | `write-tests`                           | Abuse limits and transport                        |
+| 7     | D0, C1, C2                          | —                                 | `perf-check`                            | Largest runtime win, measurable                   |
+| 8     | C3, C4, C5, C6                      | C1                                | `perf-check`                            | Drag, viewport, playback                          |
+| 9     | D1, D2, D3                          | D0                                | `perf-check`                            | Eager gate                                        |
+| 10    | C7, D4, D5, E1                      | D1 (C7)                           | `design-token-migration`, `perf-check`  | Motion and CSS budgets                            |
+| 11    | A9, A10                             | A2                                | `write-tests`                           | Small server costs, measured broadcast decision   |
+| 12    | E2                                  | E1                                | `add-ui-component`                      | Largest UI refactor last                          |
 
-A1–A4 shipped on 2026-10-07; B1 is next.
+A1–A4 and B1 shipped on 2026-10-07; A8 and B2 are next.
 
 ## 9. Corrections to the work-breakdown documents
 

@@ -11,10 +11,6 @@ import { useEffect, useRef, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useI18n } from "../../../features/i18n";
 import { localizeServerError } from "../../../features/i18n/localizedErrors";
-import {
-  rememberPlayerDisplayName,
-  resetPlayerSession,
-} from "../../../services/session/playerSession";
 import { rememberRoomEventToast } from "../../../services/session/roomEventToast";
 import { getSocketClient, resetSocketClient } from "../../../services/socket/socketClient";
 
@@ -97,7 +93,6 @@ export function useLobbyRoomConnection({
   function handleClosedRoomReset() {
     setHasClosedRoomReset(false);
     resetSocketClient();
-    resetPlayerSession();
     setRoomState(null);
     setCurrentPlayerId(null);
     currentPlayerIdRef.current = null;
@@ -113,8 +108,6 @@ export function useLobbyRoomConnection({
       navigate("/");
       return;
     }
-
-    rememberPlayerDisplayName(displayName);
 
     function handleConnect(socketClient: Awaited<ReturnType<typeof getSocketClient>>) {
       setConnectionStatus("Connected");

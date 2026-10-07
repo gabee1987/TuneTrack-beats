@@ -64,6 +64,7 @@ that initiated navigation.
 - E7-E11 cover guest recovery, host recovery, host transfer, retained offline guests and
   whole-room expiry.
 - Lifecycle durations are validated environment settings with production defaults.
+- Closing a room keeps the device session id, and storage access never throws (`05` B1).
 
 ### Remaining
 

@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { useThrowingStorage } from "../../test/stubs/storage";
 import { readPlayerProfile } from "./playerProfile";
 
 class MemoryStorage {
@@ -39,5 +40,28 @@ describe("playerProfile", () => {
       displayName: "",
       hasCompletedSetup: false,
     });
+  });
+
+  it("is the only writer of the legacy display-name key", async () => {
+    vi.resetModules();
+    const { usePlayerProfileStore } = await import("./playerProfile");
+
+    usePlayerProfileStore.getState().setDisplayName("Player One");
+
+    expect(window.localStorage.getItem("tunetrack.playerDisplayName")).toBe("Player One");
+    expect(JSON.parse(window.localStorage.getItem("tunetrack.playerProfile.v1") ?? "{}")).toEqual({
+      displayName: "Player One",
+      hasCompletedSetup: true,
+    });
+  });
+
+  it("starts and keeps a name in memory when storage throws", async () => {
+    useThrowingStorage();
+    vi.resetModules();
+    const { usePlayerProfileStore } = await import("./playerProfile");
+
+    expect(usePlayerProfileStore.getState().hasCompletedSetup).toBe(false);
+    usePlayerProfileStore.getState().setDisplayName("Player One");
+    expect(usePlayerProfileStore.getState().displayName).toBe("Player One");
   });
 });

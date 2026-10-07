@@ -3,13 +3,14 @@ import { App } from "./app/App";
 import "./app/styles/globals.css";
 import { defaultUiPreferences, type ThemeId } from "./features/preferences/uiPreferences";
 import { applyTheme } from "./features/theme/themeRegistry";
+import { readDeviceStorage } from "./services/storage/deviceStorage";
 
 function syncAppHeight() {
   document.documentElement.style.setProperty("--app-height", `${window.innerHeight}px`);
 }
 
 function getInitialTheme(): ThemeId {
-  const persistedValue = window.localStorage.getItem("tunetrack-ui-preferences");
+  const persistedValue = readDeviceStorage("tunetrack-ui-preferences");
 
   if (!persistedValue) {
     return defaultUiPreferences.theme;

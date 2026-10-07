@@ -1,5 +1,10 @@
 import { PLAYER_NAME_MAX_LENGTH, PLAYER_NAME_MIN_LENGTH } from "@tunetrack/shared";
 import { create } from "zustand";
+import {
+  type DeviceStorageArea,
+  readDeviceStorage,
+  writeDeviceStorage,
+} from "../../services/storage/deviceStorage";
 
 const PLAYER_PROFILE_STORAGE_KEY = "tunetrack.playerProfile.v1";
 const LEGACY_DISPLAY_NAME_STORAGE_KEY = "tunetrack.playerDisplayName";
@@ -59,19 +64,19 @@ export function readPlayerProfile(storage: StorageReader): PlayerProfile {
   }
 }
 
+function deviceStorageReader(area: DeviceStorageArea): StorageReader {
+  return { getItem: (key) => readDeviceStorage(key, area) };
+}
+
 function readInitialPlayerProfile(): PlayerProfile {
   if (typeof window === "undefined") {
     return emptyPlayerProfile;
   }
 
-  try {
-    const persistentProfile = readPlayerProfile(window.localStorage);
-    return persistentProfile.hasCompletedSetup
-      ? persistentProfile
-      : readPlayerProfile(window.sessionStorage);
-  } catch {
-    return emptyPlayerProfile;
-  }
+  const persistentProfile = readPlayerProfile(deviceStorageReader("local"));
+  return persistentProfile.hasCompletedSetup
+    ? persistentProfile
+    : readPlayerProfile(deviceStorageReader("session"));
 }
 
 function persistPlayerProfile(profile: PlayerProfile): void {
@@ -79,14 +84,10 @@ function persistPlayerProfile(profile: PlayerProfile): void {
     return;
   }
 
-  try {
-    const serializedProfile = JSON.stringify(profile);
-    window.localStorage.setItem(PLAYER_PROFILE_STORAGE_KEY, serializedProfile);
-    window.sessionStorage.setItem(PLAYER_PROFILE_STORAGE_KEY, serializedProfile);
-    window.localStorage.setItem(LEGACY_DISPLAY_NAME_STORAGE_KEY, profile.displayName);
-    window.sessionStorage.setItem(LEGACY_DISPLAY_NAME_STORAGE_KEY, profile.displayName);
-  } catch {
-    // The in-memory profile remains usable when browser storage is unavailable.
+  const serializedProfile = JSON.stringify(profile);
+  for (const area of ["local", "session"] as const) {
+    writeDeviceStorage(PLAYER_PROFILE_STORAGE_KEY, serializedProfile, area);
+    writeDeviceStorage(LEGACY_DISPLAY_NAME_STORAGE_KEY, profile.displayName, area);
   }
 }
 

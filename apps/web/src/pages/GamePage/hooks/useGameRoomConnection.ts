@@ -11,7 +11,6 @@ import { useEffect, useRef, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useI18n } from "../../../features/i18n";
 import { localizeServerError } from "../../../features/i18n/localizedErrors";
-import { resetPlayerSession } from "../../../services/session/playerSession";
 import { rememberRoomEventToast } from "../../../services/session/roomEventToast";
 import { getSocketClient, resetSocketClient } from "../../../services/socket/socketClient";
 import type { GameRouteState } from "../GamePage.types";
@@ -46,7 +45,6 @@ export function useGameRoomConnection({
   function handleClosedRoomReset() {
     setHasClosedRoomReset(false);
     resetSocketClient();
-    resetPlayerSession();
     setRoomState(null);
     setCurrentPlayerId(null);
     navigate("/", { replace: true, state: null });

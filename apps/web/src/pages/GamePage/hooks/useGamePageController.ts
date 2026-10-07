@@ -1,9 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
-import {
-  getOrCreatePlayerSessionId,
-  getRememberedPlayerDisplayName,
-} from "../../../services/session/playerSession";
+import { usePlayerProfileStore } from "../../../features/profile/playerProfile";
+import { getOrCreatePlayerSessionId } from "../../../services/session/playerSession";
 import type { GameRouteState, UseGamePageControllerResult } from "../GamePage.types";
 import { buildGamePageControllerResult } from "./buildGamePageControllerResult";
 import { useGamePageTransitionEvents } from "./transitions/useGamePageTransitionEvents";
@@ -26,7 +24,7 @@ export function useGamePageController({
   routeState,
 }: UseGamePageControllerOptions): UseGamePageControllerResult {
   const playerSessionId = useMemo(() => getOrCreatePlayerSessionId(), []);
-  const rememberedDisplayName = useMemo(() => getRememberedPlayerDisplayName(), []);
+  const rememberedDisplayName = useMemo(() => usePlayerProfileStore.getState().displayName, []);
   const preferencesState = useGamePagePreferencesState();
   const [pendingSkippedTrackId, setPendingSkippedTrackId] = useState<string | null>(null);
 
