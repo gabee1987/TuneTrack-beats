@@ -21,4 +21,9 @@ export class ChallengeTimerManager {
     clearTimeout(handle);
     this.timers.delete(roomId);
   }
+
+  clearAll(): void {
+    for (const handle of this.timers.values()) clearTimeout(handle);
+    this.timers.clear();
+  }
 }

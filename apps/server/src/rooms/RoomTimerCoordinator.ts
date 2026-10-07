@@ -27,6 +27,14 @@ export class RoomTimerCoordinator {
     }
   }
 
+  public clearAll(): void {
+    this.allPlayersOfflineTimers.clearAll();
+    this.challengeTimers.clearAll();
+    this.disconnectTimers.clearAll();
+    this.hostTransferTimers.clearAll();
+    this.turnSkipTimers.clearAll();
+  }
+
   public clearForSession(sessionId: string): void {
     this.disconnectTimers.clear(sessionId);
     this.turnSkipTimers.clear(sessionId);

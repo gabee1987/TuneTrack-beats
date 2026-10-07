@@ -20,6 +20,7 @@ export const ServerToClientEvent = {
   RoomList: "room_list",
   RoomPreview: "room_preview",
   RoomClosed: "room_closed",
+  ServerShuttingDown: "server_shutting_down",
   SpotifyAuthResult: "spotify_auth_result",
   SpotifyCandidatesApplied: "spotify_candidates_applied",
   SpotifyCandidatesGenerated: "spotify_candidates_generated",

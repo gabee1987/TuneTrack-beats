@@ -1,7 +1,7 @@
 # 05 — Performance and Robustness Plan
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 5 of `00-index.md` §4).
-> **Status (2026-10-07):** A1–A4 and B1 shipped; every other package is open. Every finding below
+> **Status (2026-10-07):** A1–A4, A8 and B1 shipped; every other package is open. Every finding below
 > was re-verified in code on 2026-10-07 (line numbers drift; file and symbol names are the
 > stable reference).
 > **Authority:** this document sets the **binding numeric budgets** and the **order** of the
@@ -220,15 +220,18 @@ and a `hu` entry).
 - **Proof:** new `tests/app/createSocketServer.test.ts` asserts the options, buffer size and
   CORS wiring, and that recovery is off.
 
-### A8 · Graceful shutdown (B-11 remainder)
+### A8 · Graceful shutdown (B-11 remainder) — **shipped 2026-10-07**
 
-- `app/shutdown.ts`: `SIGTERM`/`SIGINT`, idempotent; stop accepting connections; emit the new
-  `ServerShuttingDown` event; `io.close()` with a 2 s drain; `RoomTimerCoordinator.clearAll()`
-  (new, plus `clearAll()` on both timer managers); bounded Axiom flush; `server_stopped` audit
-  event; exit 0 or 1 on timeout. `unref()` stays (the HTTP listener keeps the process alive;
-  the review overstated this) — plan 12 §3.2's `keepProcessAlive` option is dropped.
-- **Proof:** `tests/app/shutdown.test.ts` with stubbed `process`, server and fake timers: one
-  sequence for two signals, zero pending timers, exit within 5 s.
+`app/shutdown.ts` handles `SIGTERM` and `SIGINT` once: it clears every room timer
+(`RoomTimerCoordinator.clearAll()` and `clearAll()` on both managers, reached through
+`RoomRegistry.clearAllTimers()`), emits `ServerToClientEvent.ServerShuttingDown` without a
+payload, closes Socket.IO and the HTTP server with a 2 s drain bound, logs the `server_stopped`
+audit event, drains the Axiom queue (`drainAxiomLogEvents`, which stops when ingest fails) and
+exits 0; a 5 s deadline or a failing step exits 1. Timers are cleared first so no grace callback
+mutates a room during the drain. `unref()` stays. Clients on long polling may miss the event
+because `io.close()` discards their buffer; B2 treats that disconnect as `reconnecting`. Proof:
+`apps/server/tests/app/shutdown.test.ts` (one sequence for repeated signals, zero pending timers,
+drain bound, deadline and failure exits) and `tests/app/axiomLogSink.test.ts`.
 
 ### A9 · Small server costs (B-24, B-26, B-19, B-18 scope)
 
@@ -330,7 +333,7 @@ their files do not overlap.
 | 2     | **A2** (shipped 2026-10-07)         | —                                 | `write-tests`                           | Ghost players, silent lobby loss, rename breakage |
 | 3     | **A3** (shipped 2026-10-07)         | `04` WP 2 (deck contract) or none | `write-tests`                           | Game soft-lock; decision 6                        |
 | 4     | **A4**, **B1** (shipped 2026-10-07) | —                                 | `add-socket-action` (A4), `write-tests` | Error contract feeds B2's toasts                  |
-| 5     | A8, B2                              | A4                                | `add-socket-action`, `e2e-scenario`     | Honest connection state end to end                |
+| 5     | **A8** (shipped 2026-10-07), B2     | A4                                | `add-socket-action`, `e2e-scenario`     | Honest connection state end to end                |
 | 6     | A5, A6, A7                          | A1                                | `write-tests`                           | Abuse limits and transport                        |
 | 7     | D0, C1, C2                          | —                                 | `perf-check`                            | Largest runtime win, measurable                   |
 | 8     | C3, C4, C5, C6                      | C1                                | `perf-check`                            | Drag, viewport, playback                          |
@@ -339,7 +342,7 @@ their files do not overlap.
 | 11    | A9, A10                             | A2                                | `write-tests`                           | Small server costs, measured broadcast decision   |
 | 12    | E2                                  | E1                                | `add-ui-component`                      | Largest UI refactor last                          |
 
-A1–A4 and B1 shipped on 2026-10-07; A8 and B2 are next.
+A1–A4, A8 and B1 shipped on 2026-10-07; B2 is next.
 
 ## 9. Corrections to the work-breakdown documents
 

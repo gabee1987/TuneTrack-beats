@@ -47,6 +47,16 @@ export async function flushAxiomLogEvents(): Promise<void> {
   return activeFlush;
 }
 
+/** Sends every queued event; stops early when ingest fails so shutdown cannot loop. */
+export async function drainAxiomLogEvents(): Promise<void> {
+  await activeFlush;
+  while (queuedEvents.length > 0) {
+    const queuedBefore = queuedEvents.length;
+    await flushAxiomLogEvents();
+    if (queuedEvents.length >= queuedBefore) return;
+  }
+}
+
 function scheduleFlush(): void {
   if (flushTimer) return;
 

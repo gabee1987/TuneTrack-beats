@@ -1,8 +1,8 @@
 # 12 — Backend Stability and Session Ownership
 
-> **Status (2026-10-06):** Phase 1 (in-game identity retention) and Phase 3.3 (lifecycle
-> periods from configuration) shipped. Phase 2 (Socket.IO configuration and rate limiting),
-> Phase 3.1 (graceful shutdown), Phase 3.2 (timer references), Phase 4 (façade collapse —
+> **Status (2026-10-07):** Phase 1 (in-game identity retention), Phase 3.1 (graceful shutdown)
+> and Phase 3.3 (lifecycle periods from configuration) shipped; Phase 3.2 (timer references) is
+> superseded by `05` A8. Phase 2 (Socket.IO configuration and rate limiting), Phase 4 (façade collapse —
 > `RoomService.ts` has grown to 718 lines) and Phase 5 (membership indexes) are open.
 > **Folded from** `docs/plans/2026-09-stability-performance/04-backend-stability-and-sessions.md`
 > on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
@@ -163,42 +163,17 @@ availability of an internet-facing service, and it is cheap.
 
 **Finding:** B-11.
 
-### 3.1 Shutdown (open)
+### 3.1 Shutdown
 
-`apps/server/src/index.ts` has no signal handling. Add an explicit shutdown sequence, kept
-in its own module (`apps/server/src/app/shutdown.ts`) so `index.ts` stays a wiring file:
+**Shipped 2026-10-07** as `05` A8: `apps/server/src/app/shutdown.ts` runs one bounded sequence
+per process (clear timers, `ServerShuttingDown`, close with a 2 s drain, `server_stopped`, Axiom
+drain, exit 0, or 1 after 5 s or on failure). Proof: `apps/server/tests/app/shutdown.test.ts`.
 
-1. Stop accepting new HTTP connections (`httpServer.close()`).
-2. Emit a new `ServerToClientEvent.ServerShuttingDown` to all connected sockets so clients
-   can show an honest message instead of a silent disconnect, and so the client can decide
-   not to treat it as a network fault (`13-network-protocol-and-resilience.md` §3).
-3. `io.close()` with a short drain window (2 s).
-4. Clear every timer via a new `RoomTimerCoordinator.clearAll()`.
-5. Flush the Axiom sink (`apps/server/src/app/axiomLogSink.ts`) and await it with a
-   bounded timeout.
-6. Log `server_stopped` as an audit event, mirroring the existing `server_started`.
-7. `process.exit(0)`, or exit non-zero if any step timed out.
+### 3.2 Timer references
 
-Register for `SIGTERM` and `SIGINT`, and make the handler idempotent so a second signal
-does not restart the sequence.
-
-The `unhandledRejection` and `uncaughtException` handlers that log at `fatal` through the
-audit sink before exiting, together with guarding every timer callback, are on the hotfix
-track of `00-index.md` §4 (B-11) and may land before this phase; this phase owns the
-ordered shutdown sequence and must not duplicate them.
-
-### 3.2 Timer references (open)
-
-`DisconnectTimerManager.schedule` and `ChallengeTimerManager.schedule` both call
-`handle.unref()`. That is convenient for tests but means a pending challenge window or
-reconnect grace period cannot keep the process alive and vanishes without a trace on
-shutdown.
-
-- Remove `unref()` from production behaviour and make it an explicit constructor option
-  (`{ keepProcessAlive: false }`) that the test setup passes. This keeps tests fast while
-  making production behaviour correct.
-- Add `clearAll()` to both managers and to `RoomTimerCoordinator`, used by the shutdown
-  sequence and by test teardown.
+**Superseded 2026-10-07** by `05` A8: `unref()` stays because the HTTP listener keeps the process
+alive; the `keepProcessAlive` option is dropped. `clearAll()` shipped on both managers and on
+`RoomTimerCoordinator`.
 
 ### 3.3 Room capacity and grace periods from configuration
 
@@ -206,10 +181,9 @@ shutdown.
 
 ### Acceptance
 
-- [ ] `SIGTERM` during an active game logs `server_stopped`, notifies clients, clears all
-      timers and exits 0 within 5 s. Verified by a test that spawns the server module with
-      a stubbed `process`.
-- [ ] `RoomTimerCoordinator.clearAll()` leaves zero pending timers (assert with fake timers).
+- [x] `SIGTERM` during an active game logs `server_stopped`, notifies clients, clears all
+      timers and exits 0 within 5 s (`tests/app/shutdown.test.ts`, stubbed `process`).
+- [x] `RoomTimerCoordinator.clearAll()` leaves zero pending timers (same test, fake timers).
 - [ ] An unhandled rejection is logged at `fatal` with an audit record before exit.
 - [ ] `docs/operations/axiom_logging_setup.md` updated with the new `server_stopped` audit
       action.

@@ -25,4 +25,9 @@ export class DisconnectTimerManager {
   has(key: string): boolean {
     return this.timers.has(key);
   }
+
+  clearAll(): void {
+    for (const handle of this.timers.values()) clearTimeout(handle);
+    this.timers.clear();
+  }
 }

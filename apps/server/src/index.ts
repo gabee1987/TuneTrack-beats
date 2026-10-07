@@ -1,9 +1,11 @@
 import { createHttpServer } from "./app/createHttpServer.js";
 import { createSocketServer } from "./app/createSocketServer.js";
 import { logAuditEvent } from "./app/auditLogger.js";
+import { drainAxiomLogEvents } from "./app/axiomLogSink.js";
 import { env } from "./app/env.js";
 import { logger } from "./app/logger.js";
 import { registerProcessFatalHandlers } from "./app/processFatalHandlers.js";
+import { registerGracefulShutdown } from "./app/shutdown.js";
 import { DeckService } from "./decks/DeckService.js";
 import { PlaylistImportService } from "./decks/PlaylistImportService.js";
 import { registerSpotifyRoutes } from "./http/spotifyRoutes.js";
@@ -64,6 +66,20 @@ const roomService = new RoomService(
 
 registerSpotifyRoutes(app, io, spotifyAuthService, roomService);
 registerSocketHandlers(io, roomService);
+registerGracefulShutdown(process, {
+  socketServer: io,
+  clearRoomTimers: () => roomRegistry.clearAllTimers(),
+  recordServerStopped: (signal) =>
+    logAuditEvent({
+      auditKind: "server",
+      action: "server_stopped",
+      outcome: "succeeded",
+      meta: { signal },
+    }),
+  flushAuditLog: drainAxiomLogEvents,
+  log: logger,
+  exit: (code) => process.exit(code),
+});
 
 httpServer.listen(env.PORT, () => {
   const axiomConfigured = Boolean(env.AXIOM_TOKEN && env.AXIOM_DATASET);

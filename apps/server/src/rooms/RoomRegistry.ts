@@ -120,6 +120,10 @@ export class RoomRegistry {
     this.spotifyPlaybackHandoffListener = listener;
   }
 
+  public clearAllTimers(): void {
+    this.timers.clearAll();
+  }
+
   public listRoomSummaries(): PublicRoomSummary[] {
     return this.store.listLobbySummaries();
   }
