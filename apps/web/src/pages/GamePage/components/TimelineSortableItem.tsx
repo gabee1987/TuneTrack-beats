@@ -111,6 +111,7 @@ function TimelineSortableItemComponent({
       } ${isDragging && isPreview ? styles.timelineItemPreviewDragging : ""} ${
         isDraggingPreviewCard && isPreview ? styles.timelineItemPreviewGhost : ""
       }`}
+      data-timeline-slot="true"
       style={style}
       onClick={
         (!isPreview || showCorrectionPreview) && onCardInfoRequest

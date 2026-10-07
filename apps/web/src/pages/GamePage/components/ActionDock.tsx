@@ -1,5 +1,5 @@
 import { motion, useIsPresent } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import {
   createActionDockMotion,
@@ -7,36 +7,12 @@ import {
   useReducedMotionPreference,
 } from "../../../features/motion";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
+import { getUsesMobileControls, subscribeViewport } from "../../../features/viewport/viewportStore";
 import styles from "./gamePageActionPanelsStyles";
 
-const MOBILE_CONTROL_MEDIA_QUERY = "(max-width: 720px), (hover: none) and (pointer: coarse)";
-
 export function useMobileControlPortalTarget(): HTMLElement | null {
-  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    function updatePortalTarget() {
-      const shouldPortal =
-        typeof window !== "undefined" && window.matchMedia(MOBILE_CONTROL_MEDIA_QUERY).matches;
-
-      setPortalTarget(shouldPortal ? document.body : null);
-    }
-
-    updatePortalTarget();
-
-    const mediaQuery = window.matchMedia(MOBILE_CONTROL_MEDIA_QUERY);
-    mediaQuery.addEventListener("change", updatePortalTarget);
-    window.addEventListener("orientationchange", updatePortalTarget);
-    window.addEventListener("resize", updatePortalTarget);
-
-    return () => {
-      mediaQuery.removeEventListener("change", updatePortalTarget);
-      window.removeEventListener("orientationchange", updatePortalTarget);
-      window.removeEventListener("resize", updatePortalTarget);
-    };
-  }, []);
-
-  return portalTarget;
+  const usesMobileControls = useSyncExternalStore(subscribeViewport, getUsesMobileControls);
+  return usesMobileControls ? document.body : null;
 }
 
 interface ActionDockProps {
@@ -69,7 +45,6 @@ export function ActionDock({ children, className, containerRef }: ActionDockProp
       className={`${styles.floatingActionDock}${className ? ` ${className}` : ""}`}
       exit="exit"
       initial="initial"
-      layout
       transition={createStandardTransition(reduceMotion)}
       variants={createActionDockMotion(reduceMotion)}
     >

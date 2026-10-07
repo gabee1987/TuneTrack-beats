@@ -19,7 +19,7 @@ const ALLOWLIST = {
   "apps/web/src/pages/GamePage/hooks/useGamePageActions.test.tsx": 982,
   "packages/game-engine/tests/gameFlow.test.ts": 826,
   "apps/e2e/tests/room-entry.spec.ts": 750,
-  "apps/web/src/pages/GamePage/hooks/useSpotifyPlaybackSdk.ts": 738,
+  "apps/web/src/pages/GamePage/hooks/useSpotifyPlaybackSdk.ts": 724,
   "apps/server/src/rooms/RoomService.ts": 703,
 };
 

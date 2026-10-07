@@ -1,11 +1,7 @@
 import { type DragEndEvent, type DragMoveEvent, type DragStartEvent } from "@dnd-kit/core";
 import type { TimelineCardPublic } from "@tunetrack/shared";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  DRAG_EDGE_SCROLL_MAX_STEP_PX,
-  DRAG_EDGE_SCROLL_ZONE_PX,
-  TIMELINE_REORDER_THROTTLE_MS,
-} from "../gamePage.constants";
+import { TIMELINE_REORDER_THROTTLE_MS } from "../gamePage.constants";
 import type { GamePageCard } from "../GamePage.types";
 import {
   TIMELINE_PREVIEW_ITEM_ID,
@@ -14,6 +10,13 @@ import {
   buildTimelineItemMap,
   clampPreviewIndex,
 } from "../gamePageTimelineItems";
+import {
+  applyAncestorScroll,
+  applyContainerScroll,
+  getPreviewIndexForActiveRect,
+  measureTimelineDragGeometry,
+  type TimelineDragGeometry,
+} from "./timelineDragGeometry";
 
 interface UseTimelinePanelDragStateOptions {
   previewCard: GamePageCard | null;
@@ -45,63 +48,6 @@ interface UseTimelinePanelDragStateResult {
   >;
 }
 
-function isGridTimelineLayout(container: HTMLElement): boolean {
-  return getComputedStyle(container).display === "grid";
-}
-
-function getGridPreviewIndex(
-  activeCenterX: number,
-  activeCenterY: number,
-  timelineCards: HTMLElement[],
-): number {
-  let nextPreviewIndex = 0;
-
-  for (const timelineCard of timelineCards) {
-    const cardRect = timelineCard.getBoundingClientRect();
-    const cardCenterX = cardRect.left + cardRect.width / 2;
-    const cardCenterY = cardRect.top + cardRect.height / 2;
-    const sameRowTop = cardRect.top;
-    const sameRowBottom = cardRect.bottom;
-
-    if (activeCenterY > sameRowBottom) {
-      nextPreviewIndex += 1;
-      continue;
-    }
-
-    if (activeCenterY >= sameRowTop && activeCenterY <= sameRowBottom) {
-      if (activeCenterX > cardCenterX) {
-        nextPreviewIndex += 1;
-        continue;
-      }
-
-      break;
-    }
-
-    if (activeCenterY < cardCenterY) {
-      break;
-    }
-  }
-
-  return nextPreviewIndex;
-}
-
-function getHorizontalPreviewIndex(activeCenterX: number, timelineCards: HTMLElement[]): number {
-  let nextPreviewIndex = 0;
-
-  for (const timelineCard of timelineCards) {
-    const cardRect = timelineCard.getBoundingClientRect();
-    const cardCenterX = cardRect.left + cardRect.width / 2;
-
-    if (activeCenterX > cardCenterX) {
-      nextPreviewIndex += 1;
-    } else {
-      break;
-    }
-  }
-
-  return nextPreviewIndex;
-}
-
 export function useTimelinePanelDragState({
   previewCard,
   previewSlotIndex,
@@ -112,6 +58,8 @@ export function useTimelinePanelDragState({
 }: UseTimelinePanelDragStateOptions): UseTimelinePanelDragStateResult {
   const [isDraggingPreviewCard, setIsDraggingPreviewCard] = useState(false);
   const lastPreviewReorderAtRef = useRef(0);
+  const dragGeometryRef = useRef<TimelineDragGeometry | null>(null);
+  const stopTrackingScrollRef = useRef<(() => void) | null>(null);
 
   const previewIndex = clampPreviewIndex(
     previewCard,
@@ -126,41 +74,68 @@ export function useTimelinePanelDragState({
   );
 
   const [orderedItemIds, setOrderedItemIds] = useState<string[]>(baseOrderedItemIds);
+  // Drag events read the order through this ref so a move never compares against the order
+  // of an earlier render.
+  const orderedItemIdsRef = useRef(orderedItemIds);
+
+  function applyOrderedItemIds(nextOrder: string[]) {
+    orderedItemIdsRef.current = nextOrder;
+    setOrderedItemIds(nextOrder);
+  }
 
   useEffect(() => {
     if (!isDraggingPreviewCard) {
+      orderedItemIdsRef.current = baseOrderedItemIds;
       setOrderedItemIds(baseOrderedItemIds);
     }
   }, [baseOrderedItemIds, isDraggingPreviewCard]);
+
+  useEffect(() => () => stopTrackingScrollRef.current?.(), []);
 
   const timelineItemMap = useMemo(
     () => buildTimelineItemMap(timelineCards, previewCard),
     [previewCard, timelineCards],
   );
 
+  function startTrackingScroll(container: HTMLElement) {
+    function handleScroll(event: Event) {
+      const geometry = dragGeometryRef.current;
+      if (!geometry) {
+        return;
+      }
+
+      if (event.target === container) {
+        dragGeometryRef.current = applyContainerScroll(geometry, container);
+      } else if (event.target instanceof Node && event.target.contains(container)) {
+        dragGeometryRef.current = applyAncestorScroll(geometry, container);
+      }
+    }
+
+    document.addEventListener("scroll", handleScroll, { capture: true, passive: true });
+    stopTrackingScrollRef.current = () => {
+      document.removeEventListener("scroll", handleScroll, { capture: true });
+      stopTrackingScrollRef.current = null;
+    };
+  }
+
+  function stopDragTracking() {
+    stopTrackingScrollRef.current?.();
+    dragGeometryRef.current = null;
+    lastPreviewReorderAtRef.current = 0;
+  }
+
   function syncPreviewIndexFromActiveRect(
-    translatedRect: DragMoveEvent["active"]["rect"]["current"]["translated"] | null,
+    geometry: TimelineDragGeometry,
+    translatedRect: NonNullable<DragMoveEvent["active"]["rect"]["current"]["translated"]>,
   ) {
-    if (!translatedRect) {
-      return;
-    }
-
-    const timelineRow = timelineRowRef.current;
-
-    if (!timelineRow) {
-      return;
-    }
-
-    const activeCenterX = translatedRect.left + translatedRect.width / 2;
-    const activeCenterY = translatedRect.top + translatedRect.height / 2;
-    const renderedTimelineCards = Array.from(
-      timelineRow.querySelectorAll<HTMLElement>("[data-timeline-card='true']"),
+    const currentPreviewIndex = orderedItemIdsRef.current.indexOf(TIMELINE_PREVIEW_ITEM_ID);
+    const nextPreviewIndex = getPreviewIndexForActiveRect(
+      geometry,
+      translatedRect,
+      currentPreviewIndex,
     );
-    const nextPreviewIndex = isGridTimelineLayout(timelineRow)
-      ? getGridPreviewIndex(activeCenterX, activeCenterY, renderedTimelineCards)
-      : getHorizontalPreviewIndex(activeCenterX, renderedTimelineCards);
 
-    if (orderedItemIds.indexOf(TIMELINE_PREVIEW_ITEM_ID) === nextPreviewIndex) {
+    if (currentPreviewIndex === nextPreviewIndex) {
       return;
     }
 
@@ -170,80 +145,45 @@ export function useTimelinePanelDragState({
       return;
     }
 
-    const nextOrder = buildOrderedTimelineItemIdsForPreviewIndex(timelineCards, nextPreviewIndex);
-
     lastPreviewReorderAtRef.current = now;
-    setOrderedItemIds(nextOrder);
+    applyOrderedItemIds(
+      buildOrderedTimelineItemIdsForPreviewIndex(timelineCards, nextPreviewIndex),
+    );
     onSelectSlot(nextPreviewIndex);
   }
 
   function handleDragStart(_: DragStartEvent) {
-    lastPreviewReorderAtRef.current = 0;
+    stopDragTracking();
+    const container = timelineRowRef.current;
+
+    if (container) {
+      dragGeometryRef.current = measureTimelineDragGeometry(container);
+      startTrackingScroll(container);
+    }
+
     setIsDraggingPreviewCard(true);
   }
 
+  // Edge scrolling is dnd-kit's auto-scroll alone (`TIMELINE_AUTO_SCROLL`); a second,
+  // per-event scroll here sped up with the pointer event rate.
   function handleDragMove(event: DragMoveEvent) {
-    const container = timelineRowRef.current;
+    const geometry = dragGeometryRef.current;
     const translatedRect = event.active.rect.current.translated;
 
-    if (!container || !translatedRect) {
-      return;
+    if (geometry && translatedRect) {
+      syncPreviewIndexFromActiveRect(geometry, translatedRect);
     }
-
-    const containerRect = container.getBoundingClientRect();
-    let scrollLeft = 0;
-    let scrollTop = 0;
-
-    if (translatedRect.right > containerRect.right - DRAG_EDGE_SCROLL_ZONE_PX) {
-      scrollLeft = Math.min(
-        DRAG_EDGE_SCROLL_MAX_STEP_PX,
-        (translatedRect.right - (containerRect.right - DRAG_EDGE_SCROLL_ZONE_PX)) / 5,
-      );
-    } else if (translatedRect.left < containerRect.left + DRAG_EDGE_SCROLL_ZONE_PX) {
-      scrollLeft = -Math.min(
-        DRAG_EDGE_SCROLL_MAX_STEP_PX,
-        (containerRect.left + DRAG_EDGE_SCROLL_ZONE_PX - translatedRect.left) / 5,
-      );
-    }
-
-    if (scrollLeft !== 0) {
-      container.scrollBy({
-        left: scrollLeft,
-        behavior: "auto",
-      });
-    }
-
-    if (isGridTimelineLayout(container)) {
-      if (translatedRect.bottom > containerRect.bottom - DRAG_EDGE_SCROLL_ZONE_PX) {
-        scrollTop = Math.min(
-          DRAG_EDGE_SCROLL_MAX_STEP_PX,
-          (translatedRect.bottom - (containerRect.bottom - DRAG_EDGE_SCROLL_ZONE_PX)) / 5,
-        );
-      } else if (translatedRect.top < containerRect.top + DRAG_EDGE_SCROLL_ZONE_PX) {
-        scrollTop = -Math.min(
-          DRAG_EDGE_SCROLL_MAX_STEP_PX,
-          (containerRect.top + DRAG_EDGE_SCROLL_ZONE_PX - translatedRect.top) / 5,
-        );
-      }
-
-      if (scrollTop !== 0) {
-        container.scrollBy({
-          top: scrollTop,
-          behavior: "auto",
-        });
-      }
-    }
-
-    syncPreviewIndexFromActiveRect(translatedRect);
   }
 
   function handleDragEnd(event: DragEndEvent) {
+    stopDragTracking();
+
     if (event.active.id !== TIMELINE_PREVIEW_ITEM_ID) {
       setIsDraggingPreviewCard(false);
       return;
     }
 
-    const slotIndex = orderedItemIds.indexOf(TIMELINE_PREVIEW_ITEM_ID);
+    const slotIndex = orderedItemIdsRef.current.indexOf(TIMELINE_PREVIEW_ITEM_ID);
 
     if (slotIndex !== -1) {
       onSelectSlot(slotIndex);
@@ -253,7 +193,7 @@ export function useTimelinePanelDragState({
   }
 
   function handleDragCancel() {
-    lastPreviewReorderAtRef.current = 0;
+    stopDragTracking();
     setIsDraggingPreviewCard(false);
   }
 

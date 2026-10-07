@@ -3,11 +3,8 @@ import { App } from "./app/App";
 import "./app/styles/globals.css";
 import { defaultUiPreferences, type ThemeId } from "./features/preferences/uiPreferences";
 import { applyTheme } from "./features/theme/themeRegistry";
+import { startAppHeightSync } from "./features/viewport/viewportStore";
 import { readDeviceStorage } from "./services/storage/deviceStorage";
-
-function syncAppHeight() {
-  document.documentElement.style.setProperty("--app-height", `${window.innerHeight}px`);
-}
 
 function getInitialTheme(): ThemeId {
   const persistedValue = readDeviceStorage("tunetrack-ui-preferences");
@@ -35,8 +32,7 @@ if (!rootElement) {
   throw new Error("Root element #root was not found.");
 }
 
-syncAppHeight();
+startAppHeightSync();
 applyTheme(getInitialTheme());
-window.addEventListener("resize", syncAppHeight);
 
 createRoot(rootElement).render(<App />);

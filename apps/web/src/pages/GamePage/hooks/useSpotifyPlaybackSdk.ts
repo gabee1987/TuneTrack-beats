@@ -28,7 +28,9 @@ export interface UseSpotifyPlaybackSdkResult {
   isReady: boolean;
   deviceId: string | null;
   isPlaying: boolean;
+  /** Position at `positionUpdatedAtMs`; the playback tab interpolates between snapshots. */
   position: number;
+  positionUpdatedAtMs: number;
   duration: number;
   hasActiveContext: boolean;
   hasEnded: boolean;
@@ -123,6 +125,7 @@ export function useSpotifyPlaybackSdk({
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [position, setPosition] = useState(0);
+  const [positionUpdatedAtMs, setPositionUpdatedAtMs] = useState(0);
   const [duration, setDuration] = useState(0);
   const [hasActiveContext, setHasActiveContext] = useState(false);
   const [hasEnded, setHasEnded] = useState(false);
@@ -135,9 +138,6 @@ export function useSpotifyPlaybackSdk({
   const accessTokenRef = useRef<string | null>(null);
   const tokenRequestInFlightRef = useRef<Promise<string | null> | null>(null);
   const isPlayingRef = useRef(false);
-  const positionSnapshotRef = useRef(0);
-  const positionSnapshotTimeRef = useRef(0);
-  const durationRef = useRef(0);
   const deviceIdRef = useRef<string | null>(null);
   const currentTrackUriRef = useRef<string | null>(null);
   const activePlayRequestIdRef = useRef<string | null>(null);
@@ -182,9 +182,7 @@ export function useSpotifyPlaybackSdk({
     setHasEnded(false);
     setNeedsUserGestureFlag(false);
     isPlayingRef.current = false;
-    positionSnapshotRef.current = 0;
-    positionSnapshotTimeRef.current = 0;
-    durationRef.current = 0;
+    setPositionUpdatedAtMs(0);
     currentTrackUriRef.current = null;
     setCurrentTrackUri(null);
   }, [setNeedsUserGestureFlag]);
@@ -411,10 +409,8 @@ export function useSpotifyPlaybackSdk({
         // did nothing at all.
         setHasActiveContext(!ended);
         isPlayingRef.current = playing;
-        positionSnapshotRef.current = state.position;
-        positionSnapshotTimeRef.current = Date.now();
-        durationRef.current = state.duration;
         setPosition(state.position);
+        setPositionUpdatedAtMs(Date.now());
         setDuration(state.duration);
 
         const pending = playConfirmRef.current;
@@ -515,17 +511,6 @@ export function useSpotifyPlaybackSdk({
       cleanup?.();
     };
   }, [enabled, pauseCurrentSpotifyDevice]);
-
-  useEffect(() => {
-    if (!enabled) return;
-    const intervalId = window.setInterval(() => {
-      if (!isPlayingRef.current) return;
-      const elapsed = Date.now() - positionSnapshotTimeRef.current;
-      const interpolated = Math.min(positionSnapshotRef.current + elapsed, durationRef.current);
-      setPosition(interpolated);
-    }, 1000);
-    return () => window.clearInterval(intervalId);
-  }, [enabled]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -724,6 +709,7 @@ export function useSpotifyPlaybackSdk({
     deviceId,
     isPlaying,
     position,
+    positionUpdatedAtMs,
     duration,
     hasActiveContext,
     hasEnded,

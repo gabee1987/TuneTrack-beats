@@ -1,13 +1,35 @@
+import type { DragMoveEvent, DragStartEvent } from "@dnd-kit/core";
 import { act, render } from "@testing-library/react";
 import { memo, type ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { TimelineCardPublic } from "@tunetrack/shared";
 import { I18nProvider } from "../../../features/i18n";
+import { setElementBox } from "../../../test/stubs/layout";
 import type { TimelineCelebrationTransitionEvent } from "../gamePageTransitionEvents";
+import { TIMELINE_AUTO_SCROLL } from "../gamePage.constants";
 import type { TimelinePanelModel } from "../GamePage.types";
 import { TimelinePanel } from "./TimelinePanel";
 
 const sortableItemRenders = vi.hoisted(() => new Map<string, number>());
+const dndContextProps = vi.hoisted(() => ({
+  current: null as {
+    autoScroll?: unknown;
+    onDragMove?: (event: DragMoveEvent) => void;
+    onDragStart?: (event: DragStartEvent) => void;
+  } | null,
+}));
+
+// Records the drag handlers so a test can drive a drag without simulating pointer physics.
+vi.mock("@dnd-kit/core", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@dnd-kit/core")>();
+  return {
+    ...actual,
+    DndContext: (props: ComponentProps<typeof actual.DndContext>) => {
+      dndContextProps.current = props;
+      return <actual.DndContext {...props} />;
+    },
+  };
+});
 
 // Same shallow comparison as the real `memo(TimelineSortableItemComponent)`, so this counts
 // renders caused by changed props. dnd-kit's sortable context re-renders every item on a
@@ -247,5 +269,132 @@ describe("TimelinePanel render cost (05 C2)", () => {
       expect(sortableItemRenders.get(itemId) ?? 0, itemId).toBe(0);
     }
     expect(sortableItemRenders.get("timeline-preview-card") ?? 0).toBeLessThanOrEqual(1);
+  });
+});
+
+describe("TimelinePanel drag move layout reads (05 §2.2, C3)", () => {
+  const timelineCards = [
+    buildCard({ id: "slot-a", releaseYear: 1970, revealedYear: 1970 }),
+    buildCard({ id: "slot-b", releaseYear: 1990, revealedYear: 1990 }),
+    buildCard({ id: "slot-c", releaseYear: 2010, revealedYear: 2010 }),
+  ];
+  const SLOT_WIDTH = 100;
+  const SLOT_STRIDE = 114;
+
+  function buildDragModel(onSelectSlot: (slotIndex: number) => void): TimelinePanelModel {
+    const model = buildModel({
+      timelineCards,
+      originalChosenSlotIndex: null,
+      showCorrectPlacementPreview: false,
+      celebrationEvent: null,
+    });
+    return {
+      ...model,
+      interaction: {
+        ...model.interaction,
+        onSelectSlot,
+        previewCard: {
+          id: "track-current",
+          title: "Current Track",
+          artist: "Test Artist",
+        } as TimelinePanelModel["interaction"]["previewCard"],
+        previewSlotIndex: 0,
+        selectable: true,
+        selectedSlotIndex: 0,
+      },
+    };
+  }
+
+  function buildMoveEvent(centerX: number): DragMoveEvent {
+    const left = centerX - SLOT_WIDTH / 2;
+    return {
+      active: {
+        id: "timeline-preview-card",
+        rect: {
+          current: {
+            translated: {
+              bottom: 160,
+              height: 140,
+              left,
+              right: left + SLOT_WIDTH,
+              top: 20,
+              width: SLOT_WIDTH,
+            },
+          },
+        },
+      },
+    } as unknown as DragMoveEvent;
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("reads no layout during 20 moves after the drag starts, across reorders", () => {
+    const onSelectSlot = vi.fn();
+    const { container } = render(renderModel(buildDragModel(onSelectSlot)));
+    const slots = Array.from(container.querySelectorAll("[data-timeline-slot='true']"));
+    expect(slots).toHaveLength(timelineCards.length + 1);
+    setElementBox(slots[0]!.parentElement!, { x: 0, y: 0, width: 2000, height: 200 });
+    slots.forEach((slot, slotIndex) => {
+      setElementBox(slot, {
+        x: 10 + slotIndex * SLOT_STRIDE,
+        y: 20,
+        width: SLOT_WIDTH,
+        height: 140,
+      });
+    });
+
+    act(() => {
+      dndContextProps.current?.onDragStart?.({
+        active: { id: "timeline-preview-card" },
+      } as unknown as DragStartEvent);
+    });
+
+    const layoutReads = [
+      vi.spyOn(Element.prototype, "getBoundingClientRect"),
+      vi.spyOn(Element.prototype, "querySelectorAll"),
+      vi.spyOn(Document.prototype, "querySelectorAll"),
+      vi.spyOn(window, "getComputedStyle"),
+    ];
+    let now = 1_000;
+    vi.spyOn(performance, "now").mockImplementation(() => now);
+
+    for (let step = 0; step < 20; step += 1) {
+      now += 200;
+      act(() => {
+        dndContextProps.current?.onDragMove?.(buildMoveEvent(200 + step * 16));
+      });
+    }
+
+    for (const read of layoutReads) {
+      expect(read).not.toHaveBeenCalled();
+    }
+    // The cached geometry still tracks the pointer: centre 504 is past all three cards.
+    expect(onSelectSlot.mock.calls.map(([slotIndex]) => slotIndex)).toEqual([1, 2, 3]);
+  });
+
+  it("leaves edge scrolling to a slow dnd-kit auto-scroll", () => {
+    const { container } = render(renderModel(buildDragModel(vi.fn())));
+    const row = container.querySelector("[data-timeline-slot='true']")!.parentElement!;
+    setElementBox(row, { x: 0, y: 0, width: 400, height: 300 });
+    const scrollBy = vi.fn();
+    row.scrollBy = scrollBy;
+
+    act(() => {
+      dndContextProps.current?.onDragStart?.({
+        active: { id: "timeline-preview-card" },
+      } as unknown as DragStartEvent);
+    });
+    // Deep inside the right and bottom edge zones.
+    act(() => {
+      dndContextProps.current?.onDragMove?.(buildMoveEvent(390));
+    });
+
+    expect(scrollBy).not.toHaveBeenCalled();
+    expect(dndContextProps.current?.autoScroll).toBe(TIMELINE_AUTO_SCROLL);
+    const maxPxPerSecond =
+      (TIMELINE_AUTO_SCROLL.acceleration / TIMELINE_AUTO_SCROLL.interval) * 1000;
+    expect(maxPxPerSecond).toBeLessThanOrEqual(200);
   });
 });

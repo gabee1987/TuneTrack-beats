@@ -1,10 +1,7 @@
 # 11 — Runtime and Motion Performance
 
-> **Status (2026-10-07):** Phase 6 shipped as `05` C1 and C2 (no slice store); every other
-> phase is open and no step has started: `gamePage.constants.ts`
-> is unchanged (860 ms / 180 ms / 4 px / 120 px), `PlaylistTrackList` rows are still
-> `motion.div`, the capture-phase `pointerdown` listener remains in `HostPlaybackProvider.tsx`,
-> `usePageLayoutMode.ts` and `main.tsx` still own their own `resize` listeners, and no
+> **Status (2026-10-07):** Phases 3, 4, 5 and 6 shipped as `05` C5, C6, C1 and C2, and the
+> §8 drag-move items as `05` C3; Phases 1 and 2 (row springs, reorder timing) are open, and no
 > `runtime-baseline.md` exists.
 > **Folded from** `docs/plans/2026-09-stability-performance/03-runtime-and-motion-performance.md`
 > on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
@@ -110,123 +107,27 @@ next candidate, still inside budget.
 
 ## 4. Phase 3 — One source of truth for viewport state
 
-**Finding:** F-10. **Scenario:** S4.
-
-Two independent problems, one fix.
-
-### 4.1 `usePageLayoutMode` is subscribed per consumer
-
-Currently each call site owns a `resize` listener and a `useState`. Replace with a single
-external store, read via `useSyncExternalStore`:
-
-- New `apps/web/src/features/viewport/viewportStore.ts`:
-  - one `resize` listener, one `visualViewport` `resize`/`scroll` listener where available;
-  - coalesced through `requestAnimationFrame` so a burst of resize events produces one
-    notification;
-  - holds `{ width, height, isCoarsePointer }` and notifies only when the derived
-    **layout mode** changes, not when pixel dimensions change. This is the key win: an
-    iOS address-bar collapse changes `height` continuously but never changes
-    `"mobile" | "desktop"`, so consumers should not re-render at all.
-- `usePageLayoutMode()` becomes `useSyncExternalStore(subscribeLayoutMode, getLayoutMode)`.
-- `resolvePageLayoutMode` in `apps/web/src/app/layout/pageLayoutMode.ts` stays pure and
-  keeps its existing tests unchanged.
-
-### 4.2 `--app-height` is written on every resize event
-
-`apps/web/src/main.tsx` lines 6-8 and 35 write a custom property on `documentElement` from
-an unthrottled listener, and never remove it.
-
-- Move this into the viewport store as a subscriber, coalesced through the same
-  `requestAnimationFrame`.
-- Prefer `window.visualViewport.height` where available; it is the value that actually
-  matches the visible area when the iOS keyboard is open, which is the case the current
-  code gets wrong.
-- Write the value only when it differs from the last written value, to avoid a needless
-  style invalidation.
-- Consider replacing `--app-height` usage with `100dvh` where the CSS allows it, and keep
-  the custom property only for the cases that still need JS. Do this as a follow-up, not
-  in the same change.
-
-### Acceptance
-
-- [ ] Exactly one `resize` listener registered by application code (assert in a test by
-      spying on `window.addEventListener`).
-- [ ] Rotating the device produces at most two React commits in `GamePage`.
-- [ ] Collapsing the iOS address bar produces **zero** layout-mode commits.
-- [ ] Existing `pageLayoutMode.test.ts` still passes unmodified.
-- [ ] The iOS keyboard no longer pushes the lobby form off-screen (manual check; this is a
-      latent bug the `visualViewport` change also fixes).
+**Shipped 2026-10-07** as `05` C5: `features/viewport/viewportStore.ts` owns the only window
+`resize` listener plus the `visualViewport` and media-query listeners, coalesces them per
+frame, notifies layout consumers only on a layout-mode change and writes `--app-height` from
+`visualViewport.height` only when it changed. Proof: `features/viewport/viewportStore.test.ts`;
+`pageLayoutMode.test.ts` is unchanged. Open: replacing `--app-height` with `100dvh` (follow-up),
+and the device checks (rotation commits, address-bar collapse, iOS keyboard on the lobby form).
 
 ## 5. Phase 4 — Contain playback-progress re-renders
 
-**Finding:** F-11. **Scenario:** S3.
-
-`useSpotifyPlaybackSdk` publishes `position` once per second into
-`HostPlaybackProvider`'s context value, re-rendering every consumer of
-`useHostPlaybackContext()` for the entire game.
-
-### Change
-
-Split the playback context into two:
-
-1. **`HostPlaybackControlsContext`** — stable identity: `isReady`, `unlockPlayback`,
-   `pause`, `resume`, `seek`, and `restart` / `needsUserGesture` from
-   `16-spotify-session-and-playback.md`. This value changes only when a capability
-   changes, so consumers re-render rarely.
-2. **`HostPlaybackProgressContext`** — `{ isPlaying, position, duration }`, consumed only
-   by the component that actually renders a progress bar
-   (`pages/GamePage/gameMenu/PlaybackTabContent.tsx`).
-
-Then:
-
-- Run the interpolation interval **only while a progress consumer is subscribed**. A
-  subscriber count in the provider, or simply gating on "the playback tab is the active
-  menu tab", removes the ticking entirely for the common case where the menu is closed.
-- Raise the tick to 500 ms only while visible (smooth enough for a progress bar), and stop
-  it on `document.visibilitychange` to `hidden` — a backgrounded party host should not be
-  burning a timer.
-- Keep the 55-minute token-refresh interval, but move it to the same visibility-aware
-  scheduler so a backgrounded tab refreshes on resume rather than on a timer that mobile
-  browsers throttle unpredictably anyway.
-
-### Acceptance
-
-- [ ] With the game menu closed, S3 re-trace shows **zero** periodic commits from playback.
-- [ ] With the playback tab open, the progress bar still advances smoothly.
-- [ ] Backgrounding the tab stops the interval; foregrounding resumes it and re-syncs
-      position from the SDK rather than from interpolation.
-- [ ] Token refresh still occurs before expiry after a long background period; covered by
-      a unit test with fake timers.
+**Shipped 2026-10-07** as `05` C6, simplified (`05` §9): controls and progress are separate
+memoised contexts; the provider publishes position snapshots on player events, with no
+interval and no `timeupdate`; only `PlaybackTabContent` interpolates, at 1 s, while playing and
+visible. The 55-minute token-refresh interval is unchanged. Proof:
+`hooks/HostPlaybackProvider.progress.test.tsx`, `hooks/useInterpolatedPlaybackPosition.test.ts`.
 
 ## 6. Phase 5 — Remove the global capture-phase pointer listener
 
-**Finding:** F-11.
-
-`HostPlaybackProvider` calls `activateElement()` on every `pointerdown` anywhere in the
-app, in the capture phase, for the whole game.
-
-### Change
-
-- Arm the SDK on a **bounded** set of gestures instead: the turn action dock's primary
-  buttons, the timeline drag start, and the playback tab's controls. These are the gestures
-  that precede a track change, which is the actual requirement.
-- Implement as an explicit `armPlayback()` exposed on the controls context (Phase 4), called
-  from those handlers. This makes the dependency visible instead of ambient.
-- Keep a single non-capture, `passive: true`, `{ once: true }` `pointerdown` listener as a
-  first-gesture fallback for the case where the host's first interaction is somewhere
-  unexpected; re-arm it whenever the SDK reports `autoplay_failed`.
-- The existing test `apps/web/src/pages/GamePage/hooks/HostPlaybackProvider.gesture.test.tsx`
-  asserts the current global-listener behaviour and must be updated together with this
-  change, so that it proves the bounded-gesture contract instead.
-
-### Acceptance
-
-- [ ] No capture-phase global listener remains in `apps/web/src`.
-- [ ] Autoplay on track change still works on iOS Safari and Android Chrome after the
-      host's first interaction (manual device check — this cannot be asserted in jsdom).
-- [ ] S2 re-trace shows no per-touch scripting from the playback provider.
-- [ ] Re-test the iOS drag scenario with this listener removed and record the result in
-      `20-bug-register.md` item B4; it is a suspected contributor.
+**Shipped 2026-10-07** as `05` C6 (`05` §9): the capture `pointerdown` listener stays only until
+a gesture reaches a ready player, and is re-armed on `autoplay_failed` or a new player. Proof:
+`hooks/HostPlaybackProvider.gesture.test.tsx`. Open: the iOS Safari and Android Chrome
+autoplay check after the first interaction, and the iOS drag re-test for `20` B4.
 
 ## 7. Phase 6 — Reduce realtime render churn
 
@@ -240,17 +141,14 @@ items. Proof: `pages/GamePage/GamePage.renderBudget.test.tsx`,
 
 ## 8. Other items found during the audit
 
-Small, isolated, no dependencies. Fold into whichever wave is convenient. The drag-move
-items are F-12; the backdrop-filter item is part of F-15.
+Small, isolated, no dependencies. Fold into whichever wave is convenient. The three drag-move
+items (F-12) shipped 2026-10-07 as `05` C3; the backdrop-filter item is part of F-15.
 
-| Item                                                                                                                                               | Location                                                                                                               | Change                                                                                                                                                   |
-| -------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `useTimelinePanelDragState` reads `orderedItemIds` from the closure inside `syncPreviewIndexFromActiveRect` while also calling `setOrderedItemIds` | `pages/GamePage/hooks/useTimelinePanelDragState.ts`                                                                    | Use a ref for the current order so a stale closure cannot compare against an outdated array mid-drag.                                                    |
-| `getComputedStyle` is called on every drag move via `isGridTimelineLayout`                                                                         | same file                                                                                                              | Resolve layout once on drag start and pass it through; `getComputedStyle` forces a style flush.                                                          |
-| `querySelectorAll("[data-timeline-card='true']")` on every drag move                                                                               | same file                                                                                                              | Cache the node list on drag start; the DOM does not change during a drag.                                                                                |
-| Backdrop filters on frequently-repainted surfaces                                                                                                  | `gamePageChrome.module.css` lines 325-341, `AppLoadingOverlay.module.css` line 12, `RoomResetModal.module.css` line 12 | `backdrop-filter: blur(24px)` on scrolling chips is expensive on mobile GPUs. Reduce radius, or drop the filter on coarse pointers. Measure in S2 first. |
-| `AppLoadingOverlay` uses three infinite CSS animations while visible                                                                               | `AppLoadingOverlay.module.css`                                                                                         | Acceptable, but confirm the `prefers-reduced-motion` block at the end of that file actually stops all three.                                             |
-| `PlaylistTrackList` `overscan: 10`                                                                                                                 | `PlaylistTrackList.tsx`                                                                                                | 10 rows above and below is generous at 68 px each; try 5 after Phase 1 and measure.                                                                      |
+| Item                                                                 | Location                                                                                                               | Change                                                                                                                                                   |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backdrop filters on frequently-repainted surfaces                    | `gamePageChrome.module.css` lines 325-341, `AppLoadingOverlay.module.css` line 12, `RoomResetModal.module.css` line 12 | `backdrop-filter: blur(24px)` on scrolling chips is expensive on mobile GPUs. Reduce radius, or drop the filter on coarse pointers. Measure in S2 first. |
+| `AppLoadingOverlay` uses three infinite CSS animations while visible | `AppLoadingOverlay.module.css`                                                                                         | Acceptable, but confirm the `prefers-reduced-motion` block at the end of that file actually stops all three.                                             |
+| `PlaylistTrackList` `overscan: 10`                                   | `PlaylistTrackList.tsx`                                                                                                | 10 rows above and below is generous at 68 px each; try 5 after Phase 1 and measure.                                                                      |
 
 ## 9. Battery and thermal notes
 

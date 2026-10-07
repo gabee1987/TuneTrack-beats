@@ -93,4 +93,43 @@ describe("HostPlaybackProvider", () => {
       expect(socket.emittedFor(ClientToServerEvent.PlaySpotifyTrack).length).toBe(2),
     );
   });
+
+  it("drops the capture listener once a gesture unlocks a ready player, and re-arms on a block", async () => {
+    const socket = getSharedFakeSocket();
+    render(
+      <HostPlaybackProvider enabled roomId={TEST_ROOM_ID} roomState={buildPremiumRoomState()}>
+        <div />
+      </HostPlaybackProvider>,
+    );
+    await waitFor(() =>
+      expect(socket.emittedFor(ClientToServerEvent.RefreshSpotifyToken).length).toBeGreaterThan(0),
+    );
+    await act(async () => {
+      socket.serverEmit(ServerToClientEvent.SpotifyTokenRefreshed, {
+        accessToken: "TEST_ACCESS_TOKEN",
+      });
+    });
+    await waitFor(() => expect(player.connect).toHaveBeenCalled());
+    await act(async () => {
+      player.emitReady();
+    });
+
+    await act(async () => {
+      window.dispatchEvent(new Event("pointerdown"));
+    });
+    const activationsAfterUnlock = player.activateElement.mock.calls.length;
+    await act(async () => {
+      window.dispatchEvent(new Event("pointerdown"));
+      window.dispatchEvent(new Event("pointerdown"));
+    });
+    expect(player.activateElement).toHaveBeenCalledTimes(activationsAfterUnlock);
+
+    await act(async () => {
+      player.emitAutoplayFailed();
+    });
+    await act(async () => {
+      window.dispatchEvent(new Event("pointerdown"));
+    });
+    expect(player.activateElement.mock.calls.length).toBeGreaterThan(activationsAfterUnlock);
+  });
 });

@@ -3,6 +3,7 @@ import { useEffect, useId, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { createStandardTransition, motionEasings, useReducedMotionPreference } from "../motion";
 import { IconButton } from "../ui/primitives";
+import { subscribeViewportResize } from "../viewport/viewportStore";
 import styles from "./HintBubble.module.css";
 
 interface HintBubbleProps {
@@ -34,11 +35,11 @@ export function HintBubble({ anchor, body, dismissLabel, onDismiss, title }: Hin
   useLayoutEffect(() => {
     const updatePosition = () => setPosition(getPosition(anchor));
     updatePosition();
-    window.addEventListener("resize", updatePosition);
+    const unsubscribeResize = subscribeViewportResize(updatePosition);
     window.addEventListener("scroll", updatePosition, true);
 
     return () => {
-      window.removeEventListener("resize", updatePosition);
+      unsubscribeResize();
       window.removeEventListener("scroll", updatePosition, true);
     };
   }, [anchor]);

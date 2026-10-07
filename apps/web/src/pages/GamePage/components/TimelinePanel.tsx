@@ -25,7 +25,7 @@ import type {
   TimelinePanelModel,
 } from "../GamePage.types";
 import { SongInfoModal } from "./SongInfoModal";
-import { DRAG_ACTIVATION_DISTANCE_PX } from "../gamePage.constants";
+import { DRAG_ACTIVATION_DISTANCE_PX, TIMELINE_AUTO_SCROLL } from "../gamePage.constants";
 import { useTimelinePreviewTransition } from "../hooks/transitions/useTimelinePreviewTransition";
 import { useTimelinePanelCelebrationState } from "../hooks/useTimelinePanelCelebrationState";
 import { useTimelinePanelDragState } from "../hooks/useTimelinePanelDragState";
@@ -211,7 +211,7 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
     timelineRowRef,
   });
   const hasTimelineOverflow = useTimelineOverflowState({
-    dependencyKey: orderedItemIds,
+    itemCount: orderedItemIds.length,
     timelineRowRef,
   });
   const handleMineButtonRef = useCallback(
@@ -267,13 +267,14 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
       } as CSSProperties)
     : undefined;
 
+  // Not measured mid-drag: every reorder would force a layout read; the drop re-measures.
   useLayoutEffect(() => {
-    if (!previewCardElementRef.current) {
+    if (!previewCardElementRef.current || isDraggingPreviewCard) {
       return;
     }
 
     previewCardRectRef.current = previewCardElementRef.current.getBoundingClientRect();
-  }, [orderedItemIds, previewCard, previewSlotIndex, timelineView]);
+  }, [isDraggingPreviewCard, orderedItemIds, previewCard, previewSlotIndex, timelineView]);
 
   return (
     <section
@@ -293,7 +294,7 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
         ) : null}
       </MotionPresence>
       <DndContext
-        autoScroll
+        autoScroll={TIMELINE_AUTO_SCROLL}
         collisionDetection={closestCenter}
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}
@@ -304,7 +305,7 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
         <div
           className={`${styles.timelineRow} ${
             hasTimelineOverflow ? styles.timelineRowOverflowing : ""
-          }`}
+          } ${isDraggingPreviewCard ? styles.timelineRowDragging : ""}`}
           ref={timelineRowRef}
         >
           <TimelinePanelItems

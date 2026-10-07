@@ -124,6 +124,10 @@ scroll on coarse pointers. Momentum scrolling, scroll snap and the narrow
   while dragging.
 - Tune the delay on a real iPhone and verify scrolling, dragging and cancellation.
 
+Since 2026-10-07 the playback provider's capture `pointerdown` listener, a suspected
+contributor, is removed once playback is unlocked, and a drag move does no layout reads
+(`05` C3, C6). The iPhone re-test with both changes is still to be done.
+
 ## B3 · Similar controls are inconsistent
 
 **Severity:** S2 · **Status:** Open · **Plan:** `15-design-system-consolidation.md`
@@ -146,21 +150,23 @@ and desktop.
 The detailed root-cause narratives and implementation journals for these entries were
 removed from the live register on 2026-09-30. They remain in git history.
 
-| ID  | Resolved   | Outcome                                                                              |
-| --- | ---------- | ------------------------------------------------------------------------------------ |
-| B1  | 2026-09-09 | Track editor opens above its parent and can be closed.                               |
-| B5  | 2026-09-09 | Settings entrance/exit flicker fixed.                                                |
-| B6  | 2026-09-09 | Leaderboard chip border clipping fixed.                                              |
-| B7  | 2026-09-09 | Playback starts deterministically with retry/device transfer coverage.               |
-| B9  | 2026-09-09 | Finished tracks can be restarted.                                                    |
-| B10 | 2026-09-09 | Home is interactive after room closure; E12 provides regression coverage.            |
-| B12 | 2026-09-16 | Player profile is separate from room identity and persists locally.                  |
-| B13 | 2026-09-09 | Leaving an active game requires confirmation.                                        |
-| B15 | 2026-09-09 | Socket reset no longer replays stale buffered actions or returns an orphaned client. |
-| B16 | 2026-09-09 | Realtime rejection logs preserve event attribution and correlation IDs.              |
-| B17 | 2026-09-08 | Unverified hardening changes were reverted; re-land rules recorded.                  |
-| B19 | 2026-09-10 | TT-bought cards use their own celebration identity.                                  |
-| B20 | 2026-09-30 | Generated room codes always satisfy the shared join schema.                          |
+| ID  | Resolved   | Outcome                                                                                                                                                                |
+| --- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B1  | 2026-09-09 | Track editor opens above its parent and can be closed.                                                                                                                 |
+| B5  | 2026-09-09 | Settings entrance/exit flicker fixed.                                                                                                                                  |
+| B6  | 2026-09-09 | Leaderboard chip border clipping fixed.                                                                                                                                |
+| B7  | 2026-09-09 | Playback starts deterministically with retry/device transfer coverage.                                                                                                 |
+| B9  | 2026-09-09 | Finished tracks can be restarted.                                                                                                                                      |
+| B10 | 2026-09-09 | Home is interactive after room closure; E12 provides regression coverage.                                                                                              |
+| B12 | 2026-09-16 | Player profile is separate from room identity and persists locally.                                                                                                    |
+| B13 | 2026-09-09 | Leaving an active game requires confirmation.                                                                                                                          |
+| B15 | 2026-09-09 | Socket reset no longer replays stale buffered actions or returns an orphaned client.                                                                                   |
+| B16 | 2026-09-09 | Realtime rejection logs preserve event attribution and correlation IDs.                                                                                                |
+| B17 | 2026-09-08 | Unverified hardening changes were reverted; re-land rules recorded.                                                                                                    |
+| B19 | 2026-09-10 | TT-bought cards use their own celebration identity.                                                                                                                    |
+| B20 | 2026-09-30 | Generated room codes always satisfy the shared join schema.                                                                                                            |
+| B21 | 2026-10-07 | Game menu no longer blinks the page through at the end of its fade (`keepFadeOnMainThread`; framer-motion 11 WAAPI hand-off).                                          |
+| B22 | 2026-10-07 | Drag edge scroll is dnd-kit's auto-scroll alone at ≤ 200 px/s, without scroll snap while dragging; the per-event scroll had sped up with the event rate after `05` C3. |
 
 ## Feature work tracked elsewhere
 

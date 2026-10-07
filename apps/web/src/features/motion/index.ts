@@ -8,6 +8,7 @@ export {
   createAppShellMenuSheetMotionTargets,
   createMenuTabActivationTransition,
   createAppShellMenuTransition,
+  keepFadeOnMainThread,
 } from "./appShellMotionTokens";
 export {
   createModalOverlayMotionTargets,

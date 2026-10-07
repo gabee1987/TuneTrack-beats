@@ -1,21 +1,47 @@
 import type { PublicRoomState } from "@tunetrack/shared";
-import { createContext, useContext, useEffect, useRef, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useHostPlayback, type HostPlaybackState } from "./useHostPlayback";
 
-const HostPlaybackContext = createContext<HostPlaybackState | null>(null);
+export type HostPlaybackControls = Pick<
+  HostPlaybackState,
+  "isReady" | "needsUserGesture" | "pause" | "restart" | "resume" | "seek" | "unlockPlayback"
+>;
 
-const disabledPlayback: HostPlaybackState = {
+export type HostPlaybackProgress = Pick<
+  HostPlaybackState,
+  "duration" | "isPlaying" | "position" | "positionUpdatedAtMs"
+>;
+
+const noop = () => undefined;
+
+const disabledControls: HostPlaybackControls = {
   isReady: false,
+  needsUserGesture: false,
+  pause: noop,
+  restart: noop,
+  resume: noop,
+  seek: noop,
+  unlockPlayback: noop,
+};
+
+const disabledProgress: HostPlaybackProgress = {
+  duration: 0,
   isPlaying: false,
   position: 0,
-  duration: 0,
-  unlockPlayback: () => undefined,
-  pause: () => undefined,
-  resume: () => undefined,
-  restart: () => undefined,
-  needsUserGesture: false,
-  seek: () => undefined,
+  positionUpdatedAtMs: 0,
 };
+
+// Split so a progress change re-renders only the playback tab, never a controls consumer.
+const HostPlaybackControlsContext = createContext<HostPlaybackControls | null>(null);
+const HostPlaybackProgressContext = createContext<HostPlaybackProgress | null>(null);
 
 export function shouldEnableHostPlayback(
   roomState: PublicRoomState | null,
@@ -48,17 +74,49 @@ export function HostPlaybackProvider({
     roomId,
     roomState,
   });
-  const unlockPlaybackRef = useRef(playback.unlockPlayback);
-  unlockPlaybackRef.current = playback.unlockPlayback;
-  const restartRef = useRef(playback.restart);
-  restartRef.current = playback.restart;
-  const needsUserGestureRef = useRef(playback.needsUserGesture);
-  needsUserGestureRef.current = playback.needsUserGesture;
+  const {
+    duration,
+    isPlaying,
+    isReady,
+    needsUserGesture,
+    pause,
+    position,
+    positionUpdatedAtMs,
+    restart,
+    resume,
+    seek,
+    unlockPlayback,
+  } = playback;
+  const controls = useMemo<HostPlaybackControls>(
+    () => ({ isReady, needsUserGesture, pause, restart, resume, seek, unlockPlayback }),
+    [isReady, needsUserGesture, pause, restart, resume, seek, unlockPlayback],
+  );
+  const progress = useMemo<HostPlaybackProgress>(
+    () => ({ duration, isPlaying, position, positionUpdatedAtMs }),
+    [duration, isPlaying, position, positionUpdatedAtMs],
+  );
+  const unlockPlaybackRef = useRef(unlockPlayback);
+  unlockPlaybackRef.current = unlockPlayback;
+  const restartRef = useRef(restart);
+  restartRef.current = restart;
+  const needsUserGestureRef = useRef(needsUserGesture);
+  needsUserGestureRef.current = needsUserGesture;
+  const isReadyRef = useRef(isReady);
+  isReadyRef.current = isReady;
+  const [isUnlocked, setIsUnlocked] = useState(false);
 
-  // Arm the Web Playback SDK on every host gesture so later socket-driven
-  // track changes (outside the click stack) are still allowed to autoplay.
+  // A new player (host transfer, playback generation) has to be unlocked again.
+  if (!isReady && isUnlocked) {
+    setIsUnlocked(false);
+  }
+
+  const isGestureListenerArmed = enabled && (!isUnlocked || needsUserGesture);
+
+  // Arms the Web Playback SDK on a host gesture so later socket-driven track changes
+  // (outside the click stack) may autoplay. One gesture on a ready player is enough, so the
+  // capture listener goes away until the SDK reports an autoplay block again (05 C6).
   useEffect(() => {
-    if (!enabled) {
+    if (!isGestureListenerArmed) {
       return;
     }
 
@@ -70,17 +128,30 @@ export function HostPlaybackProvider({
       if (needsUserGestureRef.current) {
         restartRef.current();
       }
+      if (isReadyRef.current) {
+        setIsUnlocked(true);
+      }
     }
 
     window.addEventListener("pointerdown", handlePointerDown, true);
     return () => {
       window.removeEventListener("pointerdown", handlePointerDown, true);
     };
-  }, [enabled]);
+  }, [isGestureListenerArmed]);
 
-  return <HostPlaybackContext.Provider value={playback}>{children}</HostPlaybackContext.Provider>;
+  return (
+    <HostPlaybackControlsContext.Provider value={controls}>
+      <HostPlaybackProgressContext.Provider value={progress}>
+        {children}
+      </HostPlaybackProgressContext.Provider>
+    </HostPlaybackControlsContext.Provider>
+  );
 }
 
-export function useHostPlaybackContext(): HostPlaybackState {
-  return useContext(HostPlaybackContext) ?? disabledPlayback;
+export function useHostPlaybackControls(): HostPlaybackControls {
+  return useContext(HostPlaybackControlsContext) ?? disabledControls;
+}
+
+export function useHostPlaybackProgress(): HostPlaybackProgress {
+  return useContext(HostPlaybackProgressContext) ?? disabledProgress;
 }

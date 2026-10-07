@@ -4,9 +4,11 @@ import {
   createAppShellMenuSheetMotionTargets,
   createAppShellMenuTransition,
   createMenuTabActivationTransition,
+  keepFadeOnMainThread,
   useReducedMotionPreference,
 } from "../../motion";
 import { useI18n } from "../../i18n";
+import { subscribeViewportResize } from "../../viewport/viewportStore";
 import type {
   AppShellMenuFooterAction,
   AppShellMenuPreferencesState,
@@ -81,12 +83,12 @@ export function AppShellMenuSheet({
     panelElement.addEventListener("scroll", updatePanelFadeState, {
       passive: true,
     });
-    window.addEventListener("resize", updatePanelFadeState);
+    const unsubscribeResize = subscribeViewportResize(updatePanelFadeState);
 
     return () => {
       resizeObserver.disconnect();
       panelElement.removeEventListener("scroll", updatePanelFadeState);
-      window.removeEventListener("resize", updatePanelFadeState);
+      unsubscribeResize();
     };
   }, [activeTabId, updatePanelFadeState]);
 
@@ -103,6 +105,7 @@ export function AppShellMenuSheet({
       className={styles.menuSheet}
       exit={menuSheetMotionTargets.exit}
       initial={menuSheetMotionTargets.initial}
+      onUpdate={keepFadeOnMainThread}
       transition={createAppShellMenuTransition(reduceMotion)}
     >
       <header className={styles.menuHeader}>

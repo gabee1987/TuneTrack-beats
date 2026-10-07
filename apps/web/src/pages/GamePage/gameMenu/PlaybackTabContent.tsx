@@ -1,6 +1,7 @@
 import { type PublicRoomState } from "@tunetrack/shared";
 import type { Translate } from "../../../features/i18n";
-import { useHostPlaybackContext } from "../hooks/HostPlaybackProvider";
+import { useHostPlaybackControls, useHostPlaybackProgress } from "../hooks/HostPlaybackProvider";
+import { useInterpolatedPlaybackPosition } from "../hooks/useInterpolatedPlaybackPosition";
 import styles from "../gamePageStyles";
 
 interface PlaybackTabContentProps {
@@ -16,8 +17,10 @@ function formatMs(ms: number): string {
 }
 
 export function PlaybackTabContent({ roomState, t }: PlaybackTabContentProps) {
-  const { isReady, isPlaying, needsUserGesture, position, duration, pause, restart, resume, seek } =
-    useHostPlaybackContext();
+  const { isReady, needsUserGesture, pause, restart, resume, seek } = useHostPlaybackControls();
+  const progress = useHostPlaybackProgress();
+  const { duration, isPlaying } = progress;
+  const position = useInterpolatedPlaybackPosition(progress);
   const { currentTrackCard, status } = roomState;
   const showTrackDetails = status === "reveal" || status === "finished";
   const hasTrack = currentTrackCard !== null;

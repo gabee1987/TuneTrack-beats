@@ -4,6 +4,7 @@ import {
   MotionPresence,
   createAppShellMenuTransition,
   createFadeMotion,
+  keepFadeOnMainThread,
   useReducedMotionPreference,
 } from "../../motion";
 import type { AppShellMenuProps } from "../AppShellMenu.types";
@@ -51,6 +52,7 @@ export function AppShellMenuDialog({
             exit="exit"
             initial="initial"
             onClick={() => onClose()}
+            onUpdate={keepFadeOnMainThread}
             transition={createAppShellMenuTransition(reduceMotion)}
             variants={createFadeMotion(reduceMotion)}
           />

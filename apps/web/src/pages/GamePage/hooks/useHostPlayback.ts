@@ -6,7 +6,9 @@ import { useSpotifyPlaybackSdk } from "./useSpotifyPlaybackSdk";
 export interface HostPlaybackState {
   isReady: boolean;
   isPlaying: boolean;
+  /** Position at `positionUpdatedAtMs`; only the playback tab interpolates it (05 C6). */
   position: number;
+  positionUpdatedAtMs: number;
   duration: number;
   /** Call from a user gesture so remote track changes can autoplay. */
   unlockPlayback: () => void;
@@ -24,6 +26,7 @@ const disabled: HostPlaybackState = {
   isReady: false,
   isPlaying: false,
   position: 0,
+  positionUpdatedAtMs: 0,
   duration: 0,
   unlockPlayback: noop,
   pause: noop,
@@ -57,6 +60,7 @@ export function useHostPlayback({
     deviceId: sdkDeviceId,
     isPlaying: sdkIsPlaying,
     position: sdkPosition,
+    positionUpdatedAtMs: sdkPositionUpdatedAtMs,
     duration: sdkDuration,
     hasActiveContext: sdkHasActiveContext,
     hasEnded: sdkHasEnded,
@@ -80,6 +84,7 @@ export function useHostPlayback({
   const lastPreviewCardIdRef = useRef<string | null>(null);
   const [freeIsPlaying, setFreeIsPlaying] = useState(false);
   const [freePosition, setFreePosition] = useState(0);
+  const [freePositionUpdatedAtMs, setFreePositionUpdatedAtMs] = useState(0);
   const [freeDuration, setFreeDuration] = useState(0);
 
   useEffect(() => {
@@ -88,20 +93,24 @@ export function useHostPlayback({
     const onEnded = () => setFreeIsPlaying(false);
     const onPause = () => setFreeIsPlaying(false);
     const onPlay = () => setFreeIsPlaying(true);
-    const onTimeUpdate = () => {
+    // Snapshots on discrete events instead of `timeupdate`, which fires several times a
+    // second and re-rendered the provider for the whole game.
+    const onPositionChange = () => {
       setFreePosition(audio.currentTime * 1000);
+      setFreePositionUpdatedAtMs(Date.now());
       setFreeDuration((audio.duration || 0) * 1000);
     };
+    const positionEvents = ["durationchange", "pause", "playing", "seeked"] as const;
     audio.addEventListener("ended", onEnded);
     audio.addEventListener("pause", onPause);
     audio.addEventListener("play", onPlay);
-    audio.addEventListener("timeupdate", onTimeUpdate);
+    positionEvents.forEach((type) => audio.addEventListener(type, onPositionChange));
     audioRef.current = audio;
     return () => {
       audio.removeEventListener("ended", onEnded);
       audio.removeEventListener("pause", onPause);
       audio.removeEventListener("play", onPlay);
-      audio.removeEventListener("timeupdate", onTimeUpdate);
+      positionEvents.forEach((type) => audio.removeEventListener(type, onPositionChange));
       audio.pause();
       audio.removeAttribute("src");
       audio.load();
@@ -362,6 +371,7 @@ export function useHostPlayback({
       isReady: sdkReady,
       isPlaying: sdkIsPlaying,
       position: sdkPosition,
+      positionUpdatedAtMs: sdkPositionUpdatedAtMs,
       duration: sdkDuration,
       unlockPlayback,
       pause,
@@ -375,6 +385,7 @@ export function useHostPlayback({
       isReady: true,
       isPlaying: freeIsPlaying,
       position: freePosition,
+      positionUpdatedAtMs: freePositionUpdatedAtMs,
       duration: freeDuration,
       unlockPlayback,
       pause,

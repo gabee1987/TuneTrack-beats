@@ -420,3 +420,8 @@
     scroll-padding-bottom: var(--game-mobile-timeline-bottom-clearance, 92px);
   }
 }
+
+/* Snapping pulls a slow auto-scroll back to the nearest card while dragging. */
+.timelineRow.timelineRowDragging {
+  scroll-snap-type: none;
+}
