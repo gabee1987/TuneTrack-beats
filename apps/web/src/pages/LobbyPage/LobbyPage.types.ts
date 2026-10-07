@@ -1,3 +1,4 @@
+import type { ClosedRoomReason } from "../../features/ui/RoomResetModal";
 import type { PublicPlayerState, PublicRoomSettings, PublicRoomState } from "@tunetrack/shared";
 import type { LobbyAssemblyModel } from "./hooks/buildLobbyAssemblyModel";
 
@@ -25,7 +26,7 @@ export interface LobbyPlayerSettingsActionState {
 
 export interface LobbyPageController {
   closeRoomActionStatus: CloseRoomActionStatus;
-  connectionStatus: string;
+  closedRoomReason: ClosedRoomReason;
   currentPlayerId: string | null;
   currentSettings: PublicRoomSettings;
   displayName: string;

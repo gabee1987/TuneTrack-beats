@@ -1,14 +1,19 @@
 import { ClientToServerEvent, type PublicRoomState } from "@tunetrack/shared";
 import { useCallback, useRef, useState } from "react";
-import { emitAction } from "../../../services/socket/emitAction";
+import { emitAction, type EmitActionResult } from "../../../services/socket/emitAction";
 import type { KickPlayerActionState } from "../GamePage.types";
 
 interface UseKickPlayerActionOptions {
+  reportActionResult: (result: EmitActionResult) => void;
   currentPlayerId: string | null;
   roomState: PublicRoomState | null;
 }
 
-export function useKickPlayerAction({ currentPlayerId, roomState }: UseKickPlayerActionOptions) {
+export function useKickPlayerAction({
+  currentPlayerId,
+  roomState,
+  reportActionResult,
+}: UseKickPlayerActionOptions) {
   const roomStateRef = useRef(roomState);
   roomStateRef.current = roomState;
   const isPendingRef = useRef(false);
@@ -53,6 +58,7 @@ export function useKickPlayerAction({ currentPlayerId, roomState }: UseKickPlaye
               retryOnTimeout: true,
             },
           );
+          reportActionResult(result);
           setActionState(
             result.status === "timeout" && isSubmittedRemovalCurrent()
               ? { playerId, status: "failed" }

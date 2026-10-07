@@ -1,29 +1,17 @@
 import { AppShellMenu } from "../../../features/app-shell/AppShellMenu";
 import { useI18n } from "../../../features/i18n";
-import { Badge } from "../../../features/ui/Badge";
-import {
-  getLobbyConnectionBadgeVariant,
-  getLobbyHeaderMenuTabSpecs,
-} from "../lobbyHeaderSelectors";
+import { ConnectionStatus } from "../../../features/rooms/ConnectionStatus";
+import { getLobbyHeaderMenuTabSpecs } from "../lobbyHeaderSelectors";
 import styles from "../lobbyPageStyles";
 
 interface LobbyHeaderProps {
-  connectionStatus: string;
   isHost: boolean;
   roomId: string;
 }
 
-export function LobbyHeader({ connectionStatus, isHost, roomId }: LobbyHeaderProps) {
+export function LobbyHeader({ isHost, roomId }: LobbyHeaderProps) {
   const { t } = useI18n();
   const menuTabs = getLobbyHeaderMenuTabSpecs(isHost);
-  const localizedConnectionStatus =
-    connectionStatus === "Connected"
-      ? t("lobby.connection.connected")
-      : connectionStatus === "Connecting"
-        ? t("lobby.connection.connecting")
-        : connectionStatus === "Disconnected"
-          ? t("lobby.connection.disconnected")
-          : connectionStatus;
 
   return (
     <header className={styles.header}>
@@ -34,9 +22,7 @@ export function LobbyHeader({ connectionStatus, isHost, roomId }: LobbyHeaderPro
       </div>
 
       <div className={styles.headerActions}>
-        <Badge size="md" variant={getLobbyConnectionBadgeVariant(connectionStatus)}>
-          {localizedConnectionStatus}
-        </Badge>
+        <ConnectionStatus />
         <AppShellMenu
           subtitle={t("lobby.header.menuSubtitle")}
           tabs={menuTabs.map((tab) => ({

@@ -1,7 +1,7 @@
 # 05 — Performance and Robustness Plan
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 5 of `00-index.md` §4).
-> **Status (2026-10-07):** A1–A4, A8 and B1 shipped; every other package is open. Every finding below
+> **Status (2026-10-07):** A1–A4, A8, B1 and B2 shipped; every other package is open. Every finding below
 > was re-verified in code on 2026-10-07 (line numbers drift; file and symbol names are the
 > stable reference).
 > **Authority:** this document sets the **binding numeric budgets** and the **order** of the
@@ -274,25 +274,29 @@ existing session. Proof: `services/session/playerSession.test.ts` and
 `apps/e2e/tests/session-identity.spec.ts` (close a room, join another, same session id for host
 and guest). The shared E2E helpers moved to `apps/e2e/tests/support/roomPages.ts`.
 
-### B2 · One connection-state model (F-02, F-20, F-21)
+### B2 · One connection-state model (F-02, F-20, F-21) — **shipped 2026-10-07**
 
-- `services/socket/connectionState.ts`: a `useSyncExternalStore` store fed by `connect`,
-  `disconnect`, `reconnect_attempt` and `ServerShuttingDown` (A8), states `connecting |
-connected | reconnecting | offline | server_restarting`. Both room hooks read it; the string
-  literals disappear.
-- Rendering: the `ConnectionStatus` chip from `04-host-flow-ux-spec.md` §2.3 on Play and Lobby,
-  and a game-page banner. Both render now from the store; they move onto the overlay host when
-  E2 lands, instead of waiting for it.
-- Gameplay acks `offline` and `rejected` show a localised refusal toast instead of resetting
-  to idle silently; no offline queue (decision log 2026-10-06).
-- `navigate` held in a ref in both connection effects.
-- Socket client policy per plan 13 §5.1.
-- Delete `GamePageReconnectToast` and `usePlayerReconnectToast` unless the banner work reuses
-  them (F-23 overlap).
-- **Proof:** `connectionState.test.ts` (every transition); `useGamePageActions.test.tsx` (an
-  `offline` ack produces the toast); `useGameRoomConnection.test.ts` (one `JoinRoom` per room
-  id across a location change); E2E: drop the socket on the game page, banner within 1 s,
-  clears on reconnect.
+`services/socket/connectionState.ts` is a `useSyncExternalStore` store that `socketClient.ts`
+attaches to every socket it creates and detaches on reset. It reads `connect`, `disconnect`,
+the manager's `reconnect_attempt`, `ServerShuttingDown` and the browser `online`/`offline`
+events, and derives `connecting | connected | reconnecting | offline | server_restarting`
+(`offline` means the browser has no network). The socket client uses the plan 13 §5.1 retry
+policy without `auth: { sessionId }`, because the server does not read it yet (data
+minimisation; it lands with plan 12 §2). `features/rooms/ConnectionStatus` is the chip on Play,
+the mobile lobby header and the desktop `LobbyHeader` (it replaces the English-literal badge);
+`ConnectionBanner` heads the game toast stack, on the loading screen too. An `offline` result
+from any gameplay action shows a localised refusal toast; `rejected` already shows the server
+`Error` toast, so it gets no second one. Both room hooks hold `navigate` in a ref. A
+`ROOM_NOT_FOUND` after a `ServerShuttingDown` notice opens the closed-room dialog in a "server
+restarted" variant (plan 13 §1.4 in part; a crash without the notice still needs
+`instanceId`). `GamePageReconnectToast` and `usePlayerReconnectToast` are not reused; their
+deletion is part of the owner's W1 removal. Proof: `services/socket/connectionState.test.ts`
+(every transition), `features/rooms/ConnectionStatus.test.tsx`,
+`pages/GamePage/hooks/useGamePageActions.offline.test.tsx`,
+`pages/GamePage/hooks/useGameRoomConnection.test.ts` (one `JoinRoom` across `navigate`
+changes, fails with the old dependency list; restart reason), E2E
+`apps/e2e/tests/connection-status.spec.ts` (offline banner within 1 s, refused move, banner
+clears and the move goes through after reconnect).
 
 ## 6. Track C — Render churn and runtime cost
 
@@ -333,7 +337,7 @@ their files do not overlap.
 | 2     | **A2** (shipped 2026-10-07)         | —                                 | `write-tests`                           | Ghost players, silent lobby loss, rename breakage |
 | 3     | **A3** (shipped 2026-10-07)         | `04` WP 2 (deck contract) or none | `write-tests`                           | Game soft-lock; decision 6                        |
 | 4     | **A4**, **B1** (shipped 2026-10-07) | —                                 | `add-socket-action` (A4), `write-tests` | Error contract feeds B2's toasts                  |
-| 5     | **A8** (shipped 2026-10-07), B2     | A4                                | `add-socket-action`, `e2e-scenario`     | Honest connection state end to end                |
+| 5     | **A8**, **B2** (shipped 2026-10-07) | A4                                | `add-socket-action`, `e2e-scenario`     | Honest connection state end to end                |
 | 6     | A5, A6, A7                          | A1                                | `write-tests`                           | Abuse limits and transport                        |
 | 7     | D0, C1, C2                          | —                                 | `perf-check`                            | Largest runtime win, measurable                   |
 | 8     | C3, C4, C5, C6                      | C1                                | `perf-check`                            | Drag, viewport, playback                          |
@@ -342,7 +346,7 @@ their files do not overlap.
 | 11    | A9, A10                             | A2                                | `write-tests`                           | Small server costs, measured broadcast decision   |
 | 12    | E2                                  | E1                                | `add-ui-component`                      | Largest UI refactor last                          |
 
-A1–A4, A8 and B1 shipped on 2026-10-07; B2 is next.
+A1–A4, A8, B1 and B2 shipped on 2026-10-07; A5, A6 and A7 are next.
 
 ## 9. Corrections to the work-breakdown documents
 

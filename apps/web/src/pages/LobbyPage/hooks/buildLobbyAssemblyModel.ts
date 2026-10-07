@@ -6,7 +6,6 @@ export interface LobbyAssemblyModel {
     errorMessage: string | null;
   };
   room: {
-    connectionStatus: string;
     currentPlayerId: string | null;
     displayName: string;
     hasStartedJoinError: boolean;
@@ -74,7 +73,6 @@ export function buildLobbyAssemblyModel(controller: LobbyPageController): LobbyA
       errorMessage: controller.errorMessage,
     },
     room: {
-      connectionStatus: controller.connectionStatus,
       currentPlayerId: controller.currentPlayerId,
       displayName: controller.displayName,
       hasStartedJoinError,

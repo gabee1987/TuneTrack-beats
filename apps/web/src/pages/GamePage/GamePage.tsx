@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { AppRouteFallback } from "../../app/components/AppRouteFallback";
 import { useI18n } from "../../features/i18n";
+import { ConnectionBanner } from "../../features/rooms/ConnectionBanner";
 import { RoomResetModal } from "../../features/ui/RoomResetModal";
 import { Button, Dialog } from "../../features/ui/primitives";
 import { usePageLayoutMode } from "../../hooks/usePageLayoutMode";
@@ -50,6 +51,7 @@ export function GamePage() {
       <RoomResetModal
         isOpen={controller.hasClosedRoomReset}
         onReset={controller.handleClosedRoomReset}
+        reason={controller.closedRoomReason}
       />
       <Dialog
         actions={
@@ -69,6 +71,9 @@ export function GamePage() {
       >
         {t("game.leaveConfirm.message")}
       </Dialog>
+      <GamePageToastStack toasts={toasts}>
+        <ConnectionBanner />
+      </GamePageToastStack>
     </>
   );
 
@@ -102,7 +107,6 @@ export function GamePage() {
       roomState={controller.roomState}
     >
       {screenOverlays}
-      <GamePageToastStack toasts={toasts} />
       <Suspense fallback={<AppRouteFallback />}>
         {layoutMode === "mobile" ? (
           <GamePageMobile model={model} />

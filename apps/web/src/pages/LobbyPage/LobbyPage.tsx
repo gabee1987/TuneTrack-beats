@@ -25,6 +25,7 @@ export function LobbyPage() {
       <RoomResetModal
         isOpen={controller.hasClosedRoomReset}
         onReset={controller.handleClosedRoomReset}
+        reason={controller.closedRoomReason}
       />
       <Suspense fallback={<AppRouteFallback />}>
         {layoutMode === "mobile" ? (

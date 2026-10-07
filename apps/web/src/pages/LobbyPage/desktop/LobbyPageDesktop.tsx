@@ -17,11 +17,7 @@ export function LobbyPageDesktop({ model }: LobbyPageAssemblyProps) {
 
   return (
     <AppPageShell panelClassName={styles.panelShell} screenClassName={styles.screenShell}>
-      <LobbyHeader
-        connectionStatus={room.connectionStatus}
-        isHost={room.isHost}
-        roomId={room.resolvedRoomId}
-      />
+      <LobbyHeader isHost={room.isHost} roomId={room.resolvedRoomId} />
 
       {shell.errorMessage ? <StatusBanner>{shell.errorMessage}</StatusBanner> : null}
 

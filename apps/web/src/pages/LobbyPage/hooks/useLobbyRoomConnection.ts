@@ -11,7 +11,9 @@ import { useEffect, useRef, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useI18n } from "../../../features/i18n";
 import { localizeServerError } from "../../../features/i18n/localizedErrors";
+import type { ClosedRoomReason } from "../../../features/ui/RoomResetModal";
 import { rememberRoomEventToast } from "../../../services/session/roomEventToast";
+import { hasServerRestarted } from "../../../services/socket/connectionState";
 import { getSocketClient, resetSocketClient } from "../../../services/socket/socketClient";
 
 interface UseLobbyRoomConnectionOptions {
@@ -23,8 +25,8 @@ interface UseLobbyRoomConnectionOptions {
 }
 
 interface UseLobbyRoomConnectionResult {
+  closedRoomReason: ClosedRoomReason;
   hasClosedRoomReset: boolean;
-  connectionStatus: string;
   currentPlayerId: string | null;
   errorCode: string | null;
   errorMessage: string | null;
@@ -79,7 +81,10 @@ export function useLobbyRoomConnection({
   translateRef.current = t;
   const displayNameRef = useRef(displayName);
   displayNameRef.current = displayName;
-  const [connectionStatus, setConnectionStatus] = useState("Connecting");
+  // useNavigate returns a new function on every location change, including this hook's own
+  // create-to-lobby redirect; as an effect dependency it would re-run the join.
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
   const currentPlayerIdRef = useRef<string | null>(null);
   const hasAttemptedCreateRef = useRef(false);
@@ -89,6 +94,7 @@ export function useLobbyRoomConnection({
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hasClosedRoomReset, setHasClosedRoomReset] = useState(false);
+  const [closedRoomReason, setClosedRoomReason] = useState<ClosedRoomReason>("closed");
 
   function handleClosedRoomReset() {
     setHasClosedRoomReset(false);
@@ -105,12 +111,11 @@ export function useLobbyRoomConnection({
     hasAttemptedCreateRef.current = false;
 
     if (!displayName || (intent === "join" && !roomId)) {
-      navigate("/");
+      navigateRef.current("/");
       return;
     }
 
     function handleConnect(socketClient: Awaited<ReturnType<typeof getSocketClient>>) {
-      setConnectionStatus("Connected");
       setErrorCode(null);
       setErrorMessage(null);
       const shouldCreateRoom =
@@ -134,10 +139,6 @@ export function useLobbyRoomConnection({
       });
     }
 
-    function handleDisconnect() {
-      setConnectionStatus("Disconnected");
-    }
-
     function handleStateUpdate(payload: StateUpdatePayload) {
       const updateDecision = getLobbyRoomStateUpdateDecision({
         isCreatingRoom: intent === "create",
@@ -155,7 +156,7 @@ export function useLobbyRoomConnection({
       setRoomState(payload.roomState);
 
       if (updateDecision.shouldNavigateToRoom) {
-        navigate(`/lobby/${encodeURIComponent(payload.roomState.roomId)}`, {
+        navigateRef.current(`/lobby/${encodeURIComponent(payload.roomState.roomId)}`, {
           replace: true,
           state: null,
         });
@@ -164,7 +165,7 @@ export function useLobbyRoomConnection({
 
       if (payload.roomState.status !== "lobby" && !hasNavigatedToGameRef.current) {
         hasNavigatedToGameRef.current = true;
-        navigate(`/game/${encodeURIComponent(payload.roomState.roomId)}`, {
+        navigateRef.current(`/game/${encodeURIComponent(payload.roomState.roomId)}`, {
           state: {
             currentPlayerId: currentPlayerIdRef.current,
             roomState: payload.roomState,
@@ -180,6 +181,7 @@ export function useLobbyRoomConnection({
 
     function handleError(payload: ServerErrorPayload) {
       if (isClosedRoomError(payload.code)) {
+        setClosedRoomReason(hasServerRestarted() ? "server_restarted" : "closed");
         setHasClosedRoomReset(true);
         setErrorCode(null);
         setErrorMessage(null);
@@ -199,7 +201,7 @@ export function useLobbyRoomConnection({
       }
 
       resetSocketClient();
-      navigate("/", {
+      navigateRef.current("/", {
         state:
           payload.reason === "kicked"
             ? {
@@ -220,7 +222,6 @@ export function useLobbyRoomConnection({
       const connectListener = () => handleConnect(socketClient);
 
       socketClient.on("connect", connectListener);
-      socketClient.on("disconnect", handleDisconnect);
       socketClient.on(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
       socketClient.on(ServerToClientEvent.RoomClosed, handleRoomClosed);
       socketClient.on(ServerToClientEvent.StateUpdate, handleStateUpdate);
@@ -228,7 +229,6 @@ export function useLobbyRoomConnection({
 
       cleanupSocketListeners = () => {
         socketClient.off("connect", connectListener);
-        socketClient.off("disconnect", handleDisconnect);
         socketClient.off(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
         socketClient.off(ServerToClientEvent.RoomClosed, handleRoomClosed);
         socketClient.off(ServerToClientEvent.StateUpdate, handleStateUpdate);
@@ -246,11 +246,11 @@ export function useLobbyRoomConnection({
       isDisposed = true;
       cleanupSocketListeners?.();
     };
-  }, [intent, navigate, playerSessionId, roomId]);
+  }, [intent, playerSessionId, roomId]);
 
   return {
+    closedRoomReason,
     hasClosedRoomReset,
-    connectionStatus,
     currentPlayerId,
     errorCode,
     errorMessage,

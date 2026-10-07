@@ -1,6 +1,6 @@
 # 13 — Network Protocol and Client Resilience
 
-> **Status (2026-10-07):** Phase 1 partially shipped (first-connect/reconnect split, idempotent `create_room`), Phases 2, 3 and 4 shipped (durable session id and never-throwing storage; connection effects independent of `t`; acknowledged, idempotent actions). Open: the `GAME_ALREADY_STARTED` recovery dialog and `instanceId` (Phase 1), socket client policy and connection-state model (Phase 5), narrow events and `revision` (Phase 6).
+> **Status (2026-10-07):** Phase 1 partially shipped (first-connect/reconnect split, idempotent `create_room`), Phases 2, 3 and 4 shipped (durable session id and never-throwing storage; connection effects independent of `t`; acknowledged, idempotent actions). Phase 5 shipped (socket client policy and connection-state model). Open: the `GAME_ALREADY_STARTED` recovery dialog and `instanceId` (Phase 1), narrow events and `revision` (Phase 6).
 > **Folded from** `docs/plans/2026-09-stability-performance/05-network-protocol-and-resilience.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
 >
 > **Binding budgets, order and corrections (2026-10-07):** `05-performance-and-robustness-plan.md` §2 (budgets), §8 (rollout order), §9 (corrections to this document). Where they differ, `05` wins.
@@ -16,7 +16,7 @@ found four independent causes, in rough order of impact:
 1. A host reconnect issued the wrong join command and hard-failed — **shipped**, Phase 1.
 2. Nothing told the client whether an action succeeded — **shipped**, Phase 4.
 3. Changing language rebuilt the connection and re-joined — **shipped**, Phase 3.
-4. The socket client has no reconnect policy and no handshake identity — **open**, Phase 5.
+4. The socket client had no reconnect policy and no connection state — **shipped**, Phase 5.
 
 ## 1. Phase 1 — Make joining idempotent and reconnect-safe · **S1** · partially shipped
 
@@ -47,7 +47,11 @@ with no room state. The lobby model flags the code, but no recovery dialog varia
   `15-design-system-consolidation.md` §5 on the recovery-dialog contract.
 - Keep the session id intact when recovering from this (see Phase 2).
 
-### 1.4 Server restart is a distinguishable case — open
+### 1.4 Server restart is a distinguishable case — partially shipped
+
+**Partially shipped 2026-10-07** (`05` A8, B2): a client that received `ServerShuttingDown`
+explains a later `ROOM_NOT_FOUND` with a "server restarted" dialog. The `instanceId` below is
+still open; it covers a crash, where no notice is sent.
 
 After a server restart, all rooms and memberships are gone, so a rejoin returns
 `ROOM_NOT_FOUND`. That currently shows the same modal as a host closing the room, which is
@@ -107,90 +111,14 @@ staying fire-and-forget. Known defect: F-01 — `emitAction` calls `crypto.rando
 unguarded, which throws on plain-HTTP LAN play; the fix (reuse the `sessionId.ts` fallback)
 is on the hotfix track in `00-index.md` §4.
 
-## 5. Phase 5 — Honest connection state in the UI · **S2** · open
+## 5. Phase 5 — Honest connection state in the UI · **S2** · shipped 2026-10-07
 
-**Review findings:** F-02, F-20, F-21. **Bug register:** B8 ("Remaining").
-
-### 5.1 Configure the socket client
-
-`apps/web/src/services/socket/socketClient.ts` still passes only `{ autoConnect: false }`
-(verified 2026-10-06). Replace with an explicit policy:
-
-    io(url, {
-      autoConnect: false,
-      reconnection: true,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 500,
-      reconnectionDelayMax: 5_000,
-      randomizationFactor: 0.5,
-      timeout: 10_000,
-      auth: { sessionId: getOrCreatePlayerSessionId() },
-    })
-
-`reconnectionAttempts: Infinity` is correct for this product: a party host who walks out of
-Wi-Fi range and comes back should reconnect, not be told to reload. The capped 5 s delay
-keeps recovery fast without hammering the server.
-
-`auth: { sessionId }` lets the server identify the device at handshake time, which enables
-the `12-backend-stability-and-sessions.md` §2 recovery path and lets the server log a
-stable identifier without waiting for an application-level join.
-
-Security note: the session id is an opaque random UUID with no personal data and no
-authority of its own — the server still validates every membership and permission against
-its own maps. Do not let it become a bearer token; specifically, never accept a client's
-claim about which player it is without checking `sessionMemberships`.
-
-### 5.2 A single connection-state model
-
-The English literals `"Connecting"` / `"Connected"` / `"Disconnected"` are still produced
-in `useLobbyRoomConnection.ts` and compared by string in `LobbyHeader.tsx` (F-20). Replace
-them with a typed state exposed from the socket service, not from a page hook:
-
-    export type ConnectionState =
-      | { status: "connecting" }
-      | { status: "connected" }
-      | { status: "reconnecting"; attempt: number }
-      | { status: "offline"; since: number }
-      | { status: "server_restarting" };
-
-- Derived from `connect`, `disconnect`, `connect_error`,
-  `io.on("reconnect_attempt")` and the `ServerShuttingDown` event from
-  `12-backend-stability-and-sessions.md` §3.1 (still open there: no SIGTERM/SIGINT
-  handling exists yet).
-- Exposed through a `useConnectionState()` hook backed by `useSyncExternalStore`, so it is
-  a single subscription rather than per-page state. Neither `ConnectionBanner` nor
-  `useConnectionState` exists today.
-- Rendered by one app-level `ConnectionBanner` in the overlay host from
-  `14-navigation-and-overlays.md` §4, so every screen gets the same treatment. The game
-  page currently has no connection-loss feedback at all: `useGameRoomConnection` never
-  subscribes to `disconnect`, and `GamePageReconnectToast` / `usePlayerReconnectToast`
-  exist with zero importers (F-02). The toast answers a different question ("who is
-  back?"); either mount it deliberately alongside the banner, visually distinct, or delete
-  it.
-- All copy goes through i18n keys in both `en.properties` and `hu.properties`.
-
-### 5.3 Queue user intent while offline
-
-When `status` is `offline` or `reconnecting`, a mutation should not be silently dropped.
-
-- `emitAction` returns `"offline"`, and the calling controller decides: gameplay actions
-  are **refused** with a clear message (the server is authoritative and the game may have
-  moved on), while low-stakes preference changes are applied locally and re-sent on
-  reconnect. Today offline and rejected acks are reset to `idle` silently (F-02).
-- Do not build a general-purpose offline action queue. For a server-authoritative realtime
-  game, replaying stale intent after a 30 s gap is worse than refusing it. Recorded in
-  `docs/decision_log.md` (2026-10-06).
-
-### Acceptance
-
-- [ ] No English literal reaches the UI from a connection code path.
-- [ ] `ConnectionBanner` appears within 1 s of a drop and clears on recovery, on every route,
-      including the game page.
-- [ ] A gameplay action attempted while offline shows a refusal, not a silent no-op.
-- [ ] `resolveServerUrl.test.ts` unchanged; new `connectionState.test.ts` covers each
-      transition including `server_restarting`.
-- [ ] `useGameRoomConnection`'s connect effect runs once per room id; `navigate` is held in
-      a ref (F-21).
+**Shipped 2026-10-07** as `05` B2: the socket client has an explicit retry policy, one
+`useSyncExternalStore` connection-state store drives the Play and Lobby chip and the game
+banner, offline gameplay actions are refused with a localised toast (no offline queue), and both
+room hooks hold `navigate` in a ref. `auth: { sessionId }` is deferred until the server reads it
+(plan 12 §2). Proof: `services/socket/connectionState.test.ts`,
+`pages/GamePage/hooks/useGameRoomConnection.test.ts`, E2E `connection-status.spec.ts`.
 
 ## 6. Phase 6 — Shrink the broadcast payload · **S2** · open
 

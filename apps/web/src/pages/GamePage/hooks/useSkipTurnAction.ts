@@ -1,14 +1,19 @@
 import { ClientToServerEvent, type PublicRoomState } from "@tunetrack/shared";
 import { useCallback, useRef, useState } from "react";
-import { emitAction } from "../../../services/socket/emitAction";
+import { emitAction, type EmitActionResult } from "../../../services/socket/emitAction";
 import type { SkipTurnActionStatus } from "../GamePage.types";
 
 interface UseSkipTurnActionOptions {
+  reportActionResult: (result: EmitActionResult) => void;
   currentPlayerId: string | null;
   roomState: PublicRoomState | null;
 }
 
-export function useSkipTurnAction({ currentPlayerId, roomState }: UseSkipTurnActionOptions) {
+export function useSkipTurnAction({
+  currentPlayerId,
+  roomState,
+  reportActionResult,
+}: UseSkipTurnActionOptions) {
   const roomStateRef = useRef(roomState);
   roomStateRef.current = roomState;
   const isPendingRef = useRef(false);
@@ -62,6 +67,7 @@ export function useSkipTurnAction({ currentPlayerId, roomState }: UseSkipTurnAct
             retryOnTimeout: true,
           },
         );
+        reportActionResult(result);
         setActionStatus(
           result.status === "timeout" && isSubmittedTurnCurrent() ? "failed" : "idle",
         );
@@ -71,7 +77,7 @@ export function useSkipTurnAction({ currentPlayerId, roomState }: UseSkipTurnAct
         isPendingRef.current = false;
       }
     })();
-  }, [currentPlayerId, roomState]);
+  }, [currentPlayerId, reportActionResult, roomState]);
 
   return {
     actionStatus,

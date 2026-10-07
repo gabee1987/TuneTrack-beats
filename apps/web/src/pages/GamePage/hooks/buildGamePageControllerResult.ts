@@ -1,3 +1,4 @@
+import type { ClosedRoomReason } from "../../../features/ui/RoomResetModal";
 import type { UseGamePageControllerResult, TimelineView } from "../GamePage.types";
 import type { PublicRoomState } from "@tunetrack/shared";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
@@ -67,6 +68,7 @@ interface BuildGamePageControllerResultOptions {
     | "statusBadgeText"
     | "statusDetailText"
   >;
+  closedRoomReason: ClosedRoomReason;
   errorKey: number;
   errorMessage: string | null;
   handleClosedRoomReset: () => void;
@@ -118,6 +120,7 @@ interface BuildGamePageControllerResultOptions {
 export function buildGamePageControllerResult({
   actionState,
   capabilityState,
+  closedRoomReason,
   displayState,
   errorKey,
   errorMessage,
@@ -128,6 +131,7 @@ export function buildGamePageControllerResult({
   timelineState,
 }: BuildGamePageControllerResultOptions): UseGamePageControllerResult {
   return {
+    closedRoomReason,
     errorKey,
     errorMessage,
     handleClosedRoomReset,

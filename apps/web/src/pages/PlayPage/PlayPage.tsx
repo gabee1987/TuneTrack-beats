@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FirstRunHint } from "../../features/hints/FirstRunHint";
+import { ConnectionStatus } from "../../features/rooms/ConnectionStatus";
 import { AppPageShell } from "../../features/mobile-shell/AppPageShell";
 import { useI18n } from "../../features/i18n";
 import { PlayerNameField } from "../../features/profile/PlayerNameField";
@@ -17,7 +18,10 @@ export function PlayPage() {
     <AppPageShell panelClassName={styles.panelShell} screenClassName={styles.screenShell}>
       <main className={styles.content}>
         <header className={styles.header}>
-          <p className={styles.eyebrow}>{t("home.roomEntryTitle")}</p>
+          <div className={styles.eyebrowRow}>
+            <p className={styles.eyebrow}>{t("home.roomEntryTitle")}</p>
+            <ConnectionStatus />
+          </div>
           <h1 className={styles.title}>{t("play.title")}</h1>
           <p className={styles.subtitle}>{t("home.roomEntryDescription")}</p>
         </header>

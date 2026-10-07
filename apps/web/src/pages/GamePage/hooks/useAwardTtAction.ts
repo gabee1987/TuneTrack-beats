@@ -1,14 +1,19 @@
 import { ClientToServerEvent, type PublicRoomState } from "@tunetrack/shared";
 import { useCallback, useRef, useState } from "react";
-import { emitAction } from "../../../services/socket/emitAction";
+import { emitAction, type EmitActionResult } from "../../../services/socket/emitAction";
 import type { AwardTtActionState } from "../GamePage.types";
 
 interface UseAwardTtActionOptions {
+  reportActionResult: (result: EmitActionResult) => void;
   currentPlayerId: string | null;
   roomState: PublicRoomState | null;
 }
 
-export function useAwardTtAction({ currentPlayerId, roomState }: UseAwardTtActionOptions) {
+export function useAwardTtAction({
+  currentPlayerId,
+  roomState,
+  reportActionResult,
+}: UseAwardTtActionOptions) {
   const roomStateRef = useRef(roomState);
   roomStateRef.current = roomState;
   const isPendingRef = useRef(false);
@@ -56,6 +61,7 @@ export function useAwardTtAction({ currentPlayerId, roomState }: UseAwardTtActio
               retryOnTimeout: true,
             },
           );
+          reportActionResult(result);
           setActionState(
             result.status === "timeout" && isSubmittedAdjustmentCurrent()
               ? { amount, playerId, status: "failed" }

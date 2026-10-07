@@ -1,7 +1,9 @@
 import type { Socket } from "socket.io-client";
+import { trackSocketConnection } from "./connectionState";
 import { resolveServerUrl } from "./resolveServerUrl";
 
 let socketClientInstance: Socket | null = null;
+let untrackSocketConnection: (() => void) | null = null;
 let socketClientPromise: Promise<Socket> | null = null;
 let socketClientGeneration = 0;
 
@@ -20,6 +22,8 @@ function resolveSocketServerUrl(): string {
  * player is in next. The buffer has to die with the socket that holds it.
  */
 function discardSocketClient(socketClient: Socket) {
+  untrackSocketConnection?.();
+  untrackSocketConnection = null;
   socketClient.removeAllListeners();
   socketClient.disconnect();
   socketClient.sendBuffer = [];
@@ -29,8 +33,16 @@ function discardSocketClient(socketClient: Socket) {
 async function createSocketClient(): Promise<Socket> {
   const generation = socketClientGeneration;
   const { io } = await import("socket.io-client");
+  // A host who walks out of Wi-Fi range should get back in without a reload, so retries never
+  // stop; the 5 s cap keeps recovery quick without hammering the server.
   const nextSocketClient = io(resolveSocketServerUrl(), {
     autoConnect: false,
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 500,
+    reconnectionDelayMax: 5_000,
+    randomizationFactor: 0.5,
+    timeout: 10_000,
   });
 
   if (generation !== socketClientGeneration) {
@@ -41,6 +53,7 @@ async function createSocketClient(): Promise<Socket> {
   }
 
   socketClientInstance = nextSocketClient;
+  untrackSocketConnection = trackSocketConnection(nextSocketClient);
   return nextSocketClient;
 }
 

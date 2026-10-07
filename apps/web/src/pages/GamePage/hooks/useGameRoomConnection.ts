@@ -11,7 +11,9 @@ import { useEffect, useRef, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useI18n } from "../../../features/i18n";
 import { localizeServerError } from "../../../features/i18n/localizedErrors";
+import type { ClosedRoomReason } from "../../../features/ui/RoomResetModal";
 import { rememberRoomEventToast } from "../../../services/session/roomEventToast";
+import { hasServerRestarted } from "../../../services/socket/connectionState";
 import { getSocketClient, resetSocketClient } from "../../../services/socket/socketClient";
 import type { GameRouteState } from "../GamePage.types";
 
@@ -33,6 +35,10 @@ export function useGameRoomConnection({
   const { t } = useI18n();
   const translateRef = useRef(t);
   translateRef.current = t;
+  // useNavigate returns a new function on every location change; as an effect dependency it
+  // would re-run the join for the same room.
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(
     routeState.currentPlayerId ?? null,
   );
@@ -41,6 +47,17 @@ export function useGameRoomConnection({
   const [errorKey, setErrorKey] = useState(0);
   const errorKeyRef = useRef(0);
   const [hasClosedRoomReset, setHasClosedRoomReset] = useState(false);
+  const [closedRoomReason, setClosedRoomReason] = useState<ClosedRoomReason>("closed");
+
+  function showErrorToast(message: string) {
+    errorKeyRef.current += 1;
+    setErrorKey(errorKeyRef.current);
+    setErrorMessage(message);
+  }
+
+  function showOfflineActionRefusal() {
+    showErrorToast(translateRef.current("room.connection.actionRefusedOffline"));
+  }
 
   function handleClosedRoomReset() {
     setHasClosedRoomReset(false);
@@ -55,7 +72,7 @@ export function useGameRoomConnection({
     let cleanupSocketListeners: (() => void) | null = null;
 
     if (!roomId || !rememberedDisplayName) {
-      navigate("/");
+      navigateRef.current("/");
       return;
     }
 
@@ -78,6 +95,7 @@ export function useGameRoomConnection({
 
     function handleError(payload: ServerErrorPayload) {
       if (isClosedRoomError(payload.code)) {
+        setClosedRoomReason(hasServerRestarted() ? "server_restarted" : "closed");
         setHasClosedRoomReset(true);
         setErrorMessage(null);
         return;
@@ -89,9 +107,7 @@ export function useGameRoomConnection({
         return;
       }
 
-      errorKeyRef.current += 1;
-      setErrorKey(errorKeyRef.current);
-      setErrorMessage(localizeServerError(translateRef.current, payload));
+      showErrorToast(localizeServerError(translateRef.current, payload));
     }
 
     function handleRoomClosed(payload: RoomClosedPayload) {
@@ -103,7 +119,7 @@ export function useGameRoomConnection({
       }
 
       resetSocketClient();
-      navigate("/", {
+      navigateRef.current("/", {
         state:
           payload.reason === "kicked"
             ? {
@@ -148,9 +164,10 @@ export function useGameRoomConnection({
       isDisposed = true;
       cleanupSocketListeners?.();
     };
-  }, [navigate, playerSessionId, rememberedDisplayName, roomId]);
+  }, [playerSessionId, rememberedDisplayName, roomId]);
 
   return {
+    closedRoomReason,
     currentPlayerId,
     errorKey,
     errorMessage,
@@ -158,6 +175,7 @@ export function useGameRoomConnection({
     hasClosedRoomReset,
     roomState,
     setErrorMessage,
+    showOfflineActionRefusal,
   };
 }
 

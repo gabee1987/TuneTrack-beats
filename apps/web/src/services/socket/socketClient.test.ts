@@ -8,6 +8,9 @@ interface StubSocket {
   emit: ReturnType<typeof vi.fn>;
   disconnect: ReturnType<typeof vi.fn>;
   removeAllListeners: ReturnType<typeof vi.fn>;
+  on: ReturnType<typeof vi.fn>;
+  off: ReturnType<typeof vi.fn>;
+  io: { on: ReturnType<typeof vi.fn>; off: ReturnType<typeof vi.fn> };
 }
 
 function createStubSocket(): StubSocket {
@@ -24,6 +27,9 @@ function createStubSocket(): StubSocket {
     }),
     disconnect: vi.fn(() => socket),
     removeAllListeners: vi.fn(() => socket),
+    on: vi.fn(() => socket),
+    off: vi.fn(() => socket),
+    io: { on: vi.fn(), off: vi.fn() },
   };
 
   return socket;

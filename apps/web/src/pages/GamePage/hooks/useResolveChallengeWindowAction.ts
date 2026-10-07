@@ -1,9 +1,10 @@
 import { ClientToServerEvent, type PublicRoomState } from "@tunetrack/shared";
 import { useCallback, useRef, useState } from "react";
-import { emitAction } from "../../../services/socket/emitAction";
+import { emitAction, type EmitActionResult } from "../../../services/socket/emitAction";
 import type { ResolveChallengeWindowActionStatus } from "../GamePage.types";
 
 interface UseResolveChallengeWindowActionOptions {
+  reportActionResult: (result: EmitActionResult) => void;
   canResolveChallengeWindow: boolean | null | undefined;
   roomState: PublicRoomState | null;
 }
@@ -11,6 +12,7 @@ interface UseResolveChallengeWindowActionOptions {
 export function useResolveChallengeWindowAction({
   canResolveChallengeWindow,
   roomState,
+  reportActionResult,
 }: UseResolveChallengeWindowActionOptions) {
   const roomStateRef = useRef(roomState);
   roomStateRef.current = roomState;
@@ -52,6 +54,7 @@ export function useResolveChallengeWindowAction({
             retryOnTimeout: true,
           },
         );
+        reportActionResult(result);
         setActionStatus(
           result.status === "timeout" && isSubmittedChallengeWindowCurrent() ? "failed" : "idle",
         );
@@ -61,7 +64,7 @@ export function useResolveChallengeWindowAction({
         isPendingRef.current = false;
       }
     })();
-  }, [canResolveChallengeWindow, roomState]);
+  }, [canResolveChallengeWindow, reportActionResult, roomState]);
 
   return {
     actionStatus,

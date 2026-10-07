@@ -12,6 +12,11 @@ export interface FakeSocket {
   connected: boolean;
   recovered: boolean;
   id: string;
+  /** The Socket.IO manager; only reconnect attempts are modelled. */
+  io: {
+    on(event: string, listener: Listener): unknown;
+    off(event: string, listener?: Listener): unknown;
+  };
 
   on(event: string, listener: Listener): FakeSocket;
   off(event: string, listener?: Listener): FakeSocket;
@@ -39,6 +44,8 @@ export interface FakeSocket {
   simulateConnect(options?: { recovered?: boolean }): void;
   /** Drop the connection. */
   simulateDisconnect(reason?: string): void;
+  /** The manager starts another reconnect attempt. */
+  simulateReconnectAttempt(): void;
   /** Drop and restore, as a network blip does. */
   simulateReconnect(options?: { recovered?: boolean }): void;
   /** Resolve the next `emitWithAck` for an event with this value. */
@@ -49,6 +56,7 @@ export function createFakeSocket(options: { connected?: boolean } = {}): FakeSoc
   const listeners = new Map<string, Set<Listener>>();
   const emitted: EmittedEvent[] = [];
   const ackResponses = new Map<string, unknown[]>();
+  const reconnectAttemptListeners = new Set<Listener>();
 
   function listenersFor(event: string): Set<Listener> {
     const existing = listeners.get(event);
@@ -70,6 +78,14 @@ export function createFakeSocket(options: { connected?: boolean } = {}): FakeSoc
     connected: options.connected ?? false,
     recovered: false,
     id: "TEST_SOCKET_1",
+    io: {
+      on(event, listener) {
+        if (event === "reconnect_attempt") reconnectAttemptListeners.add(listener);
+      },
+      off(event, listener) {
+        if (event === "reconnect_attempt" && listener) reconnectAttemptListeners.delete(listener);
+      },
+    },
 
     emitted,
 
@@ -168,6 +184,10 @@ export function createFakeSocket(options: { connected?: boolean } = {}): FakeSoc
       socket.connected = false;
       socket.recovered = false;
       deliver("disconnect", reason);
+    },
+
+    simulateReconnectAttempt() {
+      for (const listener of [...reconnectAttemptListeners]) listener(1);
     },
 
     simulateReconnect(reconnectOptions = {}) {

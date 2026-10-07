@@ -47,8 +47,8 @@ function createController(overrides: Partial<LobbyPageController> = {}): LobbyPa
   };
 
   return {
-    connectionStatus: "connected",
     closeRoomActionStatus: "failed",
+    closedRoomReason: "closed",
     currentPlayerId: "host-1",
     currentSettings: settings,
     displayName: "Host",

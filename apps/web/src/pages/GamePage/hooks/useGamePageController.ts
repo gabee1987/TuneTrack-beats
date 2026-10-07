@@ -29,12 +29,14 @@ export function useGamePageController({
   const [pendingSkippedTrackId, setPendingSkippedTrackId] = useState<string | null>(null);
 
   const {
+    closedRoomReason,
     currentPlayerId,
     errorKey,
     errorMessage,
     handleClosedRoomReset,
     hasClosedRoomReset,
     roomState,
+    showOfflineActionRefusal,
   } = useGameRoomConnection({
     navigate,
     roomId,
@@ -76,6 +78,7 @@ export function useGamePageController({
     isCurrentPlayerTurn: actionAvailability.isCurrentPlayerTurn,
     roomState,
     selectedSlotIndex,
+    onActionOffline: showOfflineActionRefusal,
     onSkipTrackWithTtIntent: handleSkipTrackWithTtIntent,
     setLocallyPlacedCard,
   });
@@ -243,6 +246,7 @@ export function useGamePageController({
   return buildGamePageControllerResult({
     actionState,
     capabilityState,
+    closedRoomReason,
     displayState,
     errorKey,
     errorMessage,

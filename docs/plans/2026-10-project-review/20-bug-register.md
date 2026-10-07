@@ -18,7 +18,7 @@ Status meanings:
 | ID  | Severity | Status                             | Next proof                                                             |
 | --- | -------- | ---------------------------------- | ---------------------------------------------------------------------- |
 | B2  | S1       | Open                               | Remaining overlay-stack component tests                                |
-| B8  | S1       | Partially fixed                    | Explicit client recovery state and server transport tuning             |
+| B8  | S1       | Partially fixed                    | Server transport tuning (`05` A5–A7)                                   |
 | B14 | S1       | Needs reproduction                 | Capture route, connection state and overlays when the UI becomes inert |
 | B18 | S2       | Open                               | Reproduce and instrument a page exit that never completes              |
 | B4  | S1       | Open; device confirmation required | iPhone drag-versus-scroll test                                         |
@@ -65,12 +65,11 @@ that initiated navigation.
   whole-room expiry.
 - Lifecycle durations are validated environment settings with production defaults.
 - Closing a room keeps the device session id, and storage access never throws (`05` B1).
+- One client connection state drives the Play and Lobby chip and the game banner; offline
+  gameplay actions are refused with a toast (`05` B2, E2E `connection-status.spec.ts`).
 
 ### Remaining
 
-- Define and expose one explicit client connection/recovery state instead of scattered
-  status strings.
-- Finish the connection banner and mobile-friendly retry feedback.
 - Decide and verify Socket.IO recovery, ping and rate-limit settings using measured failure
   cases rather than speculative tuning.
 - Keep server restart behavior explicit: room state is in memory and is not recoverable

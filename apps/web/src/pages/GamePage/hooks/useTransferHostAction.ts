@@ -1,9 +1,10 @@
 import { ClientToServerEvent, type PublicRoomState } from "@tunetrack/shared";
 import { useCallback, useRef, useState } from "react";
-import { emitAction } from "../../../services/socket/emitAction";
+import { emitAction, type EmitActionResult } from "../../../services/socket/emitAction";
 import type { TransferHostActionState } from "../GamePage.types";
 
 interface UseTransferHostActionOptions {
+  reportActionResult: (result: EmitActionResult) => void;
   currentPlayerId: string | null;
   roomState: PublicRoomState | null;
 }
@@ -11,6 +12,7 @@ interface UseTransferHostActionOptions {
 export function useTransferHostAction({
   currentPlayerId,
   roomState,
+  reportActionResult,
 }: UseTransferHostActionOptions) {
   const roomStateRef = useRef(roomState);
   roomStateRef.current = roomState;
@@ -59,6 +61,7 @@ export function useTransferHostAction({
               retryOnTimeout: true,
             },
           );
+          reportActionResult(result);
           setActionState(
             result.status === "timeout" && isSubmittedTransferCurrent()
               ? { playerId, status: "failed" }

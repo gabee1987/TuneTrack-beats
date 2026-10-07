@@ -4,6 +4,7 @@ import { FirstRunHint } from "../../../features/hints/FirstRunHint";
 import { useI18n } from "../../../features/i18n";
 import { MotionDialogPortal } from "../../../features/motion";
 import { PlayerNameField } from "../../../features/profile/PlayerNameField";
+import { ConnectionStatus } from "../../../features/rooms/ConnectionStatus";
 import { StatusBanner } from "../../../features/ui/StatusBanner";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { TextInput } from "../../../features/ui/TextInput";
@@ -119,7 +120,10 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
       <section className={styles.setupScreen} aria-labelledby="lobby-setup-title">
         <div className={styles.setupCard}>
           <div className={styles.setupHeader}>
-            <p className={styles.eyebrow}>{t("lobby.setup.eyebrow")}</p>
+            <div className={styles.eyebrowRow}>
+              <p className={styles.eyebrow}>{t("lobby.setup.eyebrow")}</p>
+              <ConnectionStatus />
+            </div>
             <h1 className={styles.title} id="lobby-setup-title">
               {t("lobby.setup.title")}
             </h1>

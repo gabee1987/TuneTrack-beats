@@ -43,7 +43,7 @@ export function useLobbyPageController(): LobbyPageController {
   const intent = intentRef.current;
   const playerSessionId = useMemo(() => getOrCreatePlayerSessionId(), []);
   const {
-    connectionStatus,
+    closedRoomReason,
     currentPlayerId,
     errorCode,
     errorMessage,
@@ -89,7 +89,7 @@ export function useLobbyPageController(): LobbyPageController {
 
   return {
     closeRoomActionStatus: actions.closeRoomActionStatus,
-    connectionStatus,
+    closedRoomReason,
     currentPlayerId,
     currentSettings,
     displayName,

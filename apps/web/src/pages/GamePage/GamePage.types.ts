@@ -1,3 +1,4 @@
+import type { ClosedRoomReason } from "../../features/ui/RoomResetModal";
 import type { PublicRoomState, TimelineCardPublic, TrackCardPublic } from "@tunetrack/shared";
 import type { AppShellMenuTab } from "../../features/app-shell/AppShellMenu";
 import type {
@@ -221,6 +222,7 @@ export interface GamePageAssemblyModel {
 
 export type GamePageController = GamePageActionHandlers & {
   canChangeTimelineView: boolean;
+  closedRoomReason: ClosedRoomReason;
   errorKey: number;
   handleClosedRoomReset: () => void;
   hasClosedRoomReset: boolean;
