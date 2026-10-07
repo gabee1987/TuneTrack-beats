@@ -37,12 +37,24 @@ export {
   createCorrectPlacementFillVariants,
   createCorrectPlacementShellContentTransition,
   createCorrectPlacementShellContentVariants,
-  createTimelineCelebrationTransition,
-  createTimelineCelebrationVariants,
   createTimelineFlyAnimationTransition,
   createTimelineFlyAnimationVariants,
   timelineCelebrationTransitionContract,
 } from "./transitions/timelineCelebrationTransition";
+export {
+  createPlacementCelebrationBadgeVariants,
+  createPlacementCelebrationGlowVariants,
+  createPlacementCelebrationMarkTransition,
+  createPlacementCelebrationRingVariants,
+  createPlacementCelebrationStageVariants,
+  createPlacementConfettiVariants,
+  createPlacementMessageVariants,
+  createPlacementMessageWordVariants,
+  createPlacementShardVariants,
+  placementCelebrationContract,
+  placementConfettiParticles,
+  placementFailureShards,
+} from "./transitions/placementCelebrationTransition";
 export {
   createMenuTokenAdjustFlyoutPopTransition,
   createMenuTokenAdjustFlyoutPopVariants,

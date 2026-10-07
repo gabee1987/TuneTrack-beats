@@ -5,7 +5,10 @@ import { TextInput } from "../../../../features/ui/TextInput";
 import { AdaptiveSelect } from "../AdaptiveSelect";
 import { SpotifyLogo } from "./spotifySetupIcons";
 import type { LobbySpotifyState } from "./spotifySetupTypes";
-import styles from "./spotifyStyles";
+import setupShellStyles from "./spotifySetupShell.module.css";
+import sharedStyles from "./spotifyShared.module.css";
+import setupImportStyles from "./spotifySetupImport.module.css";
+import discoveryStyles from "./spotifyDiscovery.module.css";
 
 interface SpotifySetupContentProps {
   currentSettings: PublicRoomSettings;
@@ -72,17 +75,19 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
   ];
 
   return (
-    <div className={styles.spotifySetupContent}>
+    <div className={setupShellStyles.spotifySetupContent}>
       {!isConnected ? (
-        <div className={styles.spotifyConnectRow}>
-          <div className={styles.spotifyConnectUnconnected}>
+        <div className={setupShellStyles.spotifyConnectRow}>
+          <div className={setupShellStyles.spotifyConnectUnconnected}>
             {authPhase === "error" && authError ? (
-              <div className={styles.spotifyAuthErrorBlock}>
-                <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
+              <div className={setupShellStyles.spotifyAuthErrorBlock}>
+                <p
+                  className={`${sharedStyles.spotifyStatusLine} ${sharedStyles.spotifyStatusError}`}
+                >
                   {authError}
                 </p>
                 <ActionButton
-                  className={styles.spotifyConnectBtn}
+                  className={setupShellStyles.spotifyConnectBtn}
                   onClick={connectSpotify}
                   type="button"
                   variant="neutral"
@@ -93,14 +98,14 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
               </div>
             ) : (
               <>
-                <p className={styles.spotifyConnectHint}>
+                <p className={setupShellStyles.spotifyConnectHint}>
                   {isConnecting
                     ? t("lobby.spotify.connectingHint")
                     : t("lobby.spotify.unconnectedHint")}
                 </p>
-                <div className={styles.spotifyConnectActions}>
+                <div className={setupShellStyles.spotifyConnectActions}>
                   <ActionButton
-                    className={styles.spotifyConnectBtn}
+                    className={setupShellStyles.spotifyConnectBtn}
                     disabled={isConnecting}
                     onClick={connectSpotify}
                     type="button"
@@ -111,7 +116,7 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
                   </ActionButton>
                   {isConnecting ? (
                     <ActionButton
-                      className={styles.spotifyConnectCancelBtn}
+                      className={setupShellStyles.spotifyConnectCancelBtn}
                       onClick={cancelConnectSpotify}
                       type="button"
                       variant="neutral"
@@ -127,18 +132,18 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
       ) : null}
 
       {isConnected ? (
-        <div className={styles.spotifyImportContent}>
-          <div className={styles.spotifyPlaylistEditorEntry}>
-            <span className={styles.spotifyPlaylistEditorSummary}>
+        <div className={setupImportStyles.spotifyImportContent}>
+          <div className={setupImportStyles.spotifyPlaylistEditorEntry}>
+            <span className={setupImportStyles.spotifyPlaylistEditorSummary}>
               {isImported && importPhase !== "error"
                 ? t("lobby.spotify.tracksQueued", {
                     count: currentSettings.importedTrackCount,
                   })
                 : t("lobby.spotify.tracksQueuedEmpty")}
             </span>
-            <div className={styles.spotifyPlaylistEditorActions}>
+            <div className={setupImportStyles.spotifyPlaylistEditorActions}>
               <ActionButton
-                className={styles.spotifyPlaylistEditorBtn}
+                className={setupImportStyles.spotifyPlaylistEditorBtn}
                 disabled={!isImported || isImporting}
                 onClick={openEditModal}
                 type="button"
@@ -147,7 +152,7 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
                 {t("lobby.spotify.editPlaylist")}
               </ActionButton>
               <ActionButton
-                className={styles.spotifyPlaylistEditorBtn}
+                className={setupImportStyles.spotifyPlaylistEditorBtn}
                 disabled={!isImported || isImporting}
                 onClick={saveCurrentPlaylist}
                 type="button"
@@ -156,7 +161,7 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
                 {t("lobby.spotify.savePlaylist")}
               </ActionButton>
               <ActionButton
-                className={`${styles.spotifyPlaylistEditorBtn} ${styles.spotifyPlaylistClearBtn}`}
+                className={`${setupImportStyles.spotifyPlaylistEditorBtn} ${setupImportStyles.spotifyPlaylistClearBtn}`}
                 disabled={!isImported || isImporting}
                 onClick={clearCurrentPlaylist}
                 type="button"
@@ -168,8 +173,8 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
           </div>
 
           {isImported && importPhase !== "error" ? (
-            <div className={styles.spotifySongsReady}>
-              <span className={styles.spotifySongsReadyDot} />
+            <div className={setupShellStyles.spotifySongsReady}>
+              <span className={setupShellStyles.spotifySongsReadyDot} />
               <span>
                 {t("lobby.spotify.tracksQueued", {
                   count: currentSettings.importedTrackCount,
@@ -178,7 +183,7 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
             </div>
           ) : null}
 
-          <div className={styles.spotifyImportRow}>
+          <div className={setupImportStyles.spotifyImportRow}>
             <TextInput
               disabled={isImporting || isPlaylistSearching}
               onChange={(e) => {
@@ -195,7 +200,7 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
               value={playlistUrl}
             />
             <ActionButton
-              className={styles.spotifyImportBtn}
+              className={setupImportStyles.spotifyImportBtn}
               disabled={!playlistUrl.trim() || isImporting || isPlaylistSearching}
               onClick={playlistImportAction === "import" ? importPlaylist : searchSpotifyPlaylists}
               type="button"
@@ -212,13 +217,13 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
           </div>
 
           {playlistSearchPhase === "error" && playlistSearchError ? (
-            <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
+            <p className={`${sharedStyles.spotifyStatusLine} ${sharedStyles.spotifyStatusError}`}>
               {playlistSearchError}
             </p>
           ) : null}
 
           {playlistSearchResults.length > 0 ? (
-            <div className={styles.spotifyImportSearchResults}>
+            <div className={setupImportStyles.spotifyImportSearchResults}>
               {playlistSearchResults.map((playlist) => (
                 <SpotifyImportPlaylistResultRow
                   key={playlist.id}
@@ -230,23 +235,23 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
           ) : null}
 
           {importPhase === "error" && importError ? (
-            <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
+            <p className={`${sharedStyles.spotifyStatusLine} ${sharedStyles.spotifyStatusError}`}>
               {importError}
             </p>
           ) : null}
 
           {isImported && importPhase !== "error" && !isImporting ? (
             isOverwritePromptActive ? (
-              <div className={styles.savedPlaylistOverwriteRow}>
-                <p className={styles.savedPlaylistOverwriteHint}>
+              <div className={setupImportStyles.savedPlaylistOverwriteRow}>
+                <p className={setupImportStyles.savedPlaylistOverwriteHint}>
                   {t("lobby.spotify.overwriteHint", {
                     name:
                       savedPlaylistItems.find((p) => p.id === loadedSavedPlaylistId)?.name ?? "",
                   })}
                 </p>
-                <div className={styles.savedPlaylistOverwriteActions}>
+                <div className={setupImportStyles.savedPlaylistOverwriteActions}>
                   <ActionButton
-                    className={styles.spotifyEditBtn}
+                    className={setupImportStyles.spotifyEditBtn}
                     onClick={confirmOverwrite}
                     type="button"
                     variant="neutral"
@@ -254,7 +259,7 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
                     {t("lobby.spotify.overwritePlaylist")}
                   </ActionButton>
                   <ActionButton
-                    className={styles.spotifyEditBtn}
+                    className={setupImportStyles.spotifyEditBtn}
                     onClick={switchToSaveAsNew}
                     type="button"
                     variant="neutral"
@@ -262,7 +267,7 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
                     {t("lobby.spotify.saveAsNew")}
                   </ActionButton>
                   <ActionButton
-                    className={styles.spotifyEditBtn}
+                    className={setupImportStyles.spotifyEditBtn}
                     onClick={cancelSavePlaylist}
                     type="button"
                     variant="neutral"
@@ -272,8 +277,8 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
                 </div>
               </div>
             ) : isSavingWithName ? (
-              <div className={styles.savedPlaylistNameGroup}>
-                <div className={styles.savedPlaylistNameRow}>
+              <div className={setupImportStyles.savedPlaylistNameGroup}>
+                <div className={setupImportStyles.savedPlaylistNameRow}>
                   <TextInput
                     autoFocus
                     onChange={(e) => setSaveName(e.target.value)}
@@ -285,7 +290,7 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
                     value={saveName}
                   />
                   <ActionButton
-                    className={styles.savedPlaylistNameConfirm}
+                    className={setupImportStyles.savedPlaylistNameConfirm}
                     onClick={confirmSavePlaylist}
                     type="button"
                     variant="neutral"
@@ -293,7 +298,7 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
                     {t("lobby.spotify.confirmSave")}
                   </ActionButton>
                   <ActionButton
-                    className={styles.savedPlaylistNameCancel}
+                    className={setupImportStyles.savedPlaylistNameCancel}
                     onClick={cancelSavePlaylist}
                     type="button"
                     variant="neutral"
@@ -302,7 +307,9 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
                   </ActionButton>
                 </div>
                 {saveNameError ? (
-                  <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
+                  <p
+                    className={`${sharedStyles.spotifyStatusLine} ${sharedStyles.spotifyStatusError}`}
+                  >
                     {saveNameError}
                   </p>
                 ) : null}
@@ -311,9 +318,9 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
           ) : null}
 
           {savedPlaylistItems.length > 0 ? (
-            <div className={styles.savedPlaylistPanel}>
-              <div className={styles.savedPlaylistField}>
-                <span className={styles.savedPlaylistLabel}>
+            <div className={setupImportStyles.savedPlaylistPanel}>
+              <div className={setupImportStyles.savedPlaylistField}>
+                <span className={setupImportStyles.savedPlaylistLabel}>
                   {t("lobby.spotify.savedPlaylistSelectLabel")}
                 </span>
                 <AdaptiveSelect
@@ -326,8 +333,8 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
 
               {selectedSavedPlaylistId ? (
                 renamingPlaylistId === selectedSavedPlaylistId ? (
-                  <div className={styles.savedPlaylistNameGroup}>
-                    <div className={styles.savedPlaylistNameRow}>
+                  <div className={setupImportStyles.savedPlaylistNameGroup}>
+                    <div className={setupImportStyles.savedPlaylistNameRow}>
                       <TextInput
                         autoFocus
                         onChange={(e) => setRenameInputValue(e.target.value)}
@@ -339,7 +346,7 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
                         value={renameInputValue}
                       />
                       <ActionButton
-                        className={styles.savedPlaylistNameConfirm}
+                        className={setupImportStyles.savedPlaylistNameConfirm}
                         onClick={confirmRenamePlaylist}
                         type="button"
                         variant="neutral"
@@ -347,7 +354,7 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
                         {t("lobby.spotify.confirmRename")}
                       </ActionButton>
                       <ActionButton
-                        className={styles.savedPlaylistNameCancel}
+                        className={setupImportStyles.savedPlaylistNameCancel}
                         onClick={cancelRenamePlaylist}
                         type="button"
                         variant="neutral"
@@ -356,13 +363,15 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
                       </ActionButton>
                     </div>
                     {renameError ? (
-                      <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
+                      <p
+                        className={`${sharedStyles.spotifyStatusLine} ${sharedStyles.spotifyStatusError}`}
+                      >
                         {renameError}
                       </p>
                     ) : null}
                   </div>
                 ) : (
-                  <div className={styles.savedPlaylistActions}>
+                  <div className={setupImportStyles.savedPlaylistActions}>
                     <ActionButton
                       onClick={() => startRenamePlaylist(selectedSavedPlaylistId)}
                       type="button"
@@ -384,7 +393,7 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
           ) : null}
 
           {savedPlaylistMessage ? (
-            <p className={styles.spotifyStatusLine}>{savedPlaylistMessage}</p>
+            <p className={sharedStyles.spotifyStatusLine}>{savedPlaylistMessage}</p>
           ) : null}
         </div>
       ) : null}
@@ -413,20 +422,24 @@ function SpotifyImportPlaylistResultRow({
   playlist,
 }: SpotifyImportPlaylistResultRowProps) {
   return (
-    <button className={styles.spotifyImportSearchResultRow} onClick={onImport} type="button">
+    <button
+      className={setupImportStyles.spotifyImportSearchResultRow}
+      onClick={onImport}
+      type="button"
+    >
       {playlist.imageUrl ? (
         <img
           alt=""
-          className={styles.spotifySmartResultImage}
+          className={discoveryStyles.spotifySmartResultImage}
           loading="lazy"
           src={playlist.imageUrl}
         />
       ) : (
-        <span className={styles.spotifyPlaylistImageFallback}>
+        <span className={discoveryStyles.spotifyPlaylistImageFallback}>
           <SpotifyLogo />
         </span>
       )}
-      <span className={styles.spotifyPlaylistMeta}>
+      <span className={discoveryStyles.spotifyPlaylistMeta}>
         <strong>{playlist.name}</strong>
         <span>
           {playlist.ownerName} · {playlist.trackCount} tracks

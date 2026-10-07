@@ -11,7 +11,7 @@ import {
   createCorrectPlacementShellContentVariants,
   useReducedMotionPreference,
 } from "../../../features/motion";
-import styles from "./timelineStyles";
+import styles from "./timelineCelebration.module.css";
 
 interface CorrectPlacementCelebrationProps {
   children: ReactNode;

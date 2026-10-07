@@ -5,7 +5,7 @@ import { useI18n } from "../../../../features/i18n";
 import { SelectableArtwork, SelectableArtworkImage } from "../SelectableArtwork";
 import { CheckIcon, PlusIcon, SpotifyLogo, TrashIcon } from "./spotifySetupIcons";
 import { SMART_SEARCH_SWIPE_REVEAL_WIDTH, SMART_SEARCH_SWIPE_THRESHOLD } from "./spotifySetupTypes";
-import styles from "./spotifyStyles";
+import styles from "./spotifyDiscovery.module.css";
 
 interface SpotifySmartSearchResultRowProps {
   isAdded: boolean;

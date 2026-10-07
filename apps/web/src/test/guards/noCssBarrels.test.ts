@@ -6,17 +6,9 @@ import { expectRatchet, listTypeScriptSources } from "./cssSourceFiles";
  * splitting (it is why the Lobby CSS chunk is 69 kB) and silently resolves duplicate class
  * names by import order.
  *
- * This is a ratchet. As `docs/plans/2026-09-stability-performance/02-bundle-and-startup.md`
- * phase 4 dissolves each barrel, remove it from the allowlist. The list must reach empty.
+ * The six original barrels were dissolved in `05` WP D4 (2026-10-07); the allowlist stays empty.
  */
-const PENDING_MIGRATION = [
-  "pages/GamePage/components/gamePageActionPanelsStyles.ts",
-  "pages/GamePage/components/timelineStyles.ts",
-  "pages/GamePage/gamePageStyles.ts",
-  "pages/LobbyPage/components/playlistEditModalStyles.ts",
-  "pages/LobbyPage/components/spotify/spotifyStyles.ts",
-  "pages/LobbyPage/lobbyPageStyles.ts",
-] as const;
+const PENDING_MIGRATION = [] as const;
 
 const CSS_MODULE_IMPORT = /import\s+(\w+)\s+from\s+"[^"]*\.module\.css"/g;
 const SPREAD_OF_STYLES = /\.\.\.\s*(\w+)/g;

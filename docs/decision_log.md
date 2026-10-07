@@ -12,6 +12,24 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Animation feel over the motion budget (2026-10-07)
+
+- **The animations shortened or removed in `05` C7 are restored**: the TT settings and
+  game-menu height slides, the playlist row slide after a removal, the Lobby status-dot pulse
+  and Premium sheen, the looping wrong-placement pulse, the challenge border and the
+  correct-placement, celebration and token-flyout timings. Kept from C7: the 280 ms reorder.
+  Why: the owner found every one of them worse and saw no performance problem with the
+  originals. The 500 ms ceiling now applies to plain state transitions; longer motion is an
+  allowlisted owner choice (`00-index.md` decision 19). The placement popup was redesigned
+  (badge, drawn mark, rings, confetti or shards, word-by-word message).
+
+### Largest-CSS gate (2026-10-07)
+
+- **The largest stylesheet may be up to 42 kB** (was 20 kB, `05` §2.1). Why: Vite emits one
+  stylesheet per JS chunk, so after the barrels were dissolved the remaining size is styles that
+  load together on the Game and Lobby routes; splitting them adds requests without saving bytes.
+  Host-only editors load lazily instead (`05` D4; `00-index.md` decision 18).
+
 ### Deck-exhaustion discards (2026-10-07)
 
 - **Every card that leaves play without reaching a timeline is discarded**, not only wrong

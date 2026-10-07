@@ -2,7 +2,7 @@ import { useState } from "react";
 import { FirstRunHint } from "../../../features/hints/FirstRunHint";
 import { useI18n } from "../../../features/i18n";
 import { Button } from "../../../features/ui/primitives";
-import styles from "../lobbyPageStyles";
+import styles from "../lobbySettings.module.css";
 import type { StartGameActionStatus } from "../LobbyPage.types";
 
 interface LobbyHostStartPanelProps {

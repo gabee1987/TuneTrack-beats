@@ -137,8 +137,8 @@ a component.
 
 ## 6. Layering
 
-One scale, one meaning per layer. **(target — the extended scale and the migration are
-Doc 06 section 2 of the live plan.)**
+One scale, one meaning per layer, defined in `zIndexPrimitives` and emitted in `globals.css`
+(shipped 2026-10-07, plan `05` E1).
 
 | Token               | Value | Layer                                                  |
 | ------------------- | ----- | ------------------------------------------------------ |
@@ -160,7 +160,7 @@ Doc 06 section 2 of the live plan.)**
 
 Integers `-1` to `9` for stacking **within** a single component, so local stacking can
 never escape its layer. Any other literal is a defect, enforced by
-`apps/web/src/test/guards/zIndexScale.test.ts` (**target**).
+`apps/web/src/test/guards/zIndexScale.test.ts`.
 
 Overlay components never set their own `z-index`. The overlay host assigns it from the
 stack depth and the entry kind. **(target)** No overlay host exists yet; until it does, overlays

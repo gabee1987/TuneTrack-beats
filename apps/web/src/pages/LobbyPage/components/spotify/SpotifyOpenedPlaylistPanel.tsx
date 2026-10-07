@@ -7,7 +7,9 @@ import { PlaylistTrackDetailsSheet } from "../PlaylistTrackDetailsSheet";
 import { BackIcon, PlusIcon, ReplaceIcon, SpotifyLogo } from "./spotifySetupIcons";
 import { SpotifyOpenedTrackRow } from "./SpotifyOpenedTrackRow";
 import type { OpenedSpotifyPlaylist } from "../../hooks/spotify/lobbySpotify.types";
-import styles from "./spotifyStyles";
+import panelsStyles from "./spotifyPanels.module.css";
+import sharedStyles from "./spotifyShared.module.css";
+import discoveryStyles from "./spotifyDiscovery.module.css";
 
 interface SpotifyOpenedPlaylistPanelProps {
   onAddAll: () => void;
@@ -101,11 +103,11 @@ export function SpotifyOpenedPlaylistPanel({
 
   if (phase === "loading") {
     return (
-      <section className={styles.spotifyOpenedPlaylistPanel}>
-        <button className={styles.spotifyReviewBackBtn} onClick={onBack} type="button">
+      <section className={panelsStyles.spotifyOpenedPlaylistPanel}>
+        <button className={panelsStyles.spotifyReviewBackBtn} onClick={onBack} type="button">
           {t("lobby.spotify.builder.backToSearch")}
         </button>
-        <div className={styles.spotifyLoadingState}>
+        <div className={panelsStyles.spotifyLoadingState}>
           {t("lobby.spotify.builder.openingPlaylist")}
         </div>
       </section>
@@ -114,11 +116,11 @@ export function SpotifyOpenedPlaylistPanel({
 
   if (phase === "error") {
     return (
-      <section className={styles.spotifyOpenedPlaylistPanel}>
-        <button className={styles.spotifyReviewBackBtn} onClick={onBack} type="button">
+      <section className={panelsStyles.spotifyOpenedPlaylistPanel}>
+        <button className={panelsStyles.spotifyReviewBackBtn} onClick={onBack} type="button">
           {t("lobby.spotify.builder.backToSearch")}
         </button>
-        <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
+        <p className={`${sharedStyles.spotifyStatusLine} ${sharedStyles.spotifyStatusError}`}>
           {playlistError ?? t("lobby.spotify.builder.openPlaylistFailed")}
         </p>
       </section>
@@ -128,24 +130,24 @@ export function SpotifyOpenedPlaylistPanel({
   if (!playlist) return null;
 
   return (
-    <section className={styles.spotifyOpenedPlaylistPanel}>
-      <div className={styles.spotifyOpenedPlaylistHeader}>
+    <section className={panelsStyles.spotifyOpenedPlaylistPanel}>
+      <div className={panelsStyles.spotifyOpenedPlaylistHeader}>
         <button
           aria-label={t("lobby.spotify.builder.backToSearch")}
-          className={styles.spotifyOpenedPlaylistIconBtn}
+          className={panelsStyles.spotifyOpenedPlaylistIconBtn}
           onClick={onBack}
           type="button"
         >
           <BackIcon />
         </button>
         {playlist.imageUrl ? (
-          <img alt="" className={styles.spotifyOpenedPlaylistImage} src={playlist.imageUrl} />
+          <img alt="" className={panelsStyles.spotifyOpenedPlaylistImage} src={playlist.imageUrl} />
         ) : (
-          <span className={styles.spotifyPlaylistImageFallback}>
+          <span className={discoveryStyles.spotifyPlaylistImageFallback}>
             <SpotifyLogo />
           </span>
         )}
-        <span className={styles.spotifyOpenedPlaylistMeta}>
+        <span className={panelsStyles.spotifyOpenedPlaylistMeta}>
           <strong>{playlist.title}</strong>
           <span>{playlist.subtitle}</span>
           {playlist.filteredCount > 0 ? (
@@ -154,10 +156,10 @@ export function SpotifyOpenedPlaylistPanel({
             </span>
           ) : null}
         </span>
-        <div className={styles.spotifyOpenedPlaylistHeaderActions}>
+        <div className={panelsStyles.spotifyOpenedPlaylistHeaderActions}>
           <button
             aria-label={t("lobby.spotify.builder.addAll")}
-            className={styles.spotifyOpenedPlaylistIconBtn}
+            className={panelsStyles.spotifyOpenedPlaylistIconBtn}
             disabled={tracks.length === 0 || isApplying}
             onClick={onAddAll}
             title={t("lobby.spotify.builder.addAll")}
@@ -167,7 +169,7 @@ export function SpotifyOpenedPlaylistPanel({
           </button>
           <button
             aria-label={t("lobby.spotify.builder.replaceQueue")}
-            className={styles.spotifyOpenedPlaylistIconBtn}
+            className={panelsStyles.spotifyOpenedPlaylistIconBtn}
             disabled={tracks.length === 0 || isApplying}
             onClick={onReplace}
             title={t("lobby.spotify.builder.replaceQueue")}
@@ -180,8 +182,8 @@ export function SpotifyOpenedPlaylistPanel({
 
       {tracks.length > 0 ? (
         <div
-          className={`${styles.spotifyOpenedTrackList} ${
-            selectedTrackIds.size > 0 ? styles.spotifySmartResultListWithAction : ""
+          className={`${panelsStyles.spotifyOpenedTrackList} ${
+            selectedTrackIds.size > 0 ? discoveryStyles.spotifySmartResultListWithAction : ""
           }`}
         >
           {tracks.map((track) => (
@@ -198,19 +200,21 @@ export function SpotifyOpenedPlaylistPanel({
           ))}
         </div>
       ) : (
-        <p className={styles.spotifyEmptyState}>{t("lobby.spotify.builder.playlistNoTracks")}</p>
+        <p className={panelsStyles.spotifyEmptyState}>
+          {t("lobby.spotify.builder.playlistNoTracks")}
+        </p>
       )}
 
       {selectedTrackIds.size > 0 ? (
         <m.div
           animate={{ opacity: 1, y: 0 }}
-          className={styles.spotifySearchSelectedAction}
+          className={discoveryStyles.spotifySearchSelectedAction}
           initial={{ opacity: 0, y: 18 }}
           transition={createStandardTransition(reduceMotion)}
         >
           {selectedUnqueuedTracks.length > 0 ? (
             <ActionButton
-              className={styles.spotifySearchAddSelectedBtn}
+              className={discoveryStyles.spotifySearchAddSelectedBtn}
               disabled={isApplying}
               onClick={handleAddSelected}
               type="button"
@@ -223,7 +227,7 @@ export function SpotifyOpenedPlaylistPanel({
           ) : null}
           {selectedQueuedTracks.length > 0 ? (
             <ActionButton
-              className={`${styles.spotifySearchAddSelectedBtn} ${styles.spotifySearchRemoveSelectedBtn}`}
+              className={`${discoveryStyles.spotifySearchAddSelectedBtn} ${discoveryStyles.spotifySearchRemoveSelectedBtn}`}
               disabled={isApplying}
               onClick={handleRemoveSelected}
               type="button"

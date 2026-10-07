@@ -18,7 +18,7 @@ import type {
   PlaceChallengeActionStatus,
   ResolveChallengeWindowActionStatus,
 } from "../GamePage.types";
-import styles from "./gamePageActionPanelsStyles";
+import styles from "./gamePageActionPanelsChallenge.module.css";
 import {
   ActionDock,
   PrimaryActionButton,

@@ -29,7 +29,7 @@ import {
   getChallengeWindowOptionValueMap,
   getChallengeWindowSelectValue,
 } from "../lobbySettingsSelectors";
-import styles from "../lobbyPageStyles";
+import styles from "../lobbySettings.module.css";
 
 interface LobbyHostTtSettingsProps {
   currentSettings: PublicRoomSettings;

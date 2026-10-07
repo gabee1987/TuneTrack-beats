@@ -1,6 +1,6 @@
 # 14 — Navigation and Overlay System
 
-> **Status (2026-10-06):** Phase 2 §3.2 (push/replace semantics), Phase 4 (B1, song-editor layering) and Phase 5 (B5, settings flicker) shipped; the browser and Android back button closes settings, Music Setup and the nested playlist/track editors through same-path router state (E13, E14). Open: the z-index scale and its guard (Phase 1), the transition guard and route order (Phase 2 §3.1, §3.3), the overlay host and the four overlays still outside history (Phase 3), the overlay contract (Phase 6).
+> **Status (2026-10-07):** Phase 1 (z-index scale and guard, `05` E1), Phase 2 §3.2 (push/replace semantics), Phase 4 (B1, song-editor layering) and Phase 5 (B5, settings flicker) shipped; the browser and Android back button closes settings, Music Setup and the nested playlist/track editors through same-path router state (E13, E14). Open: the transition guard and route order (Phase 2 §3.1, §3.3), the overlay host and the four overlays still outside history (Phase 3), the overlay contract (Phase 6).
 > **Folded from** `docs/plans/2026-09-stability-performance/06-navigation-and-overlays.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
 >
 > **Binding budgets, order and corrections (2026-10-07):** `05-performance-and-robustness-plan.md` §2 (budgets), §8 (rollout order), §9 (corrections to this document). Where they differ, `05` wins.
@@ -42,84 +42,14 @@ playlist editor and the track editor (`pages/LobbyPage/hooks/playlistEditorHisto
 `Dialog` still ignore it (F-06). No overlay handles Escape, moves or restores focus, or
 locks body scroll.
 
-## 2. Phase 1 — One z-index scale, enforced · **S2** · open
+## 2. Phase 1 — One z-index scale, enforced · **S2** · shipped
 
-**Review finding:** F-05.
-
-### 2.1 Extend the token scale to cover reality
-
-`zIndexPrimitives` in `apps/web/src/features/theme/tokens/primitives.ts` still ends at
-`celebration: 700` (base, sticky, nav, overlay, sheet, dialog, toast, celebration).
-`apps/web/src/app/styles/globals.css` additionally declares `--z-hint: 450`, which is not
-in the primitives and sits below `--z-dialog` and the settings sheet (1200), so a first-run
-hint can render under an open settings sheet (F-05). The scale needs a layer for each real
-stacking context, with gaps for in-component stacking:
-
-| Token               | Value | Purpose                                                       |
-| ------------------- | ----- | ------------------------------------------------------------- |
-| `--z-base`          | 0     | Page content                                                  |
-| `--z-raised`        | 10    | Cards, chips, elevated surfaces within a page                 |
-| `--z-sticky`        | 100   | Sticky headers, scroll fades                                  |
-| `--z-nav`           | 200   | Bottom docks, action bars                                     |
-| `--z-overlay`       | 300   | Scrims below sheets                                           |
-| `--z-sheet`         | 400   | Bottom sheets, side sheets                                    |
-| `--z-sheet-nested`  | 450   | A sheet opened from a sheet (the structural B1 fix)           |
-| `--z-dialog`        | 500   | Modal dialogs                                                 |
-| `--z-dialog-nested` | 550   | Confirmation opened from a dialog                             |
-| `--z-hint`          | 600   | Onboarding coach marks (`18-onboarding-hint-system.md`)       |
-| `--z-toast`         | 700   | Toasts and banners                                            |
-| `--z-celebration`   | 800   | Win/celebration effects                                       |
-| `--z-blocking`      | 900   | App loading overlay, recovery modal — nothing may cover these |
-
-Within a component, stacking must stay in the 1-9 range so it can never escape its layer.
-Hint tokens live in the primitives, not as a loose CSS declaration.
-
-### 2.2 Migrate every raw literal
-
-Eighteen `z-index` declarations outside `[-1, 9]` remain in fourteen CSS modules
-(2026-10-06 count: 1600 ×3, 1500, 1400 ×2, 1200 ×2, 1100 ×2, 880 ×2, 5000, 130, 30, 20, 12,
-10). Migrate mechanically, file by file, mapping each to the closest token. Values 1-9 that
-are local stacking inside a component stay as literals — that is legitimate and should be
-documented as the one exception.
-
-Remappings:
-
-| Location                                          | Current | Becomes                                                 |
-| ------------------------------------------------- | ------- | ------------------------------------------------------- |
-| `playlistEditChrome.module.css` `.overlay`        | 1200    | `--z-sheet`                                             |
-| `playlistEditChrome.module.css` `.detailsOverlay` | 1400    | `--z-sheet-nested` (already `position: fixed` since B1) |
-| `playlistEditChrome.module.css` `.header`         | 4       | 4 (local, inside the sheet)                             |
-| `gamePageActionPanelsDock.module.css`             | 5000    | `--z-nav`                                               |
-| `gamePageActionPanelsChallenge.module.css`        | 880 ×2  | `--z-nav`                                               |
-| `SongInfoModal.module.css`                        | 1100    | `--z-dialog`                                            |
-| `GamePageReconnectToast.module.css`               | 1100    | `--z-toast`                                             |
-| `AppShellMenu.module.css` `.menuOverlay`          | 1200    | `--z-sheet`                                             |
-| `gamePageMenu.module.css` (kick confirm)          | 1600    | `--z-dialog-nested`                                     |
-| `RoomResetModal.module.css`                       | 1500    | `--z-blocking`                                          |
-| `AppLoadingOverlay.module.css`                    | 1600    | `--z-blocking`                                          |
-| `SettingField.module.css`                         | 1600    | `--z-sheet-nested`                                      |
-| `spotifySetupShell.module.css`                    | 130     | `--z-sheet`                                             |
-| `timelinePanelShell.module.css`                   | 1400    | `--z-raised` (it is in-page content, not an overlay)    |
-| `timelineCelebration.module.css`                  | 30      | `--z-celebration`                                       |
-| `gamePageChrome.module.css`                       | 20      | `--z-raised` or a local 1-9 value, decide on inspection |
-| `HomePageMobile.module.css`                       | 12, 10  | `--z-raised` or local 1-9 values, decide on inspection  |
-
-### 2.3 Enforcement
-
-Add a guard test so this cannot regress: a Vitest test in `apps/web/src/test/guards/`
-that globs every `*.module.css`, extracts `z-index` declarations and asserts each is either
-a `--z-*` var or in `[-1, 9]`. The sibling guards `noHardcodedColors.test.ts` and
-`noCssBarrels.test.ts` already exist there with pending-migration allowlists and are the
-pattern to follow; `zIndexScale.test.ts` is still absent (T-12). Write it **before** the
-migration so it starts red and turns green as files are converted. Stylelint is not
-wanted; the test keeps the toolchain unchanged.
-
-### Acceptance
-
-- [ ] `zIndexScale.test.ts` passes over all CSS modules with an empty allowlist.
-- [ ] `globals.css` declares exactly the tokens in §2.1, generated from `zIndexPrimitives`.
-- [ ] Visual check of every overlay in the §1 inventory, in both themes and both
-      layout modes, confirming correct stacking.
+**Shipped 2026-10-07 (`05` E1).** `zIndexPrimitives` and `globals.css` carry the §2.1 scale;
+all eighteen literals are migrated. The fly-to-mine card and the token-spend flyout use
+`--z-celebration` and the SettingField info overlay `--z-dialog-nested`, not the §2.2 values
+(`05` §9). The home toast and menu anchor use local 3 and 2. Proof: `zIndexScale.test.ts`
+(every CSS module; `globals.css` equals the primitives). The visual check of every overlay is a
+manual device check.
 
 ## 3. Phase 2 — Fix the page-transition layer · **S1** · partially shipped
 

@@ -5,7 +5,8 @@ import { ActionButton } from "../../../features/ui/ActionButton";
 import { SelectInput } from "../../../features/ui/SelectInput";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import { AdaptiveSelectSheet } from "./AdaptiveSelectSheet";
-import styles from "../lobbyPageStyles";
+import settingsStyles from "../lobbySettings.module.css";
+import sheetsStyles from "../lobbySheets.module.css";
 
 export interface AdaptiveSelectOption {
   label: string;
@@ -45,7 +46,7 @@ export function AdaptiveSelect({
     return (
       <SelectInput
         aria-label={label}
-        className={styles.selectInput}
+        className={settingsStyles.selectInput}
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
         value={value}
@@ -62,14 +63,14 @@ export function AdaptiveSelect({
   return (
     <>
       <ActionButton
-        className={styles.mobileSelectButton}
+        className={sheetsStyles.mobileSelectButton}
         disabled={disabled}
         onClick={() => setIsOpen(true)}
         type="button"
         variant="neutral"
       >
-        <span className={styles.mobileSelectLabel}>{selectedOption?.label}</span>
-        <span className={styles.mobileSelectChevron}>{t("lobby.select.select")}</span>
+        <span className={sheetsStyles.mobileSelectLabel}>{selectedOption?.label}</span>
+        <span className={sheetsStyles.mobileSelectChevron}>{t("lobby.select.select")}</span>
       </ActionButton>
 
       <MotionPresence>

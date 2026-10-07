@@ -54,7 +54,7 @@
 .spotifySetupOverlay {
   position: fixed;
   inset: 0;
-  z-index: 130;
+  z-index: var(--z-sheet);
   padding: 18px;
   background: color-mix(in srgb, var(--color-overlay, rgba(3, 4, 12, 0.72)) 92%, black 8%);
   display: grid;

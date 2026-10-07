@@ -19,7 +19,8 @@ import {
 import { usePlaylistEditor, type SortField } from "../hooks/usePlaylistEditor";
 import { PlaylistTrackDetailsSheet } from "./PlaylistTrackDetailsSheet";
 import { PlaylistTrackList } from "./PlaylistTrackList";
-import styles from "./playlistEditModalStyles";
+import chromeStyles from "./playlistEditChrome.module.css";
+import listStyles from "./playlistEditList.module.css";
 
 interface PlaylistEditModalProps {
   isOpen: boolean;
@@ -105,7 +106,7 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
   return createPortal(
     <m.div
       animate="animate"
-      className={styles.overlay}
+      className={chromeStyles.overlay}
       initial={false}
       onClick={closePlaylistEditor}
       style={{ pointerEvents: "auto" }}
@@ -116,23 +117,23 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
         animate="animate"
         aria-label={t("lobby.playlist.editLabel")}
         aria-modal="true"
-        className={styles.sheet}
+        className={chromeStyles.sheet}
         initial={false}
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         transition={createStandardTransition(reduceMotion)}
         variants={createSheetMotion(reduceMotion)}
       >
-        <div className={styles.header}>
-          <div className={styles.headerLeft}>
-            <h2 className={styles.title}>{t("lobby.playlist.title")}</h2>
+        <div className={chromeStyles.header}>
+          <div className={chromeStyles.headerLeft}>
+            <h2 className={chromeStyles.title}>{t("lobby.playlist.title")}</h2>
             {!isLoading && (
-              <span className={styles.trackCount}>
+              <span className={chromeStyles.trackCount}>
                 {t("lobby.playlist.trackCount", { count: tracks.length })}
               </span>
             )}
           </div>
-          <div className={styles.headerActions}>
+          <div className={chromeStyles.headerActions}>
             <CloseIconButton ariaLabel={t("lobby.playlist.close")} onClick={closePlaylistEditor} />
           </div>
         </div>
@@ -140,12 +141,12 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
         <PlaylistSortBar activeField={sortField} direction={sortDir} onToggleSort={toggleSort} />
 
         {isLoading ? (
-          <div className={styles.loadingState}>
-            <div className={styles.loadingSpinner} />
+          <div className={listStyles.loadingState}>
+            <div className={listStyles.loadingSpinner} />
             <span>{t("lobby.playlist.loading")}</span>
           </div>
         ) : tracks.length === 0 ? (
-          <div className={styles.emptyState}>{t("lobby.playlist.empty")}</div>
+          <div className={listStyles.emptyState}>{t("lobby.playlist.empty")}</div>
         ) : (
           <PlaylistTrackList
             onOpenTrack={(track) => openTrackEditor(track.id)}
@@ -157,9 +158,9 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
         )}
 
         {selectedIds.size > 0 && (
-          <div className={styles.batchToolbar}>
+          <div className={listStyles.batchToolbar}>
             <ActionButton
-              className={styles.batchDeleteBtn}
+              className={listStyles.batchDeleteBtn}
               onClick={removeSelected}
               type="button"
               variant="danger"
@@ -202,18 +203,18 @@ function PlaylistSortBar({ activeField, direction, onToggleSort }: PlaylistSortB
   const { t } = useI18n();
 
   return (
-    <div className={styles.sortBar}>
-      <span className={styles.sortLabel}>{t("lobby.playlist.sort")}</span>
+    <div className={listStyles.sortBar}>
+      <span className={listStyles.sortLabel}>{t("lobby.playlist.sort")}</span>
       {SORT_FIELDS.map((field) => (
         <button
           key={field}
-          className={`${styles.sortChip} ${activeField === field ? styles.sortChipActive : ""}`}
+          className={`${listStyles.sortChip} ${activeField === field ? listStyles.sortChipActive : ""}`}
           onClick={() => onToggleSort(field)}
           type="button"
         >
           {getSortLabel(t, field)}
           {activeField === field && (
-            <span className={styles.sortArrow}>{direction === "asc" ? "↑" : "↓"}</span>
+            <span className={listStyles.sortArrow}>{direction === "asc" ? "↑" : "↓"}</span>
           )}
         </button>
       ))}

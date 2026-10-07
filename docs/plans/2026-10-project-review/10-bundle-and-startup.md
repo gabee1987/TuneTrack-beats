@@ -1,7 +1,7 @@
 # 10 — Bundle Size and Startup Cost
 
-> **Status (2026-10-07):** Phases 1–3 shipped 2026-10-07 (`05` D1–D3); Phases 4–5 open (six CSS
-> barrels, no `build.target`). Phase 6 shipped on 2026-09-17. §9 shipped on 2026-10-07 as `05` D0
+> **Status (2026-10-07):** Phases 1–4 shipped 2026-10-07 (`05` D1–D4); Phase 5 shipped except
+> §7.4 preloads (`05` D5). Phase 6 shipped on 2026-09-17. §9 shipped on 2026-10-07 as `05` D0
 > (`measure:bundle`, `bundle-baseline.md`).
 > **Folded from** `docs/plans/2026-09-stability-performance/02-bundle-and-startup.md` on
 > 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
@@ -92,39 +92,10 @@ catch key typos at build time.
 
 ## 6. Phase 4 — Dissolve the CSS-module barrels
 
-**Finding:** F-14. **Expected saving:** the two large CSS chunks split into per-component
-sheets; each component loads only its own styles.
-
-### Steps
-
-For each of the six barrels:
-
-1. Delete the barrel module.
-2. In each consuming component, import the specific CSS modules it actually uses, e.g.
-   `TimelineSortableItem.tsx` imports `timelineCards.module.css` only; `TimelinePanel.tsx`
-   imports `timelinePanelShell.module.css` plus whatever it genuinely references.
-3. Where a component turns out to reference classes from three or four sheets, that is a
-   signal the component is doing too much — record it, but do **not** refactor the
-   component in this phase. Keep the change mechanical.
-4. Where two components legitimately share a class, move that class into a small shared
-   sheet (e.g. `timelineShared.module.css`) rather than re-creating a barrel.
-
-**Order:** start with `gamePageActionPanelsStyles.ts` (2 modules, smallest blast radius),
-then `playlistEditModalStyles.ts`, `timelineStyles.ts`, `gamePageStyles.ts`,
-`lobbyPageStyles.ts`, and finally `spotifyStyles.ts` (5 modules, largest win).
-
-**Guard:** the `noCssBarrels` guard test already exists with a pending-migration allowlist
-naming the six barrels. Remove each barrel from the allowlist in the same change that
-deletes it, so a reintroduced barrel fails the suite. The duplicate-class-name check from
-`19-testing-strategy.md` §4 remains the second line of defence.
-
-### Acceptance
-
-- [ ] No file under `apps/web/src` exports a spread-merged CSS-module object and the
-      `noCssBarrels` allowlist is empty.
-- [ ] Largest CSS chunk under 20 kB raw.
-- [ ] Visual regression pass on Lobby (all Spotify tabs), Playlist editor, Game page
-      (turn / challenge / reveal / finished), both themes, both layout modes.
+**Shipped 2026-10-07 (`05` D4).** The six barrels are deleted and each component imports the
+sheets it uses; the playlist editor became a lazy chunk. Largest CSS 68.8 → 40.3 kB; the
+20 kB gate became ≤ 42 kB (decision 18, `05` §9). Proof: `noCssBarrels.test.ts` with an empty
+allowlist, `measure:bundle`. The visual pass on Lobby, editor and Game is a manual check.
 
 ## 7. Phase 5 — Route and vendor chunk hygiene
 
@@ -145,25 +116,13 @@ deletes it, so a reintroduced barrel fails the suite. The duplicate-class-name c
 
 ### 7.2 Tighten `manualChunks`
 
-The current `manualChunks` function in `apps/web/vite.config.ts` is sound. Two additions:
-
-- Emit `vendor-zustand` separately from the catch-all `vendor` bucket so a zustand upgrade
-  does not invalidate unrelated code.
-- After Phase 2, remove the now-dead `zod` branch.
+**Shipped 2026-10-07 (`05` D2, D5).** `vendor-zustand` is its own chunk; the `zod` branch went
+with D2.
 
 ### 7.3 Production build flags
 
-Add to `apps/web/vite.config.ts`:
-
-- `build.target: "es2020"` — explicit rather than implicit, and safe for every browser
-  that can run the Web Playback SDK.
-- `esbuild.drop: ["debugger"]` and `esbuild.pure` for console methods, or an explicit
-  `drop: ["console"]` **only after** the logging in `useSpotifyPlaybackSdk` (14 `console.*`
-  calls, F-22) has been converted to a proper diagnostics channel
-  (`16-spotify-session-and-playback.md` §5). Dropping console output while it is the only
-  playback diagnostic would be a regression.
-- `build.reportCompressedSize: false` if build time becomes a nuisance; keep it on while
-  this programme is measuring.
+**`build.target: "es2020"` shipped 2026-10-07 (`05` D5).** Dropping `console` output waits
+for the playback diagnostics channel (`16` §5); `reportCompressedSize` stays on.
 
 ### 7.4 Preload the right things, at the right time
 
@@ -179,25 +138,14 @@ socket client. Extend it:
 
 ### 7.5 Service-worker caching strategy
 
-`vite-plugin-pwa` currently runs with defaults plus `registerType: "autoUpdate"`; F-25
-confirms there is still no `navigateFallbackDenylist` for `/api/`. For a party game where
-several phones open the app at once on a domestic connection, add an explicit `workbox`
-config:
-
-- precache the app shell and the active language catalogue;
-- a `CacheFirst` runtime rule for `/*.png` icons and `/logo.png`, `/crown.png`;
-- a `NetworkOnly` rule for `/socket.io/` and `/api/` so nothing realtime is ever served
-  from cache;
-- `cleanupOutdatedCaches: true`;
-- `navigateFallback` to `index.html` with `navigateFallbackDenylist` covering `/api/`.
-
-Note: album artwork comes from Spotify's CDN. Do **not** add a runtime cache rule for it
-without compliance review — caching third-party media locally changes what the app stores
-on a user's device.
+**Shipped 2026-10-07 (`05` D5).** Workbox: `cleanupOutdatedCaches`, `navigateFallback` to
+`index.html` with `/api/` and `/socket.io/` denied, `NetworkOnly` for both, `CacheFirst`
+(32 entries) for same-origin images only; the shell and both catalogue chunks are precached.
+Spotify artwork is not cached (third-party media; compliance review).
 
 ### Acceptance for Phase 5
 
-- [ ] Build flags explicit; no behaviour change.
+- [x] Build flags explicit; no behaviour change (`05` D5).
 - [ ] Service-worker rules verified: with the app offline, the shell loads and shows a
       clear offline state; with the app online, no socket or API response is ever a cache hit.
 

@@ -1,8 +1,7 @@
 # 11 — Runtime and Motion Performance
 
-> **Status (2026-10-07):** Phases 3, 4, 5 and 6 shipped as `05` C5, C6, C1 and C2, and the
-> §8 drag-move items as `05` C3; Phases 1 and 2 (row springs, reorder timing) are open, and no
-> `runtime-baseline.md` exists.
+> **Status (2026-10-07):** Phase 2 shipped as `05` C7 (Phase 1 reverted, decision 19), Phases 3–6 as C5, C6, C1 and C2,
+> and the §8 drag-move items as `05` C3. The S1/S2 device traces and `runtime-baseline.md` are open.
 > **Folded from** `docs/plans/2026-09-stability-performance/03-runtime-and-motion-performance.md`
 > on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
 > Addresses findings **F-04, F-08 – F-13, F-15** of `01-review-findings.md`. The old audit
@@ -44,66 +43,16 @@ number.
 
 ## 2. Phase 1 — Stop spring-animating virtualised rows
 
-**Finding:** F-15 (inline spring literal in `PlaylistTrackList.tsx`). **Scenario:** S1.
-**Expected effect:** the largest single scroll win.
-
-`apps/web/src/pages/LobbyPage/components/PlaylistTrackList.tsx` lines 38-58 currently
-gives every visible row a framer-motion spring driven by `virtualItem.start`. During a
-scroll, `start` changes on every tick, so each of roughly 15 visible rows runs an
-independent physics simulation, each writing a transform per frame through React.
-
-### Change
-
-- Render each row as a plain `<div>` positioned with
-  `style={{ transform: `translateY(${virtualItem.start}px)` }}`, plus the existing
-  `position: absolute; top: 0; left: 0; width: 100%`.
-- Keep `@tanstack/react-virtual` exactly as configured (`estimateSize: 68`,
-  `overscan: 10`, `getItemKey` by track id). The virtualiser is not the problem.
-- If a row-level animation is genuinely wanted, restrict it to **entry and removal** of
-  rows (add/delete a track) via `AnimatePresence` on the row set, not to scroll position.
-  Per `CLAUDE.md`: motion must answer "what just happened?", and scrolling does not need
-  an answer.
-- Consider `content-visibility: auto` on the row container as a cheap follow-up; measure
-  before keeping it, as it can interact badly with the sticky selection toolbar.
-
-### Acceptance
-
-- [ ] S1 re-trace shows no per-frame scripting attributable to framer-motion.
-- [ ] Scrolling a 300-track list holds 60 fps on the reference Android device, or at least
-      shows a measurable improvement recorded in `runtime-baseline.md`.
-- [ ] Selecting, removing and opening a track from the list still works; covered by a new
-      component test (`19-testing-strategy.md` §4).
+**Reverted 2026-10-07 (decision 19).** C7 removed the row springs; the owner wanted the slide
+after a removal back, so the springs stay. `PlaylistTrackList.test.tsx` covers open, selection
+and removal. The S1 trace is open.
 
 ## 3. Phase 2 — Bring timeline reorder motion inside the design budget
 
-**Finding:** F-04. **Scenario:** S2.
-
-`apps/web/src/pages/GamePage/gamePage.constants.ts`:
-
-| Constant                       | Current | Proposed                    | Reason                                                                                             |
-| ------------------------------ | ------- | --------------------------- | -------------------------------------------------------------------------------------------------- |
-| `TIMELINE_REORDER_DURATION_MS` | 860     | **280**                     | `CLAUDE.md`: 200-350 ms for most transitions                                                       |
-| `TIMELINE_REORDER_THROTTLE_MS` | 180     | **90**                      | Must be shorter than the animation, not longer, so a reorder is never queued against a running one |
-| `DRAG_ACTIVATION_DISTANCE_PX`  | 4       | see `20-bug-register.md` B4 | Sensor rework, not a tuning change                                                                 |
-| `DRAG_EDGE_SCROLL_MAX_STEP_PX` | 20      | 20                          | Keep                                                                                               |
-| `DRAG_EDGE_SCROLL_ZONE_PX`     | 120     | 96                          | 120 px is over half the height of a short landscape timeline row                                   |
-
-`TIMELINE_REORDER_EASING` is `cubic-bezier(0.16, 1, 0.3, 1)` — a strong overshoot ease.
-Replace with the project's standard token value
-(`cubic-bezier(0.2, 0, 0, 1)`, exported from `features/theme/tokens/primitives.ts` as
-`motionEasePrimitives.standard`) so reorder motion matches the rest of the app. Reorder is
-a state change, not a celebration.
-
-Do the durations as one change and re-trace S2 before tuning further. 280 ms may feel
-abrupt against the current overshoot; if so, 320 ms with the `emphasized` ease is the
-next candidate, still inside budget.
-
-### Acceptance
-
-- [ ] No motion constant in `gamePage.constants.ts` exceeds 500 ms.
-- [ ] Reorder easing references a design token rather than a literal curve.
-- [ ] S2 re-trace shows no overlapping reorder animations during a slow drag.
-- [ ] Reduced-motion path still short-circuits to `motionDurations.instant`.
+**Shipped 2026-10-07 (`05` C7).** Reorder 280 ms with `motionEasePrimitives.standard`, throttle
+90 ms; the preview slot's width transition uses the standard duration and ease. The
+reduced-motion rule in `globals.css` cuts dnd-kit's inline transition. Proof:
+`motionBudget.test.ts`. The S2 re-trace is open.
 
 ## 4. Phase 3 — One source of truth for viewport state
 

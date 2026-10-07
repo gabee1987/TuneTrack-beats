@@ -176,11 +176,30 @@ export function useTimelinePanelDragState({
   }
 
   function handleDragEnd(event: DragEndEvent) {
+    const geometry = dragGeometryRef.current;
+    const translatedRect = event.active.rect.current.translated;
     stopDragTracking();
 
     if (event.active.id !== TIMELINE_PREVIEW_ITEM_ID) {
       setIsDraggingPreviewCard(false);
       return;
+    }
+
+    // The release position decides, even when the last crossing fell inside the reorder
+    // throttle and no move event followed it.
+    if (geometry && translatedRect) {
+      const currentPreviewIndex = orderedItemIdsRef.current.indexOf(TIMELINE_PREVIEW_ITEM_ID);
+      const releasePreviewIndex = getPreviewIndexForActiveRect(
+        geometry,
+        translatedRect,
+        currentPreviewIndex,
+      );
+
+      if (releasePreviewIndex !== currentPreviewIndex) {
+        applyOrderedItemIds(
+          buildOrderedTimelineItemIdsForPreviewIndex(timelineCards, releasePreviewIndex),
+        );
+      }
     }
 
     const slotIndex = orderedItemIdsRef.current.indexOf(TIMELINE_PREVIEW_ITEM_ID);

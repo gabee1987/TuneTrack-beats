@@ -1,6 +1,6 @@
 import { useI18n } from "../../../features/i18n";
 import type { RoomSettingsActionStatus } from "../LobbyPage.types";
-import styles from "../lobbyPageStyles";
+import styles from "../lobbySettings.module.css";
 
 interface LobbyRoomSettingsStatusProps {
   actionStatus: RoomSettingsActionStatus;

@@ -2,7 +2,7 @@ import { useI18n } from "../../../features/i18n";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { Button } from "../../../features/ui/primitives";
 import { LobbySectionHeader } from "./LobbySectionHeader";
-import styles from "../lobbyPageStyles";
+import styles from "../lobbySettings.module.css";
 import type { CloseRoomActionStatus, StartGameActionStatus } from "../LobbyPage.types";
 
 interface LobbyRoomActionsProps {

@@ -14,7 +14,7 @@ import { HostPlaybackProvider, shouldEnableHostPlayback } from "./hooks/HostPlay
 import { useGamePageController } from "./hooks/useGamePageController";
 import { useGamePageToasts } from "./hooks/useGamePageToasts";
 import { useLeaveGameGuard } from "./hooks/useLeaveGameGuard";
-import styles from "./gamePageStyles";
+import styles from "./gamePageChrome.module.css";
 
 const GamePageMobile = lazy(async () => {
   const module = await import("./mobile/GamePageMobile");

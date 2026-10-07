@@ -9,7 +9,7 @@ import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { TextInput } from "../../../features/ui/TextInput";
 import type { PlaylistTrackUpdatePatch } from "../hooks/usePlaylistEditor";
 import { getPlaylistTrackCurationFlags } from "../playlistMetadataFlags";
-import styles from "./playlistEditModalStyles";
+import styles from "./playlistEditChrome.module.css";
 
 interface PlaylistTrackDetailsSheetProps {
   onClose: () => void;

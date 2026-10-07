@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { useI18n } from "../../../features/i18n";
 import { getPlaylistTrackCurationFlags } from "../playlistMetadataFlags";
 import { SelectableArtwork, SelectableArtworkImage, StaticArtwork } from "./SelectableArtwork";
-import styles from "./playlistEditModalStyles";
+import styles from "./playlistEditList.module.css";
 
 const SWIPE_THRESHOLD = 68;
 const SWIPE_REVEAL_WIDTH = 132;

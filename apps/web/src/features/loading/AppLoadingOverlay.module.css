@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 1600;
+  z-index: var(--z-blocking);
   display: grid;
   place-items: center;
   padding: max(22px, var(--safe-area-top)) 22px max(22px, var(--safe-area-bottom));

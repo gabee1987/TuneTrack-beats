@@ -5,7 +5,8 @@ import { useI18n } from "../../../../features/i18n";
 import { SelectableArtwork, SelectableArtworkImage } from "../SelectableArtwork";
 import { CheckIcon, PlusIcon, SpotifyLogo, TrashIcon } from "./spotifySetupIcons";
 import { SMART_SEARCH_SWIPE_REVEAL_WIDTH, SMART_SEARCH_SWIPE_THRESHOLD } from "./spotifySetupTypes";
-import styles from "./spotifyStyles";
+import discoveryStyles from "./spotifyDiscovery.module.css";
+import panelsStyles from "./spotifyPanels.module.css";
 
 interface SpotifyOpenedTrackRowProps {
   isAdded: boolean;
@@ -100,23 +101,26 @@ export function SpotifyOpenedTrackRow({
   }
 
   return (
-    <div className={styles.spotifySmartResultRowWrapper} ref={rowRef}>
+    <div className={discoveryStyles.spotifySmartResultRowWrapper} ref={rowRef}>
       {!isAdded ? (
-        <m.div className={styles.spotifySmartAddZone} style={{ width: addZoneWidth }}>
+        <m.div className={discoveryStyles.spotifySmartAddZone} style={{ width: addZoneWidth }}>
           <m.div style={{ opacity: addIconOpacity, scale: addIconScale }}>
             <PlusIcon />
           </m.div>
         </m.div>
       ) : null}
       {isAdded ? (
-        <m.div className={styles.spotifySmartRemoveZone} style={{ width: removeZoneWidth }}>
+        <m.div
+          className={discoveryStyles.spotifySmartRemoveZone}
+          style={{ width: removeZoneWidth }}
+        >
           <m.div style={{ opacity: removeIconOpacity, scale: removeIconScale }}>
             <TrashIcon />
           </m.div>
         </m.div>
       ) : null}
       <m.div
-        className={styles.spotifyOpenedTrackRow}
+        className={panelsStyles.spotifyOpenedTrackRow}
         drag="x"
         dragConstraints={{
           left: isAdded ? -SMART_SEARCH_SWIPE_REVEAL_WIDTH : 0,
@@ -136,8 +140,12 @@ export function SpotifyOpenedTrackRow({
           {track.artworkUrl ? <SelectableArtworkImage src={track.artworkUrl} /> : <SpotifyLogo />}
         </SelectableArtwork>
 
-        <button className={styles.spotifySmartResultOpenButton} onClick={onOpen} type="button">
-          <span className={styles.spotifySmartResultMeta}>
+        <button
+          className={discoveryStyles.spotifySmartResultOpenButton}
+          onClick={onOpen}
+          type="button"
+        >
+          <span className={discoveryStyles.spotifySmartResultMeta}>
             <strong>{track.title}</strong>
             <span>
               {track.artist} · {track.releaseYear}
@@ -149,8 +157,8 @@ export function SpotifyOpenedTrackRow({
           aria-label={
             isAdded ? t("lobby.spotify.builder.addedTrack") : t("lobby.spotify.builder.addTrack")
           }
-          className={`${styles.spotifySmartQueueButton} ${
-            isAdded ? styles.spotifySmartQueueButtonAdded : ""
+          className={`${discoveryStyles.spotifySmartQueueButton} ${
+            isAdded ? discoveryStyles.spotifySmartQueueButtonAdded : ""
           }`}
           onClick={isAdded ? onRemoveFromQueue : onAdd}
           title={
@@ -158,7 +166,7 @@ export function SpotifyOpenedTrackRow({
           }
           type="button"
         >
-          <span className={styles.spotifySmartQueueButtonFace}>
+          <span className={discoveryStyles.spotifySmartQueueButtonFace}>
             {isAdded ? <CheckIcon /> : <PlusIcon />}
           </span>
         </button>

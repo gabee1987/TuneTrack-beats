@@ -87,7 +87,8 @@ pages/LobbyPage/
 - Closing an overlay removes its portal; hidden interactive DOM must not survive.
 - Overlays restore focus to their trigger, trap focus while open, lock body scroll and close
   on Escape. These behaviours come from the shared overlay primitives, not from each caller.
-- Layering uses the `--z-*` tokens only (see `design_system.md` §6).
+- Layering uses the `--z-*` tokens only (see `design_system.md` §6); a literal in [-1, 9] is
+  local stacking inside one component (`zIndexScale.test.ts`).
 
 ## 6. Motion architecture
 
@@ -108,6 +109,9 @@ pages/LobbyPage/
 - Performance: animate `transform` and `opacity`; no `layout` animation on page containers
   or list rows on mobile; no animated `filter`, `backdrop-filter` or shadows; no always-on
   decorative animation during gameplay; reduced motion through the shared helper only.
+- A plain CSS state transition takes at most 500 ms. Longer or looping motion is listed in the
+  `motionBudget.test.ts` allowlist: loaders, the home ambient background, and the celebration,
+  gameplay-feedback and status animations the owner kept (decision 19).
 
 ## 7. Styling
 

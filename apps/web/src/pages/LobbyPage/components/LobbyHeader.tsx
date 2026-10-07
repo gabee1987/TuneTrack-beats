@@ -2,7 +2,7 @@ import { AppShellMenu } from "../../../features/app-shell/AppShellMenu";
 import { useI18n } from "../../../features/i18n";
 import { ConnectionStatus } from "../../../features/rooms/ConnectionStatus";
 import { getLobbyHeaderMenuTabSpecs } from "../lobbyHeaderSelectors";
-import styles from "../lobbyPageStyles";
+import styles from "../lobbyLayout.module.css";
 
 interface LobbyHeaderProps {
   isHost: boolean;

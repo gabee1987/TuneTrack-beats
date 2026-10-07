@@ -13,7 +13,8 @@ import { TIMELINE_REORDER_DURATION_MS, TIMELINE_REORDER_EASING } from "../gamePa
 import { animateTimelineLayoutChanges, getTimelineCardSurfaceStyle } from "../gamePage.utils";
 import { CorrectPlacementCelebration } from "./CorrectPlacementCelebration";
 import { PreviewCard } from "./PreviewCard";
-import styles from "./timelineStyles";
+import cardsStyles from "./timelineCards.module.css";
+import shellStyles from "./timelinePanelShell.module.css";
 
 interface TimelineSortableItemProps {
   card: GamePageCard;
@@ -86,17 +87,17 @@ function TimelineSortableItemComponent({
   } as CSSProperties;
 
   const hasArtwork = revealedCardMode === "artwork" && Boolean(card.artworkUrl) && !isPreview;
-  const timelineCardClassName = `${styles.timelineCard} ${
-    hasArtwork ? styles.timelineCardArtwork : ""
+  const timelineCardClassName = `${cardsStyles.timelineCard} ${
+    hasArtwork ? cardsStyles.timelineCardArtwork : ""
   } ${
     isOriginalSlot && (isPreview || shouldCelebrateCorrectPlacement)
-      ? styles.timelineCardCurrentPick
+      ? cardsStyles.timelineCardCurrentPick
       : ""
-  } ${shouldCelebrateCorrectPlacement ? styles.timelineCardResolvedCorrect : ""} ${
+  } ${shouldCelebrateCorrectPlacement ? cardsStyles.timelineCardResolvedCorrect : ""} ${
     isChallengeSlot
       ? challengeMarkerTone === "failure"
-        ? styles.timelineCardChallengeFailure
-        : styles.timelineCardChallenge
+        ? cardsStyles.timelineCardChallengeFailure
+        : cardsStyles.timelineCardChallenge
       : ""
   }`;
 
@@ -106,10 +107,10 @@ function TimelineSortableItemComponent({
         setNodeRef(node);
         hintAnchorRef?.(node);
       }}
-      className={`${styles.timelineItem} ${
-        isPreview ? styles.timelineItemPreview : ""
-      } ${isDragging && isPreview ? styles.timelineItemPreviewDragging : ""} ${
-        isDraggingPreviewCard && isPreview ? styles.timelineItemPreviewGhost : ""
+      className={`${shellStyles.timelineItem} ${
+        isPreview ? shellStyles.timelineItemPreview : ""
+      } ${isDragging && isPreview ? shellStyles.timelineItemPreviewDragging : ""} ${
+        isDraggingPreviewCard && isPreview ? shellStyles.timelineItemPreviewGhost : ""
       }`}
       data-timeline-slot="true"
       style={style}
@@ -145,29 +146,29 @@ function TimelineSortableItemComponent({
       ) : shouldCelebrateCorrectPlacement && shouldAnimateCorrectPlacement ? (
         <CorrectPlacementCelebration
           key={`resolved-correct-placement-${id}`}
-          className={`${timelineCardClassName} ${styles.timelineCardCurrentPick}`}
+          className={`${timelineCardClassName} ${cardsStyles.timelineCardCurrentPick}`}
         >
-          <p className={styles.timelineArtist}>{card.artist}</p>
-          <div className={styles.timelineCardCenter}>
-            <strong className={styles.yearText}>
+          <p className={cardsStyles.timelineArtist}>{card.artist}</p>
+          <div className={cardsStyles.timelineCardCenter}>
+            <strong className={cardsStyles.yearText}>
               {"revealedYear" in card ? card.revealedYear : ""}
             </strong>
           </div>
-          <div className={styles.timelineCardBottom}>
-            <h3 className={styles.timelineTitle}>{card.title}</h3>
+          <div className={cardsStyles.timelineCardBottom}>
+            <h3 className={cardsStyles.timelineTitle}>{card.title}</h3>
           </div>
         </CorrectPlacementCelebration>
       ) : (
         <article data-timeline-card="true" className={timelineCardClassName}>
           <>
-            <p className={styles.timelineArtist}>{card.artist}</p>
-            <div className={styles.timelineCardCenter}>
-              <strong className={styles.yearText}>
+            <p className={cardsStyles.timelineArtist}>{card.artist}</p>
+            <div className={cardsStyles.timelineCardCenter}>
+              <strong className={cardsStyles.yearText}>
                 {"revealedYear" in card ? card.revealedYear : ""}
               </strong>
             </div>
-            <div className={styles.timelineCardBottom}>
-              <h3 className={styles.timelineTitle}>{card.title}</h3>
+            <div className={cardsStyles.timelineCardBottom}>
+              <h3 className={cardsStyles.timelineTitle}>{card.title}</h3>
             </div>
           </>
         </article>

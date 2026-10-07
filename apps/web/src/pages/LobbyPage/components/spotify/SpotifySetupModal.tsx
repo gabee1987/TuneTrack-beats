@@ -11,7 +11,8 @@ import {
 import { useI18n } from "../../../../features/i18n";
 import { CloseIconButton } from "../../../../features/ui/CloseIconButton";
 import type { LobbySpotifyState, SpotifySetupSource } from "./spotifySetupTypes";
-import styles from "./spotifyStyles";
+import setupShellStyles from "./spotifySetupShell.module.css";
+import sharedStyles from "./spotifyShared.module.css";
 
 const SpotifyPlaylistSearchPanel = lazy(async () => {
   const module = await import("./SpotifyPlaylistSearchPanel");
@@ -64,7 +65,7 @@ export function SpotifySetupModal({
       {isOpen ? (
         <m.div
           animate="animate"
-          className={styles.spotifySetupOverlay}
+          className={setupShellStyles.spotifySetupOverlay}
           exit="exit"
           initial="initial"
           onClick={onClose}
@@ -75,7 +76,7 @@ export function SpotifySetupModal({
             animate="animate"
             aria-label={t("lobby.spotify.setupLabel")}
             aria-modal="true"
-            className={styles.spotifySetupSheet}
+            className={setupShellStyles.spotifySetupSheet}
             exit="exit"
             initial="initial"
             onClick={(event) => event.stopPropagation()}
@@ -83,8 +84,8 @@ export function SpotifySetupModal({
             transition={createStandardTransition(reduceMotion)}
             variants={createModalSheetMotionTargets(reduceMotion)}
           >
-            <div className={styles.spotifySetupHeader}>
-              <div className={styles.spotifySourceTabs} role="tablist">
+            <div className={setupShellStyles.spotifySetupHeader}>
+              <div className={setupShellStyles.spotifySourceTabs} role="tablist">
                 <SpotifySourceTab
                   isActive={activeSource === "playlistUrl"}
                   label={t("lobby.spotify.source.playlistUrl")}
@@ -102,15 +103,15 @@ export function SpotifySetupModal({
                 />
               </div>
 
-              <div className={styles.spotifySetupHeaderActions}>
+              <div className={setupShellStyles.spotifySetupHeaderActions}>
                 <CloseIconButton ariaLabel={t("lobby.spotify.closeSetup")} onClick={onClose} />
               </div>
             </div>
 
-            <div className={styles.spotifySetupBody}>
+            <div className={setupShellStyles.spotifySetupBody}>
               <Suspense
                 fallback={
-                  <p className={styles.spotifyStatusLine}>{t("lobby.spotify.connecting")}</p>
+                  <p className={sharedStyles.spotifyStatusLine}>{t("lobby.spotify.connecting")}</p>
                 }
               >
                 {activeSource === "findPlaylists" ? (
@@ -146,7 +147,7 @@ function SpotifySourceTab({ disabled, isActive, label, onClick }: SpotifySourceT
   return (
     <button
       aria-selected={isActive}
-      className={`${styles.spotifySourceTab} ${isActive ? styles.spotifySourceTabActive : ""}`}
+      className={`${setupShellStyles.spotifySourceTab} ${isActive ? setupShellStyles.spotifySourceTabActive : ""}`}
       disabled={disabled}
       onClick={onClick}
       type="button"

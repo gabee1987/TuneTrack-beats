@@ -20,7 +20,9 @@ interface RateLimit {
 export const RATE_LIMITS: Record<RateLimitClass, RateLimit> = {
   gameplay: { capacity: 10, windowMs: 5_000 },
   search: { capacity: 5, windowMs: 10_000 },
-  tokenRefresh: { capacity: 3, windowMs: 60_000 },
+  // A player build plus the deferred retries of a reconnect race used up 3, and the playback
+  // device never got its token (20 B24).
+  tokenRefresh: { capacity: 6, windowMs: 60_000 },
   directory: { capacity: 10, windowMs: 10_000 },
   other: { capacity: 20, windowMs: 10_000 },
 };

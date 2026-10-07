@@ -1,12 +1,11 @@
 import {
   ClientToServerEvent,
   ServerToClientEvent,
-  type ServerErrorPayload,
   type SpotifyPlaybackResultPayload,
-  type SpotifyTokenRefreshedPayload,
 } from "@tunetrack/shared/client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getSocketClient } from "../../../services/socket/socketClient";
+import { requestSpotifyAccessToken } from "./requestSpotifyAccessToken";
 
 interface UseSpotifyPlaybackSdkOptions {
   roomId: string;
@@ -51,7 +50,8 @@ export interface UseSpotifyPlaybackSdkResult {
 const SERVER_PLAY_TIMEOUT_MS = 32_000;
 const PLAYBACK_CONFIRM_TIMEOUT_MS = 10_000;
 const END_OF_CONTEXT_TOLERANCE_MS = 1_000;
-const TOKEN_REQUEST_TIMEOUT_MS = 10_000;
+// `connect()` never settles while the SDK waits for a token; past this the build is retried.
+const PLAYER_CONNECT_TIMEOUT_MS = 15_000;
 const DEVICE_RECOVERY_COOLDOWN_MS = 5_000;
 
 /**
@@ -216,46 +216,10 @@ export function useSpotifyPlaybackSdk({
       return tokenRequestInFlightRef.current;
     }
 
-    const requestPromise = (async (): Promise<string | null> => {
-      const socketClient = await getSocketClient();
-      return new Promise((resolve) => {
-        // Without this the promise could stay pending forever, and because it is also the
-        // de-duplication handle, every later token request would await the same dead promise.
-        const timeoutId = window.setTimeout(() => {
-          cleanup();
-          console.warn("[TuneTrack] Spotify token refresh timed out");
-          resolve(null);
-        }, TOKEN_REQUEST_TIMEOUT_MS);
-
-        function cleanup() {
-          window.clearTimeout(timeoutId);
-          socketClient.off(ServerToClientEvent.SpotifyTokenRefreshed, handleTokenRefreshed);
-          socketClient.off(ServerToClientEvent.Error, handleRefreshError);
-        }
-
-        function handleTokenRefreshed(payload: SpotifyTokenRefreshedPayload) {
-          cleanup();
-          accessTokenRef.current = payload.accessToken;
-          resolve(payload.accessToken);
-        }
-
-        function handleRefreshError(payload: ServerErrorPayload) {
-          if (
-            payload.code !== "SPOTIFY_TOKEN_REFRESH_FAILED" &&
-            payload.code !== "SPOTIFY_TOKEN_REFRESH_DEFERRED"
-          ) {
-            return;
-          }
-          cleanup();
-          accessTokenRef.current = null;
-          resolve(null);
-        }
-
-        socketClient.on(ServerToClientEvent.SpotifyTokenRefreshed, handleTokenRefreshed);
-        socketClient.on(ServerToClientEvent.Error, handleRefreshError);
-        socketClient.emit(ClientToServerEvent.RefreshSpotifyToken, { roomId });
-      });
-    })();
+    const requestPromise = requestSpotifyAccessToken(roomId).then((token) => {
+      accessTokenRef.current = token;
+      return token;
+    });
 
     tokenRequestInFlightRef.current = requestPromise;
     try {
@@ -332,13 +296,18 @@ export function useSpotifyPlaybackSdk({
       const freshToken = await acquireAccessToken();
       if (disposed || !freshToken) return;
 
+      // A build costs one refresh: the SDK's first request reuses `init`'s token. Later ones retry
+      // until a token arrives, because an unanswered `cb` leaves `connect()` pending for good.
+      let initialToken: string | null = freshToken;
       player = new window.Spotify.Player({
         name: "TuneTrack",
         volume: 0.8,
         getOAuthToken: (cb) => {
-          void requestToken().then((token) => {
-            if (disposed) return;
-            if (token) cb(token);
+          const token = initialToken;
+          initialToken = null;
+          if (token) return cb(token);
+          void acquireAccessToken().then((nextToken) => {
+            if (!disposed && nextToken) cb(nextToken);
           });
         },
       });
@@ -426,9 +395,16 @@ export function useSpotifyPlaybackSdk({
         }
       });
 
-      await player.connect();
-      if (disposed) {
+      let connectTimeoutId = 0;
+      const isConnected = await Promise.race([
+        player.connect(),
+        new Promise<false>((resolve) => {
+          connectTimeoutId = window.setTimeout(() => resolve(false), PLAYER_CONNECT_TIMEOUT_MS);
+        }),
+      ]).finally(() => window.clearTimeout(connectTimeoutId));
+      if (disposed || !isConnected) {
         player.disconnect();
+        if (!disposed) throw new Error("Spotify player did not connect");
         return;
       }
       playerRef.current = player;

@@ -46,14 +46,29 @@ describe("timelineDragGeometry", () => {
     document.body.replaceChildren();
   });
 
-  it("skips the preview's own slot when counting the cards before the pointer", () => {
+  it("moves the preview to the slot under the card centre", () => {
     const geometry = measureTimelineDragGeometry(buildRow(HORIZONTAL_SLOTS));
 
-    // Card centres with the preview in slot 0: 160, 270, 380.
-    expect(getPreviewIndexForActiveRect(geometry, activeRectAt(150), 0)).toBe(0);
+    // Slots span 0–100, 110–210, 220–320, 330–430.
+    expect(getPreviewIndexForActiveRect(geometry, activeRectAt(150), 0)).toBe(1);
     expect(getPreviewIndexForActiveRect(geometry, activeRectAt(300), 0)).toBe(2);
-    // With the preview in slot 3 the cards sit in slots 0–2: centres 50, 160, 270.
     expect(getPreviewIndexForActiveRect(geometry, activeRectAt(150), 3)).toBe(1);
+  });
+
+  it("takes the neighbouring slot once the card is half over it (B23)", () => {
+    const geometry = measureTimelineDragGeometry(buildRow(HORIZONTAL_SLOTS));
+
+    // Centre 120: the card covers 60 px of the neighbour in slot 1. The old rule kept slot 0
+    // until the centre passed the neighbour's centre (160).
+    expect(getPreviewIndexForActiveRect(geometry, activeRectAt(120), 0)).toBe(1);
+    expect(getPreviewIndexForActiveRect(geometry, activeRectAt(90), 1)).toBe(0);
+  });
+
+  it("keeps the current slot while the centre is within its margin", () => {
+    const geometry = measureTimelineDragGeometry(buildRow(HORIZONTAL_SLOTS));
+
+    expect(getPreviewIndexForActiveRect(geometry, activeRectAt(106), 0)).toBe(0);
+    expect(getPreviewIndexForActiveRect(geometry, activeRectAt(104), 1)).toBe(1);
   });
 
   it("follows a scroll of the row without reading the slots again", () => {
@@ -85,7 +100,6 @@ describe("timelineDragGeometry", () => {
     }));
     const geometry = measureTimelineDragGeometry(buildRow(gridSlots, "grid"));
 
-    expect(geometry.isGridLayout).toBe(true);
     // Preview in slot 0; the second row holds cards 2–4 (slots 3–5).
     expect(getPreviewIndexForActiveRect(geometry, activeRectAt(170, 160), 0)).toBe(4);
   });

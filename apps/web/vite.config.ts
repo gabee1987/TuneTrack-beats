@@ -24,6 +24,27 @@ export default defineConfig({
     VitePWA({
       injectRegister: "auto",
       registerType: "autoUpdate",
+      workbox: {
+        cleanupOutdatedCaches: true,
+        navigateFallback: "/index.html",
+        // The Spotify OAuth callback and the socket transport are navigations or requests the
+        // server must answer; the cached app shell must never stand in for them (F-25).
+        navigateFallbackDenylist: [/^\/api\//, /^\/socket\.io\//],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => /^\/(api|socket\.io)\//.test(url.pathname),
+            handler: "NetworkOnly",
+          },
+          {
+            urlPattern: ({ request, sameOrigin }) => sameOrigin && request.destination === "image",
+            handler: "CacheFirst",
+            options: {
+              cacheName: "tunetrack-images",
+              expiration: { maxEntries: 32 },
+            },
+          },
+        ],
+      },
       devOptions: {
         // Self-signed HTTPS (basicSsl) breaks SW registration in Chrome; keep PWA for prod builds.
         enabled: false,
@@ -65,6 +86,7 @@ export default defineConfig({
     }),
   ],
   build: {
+    target: "es2020",
     rollupOptions: {
       output: {
         // Split third-party libs into stable, independently cacheable chunks so an
@@ -88,6 +110,9 @@ export default defineConfig({
           }
           if (id.includes("socket.io") || id.includes("engine.io")) {
             return "vendor-socket";
+          }
+          if (id.includes("zustand")) {
+            return "vendor-zustand";
           }
           if (id.includes("react-router") || id.includes("@remix-run")) {
             return "vendor-router";

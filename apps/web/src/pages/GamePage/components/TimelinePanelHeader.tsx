@@ -3,7 +3,7 @@ import { memo } from "react";
 import { useI18n } from "../../../features/i18n";
 import { createLayoutTransition, useReducedMotionPreference } from "../../../features/motion";
 import type { TimelinePanelHeaderModel } from "../GamePage.types";
-import styles from "./timelineStyles";
+import styles from "./timelinePanelShell.module.css";
 
 interface TimelinePanelHeaderProps {
   model: TimelinePanelHeaderModel;

@@ -13,42 +13,6 @@ export const timelineCelebrationTransitionContract = {
   correctPlacementShellContentDurationSeconds: 0.22,
 } as const;
 
-export function createTimelineCelebrationVariants(
-  reduceMotion: boolean,
-): Record<"initial" | "animate" | "exit", TargetAndTransition> {
-  if (reduceMotion) {
-    return {
-      initial: { opacity: 0, rotate: 0, scale: 0.95, y: 12 },
-      animate: {
-        opacity: [0, 1, 1, 0],
-        rotate: 0,
-        scale: [0.95, 1, 1, 0.96],
-        y: [12, 0, -4, -12],
-      },
-      exit: { opacity: 0, rotate: 0, scale: 0.96, y: -14 },
-    };
-  }
-
-  return {
-    initial: { opacity: 0, rotate: -12, scale: 0.55, y: 40 },
-    animate: {
-      opacity: [0, 1, 1, 0],
-      rotate: [-12, 8, -4, 10],
-      scale: [0.55, 1.28, 1.08, 0.92],
-      y: [40, -16, -4, -36],
-    },
-    exit: { opacity: 0, rotate: 10, scale: 0.88, y: -40 },
-  };
-}
-
-export function createTimelineCelebrationTransition(reduceMotion: boolean): Transition {
-  return {
-    duration: reduceMotion ? motionDurations.quick : 1.9,
-    ease: "easeInOut",
-    times: [0, 0.2, 0.7, 1],
-  };
-}
-
 export function createTimelineFlyAnimationVariants(
   reduceMotion: boolean,
   deltaX: number,

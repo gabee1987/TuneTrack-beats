@@ -12,7 +12,7 @@ import { Badge } from "../../../features/ui/Badge";
 import { CardCountAmount } from "../../../features/ui/CardCountAmount";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
-import styles from "../gamePageStyles";
+import styles from "../gamePageMenu.module.css";
 import type {
   AwardTtActionState,
   KickPlayerActionState,

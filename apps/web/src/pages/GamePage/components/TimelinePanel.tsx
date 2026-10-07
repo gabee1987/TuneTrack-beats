@@ -35,7 +35,7 @@ import { TimelinePanelFlyAnimation } from "./TimelinePanelFlyAnimation";
 import { TimelinePanelHeader } from "./TimelinePanelHeader";
 import { TimelinePanelItems } from "./TimelinePanelItems";
 import { PreviewCard } from "./PreviewCard";
-import styles from "./timelineStyles";
+import styles from "./timelinePanelShell.module.css";
 
 const NO_DISABLED_SLOT_INDEXES: number[] = [];
 

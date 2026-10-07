@@ -20,7 +20,8 @@ import type {
   SkipTurnActionStatus,
 } from "../GamePage.types";
 import { ActionDock, PrimaryActionButton, SecondaryActionButton } from "./ActionDock";
-import styles from "./gamePageActionPanelsStyles";
+import challengeStyles from "./gamePageActionPanelsChallenge.module.css";
+import dockStyles from "./gamePageActionPanelsDock.module.css";
 
 function useTurnSkipCountdown(deadlineEpochMs: number | null): string | null {
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
@@ -168,31 +169,33 @@ export function TurnActionDock({
   return (
     <>
       {canSkipOfflinePlayer && offlinePlayerName ? (
-        <div className={styles.offlinePlayerPanel}>
-          <div className={styles.offlinePlayerInfo}>
-            <span className={styles.offlinePlayerLabel}>{t("game.controls.waitingFor")}</span>
-            <span className={styles.offlinePlayerName}>{offlinePlayerName}</span>
-            <span className={styles.offlinePlayerStatus}>{t("gameMenu.offline")}</span>
+        <div className={challengeStyles.offlinePlayerPanel}>
+          <div className={challengeStyles.offlinePlayerInfo}>
+            <span className={challengeStyles.offlinePlayerLabel}>
+              {t("game.controls.waitingFor")}
+            </span>
+            <span className={challengeStyles.offlinePlayerName}>{offlinePlayerName}</span>
+            <span className={challengeStyles.offlinePlayerStatus}>{t("gameMenu.offline")}</span>
           </div>
           {turnSkipCountdown ? (
-            <span className={styles.offlinePlayerCountdown}>
+            <span className={challengeStyles.offlinePlayerCountdown}>
               {t("game.controls.autoSkipIn", { time: turnSkipCountdown })}
             </span>
           ) : null}
         </div>
       ) : null}
       <ActionDock
-        className={useStackedTurnActions ? styles.floatingActionDockStacked : ""}
+        className={useStackedTurnActions ? dockStyles.floatingActionDockStacked : ""}
         containerRef={setConfirmHintAnchor}
       >
         {useStackedTurnActions ? (
           <>
-            <div className={styles.floatingActionSecondaryRow}>
+            <div className={dockStyles.floatingActionSecondaryRow}>
               <MotionPresence mode="popLayout">
                 {canUseSkipTrack ? (
                   <m.span
                     animate="animate"
-                    className={styles.actionButtonMotionWrap}
+                    className={dockStyles.actionButtonMotionWrap}
                     exit="exit"
                     initial="initial"
                     key="skip-track"
@@ -224,7 +227,7 @@ export function TurnActionDock({
               </MotionPresence>
               {canUseBuyCard ? (
                 <m.span
-                  className={styles.actionButtonMotionWrap}
+                  className={dockStyles.actionButtonMotionWrap}
                   layout="position"
                   transition={createLayoutTransition(reduceMotion)}
                 >
@@ -250,7 +253,7 @@ export function TurnActionDock({
               ) : null}
             </div>
             <m.span
-              className={`${styles.actionButtonMotionWrap} ${styles.actionButtonMotionWrapFull}`}
+              className={`${dockStyles.actionButtonMotionWrap} ${dockStyles.actionButtonMotionWrapFull}`}
               layout="position"
               transition={createLayoutTransition(reduceMotion)}
             >
@@ -265,7 +268,7 @@ export function TurnActionDock({
               {canUseSkipTrack ? (
                 <m.span
                   animate="animate"
-                  className={styles.actionButtonMotionWrap}
+                  className={dockStyles.actionButtonMotionWrap}
                   exit="exit"
                   initial="initial"
                   key="skip-track"
@@ -297,7 +300,7 @@ export function TurnActionDock({
             </MotionPresence>
             {canUseBuyCard ? (
               <m.span
-                className={styles.actionButtonMotionWrap}
+                className={dockStyles.actionButtonMotionWrap}
                 layout="position"
                 transition={createLayoutTransition(reduceMotion)}
               >
@@ -320,7 +323,7 @@ export function TurnActionDock({
             ) : null}
             {canConfirmTurnPlacement ? (
               <m.span
-                className={styles.actionButtonMotionWrap}
+                className={dockStyles.actionButtonMotionWrap}
                 layout="position"
                 transition={createLayoutTransition(reduceMotion)}
               >
@@ -334,7 +337,7 @@ export function TurnActionDock({
             ) : null}
             {canSkipOfflinePlayer ? (
               <m.span
-                className={styles.actionButtonMotionWrap}
+                className={dockStyles.actionButtonMotionWrap}
                 layout="position"
                 transition={createLayoutTransition(reduceMotion)}
               >

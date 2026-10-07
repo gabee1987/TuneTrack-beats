@@ -3,7 +3,7 @@ import { useI18n } from "../../../features/i18n";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { LobbyPlayerListItem } from "./LobbyPlayerListItem";
 import { LobbySectionHeader } from "./LobbySectionHeader";
-import styles from "../lobbyPageStyles";
+import styles from "../lobbySettings.module.css";
 import type {
   LobbyKickPlayerActionState,
   LobbyPlayerSettingsActionState,

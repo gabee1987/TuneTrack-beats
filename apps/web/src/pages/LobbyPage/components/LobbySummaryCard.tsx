@@ -1,7 +1,8 @@
 import { Badge } from "../../../features/ui/Badge";
 import { useI18n } from "../../../features/i18n";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
-import styles from "../lobbyPageStyles";
+import layoutStyles from "../lobbyLayout.module.css";
+import settingsStyles from "../lobbySettings.module.css";
 
 interface LobbySummaryCardProps {
   displayName: string;
@@ -27,27 +28,27 @@ export function LobbySummaryCard({
   }
 
   return (
-    <SurfaceCard className={styles.summaryCard}>
-      <div className={styles.summaryRow}>
+    <SurfaceCard className={layoutStyles.summaryCard}>
+      <div className={layoutStyles.summaryRow}>
         <div>
-          <p className={styles.summaryLabel}>{t("lobby.summary.joinedAs")}</p>
-          <strong className={styles.summaryValue}>{displayName}</strong>
+          <p className={layoutStyles.summaryLabel}>{t("lobby.summary.joinedAs")}</p>
+          <strong className={layoutStyles.summaryValue}>{displayName}</strong>
         </div>
         <Badge>{isHost ? t("lobby.summary.host") : t("lobby.summary.player")}</Badge>
       </div>
 
-      <div className={styles.summaryGrid}>
-        <div className={styles.summaryMetric}>
-          <span className={styles.summaryLabel}>{t("lobby.summary.roomCode")}</span>
-          <strong className={styles.summaryValue}>{roomId}</strong>
+      <div className={layoutStyles.summaryGrid}>
+        <div className={layoutStyles.summaryMetric}>
+          <span className={layoutStyles.summaryLabel}>{t("lobby.summary.roomCode")}</span>
+          <strong className={layoutStyles.summaryValue}>{roomId}</strong>
         </div>
-        <div className={styles.summaryMetric}>
-          <span className={styles.summaryLabel}>{t("lobby.summary.playersHere")}</span>
-          <strong className={styles.summaryValue}>{playerCount}</strong>
+        <div className={layoutStyles.summaryMetric}>
+          <span className={layoutStyles.summaryLabel}>{t("lobby.summary.playersHere")}</span>
+          <strong className={layoutStyles.summaryValue}>{playerCount}</strong>
         </div>
       </div>
 
-      <button className={styles.copyInviteButton} onClick={handleCopyInvite} type="button">
+      <button className={settingsStyles.copyInviteButton} onClick={handleCopyInvite} type="button">
         {t("lobby.summary.copyInvite")}
       </button>
     </SurfaceCard>

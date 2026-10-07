@@ -88,8 +88,10 @@ The rules below are the ones every change must satisfy.
   use design tokens (CSS custom properties), never literals. A new theme is a token set, not
   component edits.
 - **Motion follows Material 3:** emphasised decelerate on enter, emphasised accelerate on
-  exit, standard easing between states. 200–350 ms for most transitions, up to 500 ms only
-  for large entries or celebration. Motion communicates state change; it never decorates. The one exception is the home
+  exit, standard easing between states. 200–350 ms for most transitions, up to 500 ms for
+  large entries. Celebrations, gameplay feedback and status indicators may run longer or
+  loop where the owner chose it (decision 19; `motionBudget.test.ts` lists them). Motion
+  communicates state change; it never decorates. The one exception is the home
   screen's ambient background (`transform`/`opacity` only, paused when hidden or reduced).
   `prefers-reduced-motion` is honoured through the shared motion helpers only.
 - **Mobile and desktop are separate UI assemblies** that share hooks, services and state.

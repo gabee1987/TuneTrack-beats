@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useEffect, useId, useState } from "react";
+import { lazy, Suspense, useEffect, useId, useState } from "react";
 import type { PublicRoomSettings } from "@tunetrack/shared/client";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FirstRunHint } from "../../../../features/hints/FirstRunHint";
@@ -8,7 +8,6 @@ import { ActionButton } from "../../../../features/ui/ActionButton";
 import { SettingInfoButton } from "../../../../features/ui/SettingField";
 import { SurfaceCard } from "../../../../features/ui/SurfaceCard";
 import { LobbySectionHeader } from "../LobbySectionHeader";
-import { PlaylistEditModal } from "../PlaylistEditModal";
 import {
   spotifySetupHistoryStateKey,
   useCurrentHistoryState,
@@ -17,12 +16,21 @@ import { useLobbySpotify } from "../../hooks/spotify/useLobbySpotify";
 import { SpotifyLogo } from "./spotifySetupIcons";
 import { SpotifySetupModal } from "./SpotifySetupModal";
 import type { SpotifySetupSource } from "./spotifySetupTypes";
-import lobbyStyles from "../../lobbyPageStyles";
-import styles from "./spotifyStyles";
+import lobbyStyles from "../../lobbySettings.module.css";
+import setupShellStyles from "./spotifySetupShell.module.css";
+import sharedStyles from "./spotifyShared.module.css";
 
 interface LobbySpotifySectionProps {
   currentSettings: PublicRoomSettings;
 }
+
+// Host-only and opened on demand: the editor and its stylesheets stay out of the lobby chunk (05 D4).
+async function loadPlaylistEditModal() {
+  const module = await import("../PlaylistEditModal");
+  return { default: module.PlaylistEditModal };
+}
+
+const PlaylistEditModal = lazy(loadPlaylistEditModal);
 
 export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProps) {
   const { t } = useI18n();
@@ -38,6 +46,18 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
   const isImported = currentSettings.playlistImported;
   const accountType = spotifyState.auth.accountType ?? currentSettings.spotifyAccountType;
   const isConnecting = spotifyState.auth.authPhase === "connecting";
+  const isEditModalOpen = spotifyState.queue.isEditModalOpen;
+  const [hasOpenedEditModal, setHasOpenedEditModal] = useState(isEditModalOpen);
+
+  if (isEditModalOpen && !hasOpenedEditModal) {
+    setHasOpenedEditModal(true);
+  }
+
+  useEffect(() => {
+    if (isImported) {
+      void loadPlaylistEditModal();
+    }
+  }, [isImported]);
 
   useEffect(() => {
     if (isSetupOpen && spotifyState.savedPlaylists.generatedPlaylistMessage) {
@@ -86,21 +106,21 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
           variant="compact"
         />
 
-        <div className={styles.spotifySetupSummary}>
-          <div className={styles.spotifyConnectRow}>
+        <div className={setupShellStyles.spotifySetupSummary}>
+          <div className={setupShellStyles.spotifyConnectRow}>
             {isConnected ? (
-              <div className={styles.spotifyConnectedState}>
-                <div className={styles.spotifyBadgeRow}>
-                  <span className={styles.spotifyConnectedBadge}>
-                    <span className={styles.spotifyConnectedDot} />
+              <div className={setupShellStyles.spotifyConnectedState}>
+                <div className={setupShellStyles.spotifyBadgeRow}>
+                  <span className={setupShellStyles.spotifyConnectedBadge}>
+                    <span className={setupShellStyles.spotifyConnectedDot} />
                     {t("lobby.spotify.connected")}
                   </span>
                   {accountType ? <SpotifyAccountBadge accountType={accountType} /> : null}
                 </div>
 
                 {isImported ? (
-                  <div className={styles.spotifySongsReady}>
-                    <span className={styles.spotifySongsReadyDot} />
+                  <div className={setupShellStyles.spotifySongsReady}>
+                    <span className={setupShellStyles.spotifySongsReadyDot} />
                     <span>
                       {t("lobby.spotify.tracksQueued", {
                         count: currentSettings.importedTrackCount,
@@ -110,21 +130,23 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
                 ) : null}
               </div>
             ) : spotifyState.auth.authPhase !== "error" ? (
-              <div className={styles.spotifyConnectUnconnected}>
-                <p className={styles.spotifyConnectHint}>{connectHint}</p>
+              <div className={setupShellStyles.spotifyConnectUnconnected}>
+                <p className={setupShellStyles.spotifyConnectHint}>{connectHint}</p>
               </div>
             ) : null}
           </div>
 
-          {isConnected ? <p className={styles.spotifyConnectHint}>{connectHint}</p> : null}
+          {isConnected ? (
+            <p className={setupShellStyles.spotifyConnectHint}>{connectHint}</p>
+          ) : null}
 
           {spotifyState.auth.authPhase === "error" && spotifyState.auth.authError ? (
-            <div className={styles.spotifyAuthErrorBlock}>
-              <p className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError}`}>
+            <div className={setupShellStyles.spotifyAuthErrorBlock}>
+              <p className={`${sharedStyles.spotifyStatusLine} ${sharedStyles.spotifyStatusError}`}>
                 {spotifyState.auth.authError}
               </p>
               <ActionButton
-                className={styles.spotifyConnectBtn}
+                className={setupShellStyles.spotifyConnectBtn}
                 onClick={spotifyState.auth.connectSpotify}
                 type="button"
                 variant="neutral"
@@ -136,9 +158,9 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
           ) : null}
 
           {spotifyState.auth.authPhase === "connecting" ? (
-            <div className={styles.spotifyConnectActions}>
+            <div className={setupShellStyles.spotifyConnectActions}>
               <ActionButton
-                className={styles.spotifyConnectCancelBtn}
+                className={setupShellStyles.spotifyConnectCancelBtn}
                 onClick={spotifyState.auth.cancelConnectSpotify}
                 type="button"
                 variant="neutral"
@@ -150,7 +172,7 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
 
           <div ref={setSpotifyHintAnchor}>
             <ActionButton
-              className={styles.spotifySetupOpenBtn}
+              className={setupShellStyles.spotifySetupOpenBtn}
               onClick={openSetup}
               type="button"
               variant="neutral"
@@ -172,10 +194,11 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
         onSourceChange={setActiveSource}
         spotifyState={spotifyState}
       />
-      <PlaylistEditModal
-        isOpen={spotifyState.queue.isEditModalOpen}
-        onClose={spotifyState.queue.closeEditModal}
-      />
+      {hasOpenedEditModal ? (
+        <Suspense fallback={null}>
+          <PlaylistEditModal isOpen={isEditModalOpen} onClose={spotifyState.queue.closeEditModal} />
+        </Suspense>
+      ) : null}
     </>
   );
 }
@@ -219,7 +242,11 @@ function SpotifyAccountBadge({ accountType }: { accountType: "free" | "premium" 
 
   return (
     <span
-      className={accountType === "premium" ? styles.spotifyPremiumBadge : styles.spotifyFreeBadge}
+      className={
+        accountType === "premium"
+          ? setupShellStyles.spotifyPremiumBadge
+          : setupShellStyles.spotifyFreeBadge
+      }
     >
       {accountType === "premium" ? `✦ ${t("lobby.spotify.premium")}` : t("lobby.spotify.free")}
     </span>

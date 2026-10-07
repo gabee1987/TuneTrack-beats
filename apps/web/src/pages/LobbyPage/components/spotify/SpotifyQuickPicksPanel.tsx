@@ -9,7 +9,8 @@ import { useAppLoading } from "../../../../features/loading";
 import { TextInput } from "../../../../features/ui/TextInput";
 import { SpotifyCandidateReviewPanel } from "./SpotifyCandidateReviewPanel";
 import type { LobbySpotifyState } from "./spotifySetupTypes";
-import styles from "./spotifyStyles";
+import discoveryStyles from "./spotifyDiscovery.module.css";
+import panelsStyles from "./spotifyPanels.module.css";
 
 export function SpotifyQuickPicksPanel({
   currentSettings,
@@ -43,10 +44,10 @@ export function SpotifyQuickPicksPanel({
   }, [hideLoading, isGenerating, showLoading, t]);
 
   return (
-    <div className={styles.spotifyDiscoveryPanel}>
+    <div className={discoveryStyles.spotifyDiscoveryPanel}>
       {!hasGeneratedTracks ? (
-        <section className={styles.spotifyQuickPicksPanel}>
-          <label className={styles.spotifyQuickPickLimitField}>
+        <section className={panelsStyles.spotifyQuickPicksPanel}>
+          <label className={panelsStyles.spotifyQuickPickLimitField}>
             <span>{t("lobby.spotify.quickPicks.limitLabel")}</span>
             <TextInput
               inputMode="numeric"
@@ -57,19 +58,19 @@ export function SpotifyQuickPicksPanel({
               value={targetCountInput}
             />
           </label>
-          <div className={styles.spotifyQuickPickGrid}>
+          <div className={panelsStyles.spotifyQuickPickGrid}>
             {SPOTIFY_QUICK_PICK_PRESETS.map((preset) => (
               <button
                 key={preset.id}
-                className={styles.spotifyQuickPickCard}
+                className={panelsStyles.spotifyQuickPickCard}
                 disabled={isGenerating}
                 onClick={() => generateCandidatesFromPreset(preset.id, targetCount)}
                 type="button"
               >
-                <span className={styles.spotifyQuickPickTitle}>
+                <span className={panelsStyles.spotifyQuickPickTitle}>
                   {t(`lobby.spotify.quickPicks.${preset.id}.title`)}
                 </span>
-                <span className={styles.spotifyQuickPickDescription}>
+                <span className={panelsStyles.spotifyQuickPickDescription}>
                   {t(`lobby.spotify.quickPicks.${preset.id}.description`)}
                 </span>
               </button>

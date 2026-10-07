@@ -14,7 +14,9 @@ import { SearchIcon } from "./spotifySetupIcons";
 import { SpotifyOpenedPlaylistPanel } from "./SpotifyOpenedPlaylistPanel";
 import { SpotifySmartSearchResultRow } from "./SpotifySmartSearchResultRow";
 import { SMART_SEARCH_TYPES, type LobbySpotifyState } from "./spotifySetupTypes";
-import styles from "./spotifyStyles";
+import discoveryStyles from "./spotifyDiscovery.module.css";
+import sharedStyles from "./spotifyShared.module.css";
+import panelsStyles from "./spotifyPanels.module.css";
 
 export function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: LobbySpotifyState }) {
   const { t } = useI18n();
@@ -222,7 +224,7 @@ export function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: Lob
   }
 
   return (
-    <div className={styles.spotifyDiscoveryPanel}>
+    <div className={discoveryStyles.spotifyDiscoveryPanel}>
       {openedPlaylistPhase !== "idle" ? (
         <SpotifyOpenedPlaylistPanel
           onAddAll={handleOpenedAddAll}
@@ -238,12 +240,12 @@ export function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: Lob
           queuedTrackIds={queuedTrackIds}
         />
       ) : (
-        <section className={styles.spotifyDiscoverySearch}>
-          <div className={styles.spotifyDiscoveryToolbar}>
-            <div className={styles.spotifySearchRow}>
+        <section className={discoveryStyles.spotifyDiscoverySearch}>
+          <div className={discoveryStyles.spotifyDiscoveryToolbar}>
+            <div className={discoveryStyles.spotifySearchRow}>
               <TextInput
                 aria-label={t("lobby.spotify.source.findPlaylists")}
-                className={styles.spotifySearchInput}
+                className={discoveryStyles.spotifySearchInput}
                 disabled={isSearching}
                 onChange={(event) => setSmartSearchQuery(event.target.value)}
                 onKeyDown={(event) => {
@@ -255,7 +257,7 @@ export function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: Lob
               />
               <button
                 aria-label={t("lobby.spotify.builder.search")}
-                className={styles.spotifySearchIconBtn}
+                className={discoveryStyles.spotifySearchIconBtn}
                 disabled={smartSearchQuery.trim().length < 2 || isSearching}
                 onClick={searchSpotifyMusic}
                 type="button"
@@ -263,12 +265,14 @@ export function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: Lob
                 <SearchIcon />
               </button>
             </div>
-            <div className={styles.spotifySearchTypeChips} role="tablist">
+            <div className={discoveryStyles.spotifySearchTypeChips} role="tablist">
               {SMART_SEARCH_TYPES.map((type) => (
                 <button
                   aria-selected={smartSearchType === type.value}
-                  className={`${styles.spotifySearchTypeChip} ${
-                    smartSearchType === type.value ? styles.spotifySearchTypeChipActive : ""
+                  className={`${discoveryStyles.spotifySearchTypeChip} ${
+                    smartSearchType === type.value
+                      ? discoveryStyles.spotifySearchTypeChipActive
+                      : ""
                   }`}
                   disabled={isSearching}
                   key={type.value}
@@ -284,7 +288,7 @@ export function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: Lob
 
           {smartSearchPhase === "error" && smartSearchError ? (
             <p
-              className={`${styles.spotifyStatusLine} ${styles.spotifyStatusError} ${styles.spotifyDiscoveryStatusOffset}`}
+              className={`${sharedStyles.spotifyStatusLine} ${sharedStyles.spotifyStatusError} ${discoveryStyles.spotifyDiscoveryStatusOffset}`}
             >
               {smartSearchError}
             </p>
@@ -305,7 +309,9 @@ export function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: Lob
               showSelectedActionPadding={selectedSearchTracks.length > 0}
             />
           ) : smartSearchHasSearched && smartSearchPhase === "idle" ? (
-            <p className={`${styles.spotifyEmptyState} ${styles.spotifyDiscoveryStatusOffset}`}>
+            <p
+              className={`${panelsStyles.spotifyEmptyState} ${discoveryStyles.spotifyDiscoveryStatusOffset}`}
+            >
               {t("lobby.spotify.builder.noResults")}
             </p>
           ) : null}
@@ -313,13 +319,13 @@ export function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: Lob
           {selectedSearchTracks.length > 0 ? (
             <m.div
               animate={{ opacity: 1, y: 0 }}
-              className={styles.spotifySearchSelectedAction}
+              className={discoveryStyles.spotifySearchSelectedAction}
               initial={{ opacity: 0, y: 18 }}
               transition={createStandardTransition(reduceMotion)}
             >
               {selectedUnqueuedSearchTracks.length > 0 ? (
                 <ActionButton
-                  className={styles.spotifySearchAddSelectedBtn}
+                  className={discoveryStyles.spotifySearchAddSelectedBtn}
                   onClick={handleAddSelectedTracks}
                   type="button"
                   variant="neutral"
@@ -331,7 +337,7 @@ export function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: Lob
               ) : null}
               {selectedQueuedSearchTracks.length > 0 ? (
                 <ActionButton
-                  className={`${styles.spotifySearchAddSelectedBtn} ${styles.spotifySearchRemoveSelectedBtn}`}
+                  className={`${discoveryStyles.spotifySearchAddSelectedBtn} ${discoveryStyles.spotifySearchRemoveSelectedBtn}`}
                   onClick={handleRemoveSelectedTracks}
                   type="button"
                   variant="danger"
@@ -387,8 +393,8 @@ function SmartSearchVirtualResultList({
 
   return (
     <div
-      className={`${styles.spotifySmartResultList} ${
-        showSelectedActionPadding ? styles.spotifySmartResultListWithAction : ""
+      className={`${discoveryStyles.spotifySmartResultList} ${
+        showSelectedActionPadding ? discoveryStyles.spotifySmartResultListWithAction : ""
       }`}
       ref={listRef}
     >
@@ -432,7 +438,7 @@ function SmartSearchVirtualResultList({
       </div>
       {hasMore ? (
         <button
-          className={styles.spotifySearchMoreLink}
+          className={discoveryStyles.spotifySearchMoreLink}
           disabled={isLoadingMore}
           onClick={onLoadMore}
           type="button"

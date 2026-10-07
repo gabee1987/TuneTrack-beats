@@ -3,7 +3,7 @@ import type { PublicTrackInfo } from "@tunetrack/shared/client";
 import { m } from "framer-motion";
 import { useRef } from "react";
 import { PlaylistTrackRow } from "./PlaylistTrackRow";
-import styles from "./playlistEditModalStyles";
+import styles from "./playlistEditList.module.css";
 
 interface PlaylistTrackListProps {
   canSelect?: boolean;

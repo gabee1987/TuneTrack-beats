@@ -8,7 +8,7 @@ import { LobbySpotifySection } from "./spotify/LobbySpotifySection";
 import { LobbySectionHeader } from "./LobbySectionHeader";
 import { LobbyRoomSettingsStatus } from "./LobbyRoomSettingsStatus";
 import type { LobbyHostSettingsPanelProps } from "./LobbyHostSettings.types";
-import styles from "../lobbyPageStyles";
+import styles from "../lobbySettings.module.css";
 
 export function LobbyHostSettingsPanel({
   currentSettings,

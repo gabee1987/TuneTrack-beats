@@ -12,7 +12,7 @@ import { useI18n } from "../../../features/i18n";
 import { RangeField } from "../../../features/ui/RangeField";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import { getLobbyPlayerDisplayState } from "../lobbyPlayerSelectors";
-import styles from "../lobbyPageStyles";
+import styles from "../lobbySettings.module.css";
 import type {
   LobbyKickPlayerActionState,
   LobbyPlayerSettingsActionState,

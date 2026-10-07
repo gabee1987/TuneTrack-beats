@@ -8,7 +8,7 @@ import {
 } from "../../../features/motion";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import { getUsesMobileControls, subscribeViewport } from "../../../features/viewport/viewportStore";
-import styles from "./gamePageActionPanelsStyles";
+import styles from "./gamePageActionPanelsDock.module.css";
 
 export function useMobileControlPortalTarget(): HTMLElement | null {
   const usesMobileControls = useSyncExternalStore(subscribeViewport, getUsesMobileControls);

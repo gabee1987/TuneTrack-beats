@@ -113,7 +113,7 @@
 
 .tokenSpendFlyoutAnchor {
   position: fixed;
-  z-index: 5000;
+  z-index: var(--z-celebration);
   transform: translate(-50%, -50%);
   pointer-events: none;
 }

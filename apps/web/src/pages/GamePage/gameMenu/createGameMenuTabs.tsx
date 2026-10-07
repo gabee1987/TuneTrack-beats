@@ -7,7 +7,8 @@ import type {
   KickPlayerActionState,
   TransferHostActionState,
 } from "../GamePage.types";
-import styles from "../gamePageStyles";
+import chromeStyles from "../gamePageChrome.module.css";
+import menuStyles from "../gamePageMenu.module.css";
 import { GameMenuPlayerItem } from "./GameMenuPlayerItem";
 import { HistoryTabContent } from "./HistoryTabContent";
 import { PlaybackTabContent } from "./PlaybackTabContent";
@@ -56,9 +57,9 @@ export function createGameMenuTabs({
       id: "players",
       label: t("gameMenu.tabs.players"),
       content: (
-        <div className={styles.menuInfoSection}>
-          <h3 className={styles.menuInfoTitle}>{t("gameMenu.playersSummary")}</h3>
-          <ul className={styles.menuPlayerList}>
+        <div className={chromeStyles.menuInfoSection}>
+          <h3 className={chromeStyles.menuInfoTitle}>{t("gameMenu.playersSummary")}</h3>
+          <ul className={menuStyles.menuPlayerList}>
             {roomState.players.map((player) => (
               <GameMenuPlayerItem
                 awardTtActionState={awardTtActionState}
@@ -99,12 +100,12 @@ export function createGameMenuTabs({
     {
       id: "view",
       label: t("gameMenu.tabs.view"),
-      content: <p className={styles.menuPlaceholder}>{t("gameMenu.viewPlaceholder")}</p>,
+      content: <p className={menuStyles.menuPlaceholder}>{t("gameMenu.viewPlaceholder")}</p>,
     },
     {
       id: "settings",
       label: t("gameMenu.tabs.theme"),
-      content: <p className={styles.menuPlaceholder}>{t("gameMenu.themePlaceholder")}</p>,
+      content: <p className={menuStyles.menuPlaceholder}>{t("gameMenu.themePlaceholder")}</p>,
     },
     {
       id: "language",
@@ -117,7 +118,7 @@ export function createGameMenuTabs({
             id: "dev" as const,
             label: t("gameMenu.tabs.diagnostics"),
             content: (
-              <p className={styles.menuPlaceholder}>{t("gameMenu.diagnosticsPlaceholder")}</p>
+              <p className={menuStyles.menuPlaceholder}>{t("gameMenu.diagnosticsPlaceholder")}</p>
             ),
           },
         ]

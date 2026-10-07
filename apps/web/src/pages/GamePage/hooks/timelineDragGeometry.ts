@@ -10,7 +10,6 @@ export const TIMELINE_SLOT_SELECTOR = "[data-timeline-slot='true']";
  */
 export interface TimelineDragGeometry {
   containerRect: Box;
-  isGridLayout: boolean;
   scrollLeft: number;
   scrollTop: number;
   shiftX: number;
@@ -26,7 +25,6 @@ function toBox(rect: DOMRectReadOnly): Box {
 export function measureTimelineDragGeometry(container: HTMLElement): TimelineDragGeometry {
   return {
     containerRect: toBox(container.getBoundingClientRect()),
-    isGridLayout: getComputedStyle(container).display === "grid",
     scrollLeft: container.scrollLeft,
     scrollTop: container.scrollTop,
     shiftX: 0,
@@ -64,64 +62,40 @@ export function applyAncestorScroll(
   };
 }
 
-function getGridPreviewIndex(
-  centerX: number,
-  centerY: number,
-  slotRects: Box[],
-  previewSlotIndex: number,
-): number {
-  let nextPreviewIndex = 0;
+/**
+ * The preview stays in its slot until the card centre leaves that slot by this share of a slot,
+ * so a card held on a slot boundary does not flip between two slots.
+ */
+const SLOT_KEEP_MARGIN_RATIO = 0.08;
 
-  for (const [slotIndex, cardRect] of slotRects.entries()) {
-    if (slotIndex === previewSlotIndex) {
-      continue;
-    }
-
-    const cardCenterX = cardRect.left + cardRect.width / 2;
-    const cardCenterY = cardRect.top + cardRect.height / 2;
-
-    if (centerY > cardRect.bottom) {
-      nextPreviewIndex += 1;
-      continue;
-    }
-
-    if (centerY >= cardRect.top && centerY <= cardRect.bottom) {
-      if (centerX > cardCenterX) {
-        nextPreviewIndex += 1;
-        continue;
-      }
-
-      break;
-    }
-
-    if (centerY < cardCenterY) {
-      break;
-    }
-  }
-
-  return nextPreviewIndex;
+function isInsideSlot(centerX: number, centerY: number, slotRect: Box): boolean {
+  const marginX = slotRect.width * SLOT_KEEP_MARGIN_RATIO;
+  const marginY = slotRect.height * SLOT_KEEP_MARGIN_RATIO;
+  return (
+    centerX >= slotRect.left - marginX &&
+    centerX <= slotRect.right + marginX &&
+    centerY >= slotRect.top - marginY &&
+    centerY <= slotRect.bottom + marginY
+  );
 }
 
-function getHorizontalPreviewIndex(
-  centerX: number,
-  slotRects: Box[],
-  previewSlotIndex: number,
-): number {
-  let nextPreviewIndex = 0;
+function getNearestSlotIndex(centerX: number, centerY: number, slotRects: Box[]): number {
+  let nearestSlotIndex = 0;
+  let nearestDistance = Number.POSITIVE_INFINITY;
 
-  for (const [slotIndex, cardRect] of slotRects.entries()) {
-    if (slotIndex === previewSlotIndex) {
-      continue;
-    }
+  for (const [slotIndex, slotRect] of slotRects.entries()) {
+    const distance = Math.hypot(
+      centerX - (slotRect.left + slotRect.width / 2),
+      centerY - (slotRect.top + slotRect.height / 2),
+    );
 
-    if (centerX > cardRect.left + cardRect.width / 2) {
-      nextPreviewIndex += 1;
-    } else {
-      break;
+    if (distance < nearestDistance) {
+      nearestDistance = distance;
+      nearestSlotIndex = slotIndex;
     }
   }
 
-  return nextPreviewIndex;
+  return nearestSlotIndex;
 }
 
 /** `previewSlotIndex` is where the preview sits now; the cards fill every other slot. */
@@ -133,7 +107,13 @@ export function getPreviewIndexForActiveRect(
   const centerX = activeRect.left + activeRect.width / 2 - geometry.shiftX;
   const centerY = activeRect.top + activeRect.height / 2 - geometry.shiftY;
 
-  return geometry.isGridLayout
-    ? getGridPreviewIndex(centerX, centerY, geometry.slotRects, previewSlotIndex)
-    : getHorizontalPreviewIndex(centerX, geometry.slotRects, previewSlotIndex);
+  const currentSlotRect = geometry.slotRects[previewSlotIndex];
+
+  // The card goes to the slot under its centre, as the drop shows it: half over a neighbour
+  // is enough, where the old rule needed the card fully over it (20 B23).
+  if (currentSlotRect && isInsideSlot(centerX, centerY, currentSlotRect)) {
+    return previewSlotIndex;
+  }
+
+  return getNearestSlotIndex(centerX, centerY, geometry.slotRects);
 }

@@ -64,5 +64,5 @@ console.log(`  entry chunk raw       ${kilobytes(entry.raw)} kB (gate <= 100)`);
 console.log(`  motion runtime eager  ${hasEagerMotion ? "yes" : "no"} (gate: no)`);
 console.log(`  vendor-zod emitted    ${hasZodChunk ? "yes" : "no"} (gate: no)`);
 console.log(
-  `  largest CSS raw       ${kilobytes(largestCss.raw)} kB ${largestCss.fileName} (gate <= 20)`,
+  `  largest CSS raw       ${kilobytes(largestCss.raw)} kB ${largestCss.fileName} (gate <= 42)`,
 );

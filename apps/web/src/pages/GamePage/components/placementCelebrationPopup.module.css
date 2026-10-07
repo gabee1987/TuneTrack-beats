@@ -1,0 +1,187 @@
+.layer {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-celebration);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.stage {
+  --celebration-tone: var(--color-accent-brand);
+  --celebration-tone-soft: color-mix(in srgb, var(--color-accent-brand) 55%, var(--color-success));
+
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  will-change: transform, opacity;
+}
+
+.failure {
+  --celebration-tone: var(--color-danger);
+  --celebration-tone-soft: color-mix(in srgb, var(--color-danger) 70%, var(--color-warning));
+}
+
+.badgeAnchor {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.effects {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+}
+
+.glow,
+.ring,
+.confetti,
+.shard {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform, opacity;
+}
+
+.glow {
+  width: min(78vw, 460px);
+  aspect-ratio: 1;
+  margin-left: calc(min(78vw, 460px) * -0.5);
+  margin-top: calc(min(78vw, 460px) * -0.5);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--celebration-tone) 46%, transparent) 0%,
+    color-mix(in srgb, var(--celebration-tone-soft) 16%, transparent) 42%,
+    transparent 70%
+  );
+}
+
+.ring {
+  width: 96px;
+  height: 96px;
+  margin-left: -48px;
+  margin-top: -48px;
+  border: 3px solid color-mix(in srgb, var(--celebration-tone) 80%, white);
+  border-radius: 50%;
+}
+
+.confetti {
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  margin-top: -5px;
+}
+
+.strip {
+  width: 7px;
+  height: 16px;
+  margin-left: -3.5px;
+  margin-top: -8px;
+  border-radius: 2px;
+}
+
+.dot {
+  border-radius: 50%;
+}
+
+.star {
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  margin-top: -8px;
+  clip-path: polygon(
+    50% 0%,
+    61% 33%,
+    98% 35%,
+    69% 57%,
+    79% 91%,
+    50% 71%,
+    21% 91%,
+    31% 57%,
+    2% 35%,
+    39% 33%
+  );
+}
+
+.brand {
+  background: var(--color-accent-brand);
+}
+
+.gold {
+  background: var(--color-warning);
+}
+
+.mint {
+  background: var(--color-success);
+}
+
+.pink {
+  background: color-mix(in srgb, var(--color-accent-brand) 62%, white);
+}
+
+.shard {
+  width: 12px;
+  height: 14px;
+  margin-left: -6px;
+  margin-top: -7px;
+  background: color-mix(in srgb, var(--color-danger) 82%, white);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 76%);
+}
+
+.badge {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(68px, 16vw, 96px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 32% 28%,
+    color-mix(in srgb, var(--celebration-tone-soft) 70%, white) 0%,
+    var(--celebration-tone) 58%,
+    color-mix(in srgb, var(--celebration-tone) 70%, black) 100%
+  );
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--celebration-tone) 30%, transparent),
+    0 18px 40px color-mix(in srgb, var(--celebration-tone) 38%, transparent);
+  will-change: transform, opacity;
+}
+
+.mark {
+  width: 62%;
+  height: 62%;
+  stroke: var(--color-on-accent-brand);
+  stroke-width: 5.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.message {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 0.28em;
+  max-width: min(86vw, 520px);
+  margin: 0;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--celebration-tone) 34%, var(--color-surface-elevated-solid));
+  outline: 2px solid color-mix(in srgb, var(--celebration-tone) 70%, white 12%);
+  box-shadow:
+    0 18px 48px color-mix(in srgb, black 36%, transparent),
+    var(--shadow-overlay);
+  color: var(--color-text-primary);
+  font-size: clamp(20px, 3.2vw, 32px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  text-align: center;
+  will-change: transform, opacity;
+}
+
+.word {
+  display: inline-block;
+}
