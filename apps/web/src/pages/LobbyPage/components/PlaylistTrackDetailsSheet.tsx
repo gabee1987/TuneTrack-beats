@@ -1,5 +1,5 @@
-import type { PublicTrackInfo, TrackMetadataStatus } from "@tunetrack/shared";
-import { motion } from "framer-motion";
+import type { PublicTrackInfo, TrackMetadataStatus } from "@tunetrack/shared/client";
+import { m } from "framer-motion";
 import { type FormEvent, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../../../features/i18n";
@@ -68,7 +68,7 @@ export function PlaylistTrackDetailsSheet({
   const detailsSheet = (
     <MotionPresence>
       {track ? (
-        <motion.div
+        <m.div
           animate={{ opacity: 1 }}
           className={styles.detailsOverlay}
           exit={{ opacity: 0 }}
@@ -76,7 +76,7 @@ export function PlaylistTrackDetailsSheet({
           onClick={onClose}
           transition={{ duration: 0.16 }}
         >
-          <motion.form
+          <m.form
             animate={{ x: 0 }}
             className={styles.detailsSheet}
             exit={{ x: reduceMotion ? 0 : 40 }}
@@ -206,8 +206,8 @@ export function PlaylistTrackDetailsSheet({
                 {t("lobby.playlist.saveTrack")}
               </ActionButton>
             </div>
-          </motion.form>
-        </motion.div>
+          </m.form>
+        </m.div>
       ) : null}
     </MotionPresence>
   );

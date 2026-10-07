@@ -6,7 +6,7 @@ import {
   type ServerErrorPayload,
   ServerToClientEvent,
   type StateUpdatePayload,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useEffect, useRef, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useI18n } from "../../../features/i18n";

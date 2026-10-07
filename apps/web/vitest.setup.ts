@@ -1,12 +1,22 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
+import { availableLanguages, loadLanguageResource } from "./src/features/i18n/languages";
 import { installElementRects } from "./src/test/stubs/layout";
 import { installMatchMedia, resetMatchMedia } from "./src/test/stubs/matchMedia";
 import { installObservers } from "./src/test/stubs/observers";
 import { installStorage, resetStorage } from "./src/test/stubs/storage";
 import { installViewport, resetViewport } from "./src/test/stubs/viewport";
 import { resetSequentialUuid } from "./src/test/stubs/crypto";
+
+vi.mock("framer-motion", async (importOriginal) => {
+  const { withEagerMotion } = await import("./src/test/stubs/framerMotion");
+  return withEagerMotion(await importOriginal<typeof import("framer-motion")>());
+});
+
+// `I18nProvider` renders only a loaded catalogue; the app loads one in `main.tsx`, tests load
+// both up front so every render stays synchronous.
+await Promise.all(availableLanguages.map((language) => loadLanguageResource(language.id)));
 
 installElementRects();
 installMatchMedia();

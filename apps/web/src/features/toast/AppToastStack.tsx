@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { MotionPresence, createToastSlideMotion, useReducedMotionPreference } from "../motion";
 import type { AppToast } from "./AppToast.types";
 import styles from "./AppToastStack.module.css";
@@ -14,7 +14,7 @@ export function AppToastStack({ toasts }: AppToastStackProps) {
     <div className={styles.toastContainer} aria-live="polite" aria-atomic="false">
       <MotionPresence mode="sync">
         {toasts.map((toast) => (
-          <motion.div
+          <m.div
             key={toast.id}
             animate="animate"
             className={`${styles.toast} ${styles[`toast--${toast.type}`]}`}
@@ -23,7 +23,7 @@ export function AppToastStack({ toasts }: AppToastStackProps) {
             variants={createToastSlideMotion(reduceMotion)}
           >
             <span className={styles.toastText}>{toast.message}</span>
-          </motion.div>
+          </m.div>
         ))}
       </MotionPresence>
     </div>

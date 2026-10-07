@@ -4,6 +4,10 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: {
     alias: {
+      // Before the bare key, which would otherwise match this one as a prefix.
+      "@tunetrack/shared/client": fileURLToPath(
+        new URL("../../packages/shared/src/client.ts", import.meta.url),
+      ),
       "@tunetrack/shared": fileURLToPath(
         new URL("../../packages/shared/src/index.ts", import.meta.url),
       ),

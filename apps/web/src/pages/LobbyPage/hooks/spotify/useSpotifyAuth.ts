@@ -5,7 +5,7 @@ import {
   type SpotifyAccountType,
   type SpotifyAuthResultPayload,
   type SpotifyAuthUrlPayload,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "../../../../features/i18n";
 import { localizeSpotifyAuthError } from "../../../../features/i18n/localizedErrors";

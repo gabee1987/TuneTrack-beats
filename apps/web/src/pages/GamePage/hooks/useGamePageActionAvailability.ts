@@ -1,4 +1,4 @@
-import { CHALLENGE_TT_COST, type PublicRoomState } from "@tunetrack/shared";
+import { CHALLENGE_TT_COST, type PublicRoomState } from "@tunetrack/shared/client";
 
 interface UseGamePageActionAvailabilityOptions {
   currentPlayerId: string | null;

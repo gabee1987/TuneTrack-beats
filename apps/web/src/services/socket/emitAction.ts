@@ -1,4 +1,4 @@
-import type { ActionAck, ClientToServerEventName } from "@tunetrack/shared";
+import type { ActionAck, ClientToServerEventName } from "@tunetrack/shared/client";
 import { createSessionId } from "../session/sessionId";
 import { getSocketClient } from "./socketClient";
 

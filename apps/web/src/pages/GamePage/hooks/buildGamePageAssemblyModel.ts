@@ -1,4 +1,4 @@
-import type { PublicRoomState } from "@tunetrack/shared";
+import type { PublicRoomState } from "@tunetrack/shared/client";
 import type { GamePageAssemblyModel, LoadedGamePageController } from "../GamePage.types";
 
 // The player a host may skip: the claimed challenger during a challenge, else the active player.

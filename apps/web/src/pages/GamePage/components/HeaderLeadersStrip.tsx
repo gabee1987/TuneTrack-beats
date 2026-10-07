@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import {
   MotionPresence,
   createStandardTransition,
@@ -26,7 +26,7 @@ export function HeaderLeadersStrip({
   return (
     <MotionPresence initial={false} mode="popLayout">
       {show ? (
-        <motion.div
+        <m.div
           animate={{ opacity: 1 }}
           className={styles.headerLeadersDisclosure}
           exit={{ opacity: 0 }}
@@ -55,7 +55,7 @@ export function HeaderLeadersStrip({
               </article>
             ))}
           </div>
-        </motion.div>
+        </m.div>
       ) : null}
     </MotionPresence>
   );

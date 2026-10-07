@@ -1,4 +1,4 @@
-import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
+import { AnimatePresence, LayoutGroup, m } from "framer-motion";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   createAppShellMenuSheetMotionTargets,
@@ -100,7 +100,7 @@ export function AppShellMenuSheet({
   );
 
   return (
-    <motion.aside
+    <m.aside
       animate={menuSheetMotionTargets.animate}
       className={styles.menuSheet}
       exit={menuSheetMotionTargets.exit}
@@ -145,7 +145,7 @@ export function AppShellMenuSheet({
             >
               <AnimatePresence>
                 {tab.id === activeTabId ? (
-                  <motion.span
+                  <m.span
                     animate={{ opacity: 1 }}
                     className={styles.tabButtonActiveBackground}
                     exit={{ opacity: 0 }}
@@ -154,7 +154,7 @@ export function AppShellMenuSheet({
                     transition={createMenuTabActivationTransition(reduceMotion)}
                   >
                     <span className={styles.tabButtonActiveGlow} />
-                  </motion.span>
+                  </m.span>
                 ) : null}
               </AnimatePresence>
               <span className={styles.tabButtonLabel}>{tab.label}</span>
@@ -202,6 +202,6 @@ export function AppShellMenuSheet({
           )}
         </footer>
       ) : null}
-    </motion.aside>
+    </m.aside>
   );
 }

@@ -4,7 +4,7 @@ import {
   type PlaylistTracksPayload,
   type PublicTrackInfo,
   type TrackMetadataStatus,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getSocketClient } from "../../../services/socket/socketClient";

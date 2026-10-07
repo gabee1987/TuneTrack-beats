@@ -1,4 +1,4 @@
-import { PLAYER_NAME_MAX_LENGTH, PLAYER_NAME_MIN_LENGTH } from "@tunetrack/shared";
+import { PLAYER_NAME_MAX_LENGTH, PLAYER_NAME_MIN_LENGTH } from "@tunetrack/shared/client";
 import { create } from "zustand";
 import {
   type DeviceStorageArea,

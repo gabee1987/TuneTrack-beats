@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { AppRouteFallback } from "../../app/components/AppRouteFallback";
+import { MotionLayoutFeatures } from "../../features/motion/MotionLayoutFeatures";
 import { RoomResetModal } from "../../features/ui/RoomResetModal";
 import { usePageLayoutMode } from "../../hooks/usePageLayoutMode";
 import { buildLobbyAssemblyModel } from "./hooks/buildLobbyAssemblyModel";
@@ -21,7 +22,7 @@ export function LobbyPage() {
   const model = buildLobbyAssemblyModel(controller);
 
   return (
-    <>
+    <MotionLayoutFeatures>
       <RoomResetModal
         isOpen={controller.hasClosedRoomReset}
         onReset={controller.handleClosedRoomReset}
@@ -34,6 +35,6 @@ export function LobbyPage() {
           <LobbyPageDesktop model={model} />
         )}
       </Suspense>
-    </>
+    </MotionLayoutFeatures>
   );
 }

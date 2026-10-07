@@ -1,4 +1,4 @@
-import { type PublicRoomState } from "@tunetrack/shared";
+import { type PublicRoomState } from "@tunetrack/shared/client";
 import { useCallback, useMemo } from "react";
 import { useI18n } from "../../../features/i18n";
 import type { GamePagePlayerNameResolver } from "../GamePage.types";

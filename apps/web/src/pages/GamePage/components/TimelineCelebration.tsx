@@ -1,5 +1,5 @@
 import type { TimelineCelebrationTone } from "../GamePage.types";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import {
   createTimelineCelebrationVariants,
   createTimelineCelebrationTransition,
@@ -26,7 +26,7 @@ export function TimelineCelebration({ message, tone = "success" }: TimelineCeleb
             : styles.timelineCelebrationBurstSuccess
         }`}
       />
-      <motion.div
+      <m.div
         className={`${styles.timelineCelebrationMessage} ${
           tone === "failure"
             ? styles.timelineCelebrationMessageFailure
@@ -39,7 +39,7 @@ export function TimelineCelebration({ message, tone = "success" }: TimelineCeleb
         variants={celebrationVariants}
       >
         {message}
-      </motion.div>
+      </m.div>
     </div>
   );
 }

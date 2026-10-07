@@ -9,3 +9,12 @@ row; rows are never edited.
 | ---------- | ----------------- | --------------- | -------------- | -------------- | --------------------- | ------------ | -------------------- |
 | 2026-10-07 | review baseline   | 147.0           | 464.0          | 119.4          | yes                   | yes          | 68.8                 |
 | 2026-10-07 | D0 (A1–A8, B1–B2) | 147.5           | 465.7          | 121.1          | yes                   | yes          | 68.8                 |
+| 2026-10-07 | C3–C6             | 148.1           | 467.3          | 122.8          | yes                   | yes          | 68.8                 |
+| 2026-10-07 | D1                | 114.9           | 365.1          | 142.6          | no                    | yes          | 68.8                 |
+| 2026-10-07 | D2                | 114.9           | 365.0          | 142.5          | no                    | no           | 68.8                 |
+| 2026-10-07 | D3                | 90.8            | 273.6          | 51.1           | no                    | no           | 68.8                 |
+
+From D1 the `vendor-motion` column means the framer animation runtime (`domAnimationFeatures`
+chunk, 19.5 kB gzip, fetched after first paint); the `m`/LazyMotion core sits in the entry.
+From D3 the active catalogue (`en` 11.6 kB, `hu` 13.1 kB gzip) loads before the app mounts and
+is not in the eager column.

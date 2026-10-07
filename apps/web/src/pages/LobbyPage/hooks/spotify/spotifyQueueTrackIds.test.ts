@@ -1,4 +1,4 @@
-import type { PublicTrackInfo, SpotifySmartSearchResult } from "@tunetrack/shared";
+import type { PublicTrackInfo, SpotifySmartSearchResult } from "@tunetrack/shared/client";
 import { describe, expect, it } from "vitest";
 import {
   appendUniqueSmartSearchResults,

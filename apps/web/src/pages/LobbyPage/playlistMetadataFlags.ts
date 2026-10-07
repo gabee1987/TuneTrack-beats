@@ -1,4 +1,4 @@
-import type { PublicTrackInfo } from "@tunetrack/shared";
+import type { PublicTrackInfo } from "@tunetrack/shared/client";
 
 const SUSPICIOUS_ALBUM_PATTERNS = [
   /\bremaster(?:ed)?\b/i,

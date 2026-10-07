@@ -1,4 +1,4 @@
-import { type PublicPlayerState, type PublicRoomSettings } from "@tunetrack/shared";
+import { type PublicPlayerState, type PublicRoomSettings } from "@tunetrack/shared/client";
 import { useI18n } from "../../../features/i18n";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { LobbyPlayerListItem } from "./LobbyPlayerListItem";

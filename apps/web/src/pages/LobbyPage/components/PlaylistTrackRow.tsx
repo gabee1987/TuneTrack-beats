@@ -1,5 +1,5 @@
-import type { PublicTrackInfo } from "@tunetrack/shared";
-import { animate, motion, useMotionValue, useTransform } from "framer-motion";
+import type { PublicTrackInfo } from "@tunetrack/shared/client";
+import { animate, m, useMotionValue, useTransform } from "framer-motion";
 import { useEffect, useRef } from "react";
 import { useI18n } from "../../../features/i18n";
 import { getPlaylistTrackCurationFlags } from "../playlistMetadataFlags";
@@ -60,12 +60,12 @@ export function PlaylistTrackRow({
 
   return (
     <div className={styles.trackRowWrapper} ref={rowRef}>
-      <motion.div className={styles.deleteZone} style={{ width: zoneWidth, opacity: zoneOpacity }}>
-        <motion.div style={{ opacity: iconOpacity, scale: iconScale }}>
+      <m.div className={styles.deleteZone} style={{ width: zoneWidth, opacity: zoneOpacity }}>
+        <m.div style={{ opacity: iconOpacity, scale: iconScale }}>
           <TrashIcon />
-        </motion.div>
-      </motion.div>
-      <motion.div
+        </m.div>
+      </m.div>
+      <m.div
         className={`${styles.trackRow} ${isSelected ? styles.trackRowSelected : ""}`}
         drag="x"
         dragConstraints={{ left: -SWIPE_REVEAL_WIDTH, right: 0 }}
@@ -81,7 +81,7 @@ export function PlaylistTrackRow({
           onToggleSelect={() => onToggleSelect(track.id)}
           track={track}
         />
-      </motion.div>
+      </m.div>
     </div>
   );
 }

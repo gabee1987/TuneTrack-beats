@@ -1,4 +1,4 @@
-import type { SpotifySmartSearchTypeFilter } from "@tunetrack/shared";
+import type { SpotifySmartSearchTypeFilter } from "@tunetrack/shared/client";
 import type { UseLobbySpotifyResult } from "../../hooks/spotify/lobbySpotify.types";
 
 export type LobbySpotifyState = UseLobbySpotifyResult;

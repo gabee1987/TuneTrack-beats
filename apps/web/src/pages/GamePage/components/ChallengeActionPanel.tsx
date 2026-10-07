@@ -1,5 +1,5 @@
-import { CHALLENGE_TT_COST } from "@tunetrack/shared";
-import { motion, useIsPresent } from "framer-motion";
+import { CHALLENGE_TT_COST } from "@tunetrack/shared/client";
+import { m, useIsPresent } from "framer-motion";
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -229,7 +229,7 @@ export function ChallengeActionPanel({
   const challengeCallout = (
     <MotionPresence>
       {challengePhase ? (
-        <motion.section
+        <m.section
           animate="animate"
           aria-live="polite"
           className={panelClassName}
@@ -263,7 +263,7 @@ export function ChallengeActionPanel({
               ) : null}
             </div>
           </div>
-        </motion.section>
+        </m.section>
       ) : null}
     </MotionPresence>
   );

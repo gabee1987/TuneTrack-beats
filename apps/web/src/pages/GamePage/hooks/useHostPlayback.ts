@@ -1,4 +1,4 @@
-import { ServerToClientEvent, type PublicRoomState } from "@tunetrack/shared";
+import { ServerToClientEvent, type PublicRoomState } from "@tunetrack/shared/client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getSocketClient } from "../../../services/socket/socketClient";
 import { useSpotifyPlaybackSdk } from "./useSpotifyPlaybackSdk";

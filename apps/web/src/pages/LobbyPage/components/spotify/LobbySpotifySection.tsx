@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useEffect, useId, useState } from "react";
-import type { PublicRoomSettings } from "@tunetrack/shared";
+import type { PublicRoomSettings } from "@tunetrack/shared/client";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FirstRunHint } from "../../../../features/hints/FirstRunHint";
 import { useI18n } from "../../../../features/i18n";

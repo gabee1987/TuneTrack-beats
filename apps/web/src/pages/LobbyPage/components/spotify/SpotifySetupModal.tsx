@@ -1,6 +1,6 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { lazy, Suspense, useEffect } from "react";
-import type { PublicRoomSettings } from "@tunetrack/shared";
+import type { PublicRoomSettings } from "@tunetrack/shared/client";
 import {
   MotionPresence,
   createModalOverlayMotionTargets,
@@ -62,7 +62,7 @@ export function SpotifySetupModal({
   return (
     <MotionPresence>
       {isOpen ? (
-        <motion.div
+        <m.div
           animate="animate"
           className={styles.spotifySetupOverlay}
           exit="exit"
@@ -71,7 +71,7 @@ export function SpotifySetupModal({
           transition={createStandardTransition(reduceMotion)}
           variants={createModalOverlayMotionTargets(reduceMotion)}
         >
-          <motion.div
+          <m.div
             animate="animate"
             aria-label={t("lobby.spotify.setupLabel")}
             aria-modal="true"
@@ -128,8 +128,8 @@ export function SpotifySetupModal({
                 )}
               </Suspense>
             </div>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       ) : null}
     </MotionPresence>
   );

@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { ClientToServerEvent } from "@tunetrack/shared";
+import { ClientToServerEvent } from "@tunetrack/shared/client";
 import type { EmitActionResult } from "../../../services/socket/emitAction";
 import { I18nProvider, useI18n } from "../../../features/i18n";
 import {

@@ -1,4 +1,8 @@
-import { ServerToClientEvent, ClientToServerEvent, type PublicTrackInfo } from "@tunetrack/shared";
+import {
+  ServerToClientEvent,
+  ClientToServerEvent,
+  type PublicTrackInfo,
+} from "@tunetrack/shared/client";
 import { useCallback, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
 import { useI18n } from "../../../../features/i18n";

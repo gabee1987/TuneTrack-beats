@@ -1,4 +1,4 @@
-import type { PublicPlayerState, PublicRoomSettings } from "@tunetrack/shared";
+import type { PublicPlayerState, PublicRoomSettings } from "@tunetrack/shared/client";
 import { describe, expect, it } from "vitest";
 import { getLobbyPlayerDisplayState } from "./lobbyPlayerSelectors";
 

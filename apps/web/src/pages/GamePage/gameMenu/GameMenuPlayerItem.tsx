@@ -1,5 +1,5 @@
-import { type PublicPlayerState, type PublicRoomState } from "@tunetrack/shared";
-import { motion } from "framer-motion";
+import { type PublicPlayerState, type PublicRoomState } from "@tunetrack/shared/client";
+import { m } from "framer-motion";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   MotionDialogPortal,
@@ -237,7 +237,7 @@ export function GameMenuPlayerItem({
           />
         </button>
       ) : null}
-      <motion.div
+      <m.div
         animate={createMeasuredDisclosureMotion(
           reduceMotion,
           isExpanded && hasExpandableContent,
@@ -271,7 +271,7 @@ export function GameMenuPlayerItem({
             </button>
           ) : null}
         </div>
-      </motion.div>
+      </m.div>
       <MotionDialogPortal
         cardClassName={styles.transferConfirmCard}
         isOpen={isTransferConfirmOpen}

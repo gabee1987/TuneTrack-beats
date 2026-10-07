@@ -8,8 +8,9 @@ const MOBILE_CONTROL_MEDIA_QUERY = "(max-width: 720px), (hover: none) and (point
 const isPresentMock = vi.fn(() => true);
 
 vi.mock("framer-motion", async (importOriginal) => {
+  const { withEagerMotion } = await import("../../../test/stubs/framerMotion");
   const actual = await importOriginal<typeof import("framer-motion")>();
-  return { ...actual, useIsPresent: () => isPresentMock() };
+  return { ...withEagerMotion(actual), useIsPresent: () => isPresentMock() };
 });
 
 function renderPortaledDock() {

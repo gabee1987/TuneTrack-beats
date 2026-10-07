@@ -1,4 +1,4 @@
-import { type PublicRoomState } from "@tunetrack/shared";
+import { type PublicRoomState } from "@tunetrack/shared/client";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import type { Translate } from "../../../features/i18n";
 import type { GameHistoryEntry } from "../hooks/useGameHistory";

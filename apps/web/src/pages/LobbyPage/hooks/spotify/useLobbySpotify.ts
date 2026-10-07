@@ -1,4 +1,4 @@
-import { ServerToClientEvent, type PlaylistTracksPayload } from "@tunetrack/shared";
+import { ServerToClientEvent, type PlaylistTracksPayload } from "@tunetrack/shared/client";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getSocketClient } from "../../../../services/socket/socketClient";

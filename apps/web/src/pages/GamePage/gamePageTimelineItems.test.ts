@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { TimelineCardPublic, TrackCardPublic } from "@tunetrack/shared";
+import type { TimelineCardPublic, TrackCardPublic } from "@tunetrack/shared/client";
 import {
   TIMELINE_PREVIEW_ITEM_ID,
   buildBaseOrderedTimelineItemIds,

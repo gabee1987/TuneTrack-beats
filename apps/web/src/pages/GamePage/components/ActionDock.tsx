@@ -1,4 +1,4 @@
-import { motion, useIsPresent } from "framer-motion";
+import { m, useIsPresent } from "framer-motion";
 import { useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -39,7 +39,7 @@ export function ActionDock({ children, className, containerRef }: ActionDockProp
   }
 
   const dock = (
-    <motion.div
+    <m.div
       ref={containerRef}
       animate="animate"
       className={`${styles.floatingActionDock}${className ? ` ${className}` : ""}`}
@@ -49,7 +49,7 @@ export function ActionDock({ children, className, containerRef }: ActionDockProp
       variants={createActionDockMotion(reduceMotion)}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 
   return portalTarget ? createPortal(dock, portalTarget) : dock;

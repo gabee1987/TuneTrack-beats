@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { ServerToClientEvent } from "@tunetrack/shared";
+import { ServerToClientEvent } from "@tunetrack/shared/client";
 import type { Socket } from "socket.io-client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createFakeSocket, type FakeSocket } from "../../test/fakeSocket";

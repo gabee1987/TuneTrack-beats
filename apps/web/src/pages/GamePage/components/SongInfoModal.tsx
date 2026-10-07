@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useI18n } from "../../../features/i18n";
 import { MotionPresence, useReducedMotionPreference } from "../../../features/motion";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
@@ -28,7 +28,7 @@ export function SongInfoModal({ card, onClose }: SongInfoModalProps) {
   return createPortal(
     <MotionPresence>
       {card ? (
-        <motion.div
+        <m.div
           key="song-info-overlay"
           animate={{ opacity: 1 }}
           className={styles.overlay}
@@ -37,7 +37,7 @@ export function SongInfoModal({ card, onClose }: SongInfoModalProps) {
           transition={{ duration: 0.18 }}
           onClick={onClose}
         >
-          <motion.div
+          <m.div
             animate={{ y: 0 }}
             className={styles.sheet}
             exit={{ y: reduceMotion ? 0 : "100%" }}
@@ -75,8 +75,8 @@ export function SongInfoModal({ card, onClose }: SongInfoModalProps) {
                 {card.albumTitle ? <p className={styles.album}>{card.albumTitle}</p> : null}
               </div>
             </div>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       ) : null}
     </MotionPresence>,
     document.body,

@@ -1,4 +1,4 @@
-import { ClientToServerEvent, type PublicRoomState } from "@tunetrack/shared";
+import { ClientToServerEvent, type PublicRoomState } from "@tunetrack/shared/client";
 import { useCallback, useRef, useState } from "react";
 import { emitAction, type EmitActionResult } from "../../../services/socket/emitAction";
 import type { KickPlayerActionState } from "../GamePage.types";

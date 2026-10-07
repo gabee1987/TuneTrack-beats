@@ -1,4 +1,4 @@
-import { ServerToClientEvent } from "@tunetrack/shared";
+import { ServerToClientEvent } from "@tunetrack/shared/client";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";

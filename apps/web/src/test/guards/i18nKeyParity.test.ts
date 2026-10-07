@@ -1,19 +1,36 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import {
   availableLanguages,
   defaultLanguageId,
-  languageResources,
+  loadLanguageResource,
+  type LanguageId,
 } from "../../features/i18n/languages";
+import type { TranslationResource } from "../../features/i18n/languages/parseLanguageResource";
 
-type LanguageId = keyof typeof languageResources;
+const languageIds = availableLanguages.map((language) => language.id);
+const languageResources = new Map<LanguageId, TranslationResource>();
 
-const languageIds = Object.keys(languageResources) as LanguageId[];
+function resourceOf(languageId: LanguageId): TranslationResource {
+  const resource = languageResources.get(languageId);
+
+  if (!resource) {
+    throw new Error(`${languageId} was not loaded`);
+  }
+
+  return resource;
+}
 
 function keySet(languageId: LanguageId): Set<string> {
-  return new Set(Object.keys(languageResources[languageId]));
+  return new Set(Object.keys(resourceOf(languageId)));
 }
 
 describe("i18n key parity", () => {
+  beforeAll(async () => {
+    for (const languageId of languageIds) {
+      languageResources.set(languageId, await loadLanguageResource(languageId));
+    }
+  });
+
   it("ships more than one language", () => {
     expect(languageIds.length).toBeGreaterThan(1);
   });
@@ -33,7 +50,7 @@ describe("i18n key parity", () => {
   );
 
   it.each(languageIds)("%s has no empty translation values", (languageId) => {
-    const empty = Object.entries(languageResources[languageId])
+    const empty = Object.entries(resourceOf(languageId))
       .filter(([, value]) => value.trim().length === 0)
       .map(([key]) => key)
       .sort();
@@ -41,14 +58,12 @@ describe("i18n key parity", () => {
     expect(empty, `${languageId} has keys with an empty value`).toEqual([]);
   });
 
-  it("exposes metadata for every language", () => {
-    expect(availableLanguages.map((language) => language.id).sort()).toEqual(
-      [...languageIds].sort(),
-    );
+  it.each(languageIds)("%s metadata matches its catalogue", (languageId) => {
+    const language = availableLanguages.find((candidate) => candidate.id === languageId);
+    const resource = resourceOf(languageId);
 
-    for (const language of availableLanguages) {
-      expect(language.name.length, `${language.id} has no name`).toBeGreaterThan(0);
-      expect(language.nativeName.length, `${language.id} has no nativeName`).toBeGreaterThan(0);
-    }
+    expect(language?.name).toBe(resource["language.name"]);
+    expect(language?.nativeName).toBe(resource["language.nativeName"]);
+    expect(resource["language.code"]).toBe(languageId);
   });
 });

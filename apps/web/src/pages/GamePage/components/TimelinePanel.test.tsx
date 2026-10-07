@@ -2,7 +2,7 @@ import type { DragMoveEvent, DragStartEvent } from "@dnd-kit/core";
 import { act, render } from "@testing-library/react";
 import { memo, type ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { TimelineCardPublic } from "@tunetrack/shared";
+import type { TimelineCardPublic } from "@tunetrack/shared/client";
 import { I18nProvider } from "../../../features/i18n";
 import { setElementBox } from "../../../test/stubs/layout";
 import type { TimelineCelebrationTransitionEvent } from "../gamePageTransitionEvents";

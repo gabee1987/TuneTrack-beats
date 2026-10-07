@@ -7,8 +7,9 @@ import { useLeaveGameGuard } from "./useLeaveGameGuard";
 const isPresentMock = vi.fn(() => true);
 
 vi.mock("framer-motion", async (importOriginal) => {
+  const { withEagerMotion } = await import("../../../test/stubs/framerMotion");
   const actual = await importOriginal<typeof import("framer-motion")>();
-  return { ...actual, useIsPresent: () => isPresentMock() };
+  return { ...withEagerMotion(actual), useIsPresent: () => isPresentMock() };
 });
 
 vi.mock("../../../services/socket/socketClient", () => ({

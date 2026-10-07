@@ -1,4 +1,4 @@
-import type { PublicPlayerState, PublicRoomSettings } from "@tunetrack/shared";
+import type { PublicPlayerState, PublicRoomSettings } from "@tunetrack/shared/client";
 import type { LobbyPageController } from "../LobbyPage.types";
 
 export interface LobbyAssemblyModel {

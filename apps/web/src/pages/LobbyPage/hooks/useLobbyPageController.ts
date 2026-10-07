@@ -4,7 +4,7 @@ import {
   DEFAULT_STARTING_TT_TOKEN_COUNT,
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
   type PublicRoomSettings,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { usePlayerProfileStore } from "../../../features/profile/playerProfile";

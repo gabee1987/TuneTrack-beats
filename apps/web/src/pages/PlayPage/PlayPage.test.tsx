@@ -1,7 +1,7 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ClientToServerEvent, ServerToClientEvent } from "@tunetrack/shared";
+import { ClientToServerEvent, ServerToClientEvent } from "@tunetrack/shared/client";
 import { AppRoutes } from "../../app/AppRoutes";
 import { I18nProvider } from "../../features/i18n";
 import { usePlayerProfileStore } from "../../features/profile/playerProfile";

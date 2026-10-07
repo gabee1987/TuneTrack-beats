@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -103,7 +103,7 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
   }
 
   return createPortal(
-    <motion.div
+    <m.div
       animate="animate"
       className={styles.overlay}
       initial={false}
@@ -112,7 +112,7 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
       transition={createStandardTransition(reduceMotion)}
       variants={createFadeMotion(reduceMotion)}
     >
-      <motion.div
+      <m.div
         animate="animate"
         aria-label={t("lobby.playlist.editLabel")}
         aria-modal="true"
@@ -174,8 +174,8 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
           onSave={updateTrack}
           track={selectedTrack}
         />
-      </motion.div>
-    </motion.div>,
+      </m.div>
+    </m.div>,
     portalTarget,
   );
 }

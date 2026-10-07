@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { PublicRoomState } from "@tunetrack/shared";
+import type { PublicRoomState } from "@tunetrack/shared/client";
 import {
   getGamePageChallengeStatusState,
   getGamePageStatusCopyState,

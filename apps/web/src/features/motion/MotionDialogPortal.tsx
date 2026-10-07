@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useReducedMotionPreference } from "./useReducedMotionPreference";
 import type { MouseEventHandler, ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -41,7 +41,7 @@ export function MotionDialogPortal({
   return createPortal(
     <MotionPresence>
       {isOpen ? (
-        <motion.div
+        <m.div
           animate="animate"
           className={overlayClassName}
           exit="exit"
@@ -55,7 +55,7 @@ export function MotionDialogPortal({
           transition={createStandardTransition(reduceMotion)}
           variants={createFadeMotion(reduceMotion)}
         >
-          <motion.div
+          <m.div
             animate="animate"
             aria-label={label}
             aria-modal="true"
@@ -68,8 +68,8 @@ export function MotionDialogPortal({
             variants={createDialogCardMotion(reduceMotion)}
           >
             {children}
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       ) : null}
     </MotionPresence>,
     portalTarget,

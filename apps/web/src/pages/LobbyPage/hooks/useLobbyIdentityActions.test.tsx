@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { ClientToServerEvent } from "@tunetrack/shared";
+import { ClientToServerEvent } from "@tunetrack/shared/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { EmitActionResult } from "../../../services/socket/emitAction";
 import { buildLobbyRoomState } from "../../../test/roomStateFixtures";

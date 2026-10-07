@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { PublicRoomState } from "@tunetrack/shared";
+import type { PublicRoomState } from "@tunetrack/shared/client";
 import type { TimelineView } from "../GamePage.types";
 
 interface UseGamePageLocalUiStateOptions {

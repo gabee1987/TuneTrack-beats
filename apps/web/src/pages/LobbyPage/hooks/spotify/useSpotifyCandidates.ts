@@ -8,7 +8,7 @@ import {
   type SpotifyCandidatesAppliedPayload,
   type SpotifyCandidatesGeneratedPayload,
   type SpotifyQuickPickPresetId,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useCallback, useState } from "react";
 import type { MutableRefObject } from "react";
 import { useI18n } from "../../../../features/i18n";

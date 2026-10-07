@@ -1,4 +1,4 @@
-import type { PublicRoomState } from "@tunetrack/shared";
+import type { PublicRoomState } from "@tunetrack/shared/client";
 
 interface UseGamePageChallengeCelebrationStateOptions {
   currentPlayerId: string | null;

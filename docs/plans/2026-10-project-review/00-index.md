@@ -138,7 +138,7 @@ these documents ships, update that document (shipped note + proving test), this 
 
 | Doc                                     | Was (2026-09) | Status (2026-10-06)                                                                                                                                                                                                                                                        |
 | --------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `10-bundle-and-startup.md`              | 02            | Phases 1–5 open (no `LazyMotion`, `vendor-zod` branch and 6 CSS barrels remain, both i18n catalogues eager). Phase 6 shipped 2026-09-17. Re-measure before starting; budgets come from Phase 5.                                                                            |
+| `10-bundle-and-startup.md`              | 02            | Phases 1–3 shipped 2026-10-07 (`05` D1–D3; eager 90.8 kB gzip). Phases 4–5 open (6 CSS barrels, no `build.target`). Phase 6 shipped 2026-09-17.                                                                                                                            |
 | `11-runtime-and-motion-performance.md`  | 03            | Phases 3–6 shipped 2026-10-07 (`05` C1–C6); phases 1–2 open.                                                                                                                                                                                                               |
 | `12-backend-stability-and-sessions.md`  | 04            | Phase 1 shipped (`disconnectLifecycle.test.ts`, E10/E11). Phase 2 shipped 2026-10-07 (`05` A6, A7); phases 4, 5 open; 3.1 shipped 2026-10-07 (`05` A8), 3.2 superseded, 3.3 shipped. Hotfixes B-01, B-02, B-03 and B-11 (timer guards, fatal handlers) shipped 2026-10-06. |
 | `13-network-protocol-and-resilience.md` | 05            | Phase 1 partial, Phase 2 shipped 2026-10-07 (`05` B1), Phases 3–4 shipped (acks + `requestId`), Phase 5 shipped 2026-10-07 (`05` B2), Phase 6 open.                                                                                                                        |
@@ -152,8 +152,9 @@ these documents ships, update that document (shipped note + proving test), this 
 
 ### Programme exit criteria (corrected 2026-10-06)
 
-- [ ] Eager home-screen bundle ≤ 110 kB gzip with framer-motion off the eager path (`05` §2.1, `10`).
-- [ ] `vendor-zod` absent from the web bundle (`10`).
+- [x] Eager home-screen bundle ≤ 110 kB gzip with framer-motion off the eager path (`05` §2.1, `10`)
+      — 90.8 kB gzip after `05` D3, `bundle-baseline.md`.
+- [x] `vendor-zod` absent from the web bundle (`10`) — `05` D2, `measure:bundle`.
 - [ ] No raw `z-index` literal in CSS modules; `zIndexScale` guard exists (`14`).
 - [ ] One button, one icon-button and one dialog/sheet component in use (`15`).
 - [ ] Browser and Android Back close the topmost overlay — partial: settings, Music Setup,

@@ -1,6 +1,6 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
-import type { PublicTrackInfo } from "@tunetrack/shared";
-import { motion } from "framer-motion";
+import type { PublicTrackInfo } from "@tunetrack/shared/client";
+import { m } from "framer-motion";
 import { useRef } from "react";
 import { PlaylistTrackRow } from "./PlaylistTrackRow";
 import styles from "./playlistEditModalStyles";
@@ -38,7 +38,7 @@ export function PlaylistTrackList({
           const track = tracks[virtualItem.index];
           if (!track) return null;
           return (
-            <motion.div
+            <m.div
               animate={{ y: virtualItem.start }}
               initial={false}
               key={virtualItem.key}
@@ -59,7 +59,7 @@ export function PlaylistTrackList({
                 onToggleSelect={onToggleSelection}
                 track={track}
               />
-            </motion.div>
+            </m.div>
           );
         })}
       </div>

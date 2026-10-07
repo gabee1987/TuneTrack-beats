@@ -2,7 +2,7 @@ import {
   ClientToServerEvent,
   type PublicRoomSettings,
   type PublicRoomState,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useCallback, useRef, useState } from "react";
 import { emitAction } from "../../../services/socket/emitAction";
 import type { RoomSettingsActionStatus } from "../LobbyPage.types";

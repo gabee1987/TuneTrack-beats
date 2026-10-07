@@ -1,5 +1,5 @@
 import { act, screen } from "@testing-library/react";
-import { ServerToClientEvent } from "@tunetrack/shared";
+import { ServerToClientEvent } from "@tunetrack/shared/client";
 import type { Socket } from "socket.io-client";
 import { afterEach, describe, expect, it } from "vitest";
 import { trackSocketConnection } from "../../services/socket/connectionState";

@@ -1,5 +1,5 @@
 import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import {
   DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
   MAX_CHALLENGE_WINDOW_DURATION_SECONDS,
@@ -7,7 +7,7 @@ import {
   MIN_CHALLENGE_WINDOW_DURATION_SECONDS,
   MIN_STARTING_TT_TOKEN_COUNT,
   type PublicRoomSettings,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import {
   createMeasuredDisclosureMotion,
   createStandardTransition,
@@ -143,16 +143,16 @@ export function LobbyHostTtSettings({
         />
       </div>
 
-      <motion.p
+      <m.p
         animate={createToggleHintFadeMotion(reduceMotion, currentSettings.ttModeEnabled)}
         className={styles.settingsInlineHint}
         layout="position"
         transition={createStandardTransition(reduceMotion)}
       >
         {t("lobby.host.tokenInlineHint")}
-      </motion.p>
+      </m.p>
 
-      <motion.div
+      <m.div
         animate={createMeasuredDisclosureMotion(
           reduceMotion,
           currentSettings.ttModeEnabled,
@@ -226,7 +226,7 @@ export function LobbyHostTtSettings({
             />
           </SettingField>
         </div>
-      </motion.div>
+      </m.div>
     </SurfaceCard>
   );
 }

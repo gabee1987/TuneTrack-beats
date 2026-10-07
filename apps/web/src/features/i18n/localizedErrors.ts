@@ -4,7 +4,7 @@ import {
   type ServerErrorCode,
   type ServerErrorPayload,
   type SpotifyAuthResultPayload,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import type { Translate } from "./i18n.types";
 
 // Every code gets an explicit key, so a new server code fails the typecheck until it is mapped.

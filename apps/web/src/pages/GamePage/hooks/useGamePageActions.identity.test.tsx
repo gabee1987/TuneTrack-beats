@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { ClientToServerEvent, type PublicRoomState } from "@tunetrack/shared";
+import { ClientToServerEvent, type PublicRoomState } from "@tunetrack/shared/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildPlayer,

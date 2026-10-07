@@ -1,5 +1,5 @@
 import type { MouseEventHandler, ReactNode } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import {
   createBottomSheetMotion,
   createFadeMotion,
@@ -30,7 +30,7 @@ export function BottomSheet({
   };
 
   return (
-    <motion.div
+    <m.div
       animate="animate"
       className={classNames(styles.overlay, overlayClassName)}
       exit="exit"
@@ -40,7 +40,7 @@ export function BottomSheet({
       transition={createStandardTransition(reduceMotion)}
       variants={createFadeMotion(reduceMotion)}
     >
-      <motion.div
+      <m.div
         animate="animate"
         className={classNames(styles.sheet, sheetClassName)}
         exit="exit"
@@ -56,7 +56,7 @@ export function BottomSheet({
           </div>
         ) : null}
         <div className={styles.content}>{children}</div>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

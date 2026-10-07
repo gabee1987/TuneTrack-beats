@@ -5,7 +5,7 @@ import {
   MIN_TARGET_TIMELINE_CARD_COUNT,
   type PublicRoomSettings,
   type RevealConfirmMode,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { RangeField } from "../../../features/ui/RangeField";
 import { SettingField } from "../../../features/ui/SettingField";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";

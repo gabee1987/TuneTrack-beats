@@ -1,4 +1,4 @@
-import type { PublicRoomSettings, SpotifyPlaylistSearchItem } from "@tunetrack/shared";
+import type { PublicRoomSettings, SpotifyPlaylistSearchItem } from "@tunetrack/shared/client";
 import { useI18n } from "../../../../features/i18n";
 import { ActionButton } from "../../../../features/ui/ActionButton";
 import { TextInput } from "../../../../features/ui/TextInput";

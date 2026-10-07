@@ -1,6 +1,6 @@
-import { animate, motion, useMotionValue, useTransform } from "framer-motion";
+import { animate, m, useMotionValue, useTransform } from "framer-motion";
 import { useEffect, useRef } from "react";
-import type { SpotifySmartSearchResult } from "@tunetrack/shared";
+import type { SpotifySmartSearchResult } from "@tunetrack/shared/client";
 import { useI18n } from "../../../../features/i18n";
 import { SelectableArtwork, SelectableArtworkImage } from "../SelectableArtwork";
 import { CheckIcon, PlusIcon, SpotifyLogo, TrashIcon } from "./spotifySetupIcons";
@@ -107,20 +107,20 @@ export function SpotifySmartSearchResultRow({
   return (
     <div className={styles.spotifySmartResultRowWrapper} ref={rowRef}>
       {isTrack ? (
-        <motion.div className={styles.spotifySmartAddZone} style={{ width: addZoneWidth }}>
-          <motion.div style={{ opacity: addIconOpacity, scale: addIconScale }}>
+        <m.div className={styles.spotifySmartAddZone} style={{ width: addZoneWidth }}>
+          <m.div style={{ opacity: addIconOpacity, scale: addIconScale }}>
             <PlusIcon />
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       ) : null}
       {isTrack ? (
-        <motion.div className={styles.spotifySmartRemoveZone} style={{ width: removeZoneWidth }}>
-          <motion.div style={{ opacity: removeIconOpacity, scale: removeIconScale }}>
+        <m.div className={styles.spotifySmartRemoveZone} style={{ width: removeZoneWidth }}>
+          <m.div style={{ opacity: removeIconOpacity, scale: removeIconScale }}>
             <TrashIcon />
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       ) : null}
-      <motion.div
+      <m.div
         className={styles.spotifySmartResultRow}
         drag={isTrack ? "x" : false}
         dragConstraints={{
@@ -195,7 +195,7 @@ export function SpotifySmartSearchResultRow({
             </span>
           </button>
         ) : null}
-      </motion.div>
+      </m.div>
     </div>
   );
 }

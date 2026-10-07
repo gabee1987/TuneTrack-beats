@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import type { ReactNode } from "react";
 import {
   MotionPresence,
@@ -22,7 +22,7 @@ export function GamePageToastStack({ children, toasts }: GamePageToastStackProps
       {children}
       <MotionPresence mode="sync">
         {toasts.map((toast) => (
-          <motion.div
+          <m.div
             animate="animate"
             className={`${styles.toast} ${styles[`toast--${toast.type}`]}`}
             exit="exit"
@@ -31,7 +31,7 @@ export function GamePageToastStack({ children, toasts }: GamePageToastStackProps
             variants={createToastSlideMotion(reduceMotion)}
           >
             <span className={styles.toastText}>{toast.message}</span>
-          </motion.div>
+          </m.div>
         ))}
       </MotionPresence>
     </div>

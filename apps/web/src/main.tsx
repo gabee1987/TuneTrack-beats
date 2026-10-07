@@ -1,6 +1,9 @@
 import { createRoot } from "react-dom/client";
 import { App } from "./app/App";
+import { AppRouteFallback } from "./app/components/AppRouteFallback";
+import { loadLazyRoute } from "./app/lazyRoute";
 import "./app/styles/globals.css";
+import { loadLanguageResource, resolveInitialLanguageId } from "./features/i18n/languages";
 import { defaultUiPreferences, type ThemeId } from "./features/preferences/uiPreferences";
 import { applyTheme } from "./features/theme/themeRegistry";
 import { startAppHeightSync } from "./features/viewport/viewportStore";
@@ -35,4 +38,11 @@ if (!rootElement) {
 startAppHeightSync();
 applyTheme(getInitialTheme());
 
-createRoot(rootElement).render(<App />);
+const root = createRoot(rootElement);
+
+// Only the active catalogue is downloaded (05 D3); the skeleton covers that request, so no
+// translation key is ever painted. A stale chunk after a deploy reloads once, like a route.
+root.render(<AppRouteFallback />);
+void loadLazyRoute(() => loadLanguageResource(resolveInitialLanguageId())).then(() => {
+  root.render(<App />);
+});

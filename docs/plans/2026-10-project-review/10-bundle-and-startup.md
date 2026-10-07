@@ -1,9 +1,8 @@
 # 10 — Bundle Size and Startup Cost
 
-> **Status (2026-10-06):** Phases 1–5 are open and not started (no `LazyMotion`, no
-> `sideEffects` flag, no shared subpath exports, `vendor-zod` branch still in `vite.config.ts`,
-> both i18n catalogues parsed eagerly, all six CSS barrels present). Phase 6 shipped on
-> 2026-09-17. §9 shipped on 2026-10-07 as `05` D0 (`measure:bundle`, `bundle-baseline.md`).
+> **Status (2026-10-07):** Phases 1–3 shipped 2026-10-07 (`05` D1–D3); Phases 4–5 open (six CSS
+> barrels, no `build.target`). Phase 6 shipped on 2026-09-17. §9 shipped on 2026-10-07 as `05` D0
+> (`measure:bundle`, `bundle-baseline.md`).
 > **Folded from** `docs/plans/2026-09-stability-performance/02-bundle-and-startup.md` on
 > 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
 > Addresses finding **F-14** (startup) and **T-02** (boundary lint) of `01-review-findings.md`.
@@ -69,132 +68,27 @@ Working targets from 2026-09, **superseded** by the binding budgets in
 
 ## 3. Phase 1 — Take framer-motion off the eager path
 
-**Finding:** F-14. **Expected saving:** approximately 31 kB gzip from the critical path.
-
-framer-motion v11 supports a split runtime: import the lightweight `m` component instead
-of `motion`, wrap the app in `LazyMotion`, and load the feature bundle asynchronously.
-`domAnimation` covers everything this app needs except layout animations; `domMax` adds
-layout/drag. F-14 counts **six** layout-feature sites (not the two the 2026-09 plan
-assumed), among them `AppShellMenuSheet` (`LayoutGroup`) and the timeline celebration;
-inventory them before step 3. Three of those sites are the `layout` page containers that
-F-13 (Phase 5 of the review programme) intends to remove, which shrinks the `domMax`
-surface further.
-
-### Steps
-
-1. Add a single feature-loading boundary in `apps/web/src/features/motion/`:
-   - `MotionFeatureProvider.tsx` — wraps children in
-     `<LazyMotion features={() => import("framer-motion").then(m => m.domAnimation)} strict>`.
-     `strict` makes any accidental `motion.*` usage a build-time-visible runtime error,
-     which is the guard that keeps the saving.
-   - Mount it in `apps/web/src/app/App.tsx`, inside `I18nProvider`.
-2. Convert every `motion.<tag>` usage in `apps/web/src` to `m.<tag>`. F-14 counts 68
-   `<motion.*>` JSX sites (128 `motion.` references in total on 2026-10-06); the change is
-   mechanical and type-compatible.
-3. For every subtree that needs layout features (the six sites from the inventory above),
-   add a nested `<LazyMotion features={() => import(...).then(m => m.domMax)}>` inside the
-   Game route and inside `AppShellMenuSheet`, so `domMax` lands in those route chunks, not
-   the entry.
-4. Re-check that `vendor-motion` no longer appears in `index.html`'s `modulepreload` list.
-
-### Alternative considered and rejected for now
-
-Replacing the page transition with CSS `@view-transition` would remove motion from the
-shell entirely, but Safari support is still the limiting factor for an iOS-first party
-game, and the app would need to keep the framer-motion path as a fallback anyway. Revisit
-after the `LazyMotion` work if the target is missed.
-
-### Acceptance
-
-- [ ] `npm run build` shows no `vendor-motion` entry in `dist/index.html`.
-- [ ] Home critical path (sum of preloaded chunks + entry, gzip) drops by at least 28 kB.
-- [ ] Every page transition, dialog, sheet, toast and celebration still animates; verified
-      by the overlay component tests from `19-testing-strategy.md` §4 and a manual pass on
-      the Game page.
-- [ ] `prefers-reduced-motion` behaviour unchanged.
+**Shipped 2026-10-07** as `05` D1. Components render `m.*`; `features/motion/MotionFeatureProvider`
+loads `domAnimation` after first paint and `MotionLayoutFeatures` adds `domMax` in the Game and
+Lobby routes. Eager path 148.1 → 114.9 kB gzip. Proof: `MotionFeatureProvider.test.tsx`,
+`test/guards/lazyMotionSites.test.ts`, `bundle-baseline.md`. Replacing the page transition with
+CSS view transitions stays rejected while Safari support is incomplete.
 
 ## 4. Phase 2 — Remove Zod from the web bundle
 
-**Finding:** F-14 (bundle reach) and T-02 (no boundary lint). **Expected saving:** 12.61 kB
-gzip removed from the lobby/game path.
-
-### Steps
-
-1. Add `"sideEffects": false` to `packages/shared/package.json` and
-   `packages/game-engine/package.json`. Both packages are pure modules — verified: no
-   top-level DOM access, no global registration, no polyfills.
-2. Add explicit subpath exports to `packages/shared/package.json` so consumers can state
-   what they need:
-
-   | Subpath       | Contents                                                                     | Consumers       |
-   | ------------- | ---------------------------------------------------------------------------- | --------------- |
-   | `.`           | current barrel, retained for compatibility                                   | existing code   |
-   | `./contracts` | `game/*`, `constants/gameplay`, `events/clientEvents`, `events/serverEvents` | web and server  |
-   | `./schemas`   | `events/schemas` (Zod)                                                       | **server only** |
-   | `./spotify`   | `spotify/*`                                                                  | web and server  |
-
-3. Repoint every `from "@tunetrack/shared"` import in `apps/web/src` (112 files on
-   2026-10-06) to `@tunetrack/shared/contracts` or `/spotify`. Leave `apps/server` on the
-   barrel or move it to explicit subpaths in the same change — the server is unaffected by
-   size.
-4. Add an ESLint `no-restricted-imports` rule for `apps/web` forbidding
-   `@tunetrack/shared/schemas` and bare `zod`, so the saving cannot regress. This is one
-   rule of the boundary-lint ruleset Phase 3 of the review programme specifies (T-02).
-
-### Acceptance
-
-- [ ] `npm run build` produces no `vendor-zod` chunk.
-- [ ] `npm run typecheck` and `npm test` pass in all workspaces.
-- [ ] Lint fails if a file under `apps/web/src` imports `zod` or `.../schemas`.
+**Shipped 2026-10-07** as `05` D2. `packages/shared` has `sideEffects: false` and a `./client`
+entry without the Zod schemas; the web imports only that entry, enforced by
+`no-restricted-imports` in `eslint.config.js`. No `vendor-zod` chunk is emitted.
 
 ## 5. Phase 3 — Load one translation catalogue
 
-**Finding:** F-14. **Expected saving:** approximately 20 kB raw from the entry chunk, plus
-the boot-time parse of the unused catalogue. Both catalogues are 692 lines on 2026-10-06
-(615 when this plan was written), so the saving has grown.
+**Shipped 2026-10-07** as `05` D3. One chunk per catalogue; `main.tsx` loads the active one
+behind the skeleton before mounting; the key-parity guard is strict and also checks the static
+language metadata. Entry 142.5 → 51.1 kB raw. Proof: `I18nProvider.test.tsx`,
+`parseLanguageResource.test.ts`, `i18nKeyParity.test.ts`.
 
-### Steps
-
-1. Replace the eager map in `apps/web/src/features/i18n/languages/index.ts` with a loader
-   registry:
-   - `languageLoaders: Record<LanguageId, () => Promise<string>>` using
-     `() => import("./en.properties?raw").then(m => m.default)`.
-   - A small static `languageMetadata` table (id, name, nativeName) so the language
-     picker can render before any catalogue is fetched. Do **not** derive metadata from
-     the parsed resource, which is what currently forces both files to load.
-
-2. Make `I18nProvider` load the active catalogue:
-   - hold `resource: TranslationResource | null` in state;
-   - inline the **default** catalogue's most critical strings only if a measurable
-     first-paint text flash appears — measure first, do not pre-optimise;
-   - while `resource` is null, `t` returns the key. To avoid visible keys, gate the first
-     paint on the catalogue: resolve it in `main.tsx` before `createRoot().render()`, or
-     render the app-level skeleton (`15-design-system-consolidation.md` §6) until it
-     resolves. Prefer the latter, since it composes with the skeleton work.
-   - cache loaded resources in a module-level `Map` so switching back and forth is free.
-
-3. Keep `parseLanguageResource` as-is; it is pure and already tested-shaped. Add a unit
-   test for comment lines, blank lines, `=` inside values, and CRLF input.
-
-### A note on translation-key typing
-
-`TranslationKey` is `string` (`features/i18n/i18n.types.ts`), so a typo in a key silently
-renders the key. Once catalogues are lazy this gets worse, because a missing key and an
-unloaded catalogue look identical. Add a build-time step or a `.d.ts` generated from
-`en.properties` giving `TranslationKey` a literal union. The key-parity guard
-(`i18nKeyParity`) already exists with a pending-migration allowlist; U-13 records that
-`hu` has 681 of 692 keys, so the allowlist must be emptied as part of this phase.
-
-### Acceptance
-
-- [ ] Only the active language's `.properties` content appears in the built assets for a
-      single-language session (inspect chunk contents).
-- [ ] Entry chunk drops by at least 18 kB raw.
-- [ ] Switching language at runtime still works and persists to
-      `tunetrack.language`.
-- [ ] The `i18nKeyParity` guard runs with an empty allowlist (`en` and `hu` key sets
-      identical).
-- [ ] No raw translation keys are ever visible during startup.
+Open: `TranslationKey` is still `string`; a literal union generated from `en.properties` would
+catch key typos at build time.
 
 ## 6. Phase 4 — Dissolve the CSS-module barrels
 

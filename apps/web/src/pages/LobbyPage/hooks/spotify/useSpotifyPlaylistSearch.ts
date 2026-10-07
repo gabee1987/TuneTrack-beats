@@ -3,7 +3,7 @@ import {
   ServerToClientEvent,
   type SpotifyPlaylistSearchItem,
   type SpotifyPlaylistSearchResultPayload,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useCallback, useState } from "react";
 import { getSocketClient } from "../../../../services/socket/socketClient";
 import type { PlaylistSearchPhase } from "./lobbySpotify.types";

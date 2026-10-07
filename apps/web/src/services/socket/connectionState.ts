@@ -1,4 +1,4 @@
-import { ServerToClientEvent } from "@tunetrack/shared";
+import { ServerToClientEvent } from "@tunetrack/shared/client";
 import { useSyncExternalStore } from "react";
 import type { Socket } from "socket.io-client";
 

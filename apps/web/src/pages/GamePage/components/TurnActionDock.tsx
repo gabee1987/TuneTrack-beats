@@ -2,8 +2,8 @@ import {
   BUY_TIMELINE_CARD_TT_COST,
   SKIP_TRACK_TT_COST,
   type PublicRoomState,
-} from "@tunetrack/shared";
-import { motion } from "framer-motion";
+} from "@tunetrack/shared/client";
+import { m } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import {
   MotionPresence,
@@ -190,7 +190,7 @@ export function TurnActionDock({
             <div className={styles.floatingActionSecondaryRow}>
               <MotionPresence mode="popLayout">
                 {canUseSkipTrack ? (
-                  <motion.span
+                  <m.span
                     animate="animate"
                     className={styles.actionButtonMotionWrap}
                     exit="exit"
@@ -219,11 +219,11 @@ export function TurnActionDock({
                     >
                       {skipTrackButtonLabel}
                     </SecondaryActionButton>
-                  </motion.span>
+                  </m.span>
                 ) : null}
               </MotionPresence>
               {canUseBuyCard ? (
-                <motion.span
+                <m.span
                   className={styles.actionButtonMotionWrap}
                   layout="position"
                   transition={createLayoutTransition(reduceMotion)}
@@ -246,10 +246,10 @@ export function TurnActionDock({
                   >
                     {buyTimelineCardButtonLabel}
                   </SecondaryActionButton>
-                </motion.span>
+                </m.span>
               ) : null}
             </div>
-            <motion.span
+            <m.span
               className={`${styles.actionButtonMotionWrap} ${styles.actionButtonMotionWrapFull}`}
               layout="position"
               transition={createLayoutTransition(reduceMotion)}
@@ -257,13 +257,13 @@ export function TurnActionDock({
               <PrimaryActionButton disabled={isPlaceCardPending} onClick={() => handlePlaceCard()}>
                 {placeCardButtonLabel}
               </PrimaryActionButton>
-            </motion.span>
+            </m.span>
           </>
         ) : (
           <>
             <MotionPresence mode="popLayout">
               {canUseSkipTrack ? (
-                <motion.span
+                <m.span
                   animate="animate"
                   className={styles.actionButtonMotionWrap}
                   exit="exit"
@@ -292,11 +292,11 @@ export function TurnActionDock({
                   >
                     {skipTrackButtonLabel}
                   </SecondaryActionButton>
-                </motion.span>
+                </m.span>
               ) : null}
             </MotionPresence>
             {canUseBuyCard ? (
-              <motion.span
+              <m.span
                 className={styles.actionButtonMotionWrap}
                 layout="position"
                 transition={createLayoutTransition(reduceMotion)}
@@ -316,10 +316,10 @@ export function TurnActionDock({
                 >
                   {buyTimelineCardButtonLabel}
                 </SecondaryActionButton>
-              </motion.span>
+              </m.span>
             ) : null}
             {canConfirmTurnPlacement ? (
-              <motion.span
+              <m.span
                 className={styles.actionButtonMotionWrap}
                 layout="position"
                 transition={createLayoutTransition(reduceMotion)}
@@ -330,10 +330,10 @@ export function TurnActionDock({
                 >
                   {placeCardButtonLabel}
                 </PrimaryActionButton>
-              </motion.span>
+              </m.span>
             ) : null}
             {canSkipOfflinePlayer ? (
-              <motion.span
+              <m.span
                 className={styles.actionButtonMotionWrap}
                 layout="position"
                 transition={createLayoutTransition(reduceMotion)}
@@ -344,7 +344,7 @@ export function TurnActionDock({
                 >
                   {skipTurnButtonLabel}
                 </SecondaryActionButton>
-              </motion.span>
+              </m.span>
             ) : null}
           </>
         )}

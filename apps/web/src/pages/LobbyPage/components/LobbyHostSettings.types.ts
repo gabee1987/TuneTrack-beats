@@ -1,4 +1,4 @@
-import type { PublicRoomSettings } from "@tunetrack/shared";
+import type { PublicRoomSettings } from "@tunetrack/shared/client";
 import type { RoomSettingsActionStatus, StartGameActionStatus } from "../LobbyPage.types";
 
 export type LobbyRoomSettingsChangeHandler = (nextSettings: PublicRoomSettings) => void;

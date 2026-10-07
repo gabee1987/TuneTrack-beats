@@ -8,7 +8,7 @@ import {
   type PublicRoomState,
   type TimelineCardPublic,
   type TrackCardPublic,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 
 /**
  * Placeholder data only. No real account identifiers, playlist URLs or personal names.

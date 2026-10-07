@@ -1,4 +1,4 @@
-import { ServerToClientEvent, type PublicTrackInfo } from "@tunetrack/shared";
+import { ServerToClientEvent, type PublicTrackInfo } from "@tunetrack/shared/client";
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider, useLocation, useNavigate } from "react-router-dom";

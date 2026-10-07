@@ -9,13 +9,14 @@ import {
 } from "react";
 import {
   availableLanguages,
-  defaultLanguageId,
-  languageResources,
+  getLoadedLanguageResource,
+  loadLanguageResource,
+  persistLanguageId,
+  resolveInitialLanguageId,
   type LanguageId,
 } from "./languages";
+import type { TranslationResource } from "./languages/parseLanguageResource";
 import type { Translate, TranslationKey, TranslationParams } from "./i18n.types";
-
-const LANGUAGE_STORAGE_KEY = "tunetrack.language";
 
 interface I18nContextValue {
   availableLanguages: typeof availableLanguages;
@@ -24,32 +25,16 @@ interface I18nContextValue {
   t: Translate;
 }
 
+interface ShownLanguage {
+  languageId: LanguageId;
+  resource: TranslationResource;
+}
+
 const I18nContext = createContext<I18nContextValue | null>(null);
 
-function isLanguageId(value: string | null): value is LanguageId {
-  return value !== null && value in languageResources;
-}
-
-function getInitialLanguage(): LanguageId {
-  if (typeof window === "undefined") {
-    return defaultLanguageId;
-  }
-
-  const persistedLanguage = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
-  if (isLanguageId(persistedLanguage)) {
-    return persistedLanguage;
-  }
-
-  const preferredLanguage = window.navigator.language.split("-")[0] ?? "";
-  if (isLanguageId(preferredLanguage)) {
-    return preferredLanguage;
-  }
-
-  return defaultLanguageId;
-}
-
-function getTranslationValue(key: TranslationKey, languageId: LanguageId): string {
-  return languageResources[languageId][key] ?? key;
+function getShownLanguage(languageId: LanguageId): ShownLanguage | null {
+  const resource = getLoadedLanguageResource(languageId);
+  return resource ? { languageId, resource } : null;
 }
 
 function interpolate(template: string, params?: TranslationParams): string {
@@ -63,30 +48,57 @@ function interpolate(template: string, params?: TranslationParams): string {
   });
 }
 
+/**
+ * Renders once the requested catalogue has loaded; `main.tsx` loads the first one before the
+ * app mounts. On a language switch the previous catalogue stays on screen until the next one
+ * arrives, so a translation key is never shown in place of text.
+ */
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [languageId, setLanguageId] = useState<LanguageId>(getInitialLanguage);
+  const [requestedLanguageId, setRequestedLanguageId] =
+    useState<LanguageId>(resolveInitialLanguageId);
+  const [shownLanguage, setShownLanguage] = useState(() => getShownLanguage(requestedLanguageId));
 
   useEffect(() => {
-    document.documentElement.lang = languageResources[languageId]["language.code"] ?? languageId;
-    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, languageId);
-  }, [languageId]);
+    let isCurrent = true;
+
+    void loadLanguageResource(requestedLanguageId).then((resource) => {
+      if (isCurrent) {
+        setShownLanguage((current) =>
+          current?.resource === resource ? current : { languageId: requestedLanguageId, resource },
+        );
+      }
+    });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [requestedLanguageId]);
+
+  useEffect(() => {
+    if (shownLanguage) {
+      document.documentElement.lang =
+        shownLanguage.resource["language.code"] ?? shownLanguage.languageId;
+      persistLanguageId(shownLanguage.languageId);
+    }
+  }, [shownLanguage]);
 
   const t = useCallback<Translate>(
-    (key, params) => interpolate(getTranslationValue(key, languageId), params),
-    [languageId],
+    (key: TranslationKey, params) => interpolate(shownLanguage?.resource[key] ?? key, params),
+    [shownLanguage],
   );
 
-  const value = useMemo<I18nContextValue>(
-    () => ({
-      availableLanguages,
-      languageId,
-      setLanguage: setLanguageId,
-      t,
-    }),
-    [languageId, t],
+  const value = useMemo<I18nContextValue | null>(
+    () =>
+      shownLanguage && {
+        availableLanguages,
+        languageId: shownLanguage.languageId,
+        setLanguage: setRequestedLanguageId,
+        t,
+      },
+    [shownLanguage, t],
   );
 
-  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+  return value ? <I18nContext.Provider value={value}>{children}</I18nContext.Provider> : null;
 }
 
 export function useI18n() {

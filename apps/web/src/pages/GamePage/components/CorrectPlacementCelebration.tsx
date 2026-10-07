@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import { motion, type MotionStyle } from "framer-motion";
+import { m, type MotionStyle } from "framer-motion";
 import {
   createCorrectPlacementCardTransition,
   createCorrectPlacementCardVariants,
@@ -100,7 +100,7 @@ export function CorrectPlacementCelebration({
   const reduceMotion = useReducedMotionPreference();
 
   return (
-    <motion.article
+    <m.article
       animate="animate"
       className={`${className} ${styles.correctPlacementShell}`}
       data-timeline-card="true"
@@ -108,7 +108,7 @@ export function CorrectPlacementCelebration({
       transition={createCorrectPlacementCardTransition(reduceMotion)}
       variants={createCorrectPlacementCardVariants(reduceMotion)}
     >
-      <motion.div
+      <m.div
         className={styles.correctPlacementShellContent}
         animate="animate"
         initial="initial"
@@ -116,15 +116,15 @@ export function CorrectPlacementCelebration({
         variants={createCorrectPlacementShellContentVariants(reduceMotion)}
       >
         {children}
-      </motion.div>
-      <motion.div
+      </m.div>
+      <m.div
         className={styles.correctPlacementFill}
         animate="animate"
         initial="initial"
         transition={createCorrectPlacementFillTransition(reduceMotion)}
         variants={createCorrectPlacementFillVariants(reduceMotion)}
       >
-        <motion.div
+        <m.div
           className={styles.correctPlacementContent}
           animate="animate"
           initial="initial"
@@ -132,12 +132,12 @@ export function CorrectPlacementCelebration({
           variants={createCorrectPlacementContentVariants(reduceMotion)}
         >
           {children}
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
       {showDecorativeStars ? (
         <div aria-hidden="true" className={styles.correctPlacementDecorativeStars}>
           {DECORATIVE_STARS.map((star, index) => (
-            <motion.span
+            <m.span
               key={`${star.x}-${star.y}-${index}`}
               animate={
                 reduceMotion
@@ -182,6 +182,6 @@ export function CorrectPlacementCelebration({
           ))}
         </div>
       ) : null}
-    </motion.article>
+    </m.article>
   );
 }

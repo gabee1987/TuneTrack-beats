@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { createPortal } from "react-dom";
 import type { HiddenCardMode, ThemeId } from "../../../features/preferences/uiPreferences";
 import {
@@ -44,7 +44,7 @@ export function TimelinePanelFlyAnimation({
   const flyVariants = createTimelineFlyAnimationVariants(reduceMotion, deltaX, deltaY);
 
   return createPortal(
-    <motion.div
+    <m.div
       animate="animate"
       className={styles.flyToMineCard}
       initial="initial"
@@ -73,7 +73,7 @@ export function TimelinePanelFlyAnimation({
         tone="success"
         transitionEvent={null}
       />
-    </motion.div>,
+    </m.div>,
     document.body,
   );
 }

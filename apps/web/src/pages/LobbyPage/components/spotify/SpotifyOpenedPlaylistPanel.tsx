@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useEffect, useState } from "react";
 import { createStandardTransition, useReducedMotionPreference } from "../../../../features/motion";
 import { useI18n } from "../../../../features/i18n";
@@ -202,7 +202,7 @@ export function SpotifyOpenedPlaylistPanel({
       )}
 
       {selectedTrackIds.size > 0 ? (
-        <motion.div
+        <m.div
           animate={{ opacity: 1, y: 0 }}
           className={styles.spotifySearchSelectedAction}
           initial={{ opacity: 0, y: 18 }}
@@ -234,7 +234,7 @@ export function SpotifyOpenedPlaylistPanel({
               })}
             </ActionButton>
           ) : null}
-        </motion.div>
+        </m.div>
       ) : null}
 
       <PlaylistTrackDetailsSheet

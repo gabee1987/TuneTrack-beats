@@ -1,6 +1,6 @@
 import type { ClosedRoomReason } from "../../../features/ui/RoomResetModal";
 import type { GamePageLeader, UseGamePageControllerResult, TimelineView } from "../GamePage.types";
-import type { PublicRoomState } from "@tunetrack/shared";
+import type { PublicRoomState } from "@tunetrack/shared/client";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import type {
   HiddenCardMode,

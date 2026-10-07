@@ -4,7 +4,7 @@ import {
   type PlaylistTracksPayload,
   type PublicTrackInfo,
   type SpotifySmartSearchResult,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { getSocketClient } from "../../../../services/socket/socketClient";
 
 const SMART_SEARCH_TRACK_ID_PREFIX = "spotify-search-";

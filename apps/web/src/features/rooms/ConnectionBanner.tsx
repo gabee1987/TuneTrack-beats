@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useI18n } from "../i18n";
 import { MotionPresence, createToastSlideMotion, useReducedMotionPreference } from "../motion";
 import { useConnectionStatus } from "../../services/socket/connectionState";
@@ -15,7 +15,7 @@ export function ConnectionBanner() {
     <div aria-live="polite" role="status">
       <MotionPresence>
         {labelKey ? (
-          <motion.p
+          <m.p
             animate="animate"
             className={styles.banner}
             exit="exit"
@@ -24,7 +24,7 @@ export function ConnectionBanner() {
             variants={createToastSlideMotion(reduceMotion)}
           >
             {t(labelKey)}
-          </motion.p>
+          </m.p>
         ) : null}
       </MotionPresence>
     </div>

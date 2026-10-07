@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { PublicRoomSettings, PublicRoomState } from "@tunetrack/shared";
+import type { PublicRoomSettings, PublicRoomState } from "@tunetrack/shared/client";
 import type { LobbyPageController } from "../LobbyPage.types";
 import { buildLobbyAssemblyModel } from "./buildLobbyAssemblyModel";
 

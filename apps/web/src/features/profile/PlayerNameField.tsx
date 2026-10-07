@@ -1,4 +1,4 @@
-import { PLAYER_NAME_MAX_LENGTH } from "@tunetrack/shared";
+import { PLAYER_NAME_MAX_LENGTH } from "@tunetrack/shared/client";
 import { type FormEvent, useEffect, useId, useState } from "react";
 import { useI18n } from "../i18n";
 import { TextInput } from "../ui/TextInput";

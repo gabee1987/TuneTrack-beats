@@ -1,5 +1,5 @@
 import { type DragEndEvent, type DragMoveEvent, type DragStartEvent } from "@dnd-kit/core";
-import type { TimelineCardPublic } from "@tunetrack/shared";
+import type { TimelineCardPublic } from "@tunetrack/shared/client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TIMELINE_REORDER_THROTTLE_MS } from "../gamePage.constants";
 import type { GamePageCard } from "../GamePage.types";

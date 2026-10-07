@@ -3,7 +3,7 @@ import {
   type PublicPlayerState,
   type PublicRoomSettings,
   type PublicRoomState,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useRef, useState } from "react";
 import { emitAction } from "../../../services/socket/emitAction";
 import type {

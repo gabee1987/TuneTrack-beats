@@ -1,3 +1,4 @@
+export { MotionFeatureProvider } from "./MotionFeatureProvider";
 export { MotionPresence } from "./MotionPresence";
 export { PageTransition } from "./PageTransition";
 export { MotionDialogPortal } from "./MotionDialogPortal";

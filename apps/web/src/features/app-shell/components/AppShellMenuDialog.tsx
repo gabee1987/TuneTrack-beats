@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { createPortal } from "react-dom";
 import {
   MotionPresence,
@@ -46,7 +46,7 @@ export function AppShellMenuDialog({
         // The scrim is a sibling of the sheet, never its parent: nested opacities multiply,
         // so a fading scrim around a fading sheet leaves the panel see-through.
         <div className={styles.menuLayer} key="app-shell-menu">
-          <motion.div
+          <m.div
             animate="animate"
             className={styles.menuScrim}
             exit="exit"

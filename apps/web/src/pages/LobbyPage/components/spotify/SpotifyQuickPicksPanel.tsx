@@ -3,7 +3,7 @@ import {
   SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT,
   SPOTIFY_QUICK_PICK_PRESETS,
   type PublicRoomSettings,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useI18n } from "../../../../features/i18n";
 import { useAppLoading } from "../../../../features/loading";
 import { TextInput } from "../../../../features/ui/TextInput";

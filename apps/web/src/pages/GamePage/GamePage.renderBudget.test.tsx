@@ -1,4 +1,4 @@
-import { ServerToClientEvent, type PublicRoomState } from "@tunetrack/shared";
+import { ServerToClientEvent, type PublicRoomState } from "@tunetrack/shared/client";
 import { act, render, screen } from "@testing-library/react";
 import { memo, type ComponentProps } from "react";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";

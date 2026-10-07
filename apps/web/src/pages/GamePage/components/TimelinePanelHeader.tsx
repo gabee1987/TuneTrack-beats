@@ -1,4 +1,4 @@
-import { LayoutGroup, motion } from "framer-motion";
+import { LayoutGroup, m } from "framer-motion";
 import { memo } from "react";
 import { useI18n } from "../../../features/i18n";
 import { createLayoutTransition, useReducedMotionPreference } from "../../../features/motion";
@@ -46,7 +46,7 @@ function TimelinePanelHeaderComponent({ model, onMineButtonRef }: TimelinePanelH
               type="button"
             >
               {timelineView === "active" ? (
-                <motion.span
+                <m.span
                   className={styles.timelineViewCompactActivePill}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -54,7 +54,7 @@ function TimelinePanelHeaderComponent({ model, onMineButtonRef }: TimelinePanelH
                   transition={layoutTransition}
                 >
                   <span className={styles.timelineViewCompactActiveGlow} />
-                </motion.span>
+                </m.span>
               ) : null}
               <span className={styles.timelineViewCompactButtonLabel}>
                 {t("game.timeline.active")}
@@ -69,7 +69,7 @@ function TimelinePanelHeaderComponent({ model, onMineButtonRef }: TimelinePanelH
               type="button"
             >
               {timelineView === "mine" ? (
-                <motion.span
+                <m.span
                   className={styles.timelineViewCompactActivePill}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -77,7 +77,7 @@ function TimelinePanelHeaderComponent({ model, onMineButtonRef }: TimelinePanelH
                   transition={layoutTransition}
                 >
                   <span className={styles.timelineViewCompactActiveGlow} />
-                </motion.span>
+                </m.span>
               ) : null}
               <span className={styles.timelineViewCompactButtonLabel}>
                 {t("game.timeline.mine")}

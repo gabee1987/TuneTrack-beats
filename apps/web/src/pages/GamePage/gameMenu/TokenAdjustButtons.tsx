@@ -1,5 +1,5 @@
-import { MAX_STARTING_TT_TOKEN_COUNT, MIN_STARTING_TT_TOKEN_COUNT } from "@tunetrack/shared";
-import { motion } from "framer-motion";
+import { MAX_STARTING_TT_TOKEN_COUNT, MIN_STARTING_TT_TOKEN_COUNT } from "@tunetrack/shared/client";
+import { m } from "framer-motion";
 import { useRef, useState } from "react";
 import { useI18n } from "../../../features/i18n";
 import {
@@ -167,7 +167,7 @@ export function TokenAdjustButtons({
           key={flyAnimation.key}
           style={{ left: flyAnimation.originX, top: flyAnimation.originY }}
         >
-          <motion.span
+          <m.span
             animate="animate"
             className={`${styles.menuTokenFlyout} ${
               flyAnimation.direction === "add"
@@ -179,7 +179,7 @@ export function TokenAdjustButtons({
             transition={createMenuTokenAdjustFlyoutTransition(reduceMotion)}
             variants={createMenuTokenAdjustFlyoutVariants(reduceMotion, flyAnimation.direction)}
           >
-            <motion.span
+            <m.span
               animate="animate"
               className={styles.menuTokenFlyoutContent}
               initial="initial"
@@ -188,8 +188,8 @@ export function TokenAdjustButtons({
             >
               {flyAnimation.direction === "add" ? "+1" : "-1"}
               <TtTokenIcon className={styles.menuTokenFlyoutIcon} />
-            </motion.span>
-          </motion.span>
+            </m.span>
+          </m.span>
         </span>
       ))}
     </div>

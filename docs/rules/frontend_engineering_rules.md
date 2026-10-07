@@ -93,6 +93,9 @@ pages/LobbyPage/
 
 - Framer imports live in `features/motion` or in dedicated animation components; page
   controllers never import Framer Motion.
+- Render `m.*`, never `motion.*`: the animation runtime loads lazily through
+  `MotionFeatureProvider`. A subtree using `layout`, `layoutId` or `drag` must sit inside
+  `MotionLayoutFeatures` (today the Game and Lobby routes). Guard: `lazyMotionSites.test.ts`.
 - One coordinator per interaction type (preview replacement, celebration, action surfaces,
   token flyouts). Shared variants and timing live in `features/motion`, grouped by
   transition responsibility, never in a generic bucket file.
@@ -146,6 +149,9 @@ pages/LobbyPage/
 - No polling intervals for display state when the data source can notify.
 - Heavy or rarely used dependencies (Framer Motion features, Zod, non-default locale) load
   lazily; the eager bundle budget is set by the live performance plan.
+- The web imports `@tunetrack/shared/client`, never the `@tunetrack/shared` barrel or `zod`
+  (lint rule): the barrel carries the server's Zod schemas. Only the active i18n catalogue is
+  loaded, before the app mounts (`main.tsx`).
 
 ## 12. Web tests
 

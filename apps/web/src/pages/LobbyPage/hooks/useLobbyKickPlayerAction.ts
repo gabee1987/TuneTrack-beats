@@ -2,7 +2,7 @@ import {
   ClientToServerEvent,
   type PublicPlayerState,
   type PublicRoomState,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useCallback, useRef, useState } from "react";
 import { emitAction } from "../../../services/socket/emitAction";
 import type { LobbyKickPlayerActionState } from "../LobbyPage.types";

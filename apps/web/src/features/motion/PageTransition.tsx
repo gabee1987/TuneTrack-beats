@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useReducedMotionPreference } from "./useReducedMotionPreference";
 import type { ReactNode } from "react";
 import {
@@ -16,7 +16,7 @@ export function PageTransition({ children, direction }: PageTransitionProps) {
   const reduceMotion = useReducedMotionPreference();
 
   return (
-    <motion.div
+    <m.div
       animate="animate"
       custom={direction}
       exit="exit"
@@ -34,6 +34,6 @@ export function PageTransition({ children, direction }: PageTransitionProps) {
       variants={createPageTransitionVariants(reduceMotion)}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }

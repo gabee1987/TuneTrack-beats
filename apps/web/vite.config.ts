@@ -17,7 +17,6 @@ const backendProxy = {
     changeOrigin: true,
   },
 };
-
 export default defineConfig({
   plugins: [
     react(),
@@ -69,14 +68,17 @@ export default defineConfig({
     rollupOptions: {
       output: {
         // Split third-party libs into stable, independently cacheable chunks so an
-        // app-code change no longer invalidates React/framer-motion for PWA updates.
+        // app-code change no longer invalidates React for PWA updates.
         // Libs used only by lazy routes (dnd-kit, tanstack, socket.io) stay deferred.
         manualChunks(id) {
           if (!id.includes("node_modules")) {
             return undefined;
           }
-          if (id.includes("framer-motion")) {
-            return "vendor-motion";
+          // framer-motion is placed by import site (05 D1): the `m`, presence and LazyMotion
+          // core goes with the entry, the feature bundles with the lazy chunks that load them.
+          // A manual chunk would pull every module the framer barrel re-exports back in.
+          if (/[\\/](framer-motion|motion-dom|motion-utils)[\\/]/.test(id)) {
+            return undefined;
           }
           if (id.includes("@dnd-kit")) {
             return "vendor-dnd";
@@ -86,9 +88,6 @@ export default defineConfig({
           }
           if (id.includes("socket.io") || id.includes("engine.io")) {
             return "vendor-socket";
-          }
-          if (id.includes("zod")) {
-            return "vendor-zod";
           }
           if (id.includes("react-router") || id.includes("@remix-run")) {
             return "vendor-router";

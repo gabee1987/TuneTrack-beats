@@ -1,5 +1,9 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { ClientToServerEvent, ServerToClientEvent, type PublicRoomState } from "@tunetrack/shared";
+import {
+  ClientToServerEvent,
+  ServerToClientEvent,
+  type PublicRoomState,
+} from "@tunetrack/shared/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getSharedFakeSocket,

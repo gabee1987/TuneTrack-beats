@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { ClientToServerEvent, ServerToClientEvent } from "@tunetrack/shared";
+import { ClientToServerEvent, ServerToClientEvent } from "@tunetrack/shared/client";
 import { createElement, type ReactNode } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import type { Socket } from "socket.io-client";

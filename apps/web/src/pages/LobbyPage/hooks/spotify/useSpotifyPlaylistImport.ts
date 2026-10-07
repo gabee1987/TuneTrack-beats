@@ -4,7 +4,7 @@ import {
   type ImportPlaylistResultPayload,
   type PlaylistTracksPayload,
   type SpotifyPlaylistSearchItem,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
 import { useI18n } from "../../../../features/i18n";

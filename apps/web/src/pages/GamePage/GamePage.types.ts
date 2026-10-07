@@ -1,5 +1,9 @@
 import type { ClosedRoomReason } from "../../features/ui/RoomResetModal";
-import type { PublicRoomState, TimelineCardPublic, TrackCardPublic } from "@tunetrack/shared";
+import type {
+  PublicRoomState,
+  TimelineCardPublic,
+  TrackCardPublic,
+} from "@tunetrack/shared/client";
 import type { AppShellMenuTab } from "../../features/app-shell/AppShellMenu";
 import type {
   HiddenCardMode,

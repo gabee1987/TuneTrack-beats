@@ -1,5 +1,5 @@
 import type { DraggableAttributes } from "@dnd-kit/core";
-import { motion, type MotionStyle } from "framer-motion";
+import { m, type MotionStyle } from "framer-motion";
 import { forwardRef, type CSSProperties } from "react";
 import { useI18n } from "../../../features/i18n";
 import type {
@@ -131,7 +131,7 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(function Pr
     displayShowRevealedContent && revealedCardMode === "artwork" && Boolean(renderCard.artworkUrl);
 
   return (
-    <motion.article
+    <m.article
       ref={ref}
       className={`${styles.previewCard} ${
         (displayShowRevealedContent ? revealedCardMode : hiddenCardMode) === "gradient"
@@ -172,6 +172,6 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(function Pr
           showRevealedContent={displayShowRevealedContent}
         />
       </div>
-    </motion.article>
+    </m.article>
   );
 });

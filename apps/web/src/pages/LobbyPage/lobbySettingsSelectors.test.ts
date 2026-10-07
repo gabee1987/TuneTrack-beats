@@ -2,7 +2,7 @@ import {
   DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
   MAX_CHALLENGE_WINDOW_DURATION_SECONDS,
   MIN_CHALLENGE_WINDOW_DURATION_SECONDS,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { describe, expect, it } from "vitest";
 import {
   formatChallengeWindowSettingValue,

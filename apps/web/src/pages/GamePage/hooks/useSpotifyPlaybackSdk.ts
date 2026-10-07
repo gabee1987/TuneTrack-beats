@@ -4,7 +4,7 @@ import {
   type ServerErrorPayload,
   type SpotifyPlaybackResultPayload,
   type SpotifyTokenRefreshedPayload,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getSocketClient } from "../../../services/socket/socketClient";
 

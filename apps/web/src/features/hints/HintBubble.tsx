@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useEffect, useId, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { createStandardTransition, motionEasings, useReducedMotionPreference } from "../motion";
@@ -71,7 +71,7 @@ export function HintBubble({ anchor, body, dismissLabel, onDismiss, title }: Hin
   }, [onDismiss, titleId]);
 
   return createPortal(
-    <motion.aside
+    <m.aside
       animate={{ opacity: 1, x: "-50%", y: verticalPosition }}
       aria-describedby={bodyId}
       aria-labelledby={titleId}
@@ -115,7 +115,7 @@ export function HintBubble({ anchor, body, dismissLabel, onDismiss, title }: Hin
           />
         </svg>
       </IconButton>
-    </motion.aside>,
+    </m.aside>,
     document.body,
   );
 }

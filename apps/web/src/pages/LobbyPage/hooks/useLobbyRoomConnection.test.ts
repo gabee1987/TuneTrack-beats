@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { ClientToServerEvent, ServerToClientEvent } from "@tunetrack/shared";
+import { ClientToServerEvent, ServerToClientEvent } from "@tunetrack/shared/client";
 import { createElement, type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { I18nProvider, useI18n } from "../../../features/i18n";

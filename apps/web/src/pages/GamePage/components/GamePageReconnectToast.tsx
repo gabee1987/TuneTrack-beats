@@ -1,5 +1,5 @@
-import type { PublicRoomState } from "@tunetrack/shared";
-import { motion } from "framer-motion";
+import type { PublicRoomState } from "@tunetrack/shared/client";
+import { m } from "framer-motion";
 import { useI18n } from "../../../features/i18n";
 import {
   MotionPresence,
@@ -27,7 +27,7 @@ export function GamePageReconnectToast({
     <div className={styles.toastContainer} aria-live="polite" aria-atomic="true">
       <MotionPresence mode="sync">
         {toast ? (
-          <motion.div
+          <m.div
             animate="animate"
             className={styles.toast}
             exit="exit"
@@ -40,7 +40,7 @@ export function GamePageReconnectToast({
             <span className={styles.toastText}>
               {t("game.toast.reconnected", { playerName: toast.playerName })}
             </span>
-          </motion.div>
+          </m.div>
         ) : null}
       </MotionPresence>
     </div>

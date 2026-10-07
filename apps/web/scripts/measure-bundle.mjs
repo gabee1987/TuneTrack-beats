@@ -43,7 +43,10 @@ const largestCss = allAssets
 const entry = measure(entryScripts[0]);
 const eagerRaw = eager.reduce((sum, file) => sum + file.raw, 0);
 const eagerGzip = eager.reduce((sum, file) => sum + file.gzip, 0);
-const hasEagerMotion = eagerFiles.some((name) => name.startsWith("vendor-motion"));
+// The `m`/LazyMotion core sits in the entry; the animation runtime must not be eager (05 D1).
+const hasEagerMotion = eagerFiles.some((name) =>
+  /^(vendor-motion|domAnimationFeatures)-/.test(name),
+);
 const hasZodChunk = allAssets.some((name) => name.startsWith("vendor-zod"));
 
 console.log("Eager home path");
@@ -58,7 +61,7 @@ for (const file of lazyChunks) {
 console.log("\nBudget row");
 console.log(`  eager path gzip       ${kilobytes(eagerGzip)} kB (gate <= 110)`);
 console.log(`  entry chunk raw       ${kilobytes(entry.raw)} kB (gate <= 100)`);
-console.log(`  vendor-motion eager   ${hasEagerMotion ? "yes" : "no"} (gate: no)`);
+console.log(`  motion runtime eager  ${hasEagerMotion ? "yes" : "no"} (gate: no)`);
 console.log(`  vendor-zod emitted    ${hasZodChunk ? "yes" : "no"} (gate: no)`);
 console.log(
   `  largest CSS raw       ${kilobytes(largestCss.raw)} kB ${largestCss.fileName} (gate <= 20)`,

@@ -5,7 +5,7 @@ import {
   MIN_STARTING_TT_TOKEN_COUNT,
   type PublicPlayerState,
   type PublicRoomSettings,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { Badge } from "../../../features/ui/Badge";
 import { CardCountAmount } from "../../../features/ui/CardCountAmount";
 import { useI18n } from "../../../features/i18n";

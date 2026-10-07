@@ -1,4 +1,4 @@
-import type { PublicPlayerState, PublicRoomSettings } from "@tunetrack/shared";
+import type { PublicPlayerState, PublicRoomSettings } from "@tunetrack/shared/client";
 
 export interface LobbyPlayerBadgeSpec {
   count?: number | undefined;

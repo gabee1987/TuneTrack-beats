@@ -3,7 +3,7 @@ import {
   CHALLENGE_TT_COST,
   SKIP_TRACK_TT_COST,
   type PublicRoomState,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useMemo } from "react";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import { useI18n } from "../../../features/i18n";

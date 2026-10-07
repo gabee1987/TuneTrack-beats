@@ -1,4 +1,4 @@
-import type { PublicTrackInfo, TrackMetadataStatus } from "@tunetrack/shared";
+import type { PublicTrackInfo, TrackMetadataStatus } from "@tunetrack/shared/client";
 
 const STORAGE_KEY = "tunetrack.savedPlaylists.v1";
 const MAX_SAVED_PLAYLISTS = 20;

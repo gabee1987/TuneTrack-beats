@@ -1,4 +1,4 @@
-import { type PublicRoomState } from "@tunetrack/shared";
+import { type PublicRoomState } from "@tunetrack/shared/client";
 import type { Translate } from "../../../features/i18n";
 import { useHostPlaybackControls, useHostPlaybackProgress } from "../hooks/HostPlaybackProvider";
 import { useInterpolatedPlaybackPosition } from "../hooks/useInterpolatedPlaybackPosition";

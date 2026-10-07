@@ -1,7 +1,10 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import type { SpotifySmartSearchResult, SpotifySmartSearchTypeFilter } from "@tunetrack/shared";
+import type {
+  SpotifySmartSearchResult,
+  SpotifySmartSearchTypeFilter,
+} from "@tunetrack/shared/client";
 import { createStandardTransition, useReducedMotionPreference } from "../../../../features/motion";
 import { useI18n } from "../../../../features/i18n";
 import { useAppToast } from "../../../../features/toast";
@@ -308,7 +311,7 @@ export function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: Lob
           ) : null}
 
           {selectedSearchTracks.length > 0 ? (
-            <motion.div
+            <m.div
               animate={{ opacity: 1, y: 0 }}
               className={styles.spotifySearchSelectedAction}
               initial={{ opacity: 0, y: 18 }}
@@ -338,7 +341,7 @@ export function SpotifyPlaylistSearchPanel({ spotifyState }: { spotifyState: Lob
                   })}
                 </ActionButton>
               ) : null}
-            </motion.div>
+            </m.div>
           ) : null}
         </section>
       )}

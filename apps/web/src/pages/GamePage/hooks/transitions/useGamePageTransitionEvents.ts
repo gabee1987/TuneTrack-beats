@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { PublicRoomState } from "@tunetrack/shared";
+import type { PublicRoomState } from "@tunetrack/shared/client";
 import type {
   GamePageCard,
   TimelineCelebrationTone,

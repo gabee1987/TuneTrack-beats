@@ -1,4 +1,4 @@
-import { ClientToServerEvent } from "@tunetrack/shared";
+import { ClientToServerEvent } from "@tunetrack/shared/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { emitAction } from "./emitAction";
 

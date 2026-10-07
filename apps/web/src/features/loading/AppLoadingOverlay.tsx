@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { MotionPresence, createDialogCardMotion, useReducedMotionPreference } from "../motion";
 import type { AppLoadingState } from "./AppLoading.types";
 import styles from "./AppLoadingOverlay.module.css";
@@ -14,7 +14,7 @@ export function AppLoadingOverlay({ loading }: AppLoadingOverlayProps) {
   return (
     <MotionPresence>
       {loading ? (
-        <motion.div
+        <m.div
           animate="animate"
           aria-live="polite"
           aria-modal="true"
@@ -24,7 +24,7 @@ export function AppLoadingOverlay({ loading }: AppLoadingOverlayProps) {
           role="dialog"
           variants={overlayMotion}
         >
-          <motion.div
+          <m.div
             animate="animate"
             className={styles.panel}
             exit="exit"
@@ -36,8 +36,8 @@ export function AppLoadingOverlay({ loading }: AppLoadingOverlayProps) {
               <strong>{loading.title}</strong>
               {loading.message ? <span>{loading.message}</span> : null}
             </div>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       ) : null}
     </MotionPresence>
   );

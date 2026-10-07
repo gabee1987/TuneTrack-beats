@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { PublicTrackInfo } from "@tunetrack/shared";
+import type { PublicTrackInfo } from "@tunetrack/shared/client";
 import { getPlaylistTrackCurationFlags, shouldShowSourceYear } from "./playlistMetadataFlags";
 
 function buildTrack(overrides: Partial<PublicTrackInfo> = {}): PublicTrackInfo {

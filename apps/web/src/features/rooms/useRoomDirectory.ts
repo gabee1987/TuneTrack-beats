@@ -3,7 +3,7 @@ import {
   type PublicRoomSummary,
   type RoomListPayload,
   ServerToClientEvent,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useEffect, useState } from "react";
 import { getSocketClient } from "../../services/socket/socketClient";
 

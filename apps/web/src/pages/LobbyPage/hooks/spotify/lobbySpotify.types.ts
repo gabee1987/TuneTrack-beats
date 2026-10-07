@@ -6,7 +6,7 @@ import type {
   SpotifyQuickPickPresetId,
   SpotifySmartSearchResult,
   SpotifySmartSearchTypeFilter,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import type { SavedPlaylist } from "../../../../services/savedPlaylists/savedPlaylists";
 
 export type AuthPhase = "idle" | "connecting" | "error";

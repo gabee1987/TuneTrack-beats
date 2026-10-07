@@ -1,5 +1,9 @@
 import type { ClosedRoomReason } from "../../features/ui/RoomResetModal";
-import type { PublicPlayerState, PublicRoomSettings, PublicRoomState } from "@tunetrack/shared";
+import type {
+  PublicPlayerState,
+  PublicRoomSettings,
+  PublicRoomState,
+} from "@tunetrack/shared/client";
 import type { LobbyAssemblyModel } from "./hooks/buildLobbyAssemblyModel";
 
 export type StartGameActionStatus = "idle" | "pending" | "retrying" | "failed";

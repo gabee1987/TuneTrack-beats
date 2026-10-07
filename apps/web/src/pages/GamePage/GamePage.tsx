@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { AppRouteFallback } from "../../app/components/AppRouteFallback";
 import { useI18n } from "../../features/i18n";
+import { MotionLayoutFeatures } from "../../features/motion/MotionLayoutFeatures";
 import { ConnectionBanner } from "../../features/rooms/ConnectionBanner";
 import { RoomResetModal } from "../../features/ui/RoomResetModal";
 import { Button, Dialog } from "../../features/ui/primitives";
@@ -101,19 +102,21 @@ export function GamePage() {
   );
 
   return (
-    <HostPlaybackProvider
-      enabled={hostPlaybackEnabled}
-      roomId={controller.roomState.roomId}
-      roomState={controller.roomState}
-    >
-      {screenOverlays}
-      <Suspense fallback={<AppRouteFallback />}>
-        {layoutMode === "mobile" ? (
-          <GamePageMobile model={model} />
-        ) : (
-          <GamePageDesktop model={model} />
-        )}
-      </Suspense>
-    </HostPlaybackProvider>
+    <MotionLayoutFeatures>
+      <HostPlaybackProvider
+        enabled={hostPlaybackEnabled}
+        roomId={controller.roomState.roomId}
+        roomState={controller.roomState}
+      >
+        {screenOverlays}
+        <Suspense fallback={<AppRouteFallback />}>
+          {layoutMode === "mobile" ? (
+            <GamePageMobile model={model} />
+          ) : (
+            <GamePageDesktop model={model} />
+          )}
+        </Suspense>
+      </HostPlaybackProvider>
+    </MotionLayoutFeatures>
   );
 }

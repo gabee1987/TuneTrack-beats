@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { memo, useRef, useState } from "react";
 import {
   MotionPresence,
@@ -113,7 +113,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
                   key={flyout.key}
                   style={{ left: flyout.originX, top: flyout.originY - 28 }}
                 >
-                  <motion.span
+                  <m.span
                     animate="animate"
                     className={styles.tokenSpendFlyout}
                     initial="initial"
@@ -121,7 +121,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
                     transition={createTokenSpendFlyoutTransition(reduceMotion)}
                     variants={createTokenSpendFlyoutVariants(reduceMotion)}
                   >
-                    <motion.span
+                    <m.span
                       animate="animate"
                       className={styles.tokenSpendFlyoutContent}
                       initial="initial"
@@ -130,8 +130,8 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
                     >
                       <span className={styles.tokenSpendFlyoutAmount}>{flyout.amount}</span>
                       <TtTokenIcon className={styles.tokenSpendIcon} />
-                    </motion.span>
-                  </motion.span>
+                    </m.span>
+                  </m.span>
                 </span>
               ))}
             </MotionPresence>,
