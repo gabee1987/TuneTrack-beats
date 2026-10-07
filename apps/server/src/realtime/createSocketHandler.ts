@@ -14,10 +14,7 @@ export function emitServerError(
   messageByCode: Record<string, string>,
 ): string {
   const errorCode = error instanceof Error ? error.message : fallbackCode;
-  logger.warn(
-    { socketId: socket.id, event: eventName, code: errorCode },
-    "socket action rejected",
-  );
+  logger.warn({ socketId: socket.id, event: eventName, code: errorCode }, "socket action rejected");
   logRejectedSocketEvent(socket, eventName, errorCode);
 
   socket.emit(ServerToClientEvent.Error, {
@@ -25,6 +22,23 @@ export function emitServerError(
     message: resolveSocketErrorMessage(errorCode, messageByCode),
   });
   return errorCode;
+}
+
+// Starts an asynchronous room request whose service method authorises synchronously, so a
+// refused caller gets the domain error code instead of the request's generic failure result.
+export function startAuthorizedRequest<TResult>(
+  socket: Socket,
+  eventName: string,
+  start: () => Promise<TResult>,
+  fallbackCode: string,
+  messageByCode: Record<string, string>,
+): Promise<TResult> | null {
+  try {
+    return start();
+  } catch (error) {
+    emitServerError(socket, eventName, error, fallbackCode, messageByCode);
+    return null;
+  }
 }
 
 export function broadcastRoomState(io: Server, roomState: PublicRoomState): void {

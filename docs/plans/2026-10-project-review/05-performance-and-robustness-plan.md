@@ -128,22 +128,17 @@ What replaces §7 (WP C1):
 
 ## 4. Track A — Server robustness and security
 
-### A1 · Authorisation before work (B-30, B-07 ordering, B-20) — **do first**
+### A1 · Authorisation before work (B-30, B-07 ordering, B-20) — **shipped 2026-10-07**
 
-- `getPlaylistTracks`: host only, and only while `status === "lobby"` (the editor is a lobby
-  tool; the host is also a player and must not see answers in game). Existing codes:
-  `ONLY_HOST_CAN_EDIT_PLAYLIST` for a guest, `GAME_ALREADY_STARTED` outside the lobby.
-- `search_spotify_music`, `search_spotify_playlists`, `open_spotify_playlist`: host only and
-  lobby only (added 2026-10-07 by `06` §8; Music Setup is a host tool, and a guest must not spend
-  the room's Spotify quota).
-- `importPlaylist`: `requireHost` before `importFromUrl`; no Spotify request for a non-host or
-  non-member.
-- `generateSpotifyCandidates` and `useSpotifyCandidates`: host check first; split
-  `applyCandidates` into peek and consume so a failed check never deletes the session (B-20).
-- **Proof:** `apps/server/tests/rooms/playlistAuthorization.test.ts` (new): guest gets
-  `ONLY_HOST_…` for all four events; a mocked `SpotifyApiClient` records **zero** calls; the
-  host's candidate session survives a rejected guest call; `get_playlist_tracks` in `playing`
-  is refused for the host too.
+Every deck-reading, deck-editing and music-setup event (`get_playlist_tracks`,
+`remove_playlist_tracks`, `update_playlist_track`, `load_curated_playlist`, `import_playlist`,
+`search_spotify_music`, `search_spotify_playlists`, `open_spotify_playlist`,
+`generate_spotify_candidates`, `use_spotify_candidates`) passes one guard,
+`RoomLobbyService.requireHostInLobby`, before any Spotify work: a guest gets its
+`ONLY_HOST_…` code, anyone outside the lobby gets `GAME_ALREADY_STARTED`, and refusals reach the
+client as server errors. The host check runs before the candidate session is consumed, so no
+peek/consume split was needed. Proof: `apps/server/tests/rooms/playlistAuthorization.test.ts`
+(22 cases; Spotify service spies record zero calls).
 
 ### A2 · Membership correctness (B-31, B-05, B-04)
 
@@ -323,22 +318,22 @@ drop it on coarse pointers only if the trace shows paint cost.
 One package = one agent session. Packages in the same row can run in parallel sessions only if
 their files do not overlap.
 
-| Order | Packages       | Depends on                        | Skills                                  | Why this order                                    |
-| ----- | -------------- | --------------------------------- | --------------------------------------- | ------------------------------------------------- |
-| 1     | **A1**         | —                                 | `write-tests`, `verify`                 | Answer leak and unauthenticated third-party calls |
-| 2     | A2             | —                                 | `write-tests`                           | Ghost players, silent lobby loss, rename breakage |
-| 3     | A3             | `04` WP 2 (deck contract) or none | `write-tests`                           | Game soft-lock; decision 6                        |
-| 4     | A4, B1         | —                                 | `add-socket-action` (A4), `write-tests` | Error contract feeds B2's toasts                  |
-| 5     | A8, B2         | A4                                | `add-socket-action`, `e2e-scenario`     | Honest connection state end to end                |
-| 6     | A5, A6, A7     | A1                                | `write-tests`                           | Abuse limits and transport                        |
-| 7     | D0, C1, C2     | —                                 | `perf-check`                            | Largest runtime win, measurable                   |
-| 8     | C3, C4, C5, C6 | C1                                | `perf-check`                            | Drag, viewport, playback                          |
-| 9     | D1, D2, D3     | D0                                | `perf-check`                            | Eager gate                                        |
-| 10    | C7, D4, D5, E1 | D1 (C7)                           | `design-token-migration`, `perf-check`  | Motion and CSS budgets                            |
-| 11    | A9, A10        | A2                                | `write-tests`                           | Small server costs, measured broadcast decision   |
-| 12    | E2             | E1                                | `add-ui-component`                      | Largest UI refactor last                          |
+| Order | Packages                    | Depends on                        | Skills                                  | Why this order                                    |
+| ----- | --------------------------- | --------------------------------- | --------------------------------------- | ------------------------------------------------- |
+| 1     | **A1** (shipped 2026-10-07) | —                                 | `write-tests`, `verify`                 | Answer leak and unauthenticated third-party calls |
+| 2     | A2                          | —                                 | `write-tests`                           | Ghost players, silent lobby loss, rename breakage |
+| 3     | A3                          | `04` WP 2 (deck contract) or none | `write-tests`                           | Game soft-lock; decision 6                        |
+| 4     | A4, B1                      | —                                 | `add-socket-action` (A4), `write-tests` | Error contract feeds B2's toasts                  |
+| 5     | A8, B2                      | A4                                | `add-socket-action`, `e2e-scenario`     | Honest connection state end to end                |
+| 6     | A5, A6, A7                  | A1                                | `write-tests`                           | Abuse limits and transport                        |
+| 7     | D0, C1, C2                  | —                                 | `perf-check`                            | Largest runtime win, measurable                   |
+| 8     | C3, C4, C5, C6              | C1                                | `perf-check`                            | Drag, viewport, playback                          |
+| 9     | D1, D2, D3                  | D0                                | `perf-check`                            | Eager gate                                        |
+| 10    | C7, D4, D5, E1              | D1 (C7)                           | `design-token-migration`, `perf-check`  | Motion and CSS budgets                            |
+| 11    | A9, A10                     | A2                                | `write-tests`                           | Small server costs, measured broadcast decision   |
+| 12    | E2                          | E1                                | `add-ui-component`                      | Largest UI refactor last                          |
 
-A1 is hotfix-sized and can be handed out before anything else in this document.
+A1 shipped on 2026-10-07; A2 is next.
 
 ## 9. Corrections to the work-breakdown documents
 

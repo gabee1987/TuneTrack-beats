@@ -10,9 +10,15 @@ import {
 import type { Server, Socket } from "socket.io";
 import { logger } from "../../app/logger.js";
 import type { RoomService } from "../../rooms/RoomService.js";
-import { broadcastRoomState, createSocketHandler } from "../createSocketHandler.js";
 import {
+  broadcastRoomState,
+  createSocketHandler,
+  startAuthorizedRequest,
+} from "../createSocketHandler.js";
+import {
+  getPlaylistTracksErrorMessages,
   loadCuratedPlaylistErrorMessages,
+  musicSetupErrorMessages,
   removePlaylistTracksErrorMessages,
   updatePlaylistTrackErrorMessages,
 } from "../errorMessages.js";
@@ -42,8 +48,16 @@ function registerImportPlaylistHandler(io: Server, socket: Socket, roomService: 
       return;
     }
 
-    void roomService
-      .importPlaylist(parseResult.data, socket.id)
+    const pendingImport = startAuthorizedRequest(
+      socket,
+      ClientToServerEvent.ImportPlaylist,
+      () => roomService.importPlaylist(parseResult.data, socket.id),
+      "IMPORT_PLAYLIST_FAILED",
+      musicSetupErrorMessages,
+    );
+    if (!pendingImport) return;
+
+    void pendingImport
       .then(({ roomState, resultPayload }) => {
         socket.emit(ServerToClientEvent.PlaylistImportResult, resultPayload);
 
@@ -112,7 +126,7 @@ function registerGetPlaylistTracksHandler(socket: Socket, roomService: RoomServi
       socket.emit(ServerToClientEvent.PlaylistTracks, { tracks });
     },
     fallbackErrorCode: "GET_PLAYLIST_TRACKS_FAILED",
-    errorMessages: {},
+    errorMessages: getPlaylistTracksErrorMessages,
   });
 }
 

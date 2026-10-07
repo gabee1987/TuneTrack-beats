@@ -28,7 +28,7 @@ import {
 } from "./roomLobbyBuilders.js";
 import { mapGameStateToPublicRoomState } from "./roomStateMappers.js";
 import { generateUniqueRoomCode } from "./roomCodeGenerator.js";
-import type { JoinRoomResult, RoomStore } from "./RoomStore.js";
+import type { JoinRoomResult, RoomRecord, RoomStore } from "./RoomStore.js";
 import type { RoomTimerCoordinator } from "./RoomTimerCoordinator.js";
 
 type RoomStateChangedEmitter = (roomState: PublicRoomState) => void;
@@ -289,6 +289,16 @@ export class RoomLobbyService {
     return nextRoomState;
   }
 
+  // The deck carries every release year, so reading or changing it is a host tool for the lobby
+  // only; the host is also a player and must not see the answers once the game runs.
+  public requireHostInLobby(socketId: string, roomId: RoomId, notHostCode: string): RoomRecord {
+    const roomRecord = this.store.getRoomRecordForMember(socketId, roomId);
+    const membership = this.store.requireMembership(socketId);
+    if (roomRecord.roomState.hostId !== membership.playerId) throw new Error(notHostCode);
+    if (roomRecord.roomState.status !== "lobby") throw new Error("GAME_ALREADY_STARTED");
+    return roomRecord;
+  }
+
   public setImportedDeck(socketId: string, roomId: RoomId, deck: GameTrackCard[]): PublicRoomState {
     return this.updateImportedDeck(socketId, roomId, deck, "replace").roomState;
   }
@@ -299,10 +309,7 @@ export class RoomLobbyService {
     deck: GameTrackCard[],
     mode: PlaylistQueueUpdateMode,
   ): { roomState: PublicRoomState; deck: GameTrackCard[] } {
-    const roomRecord = this.store.getRoomRecordForMember(socketId, roomId);
-    const membership = this.store.requireMembership(socketId);
-    if (roomRecord.roomState.hostId !== membership.playerId)
-      throw new Error("ONLY_HOST_CAN_IMPORT_PLAYLIST");
+    const roomRecord = this.requireHostInLobby(socketId, roomId, "ONLY_HOST_CAN_IMPORT_PLAYLIST");
 
     const nextDeck = dedupeImportedDeck(
       mode === "append" ? [...(roomRecord.importedDeck ?? []), ...deck] : deck,
@@ -342,10 +349,7 @@ export class RoomLobbyService {
     roomId: RoomId,
     trackIds: string[],
   ): PublicRoomState {
-    const roomRecord = this.store.getRoomRecordForMember(socketId, roomId);
-    const membership = this.store.requireMembership(socketId);
-    if (roomRecord.roomState.hostId !== membership.playerId)
-      throw new Error("ONLY_HOST_CAN_EDIT_PLAYLIST");
+    const roomRecord = this.requireHostInLobby(socketId, roomId, "ONLY_HOST_CAN_EDIT_PLAYLIST");
     if (!roomRecord.importedDeck) throw new Error("NO_PLAYLIST_IMPORTED");
 
     const removeSet = new Set(trackIds);
@@ -363,10 +367,11 @@ export class RoomLobbyService {
     socketId: string,
     payload: UpdatePlaylistTrackPayloadParsed,
   ): PublicRoomState {
-    const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
-    const membership = this.store.requireMembership(socketId);
-    if (roomRecord.roomState.hostId !== membership.playerId)
-      throw new Error("ONLY_HOST_CAN_EDIT_PLAYLIST");
+    const roomRecord = this.requireHostInLobby(
+      socketId,
+      payload.roomId,
+      "ONLY_HOST_CAN_EDIT_PLAYLIST",
+    );
     if (!roomRecord.importedDeck) throw new Error("NO_PLAYLIST_IMPORTED");
 
     let didUpdateTrack = false;

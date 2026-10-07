@@ -56,6 +56,7 @@ import type {
   UseSpotifyCandidatesPayloadParsed,
 } from "@tunetrack/shared";
 import type { ImportPlaylistResultPayload } from "@tunetrack/shared";
+import { cardToPublicTrackInfo } from "./publicTrackInfo.js";
 import { type JoinRoomResult, type KickPlayerResult, RoomRegistry } from "./RoomRegistry.js";
 
 export interface ImportPlaylistServiceResult {
@@ -78,6 +79,8 @@ export interface RenameRoomResult {
   previousRoomId: string;
   roomState: PublicRoomState;
 }
+
+const NOT_MUSIC_SETUP_HOST = "ONLY_HOST_CAN_IMPORT_PLAYLIST";
 
 export class RoomService {
   public constructor(
@@ -353,7 +356,15 @@ export class RoomService {
     return roomId;
   }
 
-  public async importPlaylist(
+  public importPlaylist(
+    payload: ImportPlaylistPayloadParsed,
+    socketId: string,
+  ): Promise<ImportPlaylistServiceResult> {
+    this.roomRegistry.requireHostInLobby(socketId, payload.roomId, NOT_MUSIC_SETUP_HOST);
+    return this.importAuthorizedPlaylist(payload, socketId);
+  }
+
+  private async importAuthorizedPlaylist(
     payload: ImportPlaylistPayloadParsed,
     socketId: string,
   ): Promise<ImportPlaylistServiceResult> {
@@ -426,7 +437,7 @@ export class RoomService {
     payload: SearchSpotifyPlaylistsPayloadParsed,
     socketId: string,
   ): Promise<SpotifyPlaylistSearchResultPayload> {
-    this.roomRegistry.getRoomStateForMember(socketId, payload.roomId);
+    this.roomRegistry.requireHostInLobby(socketId, payload.roomId, NOT_MUSIC_SETUP_HOST);
     return this.spotifyDiscoveryService.searchPlaylists(
       payload.roomId,
       payload.query,
@@ -438,7 +449,7 @@ export class RoomService {
     payload: SearchSpotifyMusicPayloadParsed,
     socketId: string,
   ): Promise<SpotifySmartSearchResultPayload> {
-    this.roomRegistry.getRoomStateForMember(socketId, payload.roomId);
+    this.roomRegistry.requireHostInLobby(socketId, payload.roomId, NOT_MUSIC_SETUP_HOST);
     return this.spotifyMusicSearchService.search(
       payload.roomId,
       payload.query,
@@ -452,7 +463,7 @@ export class RoomService {
     payload: OpenSpotifyPlaylistPayloadParsed,
     socketId: string,
   ): Promise<SpotifyPlaylistDetailPayload> {
-    this.roomRegistry.getRoomStateForMember(socketId, payload.roomId);
+    this.roomRegistry.requireHostInLobby(socketId, payload.roomId, NOT_MUSIC_SETUP_HOST);
     return this.spotifyMusicSearchService.getPlaylistDetail(
       payload.roomId,
       payload.playlistId,
@@ -464,7 +475,7 @@ export class RoomService {
     payload: GenerateSpotifyCandidatesPayloadParsed,
     socketId: string,
   ): Promise<SpotifyCandidatesGeneratedPayload> {
-    this.roomRegistry.getRoomStateForMember(socketId, payload.roomId);
+    this.roomRegistry.requireHostInLobby(socketId, payload.roomId, NOT_MUSIC_SETUP_HOST);
     return this.spotifyDiscoveryService
       .generateCandidates(payload.roomId, payload.source)
       .then((result) => result.payload);
@@ -474,6 +485,7 @@ export class RoomService {
     payload: UseSpotifyCandidatesPayloadParsed,
     socketId: string,
   ): UseSpotifyCandidatesResult {
+    this.roomRegistry.requireHostInLobby(socketId, payload.roomId, NOT_MUSIC_SETUP_HOST);
     const result = this.spotifyDiscoveryService.applyCandidates(
       payload.roomId,
       payload.candidateSessionId,
@@ -642,7 +654,7 @@ export class RoomService {
     payload: GetPlaylistTracksPayloadParsed,
     socketId: string,
   ): PublicTrackInfo[] {
-    this.roomRegistry.getRoomStateForMember(socketId, payload.roomId);
+    this.roomRegistry.requireHostInLobby(socketId, payload.roomId, "ONLY_HOST_CAN_EDIT_PLAYLIST");
     const deck = this.roomRegistry.getImportedDeck(payload.roomId);
     if (!deck) return [];
     return deck.map(cardToPublicTrackInfo);
@@ -694,30 +706,4 @@ export class RoomService {
       accountType,
     );
   }
-}
-
-function cardToPublicTrackInfo(card: {
-  id: string;
-  title: string;
-  artist: string;
-  albumTitle: string;
-  releaseYear: number;
-  sourceReleaseYear?: number;
-  metadataStatus?: "imported" | "edited" | "verified";
-  artworkUrl?: string;
-  previewUrl?: string;
-  spotifyTrackUri?: string;
-}): PublicTrackInfo {
-  return {
-    id: card.id,
-    title: card.title,
-    artist: card.artist,
-    albumTitle: card.albumTitle,
-    releaseYear: card.releaseYear,
-    sourceReleaseYear: card.sourceReleaseYear ?? card.releaseYear,
-    metadataStatus: card.metadataStatus ?? "imported",
-    ...(card.artworkUrl ? { artworkUrl: card.artworkUrl } : {}),
-    ...(card.previewUrl ? { previewUrl: card.previewUrl } : {}),
-    ...(card.spotifyTrackUri ? { spotifyTrackUri: card.spotifyTrackUri } : {}),
-  };
 }

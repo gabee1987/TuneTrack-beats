@@ -19,8 +19,9 @@ import {
   broadcastRoomState,
   createSocketHandler,
   emitServerError,
+  startAuthorizedRequest,
 } from "../createSocketHandler.js";
-import { useSpotifyCandidatesErrorMessages } from "../errorMessages.js";
+import { musicSetupErrorMessages, useSpotifyCandidatesErrorMessages } from "../errorMessages.js";
 
 // Non-toasting error code: signals the client to resolve a pending token request and retry
 // later (reconnect race / non-owner caller) without showing a user-facing "reconnect" toast.
@@ -73,8 +74,16 @@ function registerSearchSpotifyMusicHandler(socket: Socket, roomService: RoomServ
       return;
     }
 
-    void Promise.resolve()
-      .then(() => roomService.searchSpotifyMusic(parseResult.data, socket.id))
+    const pendingResult = startAuthorizedRequest(
+      socket,
+      ClientToServerEvent.SearchSpotifyMusic,
+      () => roomService.searchSpotifyMusic(parseResult.data, socket.id),
+      "SEARCH_SPOTIFY_MUSIC_FAILED",
+      musicSetupErrorMessages,
+    );
+    if (!pendingResult) return;
+
+    void pendingResult
       .then((result) => {
         socket.emit(ServerToClientEvent.SpotifySmartSearchResult, result);
       })
@@ -102,8 +111,16 @@ function registerOpenSpotifyPlaylistHandler(socket: Socket, roomService: RoomSer
       return;
     }
 
-    void Promise.resolve()
-      .then(() => roomService.openSpotifyPlaylist(parseResult.data, socket.id))
+    const pendingResult = startAuthorizedRequest(
+      socket,
+      ClientToServerEvent.OpenSpotifyPlaylist,
+      () => roomService.openSpotifyPlaylist(parseResult.data, socket.id),
+      "OPEN_SPOTIFY_PLAYLIST_FAILED",
+      musicSetupErrorMessages,
+    );
+    if (!pendingResult) return;
+
+    void pendingResult
       .then((result) => {
         socket.emit(ServerToClientEvent.SpotifyPlaylistDetail, result);
       })
@@ -131,8 +148,16 @@ function registerSearchSpotifyPlaylistsHandler(socket: Socket, roomService: Room
       return;
     }
 
-    void Promise.resolve()
-      .then(() => roomService.searchSpotifyPlaylists(parseResult.data, socket.id))
+    const pendingResult = startAuthorizedRequest(
+      socket,
+      ClientToServerEvent.SearchSpotifyPlaylists,
+      () => roomService.searchSpotifyPlaylists(parseResult.data, socket.id),
+      "SEARCH_SPOTIFY_PLAYLISTS_FAILED",
+      musicSetupErrorMessages,
+    );
+    if (!pendingResult) return;
+
+    void pendingResult
       .then((result) => {
         socket.emit(ServerToClientEvent.SpotifyPlaylistSearchResult, result);
       })
@@ -160,8 +185,16 @@ function registerGenerateSpotifyCandidatesHandler(socket: Socket, roomService: R
       return;
     }
 
-    void Promise.resolve()
-      .then(() => roomService.generateSpotifyCandidates(parseResult.data, socket.id))
+    const pendingResult = startAuthorizedRequest(
+      socket,
+      ClientToServerEvent.GenerateSpotifyCandidates,
+      () => roomService.generateSpotifyCandidates(parseResult.data, socket.id),
+      "GENERATE_SPOTIFY_CANDIDATES_FAILED",
+      musicSetupErrorMessages,
+    );
+    if (!pendingResult) return;
+
+    void pendingResult
       .then((result) => {
         socket.emit(ServerToClientEvent.SpotifyCandidatesGenerated, result);
       })

@@ -308,6 +308,10 @@ export class RoomRegistry {
     }
   }
 
+  public requireHostInLobby(socketId: string, roomId: RoomId, notHostCode: string): void {
+    this.lobby.requireHostInLobby(socketId, roomId, notHostCode);
+  }
+
   public isHost(socketId: string, roomId: RoomId): boolean {
     try {
       this.requireHost(socketId, roomId);

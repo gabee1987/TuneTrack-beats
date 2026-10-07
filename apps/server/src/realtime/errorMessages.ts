@@ -1,5 +1,4 @@
-export const DEFAULT_SOCKET_ERROR_MESSAGE =
-  "The requested room action could not be completed.";
+export const DEFAULT_SOCKET_ERROR_MESSAGE = "The requested room action could not be completed.";
 
 export const renameRoomErrorMessages: Record<string, string> = {
   GAME_ALREADY_STARTED: "Room names can only be changed before the game starts.",
@@ -14,13 +13,11 @@ export const joinRoomErrorMessages: Record<string, string> = {
 
 export const createRoomErrorMessages: Record<string, string> = {
   ROOM_ALREADY_EXISTS: "A room with that name already exists.",
-  ROOM_LIMIT_REACHED:
-    "The room limit has been reached. Close a room before creating a new one.",
+  ROOM_LIMIT_REACHED: "The room limit has been reached. Close a room before creating a new one.",
 };
 
 export const transferHostErrorMessages: Record<string, string> = {
-  HOST_TRANSFER_TARGET_DISCONNECTED:
-    "Host controls can only be transferred to a connected player.",
+  HOST_TRANSFER_TARGET_DISCONNECTED: "Host controls can only be transferred to a connected player.",
   HOST_TRANSFER_TARGET_IS_ALREADY_HOST: "That player already has host controls.",
   HOST_TRANSFER_TARGET_NOT_FOUND: "That player is no longer in the room.",
   ONLY_HOST_CAN_TRANSFER_HOST: "Only the current host can transfer host controls.",
@@ -63,17 +60,14 @@ export const claimChallengeErrorMessages: Record<string, string> = {
 
 export const placeChallengeErrorMessages: Record<string, string> = {
   CHALLENGE_WINDOW_EXPIRED: "The Beat! window already expired.",
-  GAME_NOT_IN_CHALLENGE_PHASE:
-    "Challenge placement is only available during the challenge window.",
+  GAME_NOT_IN_CHALLENGE_PHASE: "Challenge placement is only available during the challenge window.",
   INVALID_SLOT_INDEX: "Selected timeline slot is invalid.",
   CHALLENGE_SLOT_MUST_DIFFER: "Beat! must point to a different slot than the original choice.",
-  ONLY_CHALLENGE_OWNER_CAN_PLACE:
-    "Only the player who claimed Beat! can place the challenge slot.",
+  ONLY_CHALLENGE_OWNER_CAN_PLACE: "Only the player who claimed Beat! can place the challenge slot.",
 };
 
 export const resolveChallengeWindowErrorMessages: Record<string, string> = {
-  CHALLENGE_ALREADY_CLAIMED:
-    "The challenge window is already claimed and cannot be resolved yet.",
+  CHALLENGE_ALREADY_CLAIMED: "The challenge window is already claimed and cannot be resolved yet.",
   GAME_NOT_IN_CHALLENGE_PHASE:
     "Challenge resolution is only available during the challenge window.",
   ONLY_HOST_CAN_RESOLVE_CHALLENGE_WINDOW:
@@ -129,20 +123,36 @@ export const closeRoomErrorMessages: Record<string, string> = {
   ONLY_HOST_CAN_CLOSE_ROOM: "Only the host can close the room.",
 };
 
+const MUSIC_LOCKED_MESSAGE = "The music can only be changed before the game starts.";
+
+export const musicSetupErrorMessages: Record<string, string> = {
+  GAME_ALREADY_STARTED: MUSIC_LOCKED_MESSAGE,
+  ONLY_HOST_CAN_IMPORT_PLAYLIST: "Only the host can set up the music.",
+};
+
 export const loadCuratedPlaylistErrorMessages: Record<string, string> = {
+  GAME_ALREADY_STARTED: MUSIC_LOCKED_MESSAGE,
   ONLY_HOST_CAN_IMPORT_PLAYLIST: "Only the host can load a saved playlist.",
 };
 
 export const useSpotifyCandidatesErrorMessages: Record<string, string> = {
+  GAME_ALREADY_STARTED: MUSIC_LOCKED_MESSAGE,
   ONLY_HOST_CAN_IMPORT_PLAYLIST: "Only the host can use generated playlists.",
 };
 
+export const getPlaylistTracksErrorMessages: Record<string, string> = {
+  GAME_ALREADY_STARTED: MUSIC_LOCKED_MESSAGE,
+  ONLY_HOST_CAN_EDIT_PLAYLIST: "Only the host can edit the playlist.",
+};
+
 export const removePlaylistTracksErrorMessages: Record<string, string> = {
+  GAME_ALREADY_STARTED: MUSIC_LOCKED_MESSAGE,
   ONLY_HOST_CAN_EDIT_PLAYLIST: "Only the host can edit the playlist.",
   NO_PLAYLIST_IMPORTED: "No playlist has been imported.",
 };
 
 export const updatePlaylistTrackErrorMessages: Record<string, string> = {
+  GAME_ALREADY_STARTED: MUSIC_LOCKED_MESSAGE,
   ONLY_HOST_CAN_EDIT_PLAYLIST: "Only the host can edit the playlist.",
   NO_PLAYLIST_IMPORTED: "No playlist has been imported.",
   PLAYLIST_TRACK_NOT_FOUND: "That playlist track is no longer available.",
