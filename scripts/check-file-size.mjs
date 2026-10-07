@@ -20,7 +20,7 @@ const ALLOWLIST = {
   "packages/game-engine/tests/gameFlow.test.ts": 826,
   "apps/e2e/tests/room-entry.spec.ts": 848,
   "apps/web/src/pages/GamePage/hooks/useSpotifyPlaybackSdk.ts": 738,
-  "apps/server/src/rooms/RoomService.ts": 709,
+  "apps/server/src/rooms/RoomService.ts": 706,
 };
 
 function* walk(directory) {

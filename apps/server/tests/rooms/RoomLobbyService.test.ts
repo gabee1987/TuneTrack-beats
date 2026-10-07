@@ -1,3 +1,4 @@
+import type { GameTrackCard } from "@tunetrack/game-engine";
 import { describe, expect, it } from "vitest";
 import { RoomRegistry } from "../../src/rooms/RoomRegistry.js";
 
@@ -75,4 +76,78 @@ describe("RoomLobbyService.createRoom", () => {
       roomRegistry.createRoom("TEST_ROOM_2", "Player Two", "TEST_SOCKET_2", "TEST_SESSION_2"),
     ).toThrow("ROOM_LIMIT_REACHED");
   });
+
+  it("lets a host who is alone in their lobby move to a new room at the room limit", () => {
+    const roomRegistry = new RoomRegistry(undefined, undefined, undefined, undefined, 1);
+    roomRegistry.createRoom("TEST_ROOM_1", "Player One", "TEST_SOCKET_1", "TEST_SESSION_1");
+
+    const nextJoin = roomRegistry.createRoom(
+      "TEST_ROOM_2",
+      "Player One",
+      "TEST_SOCKET_1",
+      "TEST_SESSION_1",
+    );
+
+    expect(nextJoin.roomState.roomId).toBe("TEST_ROOM_2");
+    expect(roomRegistry.listRoomSummaries()).toHaveLength(1);
+  });
 });
+
+describe("RoomLobbyService leaving the current lobby", () => {
+  function createLobbyWithGuest(roomRegistry: RoomRegistry): string {
+    roomRegistry.createRoom("TEST_ROOM_1", "Player One", "TEST_SOCKET_1", "TEST_SESSION_1");
+    return roomRegistry.addPlayerToRoom(
+      "TEST_ROOM_1",
+      "Player Two",
+      "TEST_SOCKET_2",
+      "TEST_SESSION_2",
+    ).playerId;
+  }
+
+  function expectGuestStillInLobby(roomRegistry: RoomRegistry, guestId: string): void {
+    const roomState = roomRegistry.getRoomStateForMember("TEST_SOCKET_2", "TEST_ROOM_1");
+    expect(roomState.players.map((player) => player.id)).toContain(guestId);
+  }
+
+  it("keeps the player in their lobby when the room code does not exist", () => {
+    const roomRegistry = new RoomRegistry();
+    const guestId = createLobbyWithGuest(roomRegistry);
+
+    expect(() =>
+      roomRegistry.addPlayerToRoom("TEST_ROOM_9", "Player Two", "TEST_SOCKET_2", "TEST_SESSION_2"),
+    ).toThrow("ROOM_NOT_FOUND");
+    expectGuestStillInLobby(roomRegistry, guestId);
+  });
+
+  it("keeps the player in their lobby when the target game has started", () => {
+    const roomRegistry = new RoomRegistry();
+    const guestId = createLobbyWithGuest(roomRegistry);
+    roomRegistry.createRoom("TEST_ROOM_2", "Player Three", "TEST_SOCKET_3", "TEST_SESSION_3");
+    roomRegistry.startGame("TEST_SOCKET_3", { roomId: "TEST_ROOM_2" }, buildDeck());
+
+    expect(() =>
+      roomRegistry.addPlayerToRoom("TEST_ROOM_2", "Player Two", "TEST_SOCKET_2", "TEST_SESSION_2"),
+    ).toThrow("GAME_ALREADY_STARTED");
+    expectGuestStillInLobby(roomRegistry, guestId);
+  });
+
+  it("keeps the player in their lobby when the server is at its room limit", () => {
+    const roomRegistry = new RoomRegistry(undefined, undefined, undefined, undefined, 1);
+    const guestId = createLobbyWithGuest(roomRegistry);
+
+    expect(() =>
+      roomRegistry.createRoom("TEST_ROOM_2", "Player Two", "TEST_SOCKET_2", "TEST_SESSION_2"),
+    ).toThrow("ROOM_LIMIT_REACHED");
+    expectGuestStillInLobby(roomRegistry, guestId);
+  });
+});
+
+function buildDeck(): GameTrackCard[] {
+  return [1980, 1990, 2000].map((releaseYear, index) => ({
+    id: `lobby-track-${index + 1}`,
+    title: `Track ${index + 1}`,
+    artist: "Test Artist",
+    albumTitle: "Test Album",
+    releaseYear,
+  }));
+}

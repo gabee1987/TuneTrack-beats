@@ -48,6 +48,14 @@ export class SpotifyOAuthStateStore {
     return { roomId: record.roomId, socketId: record.socketId, redirectUri: record.redirectUri };
   }
 
+  public retargetRoom(previousRoomId: RoomId, nextRoomId: RoomId): void {
+    for (const [nonce, record] of this.pendingStates) {
+      if (record.roomId === previousRoomId) {
+        this.pendingStates.set(nonce, { ...record, roomId: nextRoomId });
+      }
+    }
+  }
+
   private removeExpired(): void {
     const now = Date.now();
     for (const [nonce, record] of this.pendingStates) {

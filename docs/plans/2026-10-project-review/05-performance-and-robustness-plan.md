@@ -1,8 +1,9 @@
 # 05 — Performance and Robustness Plan
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 5 of `00-index.md` §4).
-> **Status:** specification only; no code has changed. Every finding below was re-verified in
-> code on 2026-10-07 (line numbers drift; file and symbol names are the stable reference).
+> **Status (2026-10-07):** A1 and A2 shipped; every other package is open. Every finding below
+> was re-verified in code on 2026-10-07 (line numbers drift; file and symbol names are the
+> stable reference).
 > **Authority:** this document sets the **binding numeric budgets** and the **order** of the
 > performance and robustness work. The work-breakdown documents `10`–`14` and `16` keep their
 > step-by-step detail; where they disagree with this document, this document wins and §9 lists
@@ -140,22 +141,19 @@ client as server errors. The host check runs before the candidate session is con
 peek/consume split was needed. Proof: `apps/server/tests/rooms/playlistAuthorization.test.ts`
 (22 cases; Spotify service spies record zero calls).
 
-### A2 · Membership correctness (B-31, B-05, B-04)
+### A2 · Membership correctness (B-31, B-05, B-04) — **shipped 2026-10-07**
 
-- Route `removePlayerBySessionId` through `gameFlowService.removePlayer` whenever `gameState`
-  exists and clear the challenge timer unless the phase is `challenge`, exactly as `kickPlayer`
-  does; the lobby reconnect timer re-reads `status` and does nothing outside `lobby`.
-- `createRoom` / `addPlayerToRoom`: validate target room, status and capacity **before**
-  leaving the current room (B-05).
-- Rename retargets every room-keyed store: `SpotifyTokenStore`, `SpotifyPlaybackSessionStore`
-  (sessions and play chains), discovery candidate sessions, pending OAuth states and the
-  idempotency acks (B-04, with B-14's rename half). One `retargetRoom(previous, next)` per
-  store, called from the rename path next to the existing `RoomStore` retarget.
-- **Proof:** extend `kickDuringRound.test.ts` (ghost-player case: lobby grace expires after
-  start, player absent from `gameState.players`); `RoomLobbyService.test.ts` (mistyped code
-  leaves the player in the old lobby; full server leaves the player in place); new
-  `roomRename.test.ts` (Spotify status, token refresh and a pending OAuth callback still work
-  after rename).
+`removePlayerBySessionId` now removes the player from `gameState` through
+`gameFlowService.removePlayer` and clears the challenge timer outside `challenge`, as
+`kickPlayer` does. The lobby reconnect timer re-reads the room through the session membership
+and does nothing once the game has started, so the player stays reserved like any in-game
+disconnect (the proof asserts that, not removal). `createRoom` and `addPlayerToRoom` check the
+target room, its status and the room limit before leaving the current room; a host alone in
+their lobby still frees their room for the limit check. Rename retargets host tokens, pending
+OAuth states, playback sessions and play chains, candidate sessions and the idempotency acks.
+Proof: `apps/server/tests/rooms/kickDuringRound.test.ts` (2 cases),
+`apps/server/tests/rooms/RoomLobbyService.test.ts` (4 cases),
+`apps/server/tests/rooms/roomRename.test.ts` (5 cases).
 
 ### A3 · Engine purity and deck exhaustion (B-12, B-06 / decision 6, B-09)
 
@@ -321,7 +319,7 @@ their files do not overlap.
 | Order | Packages                    | Depends on                        | Skills                                  | Why this order                                    |
 | ----- | --------------------------- | --------------------------------- | --------------------------------------- | ------------------------------------------------- |
 | 1     | **A1** (shipped 2026-10-07) | —                                 | `write-tests`, `verify`                 | Answer leak and unauthenticated third-party calls |
-| 2     | A2                          | —                                 | `write-tests`                           | Ghost players, silent lobby loss, rename breakage |
+| 2     | **A2** (shipped 2026-10-07) | —                                 | `write-tests`                           | Ghost players, silent lobby loss, rename breakage |
 | 3     | A3                          | `04` WP 2 (deck contract) or none | `write-tests`                           | Game soft-lock; decision 6                        |
 | 4     | A4, B1                      | —                                 | `add-socket-action` (A4), `write-tests` | Error contract feeds B2's toasts                  |
 | 5     | A8, B2                      | A4                                | `add-socket-action`, `e2e-scenario`     | Honest connection state end to end                |
@@ -333,7 +331,7 @@ their files do not overlap.
 | 11    | A9, A10                     | A2                                | `write-tests`                           | Small server costs, measured broadcast decision   |
 | 12    | E2                          | E1                                | `add-ui-component`                      | Largest UI refactor last                          |
 
-A1 shipped on 2026-10-07; A2 is next.
+A1 and A2 shipped on 2026-10-07; A3 is next.
 
 ## 9. Corrections to the work-breakdown documents
 

@@ -105,3 +105,43 @@ describe("kicking a player in the middle of a round", () => {
     expect(roomState.turn?.activePlayerId).toBe(challengerId);
   });
 });
+
+describe("removing a player from a running game without a kick", () => {
+  it("keeps a lobby player reserved when their reconnect grace expires after the start", () => {
+    vi.useFakeTimers();
+    const reconnectGracePeriodMs = 1_000;
+    const roomRegistry = new RoomRegistry(undefined, reconnectGracePeriodMs);
+    roomRegistry.createRoom(TEST_ROOM_ID, "Player One", "host-socket", "host-session");
+    const guest = roomRegistry.addPlayerToRoom(
+      TEST_ROOM_ID,
+      "Player Two",
+      "guest-socket",
+      "guest-session",
+    );
+    roomRegistry.removePlayerBySocketId("guest-socket");
+    roomRegistry.startGame("host-socket", { roomId: TEST_ROOM_ID }, buildDeck());
+
+    vi.advanceTimersByTime(reconnectGracePeriodMs + 1);
+
+    const roomState = roomRegistry.getRoomStateForMember("host-socket", TEST_ROOM_ID);
+    expect(roomState.players.map((player) => player.id)).toContain(guest.playerId);
+    expect(roomState.timelines[guest.playerId]).toBeDefined();
+    expect(
+      roomRegistry.addPlayerToRoom(TEST_ROOM_ID, "Player Two", "guest-socket-2", "guest-session")
+        .playerId,
+    ).toBe(guest.playerId);
+  });
+
+  it("removes the player from the game when their session opens another room", () => {
+    const { roomRegistry, placerId, challengerId } = startGameWithGuestOnTurn({
+      isChallengeEnabled: false,
+    });
+
+    roomRegistry.createRoom("TEST_ROOM_2", "Player Two", "placer-socket-2", "placer-session");
+
+    const roomState = roomRegistry.getRoomStateForMember("host-socket", TEST_ROOM_ID);
+    expect(roomState.players.map((player) => player.id)).not.toContain(placerId);
+    expect(roomState.timelines[placerId]).toBeUndefined();
+    expect(roomState.turn?.activePlayerId).toBe(challengerId);
+  });
+});

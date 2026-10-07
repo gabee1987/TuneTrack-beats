@@ -438,6 +438,14 @@ export class SpotifyDiscoveryService {
     return playlists;
   }
 
+  public retargetRoom(previousRoomId: string, nextRoomId: string): void {
+    for (const [id, session] of this.sessionsById) {
+      if (session.roomId === previousRoomId) {
+        this.sessionsById.set(id, { ...session, roomId: nextRoomId });
+      }
+    }
+  }
+
   private pruneExpiredSessions(): void {
     const cutoffMs = Date.now() - CANDIDATE_SESSION_TTL_MS;
     for (const [id, session] of this.sessionsById) {

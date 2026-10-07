@@ -51,10 +51,7 @@ export class RoomConnectionService {
         membership.sessionId,
         this.timers.reconnectGracePeriodMs,
         () => {
-          const nextRoomState = this.removePlayerBySessionId(membership.sessionId);
-          if (nextRoomState) {
-            this.emitRoomStateChanged(nextRoomState);
-          }
+          this.removeLobbyPlayerAfterReconnectGrace(membership.sessionId);
         },
       );
     }
@@ -172,6 +169,7 @@ export class RoomConnectionService {
   public removePlayerBySessionId(sessionId: string): PublicRoomState | null {
     const membership = this.store.getSessionMembership(sessionId);
     if (!membership) return null;
+    this.timers.clearForSession(sessionId);
     this.store.deleteSessionMembership(sessionId);
     this.store.deleteSocketMembershipsForSession(sessionId);
 
@@ -180,11 +178,11 @@ export class RoomConnectionService {
 
     const previousPlaybackOwner = roomRecord.roomState.settings.spotifyPlaybackOwnerPlayerId;
     const previousPlaybackGeneration = roomRecord.roomState.settings.spotifyPlaybackGeneration;
-    const { nextRoomState } = buildPlayerRemovedRoomState(
+    const { nextRoomState: baseRoomState } = buildPlayerRemovedRoomState(
       roomRecord.roomState,
       membership.playerId,
     );
-    if (!nextRoomState) {
+    if (!baseRoomState) {
       this.timers.clearForRoom(membership.roomId);
       this.store.deleteRoom(membership.roomId);
       this.store.clearRoomRedirects(membership.roomId);
@@ -192,7 +190,15 @@ export class RoomConnectionService {
       return null;
     }
 
-    this.store.setRoom(membership.roomId, { ...roomRecord, roomState: nextRoomState });
+    const gameState = roomRecord.gameState
+      ? this.gameFlowService.removePlayer(roomRecord.gameState, membership.playerId)
+      : null;
+    if (gameState?.phase !== "challenge") this.timers.clearChallenge(membership.roomId);
+    const nextRoomState = gameState
+      ? mapGameStateToPublicRoomState(baseRoomState, gameState, roomRecord.trackCardsById)
+      : baseRoomState;
+
+    this.store.setRoom(membership.roomId, { ...roomRecord, gameState, roomState: nextRoomState });
 
     if (
       nextRoomState.settings.spotifyPlaybackOwnerPlayerId !== previousPlaybackOwner ||
@@ -202,6 +208,15 @@ export class RoomConnectionService {
     }
 
     return nextRoomState;
+  }
+
+  // A game started inside the grace keeps the player reserved like any in-game disconnect.
+  private removeLobbyPlayerAfterReconnectGrace(sessionId: string): void {
+    const membership = this.store.getSessionMembership(sessionId);
+    if (!membership || this.store.getRoom(membership.roomId)?.roomState.status !== "lobby") return;
+
+    const nextRoomState = this.removePlayerBySessionId(sessionId);
+    if (nextRoomState) this.emitRoomStateChanged(nextRoomState);
   }
 
   private markPlayerDisconnected(membership: SocketRoomMembership): PublicRoomState | null {

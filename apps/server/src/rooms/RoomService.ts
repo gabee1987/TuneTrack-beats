@@ -190,14 +190,11 @@ export class RoomService {
     socketId: string,
   ): RenameRoomResult {
     const result = this.roomRegistry.renameRoom(socketId, renameRoomPayload);
-    logger.info(
-      {
-        nextRoomId: result.roomState.roomId,
-        previousRoomId: result.previousRoomId,
-        socketId,
-      },
-      "room renamed",
-    );
+    const { previousRoomId, roomState } = result;
+    this.spotifyAuthService.retargetRoom(previousRoomId, roomState.roomId);
+    this.spotifyPlaybackSessions.retargetRoom(previousRoomId, roomState.roomId);
+    this.spotifyDiscoveryService.retargetRoom(previousRoomId, roomState.roomId);
+    logger.info({ nextRoomId: roomState.roomId, previousRoomId, socketId }, "room renamed");
     return result;
   }
 

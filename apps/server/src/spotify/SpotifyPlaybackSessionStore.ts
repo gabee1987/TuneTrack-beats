@@ -61,6 +61,11 @@ export class SpotifyPlaybackSessionStore {
     this.playChains.delete(roomId);
   }
 
+  public retargetRoom(previousRoomId: RoomId, nextRoomId: RoomId): void {
+    moveEntry(this.sessions, previousRoomId, nextRoomId);
+    moveEntry(this.playChains, previousRoomId, nextRoomId);
+  }
+
   public getRegisteredDevice(roomId: RoomId): { deviceId: string; socketId: string } | null {
     const session = this.sessions.get(roomId);
     if (!session?.deviceId || !session.socketId) {
@@ -101,4 +106,11 @@ export class SpotifyPlaybackSessionStore {
       releaseGate();
     }
   }
+}
+
+function moveEntry<T>(map: Map<RoomId, T>, previousRoomId: RoomId, nextRoomId: RoomId): void {
+  const value = map.get(previousRoomId);
+  if (value === undefined) return;
+  map.delete(previousRoomId);
+  map.set(nextRoomId, value);
 }

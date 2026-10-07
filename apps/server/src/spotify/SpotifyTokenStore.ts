@@ -55,6 +55,13 @@ export class SpotifyTokenStore {
     this.hostTokensByRoomId.delete(roomId);
   }
 
+  public retargetRoom(previousRoomId: RoomId, nextRoomId: RoomId): void {
+    const record = this.hostTokensByRoomId.get(previousRoomId);
+    if (!record) return;
+    this.hostTokensByRoomId.delete(previousRoomId);
+    this.hostTokensByRoomId.set(nextRoomId, record);
+  }
+
   public isHostTokenExpired(roomId: RoomId): boolean {
     const record = this.hostTokensByRoomId.get(roomId);
     if (!record) return true;

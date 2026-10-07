@@ -71,6 +71,13 @@ export class RoomStore {
     return ack;
   }
 
+  public retargetProcessedActionAcks(previousRoomId: RoomId, nextRoomId: RoomId): void {
+    const roomAcks = this.processedActionAcksByRoomId.get(previousRoomId);
+    if (!roomAcks) return;
+    this.processedActionAcksByRoomId.delete(previousRoomId);
+    this.processedActionAcksByRoomId.set(nextRoomId, roomAcks);
+  }
+
   public rememberProcessedActionAck(roomId: RoomId, ack: ActionAck): void {
     const roomAcks = this.processedActionAcksByRoomId.get(roomId) ?? new Map();
     roomAcks.delete(ack.requestId);

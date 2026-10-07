@@ -236,6 +236,11 @@ export class SpotifyAuthService {
     this.tokenStore.clearHostTokens(roomId);
   }
 
+  public retargetRoom(previousRoomId: RoomId, nextRoomId: RoomId): void {
+    this.tokenStore.retargetRoom(previousRoomId, nextRoomId);
+    this.oauthStates.retargetRoom(previousRoomId, nextRoomId);
+  }
+
   public isRoomSpotifyConnected(roomId: RoomId): boolean {
     return this.tokenStore.getHostTokenRecord(roomId) !== null;
   }

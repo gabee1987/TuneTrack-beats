@@ -90,16 +90,15 @@ export class RoomLobbyService {
       throw new Error("ROOM_ALREADY_EXISTS");
     }
 
-    if (existingSessionMembership) {
-      const previousRoomState = this.connection.removePlayerBySessionId(sessionId);
-      if (previousRoomState) {
-        this.emitRoomStateChanged(previousRoomState);
-      }
-    }
-
-    if (this.store.roomCount >= this.maxActiveRoomCount) {
+    const isLeavingFreeingARoom =
+      existingSessionMembership !== undefined &&
+      this.store.getRoom(existingSessionMembership.roomId)?.roomState.players.length === 1;
+    const roomCountAfterLeaving = this.store.roomCount - (isLeavingFreeingARoom ? 1 : 0);
+    if (roomCountAfterLeaving >= this.maxActiveRoomCount) {
       throw new Error("ROOM_LIMIT_REACHED");
     }
+
+    if (existingSessionMembership) this.leaveCurrentRoom(sessionId);
 
     const playerId = randomUUID();
     const roomState = buildInitialRoomState(roomId, playerId, displayName);
@@ -145,15 +144,6 @@ export class RoomLobbyService {
       if (restoredExistingRoom) return restoredExistingRoom;
     }
 
-    if (existingSessionMembership) {
-      const previousRoomState = this.connection.removePlayerBySessionId(sessionId);
-      if (previousRoomState) {
-        this.emitRoomStateChanged(previousRoomState);
-      }
-    }
-
-    const playerId = randomUUID();
-
     if (!existingRoomRecord) {
       throw new Error("ROOM_NOT_FOUND");
     }
@@ -162,6 +152,9 @@ export class RoomLobbyService {
       throw new Error("GAME_ALREADY_STARTED");
     }
 
+    if (existingSessionMembership) this.leaveCurrentRoom(sessionId);
+
+    const playerId = randomUUID();
     const nextRoomState = buildPlayerJoinedRoomState(
       existingRoomRecord.roomState,
       playerId,
@@ -214,6 +207,7 @@ export class RoomLobbyService {
     }
 
     const nextRoomState = buildRenamedRoomState(roomRecord.roomState, payload.nextRoomId);
+    this.store.retargetProcessedActionAcks(payload.roomId, payload.nextRoomId);
     this.store.deleteRoom(payload.roomId);
     this.store.retargetRoomRedirects(payload.roomId, payload.nextRoomId);
     this.store.setRedirect(payload.roomId, payload.nextRoomId);
@@ -421,6 +415,11 @@ export class RoomLobbyService {
     this.store.deleteRoom(payload.roomId);
     this.store.clearRoomRedirects(payload.roomId);
     return payload.roomId;
+  }
+
+  private leaveCurrentRoom(sessionId: string): void {
+    const previousRoomState = this.connection.removePlayerBySessionId(sessionId);
+    if (previousRoomState) this.emitRoomStateChanged(previousRoomState);
   }
 }
 
