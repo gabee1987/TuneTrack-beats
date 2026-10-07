@@ -147,10 +147,20 @@ export class SpotifyMusicSearchService {
         ? this.apiClient.searchTracks(trackQuery, accessToken, perTypeLimit, offset)
         : Promise.resolve([]),
       types.includes("album")
-        ? this.apiClient.searchAlbums(parsed.queryWithoutQualifiers, accessToken, perTypeLimit, offset)
+        ? this.apiClient.searchAlbums(
+            parsed.queryWithoutQualifiers,
+            accessToken,
+            perTypeLimit,
+            offset,
+          )
         : Promise.resolve([]),
       types.includes("artist")
-        ? this.apiClient.searchArtists(parsed.queryWithoutQualifiers, accessToken, perTypeLimit, offset)
+        ? this.apiClient.searchArtists(
+            parsed.queryWithoutQualifiers,
+            accessToken,
+            perTypeLimit,
+            offset,
+          )
         : Promise.resolve([]),
     ]);
 
@@ -189,7 +199,9 @@ export class SpotifyMusicSearchService {
       return {
         title: firstArtist,
         subtitle: `${rawTracks.length} top tracks`,
-        ...(rawTracks[0]?.album.images[0]?.url ? { imageUrl: rawTracks[0].album.images[0].url } : {}),
+        ...(rawTracks[0]?.album.images[0]?.url
+          ? { imageUrl: rawTracks[0].album.images[0].url }
+          : {}),
         rawTracks,
       };
     }

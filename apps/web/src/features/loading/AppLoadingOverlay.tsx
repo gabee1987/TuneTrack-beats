@@ -1,9 +1,5 @@
 import { motion } from "framer-motion";
-import {
-  MotionPresence,
-  createDialogCardMotion,
-  useReducedMotionPreference,
-} from "../motion";
+import { MotionPresence, createDialogCardMotion, useReducedMotionPreference } from "../motion";
 import type { AppLoadingState } from "./AppLoading.types";
 import styles from "./AppLoadingOverlay.module.css";
 

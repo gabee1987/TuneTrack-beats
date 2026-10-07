@@ -8,10 +8,7 @@ interface UseAwardTtActionOptions {
   roomState: PublicRoomState | null;
 }
 
-export function useAwardTtAction({
-  currentPlayerId,
-  roomState,
-}: UseAwardTtActionOptions) {
+export function useAwardTtAction({ currentPlayerId, roomState }: UseAwardTtActionOptions) {
   const roomStateRef = useRef(roomState);
   roomStateRef.current = roomState;
   const isPendingRef = useRef(false);
@@ -66,9 +63,7 @@ export function useAwardTtAction({
           );
         } catch {
           setActionState(
-            isSubmittedAdjustmentCurrent()
-              ? { amount, playerId, status: "failed" }
-              : null,
+            isSubmittedAdjustmentCurrent() ? { amount, playerId, status: "failed" } : null,
           );
         } finally {
           isPendingRef.current = false;

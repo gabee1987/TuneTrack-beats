@@ -47,8 +47,8 @@
 }
 
 @media (max-width: 720px) {
-.revealHeaderCompact {
-  flex-direction: column;
+  .revealHeaderCompact {
+    flex-direction: column;
     align-items: flex-start;
-}
+  }
 }

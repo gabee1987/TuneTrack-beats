@@ -1,9 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import {
-  createStandardTransition,
-  useReducedMotionPreference,
-} from "../../../../features/motion";
+import { createStandardTransition, useReducedMotionPreference } from "../../../../features/motion";
 import { useI18n } from "../../../../features/i18n";
 import { useAppToast } from "../../../../features/toast";
 import { ActionButton } from "../../../../features/ui/ActionButton";

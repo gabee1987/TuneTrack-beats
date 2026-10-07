@@ -38,12 +38,7 @@ function InfoGlyph() {
   return (
     <svg aria-hidden="true" className={styles.infoGlyph} fill="none" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-      <path
-        d="M12 10.5V16.5"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="2"
-      />
+      <path d="M12 10.5V16.5" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
       <circle cx="12" cy="7.5" fill="currentColor" r="1.25" />
     </svg>
   );

@@ -301,9 +301,7 @@ export function useSpotifyPlaybackSdk({
           return token;
         }
         const delayMs = retryDelayFor(attempt);
-        console.warn(
-          `[TuneTrack] Spotify SDK: no access token yet, retrying in ${delayMs}ms`,
-        );
+        console.warn(`[TuneTrack] Spotify SDK: no access token yet, retrying in ${delayMs}ms`);
         await waitBeforeRetry(delayMs);
       }
       return null;
@@ -705,13 +703,7 @@ export function useSpotifyPlaybackSdk({
       );
       return { success, needsUserGesture: !success && needsUserGestureRef.current };
     },
-    [
-      enabled,
-      requestPlayerRecovery,
-      requestServerPlay,
-      setNeedsUserGestureFlag,
-      waitForPlayingUri,
-    ],
+    [enabled, requestPlayerRecovery, requestServerPlay, setNeedsUserGestureFlag, waitForPlayingUri],
   );
 
   const pause = useCallback(() => {

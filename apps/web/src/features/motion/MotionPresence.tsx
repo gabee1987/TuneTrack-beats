@@ -7,11 +7,7 @@ interface MotionPresenceProps {
   mode?: "sync" | "popLayout" | "wait";
 }
 
-export function MotionPresence({
-  children,
-  initial = false,
-  mode = "wait",
-}: MotionPresenceProps) {
+export function MotionPresence({ children, initial = false, mode = "wait" }: MotionPresenceProps) {
   return (
     <AnimatePresence initial={initial} mode={mode}>
       {children}

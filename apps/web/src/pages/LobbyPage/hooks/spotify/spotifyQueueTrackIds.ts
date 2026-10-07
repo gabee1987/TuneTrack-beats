@@ -69,9 +69,7 @@ export function getSpotifyTrackIdFromQueuedTrack(track: PublicTrackInfo): string
   return track.id || null;
 }
 
-export function getQueuedSpotifyTrackIdsFromPlaylistTracks(
-  tracks: PublicTrackInfo[],
-): Set<string> {
+export function getQueuedSpotifyTrackIdsFromPlaylistTracks(tracks: PublicTrackInfo[]): Set<string> {
   const ids = new Set<string>();
   tracks.forEach((track) => {
     const spotifyTrackId = getSpotifyTrackIdFromQueuedTrack(track);

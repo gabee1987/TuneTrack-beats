@@ -4,21 +4,14 @@ const PLAYER_SESSION_ID_STORAGE_KEY = "tunetrack.playerSessionId";
 const PLAYER_DISPLAY_NAME_STORAGE_KEY = "tunetrack.playerDisplayName";
 
 export function getOrCreatePlayerSessionId(): string {
-  const existingPersistentSessionId = window.localStorage.getItem(
-    PLAYER_SESSION_ID_STORAGE_KEY,
-  );
+  const existingPersistentSessionId = window.localStorage.getItem(PLAYER_SESSION_ID_STORAGE_KEY);
 
   if (existingPersistentSessionId) {
-    window.sessionStorage.setItem(
-      PLAYER_SESSION_ID_STORAGE_KEY,
-      existingPersistentSessionId,
-    );
+    window.sessionStorage.setItem(PLAYER_SESSION_ID_STORAGE_KEY, existingPersistentSessionId);
     return existingPersistentSessionId;
   }
 
-  const existingTabSessionId = window.sessionStorage.getItem(
-    PLAYER_SESSION_ID_STORAGE_KEY,
-  );
+  const existingTabSessionId = window.sessionStorage.getItem(PLAYER_SESSION_ID_STORAGE_KEY);
 
   if (existingTabSessionId) {
     window.localStorage.setItem(PLAYER_SESSION_ID_STORAGE_KEY, existingTabSessionId);
@@ -43,10 +36,7 @@ export function getRememberedPlayerDisplayName(): string {
   );
 
   if (existingPersistentDisplayName) {
-    window.sessionStorage.setItem(
-      PLAYER_DISPLAY_NAME_STORAGE_KEY,
-      existingPersistentDisplayName,
-    );
+    window.sessionStorage.setItem(PLAYER_DISPLAY_NAME_STORAGE_KEY, existingPersistentDisplayName);
     return existingPersistentDisplayName;
   }
 
@@ -54,10 +44,7 @@ export function getRememberedPlayerDisplayName(): string {
     window.sessionStorage.getItem(PLAYER_DISPLAY_NAME_STORAGE_KEY) ?? "";
 
   if (existingTabDisplayName) {
-    window.localStorage.setItem(
-      PLAYER_DISPLAY_NAME_STORAGE_KEY,
-      existingTabDisplayName,
-    );
+    window.localStorage.setItem(PLAYER_DISPLAY_NAME_STORAGE_KEY, existingTabDisplayName);
   }
 
   return existingTabDisplayName;

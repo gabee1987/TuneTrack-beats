@@ -1,8 +1,4 @@
-import type {
-  PublicRoomState,
-  TimelineCardPublic,
-  TrackCardPublic,
-} from "@tunetrack/shared";
+import type { PublicRoomState, TimelineCardPublic, TrackCardPublic } from "@tunetrack/shared";
 import type { AppShellMenuTab } from "../../features/app-shell/AppShellMenu";
 import type {
   HiddenCardMode,
@@ -21,11 +17,7 @@ export type PlaceCardActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type ConfirmRevealActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type ClaimChallengeActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type PlaceChallengeActionStatus = "idle" | "pending" | "retrying" | "failed";
-export type ResolveChallengeWindowActionStatus =
-  | "idle"
-  | "pending"
-  | "retrying"
-  | "failed";
+export type ResolveChallengeWindowActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type CloseRoomActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type BuyTimelineCardActionStatus = "idle" | "pending" | "retrying" | "failed";
 export type SkipTrackActionStatus = "idle" | "pending" | "retrying" | "failed";
@@ -54,13 +46,9 @@ export type ChallengeMarkerTone = "pending" | "success" | "failure";
 export type TimelineCelebrationTone = "success" | "failure";
 
 export type GamePageCard = TrackCardPublic | TimelineCardPublic;
-export type GamePagePlayerNameResolver = (
-  playerId: string | null | undefined,
-) => string;
+export type GamePagePlayerNameResolver = (playerId: string | null | undefined) => string;
 export type GamePageViewPreferenceUpdate = Partial<ViewPreferences>;
-export type GamePageViewPreferenceUpdater = (
-  nextView: GamePageViewPreferenceUpdate,
-) => void;
+export type GamePageViewPreferenceUpdater = (nextView: GamePageViewPreferenceUpdate) => void;
 
 export interface GamePageActionHandlers {
   handleBuyTimelineCardWithTt: () => void;
@@ -153,77 +141,75 @@ export interface TimelinePanelDragModel {
   timelineCards: TimelineCardPublic[];
 }
 
-export interface GamePageHeaderModel
-  extends Pick<
-    GamePageController,
-    | "currentPlayerId"
-    | "closeRoomActionStatus"
-    | "handleCloseRoom"
-    | "handleSkipTurn"
-    | "isCloseRoomPending"
-    | "isSkipTurnPending"
-    | "leadingPlayers"
-    | "menuTabs"
-    | "showMiniStandings"
-    | "showPhaseChip"
-    | "showRoomCodeChip"
-    | "showTimelineHints"
-    | "showTurnNumberChip"
-    | "statusBadgeText"
-    | "statusDetailText"
-    | "skipTurnActionStatus"
-    | "updateViewPreferences"
-    | "visibleTimelineCardCount"
-    | "visibleTimelinePlayerId"
-    | "visibleTimelineTtCount"
-    | "visibleTimelineTitle"
-  > {
+export interface GamePageHeaderModel extends Pick<
+  GamePageController,
+  | "currentPlayerId"
+  | "closeRoomActionStatus"
+  | "handleCloseRoom"
+  | "handleSkipTurn"
+  | "isCloseRoomPending"
+  | "isSkipTurnPending"
+  | "leadingPlayers"
+  | "menuTabs"
+  | "showMiniStandings"
+  | "showPhaseChip"
+  | "showRoomCodeChip"
+  | "showTimelineHints"
+  | "showTurnNumberChip"
+  | "statusBadgeText"
+  | "statusDetailText"
+  | "skipTurnActionStatus"
+  | "updateViewPreferences"
+  | "visibleTimelineCardCount"
+  | "visibleTimelinePlayerId"
+  | "visibleTimelineTtCount"
+  | "visibleTimelineTitle"
+> {
   roomState: PublicRoomState;
 }
 
-export interface GamePageActionPanelsModel
-  extends Pick<
-    GamePageController & GamePageControllerExtras,
-    | "canClaimChallenge"
-    | "canConfirmBeatPlacement"
-    | "canConfirmReveal"
-    | "canConfirmTurnPlacement"
-    | "canResolveChallengeWindow"
-    | "canSkipOfflinePlayer"
-    | "canUseBuyCard"
-    | "canUseSkipTrack"
-    | "buyTimelineCardActionStatus"
-    | "skipTrackActionStatus"
-    | "challengeActionBody"
-    | "challengeActionTitle"
-    | "claimChallengeActionStatus"
-    | "confirmRevealActionStatus"
-    | "currentPlayerId"
-    | "currentPlayerTtCount"
-    | "getPlayerName"
-    | "handleBuyTimelineCardWithTt"
-    | "handleClaimChallenge"
-    | "handleConfirmReveal"
-    | "handlePlaceCard"
-    | "handlePlaceChallenge"
-    | "handleResolveChallengeWindow"
-    | "handleSkipTrackWithTt"
-    | "handleSkipTurn"
-    | "isBuyTimelineCardPending"
-    | "isSkipTrackPending"
-    | "isSkipTurnPending"
-    | "isCurrentPlayerTurn"
-    | "isClaimChallengePending"
-    | "isConfirmRevealPending"
-    | "isPlaceCardPending"
-    | "isPlaceChallengePending"
-    | "isResolveChallengeWindowPending"
-    | "placeCardActionStatus"
-    | "placeChallengeActionStatus"
-    | "resolveChallengeWindowActionStatus"
-    | "skipTurnActionStatus"
-    | "showHelperLabels"
-  > {
+export interface GamePageActionPanelsModel extends Pick<
+  GamePageController & GamePageControllerExtras,
+  | "canClaimChallenge"
+  | "canConfirmBeatPlacement"
+  | "canConfirmReveal"
+  | "canConfirmTurnPlacement"
+  | "canResolveChallengeWindow"
+  | "canSkipOfflinePlayer"
+  | "canUseBuyCard"
+  | "canUseSkipTrack"
+  | "buyTimelineCardActionStatus"
+  | "skipTrackActionStatus"
+  | "challengeActionBody"
+  | "challengeActionTitle"
+  | "claimChallengeActionStatus"
+  | "confirmRevealActionStatus"
+  | "currentPlayerId"
+  | "currentPlayerTtCount"
+  | "getPlayerName"
+  | "handleBuyTimelineCardWithTt"
+  | "handleClaimChallenge"
+  | "handleConfirmReveal"
+  | "handlePlaceCard"
+  | "handlePlaceChallenge"
+  | "handleResolveChallengeWindow"
+  | "handleSkipTrackWithTt"
+  | "handleSkipTurn"
+  | "isBuyTimelineCardPending"
+  | "isSkipTrackPending"
+  | "isSkipTurnPending"
+  | "isCurrentPlayerTurn"
+  | "isClaimChallengePending"
+  | "isConfirmRevealPending"
+  | "isPlaceCardPending"
+  | "isPlaceChallengePending"
+  | "isResolveChallengeWindowPending"
+  | "placeCardActionStatus"
+  | "placeChallengeActionStatus"
+  | "resolveChallengeWindowActionStatus"
+  | "skipTurnActionStatus"
+  | "showHelperLabels"
+> {
   roomState: PublicRoomState;
 }
 
@@ -320,13 +306,9 @@ export interface GamePageControllerExtras {
   getPlayerName: GamePagePlayerNameResolver;
 }
 
-export type UseGamePageControllerResult = GamePageController &
-  GamePageControllerExtras;
+export type UseGamePageControllerResult = GamePageController & GamePageControllerExtras;
 
-export type LoadedGamePageController = Omit<
-  UseGamePageControllerResult,
-  "roomState"
-> & {
+export type LoadedGamePageController = Omit<UseGamePageControllerResult, "roomState"> & {
   roomState: PublicRoomState;
 };
 

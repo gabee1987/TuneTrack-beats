@@ -84,102 +84,94 @@ function PreviewCardContent({
   );
 }
 
-export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(
-  function PreviewCard(
-    {
-      attributes,
-      hiddenCardMode,
-      revealedCardMode = "artwork",
-      isChallengeSlot,
-      isCorrectPlacement = false,
-      isCorrectionPreview = false,
-      isGhosted,
-      isOverlay = false,
-      isOriginalSlot,
-      listeners,
-      previewCard,
-      selectable,
-      showDevAlbumInfo,
-      showDevCardInfo,
-      showDevYearInfo,
-      showDevGenreInfo,
-      showRevealedContent = false,
-      theme,
-      tone,
-      transitionEvent,
-    },
-    ref,
-  ) {
-    const cardToneClass = isChallengeSlot
-      ? tone === "failure"
-        ? styles.previewCardChallengeFailure
-        : styles.previewCardChallenge
-      : isCorrectPlacement
-        ? styles.previewCardResolvedCorrect
-        : isCorrectionPreview
-          ? styles.previewCardCorrection
-          : isOriginalSlot
-            ? styles.previewCardCurrentPick
-            : "";
-    const {
-      animationControls,
-      displayCard,
-      displayShowRevealedContent,
-      isTransitionActive,
-    } = usePreviewCardTransition({
+export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(function PreviewCard(
+  {
+    attributes,
+    hiddenCardMode,
+    revealedCardMode = "artwork",
+    isChallengeSlot,
+    isCorrectPlacement = false,
+    isCorrectionPreview = false,
+    isGhosted,
+    isOverlay = false,
+    isOriginalSlot,
+    listeners,
+    previewCard,
+    selectable,
+    showDevAlbumInfo,
+    showDevCardInfo,
+    showDevYearInfo,
+    showDevGenreInfo,
+    showRevealedContent = false,
+    theme,
+    tone,
+    transitionEvent,
+  },
+  ref,
+) {
+  const cardToneClass = isChallengeSlot
+    ? tone === "failure"
+      ? styles.previewCardChallengeFailure
+      : styles.previewCardChallenge
+    : isCorrectPlacement
+      ? styles.previewCardResolvedCorrect
+      : isCorrectionPreview
+        ? styles.previewCardCorrection
+        : isOriginalSlot
+          ? styles.previewCardCurrentPick
+          : "";
+  const { animationControls, displayCard, displayShowRevealedContent, isTransitionActive } =
+    usePreviewCardTransition({
       previewCard,
       showRevealedContent,
       transitionEvent,
     });
-    const renderCard = displayCard ?? previewCard;
-    const hasArtworkSurface =
-      displayShowRevealedContent &&
-      revealedCardMode === "artwork" &&
-      Boolean(renderCard.artworkUrl);
+  const renderCard = displayCard ?? previewCard;
+  const hasArtworkSurface =
+    displayShowRevealedContent && revealedCardMode === "artwork" && Boolean(renderCard.artworkUrl);
 
-    return (
-      <motion.article
-        ref={ref}
-        className={`${styles.previewCard} ${
-          (displayShowRevealedContent ? revealedCardMode : hiddenCardMode) === "gradient"
-            ? styles.previewCardGradient
-            : styles.previewCardArtwork
-        } ${hasArtworkSurface ? styles.previewCardHasArtwork : ""} ${cardToneClass} ${selectable ? styles.previewCardDraggable : ""} ${
-          isGhosted ? styles.previewCardGhost : ""
-        } ${isOverlay ? styles.previewCardOverlay : ""} ${
-          displayShowRevealedContent ? styles.previewCardRevealed : ""
-        } ${isCorrectionPreview ? styles.previewCardCorrectionSurface : ""} ${
-          isTransitionActive ? styles.previewCardReplacing : ""
-        }`}
-        animate={animationControls}
-        initial={false}
-        style={
-          {
-            ...getPreviewCardSurfaceStyle({
-              artworkUrl: previewCard.artworkUrl,
-              hiddenCardMode,
-              revealedCardMode,
-              isOverlay,
-              seed: `${previewCard.id}-preview`,
-              showRevealedContent: displayShowRevealedContent,
-              theme,
-            }),
-          } as CSSProperties as MotionStyle
-        }
-        {...attributes}
-        {...listeners}
-      >
-        <div className={styles.previewCardFace}>
-          <PreviewCardContent
-            card={renderCard}
-            showDevAlbumInfo={showDevAlbumInfo}
-            showDevCardInfo={showDevCardInfo}
-            showDevGenreInfo={showDevGenreInfo}
-            showDevYearInfo={showDevYearInfo}
-            showRevealedContent={displayShowRevealedContent}
-          />
-        </div>
-      </motion.article>
-    );
-  },
-);
+  return (
+    <motion.article
+      ref={ref}
+      className={`${styles.previewCard} ${
+        (displayShowRevealedContent ? revealedCardMode : hiddenCardMode) === "gradient"
+          ? styles.previewCardGradient
+          : styles.previewCardArtwork
+      } ${hasArtworkSurface ? styles.previewCardHasArtwork : ""} ${cardToneClass} ${selectable ? styles.previewCardDraggable : ""} ${
+        isGhosted ? styles.previewCardGhost : ""
+      } ${isOverlay ? styles.previewCardOverlay : ""} ${
+        displayShowRevealedContent ? styles.previewCardRevealed : ""
+      } ${isCorrectionPreview ? styles.previewCardCorrectionSurface : ""} ${
+        isTransitionActive ? styles.previewCardReplacing : ""
+      }`}
+      animate={animationControls}
+      initial={false}
+      style={
+        {
+          ...getPreviewCardSurfaceStyle({
+            artworkUrl: previewCard.artworkUrl,
+            hiddenCardMode,
+            revealedCardMode,
+            isOverlay,
+            seed: `${previewCard.id}-preview`,
+            showRevealedContent: displayShowRevealedContent,
+            theme,
+          }),
+        } as CSSProperties as MotionStyle
+      }
+      {...attributes}
+      {...listeners}
+    >
+      <div className={styles.previewCardFace}>
+        <PreviewCardContent
+          card={renderCard}
+          showDevAlbumInfo={showDevAlbumInfo}
+          showDevCardInfo={showDevCardInfo}
+          showDevGenreInfo={showDevGenreInfo}
+          showDevYearInfo={showDevYearInfo}
+          showRevealedContent={displayShowRevealedContent}
+        />
+      </div>
+    </motion.article>
+  );
+});

@@ -71,9 +71,7 @@ export function GameMenuPlayerItem({
   const hasTransferAction = isCurrentPlayerHost && !isCurrentPlayer;
   const hasExpandableContent = hasTransferAction;
   const transferActionStatus =
-    transferHostActionState?.playerId === player.id
-      ? transferHostActionState.status
-      : null;
+    transferHostActionState?.playerId === player.id ? transferHostActionState.status : null;
   const transferButtonLabel =
     transferActionStatus === "retrying"
       ? t("gameMenu.transferHostRetrying")

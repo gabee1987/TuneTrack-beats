@@ -47,7 +47,9 @@ function getDefaultStorage(): StorageLike | null {
   return window.localStorage;
 }
 
-export function listSavedPlaylists(storage: StorageLike | null = getDefaultStorage()): SavedPlaylist[] {
+export function listSavedPlaylists(
+  storage: StorageLike | null = getDefaultStorage(),
+): SavedPlaylist[] {
   if (!storage) return [];
   return readStore(storage).playlists;
 }

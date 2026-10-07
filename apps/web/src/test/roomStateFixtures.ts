@@ -44,9 +44,7 @@ export function buildTrackCard(overrides: Partial<TrackCardPublic> = {}): TrackC
   };
 }
 
-export function buildTimelineCard(
-  overrides: Partial<TimelineCardPublic> = {},
-): TimelineCardPublic {
+export function buildTimelineCard(overrides: Partial<TimelineCardPublic> = {}): TimelineCardPublic {
   return {
     ...buildTrackCard(),
     id: "timeline-1",
@@ -57,9 +55,7 @@ export function buildTimelineCard(
   };
 }
 
-export function buildRoomSettings(
-  overrides: Partial<PublicRoomSettings> = {},
-): PublicRoomSettings {
+export function buildRoomSettings(overrides: Partial<PublicRoomSettings> = {}): PublicRoomSettings {
   return {
     targetTimelineCardCount: DEFAULT_TARGET_TIMELINE_CARD_COUNT,
     defaultStartingTimelineCardCount: DEFAULT_STARTING_TIMELINE_CARD_COUNT,
@@ -77,9 +73,7 @@ export function buildRoomSettings(
   };
 }
 
-export function buildLobbyRoomState(
-  overrides: Partial<PublicRoomState> = {},
-): PublicRoomState {
+export function buildLobbyRoomState(overrides: Partial<PublicRoomState> = {}): PublicRoomState {
   return {
     roomId: TEST_ROOM_ID,
     status: "lobby",
@@ -101,9 +95,7 @@ export function buildLobbyRoomState(
   };
 }
 
-export function buildTurnRoomState(
-  overrides: Partial<PublicRoomState> = {},
-): PublicRoomState {
+export function buildTurnRoomState(overrides: Partial<PublicRoomState> = {}): PublicRoomState {
   const lobby = buildLobbyRoomState();
 
   return {
@@ -127,9 +119,7 @@ export function buildTurnRoomState(
   };
 }
 
-export function buildChallengeRoomState(
-  overrides: Partial<PublicRoomState> = {},
-): PublicRoomState {
+export function buildChallengeRoomState(overrides: Partial<PublicRoomState> = {}): PublicRoomState {
   const turn = buildTurnRoomState();
 
   return {
@@ -147,9 +137,7 @@ export function buildChallengeRoomState(
   };
 }
 
-export function buildRevealRoomState(
-  overrides: Partial<PublicRoomState> = {},
-): PublicRoomState {
+export function buildRevealRoomState(overrides: Partial<PublicRoomState> = {}): PublicRoomState {
   const turn = buildTurnRoomState();
   const placedCard = buildTimelineCard({
     id: "track-current",
@@ -180,9 +168,7 @@ export function buildRevealRoomState(
   };
 }
 
-export function buildFinishedRoomState(
-  overrides: Partial<PublicRoomState> = {},
-): PublicRoomState {
+export function buildFinishedRoomState(overrides: Partial<PublicRoomState> = {}): PublicRoomState {
   return {
     ...buildTurnRoomState(),
     status: "finished",

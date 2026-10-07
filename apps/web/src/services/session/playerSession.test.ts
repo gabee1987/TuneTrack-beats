@@ -45,12 +45,8 @@ describe("playerSession", () => {
     const { localStorage, sessionStorage } = stubWindowStorage();
 
     expect(getOrCreatePlayerSessionId()).toBe("stable-session-id");
-    expect(localStorage.getItem("tunetrack.playerSessionId")).toBe(
-      "stable-session-id",
-    );
-    expect(sessionStorage.getItem("tunetrack.playerSessionId")).toBe(
-      "stable-session-id",
-    );
+    expect(localStorage.getItem("tunetrack.playerSessionId")).toBe("stable-session-id");
+    expect(sessionStorage.getItem("tunetrack.playerSessionId")).toBe("stable-session-id");
   });
 
   it("restores player sessions from durable local storage", () => {
@@ -58,9 +54,7 @@ describe("playerSession", () => {
     localStorage.setItem("tunetrack.playerSessionId", "persisted-session-id");
 
     expect(getOrCreatePlayerSessionId()).toBe("persisted-session-id");
-    expect(sessionStorage.getItem("tunetrack.playerSessionId")).toBe(
-      "persisted-session-id",
-    );
+    expect(sessionStorage.getItem("tunetrack.playerSessionId")).toBe("persisted-session-id");
   });
 
   it("persists remembered display names across browser restarts", () => {

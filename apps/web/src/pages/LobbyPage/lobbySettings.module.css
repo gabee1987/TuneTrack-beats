@@ -263,48 +263,46 @@
 }
 
 @media (min-width: 1100px) {
-.settingsGrid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  .settingsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
-}
-
 
 @media (orientation: landscape) and (max-width: 1099px) {
-.settingsGrid {
-  grid-template-columns: 1fr;
+  .settingsGrid {
+    grid-template-columns: 1fr;
+  }
 }
-}
-
 
 @media (max-width: 720px) {
-.primaryActionBar,
+  .primaryActionBar,
   .playerInfoRow {
-  display: grid;
+    display: grid;
     grid-template-columns: 1fr;
-}
+  }
 
-.settingsGrid {
-  grid-template-columns: 1fr;
-}
+  .settingsGrid {
+    grid-template-columns: 1fr;
+  }
 
-.primaryActionDescription,
+  .primaryActionDescription,
   .settingsInlineHint {
-  font-size: 13px;
+    font-size: 13px;
     line-height: 1.35;
-}
+  }
 
-.startGameButton {
-  width: 100%;
-}
+  .startGameButton {
+    width: 100%;
+  }
 
-.playerBadges {
-  justify-content: flex-start;
-}
+  .playerBadges {
+    justify-content: flex-start;
+  }
 
-.settingsGroup,
+  .settingsGroup,
   .rosterSection,
   .roomActionsSection {
-  gap: 20px;
+    gap: 20px;
     padding: 18px;
     border: 1px solid color-mix(in srgb, var(--color-border-subtle) 96%, transparent);
     border-radius: 28px;
@@ -323,21 +321,21 @@
       inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
       0 18px 54px color-mix(in srgb, black 24%, transparent);
     outline: 0;
-}
+  }
 
-.playerName,
+  .playerName,
   .primaryActionTitle {
-  color: var(--color-text-primary);
-}
+    color: var(--color-text-primary);
+  }
 
-.primaryActionDescription,
+  .primaryActionDescription,
   .settingsInlineHint,
   .playerSecondaryName {
-  color: var(--color-text-secondary);
-}
+    color: var(--color-text-secondary);
+  }
 
-.playerItem {
-  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
+  .playerItem {
+    border: 1px solid color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
     border-radius: 20px;
     background:
       radial-gradient(
@@ -347,10 +345,10 @@
       ),
       color-mix(in srgb, var(--color-surface-elevated) 70%, transparent);
     box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
-}
+  }
 
-.selectInput {
-  min-height: 56px;
+  .selectInput {
+    min-height: 56px;
     padding-right: 44px;
     background-image:
       linear-gradient(45deg, transparent 50%, currentColor 50%),
@@ -363,21 +361,20 @@
       6px 6px;
     background-repeat: no-repeat;
     appearance: none;
+  }
 }
-}
-
 
 @media (hover: none) and (pointer: coarse) {
-.primaryActionDescription,
+  .primaryActionDescription,
   .settingsInlineHint {
-  font-size: 13px;
+    font-size: 13px;
     line-height: 1.32;
-}
+  }
 
-.settingsGroup,
+  .settingsGroup,
   .rosterSection,
   .roomActionsSection {
-  gap: 18px;
+    gap: 18px;
     padding: 18px;
     border: 1px solid color-mix(in srgb, var(--color-border-subtle) 96%, transparent);
     border-radius: 28px;
@@ -396,21 +393,21 @@
       inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
       0 18px 54px color-mix(in srgb, black 24%, transparent);
     outline: 0;
-}
+  }
 
-.playerName,
+  .playerName,
   .primaryActionTitle {
-  color: var(--color-text-primary);
-}
+    color: var(--color-text-primary);
+  }
 
-.primaryActionDescription,
+  .primaryActionDescription,
   .settingsInlineHint,
   .playerSecondaryName {
-  color: var(--color-text-secondary);
-}
+    color: var(--color-text-secondary);
+  }
 
-.playerItem {
-  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
+  .playerItem {
+    border: 1px solid color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
     border-radius: 20px;
     background:
       radial-gradient(
@@ -420,30 +417,29 @@
       ),
       color-mix(in srgb, var(--color-surface-elevated) 70%, transparent);
     box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
-}
+  }
 
-.selectInput {
-  min-height: 56px;
+  .selectInput {
+    min-height: 56px;
     padding-right: 44px;
     appearance: none;
+  }
 }
-}
-
 
 @media (hover: none) and (pointer: coarse) and (max-height: 520px) {
-.settingsGrid {
-  grid-template-columns: 1fr;
+  .settingsGrid {
+    grid-template-columns: 1fr;
     gap: 10px;
     margin-top: 12px;
-}
+  }
 
-.settingsGroup {
-  gap: 12px;
+  .settingsGroup {
+    gap: 12px;
     padding: 12px;
-}
+  }
 
-.primaryActionBar,
+  .primaryActionBar,
   .playerInfoRow {
-  gap: 10px;
-}
+    gap: 10px;
+  }
 }

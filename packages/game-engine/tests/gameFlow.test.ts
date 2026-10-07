@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  GameFlowService,
-  type GameTrackCard,
-  type StartGamePlayerInput,
-} from "../src/index.js";
+import { GameFlowService, type GameTrackCard, type StartGamePlayerInput } from "../src/index.js";
 
 const players: StartGamePlayerInput[] = [
   {
@@ -159,9 +155,7 @@ describe("GameFlowService", () => {
       targetTimelineCardCount: 3,
     });
 
-    expect(() => gameFlowService.placeCard(gameState, "player-2", 1)).toThrow(
-      "NOT_ACTIVE_PLAYER",
-    );
+    expect(() => gameFlowService.placeCard(gameState, "player-2", 1)).toThrow("NOT_ACTIVE_PLAYER");
   });
 
   it("inserts a correctly placed card, enters reveal phase, and finishes when the player reaches the target count", () => {
@@ -251,10 +245,7 @@ describe("GameFlowService", () => {
       targetTimelineCardCount: 3,
     });
 
-    const nextTurnState = gameFlowService.advanceTurnToPlayer(
-      gameState,
-      "player-2",
-    );
+    const nextTurnState = gameFlowService.advanceTurnToPlayer(gameState, "player-2");
 
     expect(nextTurnState.phase).toBe("turn");
     expect(nextTurnState.turn).toEqual({
@@ -307,9 +298,7 @@ describe("GameFlowService", () => {
       targetTimelineCardCount: 3,
     });
 
-    expect(() => gameFlowService.confirmReveal(gameState)).toThrow(
-      "GAME_NOT_IN_REVEAL_PHASE",
-    );
+    expect(() => gameFlowService.confirmReveal(gameState)).toThrow("GAME_NOT_IN_REVEAL_PHASE");
   });
 
   it("opens a challenge window instead of reveal when challenge mode is enabled", () => {
@@ -362,10 +351,7 @@ describe("GameFlowService", () => {
         "player-2": 1,
       }),
     };
-    const claimedChallengeState = gameFlowService.claimChallenge(
-      openChallengeState,
-      "player-2",
-    );
+    const claimedChallengeState = gameFlowService.claimChallenge(openChallengeState, "player-2");
 
     expect(claimedChallengeState.challengeState).toEqual(
       expect.objectContaining({
@@ -373,12 +359,12 @@ describe("GameFlowService", () => {
         challengerPlayerId: "player-2",
       }),
     );
-    expect(() =>
-      gameFlowService.claimChallenge(claimedChallengeState, "player-1"),
-    ).toThrow("ACTIVE_PLAYER_CANNOT_CHALLENGE");
-    expect(() =>
-      gameFlowService.claimChallenge(claimedChallengeState, "player-2"),
-    ).toThrow("CHALLENGE_ALREADY_CLAIMED");
+    expect(() => gameFlowService.claimChallenge(claimedChallengeState, "player-1")).toThrow(
+      "ACTIVE_PLAYER_CANNOT_CHALLENGE",
+    );
+    expect(() => gameFlowService.claimChallenge(claimedChallengeState, "player-2")).toThrow(
+      "CHALLENGE_ALREADY_CLAIMED",
+    );
   });
 
   it("rejects challenge claims when the challenger has no TT left", () => {
@@ -391,9 +377,9 @@ describe("GameFlowService", () => {
       challengeEnabled: true,
     });
 
-    expect(() =>
-      gameFlowService.claimChallenge(openChallengeState, "player-2"),
-    ).toThrow("INSUFFICIENT_TT");
+    expect(() => gameFlowService.claimChallenge(openChallengeState, "player-2")).toThrow(
+      "INSUFFICIENT_TT",
+    );
   });
 
   it("resolves a successful challenge, inserts the challenger slot, and awards TT", () => {
@@ -410,10 +396,7 @@ describe("GameFlowService", () => {
         "player-2": 1,
       }),
     };
-    const claimedChallengeState = gameFlowService.claimChallenge(
-      openChallengeState,
-      "player-2",
-    );
+    const claimedChallengeState = gameFlowService.claimChallenge(openChallengeState, "player-2");
     const revealGameState = gameFlowService.placeChallengeCard(
       claimedChallengeState,
       "player-2",
@@ -459,10 +442,9 @@ describe("GameFlowService", () => {
         releaseYear: 2005,
       },
     ]);
-    expect(
-      revealGameState.players.find((player) => player.id === "player-2")
-        ?.ttTokenCount,
-    ).toBe(0);
+    expect(revealGameState.players.find((player) => player.id === "player-2")?.ttTokenCount).toBe(
+      0,
+    );
   });
 
   it("resolves a failed challenge and deducts TT from the challenger", () => {
@@ -474,23 +456,13 @@ describe("GameFlowService", () => {
     const seededTokenState = {
       ...preparedGameState,
       players: preparedGameState.players.map((player) =>
-        player.id === "player-2"
-          ? { ...player, ttTokenCount: 2 }
-          : player,
+        player.id === "player-2" ? { ...player, ttTokenCount: 2 } : player,
       ),
     };
-    const openChallengeState = gameFlowService.placeCard(
-      seededTokenState,
-      "player-1",
-      1,
-      {
-        challengeEnabled: true,
-      },
-    );
-    const claimedChallengeState = gameFlowService.claimChallenge(
-      openChallengeState,
-      "player-2",
-    );
+    const openChallengeState = gameFlowService.placeCard(seededTokenState, "player-1", 1, {
+      challengeEnabled: true,
+    });
+    const claimedChallengeState = gameFlowService.claimChallenge(openChallengeState, "player-2");
     const revealGameState = gameFlowService.placeChallengeCard(
       claimedChallengeState,
       "player-2",
@@ -517,10 +489,9 @@ describe("GameFlowService", () => {
         releaseYear: 2000,
       },
     ]);
-    expect(
-      revealGameState.players.find((player) => player.id === "player-2")
-        ?.ttTokenCount,
-    ).toBe(1);
+    expect(revealGameState.players.find((player) => player.id === "player-2")?.ttTokenCount).toBe(
+      1,
+    );
   });
 
   it("never lets TT drop below zero on a failed challenge", () => {
@@ -535,28 +506,19 @@ describe("GameFlowService", () => {
         "player-2": 1,
       }),
     };
-    const openChallengeState = gameFlowService.placeCard(
-      seededTokenState,
-      "player-1",
-      1,
-      {
-        challengeEnabled: true,
-      },
-    );
-    const claimedChallengeState = gameFlowService.claimChallenge(
-      openChallengeState,
-      "player-2",
-    );
+    const openChallengeState = gameFlowService.placeCard(seededTokenState, "player-1", 1, {
+      challengeEnabled: true,
+    });
+    const claimedChallengeState = gameFlowService.claimChallenge(openChallengeState, "player-2");
     const revealGameState = gameFlowService.placeChallengeCard(
       claimedChallengeState,
       "player-2",
       0,
     );
 
-    expect(
-      revealGameState.players.find((player) => player.id === "player-2")
-        ?.ttTokenCount,
-    ).toBe(0);
+    expect(revealGameState.players.find((player) => player.id === "player-2")?.ttTokenCount).toBe(
+      0,
+    );
   });
 
   it("rejects a Beat! slot that matches the original player's chosen slot", () => {
@@ -571,26 +533,14 @@ describe("GameFlowService", () => {
         "player-2": 1,
       }),
     };
-    const openChallengeState = gameFlowService.placeCard(
-      seededTokenState,
-      "player-1",
-      0,
-      {
-        challengeEnabled: true,
-      },
-    );
-    const claimedChallengeState = gameFlowService.claimChallenge(
-      openChallengeState,
-      "player-2",
-    );
+    const openChallengeState = gameFlowService.placeCard(seededTokenState, "player-1", 0, {
+      challengeEnabled: true,
+    });
+    const claimedChallengeState = gameFlowService.claimChallenge(openChallengeState, "player-2");
 
-    expect(() =>
-      gameFlowService.placeChallengeCard(
-        claimedChallengeState,
-        "player-2",
-        0,
-      ),
-    ).toThrow("CHALLENGE_SLOT_MUST_DIFFER");
+    expect(() => gameFlowService.placeChallengeCard(claimedChallengeState, "player-2", 0)).toThrow(
+      "CHALLENGE_SLOT_MUST_DIFFER",
+    );
   });
 
   it("lets the host award TT manually during a game", () => {
@@ -600,16 +550,11 @@ describe("GameFlowService", () => {
       targetTimelineCardCount: 4,
     });
 
-    const updatedGameState = gameFlowService.awardTtTokens(
-      gameState,
-      "player-2",
+    const updatedGameState = gameFlowService.awardTtTokens(gameState, "player-2", 1);
+
+    expect(updatedGameState.players.find((player) => player.id === "player-2")?.ttTokenCount).toBe(
       1,
     );
-
-    expect(
-      updatedGameState.players.find((player) => player.id === "player-2")
-        ?.ttTokenCount,
-    ).toBe(1);
   });
 
   it("removes a player from engine turn order and timelines", () => {
@@ -621,9 +566,7 @@ describe("GameFlowService", () => {
 
     const updatedGameState = gameFlowService.removePlayer(gameState, "player-2");
 
-    expect(updatedGameState.players.map((player) => player.id)).toEqual([
-      "player-1",
-    ]);
+    expect(updatedGameState.players.map((player) => player.id)).toEqual(["player-1"]);
     expect(updatedGameState.timelines["player-2"]).toBeUndefined();
     expect(updatedGameState.turn?.activePlayerId).toBe("player-1");
   });
@@ -648,16 +591,11 @@ describe("GameFlowService", () => {
       targetTimelineCardCount: 4,
     });
 
-    const updatedGameState = gameFlowService.awardTtTokens(
-      gameState,
-      "player-1",
-      1,
-    );
+    const updatedGameState = gameFlowService.awardTtTokens(gameState, "player-1", 1);
 
-    expect(
-      updatedGameState.players.find((player) => player.id === "player-1")
-        ?.ttTokenCount,
-    ).toBe(5);
+    expect(updatedGameState.players.find((player) => player.id === "player-1")?.ttTokenCount).toBe(
+      5,
+    );
   });
 
   it("lets the active player spend 1 TT to skip the current card and draw a new one", () => {
@@ -680,16 +618,12 @@ describe("GameFlowService", () => {
       targetTimelineCardCount: 4,
     });
 
-    const skippedGameState = gameFlowService.skipCurrentTrackWithTt(
-      gameState,
-      "player-1",
-    );
+    const skippedGameState = gameFlowService.skipCurrentTrackWithTt(gameState, "player-1");
 
     expect(skippedGameState.currentTrackCard?.id).toBe("track-5");
-    expect(
-      skippedGameState.players.find((player) => player.id === "player-1")
-        ?.ttTokenCount,
-    ).toBe(0);
+    expect(skippedGameState.players.find((player) => player.id === "player-1")?.ttTokenCount).toBe(
+      0,
+    );
     expect(skippedGameState.turn).toEqual({
       activePlayerId: "player-1",
       turnNumber: 1,
@@ -717,14 +651,11 @@ describe("GameFlowService", () => {
       targetTimelineCardCount: 4,
     });
 
-    const skippedGameState = gameFlowService.skipCurrentTrackWithTt(
-      gameState,
-      "player-1",
-    );
+    const skippedGameState = gameFlowService.skipCurrentTrackWithTt(gameState, "player-1");
 
-    expect(() =>
-      gameFlowService.skipCurrentTrackWithTt(skippedGameState, "player-1"),
-    ).toThrow("SKIP_ALREADY_USED_THIS_TURN");
+    expect(() => gameFlowService.skipCurrentTrackWithTt(skippedGameState, "player-1")).toThrow(
+      "SKIP_ALREADY_USED_THIS_TURN",
+    );
   });
 
   it("rejects skip when the player does not have enough TT", () => {
@@ -734,9 +665,9 @@ describe("GameFlowService", () => {
       targetTimelineCardCount: 4,
     });
 
-    expect(() =>
-      gameFlowService.skipCurrentTrackWithTt(gameState, "player-1"),
-    ).toThrow("INSUFFICIENT_TT");
+    expect(() => gameFlowService.skipCurrentTrackWithTt(gameState, "player-1")).toThrow(
+      "INSUFFICIENT_TT",
+    );
   });
 
   it("lets a player spend 3 TT to buy the current card directly into reveal", () => {
@@ -759,10 +690,7 @@ describe("GameFlowService", () => {
       targetTimelineCardCount: 4,
     });
 
-    const boughtGameState = gameFlowService.buyTimelineCardWithTt(
-      gameState,
-      "player-1",
-    );
+    const boughtGameState = gameFlowService.buyTimelineCardWithTt(gameState, "player-1");
 
     expect(boughtGameState.phase).toBe("reveal");
     expect(boughtGameState.timelines["player-1"]).toEqual([
@@ -775,10 +703,9 @@ describe("GameFlowService", () => {
         releaseYear: 2000,
       },
     ]);
-    expect(
-      boughtGameState.players.find((player) => player.id === "player-1")
-        ?.ttTokenCount,
-    ).toBe(0);
+    expect(boughtGameState.players.find((player) => player.id === "player-1")?.ttTokenCount).toBe(
+      0,
+    );
     expect(boughtGameState.currentTrackCard?.id).toBe("track-4");
     expect(boughtGameState.revealState).toEqual({
       playerId: "player-1",
@@ -819,9 +746,9 @@ describe("GameFlowService", () => {
       targetTimelineCardCount: 4,
     });
 
-    expect(() =>
-      gameFlowService.buyTimelineCardWithTt(gameState, "player-2"),
-    ).toThrow("NOT_ACTIVE_PLAYER");
+    expect(() => gameFlowService.buyTimelineCardWithTt(gameState, "player-2")).toThrow(
+      "NOT_ACTIVE_PLAYER",
+    );
   });
 
   it("enters reveal with a winner if buying a card reaches the target", () => {
@@ -844,10 +771,7 @@ describe("GameFlowService", () => {
       targetTimelineCardCount: 2,
     });
 
-    const boughtGameState = gameFlowService.buyTimelineCardWithTt(
-      gameState,
-      "player-1",
-    );
+    const boughtGameState = gameFlowService.buyTimelineCardWithTt(gameState, "player-1");
 
     expect(boughtGameState.phase).toBe("reveal");
     expect(boughtGameState.winnerPlayerId).toBe("player-1");
@@ -868,8 +792,7 @@ describe("GameFlowService", () => {
     const openChallengeState = gameFlowService.placeCard(gameState, "player-1", 1, {
       challengeEnabled: true,
     });
-    const revealGameState =
-      gameFlowService.resolveChallengeWindow(openChallengeState);
+    const revealGameState = gameFlowService.resolveChallengeWindow(openChallengeState);
 
     expect(revealGameState.phase).toBe("reveal");
     expect(revealGameState.revealState).toEqual({

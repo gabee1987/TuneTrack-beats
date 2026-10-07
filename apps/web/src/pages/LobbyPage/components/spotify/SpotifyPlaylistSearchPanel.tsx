@@ -2,10 +2,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { SpotifySmartSearchResult, SpotifySmartSearchTypeFilter } from "@tunetrack/shared";
-import {
-  createStandardTransition,
-  useReducedMotionPreference,
-} from "../../../../features/motion";
+import { createStandardTransition, useReducedMotionPreference } from "../../../../features/motion";
 import { useI18n } from "../../../../features/i18n";
 import { useAppToast } from "../../../../features/toast";
 import { ActionButton } from "../../../../features/ui/ActionButton";
@@ -445,4 +442,3 @@ function SmartSearchVirtualResultList({
     </div>
   );
 }
-

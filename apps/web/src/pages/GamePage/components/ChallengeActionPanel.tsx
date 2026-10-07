@@ -102,8 +102,7 @@ export function ChallengeActionPanel({
   const portalTarget = useMobileControlPortalTarget();
   const isPresent = useIsPresent();
   const beatCostBadgeRef = useRef<HTMLSpanElement | null>(null);
-  const [challengeHintAnchor, setChallengeHintAnchor] =
-    useState<HTMLElement | null>(null);
+  const [challengeHintAnchor, setChallengeHintAnchor] = useState<HTMLElement | null>(null);
 
   const challengeState = roomState.status === "challenge" ? roomState.challengeState : null;
   const isOpenChallengeWindow = challengeState?.phase === "open";
@@ -192,10 +191,7 @@ export function ChallengeActionPanel({
             buttonRef={setChallengeHintAnchor}
             disabled={isClaimChallengePending}
             onClick={(event) => {
-              const origin = resolveSpendOrigin(
-                event.currentTarget,
-                beatCostBadgeRef.current,
-              );
+              const origin = resolveSpendOrigin(event.currentTarget, beatCostBadgeRef.current);
               onTokenSpendAnimationStart?.({
                 amount: -CHALLENGE_TT_COST,
                 ...origin,
@@ -227,45 +223,45 @@ export function ChallengeActionPanel({
   ) : null;
 
   const challengeCallout = (
-      <MotionPresence>
-        {challengeState ? (
-          <motion.section
-            animate="animate"
-            aria-live="polite"
-            className={panelClassName}
-            exit="exit"
-            initial="initial"
-            key="challenge-callout"
-            transition={createStandardTransition(reduceMotion)}
-            variants={createChallengePanelMotion(reduceMotion)}
-          >
-            {hasTimedChallengeWindow && !reduceMotion ? (
-              <span
-                aria-hidden="true"
-                className={styles.challengePulseBorder}
-                key={`challenge-pulse-${countdownSeconds ?? "tick"}`}
-              />
-            ) : null}
-            <div className={styles.challengeCalloutInner}>
-              <h3 className={styles.challengeTitle}>{titleText}</h3>
-              {bodyText ? <p className={styles.challengeText}>{bodyText}</p> : null}
-              <div className={styles.challengeMetaRow}>
-                <div className={styles.challengeCountdownBadge}>
-                  <span className={styles.challengeCountdownDot} aria-hidden="true" />
-                  <span>{challengeStatusText}</span>
-                </div>
-
-                {roomState.settings.ttModeEnabled ? (
-                  <span className={styles.challengeTokenChip}>
-                    {t("game.challenge.yourTokens")}{" "}
-                    <TokenCountAmount amount={currentPlayerTtCount} />
-                  </span>
-                ) : null}
+    <MotionPresence>
+      {challengeState ? (
+        <motion.section
+          animate="animate"
+          aria-live="polite"
+          className={panelClassName}
+          exit="exit"
+          initial="initial"
+          key="challenge-callout"
+          transition={createStandardTransition(reduceMotion)}
+          variants={createChallengePanelMotion(reduceMotion)}
+        >
+          {hasTimedChallengeWindow && !reduceMotion ? (
+            <span
+              aria-hidden="true"
+              className={styles.challengePulseBorder}
+              key={`challenge-pulse-${countdownSeconds ?? "tick"}`}
+            />
+          ) : null}
+          <div className={styles.challengeCalloutInner}>
+            <h3 className={styles.challengeTitle}>{titleText}</h3>
+            {bodyText ? <p className={styles.challengeText}>{bodyText}</p> : null}
+            <div className={styles.challengeMetaRow}>
+              <div className={styles.challengeCountdownBadge}>
+                <span className={styles.challengeCountdownDot} aria-hidden="true" />
+                <span>{challengeStatusText}</span>
               </div>
+
+              {roomState.settings.ttModeEnabled ? (
+                <span className={styles.challengeTokenChip}>
+                  {t("game.challenge.yourTokens")}{" "}
+                  <TokenCountAmount amount={currentPlayerTtCount} />
+                </span>
+              ) : null}
             </div>
-          </motion.section>
-        ) : null}
-      </MotionPresence>
+          </div>
+        </motion.section>
+      ) : null}
+    </MotionPresence>
   );
 
   // Portaled into `document.body`, this outlives the page's exit transform exactly as the
@@ -275,11 +271,7 @@ export function ChallengeActionPanel({
   }
 
   const challengeHint = (
-    <FirstRunHint
-      anchor={challengeHintAnchor}
-      id="game-challenge"
-      isEligible={canClaimChallenge}
-    />
+    <FirstRunHint anchor={challengeHintAnchor} id="game-challenge" isEligible={canClaimChallenge} />
   );
 
   return portalTarget ? (

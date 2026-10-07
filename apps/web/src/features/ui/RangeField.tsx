@@ -87,18 +87,14 @@ export function RangeField({
       return;
     }
 
-    const selectedTick = scroller.querySelector<HTMLElement>(
-      `[data-range-value="${value}"]`,
-    );
+    const selectedTick = scroller.querySelector<HTMLElement>(`[data-range-value="${value}"]`);
 
     if (!selectedTick) {
       return;
     }
 
     const nextScrollLeft =
-      selectedTick.offsetLeft -
-      scroller.clientWidth / 2 +
-      selectedTick.offsetWidth / 2;
+      selectedTick.offsetLeft - scroller.clientWidth / 2 + selectedTick.offsetWidth / 2;
     const maxScrollLeft = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
     const clampedScrollLeft = Math.max(0, Math.min(maxScrollLeft, nextScrollLeft));
 
@@ -130,22 +126,17 @@ export function RangeField({
       return;
     }
 
-    const scrollerCenter =
-      scroller.getBoundingClientRect().left + scroller.clientWidth / 2;
-    const ticks = Array.from(
-      scroller.querySelectorAll<HTMLElement>("[data-range-value]"),
-    );
+    const scrollerCenter = scroller.getBoundingClientRect().left + scroller.clientWidth / 2;
+    const ticks = Array.from(scroller.querySelectorAll<HTMLElement>("[data-range-value]"));
     const nearestTick = ticks.reduce<HTMLElement | null>((nearest, tick) => {
       if (!nearest) {
         return tick;
       }
 
       const tickCenter = tick.getBoundingClientRect().left + tick.offsetWidth / 2;
-      const nearestCenter =
-        nearest.getBoundingClientRect().left + nearest.offsetWidth / 2;
+      const nearestCenter = nearest.getBoundingClientRect().left + nearest.offsetWidth / 2;
 
-      return Math.abs(tickCenter - scrollerCenter) <
-        Math.abs(nearestCenter - scrollerCenter)
+      return Math.abs(tickCenter - scrollerCenter) < Math.abs(nearestCenter - scrollerCenter)
         ? tick
         : nearest;
     }, null);
@@ -209,11 +200,7 @@ export function RangeField({
         tabIndex={disabled ? -1 : 0}
       >
         <div aria-hidden="true" className={styles.snapRangeCenterLine} />
-        <div
-          className={styles.snapRangeScroller}
-          onScroll={handleScroll}
-          ref={scrollerRef}
-        >
+        <div className={styles.snapRangeScroller} onScroll={handleScroll} ref={scrollerRef}>
           {values.map((rangeValue) => {
             const distance = Math.abs(rangeValue - value);
             const isSelected = rangeValue === value;

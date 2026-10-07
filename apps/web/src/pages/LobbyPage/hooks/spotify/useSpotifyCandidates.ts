@@ -131,10 +131,7 @@ export function useSpotifyCandidates({
     );
   }
 
-  function useGeneratedCandidates(
-    mode: PlaylistQueueUpdateMode = "replace",
-    trackIds?: string[],
-  ) {
+  function useGeneratedCandidates(mode: PlaylistQueueUpdateMode = "replace", trackIds?: string[]) {
     if (!roomId || !candidateSessionId || candidateTracks.length === 0) return;
 
     const tracksToApply =

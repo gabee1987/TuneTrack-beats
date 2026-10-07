@@ -1,7 +1,4 @@
-import {
-  ClientToServerEvent,
-  type PublicRoomState,
-} from "@tunetrack/shared";
+import { ClientToServerEvent, type PublicRoomState } from "@tunetrack/shared";
 import { useCallback, useRef, useState } from "react";
 import { emitAction } from "../../../services/socket/emitAction";
 import type {
@@ -55,14 +52,12 @@ export function useGamePageActions({
   const skipTurnAction = useSkipTurnAction({ currentPlayerId, roomState });
   const transferHostAction = useTransferHostAction({ currentPlayerId, roomState });
   const isCloseRoomPendingRef = useRef(false);
-  const [closeRoomActionStatus, setCloseRoomActionStatus] =
-    useState<CloseRoomActionStatus>("idle");
+  const [closeRoomActionStatus, setCloseRoomActionStatus] = useState<CloseRoomActionStatus>("idle");
   const isBuyTimelineCardPendingRef = useRef(false);
   const [buyTimelineCardActionStatus, setBuyTimelineCardActionStatus] =
     useState<BuyTimelineCardActionStatus>("idle");
   const isSkipTrackPendingRef = useRef(false);
-  const [skipTrackActionStatus, setSkipTrackActionStatus] =
-    useState<SkipTrackActionStatus>("idle");
+  const [skipTrackActionStatus, setSkipTrackActionStatus] = useState<SkipTrackActionStatus>("idle");
   const isClaimChallengePendingRef = useRef(false);
   const [claimChallengeActionStatus, setClaimChallengeActionStatus] =
     useState<ClaimChallengeActionStatus>("idle");
@@ -70,27 +65,22 @@ export function useGamePageActions({
   const [confirmRevealActionStatus, setConfirmRevealActionStatus] =
     useState<ConfirmRevealActionStatus>("idle");
   const isPlaceCardPendingRef = useRef(false);
-  const [placeCardActionStatus, setPlaceCardActionStatus] =
-    useState<PlaceCardActionStatus>("idle");
+  const [placeCardActionStatus, setPlaceCardActionStatus] = useState<PlaceCardActionStatus>("idle");
   const isPlaceChallengePendingRef = useRef(false);
   const [placeChallengeActionStatus, setPlaceChallengeActionStatus] =
     useState<PlaceChallengeActionStatus>("idle");
   const isPlaceCardPending =
     placeCardActionStatus === "pending" || placeCardActionStatus === "retrying";
   const isConfirmRevealPending =
-    confirmRevealActionStatus === "pending" ||
-    confirmRevealActionStatus === "retrying";
+    confirmRevealActionStatus === "pending" || confirmRevealActionStatus === "retrying";
   const isClaimChallengePending =
-    claimChallengeActionStatus === "pending" ||
-    claimChallengeActionStatus === "retrying";
+    claimChallengeActionStatus === "pending" || claimChallengeActionStatus === "retrying";
   const isPlaceChallengePending =
-    placeChallengeActionStatus === "pending" ||
-    placeChallengeActionStatus === "retrying";
+    placeChallengeActionStatus === "pending" || placeChallengeActionStatus === "retrying";
   const isCloseRoomPending =
     closeRoomActionStatus === "pending" || closeRoomActionStatus === "retrying";
   const isBuyTimelineCardPending =
-    buyTimelineCardActionStatus === "pending" ||
-    buyTimelineCardActionStatus === "retrying";
+    buyTimelineCardActionStatus === "pending" || buyTimelineCardActionStatus === "retrying";
   const isSkipTrackPending =
     skipTrackActionStatus === "pending" || skipTrackActionStatus === "retrying";
 
@@ -205,14 +195,10 @@ export function useGamePageActions({
         },
       );
       setClaimChallengeActionStatus(
-        result.status === "timeout" && isSubmittedChallengeWindowCurrent()
-          ? "failed"
-          : "idle",
+        result.status === "timeout" && isSubmittedChallengeWindowCurrent() ? "failed" : "idle",
       );
     } catch {
-      setClaimChallengeActionStatus(
-        isSubmittedChallengeWindowCurrent() ? "failed" : "idle",
-      );
+      setClaimChallengeActionStatus(isSubmittedChallengeWindowCurrent() ? "failed" : "idle");
     } finally {
       isClaimChallengePendingRef.current = false;
     }
@@ -266,11 +252,7 @@ export function useGamePageActions({
   }, [canSelectChallengeSlot, roomState, selectedSlotIndex]);
 
   const handleCloseRoom = useCallback(async () => {
-    if (
-      !roomState ||
-      roomState.hostId !== currentPlayerId ||
-      isCloseRoomPendingRef.current
-    ) {
+    if (!roomState || roomState.hostId !== currentPlayerId || isCloseRoomPendingRef.current) {
       return;
     }
 
@@ -279,8 +261,7 @@ export function useGamePageActions({
     function isSubmittedRoomCurrent() {
       const currentRoomState = roomStateRef.current;
       return (
-        currentRoomState?.roomId === submittedRoomId &&
-        currentRoomState.hostId === submittedHostId
+        currentRoomState?.roomId === submittedRoomId && currentRoomState.hostId === submittedHostId
       );
     }
 
@@ -351,9 +332,7 @@ export function useGamePageActions({
       if (result.status !== "ok" && isCurrent) {
         onSkipTrackWithTtIntent?.(null);
       }
-      setSkipTrackActionStatus(
-        result.status === "timeout" && isCurrent ? "failed" : "idle",
-      );
+      setSkipTrackActionStatus(result.status === "timeout" && isCurrent ? "failed" : "idle");
     } catch {
       const isCurrent = isSubmittedTrackCurrent();
       if (isCurrent) {
@@ -425,8 +404,7 @@ export function useGamePageActions({
     handleKickPlayer: kickPlayerAction.handleKickPlayer,
     handlePlaceCard,
     handlePlaceChallenge,
-    handleResolveChallengeWindow:
-      resolveChallengeWindowAction.handleResolveChallengeWindow,
+    handleResolveChallengeWindow: resolveChallengeWindowAction.handleResolveChallengeWindow,
     handleSkipTrackWithTt,
     handleSkipTurn: skipTurnAction.handleSkipTurn,
     handleTransferHost: transferHostAction.handleTransferHost,

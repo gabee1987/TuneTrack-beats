@@ -13,11 +13,7 @@ import { useI18n } from "../../../features/i18n";
 import { localizeServerError } from "../../../features/i18n/localizedErrors";
 import { resetPlayerSession } from "../../../services/session/playerSession";
 import { rememberRoomEventToast } from "../../../services/session/roomEventToast";
-import {
-
-  getSocketClient,
-  resetSocketClient,
-} from "../../../services/socket/socketClient";
+import { getSocketClient, resetSocketClient } from "../../../services/socket/socketClient";
 import type { GameRouteState } from "../GamePage.types";
 
 interface UseGameRoomConnectionOptions {
@@ -41,9 +37,7 @@ export function useGameRoomConnection({
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(
     routeState.currentPlayerId ?? null,
   );
-  const [roomState, setRoomState] = useState<PublicRoomState | null>(
-    routeState.roomState ?? null,
-  );
+  const [roomState, setRoomState] = useState<PublicRoomState | null>(routeState.roomState ?? null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorKey, setErrorKey] = useState(0);
   const errorKeyRef = useRef(0);

@@ -258,9 +258,7 @@
 }
 
 .previewCardCorrectionSurface {
-  background-image:
-    var(--gradient-game-preview-correction-surface),
-    var(--card-gradient);
+  background-image: var(--gradient-game-preview-correction-surface), var(--card-gradient);
   background-position: center;
   background-size: cover;
 }
@@ -397,7 +395,7 @@
 }
 
 @media (orientation: portrait) and (max-width: 720px) {
-.timelineCard,
+  .timelineCard,
   .previewCard {
     width: 100%;
     min-width: 0;
@@ -408,30 +406,30 @@
     border-radius: var(--radius-sm);
   }
 
-.previewCardFaceSurface {
+  .previewCardFaceSurface {
     padding: 10px 9px;
   }
 
-.timelineCard {
+  .timelineCard {
     box-shadow: var(--shadow-raised);
   }
 
-.previewCardFace {
+  .previewCardFace {
     gap: 4px;
   }
 
-.previewCardArtist,
+  .previewCardArtist,
   .timelineArtist {
     font-size: clamp(9px, 2.6vw, 11px);
     line-height: 1.2;
   }
 
-.previewCardAlbum {
+  .previewCardAlbum {
     font-size: 9px;
     line-height: 1.2;
   }
 
-.previewCardTitle,
+  .previewCardTitle,
   .timelineTitle {
     font-size: clamp(9px, 2.8vw, 11px);
     line-height: 1.12;
@@ -441,25 +439,24 @@
     -webkit-line-clamp: 2;
   }
 
-.previewCardYear,
+  .previewCardYear,
   .yearText {
     font-size: clamp(20px, 6vw, 28px);
   }
 
-.previewCardMysteryMark {
+  .previewCardMysteryMark {
     font-size: clamp(34px, 11vw, 50px);
   }
 
-.previewCardMetaPill {
+  .previewCardMetaPill {
     margin-top: 4px;
     padding: 4px 7px;
     font-size: 10px;
   }
 }
 
-
 @media (prefers-reduced-motion: reduce) {
-.previewCardCorrection,
+  .previewCardCorrection,
   .previewCardCorrectionSurface,
   .previewCardReplacing,
   .timelineCardResolvedCorrect,

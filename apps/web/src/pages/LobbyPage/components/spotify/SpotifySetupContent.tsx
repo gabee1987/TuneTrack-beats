@@ -15,12 +15,7 @@ interface SpotifySetupContentProps {
 export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySetupContentProps) {
   const { t } = useI18n();
   const { auth, import: playlistImport, playlistSearch, queue, savedPlaylists } = spotifyState;
-  const {
-    authError,
-    authPhase,
-    cancelConnectSpotify,
-    connectSpotify,
-  } = auth;
+  const { authError, authPhase, cancelConnectSpotify, connectSpotify } = auth;
   const {
     clearCurrentPlaylist,
     importError,
@@ -245,7 +240,8 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
               <div className={styles.savedPlaylistOverwriteRow}>
                 <p className={styles.savedPlaylistOverwriteHint}>
                   {t("lobby.spotify.overwriteHint", {
-                    name: savedPlaylistItems.find((p) => p.id === loadedSavedPlaylistId)?.name ?? "",
+                    name:
+                      savedPlaylistItems.find((p) => p.id === loadedSavedPlaylistId)?.name ?? "",
                   })}
                 </p>
                 <div className={styles.savedPlaylistOverwriteActions}>

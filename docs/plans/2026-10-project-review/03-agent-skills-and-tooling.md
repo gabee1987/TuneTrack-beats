@@ -118,10 +118,13 @@ at runtime; the existing tree lints clean after the allowlists are seeded.
 Add to the root `package.json`:
 
 ```json
-"verify": "npm run typecheck && npm run lint && npm test",
-"verify:full": "npm run verify && npm run e2e",
-"format:check": "prettier --check ."
+"format:check": "prettier --check .",
+"check:size": "node scripts/check-file-size.mjs",
+"verify": "npm run format:check && npm run check:size && npm run typecheck && npm run lint && npm test",
+"verify:full": "npm run verify && npm run e2e"
 ```
+
+`check:size` is the 700-line gate from `06` §2.1. Shipped 2026-10-07 (`06` T1).
 
 Rules: the script runs the workspaces in dependency order (npm does this through
 `--workspaces`), never swallows a failure, and prints nothing beyond the tools' own output.

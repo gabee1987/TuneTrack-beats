@@ -26,13 +26,12 @@
 .lineMedium,
 .actionBlock {
   border-radius: 18px;
-  background:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--color-surface-strong) 68%, transparent),
-      color-mix(in srgb, var(--color-surface-elevated) 92%, transparent),
-      color-mix(in srgb, var(--color-surface-strong) 68%, transparent)
-    );
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-surface-strong) 68%, transparent),
+    color-mix(in srgb, var(--color-surface-elevated) 92%, transparent),
+    color-mix(in srgb, var(--color-surface-strong) 68%, transparent)
+  );
   background-size: 220% 100%;
   animation: skeletonPulse 1.3s ease-in-out infinite;
   outline: 1px solid color-mix(in srgb, var(--color-border-subtle) 72%, transparent);

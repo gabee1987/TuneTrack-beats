@@ -26,10 +26,7 @@ export class TurnFlowService {
     const timelines: Record<string, TimelineCard[]> = {};
 
     for (const player of startGameInput.players) {
-      timelines[player.id] = drawStartingTimelineCards(
-        deck,
-        player.startingTimelineCardCount,
-      );
+      timelines[player.id] = drawStartingTimelineCards(deck, player.startingTimelineCardCount);
     }
 
     return {
@@ -106,8 +103,7 @@ export class TurnFlowService {
         originalValidSlotIndexes: placementResult.validSlotIndexes,
         challengerPlayerId: null,
         challengerSelectedSlotIndex: null,
-        challengeDeadlineEpochMs:
-          placeCardOptions.challengeDeadlineEpochMs ?? null,
+        challengeDeadlineEpochMs: placeCardOptions.challengeDeadlineEpochMs ?? null,
       };
 
       return {
@@ -148,8 +144,7 @@ export class TurnFlowService {
       revealState,
       history: [...gameState.history, revealState],
       winnerPlayerId:
-        placementResult.isCorrect &&
-        nextTimeline.length >= gameState.targetTimelineCardCount
+        placementResult.isCorrect && nextTimeline.length >= gameState.targetTimelineCardCount
           ? playerId
           : null,
     };
@@ -175,10 +170,7 @@ export class TurnFlowService {
       phase: "turn",
       currentTrackCard: drawNextCard(gameState.deck),
       turn: {
-        activePlayerId: findNextActivePlayerId(
-          gameState.players,
-          gameState.turn.activePlayerId,
-        ),
+        activePlayerId: findNextActivePlayerId(gameState.players, gameState.turn.activePlayerId),
         turnNumber: gameState.turn.turnNumber + 1,
         hasUsedSkipTrackWithTt: false,
       },
@@ -187,10 +179,7 @@ export class TurnFlowService {
     };
   }
 
-  public advanceTurnToPlayer(
-    gameState: GameState,
-    nextActivePlayerId: string,
-  ): GameState {
+  public advanceTurnToPlayer(gameState: GameState, nextActivePlayerId: string): GameState {
     if (gameState.phase !== "turn" || !gameState.turn) {
       throw new Error("GAME_NOT_IN_TURN_PHASE");
     }

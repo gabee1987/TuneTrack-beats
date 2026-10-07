@@ -50,21 +50,12 @@ export function useGamePageTransitionEvents({
   shouldAnimateCelebrationCardToMine,
   onSkipTrackTransitionDetected,
 }: UseGamePageTransitionEventsOptions): UseGamePageTransitionEventsResult {
-  const [previewCardTransitionEvent, setPreviewCardTransitionEvent] = useState<
-    UseGamePageControllerResult["previewCardTransitionEvent"]
-  >(null);
-  const [
-    timelinePreviewTransitionEvent,
-    setTimelinePreviewTransitionEvent,
-  ] = useState<UseGamePageControllerResult["timelinePreviewTransitionEvent"]>(
-    null,
-  );
-  const [
-    timelineCelebrationTransitionEvent,
-    setTimelineCelebrationTransitionEvent,
-  ] = useState<UseGamePageControllerResult["timelineCelebrationTransitionEvent"]>(
-    null,
-  );
+  const [previewCardTransitionEvent, setPreviewCardTransitionEvent] =
+    useState<UseGamePageControllerResult["previewCardTransitionEvent"]>(null);
+  const [timelinePreviewTransitionEvent, setTimelinePreviewTransitionEvent] =
+    useState<UseGamePageControllerResult["timelinePreviewTransitionEvent"]>(null);
+  const [timelineCelebrationTransitionEvent, setTimelineCelebrationTransitionEvent] =
+    useState<UseGamePageControllerResult["timelineCelebrationTransitionEvent"]>(null);
   const previewCardTransitionEventKeyRef = useRef(0);
   const timelinePreviewEventKeyRef = useRef(0);
   const timelineCelebrationEventKeyRef = useRef(0);
@@ -86,12 +77,7 @@ export function useGamePageTransitionEvents({
     previewCardTransitionEventKeyRef.current = nextEvent.eventKey;
     setPreviewCardTransitionEvent(nextEvent);
     onSkipTrackTransitionDetected();
-  }, [
-    currentTrackId,
-    onSkipTrackTransitionDetected,
-    pendingSkippedTrackId,
-    roomStatus,
-  ]);
+  }, [currentTrackId, onSkipTrackTransitionDetected, pendingSkippedTrackId, roomStatus]);
 
   useEffect(() => {
     if (

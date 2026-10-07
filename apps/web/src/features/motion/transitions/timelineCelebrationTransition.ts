@@ -41,9 +41,7 @@ export function createTimelineCelebrationVariants(
   };
 }
 
-export function createTimelineCelebrationTransition(
-  reduceMotion: boolean,
-): Transition {
+export function createTimelineCelebrationTransition(reduceMotion: boolean): Transition {
   return {
     duration: reduceMotion ? motionDurations.quick : 1.9,
     ease: "easeInOut",
@@ -69,9 +67,7 @@ export function createTimelineFlyAnimationVariants(
   };
 }
 
-export function createTimelineFlyAnimationTransition(
-  reduceMotion: boolean,
-): Transition {
+export function createTimelineFlyAnimationTransition(reduceMotion: boolean): Transition {
   return {
     duration: reduceMotion ? motionDurations.quick : motionDurations.expressive,
     ease: motionEasings.emphasized,
@@ -111,9 +107,7 @@ export function createCorrectPlacementCardVariants(
   };
 }
 
-export function createCorrectPlacementCardTransition(
-  reduceMotion: boolean,
-): Transition {
+export function createCorrectPlacementCardTransition(reduceMotion: boolean): Transition {
   if (reduceMotion) {
     return {
       duration: motionDurations.quick,
@@ -161,9 +155,7 @@ export function createCorrectPlacementFillVariants(
   };
 }
 
-export function createCorrectPlacementFillTransition(
-  reduceMotion: boolean,
-): Transition {
+export function createCorrectPlacementFillTransition(reduceMotion: boolean): Transition {
   if (reduceMotion) {
     return {
       duration: motionDurations.quick,
@@ -202,9 +194,7 @@ export function createCorrectPlacementContentVariants(
   };
 }
 
-export function createCorrectPlacementContentTransition(
-  reduceMotion: boolean,
-): Transition {
+export function createCorrectPlacementContentTransition(reduceMotion: boolean): Transition {
   if (reduceMotion) {
     return {
       duration: motionDurations.quick,
@@ -242,9 +232,7 @@ export function createCorrectPlacementShellContentVariants(
   };
 }
 
-export function createCorrectPlacementShellContentTransition(
-  reduceMotion: boolean,
-): Transition {
+export function createCorrectPlacementShellContentTransition(reduceMotion: boolean): Transition {
   if (reduceMotion) {
     return {
       duration: motionDurations.quick,
@@ -253,8 +241,7 @@ export function createCorrectPlacementShellContentTransition(
   }
 
   return {
-    duration:
-      timelineCelebrationTransitionContract.correctPlacementShellContentDurationSeconds,
+    duration: timelineCelebrationTransitionContract.correctPlacementShellContentDurationSeconds,
     ease: [0.2, 0.82, 0.24, 1],
     times: [0, 0.34, 0.74, 1],
     delay: 0,

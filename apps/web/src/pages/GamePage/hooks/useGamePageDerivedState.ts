@@ -168,15 +168,12 @@ export function useGamePageDerivedState({
     handlers,
     roomState,
   });
-  const {
-    canChangeTimelineView,
-    canToggleTimelineView,
-    isViewingOwnTimeline,
-  } = useGamePageTimelineViewMode({
-    canSelectChallengeSlot: capabilityState.canSelectChallengeSlot,
-    showOwnTimeline,
-    timelineView,
-  });
+  const { canChangeTimelineView, canToggleTimelineView, isViewingOwnTimeline } =
+    useGamePageTimelineViewMode({
+      canSelectChallengeSlot: capabilityState.canSelectChallengeSlot,
+      showOwnTimeline,
+      timelineView,
+    });
   const displayState = useGamePageDisplayState({
     activePlayerId: activePlayer?.id,
     activePlayerTtCount: activePlayer?.ttTokenCount ?? 0,

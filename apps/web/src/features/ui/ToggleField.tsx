@@ -10,13 +10,7 @@ interface ToggleFieldProps {
   onChange: (checked: boolean) => void;
 }
 
-export function ToggleField({
-  checked,
-  hint,
-  info,
-  label,
-  onChange,
-}: ToggleFieldProps) {
+export function ToggleField({ checked, hint, info, label, onChange }: ToggleFieldProps) {
   return (
     <label className={styles.toggleField}>
       <div className={styles.toggleCopy}>

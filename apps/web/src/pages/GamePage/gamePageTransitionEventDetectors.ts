@@ -47,11 +47,7 @@ export function detectSkipTrackPreviewTransitionEvent({
     return null;
   }
 
-  return createSkipTrackPreviewCardTransitionEvent(
-    eventKey,
-    pendingSkippedTrackId,
-    currentTrackId,
-  );
+  return createSkipTrackPreviewCardTransitionEvent(eventKey, pendingSkippedTrackId, currentTrackId);
 }
 
 export function detectTimelineCelebrationTransitionEvent({
@@ -97,9 +93,7 @@ export function detectTimelinePreviewTransitionEvent({
     eventKey,
     previewCard,
     previewSlot,
-    reason: showCorrectionPreview
-      ? "reveal_correction_preview"
-      : "reveal_correct_preview",
+    reason: showCorrectionPreview ? "reveal_correction_preview" : "reveal_correct_preview",
     showCorrectPlacementPreview,
     showCorrectionPreview,
     showRevealedContent: showCorrectionPreview,

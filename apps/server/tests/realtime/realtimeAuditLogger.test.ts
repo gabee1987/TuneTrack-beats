@@ -16,9 +16,8 @@ vi.mock("../../src/app/axiomLogSink.js", () => ({
 
 process.env["ENABLE_EVENT_AUDIT"] = "true";
 
-const { logRejectedSocketEvent, registerSocketAuditMiddleware } = await import(
-  "../../src/realtime/realtimeAuditLogger.js"
-);
+const { logRejectedSocketEvent, registerSocketAuditMiddleware } =
+  await import("../../src/realtime/realtimeAuditLogger.js");
 
 interface AuditRecord {
   eventId?: string;

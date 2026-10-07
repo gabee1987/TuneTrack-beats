@@ -5,9 +5,7 @@ import {
   getGamePageRevealTimelineState,
 } from "./gamePageTimelineSelectors";
 
-function createRoomState(
-  overrides: Partial<PublicRoomState> = {},
-): PublicRoomState {
+function createRoomState(overrides: Partial<PublicRoomState> = {}): PublicRoomState {
   return {
     roomId: "ROOM1",
     status: "turn",

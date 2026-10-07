@@ -1,7 +1,9 @@
 .screenShell {
   min-height: var(--app-height);
-  padding: calc(var(--safe-area-top) + var(--space-4)) calc(var(--safe-area-right) + var(--space-screen-gutter))
-    calc(var(--safe-area-bottom) + var(--space-6)) calc(var(--safe-area-left) + var(--space-screen-gutter));
+  padding: calc(var(--safe-area-top) + var(--space-4))
+    calc(var(--safe-area-right) + var(--space-screen-gutter))
+    calc(var(--safe-area-bottom) + var(--space-6))
+    calc(var(--safe-area-left) + var(--space-screen-gutter));
   background: var(--gradient-app-background);
 }
 
@@ -99,8 +101,9 @@
 
 @media (max-width: 560px) {
   .screenShell {
-    padding: calc(var(--safe-area-top) + var(--space-3)) calc(var(--safe-area-right) + var(--space-3))
-      calc(var(--safe-area-bottom) + var(--space-4)) calc(var(--safe-area-left) + var(--space-3));
+    padding: calc(var(--safe-area-top) + var(--space-3))
+      calc(var(--safe-area-right) + var(--space-3)) calc(var(--safe-area-bottom) + var(--space-4))
+      calc(var(--safe-area-left) + var(--space-3));
   }
 
   .panelShell {

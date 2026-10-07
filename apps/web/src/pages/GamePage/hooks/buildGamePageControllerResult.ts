@@ -1,7 +1,4 @@
-import type {
-  UseGamePageControllerResult,
-  TimelineView,
-} from "../GamePage.types";
+import type { UseGamePageControllerResult, TimelineView } from "../GamePage.types";
 import type { PublicRoomState } from "@tunetrack/shared";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import type {

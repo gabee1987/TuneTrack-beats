@@ -1,10 +1,5 @@
 import type { GameState, GameTrackCard } from "@tunetrack/game-engine";
-import type {
-  ActionAck,
-  PublicRoomState,
-  PublicRoomSummary,
-  RoomId,
-} from "@tunetrack/shared";
+import type { ActionAck, PublicRoomState, PublicRoomSummary, RoomId } from "@tunetrack/shared";
 
 export interface SocketRoomMembership {
   playerId: string;
@@ -37,10 +32,7 @@ export interface KickPlayerResult {
 export class RoomStore {
   private static readonly MAX_PROCESSED_ACTION_COUNT = 32;
 
-  private readonly processedActionAcksByRoomId = new Map<
-    RoomId,
-    Map<string, ActionAck>
-  >();
+  private readonly processedActionAcksByRoomId = new Map<RoomId, Map<string, ActionAck>>();
   private readonly roomsById = new Map<RoomId, RoomRecord>();
   private readonly roomRedirectsById = new Map<RoomId, RoomId>();
   private readonly socketMemberships = new Map<string, SocketRoomMembership>();
@@ -67,10 +59,7 @@ export class RoomStore {
     this.processedActionAcksByRoomId.delete(roomId);
   }
 
-  public getProcessedActionAck(
-    roomId: RoomId,
-    requestId: string,
-  ): ActionAck | undefined {
+  public getProcessedActionAck(roomId: RoomId, requestId: string): ActionAck | undefined {
     const roomAcks = this.processedActionAcksByRoomId.get(roomId);
     const ack = roomAcks?.get(requestId);
     if (!roomAcks || !ack) {

@@ -21,8 +21,7 @@ export function resolvePageLayoutMode({
 
   if (
     isCoarsePointer &&
-    (viewportWidth <= MOBILE_LAYOUT_MAX_WIDTH ||
-      viewportHeight <= MOBILE_LAYOUT_MAX_HEIGHT)
+    (viewportWidth <= MOBILE_LAYOUT_MAX_WIDTH || viewportHeight <= MOBILE_LAYOUT_MAX_HEIGHT)
   ) {
     return "mobile";
   }

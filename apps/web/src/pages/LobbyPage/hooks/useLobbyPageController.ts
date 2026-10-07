@@ -39,9 +39,7 @@ export function useLobbyPageController(): LobbyPageController {
   const queryDisplayName = searchParams.get("playerName")?.trim() ?? "";
   const displayName = storedDisplayName || queryDisplayName;
   const routeState = (location.state ?? {}) as { intent?: "create" };
-  const intentRef = useRef<"create" | "join">(
-    routeState.intent === "create" ? "create" : "join",
-  );
+  const intentRef = useRef<"create" | "join">(routeState.intent === "create" ? "create" : "join");
   const intent = intentRef.current;
   const playerSessionId = useMemo(() => getOrCreatePlayerSessionId(), []);
   const {

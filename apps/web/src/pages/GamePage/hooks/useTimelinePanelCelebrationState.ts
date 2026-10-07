@@ -19,19 +19,15 @@ export function useTimelinePanelCelebrationState({
 }: UseTimelinePanelCelebrationStateOptions) {
   const [activeCelebrationEvent, setActiveCelebrationEvent] =
     useState<TimelineCelebrationTransitionEvent | null>(null);
-  const [flyAnimationState, setFlyAnimationState] =
-    useState<TimelineFlyAnimationState | null>(null);
-  const previewCardRectRef = useRef<DOMRect | null>(null);
-  const lastHandledEventKeyRef = useRef<number | null>(
-    transitionEvent?.eventKey ?? null,
+  const [flyAnimationState, setFlyAnimationState] = useState<TimelineFlyAnimationState | null>(
+    null,
   );
+  const previewCardRectRef = useRef<DOMRect | null>(null);
+  const lastHandledEventKeyRef = useRef<number | null>(transitionEvent?.eventKey ?? null);
   const mineButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
-    if (!shouldHandleTimelineCelebrationEvent(
-      lastHandledEventKeyRef.current,
-      transitionEvent,
-    )) {
+    if (!shouldHandleTimelineCelebrationEvent(lastHandledEventKeyRef.current, transitionEvent)) {
       return;
     }
 

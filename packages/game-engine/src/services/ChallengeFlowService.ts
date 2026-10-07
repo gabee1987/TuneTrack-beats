@@ -23,9 +23,7 @@ export class ChallengeFlowService {
       throw new Error("CHALLENGE_ALREADY_CLAIMED");
     }
 
-    const challenger = gameState.players.find(
-      (player) => player.id === challengerPlayerId,
-    );
+    const challenger = gameState.players.find((player) => player.id === challengerPlayerId);
 
     if (!challenger) {
       throw new Error("PLAYER_NOT_FOUND");
@@ -73,9 +71,7 @@ export class ChallengeFlowService {
       throw new Error("INVALID_SLOT_INDEX");
     }
 
-    if (
-      selectedSlotIndex === gameState.challengeState.originalSelectedSlotIndex
-    ) {
+    if (selectedSlotIndex === gameState.challengeState.originalSelectedSlotIndex) {
       throw new Error("CHALLENGE_SLOT_MUST_DIFFER");
     }
 
@@ -99,19 +95,15 @@ export class ChallengeFlowService {
     }
 
     const challengerAwardSlotIndex = challengeWasSuccessful
-      ? findFirstValidSlotIndex(
-          challengerTimeline,
-          gameState.challengeState.placedCard.releaseYear,
-        )
+      ? findFirstValidSlotIndex(challengerTimeline, gameState.challengeState.placedCard.releaseYear)
       : null;
-    const nextOriginalTimeline =
-      gameState.challengeState.originalWasCorrect
-        ? insertTimelineCard(
-            originalTimeline,
-            gameState.challengeState.originalSelectedSlotIndex,
-            gameState.challengeState.placedCard,
-          )
-        : [...originalTimeline];
+    const nextOriginalTimeline = gameState.challengeState.originalWasCorrect
+      ? insertTimelineCard(
+          originalTimeline,
+          gameState.challengeState.originalSelectedSlotIndex,
+          gameState.challengeState.placedCard,
+        )
+      : [...originalTimeline];
     const nextChallengerTimeline =
       challengeWasSuccessful && challengerAwardSlotIndex !== null
         ? insertTimelineCard(
@@ -157,8 +149,7 @@ export class ChallengeFlowService {
       revealState,
       history: [...gameState.history, revealState],
       winnerPlayerId:
-        challengeWasSuccessful &&
-        nextChallengerTimeline.length >= gameState.targetTimelineCardCount
+        challengeWasSuccessful && nextChallengerTimeline.length >= gameState.targetTimelineCardCount
           ? challengerPlayerId
           : gameState.challengeState.originalWasCorrect &&
               nextOriginalTimeline.length >= gameState.targetTimelineCardCount
@@ -205,9 +196,7 @@ export class ChallengeFlowService {
       challengerSelectedSlotIndex: null,
       challengeWasSuccessful: null,
       challengerTtChange: 0,
-      awardedPlayerId: gameState.challengeState.originalWasCorrect
-        ? originalPlayerId
-        : null,
+      awardedPlayerId: gameState.challengeState.originalWasCorrect ? originalPlayerId : null,
       awardedSlotIndex: gameState.challengeState.originalWasCorrect
         ? gameState.challengeState.originalSelectedSlotIndex
         : null,

@@ -78,9 +78,7 @@ export function HostPlaybackProvider({
     };
   }, [enabled]);
 
-  return (
-    <HostPlaybackContext.Provider value={playback}>{children}</HostPlaybackContext.Provider>
-  );
+  return <HostPlaybackContext.Provider value={playback}>{children}</HostPlaybackContext.Provider>;
 }
 
 export function useHostPlaybackContext(): HostPlaybackState {

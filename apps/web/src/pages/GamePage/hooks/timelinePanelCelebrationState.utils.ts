@@ -18,9 +18,7 @@ export function shouldHandleTimelineCelebrationEvent(
   lastHandledEventKey: number | null,
   transitionEvent: TimelineCelebrationTransitionEvent | null,
 ): transitionEvent is TimelineCelebrationTransitionEvent {
-  return Boolean(
-    transitionEvent && transitionEvent.eventKey !== lastHandledEventKey,
-  );
+  return Boolean(transitionEvent && transitionEvent.eventKey !== lastHandledEventKey);
 }
 
 export function createTimelineCelebrationFlyAnimationState({

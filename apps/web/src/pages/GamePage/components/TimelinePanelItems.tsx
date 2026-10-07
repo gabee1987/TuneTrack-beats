@@ -40,10 +40,7 @@ function TimelinePanelItemsComponent({
   const firstTimelineItemId = itemViewModels.find((item) => !item.isPreview)?.id;
 
   return (
-    <SortableContext
-      items={orderedItemIds}
-      strategy={rectSortingStrategy}
-    >
+    <SortableContext items={orderedItemIds} strategy={rectSortingStrategy}>
       {itemViewModels.map((item) => (
         <TimelineSortableItem
           card={item.card}
@@ -61,9 +58,7 @@ function TimelinePanelItemsComponent({
           {...(onCardInfoRequest ? { onCardInfoRequest } : {})}
           previewCardTransitionEvent={model.previewCardTransitionEvent}
           selectable={model.selectable}
-          shouldAnimateCorrectPlacement={Boolean(
-            model.shouldAnimateCorrectPlacement,
-          )}
+          shouldAnimateCorrectPlacement={Boolean(model.shouldAnimateCorrectPlacement)}
           showCorrectPlacementPreview={model.showCorrectPlacementPreview}
           showCorrectionPreview={model.showCorrectionPreview}
           showDevAlbumInfo={model.showDevAlbumInfo}

@@ -32,9 +32,7 @@ export function FinishedStatePanel({
 
   return (
     <section className={styles.revealPanel}>
-      {showHelperLabels ? (
-        <p className={styles.sectionLabel}>{t("game.finished.label")}</p>
-      ) : null}
+      {showHelperLabels ? <p className={styles.sectionLabel}>{t("game.finished.label")}</p> : null}
       <h2 className={styles.cardTitle}>{titleText}</h2>
     </section>
   );

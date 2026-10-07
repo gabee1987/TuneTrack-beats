@@ -38,9 +38,7 @@ describe("extractSpotifyPlaylistId", () => {
 
   describe("spotify: URI format", () => {
     it("extracts id from a spotify URI", () => {
-      const result = extractSpotifyPlaylistId(
-        "spotify:playlist:37i9dQZF1DXcBWIGoYBM5M",
-      );
+      const result = extractSpotifyPlaylistId("spotify:playlist:37i9dQZF1DXcBWIGoYBM5M");
 
       expect(result).toBe("37i9dQZF1DXcBWIGoYBM5M");
     });
@@ -53,17 +51,13 @@ describe("extractSpotifyPlaylistId", () => {
 
     it("returns null for a Spotify track URL (not a playlist)", () => {
       expect(
-        extractSpotifyPlaylistId(
-          "https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC",
-        ),
+        extractSpotifyPlaylistId("https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC"),
       ).toBeNull();
     });
 
     it("returns null for a Spotify album URL", () => {
       expect(
-        extractSpotifyPlaylistId(
-          "https://open.spotify.com/album/4uLU6hMCjMI75M1A2tKUQC",
-        ),
+        extractSpotifyPlaylistId("https://open.spotify.com/album/4uLU6hMCjMI75M1A2tKUQC"),
       ).toBeNull();
     });
 

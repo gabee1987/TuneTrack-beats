@@ -22,9 +22,7 @@ const CSS_MODULE_IMPORT = /import\s+(\w+)\s+from\s+"[^"]*\.module\.css"/g;
 const SPREAD_OF_STYLES = /\.\.\.\s*(\w+)/g;
 
 function isCssModuleBarrel(contents: string): boolean {
-  const importedNames = new Set(
-    [...contents.matchAll(CSS_MODULE_IMPORT)].map(([, name]) => name),
-  );
+  const importedNames = new Set([...contents.matchAll(CSS_MODULE_IMPORT)].map(([, name]) => name));
 
   if (importedNames.size < 2) {
     return false;

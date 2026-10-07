@@ -233,40 +233,40 @@
 }
 
 @media (max-width: 440px) {
-.spotifyImportRow {
+  .spotifyImportRow {
     grid-template-columns: 1fr;
   }
 
-.spotifyPlaylistEditorEntry {
+  .spotifyPlaylistEditorEntry {
     grid-template-columns: 1fr;
     align-items: stretch;
   }
 
-.spotifyPlaylistEditorActions {
+  .spotifyPlaylistEditorActions {
     display: grid;
     grid-template-columns: 1fr 1fr;
   }
 
-.spotifyImportBtn,
+  .spotifyImportBtn,
   .spotifyEditBtn,
   .spotifyPlaylistEditorBtn {
     width: 100%;
   }
 
-.spotifyEditRow {
+  .spotifyEditRow {
     display: grid;
     grid-template-columns: 1fr;
   }
 
-.savedPlaylistActions {
+  .savedPlaylistActions {
     flex-direction: column;
   }
 
-.savedPlaylistActions button {
+  .savedPlaylistActions button {
     width: 100%;
   }
 
-.savedPlaylistNameRow {
+  .savedPlaylistNameRow {
     grid-template-columns: 1fr;
   }
 }

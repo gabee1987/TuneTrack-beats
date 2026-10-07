@@ -10,9 +10,7 @@ export const router = createBrowserRouter([
       {
         index: true,
         lazy: async () => {
-          const { HomePage } = await loadLazyRoute(() =>
-            import("../pages/HomePage/HomePage"),
-          );
+          const { HomePage } = await loadLazyRoute(() => import("../pages/HomePage/HomePage"));
 
           return {
             Component: HomePage,
@@ -22,9 +20,7 @@ export const router = createBrowserRouter([
       {
         path: "play",
         lazy: async () => {
-          const { PlayPage } = await loadLazyRoute(() =>
-            import("../pages/PlayPage/PlayPage"),
-          );
+          const { PlayPage } = await loadLazyRoute(() => import("../pages/PlayPage/PlayPage"));
 
           return {
             Component: PlayPage,
@@ -34,8 +30,8 @@ export const router = createBrowserRouter([
       {
         path: "join/:roomId",
         lazy: async () => {
-          const { JoinRoomPage } = await loadLazyRoute(() =>
-            import("../pages/JoinRoomPage/JoinRoomPage"),
+          const { JoinRoomPage } = await loadLazyRoute(
+            () => import("../pages/JoinRoomPage/JoinRoomPage"),
           );
 
           return {
@@ -46,9 +42,7 @@ export const router = createBrowserRouter([
       {
         path: "lobby/:roomId?",
         lazy: async () => {
-          const { LobbyPage } = await loadLazyRoute(() =>
-            import("../pages/LobbyPage/LobbyPage"),
-          );
+          const { LobbyPage } = await loadLazyRoute(() => import("../pages/LobbyPage/LobbyPage"));
 
           return {
             Component: LobbyPage,
@@ -58,9 +52,7 @@ export const router = createBrowserRouter([
       {
         path: "game/:roomId",
         lazy: async () => {
-          const { GamePage } = await loadLazyRoute(() =>
-            import("../pages/GamePage/GamePage"),
-          );
+          const { GamePage } = await loadLazyRoute(() => import("../pages/GamePage/GamePage"));
 
           return {
             Component: GamePage,
@@ -72,9 +64,8 @@ export const router = createBrowserRouter([
             {
               path: "dev/ui",
               lazy: async () => {
-                const { DesignSystemPage } = await import(
-                  "../pages/DesignSystemPage/DesignSystemPage"
-                );
+                const { DesignSystemPage } =
+                  await import("../pages/DesignSystemPage/DesignSystemPage");
 
                 return {
                   Component: DesignSystemPage,

@@ -70,20 +70,23 @@ export const lightThemeDefinition: ThemeDefinition = {
       "radial-gradient(circle at top left, rgba(91, 140, 255, 0.09), transparent 26%), radial-gradient(circle at bottom right, rgba(29, 185, 84, 0.08), transparent 24%), transparent",
     "gradient-hidden-card-preview-artwork":
       "radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.42), transparent 30%), radial-gradient(circle at 80% 0%, rgba(91, 140, 255, 0.28), transparent 34%), linear-gradient(135deg, rgba(91, 140, 255, 0.55) 0%, rgba(29, 185, 84, 0.42) 100%)",
-    "gradient-card-hidden":
-      "linear-gradient(145deg, #e7eef5 0%, #f2f6f9 55%, #ffffff 100%)",
+    "gradient-card-hidden": "linear-gradient(145deg, #e7eef5 0%, #f2f6f9 55%, #ffffff 100%)",
     "gradient-card-artwork-scrim":
       "linear-gradient(180deg, rgba(20, 28, 40, 0.12) 0%, rgba(20, 28, 40, 0.28) 42%, rgba(20, 28, 40, 0.78) 100%)",
 
     // Game UI
     "color-mask-solid": "#e8eef4",
     "color-game-error-text": "var(--color-status-danger-text)",
-    "color-game-card-current-outline": "color-mix(in srgb, var(--color-accent-brand) 72%, transparent)",
-    "color-game-card-challenge-outline": "color-mix(in srgb, var(--color-warning) 78%, transparent)",
+    "color-game-card-current-outline":
+      "color-mix(in srgb, var(--color-accent-brand) 72%, transparent)",
+    "color-game-card-challenge-outline":
+      "color-mix(in srgb, var(--color-warning) 78%, transparent)",
     "color-game-card-failure-outline": "color-mix(in srgb, var(--color-danger) 78%, transparent)",
-    "color-game-card-correct-outline": "color-mix(in srgb, var(--color-accent-brand) 88%, transparent)",
+    "color-game-card-correct-outline":
+      "color-mix(in srgb, var(--color-accent-brand) 88%, transparent)",
     "color-game-card-draggable-outline": "var(--color-accent-brand)",
-    "color-game-card-correction-outline": "color-mix(in srgb, var(--color-danger) 82%, transparent)",
+    "color-game-card-correction-outline":
+      "color-mix(in srgb, var(--color-danger) 82%, transparent)",
     "color-game-preview-scrim": "rgba(232, 238, 244, 0.52)",
     "gradient-game-preview-correction-surface":
       "linear-gradient(135deg, color-mix(in srgb, var(--color-danger) 18%, transparent) 0%, color-mix(in srgb, var(--color-warning) 12%, transparent) 100%)",

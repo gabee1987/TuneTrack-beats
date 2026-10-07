@@ -10,11 +10,7 @@ import {
 } from "./gameFlowHelpers.js";
 
 export class TtActionService {
-  public awardTtTokens(
-    gameState: GameState,
-    playerId: string,
-    tokenAmount: number,
-  ): GameState {
+  public awardTtTokens(gameState: GameState, playerId: string, tokenAmount: number): GameState {
     if (!Number.isInteger(tokenAmount) || tokenAmount === 0) {
       throw new Error("INVALID_TT_AMOUNT");
     }
@@ -25,10 +21,7 @@ export class TtActionService {
     };
   }
 
-  public skipCurrentTrackWithTt(
-    gameState: GameState,
-    playerId: string,
-  ): GameState {
+  public skipCurrentTrackWithTt(gameState: GameState, playerId: string): GameState {
     if (gameState.phase !== "turn" || !gameState.turn) {
       throw new Error("GAME_NOT_IN_TURN_PHASE");
     }
@@ -66,10 +59,7 @@ export class TtActionService {
     };
   }
 
-  public buyTimelineCardWithTt(
-    gameState: GameState,
-    playerId: string,
-  ): GameState {
+  public buyTimelineCardWithTt(gameState: GameState, playerId: string): GameState {
     if (gameState.phase !== "turn" || !gameState.turn) {
       throw new Error("GAME_NOT_IN_TURN_PHASE");
     }
@@ -92,19 +82,12 @@ export class TtActionService {
       throw new Error("CURRENT_CARD_NOT_AVAILABLE");
     }
 
-    const awardedSlotIndex = findFirstValidSlotIndex(
-      playerTimeline,
-      boughtTrackCard.releaseYear,
-    );
+    const awardedSlotIndex = findFirstValidSlotIndex(playerTimeline, boughtTrackCard.releaseYear);
     const boughtTimelineCard: TimelineCard = {
       id: boughtTrackCard.id,
       releaseYear: boughtTrackCard.releaseYear,
     };
-    const nextTimeline = insertTimelineCard(
-      playerTimeline,
-      awardedSlotIndex,
-      boughtTimelineCard,
-    );
+    const nextTimeline = insertTimelineCard(playerTimeline, awardedSlotIndex, boughtTimelineCard);
     const revealState: RevealState = {
       playerId,
       placedCard: boughtTimelineCard,
@@ -133,10 +116,7 @@ export class TtActionService {
       challengeState: null,
       revealState,
       history: [...gameState.history, revealState],
-      winnerPlayerId:
-        nextTimeline.length >= gameState.targetTimelineCardCount
-          ? playerId
-          : null,
+      winnerPlayerId: nextTimeline.length >= gameState.targetTimelineCardCount ? playerId : null,
     };
   }
 }

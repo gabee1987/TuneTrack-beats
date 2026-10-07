@@ -20,9 +20,7 @@ export function TokenCountAmount({
       className={`${styles.tokenCount}${className ? ` ${className}` : ""}`}
     >
       <span aria-hidden="true">{amount}</span>
-      <TtTokenIcon
-        className={`${styles.tokenIcon}${iconClassName ? ` ${iconClassName}` : ""}`}
-      />
+      <TtTokenIcon className={`${styles.tokenIcon}${iconClassName ? ` ${iconClassName}` : ""}`} />
     </span>
   );
 }

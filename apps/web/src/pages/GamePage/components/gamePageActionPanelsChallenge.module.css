@@ -327,8 +327,8 @@
 }
 
 @media (max-width: 720px), (hover: none) and (pointer: coarse) {
-.challengeCallout {
-  position: fixed;
+  .challengeCallout {
+    position: fixed;
     left: max(16px, var(--safe-area-left));
     right: max(16px, var(--safe-area-right));
     bottom: calc(var(--safe-area-bottom) + 86px);
@@ -338,60 +338,57 @@
     /* overflow-y: auto; */
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
+  }
 }
-}
-
 
 @media (max-width: 720px) and (max-height: 700px),
   (hover: none) and (pointer: coarse) and (max-height: 700px) {
-.challengeCallout {
-  bottom: calc(var(--safe-area-bottom) + 68px);
+  .challengeCallout {
+    bottom: calc(var(--safe-area-bottom) + 68px);
     max-height: calc(100svh - var(--safe-area-top) - var(--safe-area-bottom) - 82px);
     padding: 12px;
     border-radius: 22px;
+  }
 }
-}
-
 
 @media (max-height: 420px) and (orientation: landscape) {
-.challengeCallout {
-  left: max(10px, var(--safe-area-left));
+  .challengeCallout {
+    left: max(10px, var(--safe-area-left));
     right: max(10px, var(--safe-area-right));
     bottom: calc(var(--safe-area-bottom) + 54px);
     max-height: calc(100svh - var(--safe-area-top) - var(--safe-area-bottom) - 62px);
     padding: 10px;
     border-radius: 18px;
-}
+  }
 
-.challengeCalloutInner {
-  gap: 5px;
-}
+  .challengeCalloutInner {
+    gap: 5px;
+  }
 
-.challengeTitle {
-  font-size: 16px;
-}
+  .challengeTitle {
+    font-size: 16px;
+  }
 
-.challengeText {
-  font-size: 12px;
-}
+  .challengeText {
+    font-size: 12px;
+  }
 
-.challengeMetaRow {
-  gap: 6px;
+  .challengeMetaRow {
+    gap: 6px;
     margin-top: 6px;
-}
+  }
 
-.challengeCountdownBadge,
+  .challengeCountdownBadge,
   .challengeTokenChip {
-  min-height: 28px;
+    min-height: 28px;
     padding: 6px 8px;
     font-size: 10px;
+  }
 }
-}
-
 
 @media (max-width: 720px), (hover: none) and (pointer: coarse) {
-.offlinePlayerPanel {
-  position: fixed;
+  .offlinePlayerPanel {
+    position: fixed;
     left: max(var(--space-3), var(--safe-area-left));
     right: max(var(--space-3), var(--safe-area-right));
     bottom: calc(var(--safe-area-bottom) + 94px);
@@ -399,12 +396,11 @@
     margin: 0;
     background: var(--color-surface-elevated-solid);
     box-shadow: var(--shadow-overlay);
+  }
 }
-}
-
 
 @media (prefers-reduced-motion: reduce) {
-.challengePulseBorder {
-  animation: none;
-}
+  .challengePulseBorder {
+    animation: none;
+  }
 }

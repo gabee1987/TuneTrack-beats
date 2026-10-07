@@ -1,10 +1,7 @@
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { useI18n } from "../../../features/i18n";
-import {
-  MotionPresence,
-  useReducedMotionPreference,
-} from "../../../features/motion";
+import { MotionPresence, useReducedMotionPreference } from "../../../features/motion";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import type { GamePageCard } from "../GamePage.types";
 import styles from "./SongInfoModal.module.css";

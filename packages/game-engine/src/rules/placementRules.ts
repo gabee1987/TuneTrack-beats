@@ -40,19 +40,13 @@ export function collectValidSlotIndexes(
     return [insertionUpperBound];
   }
 
-  const lastEqualYearIndex = findLastEqualYearIndex(
-    timelineCards,
-    candidateReleaseYear,
-  );
+  const lastEqualYearIndex = findLastEqualYearIndex(timelineCards, candidateReleaseYear);
 
   return createInclusiveNumberRange(firstEqualYearIndex, lastEqualYearIndex + 1);
 }
 
 function createInclusiveNumberRange(startValue: number, endValue: number): number[] {
-  return Array.from(
-    { length: endValue - startValue + 1 },
-    (_, offset) => startValue + offset,
-  );
+  return Array.from({ length: endValue - startValue + 1 }, (_, offset) => startValue + offset);
 }
 
 function findLastEqualYearIndex(

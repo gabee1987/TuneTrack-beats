@@ -1,7 +1,4 @@
-import type {
-  GamePageAssemblyModel,
-  LoadedGamePageController,
-} from "../GamePage.types";
+import type { GamePageAssemblyModel, LoadedGamePageController } from "../GamePage.types";
 
 export function buildGamePageAssemblyModel(
   controller: LoadedGamePageController,
@@ -43,8 +40,7 @@ export function buildGamePageAssemblyModel(
       isSkipTurnPending: controller.isSkipTurnPending,
       placeCardActionStatus: controller.placeCardActionStatus,
       placeChallengeActionStatus: controller.placeChallengeActionStatus,
-      resolveChallengeWindowActionStatus:
-        controller.resolveChallengeWindowActionStatus,
+      resolveChallengeWindowActionStatus: controller.resolveChallengeWindowActionStatus,
       skipTrackActionStatus: controller.skipTrackActionStatus,
       skipTurnActionStatus: controller.skipTurnActionStatus,
       roomState: controller.roomState,
@@ -100,16 +96,14 @@ export function buildGamePageAssemblyModel(
         hint: controller.visibleTimelineHint,
         previewCardTransitionEvent: controller.previewCardTransitionEvent,
         timelinePreviewTransitionEvent: controller.timelinePreviewTransitionEvent,
-        timelineCelebrationTransitionEvent:
-          controller.timelineCelebrationTransitionEvent,
+        timelineCelebrationTransitionEvent: controller.timelineCelebrationTransitionEvent,
         showCorrectPlacementPreview: controller.showCorrectPlacementPreview,
         showCorrectionPreview: controller.showCorrectionPreview,
         showDevAlbumInfo: controller.isHost && controller.showDevAlbumInfo,
         showDevCardInfo: controller.isHost && controller.showDevCardInfo,
         showDevGenreInfo: controller.isHost && controller.showDevGenreInfo,
         showDevYearInfo: controller.isHost && controller.showDevYearInfo,
-        showHint:
-          controller.showTimelineHints && controller.visibleTimelineHint.length > 0,
+        showHint: controller.showTimelineHints && controller.visibleTimelineHint.length > 0,
         isOwnTimeline:
           controller.currentPlayerId !== null &&
           controller.visibleTimelinePlayerId === controller.currentPlayerId,

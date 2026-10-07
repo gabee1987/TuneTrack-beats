@@ -1,9 +1,6 @@
 import { motion } from "framer-motion";
 import { createPortal } from "react-dom";
-import type {
-  HiddenCardMode,
-  ThemeId,
-} from "../../../features/preferences/uiPreferences";
+import type { HiddenCardMode, ThemeId } from "../../../features/preferences/uiPreferences";
 import {
   createTimelineFlyAnimationVariants,
   createTimelineFlyAnimationTransition,
@@ -14,13 +11,11 @@ import { PreviewCard } from "./PreviewCard";
 import styles from "./timelineStyles";
 
 interface TimelinePanelFlyAnimationProps {
-  flyAnimationState:
-    | {
-        card: GamePageCard;
-        sourceRect: DOMRect;
-        targetRect: DOMRect;
-      }
-    | null;
+  flyAnimationState: {
+    card: GamePageCard;
+    sourceRect: DOMRect;
+    targetRect: DOMRect;
+  } | null;
   showDevAlbumInfo: boolean;
   showDevGenreInfo: boolean;
   theme: ThemeId;
@@ -41,13 +36,11 @@ export function TimelinePanelFlyAnimation({
   const deltaX =
     flyAnimationState.targetRect.left +
     flyAnimationState.targetRect.width / 2 -
-    (flyAnimationState.sourceRect.left +
-      flyAnimationState.sourceRect.width / 2);
+    (flyAnimationState.sourceRect.left + flyAnimationState.sourceRect.width / 2);
   const deltaY =
     flyAnimationState.targetRect.top +
     flyAnimationState.targetRect.height / 2 -
-    (flyAnimationState.sourceRect.top +
-      flyAnimationState.sourceRect.height / 2);
+    (flyAnimationState.sourceRect.top + flyAnimationState.sourceRect.height / 2);
   const flyVariants = createTimelineFlyAnimationVariants(reduceMotion, deltaX, deltaY);
 
   return createPortal(

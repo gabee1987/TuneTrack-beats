@@ -1,6 +1,4 @@
-import {
-  type GameTrackCard,
-} from "@tunetrack/game-engine";
+import { type GameTrackCard } from "@tunetrack/game-engine";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { RoomRegistry } from "../src/rooms/RoomRegistry.js";
 
@@ -53,12 +51,7 @@ describe("challenge flow", () => {
       "host-socket",
       "host-session",
     );
-    roomRegistry.addPlayerToRoom(
-      "challenge-room",
-      "Guest Player",
-      "guest-socket",
-      "guest-session",
-    );
+    roomRegistry.addPlayerToRoom("challenge-room", "Guest Player", "guest-socket", "guest-session");
 
     roomRegistry.updateRoomSettings("host-socket", "challenge-room", {
       roomId: "challenge-room",
@@ -70,11 +63,7 @@ describe("challenge flow", () => {
       challengeWindowDurationSeconds: null,
     });
 
-    roomRegistry.startGame(
-      "host-socket",
-      { roomId: "challenge-room" },
-      challengeDeck,
-    );
+    roomRegistry.startGame("host-socket", { roomId: "challenge-room" }, challengeDeck);
 
     const challengeState = roomRegistry.placeCard("host-socket", {
       roomId: "challenge-room",
@@ -122,12 +111,7 @@ describe("challenge flow", () => {
 
   it("lets the active player resolve the challenge window when reveal confirmation allows it", () => {
     const roomRegistry = new RoomRegistry();
-    roomRegistry.createRoom(
-      "active-resolve-room",
-      "Host Player",
-      "host-socket",
-      "host-session",
-    );
+    roomRegistry.createRoom("active-resolve-room", "Host Player", "host-socket", "host-session");
     const guestJoin = roomRegistry.addPlayerToRoom(
       "active-resolve-room",
       "Guest Player",
@@ -145,11 +129,7 @@ describe("challenge flow", () => {
       challengeWindowDurationSeconds: null,
     });
 
-    roomRegistry.startGame(
-      "host-socket",
-      { roomId: "active-resolve-room" },
-      challengeDeck,
-    );
+    roomRegistry.startGame("host-socket", { roomId: "active-resolve-room" }, challengeDeck);
     roomRegistry.placeCard("host-socket", {
       roomId: "active-resolve-room",
       selectedSlotIndex: 0,
@@ -205,8 +185,7 @@ describe("challenge flow", () => {
     );
 
     expect(
-      startedGameState.players.find((player) => player.id === guestJoin.playerId)
-        ?.ttTokenCount,
+      startedGameState.players.find((player) => player.id === guestJoin.playerId)?.ttTokenCount,
     ).toBe(1);
 
     roomRegistry.placeCard("host-socket", {
@@ -256,8 +235,7 @@ describe("challenge flow", () => {
       awardedSlotIndex: 0,
     });
     expect(
-      revealState.players.find((player) => player.id === guestJoin.playerId)
-        ?.ttTokenCount,
+      revealState.players.find((player) => player.id === guestJoin.playerId)?.ttTokenCount,
     ).toBe(0);
     expect(revealState.timelines[hostJoin.playerId]).toEqual([
       {
@@ -297,26 +275,16 @@ describe("challenge flow", () => {
     vi.setSystemTime(new Date("2026-04-07T12:00:00.000Z"));
 
     const roomRegistry = new RoomRegistry();
-    let latestRoomState = null as ReturnType<
-      typeof roomRegistry["createRoom"]
-    >["roomState"] | null;
+    let latestRoomState = null as
+      | ReturnType<(typeof roomRegistry)["createRoom"]>["roomState"]
+      | null;
 
     roomRegistry.setRoomStateChangedListener((roomState) => {
       latestRoomState = roomState;
     });
 
-    roomRegistry.createRoom(
-      "timed-room",
-      "Host Player",
-      "host-socket",
-      "host-session",
-    );
-    roomRegistry.addPlayerToRoom(
-      "timed-room",
-      "Guest Player",
-      "guest-socket",
-      "guest-session",
-    );
+    roomRegistry.createRoom("timed-room", "Host Player", "host-socket", "host-session");
+    roomRegistry.addPlayerToRoom("timed-room", "Guest Player", "guest-socket", "guest-session");
 
     roomRegistry.updateRoomSettings("host-socket", "timed-room", {
       roomId: "timed-room",
@@ -353,12 +321,7 @@ describe("challenge flow", () => {
     vi.setSystemTime(new Date("2026-04-07T12:00:00.000Z"));
 
     const roomRegistry = new RoomRegistry();
-    roomRegistry.createRoom(
-      "claimed-timed-room",
-      "Host Player",
-      "host-socket",
-      "host-session",
-    );
+    roomRegistry.createRoom("claimed-timed-room", "Host Player", "host-socket", "host-session");
     roomRegistry.addPlayerToRoom(
       "claimed-timed-room",
       "Guest Player",
@@ -376,11 +339,7 @@ describe("challenge flow", () => {
       challengeWindowDurationSeconds: 1,
     });
 
-    roomRegistry.startGame(
-      "host-socket",
-      { roomId: "claimed-timed-room" },
-      challengeDeck,
-    );
+    roomRegistry.startGame("host-socket", { roomId: "claimed-timed-room" }, challengeDeck);
     roomRegistry.placeCard("host-socket", {
       roomId: "claimed-timed-room",
       selectedSlotIndex: 0,
@@ -405,4 +364,3 @@ describe("challenge flow", () => {
     );
   });
 });
-

@@ -6,10 +6,5 @@ interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export function TextInput({ className, ...props }: TextInputProps) {
-  return (
-    <input
-      {...props}
-      className={`${styles.textInput}${className ? ` ${className}` : ""}`}
-    />
-  );
+  return <input {...props} className={`${styles.textInput}${className ? ` ${className}` : ""}`} />;
 }

@@ -146,7 +146,10 @@ export function useSpotifyAuth(roomId: string | undefined) {
 
       const handleSocketError = (payload: ServerErrorPayload) => {
         if (authSessionIdRef.current !== sessionId) return;
-        if (payload.code !== "REQUEST_SPOTIFY_AUTH_URL_FAILED" && payload.code !== "INVALID_REQUEST_SPOTIFY_AUTH_URL_PAYLOAD") {
+        if (
+          payload.code !== "REQUEST_SPOTIFY_AUTH_URL_FAILED" &&
+          payload.code !== "INVALID_REQUEST_SPOTIFY_AUTH_URL_PAYLOAD"
+        ) {
           return;
         }
 

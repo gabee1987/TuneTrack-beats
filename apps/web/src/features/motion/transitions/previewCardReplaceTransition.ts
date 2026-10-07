@@ -25,9 +25,7 @@ export const previewCardReplaceTransitionContract = {
   },
 } as const;
 
-export function createPreviewCardReplaceExitMotion(
-  reduceMotion: boolean,
-): TargetAndTransition {
+export function createPreviewCardReplaceExitMotion(reduceMotion: boolean): TargetAndTransition {
   if (reduceMotion) {
     return {
       opacity: previewCardReplaceTransitionContract.exit.opacity,
@@ -49,9 +47,7 @@ export function createPreviewCardReplaceExitMotion(
   };
 }
 
-export function createPreviewCardReplaceEnterInitial(
-  reduceMotion: boolean,
-): TargetAndTransition {
+export function createPreviewCardReplaceEnterInitial(reduceMotion: boolean): TargetAndTransition {
   if (reduceMotion) {
     return {
       opacity: previewCardReplaceTransitionContract.enterInitial.opacity,
@@ -65,9 +61,7 @@ export function createPreviewCardReplaceEnterInitial(
   };
 }
 
-export function createPreviewCardReplaceEnterMotion(
-  reduceMotion: boolean,
-): TargetAndTransition {
+export function createPreviewCardReplaceEnterMotion(reduceMotion: boolean): TargetAndTransition {
   if (reduceMotion) {
     return {
       opacity: 1,

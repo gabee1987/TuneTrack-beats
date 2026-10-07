@@ -145,9 +145,7 @@ function ChallengePlacementHarness() {
         isPlaceChallengePending={actions.isPlaceChallengePending}
         isResolveChallengeWindowPending={actions.isResolveChallengeWindowPending}
         placeChallengeActionStatus={actions.placeChallengeActionStatus}
-        resolveChallengeWindowActionStatus={
-          actions.resolveChallengeWindowActionStatus
-        }
+        resolveChallengeWindowActionStatus={actions.resolveChallengeWindowActionStatus}
         roomState={roomState}
       />
     </I18nProvider>
@@ -186,9 +184,7 @@ function ChallengeClaimHarness() {
         isPlaceChallengePending={actions.isPlaceChallengePending}
         isResolveChallengeWindowPending={actions.isResolveChallengeWindowPending}
         placeChallengeActionStatus={actions.placeChallengeActionStatus}
-        resolveChallengeWindowActionStatus={
-          actions.resolveChallengeWindowActionStatus
-        }
+        resolveChallengeWindowActionStatus={actions.resolveChallengeWindowActionStatus}
         roomState={roomState}
       />
     </I18nProvider>
@@ -227,9 +223,7 @@ function ChallengeResolveHarness() {
         isPlaceChallengePending={actions.isPlaceChallengePending}
         isResolveChallengeWindowPending={actions.isResolveChallengeWindowPending}
         placeChallengeActionStatus={actions.placeChallengeActionStatus}
-        resolveChallengeWindowActionStatus={
-          actions.resolveChallengeWindowActionStatus
-        }
+        resolveChallengeWindowActionStatus={actions.resolveChallengeWindowActionStatus}
         roomState={roomState}
       />
     </I18nProvider>
@@ -788,9 +782,7 @@ describe("useGamePageActions transfer_host", () => {
     emitActionMock.mockReturnValueOnce(deferred.promise);
     render(<TransferHostHarness />);
 
-    fireEvent.click(
-      screen.getByRole("button", { name: /show host transfer controls/i }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: /show host transfer controls/i }));
     fireEvent.click(screen.getByRole("button", { name: /^transfer host$/i }));
     const dialog = screen.getByRole("dialog", { name: /transfer host controls/i });
     const confirmButton = within(dialog).getByRole("button", {
@@ -813,9 +805,7 @@ describe("useGamePageActions transfer_host", () => {
     };
     act(() => options.onTimeoutRetry?.());
 
-    expect(
-      within(dialog).getByRole("button", { name: /no response.*retrying/i }),
-    ).toBeDisabled();
+    expect(within(dialog).getByRole("button", { name: /no response.*retrying/i })).toBeDisabled();
 
     await act(async () => {
       deferred.resolve({ status: "timeout" });
@@ -844,9 +834,7 @@ describe("useGamePageActions kick_player", () => {
     emitActionMock.mockReturnValueOnce(deferred.promise);
     render(<TransferHostHarness />);
 
-    fireEvent.click(
-      screen.getByRole("button", { name: /show host transfer controls/i }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: /show host transfer controls/i }));
     fireEvent.click(screen.getByRole("button", { name: /^kick player$/i }));
     const dialog = screen.getByRole("dialog", { name: /^kick player$/i });
     const confirmButton = within(dialog).getByRole("button", {
@@ -869,9 +857,7 @@ describe("useGamePageActions kick_player", () => {
     };
     act(() => options.onTimeoutRetry?.());
 
-    expect(
-      within(dialog).getByRole("button", { name: /no response.*retrying/i }),
-    ).toBeDisabled();
+    expect(within(dialog).getByRole("button", { name: /no response.*retrying/i })).toBeDisabled();
 
     await act(async () => {
       deferred.resolve({ status: "timeout" });
@@ -899,9 +885,7 @@ describe("useGamePageActions buy_timeline_card_with_tt", () => {
     const deferred = createDeferredActionResult();
     const onTokenSpendAnimationStart = vi.fn();
     emitActionMock.mockReturnValueOnce(deferred.promise);
-    render(
-      <BuyTimelineCardHarness onTokenSpendAnimationStart={onTokenSpendAnimationStart} />,
-    );
+    render(<BuyTimelineCardHarness onTokenSpendAnimationStart={onTokenSpendAnimationStart} />);
 
     const buyButton = screen.getByRole("button", { name: /buy/i });
     fireEvent.click(buyButton);

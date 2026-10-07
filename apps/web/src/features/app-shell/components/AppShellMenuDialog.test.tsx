@@ -4,9 +4,7 @@ import { I18nProvider } from "../../i18n";
 import { AppShellMenuDialog } from "./AppShellMenuDialog";
 import type { AppShellMenuTab } from "../AppShellMenu.types";
 
-const TABS: AppShellMenuTab[] = [
-  { id: "view", label: "View", content: <p>view panel</p> },
-];
+const TABS: AppShellMenuTab[] = [{ id: "view", label: "View", content: <p>view panel</p> }];
 
 function renderDialog() {
   return render(

@@ -2,7 +2,6 @@
   margin-top: 120px;
 }
 
-
 .spotifyDiscoveryPanel {
   display: flex;
   flex-direction: column;
@@ -449,24 +448,24 @@
 }
 
 @media (max-width: 440px) {
-.spotifyPlaylistRow {
+  .spotifyPlaylistRow {
     grid-template-columns: 42px minmax(0, 1fr);
     min-height: 58px;
     padding: 8px 10px;
   }
 
-.spotifyPlaylistImageFallback {
+  .spotifyPlaylistImageFallback {
     width: 42px;
     height: 42px;
   }
 
-.spotifySmartResultRow {
+  .spotifySmartResultRow {
     grid-template-columns: 42px minmax(0, 1fr) 24px;
     gap: 8px;
     padding: 8px 10px;
   }
 
-.spotifySmartResultType {
+  .spotifySmartResultType {
     display: none;
   }
 }

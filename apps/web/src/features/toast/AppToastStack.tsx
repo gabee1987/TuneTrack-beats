@@ -1,9 +1,5 @@
 import { motion } from "framer-motion";
-import {
-  MotionPresence,
-  createToastSlideMotion,
-  useReducedMotionPreference,
-} from "../motion";
+import { MotionPresence, createToastSlideMotion, useReducedMotionPreference } from "../motion";
 import type { AppToast } from "./AppToast.types";
 import styles from "./AppToastStack.module.css";
 

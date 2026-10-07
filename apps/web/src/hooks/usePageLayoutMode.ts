@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMediaQuery } from "./useMediaQuery";
-import {
-  resolvePageLayoutMode,
-  type PageLayoutMode,
-} from "../app/layout/pageLayoutMode";
+import { resolvePageLayoutMode, type PageLayoutMode } from "../app/layout/pageLayoutMode";
 
 function getViewportSize() {
   if (typeof window === "undefined") {

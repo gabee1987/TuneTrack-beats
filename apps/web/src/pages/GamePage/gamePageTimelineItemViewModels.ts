@@ -33,8 +33,7 @@ export function buildTimelineSortableItemViewModels(
           isPreview &&
           itemIndex === model.challengerChosenSlotIndex,
         isOriginalSlot:
-          model.originalChosenSlotIndex !== null &&
-          itemIndex === model.originalChosenSlotIndex,
+          model.originalChosenSlotIndex !== null && itemIndex === model.originalChosenSlotIndex,
         isPreview,
         isPreviewDisabled: isPreview && model.disabledSlotIndexes.includes(itemIndex),
       },

@@ -8,10 +8,7 @@ interface UseKickPlayerActionOptions {
   roomState: PublicRoomState | null;
 }
 
-export function useKickPlayerAction({
-  currentPlayerId,
-  roomState,
-}: UseKickPlayerActionOptions) {
+export function useKickPlayerAction({ currentPlayerId, roomState }: UseKickPlayerActionOptions) {
   const roomStateRef = useRef(roomState);
   roomStateRef.current = roomState;
   const isPendingRef = useRef(false);
@@ -62,9 +59,7 @@ export function useKickPlayerAction({
               : null,
           );
         } catch {
-          setActionState(
-            isSubmittedRemovalCurrent() ? { playerId, status: "failed" } : null,
-          );
+          setActionState(isSubmittedRemovalCurrent() ? { playerId, status: "failed" } : null);
         } finally {
           isPendingRef.current = false;
         }

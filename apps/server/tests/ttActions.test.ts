@@ -52,12 +52,10 @@ describe("tt actions", () => {
     expect(startedRoomState.turn?.activePlayerId).toBe(hostJoin.playerId);
     expect(startedRoomState.currentTrackCard?.id).toBe("tt-track-3");
     expect(
-      startedRoomState.players.find((player) => player.id === hostJoin.playerId)
-        ?.ttTokenCount,
+      startedRoomState.players.find((player) => player.id === hostJoin.playerId)?.ttTokenCount,
     ).toBe(4);
     expect(
-      startedRoomState.players.find((player) => player.id === guestJoin.playerId)
-        ?.ttTokenCount,
+      startedRoomState.players.find((player) => player.id === guestJoin.playerId)?.ttTokenCount,
     ).toBe(2);
 
     const roomAfterSkip = roomRegistry.skipTrackWithTt("host-socket", {
@@ -66,14 +64,13 @@ describe("tt actions", () => {
 
     expect(roomAfterSkip.currentTrackCard?.id).toBe("tt-track-4");
     expect(
-      roomAfterSkip.players.find((player) => player.id === hostJoin.playerId)
-        ?.ttTokenCount,
+      roomAfterSkip.players.find((player) => player.id === hostJoin.playerId)?.ttTokenCount,
     ).toBe(3);
     expect(roomAfterSkip.turn?.hasUsedSkipTrackWithTt).toBe(true);
 
-    expect(() =>
-      roomRegistry.skipTrackWithTt("host-socket", { roomId: "tt-room" }),
-    ).toThrow("SKIP_ALREADY_USED_THIS_TURN");
+    expect(() => roomRegistry.skipTrackWithTt("host-socket", { roomId: "tt-room" })).toThrow(
+      "SKIP_ALREADY_USED_THIS_TURN",
+    );
 
     const roomAfterBuy = roomRegistry.buyTimelineCardWithTt("host-socket", {
       roomId: "tt-room",
@@ -83,8 +80,7 @@ describe("tt actions", () => {
     expect(roomAfterBuy.status).toBe("reveal");
     expect(roomAfterBuy.currentTrackCard?.id).toBe("tt-track-4");
     expect(
-      roomAfterBuy.players.find((player) => player.id === hostJoin.playerId)
-        ?.ttTokenCount,
+      roomAfterBuy.players.find((player) => player.id === hostJoin.playerId)?.ttTokenCount,
     ).toBe(0);
     expect(roomAfterBuy.timelines[hostJoin.playerId]).toHaveLength(2);
     expect(roomAfterBuy.revealState).toEqual(
@@ -94,12 +90,12 @@ describe("tt actions", () => {
       }),
     );
 
-    expect(() =>
-      roomRegistry.skipTrackWithTt("guest-socket", { roomId: "tt-room" }),
-    ).toThrow("GAME_NOT_IN_TURN_PHASE");
-    expect(() =>
-      roomRegistry.buyTimelineCardWithTt("guest-socket", { roomId: "tt-room" }),
-    ).toThrow("GAME_NOT_IN_TURN_PHASE");
+    expect(() => roomRegistry.skipTrackWithTt("guest-socket", { roomId: "tt-room" })).toThrow(
+      "GAME_NOT_IN_TURN_PHASE",
+    );
+    expect(() => roomRegistry.buyTimelineCardWithTt("guest-socket", { roomId: "tt-room" })).toThrow(
+      "GAME_NOT_IN_TURN_PHASE",
+    );
 
     expect(guestJoin.playerId).toBeDefined();
   });
@@ -151,4 +147,3 @@ function getTtActionDeck(): GameTrackCard[] {
     },
   ];
 }
-

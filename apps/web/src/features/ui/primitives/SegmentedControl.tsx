@@ -23,11 +23,7 @@ export function SegmentedControl<T extends string>({
   value,
 }: SegmentedControlProps<T>) {
   return (
-    <div
-      aria-label={ariaLabel}
-      className={classNames(styles.root, className)}
-      role="radiogroup"
-    >
+    <div aria-label={ariaLabel} className={classNames(styles.root, className)} role="radiogroup">
       {options.map((option) => {
         const isSelected = option.value === value;
 

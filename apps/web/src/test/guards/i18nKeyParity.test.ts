@@ -27,9 +27,7 @@ describe("i18n key parity", () => {
       const missing = [...defaultKeys].filter((key) => !translationKeys.has(key)).sort();
       const extra = [...translationKeys].filter((key) => !defaultKeys.has(key)).sort();
 
-      expect(missing, `${languageId} is missing keys present in ${defaultLanguageId}`).toEqual(
-        [],
-      );
+      expect(missing, `${languageId} is missing keys present in ${defaultLanguageId}`).toEqual([]);
       expect(extra, `${languageId} has keys absent from ${defaultLanguageId}`).toEqual([]);
     },
   );
@@ -50,10 +48,7 @@ describe("i18n key parity", () => {
 
     for (const language of availableLanguages) {
       expect(language.name.length, `${language.id} has no name`).toBeGreaterThan(0);
-      expect(
-        language.nativeName.length,
-        `${language.id} has no nativeName`,
-      ).toBeGreaterThan(0);
+      expect(language.nativeName.length, `${language.id} has no nativeName`).toBeGreaterThan(0);
     }
   });
 });

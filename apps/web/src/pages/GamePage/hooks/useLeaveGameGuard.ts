@@ -29,9 +29,7 @@ export function useLeaveGameGuard({ isGuarded }: UseLeaveGameGuardOptions): Leav
   const canBlock = isGuarded && isPresent;
   const blocker = useBlocker(
     ({ currentLocation, historyAction, nextLocation }) =>
-      canBlock &&
-      historyAction === "POP" &&
-      currentLocation.pathname !== nextLocation.pathname,
+      canBlock && historyAction === "POP" && currentLocation.pathname !== nextLocation.pathname,
   );
   const isBlocked = blocker.state === "blocked";
 

@@ -10,12 +10,7 @@ export {
   type IconButtonSize,
   type IconButtonVariant,
 } from "./IconButton";
-export {
-  ListRow,
-  ListRowButton,
-  type ListRowButtonProps,
-  type ListRowProps,
-} from "./ListRow";
+export { ListRow, ListRowButton, type ListRowButtonProps, type ListRowProps } from "./ListRow";
 export {
   SegmentedControl,
   type SegmentedControlOption,

@@ -8,7 +8,7 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint tests playwright.config.ts --ext .ts"
+    "lint": "eslint tests playwright.config.ts fake-spotify-server.mjs --ext .ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0"

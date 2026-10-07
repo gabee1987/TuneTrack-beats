@@ -39,7 +39,9 @@
 .secondaryColumn {
   position: sticky;
   top: calc(var(--safe-area-top) + var(--space-4));
-  max-height: calc(var(--app-height) - var(--safe-area-top) - var(--safe-area-bottom) - var(--space-8));
+  max-height: calc(
+    var(--app-height) - var(--safe-area-top) - var(--safe-area-bottom) - var(--space-8)
+  );
   overflow-y: auto;
   overscroll-behavior: contain;
   padding-bottom: var(--space-4);

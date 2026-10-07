@@ -3,10 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 
-const defaultEnvFilePath = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "../../.env",
-);
+const defaultEnvFilePath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../.env");
 
 /**
  * Apply non-empty keys from apps/server/.env over inherited OS/shell env.

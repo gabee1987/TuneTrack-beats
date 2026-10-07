@@ -113,11 +113,7 @@ export function getPreviewCardSurfaceStyle(options: {
       };
     }
 
-    const hiddenSurface = getCardGradient(
-      theme,
-      seed,
-      isOverlay ? "overlay" : "preview",
-    );
+    const hiddenSurface = getCardGradient(theme, seed, isOverlay ? "overlay" : "preview");
     return {
       ["--card-gradient" as string]: hiddenSurface,
       ...(isOverlay ? {} : { backgroundImage: hiddenSurface }),
@@ -138,11 +134,7 @@ export function getPreviewCardSurfaceStyle(options: {
     };
   }
 
-  const gradient = getCardGradient(
-    theme,
-    seed,
-    isOverlay ? "overlay" : "preview",
-  );
+  const gradient = getCardGradient(theme, seed, isOverlay ? "overlay" : "preview");
   return {
     ["--card-gradient" as string]: gradient,
     ...(isOverlay ? {} : { backgroundImage: gradient }),

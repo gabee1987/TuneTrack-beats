@@ -7,10 +7,7 @@ import { registerGameplayHandlers } from "./handlers/gameplayHandlers.js";
 import { registerLobbyHandlers } from "./handlers/lobbyHandlers.js";
 import { registerPlaylistHandlers } from "./handlers/playlistHandlers.js";
 import { registerSpotifyHandlers } from "./handlers/spotifyHandlers.js";
-import {
-  logRoomStateBroadcast,
-  registerSocketAuditMiddleware,
-} from "./realtimeAuditLogger.js";
+import { logRoomStateBroadcast, registerSocketAuditMiddleware } from "./realtimeAuditLogger.js";
 
 export function registerSocketHandlers(io: Server, roomService: RoomService): void {
   roomService.setRoomStateChangedListener((roomState) => {

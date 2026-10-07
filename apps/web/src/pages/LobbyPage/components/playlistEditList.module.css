@@ -265,22 +265,22 @@
 }
 
 @media (max-width: 520px) {
-.trackBadges {
-  max-width: 58px;
-}
+  .trackBadges {
+    max-width: 58px;
+  }
 
-.trackBadgeIcon {
-  width: 22px;
+  .trackBadgeIcon {
+    width: 22px;
     height: 22px;
-}
+  }
 
-.sortBar {
-  top: 80px;
-  right: 14px;
-  left: 14px;
-}
+  .sortBar {
+    top: 80px;
+    right: 14px;
+    left: 14px;
+  }
 
-.trackRow {
-  padding-inline: 14px;
-}
+  .trackRow {
+    padding-inline: 14px;
+  }
 }

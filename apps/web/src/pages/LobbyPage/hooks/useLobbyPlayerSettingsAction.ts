@@ -1,7 +1,4 @@
-import {
-  ClientToServerEvent,
-  type PublicRoomState,
-} from "@tunetrack/shared";
+import { ClientToServerEvent, type PublicRoomState } from "@tunetrack/shared";
 import { useCallback, useRef, useState } from "react";
 import { emitAction } from "../../../services/socket/emitAction";
 import type { LobbyPlayerSettingsActionState } from "../LobbyPage.types";
@@ -77,9 +74,7 @@ export function useLobbyPlayerSettingsAction({
           );
         } catch {
           setActionState(
-            isSubmittedUpdateCurrent()
-              ? { playerId: update.playerId, status: "failed" }
-              : null,
+            isSubmittedUpdateCurrent() ? { playerId: update.playerId, status: "failed" } : null,
           );
         } finally {
           isPendingRef.current = false;

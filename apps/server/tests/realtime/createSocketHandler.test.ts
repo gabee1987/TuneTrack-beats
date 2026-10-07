@@ -1,9 +1,10 @@
-import { ClientToServerEvent, ServerToClientEvent, startGamePayloadSchema } from "@tunetrack/shared";
-import { describe, expect, it, vi } from "vitest";
 import {
-  createSocketHandler,
-  emitServerError,
-} from "../../src/realtime/createSocketHandler.js";
+  ClientToServerEvent,
+  ServerToClientEvent,
+  startGamePayloadSchema,
+} from "@tunetrack/shared";
+import { describe, expect, it, vi } from "vitest";
+import { createSocketHandler, emitServerError } from "../../src/realtime/createSocketHandler.js";
 import {
   DEFAULT_SOCKET_ERROR_MESSAGE,
   resolveSocketErrorMessage,
@@ -50,9 +51,15 @@ describe("emitServerError", () => {
   it("emits the thrown error code with catalog message", () => {
     const socket = createMockSocket();
 
-    emitServerError(socket as never, "start_game", new Error("ONLY_HOST_CAN_START_GAME"), "START_GAME_FAILED", {
-      ONLY_HOST_CAN_START_GAME: "Only the host can start the game.",
-    });
+    emitServerError(
+      socket as never,
+      "start_game",
+      new Error("ONLY_HOST_CAN_START_GAME"),
+      "START_GAME_FAILED",
+      {
+        ONLY_HOST_CAN_START_GAME: "Only the host can start the game.",
+      },
+    );
 
     expect(socket.emitted).toEqual([
       {
@@ -68,7 +75,13 @@ describe("emitServerError", () => {
   it("falls back to default message when code is unmapped", () => {
     const socket = createMockSocket();
 
-    emitServerError(socket as never, "start_game", new Error("SOME_NEW_CODE"), "START_GAME_FAILED", {});
+    emitServerError(
+      socket as never,
+      "start_game",
+      new Error("SOME_NEW_CODE"),
+      "START_GAME_FAILED",
+      {},
+    );
 
     expect(socket.emitted).toEqual([
       {

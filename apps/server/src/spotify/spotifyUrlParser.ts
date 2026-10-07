@@ -1,5 +1,4 @@
-const SPOTIFY_PLAYLIST_URL_REGEX =
-  /^https?:\/\/open\.spotify\.com\/playlist\/([a-zA-Z0-9]+)/;
+const SPOTIFY_PLAYLIST_URL_REGEX = /^https?:\/\/open\.spotify\.com\/playlist\/([a-zA-Z0-9]+)/;
 
 const SPOTIFY_PLAYLIST_URI_REGEX = /^spotify:playlist:([a-zA-Z0-9]+)$/;
 

@@ -294,7 +294,8 @@
   background: var(--color-background-spotify, #1ed760);
   color: #06100a;
   outline-color: color-mix(in srgb, var(--color-background-spotify, #1ed760) 70%, white 12%);
-  box-shadow: 0 10px 28px color-mix(in srgb, var(--color-background-spotify, #1ed760) 18%, transparent);
+  box-shadow: 0 10px 28px
+    color-mix(in srgb, var(--color-background-spotify, #1ed760) 18%, transparent);
 }
 
 .primaryButton:hover:not(:disabled) {
@@ -302,33 +303,32 @@
 }
 
 @media (max-width: 520px) {
-.header {
-  padding-inline: 14px;
-}
+  .header {
+    padding-inline: 14px;
+  }
 
-.detailsSheet {
-  width: 100%;
+  .detailsSheet {
+    width: 100%;
     border-left: none;
+  }
 }
-}
-
 
 @media (max-height: 700px) {
-.detailsEyebrow {
-  display: none;
-}
+  .detailsEyebrow {
+    display: none;
+  }
 
-.detailsArtworkRow {
-  padding-block: 9px;
-}
+  .detailsArtworkRow {
+    padding-block: 9px;
+  }
 
-.detailsArtwork {
-  width: 48px;
+  .detailsArtwork {
+    width: 48px;
     height: 48px;
-}
+  }
 
-.detailsFields {
-  gap: 8px;
+  .detailsFields {
+    gap: 8px;
     padding-block: 10px;
-}
+  }
 }

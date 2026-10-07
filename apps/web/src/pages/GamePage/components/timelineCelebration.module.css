@@ -17,23 +17,21 @@
 }
 
 .timelineCelebrationBurstSuccess {
-  background:
-    radial-gradient(
-      circle,
-      color-mix(in srgb, var(--color-accent-brand) 42%, transparent) 0%,
-      color-mix(in srgb, var(--color-accent-brand) 12%, transparent) 42%,
-      transparent 70%
-    );
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-accent-brand) 42%, transparent) 0%,
+    color-mix(in srgb, var(--color-accent-brand) 12%, transparent) 42%,
+    transparent 70%
+  );
 }
 
 .timelineCelebrationBurstFailure {
-  background:
-    radial-gradient(
-      circle,
-      color-mix(in srgb, var(--color-danger) 38%, transparent) 0%,
-      color-mix(in srgb, var(--color-danger) 12%, transparent) 42%,
-      transparent 70%
-    );
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-danger) 38%, transparent) 0%,
+    color-mix(in srgb, var(--color-danger) 12%, transparent) 42%,
+    transparent 70%
+  );
 }
 
 .timelineCelebrationMessage {
@@ -54,7 +52,11 @@
 }
 
 .timelineCelebrationMessageSuccess {
-  background: color-mix(in srgb, var(--color-accent-brand) 42%, var(--color-surface-elevated-solid));
+  background: color-mix(
+    in srgb,
+    var(--color-accent-brand) 42%,
+    var(--color-surface-elevated-solid)
+  );
   outline: 2px solid color-mix(in srgb, var(--color-accent-brand) 72%, white 12%);
   color: var(--color-on-accent-brand);
 }
@@ -169,30 +171,28 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-.timelineCelebrationBurst {
+  .timelineCelebrationBurst {
     animation: none;
     opacity: 0.55;
     transform: scale(1);
   }
 }
 
-
 @media (orientation: portrait) and (max-width: 720px) {
-.correctPlacementContent {
+  .correctPlacementContent {
     gap: 4px;
     padding: 10px 9px;
   }
 
-.correctPlacementShellContent {
+  .correctPlacementShellContent {
     gap: 4px;
     padding: 10px 9px;
   }
 
-.correctPlacementDecorativeStars {
+  .correctPlacementDecorativeStars {
     inset: -18%;
   }
 }
-
 
 @keyframes timelineCelebrationBurstPulse {
   0% {

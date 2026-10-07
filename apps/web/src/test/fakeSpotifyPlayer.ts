@@ -27,11 +27,7 @@ export interface FakeSpotifyPlayer {
   emitReady(deviceId?: string): void;
   emitNotReady(): void;
   emitError(
-    event:
-      | "initialization_error"
-      | "authentication_error"
-      | "account_error"
-      | "playback_error",
+    event: "initialization_error" | "authentication_error" | "account_error" | "playback_error",
     message?: string,
   ): void;
   emitAutoplayFailed(): void;

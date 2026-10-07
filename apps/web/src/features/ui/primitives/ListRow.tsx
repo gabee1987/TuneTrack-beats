@@ -24,25 +24,12 @@ function ListRowContent({ leading, subtitle, title, trailing }: ListRowContentPr
 
 export type ListRowProps = ListRowContentProps & HTMLAttributes<HTMLDivElement>;
 
-export type ListRowButtonProps = ListRowContentProps &
-  ButtonHTMLAttributes<HTMLButtonElement>;
+export type ListRowButtonProps = ListRowContentProps & ButtonHTMLAttributes<HTMLButtonElement>;
 
-export function ListRow({
-  className,
-  leading,
-  subtitle,
-  title,
-  trailing,
-  ...props
-}: ListRowProps) {
+export function ListRow({ className, leading, subtitle, title, trailing, ...props }: ListRowProps) {
   return (
     <div {...props} className={classNames(styles.row, className)}>
-      <ListRowContent
-        leading={leading}
-        subtitle={subtitle}
-        title={title}
-        trailing={trailing}
-      />
+      <ListRowContent leading={leading} subtitle={subtitle} title={title} trailing={trailing} />
     </div>
   );
 }
@@ -57,17 +44,8 @@ export function ListRowButton({
   ...props
 }: ListRowButtonProps) {
   return (
-    <button
-      {...props}
-      className={classNames(styles.row, styles.button, className)}
-      type={type}
-    >
-      <ListRowContent
-        leading={leading}
-        subtitle={subtitle}
-        title={title}
-        trailing={trailing}
-      />
+    <button {...props} className={classNames(styles.row, styles.button, className)} type={type}>
+      <ListRowContent leading={leading} subtitle={subtitle} title={title} trailing={trailing} />
     </button>
   );
 }

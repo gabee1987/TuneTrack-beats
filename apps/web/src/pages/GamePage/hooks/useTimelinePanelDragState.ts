@@ -1,8 +1,4 @@
-import {
-  type DragEndEvent,
-  type DragMoveEvent,
-  type DragStartEvent,
-} from "@dnd-kit/core";
+import { type DragEndEvent, type DragMoveEvent, type DragStartEvent } from "@dnd-kit/core";
 import type { TimelineCardPublic } from "@tunetrack/shared";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -89,10 +85,7 @@ function getGridPreviewIndex(
   return nextPreviewIndex;
 }
 
-function getHorizontalPreviewIndex(
-  activeCenterX: number,
-  timelineCards: HTMLElement[],
-): number {
+function getHorizontalPreviewIndex(activeCenterX: number, timelineCards: HTMLElement[]): number {
   let nextPreviewIndex = 0;
 
   for (const timelineCard of timelineCards) {
@@ -177,10 +170,7 @@ export function useTimelinePanelDragState({
       return;
     }
 
-    const nextOrder = buildOrderedTimelineItemIdsForPreviewIndex(
-      timelineCards,
-      nextPreviewIndex,
-    );
+    const nextOrder = buildOrderedTimelineItemIdsForPreviewIndex(timelineCards, nextPreviewIndex);
 
     lastPreviewReorderAtRef.current = now;
     setOrderedItemIds(nextOrder);
@@ -207,16 +197,12 @@ export function useTimelinePanelDragState({
     if (translatedRect.right > containerRect.right - DRAG_EDGE_SCROLL_ZONE_PX) {
       scrollLeft = Math.min(
         DRAG_EDGE_SCROLL_MAX_STEP_PX,
-        (translatedRect.right - (containerRect.right - DRAG_EDGE_SCROLL_ZONE_PX)) /
-          5,
+        (translatedRect.right - (containerRect.right - DRAG_EDGE_SCROLL_ZONE_PX)) / 5,
       );
-    } else if (
-      translatedRect.left < containerRect.left + DRAG_EDGE_SCROLL_ZONE_PX
-    ) {
+    } else if (translatedRect.left < containerRect.left + DRAG_EDGE_SCROLL_ZONE_PX) {
       scrollLeft = -Math.min(
         DRAG_EDGE_SCROLL_MAX_STEP_PX,
-        ((containerRect.left + DRAG_EDGE_SCROLL_ZONE_PX) - translatedRect.left) /
-          5,
+        (containerRect.left + DRAG_EDGE_SCROLL_ZONE_PX - translatedRect.left) / 5,
       );
     }
 
@@ -231,16 +217,12 @@ export function useTimelinePanelDragState({
       if (translatedRect.bottom > containerRect.bottom - DRAG_EDGE_SCROLL_ZONE_PX) {
         scrollTop = Math.min(
           DRAG_EDGE_SCROLL_MAX_STEP_PX,
-          (translatedRect.bottom - (containerRect.bottom - DRAG_EDGE_SCROLL_ZONE_PX)) /
-            5,
+          (translatedRect.bottom - (containerRect.bottom - DRAG_EDGE_SCROLL_ZONE_PX)) / 5,
         );
-      } else if (
-        translatedRect.top < containerRect.top + DRAG_EDGE_SCROLL_ZONE_PX
-      ) {
+      } else if (translatedRect.top < containerRect.top + DRAG_EDGE_SCROLL_ZONE_PX) {
         scrollTop = -Math.min(
           DRAG_EDGE_SCROLL_MAX_STEP_PX,
-          ((containerRect.top + DRAG_EDGE_SCROLL_ZONE_PX) - translatedRect.top) /
-            5,
+          (containerRect.top + DRAG_EDGE_SCROLL_ZONE_PX - translatedRect.top) / 5,
         );
       }
 

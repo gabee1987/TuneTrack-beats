@@ -76,7 +76,8 @@ export function SpotifySmartSearchResultRow({
     }
 
     if (isAdded && info.offset.x < -SMART_SEARCH_SWIPE_THRESHOLD) {
-      const rowWidth = rowRef.current?.getBoundingClientRect().width ?? SMART_SEARCH_SWIPE_REVEAL_WIDTH;
+      const rowWidth =
+        rowRef.current?.getBoundingClientRect().width ?? SMART_SEARCH_SWIPE_REVEAL_WIDTH;
       isActing.current = true;
       await Promise.all([
         animate(x, -rowWidth, {

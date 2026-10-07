@@ -5,11 +5,7 @@ import { PlayerRemovalService } from "./PlayerRemovalService.js";
 import { TtActionService } from "./TtActionService.js";
 import { TurnFlowService } from "./TurnFlowService.js";
 
-export type {
-  PlaceCardOptions,
-  StartGameInput,
-  StartGamePlayerInput,
-} from "./gameFlowTypes.js";
+export type { PlaceCardOptions, StartGameInput, StartGamePlayerInput } from "./gameFlowTypes.js";
 
 export class GameFlowService {
   private readonly turnFlow = new TurnFlowService();
@@ -39,11 +35,7 @@ export class GameFlowService {
     challengerPlayerId: string,
     selectedSlotIndex: number,
   ): GameState {
-    return this.challengeFlow.placeChallengeCard(
-      gameState,
-      challengerPlayerId,
-      selectedSlotIndex,
-    );
+    return this.challengeFlow.placeChallengeCard(gameState, challengerPlayerId, selectedSlotIndex);
   }
 
   public resolveChallengeWindow(gameState: GameState): GameState {
@@ -54,18 +46,11 @@ export class GameFlowService {
     return this.turnFlow.confirmReveal(gameState);
   }
 
-  public advanceTurnToPlayer(
-    gameState: GameState,
-    nextActivePlayerId: string,
-  ): GameState {
+  public advanceTurnToPlayer(gameState: GameState, nextActivePlayerId: string): GameState {
     return this.turnFlow.advanceTurnToPlayer(gameState, nextActivePlayerId);
   }
 
-  public awardTtTokens(
-    gameState: GameState,
-    playerId: string,
-    tokenAmount: number,
-  ): GameState {
+  public awardTtTokens(gameState: GameState, playerId: string, tokenAmount: number): GameState {
     return this.ttActions.awardTtTokens(gameState, playerId, tokenAmount);
   }
 
@@ -73,17 +58,11 @@ export class GameFlowService {
     return this.playerRemoval.removePlayer(gameState, playerId);
   }
 
-  public skipCurrentTrackWithTt(
-    gameState: GameState,
-    playerId: string,
-  ): GameState {
+  public skipCurrentTrackWithTt(gameState: GameState, playerId: string): GameState {
     return this.ttActions.skipCurrentTrackWithTt(gameState, playerId);
   }
 
-  public buyTimelineCardWithTt(
-    gameState: GameState,
-    playerId: string,
-  ): GameState {
+  public buyTimelineCardWithTt(gameState: GameState, playerId: string): GameState {
     return this.ttActions.buyTimelineCardWithTt(gameState, playerId);
   }
 

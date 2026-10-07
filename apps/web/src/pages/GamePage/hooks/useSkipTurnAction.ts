@@ -8,10 +8,7 @@ interface UseSkipTurnActionOptions {
   roomState: PublicRoomState | null;
 }
 
-export function useSkipTurnAction({
-  currentPlayerId,
-  roomState,
-}: UseSkipTurnActionOptions) {
+export function useSkipTurnAction({ currentPlayerId, roomState }: UseSkipTurnActionOptions) {
   const roomStateRef = useRef(roomState);
   roomStateRef.current = roomState;
   const isPendingRef = useRef(false);

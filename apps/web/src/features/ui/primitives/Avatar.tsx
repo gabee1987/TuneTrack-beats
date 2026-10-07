@@ -25,13 +25,7 @@ function resolveInitials(initials: string | undefined): string {
   return trimmed.slice(0, 2).toUpperCase();
 }
 
-export function Avatar({
-  alt = "",
-  className,
-  initials,
-  size = "md",
-  src,
-}: AvatarProps) {
+export function Avatar({ alt = "", className, initials, size = "md", src }: AvatarProps) {
   return (
     <span className={classNames(styles.avatar, styles[size], className)} aria-hidden={!alt}>
       {src ? (

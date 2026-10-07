@@ -7,11 +7,7 @@ interface SurfaceCardProps {
   className?: string | undefined;
 }
 
-export function SurfaceCard({
-  as = "section",
-  children,
-  className,
-}: SurfaceCardProps) {
+export function SurfaceCard({ as = "section", children, className }: SurfaceCardProps) {
   const Component = as;
 
   return (

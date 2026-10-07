@@ -103,19 +103,13 @@ export function useGamePageToasts({
       if (player.id === currentPlayerId) continue;
       const prev = prevPlayers.find((p) => p.id === player.id);
       if (prev?.connectionStatus === "connected" && player.connectionStatus === "disconnected") {
-        pushToast(
-          "info",
-          t("game.toast.disconnected", { playerName: player.displayName }),
-        );
+        pushToast("info", t("game.toast.disconnected", { playerName: player.displayName }));
         return;
       }
 
       if (prev?.connectionStatus === "disconnected" && player.connectionStatus === "connected") {
         removeActiveToastByType("info");
-        pushToast(
-          "success",
-          t("game.toast.reconnected", { playerName: player.displayName }),
-        );
+        pushToast("success", t("game.toast.reconnected", { playerName: player.displayName }));
         return;
       }
     }

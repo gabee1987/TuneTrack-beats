@@ -37,8 +37,7 @@ export function applyTimelinePreviewTransitionEvent(
   return {
     displayPreviewCard: transitionEvent.previewCard,
     displayPreviewSlot: transitionEvent.previewSlot,
-    displayShowCorrectPlacementPreview:
-      transitionEvent.showCorrectPlacementPreview,
+    displayShowCorrectPlacementPreview: transitionEvent.showCorrectPlacementPreview,
     displayShowCorrectionPreview: transitionEvent.showCorrectionPreview,
     displayShowRevealedContent: transitionEvent.showRevealedContent,
   };

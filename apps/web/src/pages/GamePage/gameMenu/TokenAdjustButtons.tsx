@@ -1,7 +1,4 @@
-import {
-  MAX_STARTING_TT_TOKEN_COUNT,
-  MIN_STARTING_TT_TOKEN_COUNT,
-} from "@tunetrack/shared";
+import { MAX_STARTING_TT_TOKEN_COUNT, MIN_STARTING_TT_TOKEN_COUNT } from "@tunetrack/shared";
 import { motion } from "framer-motion";
 import { useRef, useState } from "react";
 import { useI18n } from "../../../features/i18n";
@@ -70,9 +67,7 @@ export function TokenAdjustButtons({
     playerActionState?.amount === -1 && playerActionState.status === "failed"
       ? t("gameMenu.retryRemoveToken")
       : t("gameMenu.removeToken");
-  const actionStatusKey = playerActionState
-    ? getActionStatusKey(playerActionState)
-    : null;
+  const actionStatusKey = playerActionState ? getActionStatusKey(playerActionState) : null;
   const actionStatusLabel = actionStatusKey ? t(actionStatusKey) : null;
 
   function getFlyAnimationOrigin(direction: Exclude<TokenFlyAnimation, null>) {

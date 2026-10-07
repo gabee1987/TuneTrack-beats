@@ -35,9 +35,7 @@ export function useTransferHostAction({
       const submittedHostId = roomState.hostId;
       function isSubmittedTransferCurrent() {
         const currentRoomState = roomStateRef.current;
-        const currentTarget = currentRoomState?.players.find(
-          (player) => player.id === playerId,
-        );
+        const currentTarget = currentRoomState?.players.find((player) => player.id === playerId);
         return (
           currentRoomState?.roomId === submittedRoomId &&
           currentRoomState.hostId === submittedHostId &&
@@ -67,9 +65,7 @@ export function useTransferHostAction({
               : null,
           );
         } catch {
-          setActionState(
-            isSubmittedTransferCurrent() ? { playerId, status: "failed" } : null,
-          );
+          setActionState(isSubmittedTransferCurrent() ? { playerId, status: "failed" } : null);
         } finally {
           isPendingRef.current = false;
         }

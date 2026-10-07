@@ -54,11 +54,7 @@ export function useGamePageLocalUiState({
     }
 
     setSelectedSlotIndex(0);
-  }, [
-    roomState?.status,
-    roomState?.turn?.activePlayerId,
-    roomState?.turn?.turnNumber,
-  ]);
+  }, [roomState?.status, roomState?.turn?.activePlayerId, roomState?.turn?.turnNumber]);
 
   return {
     locallyPlacedCard,

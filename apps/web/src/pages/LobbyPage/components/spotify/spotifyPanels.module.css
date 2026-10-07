@@ -372,38 +372,38 @@
 }
 
 @media (max-width: 440px) {
-.spotifyOpenedTrackRow {
+  .spotifyOpenedTrackRow {
     grid-template-columns: 42px minmax(0, 1fr) 24px;
     gap: 8px;
     padding: 8px 10px;
   }
 
-.spotifyOpenedPlaylistHeader {
+  .spotifyOpenedPlaylistHeader {
     grid-template-columns: 36px 42px minmax(0, 1fr) auto;
     padding: 8px 10px;
   }
 
-.spotifyOpenedPlaylistImage {
+  .spotifyOpenedPlaylistImage {
     width: 42px;
     height: 42px;
   }
 
-.spotifyOpenedPlaylistHeaderActions {
+  .spotifyOpenedPlaylistHeaderActions {
     gap: 5px;
   }
 
-.spotifyOpenedPlaylistIconBtn {
+  .spotifyOpenedPlaylistIconBtn {
     width: 36px;
     height: 36px;
   }
 
-.spotifyFloatingAction {
+  .spotifyFloatingAction {
     right: 10px;
     bottom: 10px;
     width: calc(100% - 20px);
   }
 
-.spotifyFloatingAction:has(.spotifyApplyChoicePanel) {
+  .spotifyFloatingAction:has(.spotifyApplyChoicePanel) {
     left: 0;
     right: 0;
     bottom: 0;

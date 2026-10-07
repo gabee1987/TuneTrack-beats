@@ -1,8 +1,5 @@
 import { motion } from "framer-motion";
-import {
-  createStandardTransition,
-  useReducedMotionPreference,
-} from "../../../features/motion";
+import { createStandardTransition, useReducedMotionPreference } from "../../../features/motion";
 import { GamePageActionPanels } from "../components/GamePageActionPanels";
 import { GamePageHeader } from "../components/GamePageHeader";
 import { TimelinePanel } from "../components/TimelinePanel";

@@ -8,10 +8,7 @@ import { usePageLayoutMode } from "../../hooks/usePageLayoutMode";
 import { GamePageToastStack } from "./components/GamePageToastStack";
 import type { GameRouteState, LoadedGamePageController } from "./GamePage.types";
 import { buildGamePageAssemblyModel } from "./hooks/buildGamePageAssemblyModel";
-import {
-  HostPlaybackProvider,
-  shouldEnableHostPlayback,
-} from "./hooks/HostPlaybackProvider";
+import { HostPlaybackProvider, shouldEnableHostPlayback } from "./hooks/HostPlaybackProvider";
 import { useGamePageController } from "./hooks/useGamePageController";
 import { useGamePageToasts } from "./hooks/useGamePageToasts";
 import { useLeaveGameGuard } from "./hooks/useLeaveGameGuard";

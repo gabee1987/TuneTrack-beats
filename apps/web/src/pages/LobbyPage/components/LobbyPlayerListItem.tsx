@@ -66,9 +66,7 @@ export function LobbyPlayerListItem({
       ? kickButtonLabel
       : t("lobby.players.kickPlayer", { playerName: displayState.primaryName });
   const playerSettingsActionStatus =
-    playerSettingsActionState?.playerId === player.id
-      ? playerSettingsActionState.status
-      : null;
+    playerSettingsActionState?.playerId === player.id ? playerSettingsActionState.status : null;
 
   return (
     <li className={styles.playerItem}>

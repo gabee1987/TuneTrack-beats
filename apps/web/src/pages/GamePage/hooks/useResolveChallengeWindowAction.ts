@@ -15,8 +15,7 @@ export function useResolveChallengeWindowAction({
   const roomStateRef = useRef(roomState);
   roomStateRef.current = roomState;
   const isPendingRef = useRef(false);
-  const [actionStatus, setActionStatus] =
-    useState<ResolveChallengeWindowActionStatus>("idle");
+  const [actionStatus, setActionStatus] = useState<ResolveChallengeWindowActionStatus>("idle");
 
   const handleResolveChallengeWindow = useCallback(() => {
     if (!roomState || !canResolveChallengeWindow || isPendingRef.current) {
@@ -54,9 +53,7 @@ export function useResolveChallengeWindowAction({
           },
         );
         setActionStatus(
-          result.status === "timeout" && isSubmittedChallengeWindowCurrent()
-            ? "failed"
-            : "idle",
+          result.status === "timeout" && isSubmittedChallengeWindowCurrent() ? "failed" : "idle",
         );
       } catch {
         setActionStatus(isSubmittedChallengeWindowCurrent() ? "failed" : "idle");

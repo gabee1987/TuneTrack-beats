@@ -10,13 +10,13 @@ can all reach.
 
 This guide covers three tiers in order of complexity:
 
-| Tier | Best for | Internet access | Spotify OAuth | Effort |
-|------|----------|-----------------|---------------|--------|
-| [Tier 1 — Local network](#tier-1--local-network-only) | Everyone on the same Wi-Fi | No | No* | 10 min |
-| [Tier 2 — Cloudflare Tunnel](#tier-2--cloudflare-tunnel-recommended) | Remote players, full Spotify | Yes | Yes | 30–45 min |
-| [Tier 3 — Port forwarding + Caddy](#tier-3--port-forwarding--caddy-advanced) | Full control, custom domain | Yes | Yes | 1–2 hrs |
+| Tier                                                                         | Best for                     | Internet access | Spotify OAuth | Effort    |
+| ---------------------------------------------------------------------------- | ---------------------------- | --------------- | ------------- | --------- |
+| [Tier 1 — Local network](#tier-1--local-network-only)                        | Everyone on the same Wi-Fi   | No              | No\*          | 10 min    |
+| [Tier 2 — Cloudflare Tunnel](#tier-2--cloudflare-tunnel-recommended)         | Remote players, full Spotify | Yes             | Yes           | 30–45 min |
+| [Tier 3 — Port forwarding + Caddy](#tier-3--port-forwarding--caddy-advanced) | Full control, custom domain  | Yes             | Yes           | 1–2 hrs   |
 
-*Spotify playback requires HTTPS on a non-localhost origin. On a local network you can
+\*Spotify playback requires HTTPS on a non-localhost origin. On a local network you can
 still play the game; the host just controls music manually through their Spotify app.
 
 ---
@@ -26,14 +26,14 @@ still play the game; the host just controls music manually through their Spotify
 TuneTrack's server uses roughly **50–80 MB of RAM** at idle with a few connected
 players. CPU usage is negligible between turns. Any of the following works:
 
-| Hardware | Cost | Power | Notes |
-|----------|------|-------|-------|
-| **Raspberry Pi 4 (2 GB)** | ~$45 | ~5 W | Best dedicated option. Silent, always-on, cheap to run. |
-| **Raspberry Pi 5 (4 GB)** | ~$60 | ~7 W | Overkill but great if you also want to run other services. |
-| **Old laptop (any dual-core, 2 GB+ RAM)** | Free (if you have one) | 15–45 W | Works fine. Keep it plugged in. |
-| **Old desktop PC** | Free (if you have one) | 40–100 W | Works. More power draw than necessary. |
-| **Your main gaming PC** | Free | 80–200 W | Works for a session. Not ideal to leave running 24/7. |
-| **NAS (Synology, QNAP)** | Varies | ~15 W | Works if it runs Docker or Node.js packages. |
+| Hardware                                  | Cost                   | Power    | Notes                                                      |
+| ----------------------------------------- | ---------------------- | -------- | ---------------------------------------------------------- |
+| **Raspberry Pi 4 (2 GB)**                 | ~$45                   | ~5 W     | Best dedicated option. Silent, always-on, cheap to run.    |
+| **Raspberry Pi 5 (4 GB)**                 | ~$60                   | ~7 W     | Overkill but great if you also want to run other services. |
+| **Old laptop (any dual-core, 2 GB+ RAM)** | Free (if you have one) | 15–45 W  | Works fine. Keep it plugged in.                            |
+| **Old desktop PC**                        | Free (if you have one) | 40–100 W | Works. More power draw than necessary.                     |
+| **Your main gaming PC**                   | Free                   | 80–200 W | Works for a session. Not ideal to leave running 24/7.      |
+| **NAS (Synology, QNAP)**                  | Varies                 | ~15 W    | Works if it runs Docker or Node.js packages.               |
 
 **Verdict:** A Raspberry Pi 4 (2 GB) is the ideal dedicated server. It costs about
 €0.30/month in electricity running 24/7 at 5 W. If you already have a spare PC or
@@ -50,6 +50,7 @@ Install these on whichever machine will run the server.
 Download and install from [nodejs.org](https://nodejs.org). Choose the **LTS** version.
 
 Verify:
+
 ```bash
 node --version   # should print v20.x.x or higher
 npm --version    # should print 10.x.x or higher
@@ -64,6 +65,7 @@ npm install -g pm2
 ```
 
 Verify:
+
 ```bash
 pm2 --version
 ```
@@ -92,6 +94,7 @@ npm run build
 ```
 
 The build produces:
+
 - `apps/server/dist/` — compiled Node.js server
 - `apps/web/dist/` — compiled React frontend (static files)
 
@@ -117,6 +120,7 @@ Your hosting PC (192.168.1.Y)
 ### Step 1 — Find your PC's local IP address
 
 **Windows:**
+
 ```powershell
 ipconfig
 # Look for "IPv4 Address" under your Wi-Fi or Ethernet adapter
@@ -124,12 +128,14 @@ ipconfig
 ```
 
 **Linux / Raspberry Pi:**
+
 ```bash
 ip addr show | grep "inet "
 # Look for something like inet 192.168.1.42
 ```
 
 **macOS:**
+
 ```bash
 ipconfig getifaddr en0
 ```
@@ -166,6 +172,7 @@ pm2 start apps/server/dist/index.js --name tunetrack-server
 ```
 
 Verify it is running:
+
 ```bash
 pm2 logs tunetrack-server
 # You should see: Server listening on port 3001
@@ -197,6 +204,7 @@ New-NetFirewallRule -DisplayName "TuneTrack Web" -Direction Inbound -Protocol TC
 ```
 
 On Linux (if `ufw` is enabled):
+
 ```bash
 sudo ufw allow 3001
 sudo ufw allow 4173
@@ -205,6 +213,7 @@ sudo ufw allow 4173
 ### Step 6 — Play
 
 Players on the same Wi-Fi open their browser and go to:
+
 ```
 http://192.168.1.42:4173
 ```
@@ -261,10 +270,12 @@ In addition to the software in the prerequisites section, you need:
 **Install cloudflared:**
 
 Windows (download the installer):
+
 - Go to [developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/)
 - Download the Windows installer (`.msi`) and run it
 
 Linux / Raspberry Pi:
+
 ```bash
 # Debian/Ubuntu/Raspberry Pi OS
 curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64.deb
@@ -273,6 +284,7 @@ sudo dpkg -i cloudflared.deb
 ```
 
 Verify:
+
 ```bash
 cloudflared --version
 ```
@@ -315,6 +327,7 @@ ingress:
 quick-tunnel approach instead (described below).
 
 **Quick tunnel (no domain required, for testing):**
+
 ```bash
 cloudflared tunnel --url http://localhost:3001
 ```
@@ -373,6 +386,7 @@ pm2 start "cloudflared tunnel run tunetrack" --name tunetrack-tunnel
 ```
 
 Check logs:
+
 ```bash
 pm2 logs tunetrack-server   # should show: Server listening on port 3001
 pm2 logs tunetrack-tunnel   # should show: Registered tunnel connection
@@ -463,6 +477,7 @@ Windows: Download the binary from [caddyserver.com/download](https://caddyserver
 and place it somewhere on your `PATH`.
 
 Linux / Raspberry Pi:
+
 ```bash
 sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
@@ -476,10 +491,10 @@ sudo apt update && sudo apt install caddy
 2. Find **Port Forwarding** / **Virtual Server** / **NAT** (naming varies by router brand)
 3. Add two rules:
 
-| External port | Internal IP | Internal port | Protocol |
-|---------------|-------------|---------------|----------|
-| 80 | 192.168.1.YOUR-PC | 80 | TCP |
-| 443 | 192.168.1.YOUR-PC | 443 | TCP |
+| External port | Internal IP       | Internal port | Protocol |
+| ------------- | ----------------- | ------------- | -------- |
+| 80            | 192.168.1.YOUR-PC | 80            | TCP      |
+| 443           | 192.168.1.YOUR-PC | 443           | TCP      |
 
 This forwards HTTPS traffic from the internet to your PC. Caddy handles it from there.
 
@@ -604,32 +619,32 @@ pm2 restart tunetrack-server
 
 ## Useful PM2 commands
 
-| Command | What it does |
-|---------|--------------|
-| `pm2 list` | Show all running processes and their status |
-| `pm2 logs tunetrack-server` | Stream live logs |
-| `pm2 logs tunetrack-server --lines 100` | Show last 100 log lines |
-| `pm2 restart tunetrack-server` | Restart after a code change |
-| `pm2 stop tunetrack-server` | Stop the process |
-| `pm2 delete tunetrack-server` | Remove from PM2 |
-| `pm2 monit` | Live CPU and memory usage dashboard |
+| Command                                 | What it does                                |
+| --------------------------------------- | ------------------------------------------- |
+| `pm2 list`                              | Show all running processes and their status |
+| `pm2 logs tunetrack-server`             | Stream live logs                            |
+| `pm2 logs tunetrack-server --lines 100` | Show last 100 log lines                     |
+| `pm2 restart tunetrack-server`          | Restart after a code change                 |
+| `pm2 stop tunetrack-server`             | Stop the process                            |
+| `pm2 delete tunetrack-server`           | Remove from PM2                             |
+| `pm2 monit`                             | Live CPU and memory usage dashboard         |
 
 ---
 
 ## Comparison summary
 
-| | Tier 1 (Local) | Tier 2 (Cloudflare) | Tier 3 (Port forward) |
-|---|---|---|---|
-| **Internet access** | No | Yes | Yes |
-| **Spotify OAuth** | Host machine only | Full | Full |
-| **Router config needed** | No | No | Yes |
-| **HTTPS** | No | Yes (Cloudflare) | Yes (Let's Encrypt) |
-| **Third-party dependency** | None | Cloudflare tunnel | None |
-| **Setup time** | 10 min | 30–45 min | 1–2 hrs |
-| **Reliability** | PC must be on | PC + cloudflared must be on | PC + Caddy must be on |
-| **Custom domain** | No | Optional | Required (or DuckDNS) |
-| **Frontend hosting** | Local Vite preview | Render (free) | Self-hosted via Caddy |
-| **Best for** | Same room | Remote + easy setup | Full self-hosting |
+|                            | Tier 1 (Local)     | Tier 2 (Cloudflare)         | Tier 3 (Port forward) |
+| -------------------------- | ------------------ | --------------------------- | --------------------- |
+| **Internet access**        | No                 | Yes                         | Yes                   |
+| **Spotify OAuth**          | Host machine only  | Full                        | Full                  |
+| **Router config needed**   | No                 | No                          | Yes                   |
+| **HTTPS**                  | No                 | Yes (Cloudflare)            | Yes (Let's Encrypt)   |
+| **Third-party dependency** | None               | Cloudflare tunnel           | None                  |
+| **Setup time**             | 10 min             | 30–45 min                   | 1–2 hrs               |
+| **Reliability**            | PC must be on      | PC + cloudflared must be on | PC + Caddy must be on |
+| **Custom domain**          | No                 | Optional                    | Required (or DuckDNS) |
+| **Frontend hosting**       | Local Vite preview | Render (free)               | Self-hosted via Caddy |
+| **Best for**               | Same room          | Remote + easy setup         | Full self-hosting     |
 
 ---
 
@@ -641,6 +656,7 @@ If you use a Raspberry Pi as your dedicated server:
 at idle, leaving the rest for TuneTrack.
 
 **Install Node.js 20 on Raspberry Pi:**
+
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs
@@ -665,6 +681,7 @@ ssh pi@192.168.1.YOUR-PI-IP
 ```
 
 **Shut down safely:** Never just unplug a Raspberry Pi. Use:
+
 ```bash
 sudo shutdown now
 ```

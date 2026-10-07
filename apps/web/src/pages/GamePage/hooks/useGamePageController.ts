@@ -4,10 +4,7 @@ import {
   getOrCreatePlayerSessionId,
   getRememberedPlayerDisplayName,
 } from "../../../services/session/playerSession";
-import type {
-  GameRouteState,
-  UseGamePageControllerResult,
-} from "../GamePage.types";
+import type { GameRouteState, UseGamePageControllerResult } from "../GamePage.types";
 import { buildGamePageControllerResult } from "./buildGamePageControllerResult";
 import { useGamePageTransitionEvents } from "./transitions/useGamePageTransitionEvents";
 import { useGamePageActionAvailability } from "./useGamePageActionAvailability";
@@ -29,14 +26,9 @@ export function useGamePageController({
   routeState,
 }: UseGamePageControllerOptions): UseGamePageControllerResult {
   const playerSessionId = useMemo(() => getOrCreatePlayerSessionId(), []);
-  const rememberedDisplayName = useMemo(
-    () => getRememberedPlayerDisplayName(),
-    [],
-  );
+  const rememberedDisplayName = useMemo(() => getRememberedPlayerDisplayName(), []);
   const preferencesState = useGamePagePreferencesState();
-  const [pendingSkippedTrackId, setPendingSkippedTrackId] = useState<string | null>(
-    null,
-  );
+  const [pendingSkippedTrackId, setPendingSkippedTrackId] = useState<string | null>(null);
 
   const {
     currentPlayerId,
@@ -140,8 +132,7 @@ export function useGamePageController({
     roomStatus: roomState?.status ?? null,
     showCorrectPlacementPreview: derivedState.showCorrectPlacementPreview,
     showCorrectionPreview: derivedState.showCorrectionPreview,
-    shouldAnimateCelebrationCardToMine:
-      derivedState.shouldAnimateCelebrationCardToMine,
+    shouldAnimateCelebrationCardToMine: derivedState.shouldAnimateCelebrationCardToMine,
     onSkipTrackTransitionDetected: () => {
       setPendingSkippedTrackId(null);
     },

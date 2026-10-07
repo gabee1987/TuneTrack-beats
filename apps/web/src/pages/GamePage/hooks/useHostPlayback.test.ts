@@ -1,11 +1,11 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import {
-  ClientToServerEvent,
-  ServerToClientEvent,
-  type PublicRoomState,
-} from "@tunetrack/shared";
+import { ClientToServerEvent, ServerToClientEvent, type PublicRoomState } from "@tunetrack/shared";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getSharedFakeSocket, resetSharedFakeSocket, type FakeSocket } from "../../../test/fakeSocket";
+import {
+  getSharedFakeSocket,
+  resetSharedFakeSocket,
+  type FakeSocket,
+} from "../../../test/fakeSocket";
 import {
   createFakeSpotifyPlayer,
   installFakeSpotifySdk,

@@ -12,10 +12,7 @@ interface TimelineCelebrationProps {
   tone?: TimelineCelebrationTone;
 }
 
-export function TimelineCelebration({
-  message,
-  tone = "success",
-}: TimelineCelebrationProps) {
+export function TimelineCelebration({ message, tone = "success" }: TimelineCelebrationProps) {
   const reduceMotion = useReducedMotionPreference();
   const celebrationVariants = createTimelineCelebrationVariants(reduceMotion);
 

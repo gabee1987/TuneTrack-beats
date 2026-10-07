@@ -32,8 +32,8 @@ export function DesignSystemPage() {
         <p className={styles.eyebrow}>DEV ONLY</p>
         <h1 className={`typeTitleLg ${styles.heading}`}>Design system</h1>
         <p className="typeBody">
-          Token-driven primitives for the Spotify-inspired UI overhaul. Not linked from
-          production navigation.
+          Token-driven primitives for the Spotify-inspired UI overhaul. Not linked from production
+          navigation.
         </p>
       </header>
 
@@ -75,16 +75,10 @@ export function DesignSystemPage() {
         <h2 className="typeTitleMd">Chips & badges</h2>
         <div className={styles.row}>
           <Chip>Neutral</Chip>
-          <ChipButton
-            onClick={() => setSelectedChip("rock")}
-            selected={selectedChip === "rock"}
-          >
+          <ChipButton onClick={() => setSelectedChip("rock")} selected={selectedChip === "rock"}>
             Rock
           </ChipButton>
-          <ChipButton
-            onClick={() => setSelectedChip("pop")}
-            selected={selectedChip === "pop"}
-          >
+          <ChipButton onClick={() => setSelectedChip("pop")} selected={selectedChip === "pop"}>
             Pop
           </ChipButton>
           <Badge variant="connected">Connected</Badge>
@@ -151,8 +145,8 @@ export function DesignSystemPage() {
           title="Confirm action"
         >
           <p className="typeBody">
-            Dialogs are for blocking confirmations. Prefer bottom sheets for contextual
-            content on mobile.
+            Dialogs are for blocking confirmations. Prefer bottom sheets for contextual content on
+            mobile.
           </p>
         </Dialog>
       </section>
@@ -163,12 +157,7 @@ export function DesignSystemPage() {
 function CloseGlyph() {
   return (
     <svg aria-hidden="true" fill="none" height="18" viewBox="0 0 24 24" width="18">
-      <path
-        d="M6 6L18 18M18 6L6 18"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="2"
-      />
+      <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
     </svg>
   );
 }

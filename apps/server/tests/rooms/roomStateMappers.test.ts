@@ -184,7 +184,7 @@ describe("mapGameStateToPublicRoomState", () => {
         revealedYear: 2005,
       },
     ]);
-    expect(publicState.timelines[GUEST_ID][0]).toEqual(
+    expect(publicState.timelines[GUEST_ID]?.[0]).toEqual(
       expect.objectContaining({
         id: "track-a",
         releaseYear: 1999,
@@ -208,8 +208,8 @@ describe("mapGameStateToPublicRoomState", () => {
     );
 
     expect(publicState.currentTrackCard).not.toHaveProperty("releaseYear");
-    expect(publicState.timelines[HOST_ID][0].releaseYear).toBe(2005);
-    expect(publicState.timelines[HOST_ID][0].revealedYear).toBe(2005);
+    expect(publicState.timelines[HOST_ID]?.[0]?.releaseYear).toBe(2005);
+    expect(publicState.timelines[HOST_ID]?.[0]?.revealedYear).toBe(2005);
   });
 
   it("maps turn with turnSkipDeadlineEpochMs reset to null", () => {
@@ -352,9 +352,7 @@ describe("mapGameStateToPublicRoomState", () => {
 
   it(`caps public history to the last ${PUBLIC_HISTORY_MAX_ENTRIES} entries`, () => {
     const historyLength = PUBLIC_HISTORY_MAX_ENTRIES + 12;
-    const history = Array.from({ length: historyLength }, (_, index) =>
-      createHistoryEntry(index),
-    );
+    const history = Array.from({ length: historyLength }, (_, index) => createHistoryEntry(index));
 
     const publicState = mapGameStateToPublicRoomState(
       createLobbyRoomState(),

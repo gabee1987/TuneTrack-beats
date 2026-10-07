@@ -68,16 +68,15 @@ function TimelineSortableItemComponent({
 }: TimelineSortableItemProps) {
   const shouldCelebrateCorrectPlacement =
     !isPreview && isOriginalSlot && showCorrectPlacementPreview;
-  const { attributes, isDragging, listeners, setNodeRef, transform, transition } =
-    useSortable({
-      id,
-      animateLayoutChanges: animateTimelineLayoutChanges,
-      disabled: isPreview ? isPreviewDisabled : false,
-      transition: {
-        duration: TIMELINE_REORDER_DURATION_MS,
-        easing: TIMELINE_REORDER_EASING,
-      },
-    });
+  const { attributes, isDragging, listeners, setNodeRef, transform, transition } = useSortable({
+    id,
+    animateLayoutChanges: animateTimelineLayoutChanges,
+    disabled: isPreview ? isPreviewDisabled : false,
+    transition: {
+      duration: TIMELINE_REORDER_DURATION_MS,
+      easing: TIMELINE_REORDER_EASING,
+    },
+  });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -86,17 +85,14 @@ function TimelineSortableItemComponent({
       : {}),
   } as CSSProperties;
 
-  const hasArtwork =
-    revealedCardMode === "artwork" && Boolean(card.artworkUrl) && !isPreview;
+  const hasArtwork = revealedCardMode === "artwork" && Boolean(card.artworkUrl) && !isPreview;
   const timelineCardClassName = `${styles.timelineCard} ${
     hasArtwork ? styles.timelineCardArtwork : ""
   } ${
     isOriginalSlot && (isPreview || shouldCelebrateCorrectPlacement)
       ? styles.timelineCardCurrentPick
       : ""
-  } ${
-    shouldCelebrateCorrectPlacement ? styles.timelineCardResolvedCorrect : ""
-  } ${
+  } ${shouldCelebrateCorrectPlacement ? styles.timelineCardResolvedCorrect : ""} ${
     isChallengeSlot
       ? challengeMarkerTone === "failure"
         ? styles.timelineCardChallengeFailure
@@ -116,7 +112,11 @@ function TimelineSortableItemComponent({
         isDraggingPreviewCard && isPreview ? styles.timelineItemPreviewGhost : ""
       }`}
       style={style}
-      onClick={(!isPreview || showCorrectionPreview) && onCardInfoRequest ? () => onCardInfoRequest(card) : undefined}
+      onClick={
+        (!isPreview || showCorrectionPreview) && onCardInfoRequest
+          ? () => onCardInfoRequest(card)
+          : undefined
+      }
     >
       {isPreview ? (
         <PreviewCard
@@ -141,12 +141,24 @@ function TimelineSortableItemComponent({
           transitionEvent={previewCardTransitionEvent}
           ref={previewCardRef}
         />
+      ) : shouldCelebrateCorrectPlacement && shouldAnimateCorrectPlacement ? (
+        <CorrectPlacementCelebration
+          key={`resolved-correct-placement-${id}`}
+          className={`${timelineCardClassName} ${styles.timelineCardCurrentPick}`}
+        >
+          <p className={styles.timelineArtist}>{card.artist}</p>
+          <div className={styles.timelineCardCenter}>
+            <strong className={styles.yearText}>
+              {"revealedYear" in card ? card.revealedYear : ""}
+            </strong>
+          </div>
+          <div className={styles.timelineCardBottom}>
+            <h3 className={styles.timelineTitle}>{card.title}</h3>
+          </div>
+        </CorrectPlacementCelebration>
       ) : (
-        shouldCelebrateCorrectPlacement && shouldAnimateCorrectPlacement ? (
-          <CorrectPlacementCelebration
-            key={`resolved-correct-placement-${id}`}
-            className={`${timelineCardClassName} ${styles.timelineCardCurrentPick}`}
-          >
+        <article data-timeline-card="true" className={timelineCardClassName}>
+          <>
             <p className={styles.timelineArtist}>{card.artist}</p>
             <div className={styles.timelineCardCenter}>
               <strong className={styles.yearText}>
@@ -156,25 +168,8 @@ function TimelineSortableItemComponent({
             <div className={styles.timelineCardBottom}>
               <h3 className={styles.timelineTitle}>{card.title}</h3>
             </div>
-          </CorrectPlacementCelebration>
-        ) : (
-          <article
-            data-timeline-card="true"
-            className={timelineCardClassName}
-          >
-            <>
-              <p className={styles.timelineArtist}>{card.artist}</p>
-              <div className={styles.timelineCardCenter}>
-                <strong className={styles.yearText}>
-                  {"revealedYear" in card ? card.revealedYear : ""}
-                </strong>
-              </div>
-              <div className={styles.timelineCardBottom}>
-                <h3 className={styles.timelineTitle}>{card.title}</h3>
-              </div>
-            </>
-          </article>
-        )
+          </>
+        </article>
       )}
     </div>
   );

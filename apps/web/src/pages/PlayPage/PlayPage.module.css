@@ -175,7 +175,11 @@
 
 .roomListItem:active {
   transform: scale(0.99);
-  background: color-mix(in srgb, var(--color-surface-interactive) 80%, var(--color-accent-brand) 20%);
+  background: color-mix(
+    in srgb,
+    var(--color-surface-interactive) 80%,
+    var(--color-accent-brand) 20%
+  );
 }
 
 .roomListCopy {

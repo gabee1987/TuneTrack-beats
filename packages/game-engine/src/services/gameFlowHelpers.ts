@@ -10,7 +10,11 @@ export function findFirstValidSlotIndex(
   timelineCards: TimelineCard[],
   releaseYear: number,
 ): number {
-  for (let selectedSlotIndex = 0; selectedSlotIndex <= timelineCards.length; selectedSlotIndex += 1) {
+  for (
+    let selectedSlotIndex = 0;
+    selectedSlotIndex <= timelineCards.length;
+    selectedSlotIndex += 1
+  ) {
     const placementResult = evaluateTimelinePlacement(
       timelineCards,
       releaseYear,
@@ -92,9 +96,7 @@ export function findNextActivePlayerId(
   players: GamePlayer[],
   currentActivePlayerId: string,
 ): string {
-  const currentPlayerIndex = players.findIndex(
-    (player) => player.id === currentActivePlayerId,
-  );
+  const currentPlayerIndex = players.findIndex((player) => player.id === currentActivePlayerId);
 
   if (currentPlayerIndex === -1) {
     throw new Error("ACTIVE_PLAYER_NOT_FOUND");

@@ -71,18 +71,19 @@ const darkThemeCssVariables = {
   "gradient-hidden-card-preview-artwork":
     "radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.18), transparent 30%), radial-gradient(circle at 80% 0%, rgba(124, 108, 255, 0.42), transparent 34%), linear-gradient(135deg, rgba(124, 108, 255, 0.85) 0%, rgba(255, 79, 154, 0.72) 100%)",
   // Neutral hidden-card gradient for the flat design system (Phase 1+ adoption).
-  "gradient-card-hidden":
-    "linear-gradient(145deg, #2a2a2a 0%, #181818 55%, #121212 100%)",
+  "gradient-card-hidden": "linear-gradient(145deg, #2a2a2a 0%, #181818 55%, #121212 100%)",
   "gradient-card-artwork-scrim":
     "linear-gradient(180deg, rgba(10, 10, 10, 0.18) 0%, rgba(10, 10, 10, 0.34) 42%, rgba(10, 10, 10, 0.82) 100%)",
 
   // Game UI
   "color-mask-solid": "#000000",
   "color-game-error-text": "var(--color-status-danger-text)",
-  "color-game-card-current-outline": "color-mix(in srgb, var(--color-accent-brand) 72%, transparent)",
+  "color-game-card-current-outline":
+    "color-mix(in srgb, var(--color-accent-brand) 72%, transparent)",
   "color-game-card-challenge-outline": "color-mix(in srgb, var(--color-warning) 78%, transparent)",
   "color-game-card-failure-outline": "color-mix(in srgb, var(--color-danger) 78%, transparent)",
-  "color-game-card-correct-outline": "color-mix(in srgb, var(--color-accent-brand) 88%, transparent)",
+  "color-game-card-correct-outline":
+    "color-mix(in srgb, var(--color-accent-brand) 88%, transparent)",
   "color-game-card-draggable-outline": "var(--color-accent-brand)",
   "color-game-card-correction-outline": "color-mix(in srgb, var(--color-danger) 82%, transparent)",
   "color-game-preview-scrim": "rgba(18, 18, 18, 0.42)",

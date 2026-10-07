@@ -23,9 +23,7 @@ function buildTracks(count: number): SpotifyApiTrack[] {
   return Array.from({ length: count }, (_, i) => buildApiTrack(`id-${i}`, `${1970 + i}`));
 }
 
-function createMockApiClient(
-  overrides: Partial<SpotifyApiClient> = {},
-): SpotifyApiClient {
+function createMockApiClient(overrides: Partial<SpotifyApiClient> = {}): SpotifyApiClient {
   return {
     getClientCredentialsToken: vi.fn().mockResolvedValue({
       access_token: "test-token",
@@ -67,9 +65,7 @@ describe("PlaylistImportService", () => {
       });
       const service = new PlaylistImportService(mockClient, tokenStore);
 
-      const result = await service.importFromUrl(
-        "https://open.spotify.com/playlist/abc123",
-      );
+      const result = await service.importFromUrl("https://open.spotify.com/playlist/abc123");
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -87,9 +83,7 @@ describe("PlaylistImportService", () => {
       });
       const service = new PlaylistImportService(mockClient, tokenStore);
 
-      const result = await service.importFromUrl(
-        "https://open.spotify.com/playlist/abc123",
-      );
+      const result = await service.importFromUrl("https://open.spotify.com/playlist/abc123");
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -112,9 +106,7 @@ describe("PlaylistImportService", () => {
       });
       const service = new PlaylistImportService(mockClient, tokenStore);
 
-      const result = await service.importFromUrl(
-        "https://open.spotify.com/playlist/abc123",
-      );
+      const result = await service.importFromUrl("https://open.spotify.com/playlist/abc123");
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -126,15 +118,13 @@ describe("PlaylistImportService", () => {
 
     it("returns playlist_not_found when the Spotify API returns 404", async () => {
       const mockClient = createMockApiClient({
-        getAllPlaylistTracks: vi.fn().mockRejectedValue(
-          new SpotifyApiError("not_found", "Not found", 404),
-        ),
+        getAllPlaylistTracks: vi
+          .fn()
+          .mockRejectedValue(new SpotifyApiError("not_found", "Not found", 404)),
       });
       const service = new PlaylistImportService(mockClient, tokenStore);
 
-      const result = await service.importFromUrl(
-        "https://open.spotify.com/playlist/abc123",
-      );
+      const result = await service.importFromUrl("https://open.spotify.com/playlist/abc123");
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -144,15 +134,13 @@ describe("PlaylistImportService", () => {
 
     it("returns playlist_private when the Spotify API returns 403", async () => {
       const mockClient = createMockApiClient({
-        getAllPlaylistTracks: vi.fn().mockRejectedValue(
-          new SpotifyApiError("forbidden", "Forbidden", 403),
-        ),
+        getAllPlaylistTracks: vi
+          .fn()
+          .mockRejectedValue(new SpotifyApiError("forbidden", "Forbidden", 403)),
       });
       const service = new PlaylistImportService(mockClient, tokenStore);
 
-      const result = await service.importFromUrl(
-        "https://open.spotify.com/playlist/abc123",
-      );
+      const result = await service.importFromUrl("https://open.spotify.com/playlist/abc123");
 
       expect(result.success).toBe(false);
       if (!result.success) {

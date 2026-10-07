@@ -41,9 +41,9 @@ export function getGamePageActiveTimelinePreviewState({
     roomState?.status === "challenge"
       ? canSelectChallengeSlot
         ? null
-        : roomState.challengeState?.originalSelectedSlotIndex ?? null
+        : (roomState.challengeState?.originalSelectedSlotIndex ?? null)
       : roomState?.status === "reveal"
-        ? roomState.revealState?.selectedSlotIndex ?? null
+        ? (roomState.revealState?.selectedSlotIndex ?? null)
         : canSelectTurnSlot
           ? selectedSlotIndex
           : null;
@@ -54,14 +54,14 @@ export function getGamePageActiveTimelinePreviewState({
         ? selectedSlotIndex
         : null
       : roomState?.status === "reveal"
-        ? roomState.revealState?.challengerSelectedSlotIndex ?? null
+        ? (roomState.revealState?.challengerSelectedSlotIndex ?? null)
         : null;
 
   const activeTimelinePreviewCard =
     roomState?.status === "challenge"
-      ? roomState.currentTrackCard ?? locallyPlacedCard
+      ? (roomState.currentTrackCard ?? locallyPlacedCard)
       : canSelectTurnSlot
-        ? roomState?.currentTrackCard ?? null
+        ? (roomState?.currentTrackCard ?? null)
         : null;
 
   const activeTimelinePreviewSlot =
@@ -84,8 +84,7 @@ export function getGamePageRevealTimelineState({
   roomState,
 }: GamePageRevealTimelineSelectorOptions): GamePageRevealTimelineSelectorResult {
   const isRevealWithAutoCorrection =
-    roomState?.status === "reveal" &&
-    Boolean(roomState.revealState);
+    roomState?.status === "reveal" && Boolean(roomState.revealState);
 
   const showCorrectPlacementPreview = Boolean(
     roomState?.status === "reveal" && roomState?.revealState?.wasCorrect,
@@ -96,11 +95,11 @@ export function getGamePageRevealTimelineState({
   );
 
   const revealPreviewCard = showCorrectionPreview
-    ? roomState?.revealState?.placedCard ?? null
+    ? (roomState?.revealState?.placedCard ?? null)
     : null;
 
   const revealPreviewSlot = showCorrectionPreview
-    ? roomState?.revealState?.selectedSlotIndex ?? null
+    ? (roomState?.revealState?.selectedSlotIndex ?? null)
     : null;
 
   const revealPreviewTransitionKey =
@@ -116,21 +115,19 @@ export function getGamePageRevealTimelineState({
       : null;
 
   const hasAwardedOwnTimelineSlot =
-    roomState?.status === "reveal" &&
-    roomState.revealState?.awardedPlayerId === currentPlayerId;
+    roomState?.status === "reveal" && roomState.revealState?.awardedPlayerId === currentPlayerId;
 
   const challengerOwnsAward =
-    hasAwardedOwnTimelineSlot &&
-    roomState?.revealState?.challengerPlayerId === currentPlayerId;
+    hasAwardedOwnTimelineSlot && roomState?.revealState?.challengerPlayerId === currentPlayerId;
 
   return {
     ownTimelineChallengeAwardSlot:
       hasAwardedOwnTimelineSlot && challengerOwnsAward
-        ? roomState?.revealState?.awardedSlotIndex ?? null
+        ? (roomState?.revealState?.awardedSlotIndex ?? null)
         : null,
     ownTimelineOriginalAwardSlot:
       hasAwardedOwnTimelineSlot && challengerOwnsAward === false
-        ? roomState?.revealState?.awardedSlotIndex ?? null
+        ? (roomState?.revealState?.awardedSlotIndex ?? null)
         : null,
     revealPreviewCard,
     revealPreviewTransitionKey,

@@ -3,10 +3,7 @@ import { motion } from "framer-motion";
 import { type FormEvent, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../../../features/i18n";
-import {
-  MotionPresence,
-  useReducedMotionPreference,
-} from "../../../features/motion";
+import { MotionPresence, useReducedMotionPreference } from "../../../features/motion";
 import { ActionButton } from "../../../features/ui/ActionButton";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { TextInput } from "../../../features/ui/TextInput";

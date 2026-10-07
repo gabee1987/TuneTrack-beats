@@ -227,8 +227,7 @@ function areActionPanelModelsEqual(
     previousModel.isBuyTimelineCardPending === nextModel.isBuyTimelineCardPending &&
     previousModel.isPlaceCardPending === nextModel.isPlaceCardPending &&
     previousModel.isPlaceChallengePending === nextModel.isPlaceChallengePending &&
-    previousModel.isResolveChallengeWindowPending ===
-      nextModel.isResolveChallengeWindowPending &&
+    previousModel.isResolveChallengeWindowPending === nextModel.isResolveChallengeWindowPending &&
     previousModel.isSkipTrackPending === nextModel.isSkipTrackPending &&
     previousModel.isSkipTurnPending === nextModel.isSkipTurnPending &&
     previousModel.placeCardActionStatus === nextModel.placeCardActionStatus &&

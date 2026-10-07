@@ -350,9 +350,7 @@ export class SpotifyAuthService {
           try {
             await this.apiClient.transferPlaybackToDevice(accessToken, playableDeviceId, false);
           } catch (transferError) {
-            if (
-              !(transferError instanceof SpotifyApiError && transferError.code === "not_found")
-            ) {
+            if (!(transferError instanceof SpotifyApiError && transferError.code === "not_found")) {
               lastError = transferError;
             }
           }

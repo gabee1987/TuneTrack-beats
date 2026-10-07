@@ -53,20 +53,10 @@ describe("evaluateTimelinePlacement", () => {
       { id: "track-5", releaseYear: 2000 },
     ];
 
-    expect(collectValidSlotIndexes(sameYearTimelineCards, 1990)).toEqual([
-      1, 2, 3, 4,
-    ]);
-    expect(evaluateTimelinePlacement(sameYearTimelineCards, 1990, 1).isCorrect).toBe(
-      true,
-    );
-    expect(evaluateTimelinePlacement(sameYearTimelineCards, 1990, 2).isCorrect).toBe(
-      true,
-    );
-    expect(evaluateTimelinePlacement(sameYearTimelineCards, 1990, 3).isCorrect).toBe(
-      true,
-    );
-    expect(evaluateTimelinePlacement(sameYearTimelineCards, 1990, 4).isCorrect).toBe(
-      true,
-    );
+    expect(collectValidSlotIndexes(sameYearTimelineCards, 1990)).toEqual([1, 2, 3, 4]);
+    expect(evaluateTimelinePlacement(sameYearTimelineCards, 1990, 1).isCorrect).toBe(true);
+    expect(evaluateTimelinePlacement(sameYearTimelineCards, 1990, 2).isCorrect).toBe(true);
+    expect(evaluateTimelinePlacement(sameYearTimelineCards, 1990, 3).isCorrect).toBe(true);
+    expect(evaluateTimelinePlacement(sameYearTimelineCards, 1990, 4).isCorrect).toBe(true);
   });
 });

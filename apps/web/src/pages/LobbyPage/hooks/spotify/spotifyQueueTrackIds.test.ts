@@ -60,9 +60,9 @@ describe("getSpotifyTrackIdFromQueuedTrack", () => {
   });
 
   it("supports legacy smart-search prefixed ids", () => {
-    expect(
-      getSpotifyTrackIdFromQueuedTrack(buildTrack({ id: "spotify-search-abc123" })),
-    ).toBe("abc123");
+    expect(getSpotifyTrackIdFromQueuedTrack(buildTrack({ id: "spotify-search-abc123" }))).toBe(
+      "abc123",
+    );
   });
 
   it("falls back to the track id", () => {

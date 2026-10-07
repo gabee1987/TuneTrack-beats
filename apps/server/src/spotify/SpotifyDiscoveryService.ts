@@ -181,7 +181,9 @@ export class SpotifyDiscoveryService {
       }
 
       const rawTracks = rawTrackResults.flat();
-      const cards = options.interleaveSources ? interleaveCardGroups(cardGroups) : cardGroups.flat();
+      const cards = options.interleaveSources
+        ? interleaveCardGroups(cardGroups)
+        : cardGroups.flat();
       const { dedupedCards, duplicateCount } = dedupeCards(cards);
       const yearFilteredCards = filterCardsByYearRanges(dedupedCards, options.yearRanges);
       const yearFilteredCount = dedupedCards.length - yearFilteredCards.length;
@@ -323,17 +325,12 @@ export class SpotifyDiscoveryService {
         };
       }
 
-      return this.generateFromPlaylists(
-        roomId,
-        playlistIds,
-        targetCount,
-        {
-          sourceSummary: `${preset.name} Quick Pick`,
-          yearRanges: preset.yearRanges,
-          balanceByYear: true,
-          interleaveSources: true,
-        },
-      );
+      return this.generateFromPlaylists(roomId, playlistIds, targetCount, {
+        sourceSummary: `${preset.name} Quick Pick`,
+        yearRanges: preset.yearRanges,
+        balanceByYear: true,
+        interleaveSources: true,
+      });
     } catch (err) {
       logger.error({ err, roomId, presetId }, "Spotify quick pick generation failed");
       return {
