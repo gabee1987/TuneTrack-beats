@@ -6,6 +6,8 @@
 > (resolved by this document), **T-01** and **T-02** (specified; code lands in Phase 6).
 > Owner decisions that shaped it: one live plan (1), 48 px touch target (2), 700-line limit (3),
 > `AGENT.md` merged into `CLAUDE.md` (4).
+>
+> **Structure, test gates and order (2026-10-07):** `06-structure-and-test-plan.md` §2 (gates), §7 (order), §8 (corrections to this document). Where they differ, `06` wins.
 
 ## 1. Why skills
 

@@ -216,8 +216,8 @@ shutdown.
 
 ## 4. Phase 4 — Collapse the double delegation layer
 
-**Finding:** B-08, owned by Phase 6 of the review programme (`00-index.md` §4); this section
-is the work breakdown that phase will package. This is a maintainability change with no
+**Finding:** B-08, owned by Phase 6 of the review programme; `06-structure-and-test-plan.md` S1–S2
+packages and orders it (and corrects B-08: `requireHost` is not dead). This is a maintainability change with no
 behavioural intent. Schedule it **after** Phases 1–3, and treat any behaviour change as a
 defect.
 

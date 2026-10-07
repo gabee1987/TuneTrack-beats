@@ -133,6 +133,9 @@ What replaces §7 (WP C1):
 - `getPlaylistTracks`: host only, and only while `status === "lobby"` (the editor is a lobby
   tool; the host is also a player and must not see answers in game). Existing codes:
   `ONLY_HOST_CAN_EDIT_PLAYLIST` for a guest, `GAME_ALREADY_STARTED` outside the lobby.
+- `search_spotify_music`, `search_spotify_playlists`, `open_spotify_playlist`: host only and
+  lobby only (added 2026-10-07 by `06` §8; Music Setup is a host tool, and a guest must not spend
+  the room's Spotify quota).
 - `importPlaylist`: `requireHost` before `importFromUrl`; no Spotify request for a non-host or
   non-member.
 - `generateSpotifyCandidates` and `useSpotifyCandidates`: host check first; split
@@ -168,8 +171,8 @@ What replaces §7 (WP C1):
   (decision 6). Shuffling is injected: `GameFlowService` takes a `shuffleCards` function
   (default Fisher–Yates over `Math.random`, tests pass a deterministic one), so the engine stays
   free of environment access.
-- If deck **and** discard pile are empty the game finishes deterministically — see owner
-  question §11.1 for the tie rule. `CURRENT_CARD_NOT_AVAILABLE` can no longer be reached.
+- If deck **and** discard pile are empty the game finishes deterministically: most timeline cards
+  wins, ties go to whoever reached that count first (decision 14). `CURRENT_CARD_NOT_AVAILABLE` can no longer be reached.
 - `nowEpochMs` becomes a parameter of the engine transitions that need a clock; the challenge
   deadline check and the skip-versus-cancel decision in `RoomGameplayService.skipTurn` move
   into the engine (B-09).
@@ -186,7 +189,8 @@ What replaces §7 (WP C1):
   else, and logs unknown errors at `error` with the stack.
 - **Proof:** `createSocketHandler.test.ts`: a thrown `TypeError` reaches the client as the
   fallback code and is logged with a stack; a type test fails if a web map key is not a
-  `ServerErrorCode`.
+  `ServerErrorCode`; a test asserts every `ServerErrorCode` has an `en` and a `hu` catalogue
+  entry (added 2026-10-07 by `06` §8: about ten codes show the generic message today).
 
 ### A5 · Idempotency scoping (B-14)
 
@@ -367,7 +371,7 @@ A1 is hotfix-sized and can be handed out before anything else in this document.
 - A8's `server_stopped` audit event carries no personal data.
 - No change in this document broadens the personal data stored, logged or shipped.
 
-## 11. Open owner questions
+## 11. Owner questions (answered 2026-10-07: decisions 14 and 15, both as proposed)
 
 1. **Deck and discard pile both empty** (only possible with a deck shorter than the lobby's
    required size, which warns but does not block). Proposal: the game finishes; the player with

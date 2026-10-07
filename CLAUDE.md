@@ -38,7 +38,9 @@ motion that explains what just happened.
 - **Deck exhaustion** (decided 2026-10-06, implementation pending): when the deck is empty,
   every card discarded during the game (wrong placements and TT skips) is reshuffled into a
   new deck; cards on timelines stay out. The lobby shows how many cards the deck needs for the
-  current player count and win target, and warns when the deck is smaller.
+  current player count and win target, and warns when the deck is smaller. If the deck and
+  the discard pile are both empty, the game finishes: most timeline cards wins, and on a tie
+  the player who reached that count first (decided 2026-10-07).
 - **No silent practice deck** (decided 2026-10-06, implementation pending): Start is blocked
   until a deck exists; the host chooses the practice deck explicitly.
 
@@ -86,7 +88,8 @@ The rules below are the ones every change must satisfy.
   component edits.
 - **Motion follows Material 3:** emphasised decelerate on enter, emphasised accelerate on
   exit, standard easing between states. 200–350 ms for most transitions, up to 500 ms only
-  for large entries or celebration. Motion communicates state change; it never decorates.
+  for large entries or celebration. Motion communicates state change; it never decorates. The one exception is the home
+  screen's ambient background (`transform`/`opacity` only, paused when hidden or reduced).
   `prefers-reduced-motion` is honoured through the shared motion helpers only.
 - **Mobile and desktop are separate UI assemblies** that share hooks, services and state.
   Mobile is the primary surface: thumb-reachable controls, **48 × 48 px minimum touch

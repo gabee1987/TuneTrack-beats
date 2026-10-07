@@ -42,10 +42,9 @@ review of 2026-10-06 and its phased roadmap.
 | `03-agent-skills-and-tooling.md`        | Phase 3: the skill catalogue under `.claude/skills/`, the project permission file, boundary-lint and `verify` specs. |
 | `04-host-flow-ux-spec.md`               | Phase 4: host creation flow, screen by screen, deck gating, hints, acceptance and work packages.                     |
 | `05-performance-and-robustness-plan.md` | Phase 5: binding performance budgets, measurement commands, robustness work packages and rollout order.              |
-| `06` (as it lands)                      | Phase deliverable: structure and tests.                                                                              |
+| `06-structure-and-test-plan.md`         | Phase 6: file-size, boundary and test gates, structure and test work items, CI and coverage, rollout order.          |
 | `10`–`19`                               | Work-breakdown documents folded from the 2026-09 programme, trimmed to open work.                                    |
 | `20-bug-register.md`                    | Active defects with next proof, plus the resolved ledger and tech-debt notes.                                        |
-| `review-input/`                         | Raw audit reports used only to author phase documents; deleted when Phase 6 is written.                              |
 
 ## Operations (not on the coding path)
 

@@ -12,6 +12,20 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Phase 5 and 6 owner decisions (2026-10-07)
+
+Answers to `05-performance-and-robustness-plan.md` §11 and `06-structure-and-test-plan.md` §10:
+
+- **Deck and discard pile both empty: most cards wins**, ties go to whoever reached that count
+  first. A shared win was declined because it changes the single-winner contract. Implementation
+  pending (`05` A3).
+- **The home-screen ambient background stays** as the only decorative motion, limited to the
+  home screen, `transform`/`opacity`, and paused when the tab is hidden or reduced motion is on.
+- **Dev dependencies approved:** `@vitest/coverage-v8`, `eslint-plugin-react-hooks`; layer
+  boundaries use ESLint's built-in `no-restricted-imports` instead of a plugin.
+- **No CI for now.** The local `verify` script is the gate; the GitHub Actions workflow (`06` T4)
+  stays specified and parked, and would need a compliance review before it is enabled.
+
 ### Host-flow owner decisions (2026-10-07)
 
 Answers to the open questions of `docs/plans/2026-10-project-review/04-host-flow-ux-spec.md` §13:

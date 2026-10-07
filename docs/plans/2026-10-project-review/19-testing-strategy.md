@@ -7,6 +7,8 @@
 > the verify sequence and the manual device checklist (§8) into Claude Code skills (`verify`,
 > `write-tests`, `e2e-scenario`); Phase 6 owns test restructuring and additions (T-03 … T-12), the
 > CI workflow and the coverage ratchet.
+>
+> **Structure, test gates and order (2026-10-07):** `06-structure-and-test-plan.md` §2 (gates), §7 (order), §8 (corrections to this document). Where they differ, `06` wins.
 
 ## 1. Current numbers (2026-10-06, `npm test` exit 0)
 
