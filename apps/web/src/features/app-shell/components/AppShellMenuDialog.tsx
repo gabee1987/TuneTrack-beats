@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { useMemo } from "react";
 import { createPortal } from "react-dom";
 import {
   MotionPresence,
@@ -28,11 +27,10 @@ export function AppShellMenuDialog({
 }: AppShellMenuDialogProps) {
   const reduceMotion = useReducedMotionPreference();
   const preferencesState = useAppShellMenuPreferencesState();
-  const availableTabs = useMemo(() => tabs, [tabs]);
-  const activeTabId = availableTabs.some((tab) => tab.id === preferencesState.lastOpenedMenuTab)
+  const activeTabId = tabs.some((tab) => tab.id === preferencesState.lastOpenedMenuTab)
     ? preferencesState.lastOpenedMenuTab
-    : availableTabs[0]?.id;
-  const activeTab = availableTabs.find((tab) => tab.id === activeTabId) ?? null;
+    : tabs[0]?.id;
+  const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? null;
   const menuLayer = typeof document !== "undefined" ? document.body : null;
 
   if (!menuLayer) {
@@ -62,7 +60,7 @@ export function AppShellMenuDialog({
             onClose={onClose}
             preferencesState={preferencesState}
             subtitle={subtitle}
-            tabs={availableTabs}
+            tabs={tabs}
             title={title}
             {...(footerAction ? { footerAction } : {})}
             {...(footerActions ? { footerActions } : {})}

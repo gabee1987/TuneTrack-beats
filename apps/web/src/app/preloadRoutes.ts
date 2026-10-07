@@ -3,13 +3,13 @@ import { preloadSocketClient } from "../services/socket/socketClient";
 let lobbyPagePromise: Promise<unknown> | null = null;
 let gamePagePromise: Promise<unknown> | null = null;
 
-export function preloadLobbyPage(): void {
+function preloadLobbyPage(): void {
   if (!lobbyPagePromise) {
     lobbyPagePromise = import("../pages/LobbyPage/LobbyPage");
   }
 }
 
-export function preloadGamePage(): void {
+function preloadGamePage(): void {
   if (!gamePagePromise) {
     gamePagePromise = import("../pages/GamePage/GamePage");
   }

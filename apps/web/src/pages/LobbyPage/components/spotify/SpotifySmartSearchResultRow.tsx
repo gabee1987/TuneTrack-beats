@@ -200,7 +200,7 @@ export function SpotifySmartSearchResultRow({
   );
 }
 
-export function getSmartSearchResultTypeLabel(
+function getSmartSearchResultTypeLabel(
   t: ReturnType<typeof useI18n>["t"],
   type: SpotifySmartSearchResult["type"],
 ) {

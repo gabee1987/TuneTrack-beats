@@ -50,10 +50,6 @@ export function readHintState(storage: Storage = window.localStorage): HintState
   }
 }
 
-export function hasSeenHint(id: HintId, storage: Storage = window.localStorage): boolean {
-  return (readHintState(storage).seenCounts[id] ?? 0) > 0;
-}
-
 export function isHintsEnabled(storage: Storage = window.localStorage): boolean {
   return readHintState(storage).enabled;
 }

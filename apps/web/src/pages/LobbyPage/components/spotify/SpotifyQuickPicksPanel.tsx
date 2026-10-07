@@ -86,7 +86,7 @@ export function SpotifyQuickPicksPanel({
   );
 }
 
-export function clampQuickPickTargetCount(value: string): number {
+function clampQuickPickTargetCount(value: string): number {
   const parsedValue = Number.parseInt(value, 10);
   if (!Number.isFinite(parsedValue)) return 250;
   return Math.min(Math.max(parsedValue, 10), SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT);

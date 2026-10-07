@@ -126,19 +126,13 @@ export function createToastSlideMotion(
 }
 
 export function createFadeMotion(
-  reduceMotion: boolean,
+  _reduceMotion: boolean,
 ): Record<"initial" | "animate" | "exit", TargetAndTransition> {
-  return reduceMotion
-    ? {
-        initial: { opacity: 0 },
-        animate: { opacity: 1 },
-        exit: { opacity: 0 },
-      }
-    : {
-        initial: { opacity: 0 },
-        animate: { opacity: 1 },
-        exit: { opacity: 0 },
-      };
+  return {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+  };
 }
 
 export function createStandardTransition(reduceMotion: boolean): Transition {

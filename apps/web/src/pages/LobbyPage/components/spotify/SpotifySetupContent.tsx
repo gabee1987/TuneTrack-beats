@@ -394,7 +394,7 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
 
 type PlaylistImportAction = "import" | "search";
 
-export function getPlaylistImportAction(value: string): PlaylistImportAction {
+function getPlaylistImportAction(value: string): PlaylistImportAction {
   const trimmedValue = value.trim();
   if (!trimmedValue) return "search";
   if (/^spotify:playlist:/i.test(trimmedValue)) return "import";
@@ -408,7 +408,7 @@ interface SpotifyImportPlaylistResultRowProps {
   playlist: SpotifyPlaylistSearchItem;
 }
 
-export function SpotifyImportPlaylistResultRow({
+function SpotifyImportPlaylistResultRow({
   onImport,
   playlist,
 }: SpotifyImportPlaylistResultRowProps) {

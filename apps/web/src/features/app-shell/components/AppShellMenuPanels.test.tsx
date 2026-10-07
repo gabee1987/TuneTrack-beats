@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import { hasSeenHint, isHintsEnabled, markHintSeen } from "../../hints/hintState";
+import { type HintId, isHintsEnabled, markHintSeen, readHintState } from "../../hints/hintState";
 import { I18nProvider } from "../../i18n";
 import { useAppShellMenuPreferencesState } from "../hooks/useAppShellMenuPreferencesState";
 import { AppShellMenuPanels } from "./AppShellMenuPanels";
@@ -17,6 +17,10 @@ function MenuPanel({ tabId = "view" }: { tabId?: "settings" | "view" }) {
       />
     </I18nProvider>
   );
+}
+
+function hasSeenHint(id: HintId): boolean {
+  return (readHintState().seenCounts[id] ?? 0) > 0;
 }
 
 describe("AppShellMenuPanels hints settings", () => {

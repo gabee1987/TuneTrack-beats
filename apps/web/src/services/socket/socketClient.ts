@@ -60,10 +60,6 @@ export function preloadSocketClient(): void {
   void getSocketClient();
 }
 
-export function disconnectSocketClient(): void {
-  socketClientInstance?.disconnect();
-}
-
 export function resetSocketClient(): void {
   socketClientGeneration += 1;
 

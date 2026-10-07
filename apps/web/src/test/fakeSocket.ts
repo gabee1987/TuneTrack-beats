@@ -188,7 +188,6 @@ export function createFakeSocket(options: { connected?: boolean } = {}): FakeSoc
 export interface SocketClientMock {
   getSocketClient: ReturnType<typeof vi.fn>;
   preloadSocketClient: ReturnType<typeof vi.fn>;
-  disconnectSocketClient: ReturnType<typeof vi.fn>;
   resetSocketClient: ReturnType<typeof vi.fn>;
 }
 
@@ -196,7 +195,6 @@ export function createSocketClientMock(socket: FakeSocket): SocketClientMock {
   return {
     getSocketClient: vi.fn(() => Promise.resolve(socket)),
     preloadSocketClient: vi.fn(),
-    disconnectSocketClient: vi.fn(() => socket.disconnect()),
     resetSocketClient: vi.fn(() => {
       socket.removeAllListeners();
       socket.disconnect();

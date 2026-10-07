@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MemoryStorage, ThrowingStorage } from "../../test/stubs/storage";
 import {
-  hasSeenHint,
+  type HintId,
   isHintsEnabled,
   hintStateStorageKey,
   markHintSeen,
@@ -9,6 +9,10 @@ import {
   resetHints,
   setHintsEnabled,
 } from "./hintState";
+
+function hasSeenHint(id: HintId, storage: Storage): boolean {
+  return (readHintState(storage).seenCounts[id] ?? 0) > 0;
+}
 
 describe("hintState", () => {
   it("records a hint once and can reset it", () => {

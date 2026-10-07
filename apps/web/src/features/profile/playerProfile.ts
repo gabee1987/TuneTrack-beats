@@ -105,8 +105,3 @@ export const usePlayerProfileStore = create<PlayerProfileStore>((set) => ({
     set(profile);
   },
 }));
-
-export function getPlayerProfile(): PlayerProfile {
-  const { displayName, hasCompletedSetup } = usePlayerProfileStore.getState();
-  return { displayName, hasCompletedSetup };
-}

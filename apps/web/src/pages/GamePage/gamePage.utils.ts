@@ -1,5 +1,4 @@
 import { defaultAnimateLayoutChanges } from "@dnd-kit/sortable";
-import type { PublicRoomState } from "@tunetrack/shared";
 import type { CSSProperties } from "react";
 import type {
   HiddenCardMode,
@@ -14,24 +13,7 @@ export function animateTimelineLayoutChanges(
   return defaultAnimateLayoutChanges(args);
 }
 
-export function formatPhaseLabel(status: PublicRoomState["status"]): string {
-  switch (status) {
-    case "turn":
-      return "Play";
-    case "challenge":
-      return "Challenge";
-    case "reveal":
-      return "Reveal";
-    case "finished":
-      return "Finished";
-    case "lobby":
-      return "Lobby";
-    default:
-      return "Game";
-  }
-}
-
-export function getCardGradient(
+function getCardGradient(
   theme: ThemeId,
   seed: string,
   variant: "default" | "preview" | "overlay" = "default",

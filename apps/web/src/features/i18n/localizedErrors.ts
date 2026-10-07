@@ -112,7 +112,7 @@ const PLAYLIST_IMPORT_ERROR_KEY_BY_CODE: Record<string, string> = {
   too_few_tracks: "error.playlist.tooFewTracks",
 };
 
-export function getServerErrorTranslationKey(code: string): string {
+function getServerErrorTranslationKey(code: string): string {
   return SERVER_ERROR_KEY_BY_CODE[code] ?? "error.server.GENERIC_ROOM_ACTION_FAILED";
 }
 
