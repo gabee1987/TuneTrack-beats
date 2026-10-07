@@ -18,6 +18,24 @@ $5/month and includes $5 of usage before extra usage charges.
 
 ---
 
+## Before every production deploy to `main` — required settings
+
+> **Crucial.** The server starts without these, but it misbehaves in production. Check every
+> item before merging to `main`, and again whenever the Railway service is recreated.
+
+- [ ] **Railway → Variables: `TRUST_PROXY_HOPS = 1`.** Railway's edge proxy sits in front of
+      the server. Without this setting the server sees the proxy's address for every request,
+      so all players share one Spotify-login limit (10 per minute) and a busy party gets
+      "Too many requests". Use `1` only while the service has the generated
+      `*.up.railway.app` domain, no Cloudflare in front and CDN caching off; a further proxy
+      in front needs one more hop.
+- [ ] **Railway → Variables: `CLIENT_ORIGIN`** is the exact Render URL, no trailing slash.
+- [ ] **Render → Environment: `VITE_SERVER_URL`** is the Railway URL; after a change, run
+      **Manual Deploy** so the bundle is rebuilt.
+- [ ] After the deploy, run check [E6](#e6--per-address-limit-sees-the-real-client).
+
+---
+
 ## Overview of what you will set up
 
 ```
@@ -112,18 +130,18 @@ After the project is created you will see a canvas with a service card in it.
 | `SPOTIFY_CLIENT_ID`     | _(your client ID)_                                 | Copy from the Spotify developer dashboard                                                                   |
 | `SPOTIFY_CLIENT_SECRET` | _(your client secret)_                             | Copy from the Spotify developer dashboard                                                                   |
 | `SPOTIFY_REDIRECT_URI`  | `https://YOUR-RAILWAY-DOMAIN/api/spotify/callback` | Replace with the domain you generated in A2                                                                 |
+| `TRUST_PROXY_HOPS`      | `1`                                                | **Required on Railway.** Without it every player shares one rate limit (see the checklist at the top)       |
 
 Room lifecycle variables are optional. When omitted, the server uses these production
 defaults:
 
-| Key                               | Default   | Purpose                                                    |
-| --------------------------------- | --------- | ---------------------------------------------------------- |
-| `MAX_ACTIVE_ROOMS`                | `5`       | Maximum rooms held by one server process                   |
-| `RECONNECT_GRACE_MS`              | `30000`   | Lobby reconnect window before removal                      |
-| `HOST_TRANSFER_GRACE_MS`          | `30000`   | Delay before an offline in-game host transfers             |
-| `TURN_SKIP_GRACE_MS`              | `60000`   | Safety delay before an offline active turn advances        |
-| `TRUST_PROXY_HOPS`                | `0`       | Set to `1` on Railway so per-address limits see the client |
-| `ALL_PLAYERS_OFFLINE_ROOM_TTL_MS` | `3600000` | Continuous all-offline time before the whole room closes   |
+| Key                               | Default   | Purpose                                                  |
+| --------------------------------- | --------- | -------------------------------------------------------- |
+| `MAX_ACTIVE_ROOMS`                | `5`       | Maximum rooms held by one server process                 |
+| `RECONNECT_GRACE_MS`              | `30000`   | Lobby reconnect window before removal                    |
+| `HOST_TRANSFER_GRACE_MS`          | `30000`   | Delay before an offline in-game host transfers           |
+| `TURN_SKIP_GRACE_MS`              | `60000`   | Safety delay before an offline active turn advances      |
+| `ALL_PLAYERS_OFFLINE_ROOM_TTL_MS` | `3600000` | Continuous all-offline time before the whole room closes |
 
 Example with a real domain:
 
@@ -300,6 +318,18 @@ If you see the request going to `wss://tunetrack-web.onrender.com` instead, the
 3. After logging in, Spotify redirects back to `https://YOUR-RAILWAY-DOMAIN/api/spotify/callback`
 4. You should be redirected back to the app in an authenticated state
 
+### E6 — Per-address limit sees the real client
+
+Confirms `TRUST_PROXY_HOPS = 1`.
+
+1. On a phone using mobile data, open `https://YOUR-RAILWAY-DOMAIN/api/spotify/callback`
+   11 times in a row. The 11th answer is "Too many requests".
+2. Within the same minute, open the same URL from a computer on another network. It must
+   **not** say "Too many requests".
+
+If the computer is also refused, every player shares one limit: set `TRUST_PROXY_HOPS = 1`
+in Railway → Variables and repeat the check.
+
 ---
 
 ## Troubleshooting
@@ -391,7 +421,7 @@ Both services watch your `main` branch and redeploy automatically when you push.
 | `SPOTIFY_CLIENT_SECRET`           | `xyz789...`                                                       | From Spotify developer dashboard — keep private       |
 | `SPOTIFY_REDIRECT_URI`            | `https://YOUR-RAILWAY-DOMAIN.up.railway.app/api/spotify/callback` | Must be registered in Spotify dashboard               |
 | `MAX_ACTIVE_ROOMS`                | `5`                                                               | Optional; defaults to 5                               |
-| `TRUST_PROXY_HOPS`                | `1`                                                               | Railway's edge proxy is the one hop in front          |
+| `TRUST_PROXY_HOPS`                | `1`                                                               | **Required** — Railway's edge proxy is the one hop    |
 | `RECONNECT_GRACE_MS`              | `30000`                                                           | Optional lobby reconnect window                       |
 | `HOST_TRANSFER_GRACE_MS`          | `30000`                                                           | Optional in-game host-transfer delay                  |
 | `TURN_SKIP_GRACE_MS`              | `60000`                                                           | Optional offline-turn safety delay                    |
