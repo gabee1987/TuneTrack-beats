@@ -21,6 +21,7 @@ export function useKickPlayerAction({
 
   const handleKickPlayer = useCallback(
     (playerId: string) => {
+      const roomState = roomStateRef.current;
       if (
         !roomState ||
         roomState.hostId !== currentPlayerId ||
@@ -71,7 +72,7 @@ export function useKickPlayerAction({
         }
       })();
     },
-    [currentPlayerId, roomState],
+    [currentPlayerId],
   );
 
   return {

@@ -2,8 +2,8 @@
 
 > **Status (2026-10-06):** Phases 1–5 are open and not started (no `LazyMotion`, no
 > `sideEffects` flag, no shared subpath exports, `vendor-zod` branch still in `vite.config.ts`,
-> both i18n catalogues parsed eagerly, all six CSS barrels present, no `analyze` script, no
-> bundle baseline file). Phase 6 shipped on 2026-09-17.
+> both i18n catalogues parsed eagerly, all six CSS barrels present). Phase 6 shipped on
+> 2026-09-17. §9 shipped on 2026-10-07 as `05` D0 (`measure:bundle`, `bundle-baseline.md`).
 > **Folded from** `docs/plans/2026-09-stability-performance/02-bundle-and-startup.md` on
 > 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
 > Addresses finding **F-14** (startup) and **T-02** (boundary lint) of `01-review-findings.md`.
@@ -313,16 +313,9 @@ on a user's device.
 
 ## 9. Verification harness for this document
 
-Add these to `apps/web/package.json` so every phase is measurable rather than asserted:
-
-- `"analyze": "vite build --mode production && vite-bundle-visualizer"` — development
-  dependency only, never shipped. Note: this is a local dev tool, not a hosted service, so
-  no compliance review is required; if a hosted bundle-analysis service is ever proposed,
-  raise it first.
-- A committed `docs/plans/2026-10-project-review/bundle-baseline.md` capturing the
-  table in section 1, updated at the end of each phase with the new numbers and the delta.
-  The file was never created under the 2026-09 programme; Phase 5 of the review programme
-  defines the measurement command it must record.
+**Shipped 2026-10-07** as `05` D0: `npm run measure:bundle -w @tunetrack/web`
+(`apps/web/scripts/measure-bundle.mjs`, Node built-ins only, no visualizer dependency) and
+`bundle-baseline.md`, which every phase with a bundle budget extends by one row.
 
 ## 10. Risk register
 

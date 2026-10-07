@@ -67,12 +67,15 @@ describe("buildGamePageAssemblyModel", () => {
         tone: "success",
       },
       roomState: {
-        players: [],
+        challengeState: null,
+        hostId: "player-1",
+        players: [{ id: "player-2", displayName: "Player Two" }],
         roomId: "ABCD",
         settings: { ttModeEnabled: true },
-        status: "playing",
+        status: "turn",
         timelines: {},
-        turn: { turnNumber: 4 },
+        turn: { activePlayerId: "player-2", turnNumber: 4, turnSkipDeadlineEpochMs: 12345 },
+        winnerPlayerId: null,
       },
       selectedSlotIndex: 2,
       setSelectedSlotIndex: () => undefined,
@@ -108,7 +111,13 @@ describe("buildGamePageAssemblyModel", () => {
 
     const model = buildGamePageAssemblyModel(controller);
 
-    expect(model.header.roomState.roomId).toBe("ABCD");
+    expect(model.header).toMatchObject({
+      hostId: "player-1",
+      roomId: "ABCD",
+      status: "turn",
+      ttModeEnabled: true,
+      turnNumber: 4,
+    });
     expect(model.header.statusBadgeText).toBe("Your turn");
     expect(model.header.closeRoomActionStatus).toBe("failed");
     expect(model.header.isCloseRoomPending).toBe(false);
@@ -138,6 +147,16 @@ describe("buildGamePageAssemblyModel", () => {
     expect(model.actions.skipTurnActionStatus).toBe("retrying");
     expect(model.header.isSkipTurnPending).toBe(true);
     expect(model.header.skipTurnActionStatus).toBe("retrying");
-    expect(model.actions.roomState).toBe(controller.roomState);
+    expect(model.actions).toMatchObject({
+      challengeDeadlineEpochMs: null,
+      challengePhase: null,
+      skipCandidateName: "Player Two",
+      status: "turn",
+      ttModeEnabled: true,
+      turnSkipDeadlineEpochMs: 12345,
+      winnerPlayerId: null,
+    });
+    expect(model).not.toHaveProperty("header.roomState");
+    expect(model).not.toHaveProperty("actions.roomState");
   });
 });

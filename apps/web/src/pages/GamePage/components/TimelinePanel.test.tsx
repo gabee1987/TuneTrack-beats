@@ -1,10 +1,26 @@
 import { act, render } from "@testing-library/react";
+import { memo, type ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { TimelineCardPublic } from "@tunetrack/shared";
 import { I18nProvider } from "../../../features/i18n";
 import type { TimelineCelebrationTransitionEvent } from "../gamePageTransitionEvents";
 import type { TimelinePanelModel } from "../GamePage.types";
 import { TimelinePanel } from "./TimelinePanel";
+
+const sortableItemRenders = vi.hoisted(() => new Map<string, number>());
+
+// Same shallow comparison as the real `memo(TimelineSortableItemComponent)`, so this counts
+// renders caused by changed props. dnd-kit's sortable context re-renders every item on a
+// reorder regardless; that cost is outside what the props can control.
+vi.mock("./TimelineSortableItem", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./TimelineSortableItem")>();
+  return {
+    TimelineSortableItem: memo((props: ComponentProps<typeof actual.TimelineSortableItem>) => {
+      sortableItemRenders.set(props.id, (sortableItemRenders.get(props.id) ?? 0) + 1);
+      return <actual.TimelineSortableItem {...props} />;
+    }),
+  };
+});
 
 function buildModel(overrides: {
   timelineCards: TimelineCardPublic[];
@@ -185,5 +201,51 @@ describe("TimelinePanel correct-placement glow", () => {
     );
 
     expect(countYearOccurrences(container, 2010)).toBe(2);
+  });
+});
+
+describe("TimelinePanel render cost (05 C2)", () => {
+  const timelineCards = [
+    buildCard({ id: "slot-a", releaseYear: 1970, revealedYear: 1970 }),
+    buildCard({ id: "slot-b", releaseYear: 1990, revealedYear: 1990 }),
+    buildCard({ id: "slot-c", releaseYear: 2010, revealedYear: 2010 }),
+  ];
+  const previewCard = { id: "track-current", title: "Current Track", artist: "Test Artist" };
+  const onSelectSlot = vi.fn();
+
+  function buildSelectableModel(selectedSlotIndex: number): TimelinePanelModel {
+    const model = buildModel({
+      timelineCards,
+      originalChosenSlotIndex: null,
+      showCorrectPlacementPreview: false,
+      celebrationEvent: null,
+    });
+    return {
+      ...model,
+      interaction: {
+        ...model.interaction,
+        onSelectSlot,
+        previewCard: previewCard as TimelinePanelModel["interaction"]["previewCard"],
+        previewSlotIndex: selectedSlotIndex,
+        selectable: true,
+        selectedSlotIndex,
+      },
+    };
+  }
+
+  it("gives unmoved cards equal props when the preview moves to another slot", () => {
+    sortableItemRenders.clear();
+    const { rerender } = render(renderModel(buildSelectableModel(0)));
+    const renderedItemIds = [...sortableItemRenders.keys()];
+    sortableItemRenders.clear();
+
+    rerender(renderModel(buildSelectableModel(2)));
+
+    const timelineItemIds = renderedItemIds.filter((itemId) => itemId !== "timeline-preview-card");
+    expect(timelineItemIds).toHaveLength(timelineCards.length);
+    for (const itemId of timelineItemIds) {
+      expect(sortableItemRenders.get(itemId) ?? 0, itemId).toBe(0);
+    }
+    expect(sortableItemRenders.get("timeline-preview-card") ?? 0).toBeLessThanOrEqual(1);
   });
 });

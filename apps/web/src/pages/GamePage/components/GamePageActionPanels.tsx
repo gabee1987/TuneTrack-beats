@@ -43,10 +43,11 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     canUseSkipTrack,
     challengeActionBody,
     challengeActionTitle,
+    challengeDeadlineEpochMs,
+    challengePhase,
     claimChallengeActionStatus,
     confirmRevealActionStatus,
     currentPlayerTtCount,
-    getPlayerName,
     handleBuyTimelineCardWithTt,
     handleClaimChallenge,
     handleConfirmReveal,
@@ -68,8 +69,13 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     resolveChallengeWindowActionStatus,
     skipTrackActionStatus,
     skipTurnActionStatus,
-    roomState,
     showHelperLabels,
+    skipCandidateName,
+    status,
+    ttModeEnabled,
+    turnSkipDeadlineEpochMs,
+    winnerPlayerId,
+    winnerPlayerName,
   } = model;
 
   function handleTokenSpendAnimationStart(payload: {
@@ -139,6 +145,8 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
         canResolveChallengeWindow={canResolveChallengeWindow}
         challengeActionBody={challengeActionBody}
         challengeActionTitle={challengeActionTitle}
+        challengeDeadlineEpochMs={challengeDeadlineEpochMs}
+        challengePhase={challengePhase}
         claimChallengeActionStatus={claimChallengeActionStatus}
         currentPlayerTtCount={currentPlayerTtCount}
         handleClaimChallenge={handleClaimChallenge}
@@ -151,14 +159,15 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
         onTokenSpendAnimationStart={handleTokenSpendAnimationStart}
         placeChallengeActionStatus={placeChallengeActionStatus}
         resolveChallengeWindowActionStatus={resolveChallengeWindowActionStatus}
-        roomState={roomState}
+        ttModeEnabled={ttModeEnabled}
       />
 
       <FinishedStatePanel
         currentPlayerId={model.currentPlayerId}
-        getPlayerName={getPlayerName}
-        roomState={roomState}
         showHelperLabels={showHelperLabels}
+        status={status}
+        winnerPlayerId={winnerPlayerId}
+        winnerPlayerName={winnerPlayerName}
       />
 
       <RevealActionDock
@@ -166,7 +175,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
         confirmRevealActionStatus={confirmRevealActionStatus}
         handleConfirmReveal={handleConfirmReveal}
         isConfirmRevealPending={isConfirmRevealPending}
-        roomState={roomState}
+        status={status}
       />
 
       <TurnActionDock
@@ -185,9 +194,11 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
         isSkipTurnPending={isSkipTurnPending}
         placeCardActionStatus={placeCardActionStatus}
         onTokenSpendAnimationStart={handleTokenSpendAnimationStart}
-        roomState={roomState}
+        skipCandidateName={skipCandidateName}
         skipTrackActionStatus={skipTrackActionStatus}
         skipTurnActionStatus={skipTurnActionStatus}
+        status={status}
+        turnSkipDeadlineEpochMs={turnSkipDeadlineEpochMs}
       />
     </>
   );
@@ -209,10 +220,11 @@ function areActionPanelModelsEqual(
     previousModel.buyTimelineCardActionStatus === nextModel.buyTimelineCardActionStatus &&
     previousModel.challengeActionBody === nextModel.challengeActionBody &&
     previousModel.challengeActionTitle === nextModel.challengeActionTitle &&
+    previousModel.challengeDeadlineEpochMs === nextModel.challengeDeadlineEpochMs &&
+    previousModel.challengePhase === nextModel.challengePhase &&
     previousModel.claimChallengeActionStatus === nextModel.claimChallengeActionStatus &&
     previousModel.confirmRevealActionStatus === nextModel.confirmRevealActionStatus &&
     previousModel.currentPlayerTtCount === nextModel.currentPlayerTtCount &&
-    previousModel.getPlayerName === nextModel.getPlayerName &&
     previousModel.handleBuyTimelineCardWithTt === nextModel.handleBuyTimelineCardWithTt &&
     previousModel.handleClaimChallenge === nextModel.handleClaimChallenge &&
     previousModel.handleConfirmReveal === nextModel.handleConfirmReveal &&
@@ -236,8 +248,13 @@ function areActionPanelModelsEqual(
       nextModel.resolveChallengeWindowActionStatus &&
     previousModel.skipTrackActionStatus === nextModel.skipTrackActionStatus &&
     previousModel.skipTurnActionStatus === nextModel.skipTurnActionStatus &&
-    previousModel.roomState === nextModel.roomState &&
-    previousModel.showHelperLabels === nextModel.showHelperLabels
+    previousModel.showHelperLabels === nextModel.showHelperLabels &&
+    previousModel.skipCandidateName === nextModel.skipCandidateName &&
+    previousModel.status === nextModel.status &&
+    previousModel.ttModeEnabled === nextModel.ttModeEnabled &&
+    previousModel.turnSkipDeadlineEpochMs === nextModel.turnSkipDeadlineEpochMs &&
+    previousModel.winnerPlayerId === nextModel.winnerPlayerId &&
+    previousModel.winnerPlayerName === nextModel.winnerPlayerName
   );
 }
 

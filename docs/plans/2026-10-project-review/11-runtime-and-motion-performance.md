@@ -1,6 +1,7 @@
 # 11 — Runtime and Motion Performance
 
-> **Status (2026-10-06):** Every phase is open and no step has started: `gamePage.constants.ts`
+> **Status (2026-10-07):** Phase 6 shipped as `05` C1 and C2 (no slice store); every other
+> phase is open and no step has started: `gamePage.constants.ts`
 > is unchanged (860 ms / 180 ms / 4 px / 120 px), `PlaylistTrackList` rows are still
 > `motion.div`, the capture-phase `pointerdown` listener remains in `HostPlaybackProvider.tsx`,
 > `usePageLayoutMode.ts` and `main.tsx` still own their own `resize` listeners, and no
@@ -229,42 +230,13 @@ app, in the capture phase, for the whole game.
 
 ## 7. Phase 6 — Reduce realtime render churn
 
-**Finding:** F-08 (the wire-format half of this is B-16, owned by
-`13-network-protocol-and-resilience.md` §4).
-
-Even with a smaller payload, every `state_update` replaces `roomState` wholesale, so every
-selector downstream of it recomputes and every memo keyed on `roomState` invalidates.
-`GamePageHeader` already has a hand-written `areHeaderModelsEqual` comparator
-(`components/GamePageHeader.tsx`) which compares `previousModel.roomState === nextModel.roomState`
-by reference — so it re-renders on every single state update regardless of whether
-anything it displays changed.
-
-### Change
-
-- Introduce a normalised client-side room store fed by `state_update`, holding
-  independently-referenced slices: `players`, `timelinesByPlayerId`, `settings`, `turn`,
-  `challengeState`, `revealState`, `currentTrackCard`, `history`. On each update, replace
-  only the slices whose serialised content differs. This keeps object identity stable for
-  untouched slices, so existing memoisation starts working as intended.
-- Repoint the derived-state hooks (`useGamePageDerivedState`, `useGamePageTimelineState`,
-  `useGamePageStatusState` and siblings) at slices rather than at whole `roomState`.
-- Replace `areHeaderModelsEqual`'s `roomState` reference check with checks on the specific
-  slices the header renders (`players` for standings, `settings.ttModeEnabled`,
-  `turn.turnNumber`, `status`, `roomId`, `hostId`).
-
-This is the largest change in this document and should be its own wave. Do it **after**
-`13-network-protocol-and-resilience.md` §4 lands the delta protocol, because the
-slice-diffing logic belongs on the receiving side of that protocol and doing both at once
-doubles the risk.
-
-### Acceptance
-
-- [ ] Awarding a TT token to one player re-renders the player list and header counters
-      only — not the timeline, not the action dock. Assert with render counters in a
-      component test.
-- [ ] A connection-status change on a non-active player does not re-render the timeline.
-- [ ] All existing GamePage selector tests pass unchanged; new tests cover slice identity
-      stability across an update that changes nothing.
+**Shipped 2026-10-07** as `05` C1 and C2, superseding the slice store (`05` §3): stable action
+handlers, scalar header and action-panel models, memoised timeline models, and structural
+sharing of each `state_update` (`pages/GamePage/reuseUnchangedReferences.ts`). A token change
+for another player re-renders the header once and neither the action panels nor the timeline
+items. Proof: `pages/GamePage/GamePage.renderBudget.test.tsx`,
+`hooks/useGamePageActions.identity.test.tsx`, `components/TimelinePanel.test.tsx`,
+`reuseUnchangedReferences.test.ts`. The connection-status case is not separately asserted.
 
 ## 8. Other items found during the audit
 

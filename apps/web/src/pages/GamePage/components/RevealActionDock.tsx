@@ -10,7 +10,7 @@ interface RevealActionDockProps {
   confirmRevealActionStatus: ConfirmRevealActionStatus;
   handleConfirmReveal: () => void;
   isConfirmRevealPending: boolean;
-  roomState: PublicRoomState;
+  status: PublicRoomState["status"];
 }
 
 export function RevealActionDock({
@@ -18,12 +18,12 @@ export function RevealActionDock({
   confirmRevealActionStatus,
   handleConfirmReveal,
   isConfirmRevealPending,
-  roomState,
+  status,
 }: RevealActionDockProps) {
   const { t } = useI18n();
   const [nextSongHintAnchor, setNextSongHintAnchor] = useState<HTMLElement | null>(null);
 
-  if (roomState.status !== "reveal" || !canConfirmReveal) {
+  if (status !== "reveal" || !canConfirmReveal) {
     return null;
   }
 

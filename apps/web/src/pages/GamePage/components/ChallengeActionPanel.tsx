@@ -1,4 +1,4 @@
-import { CHALLENGE_TT_COST, type PublicRoomState } from "@tunetrack/shared";
+import { CHALLENGE_TT_COST } from "@tunetrack/shared";
 import { motion, useIsPresent } from "framer-motion";
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -14,6 +14,7 @@ import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import { useChallengeCountdownLabel } from "../hooks/useChallengeCountdownLabel";
 import type {
   ClaimChallengeActionStatus,
+  GamePageChallengePhase,
   PlaceChallengeActionStatus,
   ResolveChallengeWindowActionStatus,
 } from "../GamePage.types";
@@ -58,6 +59,9 @@ interface ChallengeActionPanelProps {
   canResolveChallengeWindow: boolean;
   challengeActionBody: string | null;
   challengeActionTitle: string | null;
+  challengeDeadlineEpochMs: number | null;
+  /** Null outside the challenge phase. */
+  challengePhase: GamePageChallengePhase | null;
   claimChallengeActionStatus: ClaimChallengeActionStatus;
   currentPlayerTtCount: number;
   handleClaimChallenge: () => void;
@@ -72,9 +76,9 @@ interface ChallengeActionPanelProps {
     originX: number;
     originY: number;
   }) => void;
-  roomState: PublicRoomState;
   placeChallengeActionStatus: PlaceChallengeActionStatus;
   resolveChallengeWindowActionStatus: ResolveChallengeWindowActionStatus;
+  ttModeEnabled: boolean;
 }
 
 export function ChallengeActionPanel({
@@ -83,6 +87,8 @@ export function ChallengeActionPanel({
   canResolveChallengeWindow,
   challengeActionBody,
   challengeActionTitle,
+  challengeDeadlineEpochMs,
+  challengePhase,
   claimChallengeActionStatus,
   currentPlayerTtCount,
   handleClaimChallenge,
@@ -93,9 +99,9 @@ export function ChallengeActionPanel({
   isPlaceChallengePending,
   isResolveChallengeWindowPending,
   onTokenSpendAnimationStart,
-  roomState,
   placeChallengeActionStatus,
   resolveChallengeWindowActionStatus,
+  ttModeEnabled,
 }: ChallengeActionPanelProps) {
   const { t } = useI18n();
   const reduceMotion = useReducedMotionPreference();
@@ -104,9 +110,7 @@ export function ChallengeActionPanel({
   const beatCostBadgeRef = useRef<HTMLSpanElement | null>(null);
   const [challengeHintAnchor, setChallengeHintAnchor] = useState<HTMLElement | null>(null);
 
-  const challengeState = roomState.status === "challenge" ? roomState.challengeState : null;
-  const isOpenChallengeWindow = challengeState?.phase === "open";
-  const challengeDeadlineEpochMs = challengeState?.challengeDeadlineEpochMs ?? null;
+  const isOpenChallengeWindow = challengePhase === "open";
   const challengeCountdownLabel = useChallengeCountdownLabel(
     challengeDeadlineEpochMs,
     isOpenChallengeWindow,
@@ -116,7 +120,7 @@ export function ChallengeActionPanel({
 
   const challengeStatusText = challengeCountdownLabel
     ? challengeCountdownLabel
-    : challengeState?.phase === "claimed"
+    : challengePhase === "claimed"
       ? t("game.challenge.beatWasClaimed")
       : isActivePlayerChallengeView
         ? canResolveChallengeWindow
@@ -128,13 +132,13 @@ export function ChallengeActionPanel({
   const countdownStageClassName = styles[getCountdownStageClassName(countdownSeconds)];
   const panelClassName = `${styles.challengeCallout} ${countdownStageClassName}`;
   const titleText =
-    challengeState?.phase === "open"
+    challengePhase === "open"
       ? isActivePlayerChallengeView
         ? t("game.challenge.beatWindowOpen")
         : t("game.challenge.callBeat")
       : challengeActionTitle;
   const bodyText =
-    challengeState?.phase === "open"
+    challengePhase === "open"
       ? isActivePlayerChallengeView
         ? canResolveChallengeWindow
           ? isManualChallengeWindow
@@ -224,7 +228,7 @@ export function ChallengeActionPanel({
 
   const challengeCallout = (
     <MotionPresence>
-      {challengeState ? (
+      {challengePhase ? (
         <motion.section
           animate="animate"
           aria-live="polite"
@@ -251,7 +255,7 @@ export function ChallengeActionPanel({
                 <span>{challengeStatusText}</span>
               </div>
 
-              {roomState.settings.ttModeEnabled ? (
+              {ttModeEnabled ? (
                 <span className={styles.challengeTokenChip}>
                   {t("game.challenge.yourTokens")}{" "}
                   <TokenCountAmount amount={currentPlayerTtCount} />
@@ -277,7 +281,7 @@ export function ChallengeActionPanel({
   return portalTarget ? (
     <>
       {createPortal(challengeCallout, portalTarget)}
-      {challengeState ? actionDock : null}
+      {challengePhase ? actionDock : null}
       {challengeHint}
     </>
   ) : actionDock ? (

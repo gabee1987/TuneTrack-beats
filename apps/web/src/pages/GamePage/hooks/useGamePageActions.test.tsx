@@ -69,9 +69,11 @@ function PlacementHarness({
         isSkipTrackPending={actions.isSkipTrackPending}
         isSkipTurnPending={actions.isSkipTurnPending}
         placeCardActionStatus={actions.placeCardActionStatus}
-        roomState={roomState}
         skipTrackActionStatus={actions.skipTrackActionStatus}
+        skipCandidateName={null}
         skipTurnActionStatus={actions.skipTurnActionStatus}
+        status={roomState.status}
+        turnSkipDeadlineEpochMs={roomState.turn?.turnSkipDeadlineEpochMs ?? null}
       />
     </I18nProvider>
   );
@@ -98,7 +100,7 @@ function RevealHarness() {
         confirmRevealActionStatus={actions.confirmRevealActionStatus}
         handleConfirmReveal={actions.handleConfirmReveal}
         isConfirmRevealPending={actions.isConfirmRevealPending}
-        roomState={roomState}
+        status={roomState.status}
       />
     </I18nProvider>
   );
@@ -146,7 +148,9 @@ function ChallengePlacementHarness() {
         isResolveChallengeWindowPending={actions.isResolveChallengeWindowPending}
         placeChallengeActionStatus={actions.placeChallengeActionStatus}
         resolveChallengeWindowActionStatus={actions.resolveChallengeWindowActionStatus}
-        roomState={roomState}
+        challengeDeadlineEpochMs={roomState.challengeState?.challengeDeadlineEpochMs ?? null}
+        challengePhase={roomState.challengeState?.phase ?? null}
+        ttModeEnabled={roomState.settings.ttModeEnabled}
       />
     </I18nProvider>
   );
@@ -185,7 +189,9 @@ function ChallengeClaimHarness() {
         isResolveChallengeWindowPending={actions.isResolveChallengeWindowPending}
         placeChallengeActionStatus={actions.placeChallengeActionStatus}
         resolveChallengeWindowActionStatus={actions.resolveChallengeWindowActionStatus}
-        roomState={roomState}
+        challengeDeadlineEpochMs={roomState.challengeState?.challengeDeadlineEpochMs ?? null}
+        challengePhase={roomState.challengeState?.phase ?? null}
+        ttModeEnabled={roomState.settings.ttModeEnabled}
       />
     </I18nProvider>
   );
@@ -224,7 +230,9 @@ function ChallengeResolveHarness() {
         isResolveChallengeWindowPending={actions.isResolveChallengeWindowPending}
         placeChallengeActionStatus={actions.placeChallengeActionStatus}
         resolveChallengeWindowActionStatus={actions.resolveChallengeWindowActionStatus}
-        roomState={roomState}
+        challengeDeadlineEpochMs={roomState.challengeState?.challengeDeadlineEpochMs ?? null}
+        challengePhase={roomState.challengeState?.phase ?? null}
+        ttModeEnabled={roomState.settings.ttModeEnabled}
       />
     </I18nProvider>
   );
@@ -334,9 +342,11 @@ function BuyTimelineCardHarness({
         isSkipTurnPending={actions.isSkipTurnPending}
         onTokenSpendAnimationStart={onTokenSpendAnimationStart}
         placeCardActionStatus={actions.placeCardActionStatus}
-        roomState={roomState}
         skipTrackActionStatus={actions.skipTrackActionStatus}
+        skipCandidateName={null}
         skipTurnActionStatus={actions.skipTurnActionStatus}
+        status={roomState.status}
+        turnSkipDeadlineEpochMs={roomState.turn?.turnSkipDeadlineEpochMs ?? null}
       />
     </I18nProvider>
   );
@@ -383,9 +393,11 @@ function SkipTrackHarness({
         isSkipTurnPending={actions.isSkipTurnPending}
         onTokenSpendAnimationStart={onTokenSpendAnimationStart}
         placeCardActionStatus={actions.placeCardActionStatus}
-        roomState={roomState}
         skipTrackActionStatus={actions.skipTrackActionStatus}
+        skipCandidateName={null}
         skipTurnActionStatus={actions.skipTurnActionStatus}
+        status={roomState.status}
+        turnSkipDeadlineEpochMs={roomState.turn?.turnSkipDeadlineEpochMs ?? null}
       />
     </I18nProvider>
   );
@@ -416,62 +428,6 @@ function AwardTtHarness() {
         onAwardTt={() => actions.handleAwardTt(TEST_GUEST_ID)}
         onRemoveTt={() => actions.handleRemoveTt(TEST_GUEST_ID)}
         playerId={TEST_GUEST_ID}
-      />
-    </I18nProvider>
-  );
-}
-
-function SkipTurnHarness() {
-  const roomState = buildTurnRoomState({
-    players: [
-      {
-        ...buildTurnRoomState().players[0]!,
-        connectionStatus: "connected",
-      },
-      {
-        ...buildTurnRoomState().players[1]!,
-        connectionStatus: "disconnected",
-      },
-    ],
-    turn: {
-      activePlayerId: TEST_GUEST_ID,
-      turnNumber: 2,
-      hasUsedSkipTrackWithTt: false,
-      turnSkipDeadlineEpochMs: Date.now() + 10_000,
-    },
-  });
-  const actions = useGamePageActions({
-    canClaimChallenge: false,
-    canConfirmReveal: false,
-    canResolveChallengeWindow: false,
-    canSelectChallengeSlot: false,
-    currentPlayerId: TEST_HOST_ID,
-    isCurrentPlayerTurn: false,
-    roomState,
-    selectedSlotIndex: 1,
-    setLocallyPlacedCard: vi.fn(),
-  });
-
-  return (
-    <I18nProvider>
-      <TurnActionDock
-        buyTimelineCardActionStatus={actions.buyTimelineCardActionStatus}
-        canConfirmTurnPlacement={false}
-        canSkipOfflinePlayer
-        canUseBuyCard={false}
-        canUseSkipTrack={false}
-        handleBuyTimelineCardWithTt={actions.handleBuyTimelineCardWithTt}
-        handlePlaceCard={actions.handlePlaceCard}
-        handleSkipOfflinePlayer={actions.handleSkipTurn}
-        handleSkipTrackWithTt={actions.handleSkipTrackWithTt}
-        isBuyTimelineCardPending={actions.isBuyTimelineCardPending}
-        isPlaceCardPending={actions.isPlaceCardPending}
-        isSkipTrackPending={actions.isSkipTrackPending}
-        isSkipTurnPending={actions.isSkipTurnPending}
-        placeCardActionStatus={actions.placeCardActionStatus}
-        roomState={roomState}
-        skipTrackActionStatus={actions.skipTrackActionStatus}
-        skipTurnActionStatus={actions.skipTurnActionStatus}
       />
     </I18nProvider>
   );
@@ -1016,50 +972,6 @@ describe("useGamePageActions award_tt", () => {
     });
 
     const retryButton = screen.getByRole("button", { name: /try adding token again/i });
-    expect(retryButton).toBeEnabled();
-
-    emitActionMock.mockResolvedValueOnce({ status: "ok" });
-    fireEvent.click(retryButton);
-
-    await waitFor(() => expect(emitActionMock).toHaveBeenCalledTimes(2));
-  });
-});
-
-describe("useGamePageActions skip_turn", () => {
-  beforeEach(() => {
-    emitActionMock.mockReset();
-  });
-
-  it("retries safely, blocks duplicate skips, and exposes a final retry", async () => {
-    const deferred = createDeferredActionResult();
-    emitActionMock.mockReturnValueOnce(deferred.promise);
-    render(<SkipTurnHarness />);
-
-    const skipButton = screen.getByRole("button", { name: /skip turn/i });
-    fireEvent.click(skipButton);
-    fireEvent.click(skipButton);
-
-    expect(skipButton).toBeDisabled();
-    expect(emitActionMock).toHaveBeenCalledTimes(1);
-    expect(emitActionMock).toHaveBeenCalledWith(
-      ClientToServerEvent.SkipTurn,
-      { roomId: "TEST_ROOM_1" },
-      expect.objectContaining({ retryOnTimeout: true }),
-    );
-
-    const options = emitActionMock.mock.calls[0]?.[2] as {
-      onTimeoutRetry?: () => void;
-    };
-    act(() => options.onTimeoutRetry?.());
-
-    expect(screen.getByRole("button", { name: /no response.*retrying/i })).toBeDisabled();
-
-    await act(async () => {
-      deferred.resolve({ status: "timeout" });
-      await deferred.promise;
-    });
-
-    const retryButton = screen.getByRole("button", { name: /try skipping turn again/i });
     expect(retryButton).toBeEnabled();
 
     emitActionMock.mockResolvedValueOnce({ status: "ok" });

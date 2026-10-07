@@ -3,6 +3,7 @@ import type {
   AwardTtActionState,
   ChallengeMarkerTone,
   GamePageCard,
+  GamePageLeader,
   GamePagePlayerNameResolver,
   GamePageViewPreferenceUpdater,
   KickPlayerActionState,
@@ -57,7 +58,7 @@ interface GamePageDerivedPlayerState {
   getPlayerName: GamePagePlayerNameResolver;
   isChallengeOwner: boolean;
   isCurrentPlayerTurn: boolean;
-  leadingPlayers: PublicRoomState["players"];
+  leadingPlayers: GamePageLeader[];
 }
 
 interface GamePageDerivedInteractionState {

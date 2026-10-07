@@ -9,6 +9,7 @@ import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import { useI18n } from "../../../features/i18n";
 import type {
   AwardTtActionState,
+  GamePageLeader,
   KickPlayerActionState,
   TransferHostActionState,
 } from "../GamePage.types";
@@ -47,7 +48,7 @@ interface UseGamePageCapabilityStateResult {
   canUseSkipTrack: boolean;
   isChallengeOwner: boolean;
   isCurrentPlayerTurn: boolean;
-  leadingPlayers: PublicRoomState["players"];
+  leadingPlayers: GamePageLeader[];
   menuTabs: AppShellMenuTab[];
 }
 
@@ -102,16 +103,16 @@ export function useGamePageCapabilityState({
 
   // Stable identity while roomState is unchanged so GamePageHeader's memo can skip
   // re-renders during local-only interactions (slot selection, drag, menu open).
-  const leadingPlayers = useMemo<PublicRoomState["players"]>(
+  const leadingPlayers = useMemo<GamePageLeader[]>(
     () =>
       roomState?.players
-        .slice()
-        .sort((leftPlayer, rightPlayer) => {
-          const rightScore = roomState.timelines[rightPlayer.id]?.length ?? 0;
-          const leftScore = roomState.timelines[leftPlayer.id]?.length ?? 0;
-
-          return rightScore - leftScore;
-        })
+        .map((player) => ({
+          cardCount: roomState.timelines[player.id]?.length ?? 0,
+          displayName: player.displayName,
+          id: player.id,
+          ttTokenCount: player.ttTokenCount,
+        }))
+        .sort((leftPlayer, rightPlayer) => rightPlayer.cardCount - leftPlayer.cardCount)
         .slice(0, 3) ?? [],
     [roomState],
   );

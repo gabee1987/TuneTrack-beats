@@ -16,7 +16,7 @@ const SKIPPED_DIRECTORIES = new Set([
 // item that splits one deletes its entry (06-structure-and-test-plan.md §2.1).
 const ALLOWLIST = {
   "apps/server/tests/roomFlow.test.ts": 1933,
-  "apps/web/src/pages/GamePage/hooks/useGamePageActions.test.tsx": 1070,
+  "apps/web/src/pages/GamePage/hooks/useGamePageActions.test.tsx": 982,
   "packages/game-engine/tests/gameFlow.test.ts": 826,
   "apps/e2e/tests/room-entry.spec.ts": 750,
   "apps/web/src/pages/GamePage/hooks/useSpotifyPlaybackSdk.ts": 738,

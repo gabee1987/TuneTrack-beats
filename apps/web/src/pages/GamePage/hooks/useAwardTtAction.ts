@@ -21,6 +21,7 @@ export function useAwardTtAction({
 
   const submitAdjustment = useCallback(
     (playerId: string, amount: 1 | -1) => {
+      const roomState = roomStateRef.current;
       if (
         !roomState ||
         roomState.hostId !== currentPlayerId ||
@@ -78,7 +79,7 @@ export function useAwardTtAction({
 
       return true;
     },
-    [currentPlayerId, roomState],
+    [currentPlayerId],
   );
 
   const handleAwardTt = useCallback(

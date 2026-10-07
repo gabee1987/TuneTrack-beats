@@ -16,6 +16,7 @@ import { rememberRoomEventToast } from "../../../services/session/roomEventToast
 import { hasServerRestarted } from "../../../services/socket/connectionState";
 import { getSocketClient, resetSocketClient } from "../../../services/socket/socketClient";
 import type { GameRouteState } from "../GamePage.types";
+import { reuseUnchangedReferences } from "../reuseUnchangedReferences";
 
 interface UseGameRoomConnectionOptions {
   navigate: NavigateFunction;
@@ -85,7 +86,9 @@ export function useGameRoomConnection({
     }
 
     function handleStateUpdate(payload: StateUpdatePayload) {
-      setRoomState(payload.roomState);
+      setRoomState((previousRoomState) =>
+        reuseUnchangedReferences(previousRoomState, payload.roomState),
+      );
       setErrorMessage(null);
     }
 

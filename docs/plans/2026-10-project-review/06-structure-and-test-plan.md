@@ -230,7 +230,7 @@ After `05` C1 and C5. One item per row:
 | `GameMenuPlayerItem.tsx` (357)   | `GameMenuPlayerRow`, `GameMenuPlayerActions`, `KickPlayerConfirmDialog`                                                                                                    |
 | `TimelinePanel.tsx` (336)        | `useCorrectPlacementAnimationKey`, `useDragOverlaySize`, `TimelinePanelHints`                                                                                              |
 | `GamePage.types.ts` (335)        | `gamePageActionTypes`, `timelinePanel.types`, `gamePageModels.types`                                                                                                       |
-| leaf props (F-19)                | the seven leaves listed in F-19 receive narrow props from the controller, not `PublicRoomState`                                                                            |
+| leaf props (F-19)                | `GameMenuPlayerItem` and `PlaybackTabContent` receive narrow props from the controller, not `PublicRoomState` (the other leaves shipped in `05` C1)                        |
 | small moves                      | `useMobileControlPortalTarget` out of `ActionDock.tsx` (into the `05` C5 viewport store); `useLeaveGameGuard` takes `isPresent` as an argument instead of importing Framer |
 
 **Before/after:** the component's existing test stays green; a component without one gets a

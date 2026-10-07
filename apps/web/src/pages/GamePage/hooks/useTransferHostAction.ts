@@ -21,6 +21,7 @@ export function useTransferHostAction({
 
   const handleTransferHost = useCallback(
     (playerId: string) => {
+      const roomState = roomStateRef.current;
       const targetPlayer = roomState?.players.find((player) => player.id === playerId);
       if (
         !roomState ||
@@ -74,7 +75,7 @@ export function useTransferHostAction({
         }
       })();
     },
-    [currentPlayerId, roomState],
+    [currentPlayerId],
   );
 
   return {

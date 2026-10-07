@@ -64,9 +64,12 @@ interface TurnActionDockProps {
     originX: number;
     originY: number;
   }) => void;
-  roomState: PublicRoomState;
+  /** The player a host may skip: the claimed challenger, else the active player. */
+  skipCandidateName: string | null;
   skipTrackActionStatus: SkipTrackActionStatus;
   skipTurnActionStatus: SkipTurnActionStatus;
+  status: PublicRoomState["status"];
+  turnSkipDeadlineEpochMs: number | null;
 }
 
 export function TurnActionDock({
@@ -85,25 +88,22 @@ export function TurnActionDock({
   isSkipTurnPending,
   placeCardActionStatus,
   onTokenSpendAnimationStart,
-  roomState,
+  skipCandidateName,
   skipTrackActionStatus,
   skipTurnActionStatus,
+  status,
+  turnSkipDeadlineEpochMs,
 }: TurnActionDockProps) {
   const { t } = useI18n();
   const reduceMotion = useReducedMotionPreference();
   const skipCostBadgeRef = useRef<HTMLSpanElement | null>(null);
   const buyCostBadgeRef = useRef<HTMLSpanElement | null>(null);
   const [confirmHintAnchor, setConfirmHintAnchor] = useState<HTMLElement | null>(null);
-  const offlinePlayerId =
-    roomState.status === "challenge"
-      ? roomState.challengeState?.challengerPlayerId
-      : roomState.turn?.activePlayerId;
   const offlinePlayerName = canSkipOfflinePlayer
-    ? (roomState.players.find((p) => p.id === offlinePlayerId)?.displayName ??
-      t("game.player.unknown"))
+    ? (skipCandidateName ?? t("game.player.unknown"))
     : null;
   const turnSkipCountdown = useTurnSkipCountdown(
-    canSkipOfflinePlayer ? (roomState.turn?.turnSkipDeadlineEpochMs ?? null) : null,
+    canSkipOfflinePlayer ? turnSkipDeadlineEpochMs : null,
   );
   let placeCardButtonLabel = t("game.controls.confirm");
   if (placeCardActionStatus === "pending") {
@@ -148,12 +148,12 @@ export function TurnActionDock({
     };
   }
 
-  const isChallengePhasSkip = roomState.status === "challenge" && canSkipOfflinePlayer;
-  if (roomState.status !== "turn" && !isChallengePhasSkip) {
+  const isChallengePhasSkip = status === "challenge" && canSkipOfflinePlayer;
+  if (status !== "turn" && !isChallengePhasSkip) {
     return null;
   }
   if (
-    roomState.status === "turn" &&
+    status === "turn" &&
     !canUseSkipTrack &&
     !canUseBuyCard &&
     !canConfirmTurnPlacement &&
@@ -163,7 +163,7 @@ export function TurnActionDock({
   }
   const hasTurnSecondaryActions = canUseSkipTrack || canUseBuyCard;
   const useStackedTurnActions =
-    roomState.status === "turn" && canConfirmTurnPlacement && hasTurnSecondaryActions;
+    status === "turn" && canConfirmTurnPlacement && hasTurnSecondaryActions;
 
   return (
     <>
@@ -352,7 +352,7 @@ export function TurnActionDock({
       <FirstRunHint
         anchor={confirmHintAnchor}
         id="game-confirm"
-        isEligible={roomState.status === "turn" && canConfirmTurnPlacement}
+        isEligible={status === "turn" && canConfirmTurnPlacement}
       />
     </>
   );

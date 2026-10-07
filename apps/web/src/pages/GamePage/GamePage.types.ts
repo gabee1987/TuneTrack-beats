@@ -47,6 +47,14 @@ export type ChallengeMarkerTone = "pending" | "success" | "failure";
 export type TimelineCelebrationTone = "success" | "failure";
 
 export type GamePageCard = TrackCardPublic | TimelineCardPublic;
+export type GamePageChallengePhase = NonNullable<PublicRoomState["challengeState"]>["phase"];
+
+export interface GamePageLeader {
+  cardCount: number;
+  displayName: string;
+  id: string;
+  ttTokenCount: number;
+}
 export type GamePagePlayerNameResolver = (playerId: string | null | undefined) => string;
 export type GamePageViewPreferenceUpdate = Partial<ViewPreferences>;
 export type GamePageViewPreferenceUpdater = (nextView: GamePageViewPreferenceUpdate) => void;
@@ -166,7 +174,11 @@ export interface GamePageHeaderModel extends Pick<
   | "visibleTimelineTtCount"
   | "visibleTimelineTitle"
 > {
-  roomState: PublicRoomState;
+  hostId: string;
+  roomId: string;
+  status: PublicRoomState["status"];
+  ttModeEnabled: boolean;
+  turnNumber: number | null;
 }
 
 export interface GamePageActionPanelsModel extends Pick<
@@ -187,7 +199,6 @@ export interface GamePageActionPanelsModel extends Pick<
   | "confirmRevealActionStatus"
   | "currentPlayerId"
   | "currentPlayerTtCount"
-  | "getPlayerName"
   | "handleBuyTimelineCardWithTt"
   | "handleClaimChallenge"
   | "handleConfirmReveal"
@@ -211,7 +222,14 @@ export interface GamePageActionPanelsModel extends Pick<
   | "skipTurnActionStatus"
   | "showHelperLabels"
 > {
-  roomState: PublicRoomState;
+  challengeDeadlineEpochMs: number | null;
+  challengePhase: GamePageChallengePhase | null;
+  skipCandidateName: string | null;
+  status: PublicRoomState["status"];
+  ttModeEnabled: boolean;
+  turnSkipDeadlineEpochMs: number | null;
+  winnerPlayerId: string | null;
+  winnerPlayerName: string;
 }
 
 export interface GamePageAssemblyModel {
@@ -264,7 +282,7 @@ export type GamePageController = GamePageActionHandlers & {
   placeChallengeActionStatus: PlaceChallengeActionStatus;
   resolveChallengeWindowActionStatus: ResolveChallengeWindowActionStatus;
   isViewingOwnTimeline: boolean;
-  leadingPlayers: PublicRoomState["players"];
+  leadingPlayers: GamePageLeader[];
   menuTabs: AppShellMenuTab[];
   roomState: PublicRoomState | null;
   selectedSlotIndex: number;

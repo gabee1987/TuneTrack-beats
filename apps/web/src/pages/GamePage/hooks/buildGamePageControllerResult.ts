@@ -1,5 +1,5 @@
 import type { ClosedRoomReason } from "../../../features/ui/RoomResetModal";
-import type { UseGamePageControllerResult, TimelineView } from "../GamePage.types";
+import type { GamePageLeader, UseGamePageControllerResult, TimelineView } from "../GamePage.types";
 import type { PublicRoomState } from "@tunetrack/shared";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import type {
@@ -79,7 +79,7 @@ interface BuildGamePageControllerResultOptions {
     getPlayerName: UseGamePageControllerResult["getPlayerName"];
     isHost: boolean;
     isViewingOwnTimeline: boolean;
-    leadingPlayers: PublicRoomState["players"];
+    leadingPlayers: GamePageLeader[];
     menuTabs: AppShellMenuTab[];
     roomState: PublicRoomState | null;
   };

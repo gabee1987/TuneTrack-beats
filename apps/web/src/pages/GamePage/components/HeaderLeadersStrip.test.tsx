@@ -3,31 +3,21 @@ import { join } from "node:path";
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { renderWithProviders } from "../../../test/renderWithProviders";
-import {
-  TEST_GUEST_ID,
-  TEST_HOST_ID,
-  buildPlayer,
-  buildTurnRoomState,
-} from "../../../test/roomStateFixtures";
+import { TEST_GUEST_ID, TEST_HOST_ID } from "../../../test/roomStateFixtures";
 import { HeaderLeadersStrip } from "./HeaderLeadersStrip";
 
 const leaders = [
-  buildPlayer({ id: TEST_HOST_ID, displayName: "Player One" }),
-  buildPlayer({ id: TEST_GUEST_ID, displayName: "Player Two", isHost: false }),
+  { cardCount: 3, displayName: "Player One", id: TEST_HOST_ID, ttTokenCount: 1 },
+  { cardCount: 1, displayName: "Player Two", id: TEST_GUEST_ID, ttTokenCount: 0 },
 ];
 
 function renderStrip(show: boolean, ttModeEnabled = false) {
-  const roomState = buildTurnRoomState();
-
   return renderWithProviders(
     <HeaderLeadersStrip
       getCardCountLabel={(count) => `${count} cards`}
       leadingPlayers={leaders}
-      roomState={{
-        ...roomState,
-        settings: { ...roomState.settings, ttModeEnabled },
-      }}
       show={show}
+      ttModeEnabled={ttModeEnabled}
     />,
   );
 }
@@ -40,6 +30,7 @@ describe("HeaderLeadersStrip", () => {
     expect(screen.getByText("Player Two")).toBeInTheDocument();
     expect(screen.getByText("#1")).toBeInTheDocument();
     expect(screen.getByText("#2")).toBeInTheDocument();
+    expect(screen.getByLabelText("3 cards")).toBeInTheDocument();
   });
 
   it("renders nothing when hidden", () => {

@@ -8,6 +8,7 @@
     "prebuild": "npm run build -w @tunetrack/shared",
     "build": "tsc -p tsconfig.json && vite build",
     "preview": "vite preview",
+    "measure:bundle": "node scripts/measure-bundle.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src vite.config.ts vitest.config.ts vitest.setup.ts --ext .ts,.tsx",
     "test": "vitest run --config vitest.config.ts --pool=threads --passWithNoTests",

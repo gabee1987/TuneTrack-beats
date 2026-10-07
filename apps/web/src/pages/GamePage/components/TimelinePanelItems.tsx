@@ -66,13 +66,7 @@ function TimelinePanelItemsComponent({
           showDevGenreInfo={model.showDevGenreInfo}
           showDevYearInfo={model.showDevYearInfo}
           theme={model.theme}
-          {...(item.isPreview
-            ? {
-                previewCardRef: (node: HTMLElement | null) => {
-                  onPreviewCardRef(node);
-                },
-              }
-            : {})}
+          {...(item.isPreview ? { previewCardRef: onPreviewCardRef } : {})}
         />
       ))}
     </SortableContext>

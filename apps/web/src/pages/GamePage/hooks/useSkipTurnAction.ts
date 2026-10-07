@@ -20,6 +20,7 @@ export function useSkipTurnAction({
   const [actionStatus, setActionStatus] = useState<SkipTurnActionStatus>("idle");
 
   const handleSkipTurn = useCallback(() => {
+    const roomState = roomStateRef.current;
     const isClaimedChallenge =
       roomState?.status === "challenge" && roomState.challengeState?.phase === "claimed";
     if (
@@ -77,7 +78,7 @@ export function useSkipTurnAction({
         isPendingRef.current = false;
       }
     })();
-  }, [currentPlayerId, reportActionResult, roomState]);
+  }, [currentPlayerId, reportActionResult]);
 
   return {
     actionStatus,

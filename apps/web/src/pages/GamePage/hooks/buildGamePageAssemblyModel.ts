@@ -1,8 +1,23 @@
+import type { PublicRoomState } from "@tunetrack/shared";
 import type { GamePageAssemblyModel, LoadedGamePageController } from "../GamePage.types";
 
+// The player a host may skip: the claimed challenger during a challenge, else the active player.
+function getSkipCandidateName(roomState: PublicRoomState): string | null {
+  const skipCandidateId =
+    roomState.status === "challenge"
+      ? roomState.challengeState?.challengerPlayerId
+      : roomState.turn?.activePlayerId;
+  return roomState.players.find((player) => player.id === skipCandidateId)?.displayName ?? null;
+}
+
+// Scalars rather than `roomState`, so the memoised header and action panels skip a
+// `state_update` that changes nothing they show (05 §3).
 export function buildGamePageAssemblyModel(
   controller: LoadedGamePageController,
 ): GamePageAssemblyModel {
+  const { roomState } = controller;
+  const challengeState = roomState.status === "challenge" ? roomState.challengeState : null;
+
   return {
     actions: {
       buyTimelineCardActionStatus: controller.buyTimelineCardActionStatus,
@@ -20,7 +35,6 @@ export function buildGamePageAssemblyModel(
       confirmRevealActionStatus: controller.confirmRevealActionStatus,
       currentPlayerId: controller.currentPlayerId,
       currentPlayerTtCount: controller.currentPlayerTtCount,
-      getPlayerName: controller.getPlayerName,
       handleBuyTimelineCardWithTt: controller.handleBuyTimelineCardWithTt,
       handleClaimChallenge: controller.handleClaimChallenge,
       handleConfirmReveal: controller.handleConfirmReveal,
@@ -43,8 +57,15 @@ export function buildGamePageAssemblyModel(
       resolveChallengeWindowActionStatus: controller.resolveChallengeWindowActionStatus,
       skipTrackActionStatus: controller.skipTrackActionStatus,
       skipTurnActionStatus: controller.skipTurnActionStatus,
-      roomState: controller.roomState,
       showHelperLabels: controller.showHelperLabels,
+      challengeDeadlineEpochMs: challengeState?.challengeDeadlineEpochMs ?? null,
+      challengePhase: challengeState?.phase ?? null,
+      skipCandidateName: getSkipCandidateName(roomState),
+      status: roomState.status,
+      ttModeEnabled: roomState.settings.ttModeEnabled,
+      turnSkipDeadlineEpochMs: roomState.turn?.turnSkipDeadlineEpochMs ?? null,
+      winnerPlayerId: roomState.winnerPlayerId,
+      winnerPlayerName: controller.getPlayerName(roomState.winnerPlayerId),
     },
     header: {
       closeRoomActionStatus: controller.closeRoomActionStatus,
@@ -55,7 +76,6 @@ export function buildGamePageAssemblyModel(
       isSkipTurnPending: controller.isSkipTurnPending,
       leadingPlayers: controller.leadingPlayers,
       menuTabs: controller.menuTabs,
-      roomState: controller.roomState,
       skipTurnActionStatus: controller.skipTurnActionStatus,
       showMiniStandings: controller.showMiniStandings,
       showPhaseChip: controller.showPhaseChip,
@@ -69,6 +89,11 @@ export function buildGamePageAssemblyModel(
       visibleTimelinePlayerId: controller.visibleTimelinePlayerId,
       visibleTimelineTtCount: controller.visibleTimelineTtCount,
       visibleTimelineTitle: controller.visibleTimelineTitle,
+      hostId: roomState.hostId,
+      roomId: roomState.roomId,
+      status: roomState.status,
+      ttModeEnabled: roomState.settings.ttModeEnabled,
+      turnNumber: roomState.turn?.turnNumber ?? null,
     },
     timeline: {
       header: {

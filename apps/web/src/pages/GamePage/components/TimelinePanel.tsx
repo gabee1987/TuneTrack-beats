@@ -6,7 +6,15 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { FirstRunHint } from "../../../features/hints/FirstRunHint";
 import { MotionPresence, timelineCelebrationTransitionContract } from "../../../features/motion";
 import { usePageLayoutMode } from "../../../hooks/usePageLayoutMode";
@@ -29,6 +37,8 @@ import { TimelinePanelItems } from "./TimelinePanelItems";
 import { PreviewCard } from "./PreviewCard";
 import styles from "./timelineStyles";
 
+const NO_DISABLED_SLOT_INDEXES: number[] = [];
+
 interface TimelinePanelProps {
   model: TimelinePanelModel;
 }
@@ -49,31 +59,22 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
     showCorrectionPreview: model.render.showCorrectionPreview ?? false,
     transitionEvent: model.render.timelinePreviewTransitionEvent,
   });
-  const dragModel: TimelinePanelDragModel = {
-    onSelectSlot: model.interaction.onSelectSlot,
-    previewCard: displayPreviewCard,
-    previewSlotIndex: displayPreviewSlot,
-    selectedSlotIndex: model.interaction.selectedSlotIndex,
-    timelineCards: model.render.timelineCards,
-  };
-  const itemsModel: TimelinePanelItemsModel = {
-    challengeMarkerTone: model.interaction.challengeMarkerTone ?? "pending",
-    challengerChosenSlotIndex: model.interaction.challengerChosenSlotIndex,
-    disabledSlotIndexes: model.interaction.disabledSlotIndexes ?? [],
-    hiddenCardMode: model.render.hiddenCardMode,
-    revealedCardMode: model.render.revealedCardMode,
-    originalChosenSlotIndex: model.interaction.originalChosenSlotIndex,
-    previewCardTransitionEvent: model.render.previewCardTransitionEvent,
-    selectable: model.interaction.selectable,
-    shouldAnimateCorrectPlacement: false,
-    showCorrectPlacementPreview: displayShowCorrectPlacementPreview,
-    showCorrectionPreview: displayShowCorrectionPreview,
-    showDevAlbumInfo: model.render.showDevAlbumInfo,
-    showDevCardInfo: model.render.showDevCardInfo,
-    showDevGenreInfo: model.render.showDevGenreInfo,
-    showDevYearInfo: model.render.showDevYearInfo,
-    theme: model.render.theme,
-  };
+  const dragModel = useMemo<TimelinePanelDragModel>(
+    () => ({
+      onSelectSlot: model.interaction.onSelectSlot,
+      previewCard: displayPreviewCard,
+      previewSlotIndex: displayPreviewSlot,
+      selectedSlotIndex: model.interaction.selectedSlotIndex,
+      timelineCards: model.render.timelineCards,
+    }),
+    [
+      displayPreviewCard,
+      displayPreviewSlot,
+      model.interaction.onSelectSlot,
+      model.interaction.selectedSlotIndex,
+      model.render.timelineCards,
+    ],
+  );
   const previewCard = dragModel.previewCard;
   const previewSlotIndex = dragModel.previewSlotIndex;
 
@@ -114,6 +115,47 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
             : correctPlacementCard.releaseYear,
         ].join(":")
       : null;
+  const shouldAnimateCorrectPlacement =
+    correctPlacementAnimationKey !== null &&
+    activeCorrectPlacementAnimationKey === correctPlacementAnimationKey;
+  const itemsModel = useMemo<TimelinePanelItemsModel>(
+    () => ({
+      challengeMarkerTone: model.interaction.challengeMarkerTone ?? "pending",
+      challengerChosenSlotIndex: model.interaction.challengerChosenSlotIndex,
+      disabledSlotIndexes: model.interaction.disabledSlotIndexes ?? NO_DISABLED_SLOT_INDEXES,
+      hiddenCardMode: model.render.hiddenCardMode,
+      revealedCardMode: model.render.revealedCardMode,
+      originalChosenSlotIndex: model.interaction.originalChosenSlotIndex,
+      previewCardTransitionEvent: model.render.previewCardTransitionEvent,
+      selectable: model.interaction.selectable,
+      shouldAnimateCorrectPlacement,
+      showCorrectPlacementPreview: displayShowCorrectPlacementPreview,
+      showCorrectionPreview: displayShowCorrectionPreview,
+      showDevAlbumInfo: model.render.showDevAlbumInfo,
+      showDevCardInfo: model.render.showDevCardInfo,
+      showDevGenreInfo: model.render.showDevGenreInfo,
+      showDevYearInfo: model.render.showDevYearInfo,
+      theme: model.render.theme,
+    }),
+    [
+      displayShowCorrectPlacementPreview,
+      displayShowCorrectionPreview,
+      model.interaction.challengeMarkerTone,
+      model.interaction.challengerChosenSlotIndex,
+      model.interaction.disabledSlotIndexes,
+      model.interaction.originalChosenSlotIndex,
+      model.interaction.selectable,
+      model.render.hiddenCardMode,
+      model.render.previewCardTransitionEvent,
+      model.render.revealedCardMode,
+      model.render.showDevAlbumInfo,
+      model.render.showDevCardInfo,
+      model.render.showDevGenreInfo,
+      model.render.showDevYearInfo,
+      model.render.theme,
+      shouldAnimateCorrectPlacement,
+    ],
+  );
   const { activeCelebrationEvent, flyAnimationState, mineButtonRef, previewCardRectRef } =
     useTimelinePanelCelebrationState({
       timelineView,
@@ -152,9 +194,6 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
     };
   }, [correctPlacementAnimationKey]);
 
-  itemsModel.shouldAnimateCorrectPlacement =
-    correctPlacementAnimationKey !== null &&
-    activeCorrectPlacementAnimationKey === correctPlacementAnimationKey;
   const {
     handleDragCancel: completeDragCancel,
     handleDragEnd: completeDragEnd,
@@ -175,6 +214,17 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
     dependencyKey: orderedItemIds,
     timelineRowRef,
   });
+  const handleMineButtonRef = useCallback(
+    (node: HTMLButtonElement | null) => {
+      mineButtonRef.current = node;
+      setTimelineSwitchHintAnchor(node);
+    },
+    [mineButtonRef],
+  );
+  const handlePreviewCardRef = useCallback((node: HTMLElement | null) => {
+    previewCardElementRef.current = node;
+    setPreviewHintAnchor(node);
+  }, []);
 
   function captureDragOverlaySize() {
     const previewNode = previewCardElementRef.current;
@@ -231,13 +281,7 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
         layoutMode === "desktop" ? ` ${styles.timelinePanelDesktop}` : ""
       }`}
     >
-      <TimelinePanelHeader
-        model={model.header}
-        onMineButtonRef={(node) => {
-          mineButtonRef.current = node;
-          setTimelineSwitchHintAnchor(node);
-        }}
-      />
+      <TimelinePanelHeader model={model.header} onMineButtonRef={handleMineButtonRef} />
       {model.render.showHint ? <p className={styles.timelineHint}>{model.render.hint}</p> : null}
       <MotionPresence mode="sync">
         {activeCelebrationEvent ? (
@@ -267,12 +311,9 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
             hintAnchorRef={setTimelineCardHintAnchor}
             isDraggingPreviewCard={isDraggingPreviewCard}
             model={itemsModel}
-            onCardInfoRequest={(card) => setCardForInfo(card)}
+            onCardInfoRequest={setCardForInfo}
             orderedItemIds={orderedItemIds}
-            onPreviewCardRef={(node) => {
-              previewCardElementRef.current = node;
-              setPreviewHintAnchor(node);
-            }}
+            onPreviewCardRef={handlePreviewCardRef}
             timelineItemMap={timelineItemMap}
           />
         </div>

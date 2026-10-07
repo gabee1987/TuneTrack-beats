@@ -46,6 +46,8 @@ export function useGamePageActions({
 }: UseGamePageActionsOptions) {
   const roomStateRef = useRef(roomState);
   roomStateRef.current = roomState;
+  const selectedSlotIndexRef = useRef(selectedSlotIndex);
+  selectedSlotIndexRef.current = selectedSlotIndex;
   const onActionOfflineRef = useRef(onActionOffline);
   onActionOfflineRef.current = onActionOffline;
   const reportActionResult = useCallback((result: EmitActionResult) => {
@@ -98,6 +100,7 @@ export function useGamePageActions({
     skipTrackActionStatus === "pending" || skipTrackActionStatus === "retrying";
 
   const handlePlaceCard = useCallback(async () => {
+    const roomState = roomStateRef.current;
     if (
       !roomState ||
       roomState.status !== "turn" ||
@@ -115,7 +118,7 @@ export function useGamePageActions({
         ClientToServerEvent.PlaceCard,
         {
           roomId: roomState.roomId,
-          selectedSlotIndex,
+          selectedSlotIndex: selectedSlotIndexRef.current,
         },
         {
           onTimeoutRetry: () => setPlaceCardActionStatus("retrying"),
@@ -133,9 +136,10 @@ export function useGamePageActions({
     } finally {
       isPlaceCardPendingRef.current = false;
     }
-  }, [isCurrentPlayerTurn, reportActionResult, roomState, selectedSlotIndex, setLocallyPlacedCard]);
+  }, [isCurrentPlayerTurn, reportActionResult, setLocallyPlacedCard]);
 
   const handleConfirmReveal = useCallback(async () => {
+    const roomState = roomStateRef.current;
     if (!roomState || !canConfirmReveal || isConfirmRevealPendingRef.current) {
       return;
     }
@@ -175,9 +179,10 @@ export function useGamePageActions({
     } finally {
       isConfirmRevealPendingRef.current = false;
     }
-  }, [canConfirmReveal, reportActionResult, roomState]);
+  }, [canConfirmReveal, reportActionResult]);
 
   const handleClaimChallenge = useCallback(async () => {
+    const roomState = roomStateRef.current;
     if (!roomState || !canClaimChallenge || isClaimChallengePendingRef.current) {
       return;
     }
@@ -218,9 +223,10 @@ export function useGamePageActions({
     } finally {
       isClaimChallengePendingRef.current = false;
     }
-  }, [canClaimChallenge, reportActionResult, roomState]);
+  }, [canClaimChallenge, reportActionResult]);
 
   const handlePlaceChallenge = useCallback(async () => {
+    const roomState = roomStateRef.current;
     if (!roomState || !canSelectChallengeSlot || isPlaceChallengePendingRef.current) {
       return;
     }
@@ -246,7 +252,7 @@ export function useGamePageActions({
         ClientToServerEvent.PlaceChallenge,
         {
           roomId: roomState.roomId,
-          selectedSlotIndex,
+          selectedSlotIndex: selectedSlotIndexRef.current,
         },
         {
           onTimeoutRetry: () => {
@@ -266,9 +272,10 @@ export function useGamePageActions({
     } finally {
       isPlaceChallengePendingRef.current = false;
     }
-  }, [canSelectChallengeSlot, reportActionResult, roomState, selectedSlotIndex]);
+  }, [canSelectChallengeSlot, reportActionResult]);
 
   const handleCloseRoom = useCallback(async () => {
+    const roomState = roomStateRef.current;
     if (!roomState || roomState.hostId !== currentPlayerId || isCloseRoomPendingRef.current) {
       return;
     }
@@ -306,9 +313,10 @@ export function useGamePageActions({
     } finally {
       isCloseRoomPendingRef.current = false;
     }
-  }, [currentPlayerId, reportActionResult, roomState]);
+  }, [currentPlayerId, reportActionResult]);
 
   const handleSkipTrackWithTt = useCallback(async () => {
+    const roomState = roomStateRef.current;
     if (
       !roomState ||
       !roomState.settings.ttModeEnabled ||
@@ -361,9 +369,10 @@ export function useGamePageActions({
     } finally {
       isSkipTrackPendingRef.current = false;
     }
-  }, [isCurrentPlayerTurn, onSkipTrackWithTtIntent, reportActionResult, roomState]);
+  }, [isCurrentPlayerTurn, onSkipTrackWithTtIntent, reportActionResult]);
 
   const handleBuyTimelineCardWithTt = useCallback(async () => {
+    const roomState = roomStateRef.current;
     if (
       !roomState ||
       !roomState.settings.ttModeEnabled ||
@@ -409,7 +418,7 @@ export function useGamePageActions({
     } finally {
       isBuyTimelineCardPendingRef.current = false;
     }
-  }, [isCurrentPlayerTurn, reportActionResult, roomState]);
+  }, [isCurrentPlayerTurn, reportActionResult]);
 
   return {
     awardTtActionState: awardTtAction.actionState,
