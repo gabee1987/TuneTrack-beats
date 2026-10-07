@@ -329,16 +329,15 @@ Example: four players, target 10, one starting card → required 37, recommended
 
 ## 6. Duplicate display names (open question in `decision_log.md`)
 
-### 6.1 Proposal
+### 6.1 Decision (owner decision 11, 2026-10-07)
 
 **Allow the name, disambiguate the display.** When a player joins or renames to a name that
 another player in the same room already uses (case-insensitive, trimmed), the server stores the
 name with a numeric suffix for that room only ("Player One 2"); the device profile keeps the name
 as typed. Reasons: joining must stay one tap from a room row or invite link (blocking adds a dead
 end), identity is already by player id and session, and a visible suffix prevents "which Anna
-won?" confusion on the leaderboard. Rejection with an error is the alternative if the owner
-prefers explicit names. Record the choice in `decision_log.md` when accepted; implementation is
-then a `rooms/` builder change plus one server test.
+won?" confusion on the leaderboard. Rejecting the join was considered and declined. Recorded in
+`decision_log.md` (2026-10-07); implementation is a `rooms/` builder change plus one server test.
 
 ### 6.2 Room codes
 
@@ -360,8 +359,37 @@ case.
 | All hints              | **Accessibility**: bubble is `role="status"` (polite), not `role="dialog"`; no focus move; the 48 px dismiss button is labelled "Dismiss hint".                            |
 | Settings               | App menu shows "Hints: 4 of 12 seen" and **Show hints again** (resets seen state; existing reset function).                                                                |
 
-The two-per-visit cap stays (normative rule). Whether the game page should count a "visit" per
-turn instead of per page mount is an open owner question (§13), not part of this work.
+### 7.1 Tutorial sequence (owner decision 12, 2026-10-07)
+
+First-run hints work as an **interactive tutorial**: during a device's first game every relevant
+hint appears, one after another, each at the place and moment its control matters. The cap of two
+hints per page visit is **removed**.
+
+- **Moment.** A hint shows only while its eligibility predicate holds (the existing `isEligible`
+  props: for example `game-challenge` only while a challenge can be claimed, `game-confirm` only
+  during the player's own placement) and its anchor is at least 50 % visible. A hint whose moment
+  passes before it is shown waits for the next occurrence; it is never shown out of context.
+- **Order and pace.** Registry priority orders hints that are eligible at the same time. One hint
+  is on screen at a time; the 1.5 s quiet period applies on arrival at a screen and again after
+  each dismissal, so hints follow each other without stacking. No hint appears during an active
+  drag.
+- **Seen means acknowledged.** A hint is marked seen when the player dismisses it or uses its
+  anchor, not when it appears. A hint cut off by navigation, a phase change or a reload returns at
+  its next moment.
+- **Re-enable at any time.** "Show hints again" in the app menu clears seen state and restarts the
+  tutorial on the current screen immediately, with no reload, also in the middle of a game. The
+  on/off toggle hides hints at once and keeps progress; switching it back on resumes where the
+  player left off.
+- **Robustness.** The coordinator holds no state that can outlive a reset or a toggle: both events
+  clear the pending timer and the active hint and re-run selection. Storage stays
+  `tunetrack.hints.v1`; blocked storage still degrades to "enabled, nothing remembered".
+
+Code impact (WP 8): remove `MAX_HINTS_PER_VISIT` and the `maxHintsPerVisit` scheduler option; move
+`markHintSeen` from display to acknowledgement; add the post-dismissal quiet period; suppress
+during drag. Proof: coordinator unit tests with fake timers (three eligible candidates show in
+order; an interrupted hint returns; reset re-shows a seen hint; toggle off hides immediately) and
+an E2E extension of E15 (first game shows `game-drag-preview`, then `game-confirm`; after "Show
+hints again" `game-drag-preview` returns).
 
 ## 8. Accessibility requirements (host flow)
 
@@ -386,7 +414,7 @@ turn instead of per page mount is an open owner question (§13), not part of thi
 | Layer                  | Change                                                                                                                                                                                                                     |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/shared`      | `deckSize.ts` (§4.1); `PublicRoomSettings.deckSource: "none" \| "spotify" \| "practice"` and `tracksToCheckCount: number`; `use_practice_deck` event + schema; track year-flag rule moved from `playlistMetadataFlags.ts`. |
-| `apps/server` `rooms/` | remove test-deck fallback, `DECK_REQUIRED`; `usePracticeDeck` in the lobby service; `deckSource` and `tracksToCheckCount` in the settings builder; duplicate-name suffix (§6, if accepted); case-insensitive code lookup.  |
+| `apps/server` `rooms/` | remove test-deck fallback, `DECK_REQUIRED`; `usePracticeDeck` in the lobby service; `deckSource` and `tracksToCheckCount` in the settings builder; duplicate-name suffix (§6); case-insensitive code lookup.               |
 | `apps/server` `http/`  | honest popup page (§3.6 item 10).                                                                                                                                                                                          |
 | `apps/web` LobbyPage   | new `useLobbySetupModel` (pure selectors: start reasons, readiness line, music status, rules summary, labels) shared by both assemblies — this resolves the lobby half of F-16; mobile and desktop become layout only.     |
 | `apps/web` components  | `LobbyCodeCard`, `LobbyPlayersStrip`, `LobbyMusicRow`, `LobbyRulesRow`, `LobbyStartDock`, `RoomRenameDialog`, `PlayerNameDialog`, `ConnectionStatus`; each with a component test and, if a primitive changes, `/dev/ui`.   |
@@ -448,18 +476,17 @@ no new route for these scenarios.
 | 5   | Music setup (§3.6 items 1–9)                                                                                     | 2          | `add-ui-component`, `e2e-scenario`      |
 | 6   | Curation aids and `tracksToCheckCount` (§3.7)                                                                    | 2          | `add-ui-component`, `add-socket-action` |
 | 7   | Play page, guest lobby, handover, host playback chip (§3.2, §3.8, §3.9), `ConnectionStatus` (§2.3)               | 3          | `add-ui-component`, `e2e-scenario`      |
-| 8   | Hints (§7)                                                                                                       | 3, 5       | `add-hint`                              |
-| 9   | Duplicate names and case-insensitive codes (§6), after the owner decides                                         | owner      | `write-tests`                           |
+| 8   | Hints (§7) and the tutorial sequence (§7.1)                                                                      | 3, 5       | `add-hint`                              |
+| 9   | Duplicate names and case-insensitive codes (§6)                                                                  | —          | `write-tests`                           |
 | 10  | Accessibility sweep and acceptance run (§8, §10), `device-checklist`                                             | 1–8        | `verify`, `device-checklist`            |
 
 Every package ends with `verify` and `plan-status`, and keeps desktop un-regressed.
 
-## 13. Open owner questions
+## 13. Owner decisions (answered 2026-10-07)
 
-1. Duplicate names: suffix (proposed) or reject (§6.1)?
-2. Hint cap: keep "two per page visit" or count per turn on the game page (§7)?
-3. Practice deck wording: "Practice deck (no audio, 40 songs)" as decided, or a friendlier name
-   such as "Party test deck"?
+1. Duplicate names: **suffix** (§6.1, decision 11).
+2. Hint cap: **no cap; hints form a first-game tutorial** (§7.1, decision 12).
+3. Practice deck wording: **"Practice deck (no audio, 40 songs)"** stays (decision 13).
 
 ## 14. Findings coverage
 

@@ -12,6 +12,8 @@
 > 2026-09-08 and are indicative only.
 > Owning layers: `apps/web/src/pages/GamePage`, `apps/web/src/pages/LobbyPage/components`,
 > `apps/web/src/hooks`, `apps/web/src/main.tsx`, `apps/web/src/features/motion`.
+>
+> **Binding budgets, order and corrections (2026-10-07):** `05-performance-and-robustness-plan.md` §2 (budgets), §8 (rollout order), §9 (corrections to this document). Where they differ, `05` wins.
 
 Startup cost is `10-bundle-and-startup.md`. This document covers the cost of the app while
 it is running: frames dropped during scroll and drag, unnecessary React work, timers, and

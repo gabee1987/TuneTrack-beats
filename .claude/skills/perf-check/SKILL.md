@@ -5,9 +5,8 @@ description: Measure TuneTrack web bundle size and runtime render cost before an
 
 # perf-check
 
-Normative targets: `docs/plans/2026-10-project-review/10-bundle-and-startup.md` §1–§2 and
-`11-runtime-and-motion-performance.md` §1. Phase 5 of the review programme (document `05`)
-will set binding budgets; until it lands, use the working targets in plan 10 §2.
+Binding budgets: `docs/plans/2026-10-project-review/05-performance-and-robustness-plan.md` §2.
+Step detail: `10-bundle-and-startup.md` and `11-runtime-and-motion-performance.md`.
 
 ## 1. Bundle — measure before, measure after
 
@@ -28,14 +27,14 @@ Vite prints every chunk with raw and gzip size. Record these rows (names come fr
 | `LobbyPage`, `GamePage`, `TimelinePanel` JS and CSS | largest route chunks; CSS barrels inflate them |
 
 **Eager home path** = entry JS + entry CSS + every chunk the HTML preloads or `App.tsx`
-imports statically. Baseline 2026-10-06: ~462 kB raw / ~147 kB gzip. Working targets: home
-critical path ≤ 95 kB gzip, motion on eager path < 8 kB gzip, largest CSS chunk < 20 kB,
-entry < 55 kB raw. Report a before/after table; a regression over 2 kB gzip on the eager path
-needs a justification in the report.
+imports statically. Baseline 2026-10-07: 464.0 kB raw / 147.0 kB gzip. Gates (`05` §2.1):
+eager path ≤ 110 kB gzip, entry ≤ 100 kB raw, no `vendor-motion` on the eager path, no
+`vendor-zod`, largest CSS chunk ≤ 20 kB raw. Report a before/after table; a regression over
+2 kB gzip on the eager path needs a justification in the report.
 
-No `analyze` script or visualizer exists yet (plan 10 lists it as open). If you need a
-treemap, note that `rollup-plugin-visualizer` is a new dev dependency and leave the decision
-to the owner; do not add it silently.
+Once `05` WP D0 has landed, `npm run measure:bundle -w @tunetrack/web` computes these numbers
+from `dist/` with Node built-ins only; append its row to `bundle-baseline.md`. No visualizer
+dependency is planned; do not add one silently.
 
 ## 2. Preload and lazy-route checks
 

@@ -2,6 +2,8 @@
 
 > **Status (2026-10-06):** Phase 2 §3.2 (push/replace semantics), Phase 4 (B1, song-editor layering) and Phase 5 (B5, settings flicker) shipped; the browser and Android back button closes settings, Music Setup and the nested playlist/track editors through same-path router state (E13, E14). Open: the z-index scale and its guard (Phase 1), the transition guard and route order (Phase 2 §3.1, §3.3), the overlay host and the four overlays still outside history (Phase 3), the overlay contract (Phase 6).
 > **Folded from** `docs/plans/2026-09-stability-performance/06-navigation-and-overlays.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
+>
+> **Binding budgets, order and corrections (2026-10-07):** `05-performance-and-robustness-plan.md` §2 (budgets), §8 (rollout order), §9 (corrections to this document). Where they differ, `05` wins.
 
 > Review findings owned here: F-05 (z-index literals and scale) and F-06 (overlay escape/focus/scroll/back coverage). Phase 5 of the review programme sets the budgets and Phase 4 owns the back-button coverage of the host flow; this document holds the work breakdown. Bug register: B2 (`20-bug-register.md`).
 > Owning layers: `apps/web/src/app`, `apps/web/src/features/motion`,

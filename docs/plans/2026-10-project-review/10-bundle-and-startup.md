@@ -12,6 +12,8 @@
 > `packages/shared`, `packages/game-engine`.
 > Phase 5 of the review programme (performance plan, see `00-index.md` §4) sets the binding
 > numeric budgets and the measurement protocol; this document stays the work breakdown.
+>
+> **Binding budgets, order and corrections (2026-10-07):** `05-performance-and-robustness-plan.md` §2 (budgets), §8 (rollout order), §9 (corrections to this document). Where they differ, `05` wins.
 
 ## 1. The problem, quantified
 
@@ -54,8 +56,8 @@ Loaded later but still oversized:
 
 ## 2. Targets
 
-Working targets from 2026-09. Phase 5 of the review programme sets the binding budgets; until
-it does, treat these as the direction, not the gate.
+Working targets from 2026-09, **superseded** by the binding budgets in
+`05-performance-and-robustness-plan.md` §2.1 (eager gate ≤ 110 kB gzip; 95 kB is a stretch goal).
 
 | Metric                           | Baseline  | Target          | Stretch |
 | -------------------------------- | --------- | --------------- | ------- |

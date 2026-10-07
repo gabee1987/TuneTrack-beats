@@ -2,6 +2,8 @@
 
 > **Status (2026-10-06):** Phase 1 partially shipped (first-connect/reconnect split, idempotent `create_room`), Phases 3 and 4 shipped (connection effects independent of `t`; acknowledged, idempotent actions). Open: the `GAME_ALREADY_STARTED` recovery dialog and `instanceId` (Phase 1), the durable session id still cleared on room close (Phase 2, the next proof for B8), socket client policy and connection-state model (Phase 5), narrow events and `revision` (Phase 6).
 > **Folded from** `docs/plans/2026-09-stability-performance/05-network-protocol-and-resilience.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
+>
+> **Binding budgets, order and corrections (2026-10-07):** `05-performance-and-robustness-plan.md` §2 (budgets), §8 (rollout order), §9 (corrections to this document). Where they differ, `05` wins.
 
 > Review findings owned here: F-02, F-17, F-20, F-21 (Phase 5 of the review programme sets the budgets, this document holds the work breakdown) and B-16 (Phase 6). F-01 (`crypto.randomUUID` unguarded in `emitAction`) is on the hotfix track in `00-index.md` §4. Bug register: B8 (`20-bug-register.md`).
 > Owning layers: `apps/web/src/services/socket`, the two room-connection hooks,

@@ -20,29 +20,30 @@ The implementation deliberately differs from the original design; this section d
 
 - Every hint describes something **not discoverable** from the UI alone. If a control says what it does, it needs no hint; a proposed hint is first a prompt to ask whether the UI itself should be clearer.
 - Hint ids are stable and never reused. A new hint needs a registry entry, a title and a body key in **both** `en` and `hu`, and a component test or an E2E assertion.
-- No hint appears during the first 1.5 s of a screen, at most two hints appear per screen visit, and only one is on screen at a time.
+- Hints form a first-game tutorial (owner decision 12, `04-host-flow-ux-spec.md` §7.1): no per-visit cap; a hint appears only at the moment its control matters, one at a time, never within 1.5 s of arriving on a screen or of the previous dismissal; it counts as seen when acknowledged, not when shown.
 - A hint never covers the control it describes nor the primary action of the screen.
 - A hint is subtle: one line of title, at most two lines of body, one dismiss affordance, no dimming mask. Motion uses the shared motion tokens and degrades to a fade under `prefers-reduced-motion`.
 - The dismiss control is at least 48 × 48 px (owner decision 2, `00-index.md` §5).
 
 ## 3. Open items
 
-| Item                                 | Detail                                                                                                                                               | Owner                                                                                 |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| History-back dismissal               | Browser or Android back does not dismiss the current hint. Depends on the overlay history pattern in `14-navigation-and-overlays.md`.                | `14-navigation-and-overlays.md` Phase 3                                               |
-| Dismissal on anchor interaction      | Using the anchored control does not dismiss its hint (U-10).                                                                                         | `04-host-flow-ux-spec.md` §7 (WP 8)                                                   |
-| Anchor visibility                    | Without `IntersectionObserver` a hint can target a control that is off screen; the original design suppressed such hints.                            | `04-host-flow-ux-spec.md` §7; viewport work in `11-runtime-and-motion-performance.md` |
-| Replay and count UI                  | No "Replay the walkthrough" action and no "n of m hints seen" count in settings (U-10).                                                              | `04-host-flow-ux-spec.md` §7 (WP 8)                                                   |
-| `home-start` hint and catalogue gaps | `home-start` planned but absent; no share-code or playback hint; the two-per-visit cap hides most game hints on a device that plays one game (U-10). | `04-host-flow-ux-spec.md` §7 (WP 8)                                                   |
-| Bubble accessibility                 | `HintBubble` mixes `role="dialog"` with `aria-live`; it should not steal focus and should be announced politely (U-12).                              | `04-host-flow-ux-spec.md` §7 (WP 8)                                                   |
-| Component tests                      | No render tests for `HintBubble` or for the anchor hook; only the scheduler and state modules are unit-tested.                                       | Review Phase 6 (`19-testing-strategy.md`)                                             |
-| Bundle budget                        | The feature is not lazily loaded and the under-6 kB gzip budget has not been measured.                                                               | `10-bundle-and-startup.md`                                                            |
-| Layering                             | `--z-hint` (450) sits below `--z-dialog` and the menu sheet, so a hint can render under an open settings sheet (F-05).                               | `14-navigation-and-overlays.md` Phase 1                                               |
+| Item                                 | Detail                                                                                                                                                                           | Owner                                                                                 |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| History-back dismissal               | Browser or Android back does not dismiss the current hint. Depends on the overlay history pattern in `14-navigation-and-overlays.md`.                                            | `14-navigation-and-overlays.md` Phase 3                                               |
+| Dismissal on anchor interaction      | Using the anchored control does not dismiss its hint (U-10).                                                                                                                     | `04-host-flow-ux-spec.md` §7 (WP 8)                                                   |
+| Anchor visibility                    | Without `IntersectionObserver` a hint can target a control that is off screen; the original design suppressed such hints.                                                        | `04-host-flow-ux-spec.md` §7; viewport work in `11-runtime-and-motion-performance.md` |
+| Replay and count UI                  | No "Replay the walkthrough" action and no "n of m hints seen" count in settings (U-10).                                                                                          | `04-host-flow-ux-spec.md` §7 (WP 8)                                                   |
+| `home-start` hint and catalogue gaps | `home-start` planned but absent; no share-code or playback hint; the two-per-visit cap hides most game hints on a device that plays one game (U-10; cap removed by decision 12). | `04-host-flow-ux-spec.md` §7 (WP 8)                                                   |
+| Bubble accessibility                 | `HintBubble` mixes `role="dialog"` with `aria-live`; it should not steal focus and should be announced politely (U-12).                                                          | `04-host-flow-ux-spec.md` §7 (WP 8)                                                   |
+| Component tests                      | No render tests for `HintBubble` or for the anchor hook; only the scheduler and state modules are unit-tested.                                                                   | Review Phase 6 (`19-testing-strategy.md`)                                             |
+| Bundle budget                        | The feature is not lazily loaded and the under-6 kB gzip budget has not been measured.                                                                                           | `10-bundle-and-startup.md`                                                            |
+| Layering                             | `--z-hint` (450) sits below `--z-dialog` and the menu sheet, so a hint can render under an open settings sheet (F-05).                                                           | `14-navigation-and-overlays.md` Phase 1                                               |
 
 ## 4. Acceptance checklist
 
-- [x] A fresh install shows at most two hints per game-page visit, none within 1.5 s of arrival.
-- [x] Each hint appears exactly once and never again.
+- [ ] A fresh install walks through every eligible hint during the first game, one at a time, none within 1.5 s of arrival or of the previous dismissal (decision 12).
+- [ ] Each hint is acknowledged once and never again; an interrupted hint returns at its next moment.
+- [ ] "Show hints again" restarts the tutorial on the current screen without a reload.
 - [x] "Reset hints" makes every hint eligible again.
 - [x] "Show hints" off suppresses everything immediately without erasing seen progress.
 - [ ] Every hint dismisses via button, outside tap, Escape, back, and interaction with its anchor.

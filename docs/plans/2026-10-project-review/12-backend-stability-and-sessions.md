@@ -12,6 +12,8 @@
 > Owning layers: `apps/server/src/rooms`, `apps/server/src/app`, `apps/server/src/realtime`.
 > `packages/game-engine` stays pure; nothing in this document adds transport, timers or
 > logging to it.
+>
+> **Binding budgets, order and corrections (2026-10-07):** `05-performance-and-robustness-plan.md` §2 (budgets), §8 (rollout order), §9 (corrections to this document). Where they differ, `05` wins.
 
 Reconnect behaviour depends on the server making transport loss, host transfer, turn
 recovery and explicit removal separate policies. The rules below are the product rules as

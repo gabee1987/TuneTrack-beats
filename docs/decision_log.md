@@ -12,6 +12,20 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Host-flow owner decisions (2026-10-07)
+
+Answers to the open questions of `docs/plans/2026-10-project-review/04-host-flow-ux-spec.md` §13:
+
+- **Duplicate player names are allowed and suffixed.** A second "Player One" in the same room is
+  stored and shown as "Player One 2" for that room only; identity stays by player id and session.
+  Rejecting the join was declined because it adds a dead end to joining. Resolves the open entry
+  of 2026-04-04. Implementation pending (WP 9).
+- **First-run hints are a first-game tutorial.** The two-per-visit cap is removed; every relevant
+  hint appears at the moment its control matters, one at a time, and counts as seen only when
+  acknowledged. "Show hints again" restarts the tutorial immediately. Implementation pending
+  (WP 8).
+- **The bundled deck is called "Practice deck (no audio, 40 songs)".**
+
 ### Documentation reset and owner decisions (2026-10-06)
 
 Phase 2 of the review programme (`docs/plans/2026-10-project-review/00-index.md`) rewrote
@@ -155,10 +169,6 @@ than a bug report.
 
 ## Still open
 
-### Duplicate player names (2026-04-04)
-
-Duplicate display names are allowed within a room; players are distinguished by internal
-ids. Decide whether to block duplicates per room or keep relying on ids. Phase 4 of the review
-programme (host-flow specification) should propose the answer.
+Nothing open. (Duplicate player names, open since 2026-04-04, was decided on 2026-10-07.)
 
 # End of Decision Log
