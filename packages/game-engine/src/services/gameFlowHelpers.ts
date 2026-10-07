@@ -1,5 +1,4 @@
 import type { GamePlayer } from "../domain/GamePlayer.js";
-import type { GameTrackCard } from "../domain/GameTrackCard.js";
 import type { TimelineCard } from "../domain/TimelineCard.js";
 import { evaluateTimelinePlacement } from "../rules/placementRules.js";
 import type { StartGameInput } from "./gameFlowTypes.js";
@@ -50,34 +49,6 @@ export function validateStartGameInput(startGameInput: StartGameInput): void {
   ) {
     throw new Error("INVALID_TARGET_TIMELINE_CARD_COUNT");
   }
-}
-
-export function drawStartingTimelineCards(
-  deck: GameTrackCard[],
-  startingTimelineCardCount: number,
-): TimelineCard[] {
-  const timelineCards: TimelineCard[] = [];
-
-  for (let index = 0; index < startingTimelineCardCount; index += 1) {
-    const card = drawNextCard(deck);
-
-    if (!card) {
-      throw new Error("NOT_ENOUGH_CARDS");
-    }
-
-    timelineCards.push({
-      id: card.id,
-      releaseYear: card.releaseYear,
-    });
-  }
-
-  return [...timelineCards].sort(
-    (leftCard, rightCard) => leftCard.releaseYear - rightCard.releaseYear,
-  );
-}
-
-export function drawNextCard(deck: GameTrackCard[]): GameTrackCard | null {
-  return deck.shift() ?? null;
 }
 
 export function insertTimelineCard(

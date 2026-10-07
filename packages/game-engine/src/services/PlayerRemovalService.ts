@@ -1,14 +1,17 @@
 import type { GameState } from "../domain/GameState.js";
-import type { TurnState } from "../domain/TurnState.js";
 import type { ChallengeFlowService } from "./ChallengeFlowService.js";
-import { drawNextCard, findNextActivePlayerId } from "./gameFlowHelpers.js";
+import { beginNextTurn, type ShuffleCards } from "./deckFlow.js";
+import { findNextActivePlayerId } from "./gameFlowHelpers.js";
 
 /**
  * Removing a player must never leave the turn, challenge, reveal or winner pointing at someone
  * who is gone; every later transition (timers included) looks those ids up.
  */
 export class PlayerRemovalService {
-  public constructor(private readonly challengeFlow: ChallengeFlowService) {}
+  public constructor(
+    private readonly challengeFlow: ChallengeFlowService,
+    private readonly shuffleCards: ShuffleCards,
+  ) {}
 
   public removePlayer(gameState: GameState, playerId: string): GameState {
     if (!gameState.players.some((player) => player.id === playerId)) {
@@ -25,9 +28,14 @@ export class PlayerRemovalService {
 
     const { turn } = gameState;
     if (turn?.activePlayerId === playerId) {
+      // The leaving player is dropped first so a deck-exhaustion finish cannot crown them.
       return isWonByAnotherPlayer(gameState, playerId)
         ? gameState
-        : advanceTurnPastPlayer(gameState, turn, playerId);
+        : beginNextTurn(
+            withoutPlayer(gameState, playerId),
+            findNextActivePlayerId(gameState.players, playerId),
+            this.shuffleCards,
+          );
     }
 
     if (
@@ -55,24 +63,6 @@ function isWonByAnotherPlayer(gameState: GameState, playerId: string): boolean {
     gameState.winnerPlayerId !== null &&
     gameState.winnerPlayerId !== playerId
   );
-}
-
-function advanceTurnPastPlayer(gameState: GameState, turn: TurnState, playerId: string): GameState {
-  const deck = [...gameState.deck];
-  return {
-    ...gameState,
-    phase: "turn",
-    deck,
-    currentTrackCard: drawNextCard(deck),
-    turn: {
-      activePlayerId: findNextActivePlayerId(gameState.players, playerId),
-      turnNumber: turn.turnNumber + 1,
-      hasUsedSkipTrackWithTt: false,
-    },
-    challengeState: null,
-    revealState: null,
-    winnerPlayerId: null,
-  };
 }
 
 function withoutPlayer(gameState: GameState, playerId: string): GameState {

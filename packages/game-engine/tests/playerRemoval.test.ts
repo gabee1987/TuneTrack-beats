@@ -68,6 +68,7 @@ describe("GameFlowService.removePlayer", () => {
     return gameFlowService.claimChallenge(
       openChallenge(selectedSlotIndex, targetTimelineCardCount),
       "player-2",
+      0,
     );
   }
 

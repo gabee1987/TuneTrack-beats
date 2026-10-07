@@ -6,5 +6,6 @@ export * from "./domain/PlayerTimeline.js";
 export * from "./domain/RevealState.js";
 export * from "./domain/TimelineCard.js";
 export * from "./domain/TurnState.js";
+export * from "./rules/challengeRules.js";
 export * from "./rules/placementRules.js";
 export * from "./services/GameFlowService.js";

@@ -35,9 +35,10 @@ motion that explains what just happened.
 - Reveal confirmation mode is `host_only` (default) or `host_or_active_player`.
 - **The host may skip the active turn for any player at any time.** A 60 s safety auto-skip
   (`TURN_SKIP_GRACE_MS`) remains as a fallback when the active player is offline.
-- **Deck exhaustion** (decided 2026-10-06, implementation pending): when the deck is empty,
-  every card discarded during the game (wrong placements and TT skips) is reshuffled into a
-  new deck; cards on timelines stay out. The lobby shows how many cards the deck needs for the
+- **Deck exhaustion** (decided 2026-10-06; engine shipped 2026-10-07, lobby indicator
+  pending): when the deck is empty, every card that left play without reaching a timeline
+  (wrong placements, failed challenges, TT skips, skipped or cancelled turns) is reshuffled
+  into a new deck; cards on timelines stay out. A TT skip never hands back the skipped card. The lobby shows how many cards the deck needs for the
   current player count and win target, and warns when the deck is smaller. If the deck and
   the discard pile are both empty, the game finishes: most timeline cards wins, and on a tie
   the player who reached that count first (decided 2026-10-07).

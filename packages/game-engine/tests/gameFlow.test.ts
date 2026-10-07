@@ -351,7 +351,7 @@ describe("GameFlowService", () => {
         "player-2": 1,
       }),
     };
-    const claimedChallengeState = gameFlowService.claimChallenge(openChallengeState, "player-2");
+    const claimedChallengeState = gameFlowService.claimChallenge(openChallengeState, "player-2", 0);
 
     expect(claimedChallengeState.challengeState).toEqual(
       expect.objectContaining({
@@ -359,10 +359,10 @@ describe("GameFlowService", () => {
         challengerPlayerId: "player-2",
       }),
     );
-    expect(() => gameFlowService.claimChallenge(claimedChallengeState, "player-1")).toThrow(
+    expect(() => gameFlowService.claimChallenge(claimedChallengeState, "player-1", 0)).toThrow(
       "ACTIVE_PLAYER_CANNOT_CHALLENGE",
     );
-    expect(() => gameFlowService.claimChallenge(claimedChallengeState, "player-2")).toThrow(
+    expect(() => gameFlowService.claimChallenge(claimedChallengeState, "player-2", 0)).toThrow(
       "CHALLENGE_ALREADY_CLAIMED",
     );
   });
@@ -377,7 +377,7 @@ describe("GameFlowService", () => {
       challengeEnabled: true,
     });
 
-    expect(() => gameFlowService.claimChallenge(openChallengeState, "player-2")).toThrow(
+    expect(() => gameFlowService.claimChallenge(openChallengeState, "player-2", 0)).toThrow(
       "INSUFFICIENT_TT",
     );
   });
@@ -396,7 +396,7 @@ describe("GameFlowService", () => {
         "player-2": 1,
       }),
     };
-    const claimedChallengeState = gameFlowService.claimChallenge(openChallengeState, "player-2");
+    const claimedChallengeState = gameFlowService.claimChallenge(openChallengeState, "player-2", 0);
     const revealGameState = gameFlowService.placeChallengeCard(
       claimedChallengeState,
       "player-2",
@@ -462,7 +462,7 @@ describe("GameFlowService", () => {
     const openChallengeState = gameFlowService.placeCard(seededTokenState, "player-1", 1, {
       challengeEnabled: true,
     });
-    const claimedChallengeState = gameFlowService.claimChallenge(openChallengeState, "player-2");
+    const claimedChallengeState = gameFlowService.claimChallenge(openChallengeState, "player-2", 0);
     const revealGameState = gameFlowService.placeChallengeCard(
       claimedChallengeState,
       "player-2",
@@ -509,7 +509,7 @@ describe("GameFlowService", () => {
     const openChallengeState = gameFlowService.placeCard(seededTokenState, "player-1", 1, {
       challengeEnabled: true,
     });
-    const claimedChallengeState = gameFlowService.claimChallenge(openChallengeState, "player-2");
+    const claimedChallengeState = gameFlowService.claimChallenge(openChallengeState, "player-2", 0);
     const revealGameState = gameFlowService.placeChallengeCard(
       claimedChallengeState,
       "player-2",
@@ -536,7 +536,7 @@ describe("GameFlowService", () => {
     const openChallengeState = gameFlowService.placeCard(seededTokenState, "player-1", 0, {
       challengeEnabled: true,
     });
-    const claimedChallengeState = gameFlowService.claimChallenge(openChallengeState, "player-2");
+    const claimedChallengeState = gameFlowService.claimChallenge(openChallengeState, "player-2", 0);
 
     expect(() => gameFlowService.placeChallengeCard(claimedChallengeState, "player-2", 0)).toThrow(
       "CHALLENGE_SLOT_MUST_DIFFER",

@@ -12,6 +12,8 @@ export interface GameState {
   players: GamePlayer[];
   timelines: Record<string, TimelineCard[]>;
   deck: GameTrackCard[];
+  /** Cards that left play without reaching a timeline; reshuffled into the deck when it runs out. */
+  discardPile: GameTrackCard[];
   currentTrackCard: GameTrackCard | null;
   turn: TurnState | null;
   challengeState: ChallengeState | null;

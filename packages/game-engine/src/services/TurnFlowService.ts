@@ -3,16 +3,13 @@ import type { GameState } from "../domain/GameState.js";
 import type { RevealState } from "../domain/RevealState.js";
 import type { TimelineCard } from "../domain/TimelineCard.js";
 import { evaluateTimelinePlacement } from "../rules/placementRules.js";
-import {
-  drawNextCard,
-  drawStartingTimelineCards,
-  findNextActivePlayerId,
-  insertTimelineCard,
-  validateStartGameInput,
-} from "./gameFlowHelpers.js";
+import { beginNextTurn, beginTurnOfNextPlayer, type ShuffleCards } from "./deckFlow.js";
+import { insertTimelineCard, validateStartGameInput } from "./gameFlowHelpers.js";
 import type { PlaceCardOptions, StartGameInput } from "./gameFlowTypes.js";
 
 export class TurnFlowService {
+  public constructor(private readonly shuffleCards: ShuffleCards) {}
+
   public startGame(startGameInput: StartGameInput): GameState {
     validateStartGameInput(startGameInput);
 
@@ -22,12 +19,18 @@ export class TurnFlowService {
       throw new Error("NOT_ENOUGH_PLAYERS");
     }
 
-    const deck = [...startGameInput.deck];
+    let deck = startGameInput.deck;
     const timelines: Record<string, TimelineCard[]> = {};
 
     for (const player of startGameInput.players) {
-      timelines[player.id] = drawStartingTimelineCards(deck, player.startingTimelineCardCount);
+      timelines[player.id] = deck
+        .slice(0, player.startingTimelineCardCount)
+        .map((card) => ({ id: card.id, releaseYear: card.releaseYear }))
+        .sort((leftCard, rightCard) => leftCard.releaseYear - rightCard.releaseYear);
+      deck = deck.slice(player.startingTimelineCardCount);
     }
+
+    const [currentTrackCard = null, ...remainingDeck] = deck;
 
     return {
       phase: "turn",
@@ -36,8 +39,9 @@ export class TurnFlowService {
         ttTokenCount: player.startingTtTokenCount,
       })),
       timelines,
-      deck,
-      currentTrackCard: drawNextCard(deck),
+      deck: remainingDeck,
+      discardPile: [],
+      currentTrackCard,
       turn: {
         activePlayerId: firstPlayer.id,
         turnNumber: 1,
@@ -165,18 +169,7 @@ export class TurnFlowService {
       };
     }
 
-    return {
-      ...gameState,
-      phase: "turn",
-      currentTrackCard: drawNextCard(gameState.deck),
-      turn: {
-        activePlayerId: findNextActivePlayerId(gameState.players, gameState.turn.activePlayerId),
-        turnNumber: gameState.turn.turnNumber + 1,
-        hasUsedSkipTrackWithTt: false,
-      },
-      challengeState: null,
-      revealState: null,
-    };
+    return beginTurnOfNextPlayer(gameState, this.shuffleCards);
   }
 
   public advanceTurnToPlayer(gameState: GameState, nextActivePlayerId: string): GameState {
@@ -209,12 +202,7 @@ export class TurnFlowService {
       throw new Error("GAME_NOT_IN_TURN_PHASE");
     }
 
-    const nextActivePlayerId = findNextActivePlayerId(
-      gameState.players,
-      gameState.turn.activePlayerId,
-    );
-
-    return this.skipTurnToPlayer(gameState, nextActivePlayerId);
+    return beginTurnOfNextPlayer(gameState, this.shuffleCards);
   }
 
   public skipTurnToPlayer(gameState: GameState, nextActivePlayerId: string): GameState {
@@ -226,16 +214,6 @@ export class TurnFlowService {
       throw new Error("PLAYER_NOT_FOUND");
     }
 
-    return {
-      ...gameState,
-      turn: {
-        activePlayerId: nextActivePlayerId,
-        turnNumber: gameState.turn.turnNumber + 1,
-        hasUsedSkipTrackWithTt: false,
-      },
-      challengeState: null,
-      revealState: null,
-      currentTrackCard: drawNextCard(gameState.deck),
-    };
+    return beginNextTurn(gameState, nextActivePlayerId, this.shuffleCards);
   }
 }

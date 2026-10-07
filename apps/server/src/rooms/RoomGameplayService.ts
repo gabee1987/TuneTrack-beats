@@ -1,4 +1,9 @@
-import { GameFlowService, type GameState, type GameTrackCard } from "@tunetrack/game-engine";
+import {
+  GameFlowService,
+  type GameState,
+  type GameTrackCard,
+  isChallengeWindowExpired,
+} from "@tunetrack/game-engine";
 import {
   type BuyTimelineCardWithTtPayloadParsed,
   type ClaimChallengePayloadParsed,
@@ -69,31 +74,17 @@ export class RoomGameplayService {
       throw new Error("ONLY_HOST_CAN_SKIP_TURN");
     if (!roomRecord.gameState) throw new Error("GAME_NOT_STARTED");
 
-    const phase = roomRecord.gameState.phase;
-    const isChallengeClaimedSkip =
-      phase === "challenge" && roomRecord.gameState.challengeState?.phase === "claimed";
-
-    if (phase !== "turn" && !isChallengeClaimedSkip) throw new Error("GAME_NOT_IN_TURN_PHASE");
-
-    if (phase === "turn") {
-      const activeSessionId = this.store.findSessionIdForPlayer(
-        payload.roomId,
-        roomRecord.gameState.turn?.activePlayerId ?? "",
-      );
-      if (activeSessionId) this.timers.clearTurnSkip(activeSessionId);
-    }
-
-    if (isChallengeClaimedSkip) {
-      const challengerSessionId = this.store.findSessionIdForPlayer(
-        payload.roomId,
-        roomRecord.gameState.challengeState!.challengerPlayerId ?? "",
-      );
-      if (challengerSessionId) this.timers.clearTurnSkip(challengerSessionId);
-    }
-
-    const nextGameState = isChallengeClaimedSkip
-      ? this.gameFlowService.cancelClaimedChallengeForOfflineChallenger(roomRecord.gameState)
-      : this.skipToNextConnectedPlayer(roomRecord.roomState, roomRecord.gameState);
+    const { gameState } = roomRecord;
+    const nextConnectedPlayer = selectNextConnectedTurnPlayer(
+      roomRecord.roomState,
+      gameState.turn?.activePlayerId ?? "",
+    );
+    const nextGameState = this.gameFlowService.skipTurn(gameState, nextConnectedPlayer?.id ?? null);
+    // The engine only skips a turn or a claimed challenge, so this is the player being skipped.
+    const skippedPlayerId =
+      gameState.challengeState?.challengerPlayerId ?? gameState.turn?.activePlayerId ?? "";
+    const skippedSessionId = this.store.findSessionIdForPlayer(payload.roomId, skippedPlayerId);
+    if (skippedSessionId) this.timers.clearTurnSkip(skippedSessionId);
     const nextRoomState = mapGameStateToPublicRoomState(
       roomRecord.roomState,
       nextGameState,
@@ -188,11 +179,11 @@ export class RoomGameplayService {
     const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.store.requireMembership(socketId);
     if (!roomRecord.gameState) throw new Error("GAME_NOT_STARTED");
-    this.assertChallengeWindowStillOpen(roomRecord.gameState);
 
     const gameState = this.gameFlowService.claimChallenge(
       roomRecord.gameState,
       membership.playerId,
+      Date.now(),
     );
     const roomState = mapGameStateToPublicRoomState(
       roomRecord.roomState,
@@ -285,17 +276,6 @@ export class RoomGameplayService {
     return roomState;
   }
 
-  private skipToNextConnectedPlayer(roomState: PublicRoomState, gameState: GameState): GameState {
-    const nextConnectedPlayer = selectNextConnectedTurnPlayer(
-      roomState,
-      gameState.turn?.activePlayerId ?? "",
-    );
-
-    return nextConnectedPlayer
-      ? this.gameFlowService.skipTurnToPlayer(gameState, nextConnectedPlayer.id)
-      : this.gameFlowService.skipOfflinePlayerTurn(gameState);
-  }
-
   private scheduleChallengeAutoResolve(roomId: RoomId, gameState: GameState): void {
     if (!gameState.challengeState?.challengeDeadlineEpochMs || gameState.phase !== "challenge") {
       this.timers.clearChallenge(roomId);
@@ -305,12 +285,10 @@ export class RoomGameplayService {
     const delayMs = Math.max(0, gameState.challengeState.challengeDeadlineEpochMs - Date.now());
     this.timers.scheduleChallenge(roomId, delayMs, () => {
       const roomRecord = this.store.getRoom(roomId);
-      if (!roomRecord?.gameState) return;
       if (
-        roomRecord.gameState.phase !== "challenge" ||
-        !roomRecord.gameState.challengeState ||
-        roomRecord.gameState.challengeState.challengerPlayerId ||
-        !this.isChallengeDeadlineExpired(roomRecord.gameState)
+        !roomRecord?.gameState ||
+        roomRecord.gameState.challengeState?.challengerPlayerId ||
+        !isChallengeWindowExpired(roomRecord.gameState, Date.now())
       )
         return;
 
@@ -327,15 +305,5 @@ export class RoomGameplayService {
       });
       this.emitRoomStateChanged(nextRoomState);
     });
-  }
-
-  private assertChallengeWindowStillOpen(gameState: GameState): void {
-    if (this.isChallengeDeadlineExpired(gameState)) throw new Error("CHALLENGE_WINDOW_EXPIRED");
-  }
-
-  private isChallengeDeadlineExpired(gameState: GameState): boolean {
-    if (!gameState.challengeState?.challengeDeadlineEpochMs || gameState.phase !== "challenge")
-      return false;
-    return Date.now() >= gameState.challengeState.challengeDeadlineEpochMs;
   }
 }

@@ -1,18 +1,28 @@
 import type { GameState } from "../domain/GameState.js";
 import type { RevealState } from "../domain/RevealState.js";
+import { isChallengeWindowExpired } from "../rules/challengeRules.js";
 import { evaluateTimelinePlacement } from "../rules/placementRules.js";
+import { beginTurnOfNextPlayer, type ShuffleCards } from "./deckFlow.js";
 import {
-  drawNextCard,
   findFirstValidSlotIndex,
-  findNextActivePlayerId,
   insertTimelineCard,
   updatePlayerTokenCount,
 } from "./gameFlowHelpers.js";
 
 export class ChallengeFlowService {
-  public claimChallenge(gameState: GameState, challengerPlayerId: string): GameState {
+  public constructor(private readonly shuffleCards: ShuffleCards) {}
+
+  public claimChallenge(
+    gameState: GameState,
+    challengerPlayerId: string,
+    nowEpochMs: number,
+  ): GameState {
     if (gameState.phase !== "challenge" || !gameState.challengeState || !gameState.turn) {
       throw new Error("GAME_NOT_IN_CHALLENGE_PHASE");
+    }
+
+    if (isChallengeWindowExpired(gameState, nowEpochMs)) {
+      throw new Error("CHALLENGE_WINDOW_EXPIRED");
     }
 
     if (gameState.turn.activePlayerId === challengerPlayerId) {
@@ -226,22 +236,6 @@ export class ChallengeFlowService {
       throw new Error("GAME_NOT_IN_CLAIMED_CHALLENGE_PHASE");
     }
 
-    const nextActivePlayerId = findNextActivePlayerId(
-      gameState.players,
-      gameState.turn.activePlayerId,
-    );
-
-    return {
-      ...gameState,
-      phase: "turn",
-      turn: {
-        activePlayerId: nextActivePlayerId,
-        turnNumber: gameState.turn.turnNumber + 1,
-        hasUsedSkipTrackWithTt: false,
-      },
-      challengeState: null,
-      revealState: null,
-      currentTrackCard: drawNextCard(gameState.deck),
-    };
+    return beginTurnOfNextPlayer(gameState, this.shuffleCards);
   }
 }

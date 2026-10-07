@@ -1,7 +1,7 @@
 # 05 — Performance and Robustness Plan
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 5 of `00-index.md` §4).
-> **Status (2026-10-07):** A1 and A2 shipped; every other package is open. Every finding below
+> **Status (2026-10-07):** A1, A2 and A3 shipped; every other package is open. Every finding below
 > was re-verified in code on 2026-10-07 (line numbers drift; file and symbol names are the
 > stable reference).
 > **Authority:** this document sets the **binding numeric budgets** and the **order** of the
@@ -155,24 +155,23 @@ Proof: `apps/server/tests/rooms/kickDuringRound.test.ts` (2 cases),
 `apps/server/tests/rooms/RoomLobbyService.test.ts` (4 cases),
 `apps/server/tests/rooms/roomRename.test.ts` (5 cases).
 
-### A3 · Engine purity and deck exhaustion (B-12, B-06 / decision 6, B-09)
+### A3 · Engine purity and deck exhaustion (B-12, B-06 / decision 6, B-09) — **shipped 2026-10-07**
 
-- `drawNextCard(deck)` returns `{ card, deck }` and never mutates; all four mutating callers
-  move to the copy (B-12).
-- `GameState` gains `discardPile: GameTrackCard[]`. A wrong placement and a TT skip push the
-  card there. When a draw finds the deck empty, the discard pile is shuffled into a new deck
-  (decision 6). Shuffling is injected: `GameFlowService` takes a `shuffleCards` function
-  (default Fisher–Yates over `Math.random`, tests pass a deterministic one), so the engine stays
-  free of environment access.
-- If deck **and** discard pile are empty the game finishes deterministically: most timeline cards
-  wins, ties go to whoever reached that count first (decision 14). `CURRENT_CARD_NOT_AVAILABLE` can no longer be reached.
-- `nowEpochMs` becomes a parameter of the engine transitions that need a clock; the challenge
-  deadline check and the skip-versus-cancel decision in `RoomGameplayService.skipTurn` move
-  into the engine (B-09).
-- **Proof:** `packages/game-engine/tests/deckExhaustion.test.ts` (new: reshuffle after the
-  last card, discarded cards return, timeline cards never do, finish when both are empty);
-  `gameFlow.test.ts` asserts the input state is deep-equal before and after every transition.
-- Note: the lobby deck-size indicator and Start gating are `04-host-flow-ux-spec.md` WP 2.
+Engine transitions no longer mutate their input: `drawNextCard` in the new
+`services/deckFlow.ts` returns the card with new deck and discard-pile arrays. `GameState` has a
+`discardPile`; every card that leaves play without reaching a timeline (wrong placement, failed
+challenge, TT skip, skipped or cancelled turn, removed active player) goes there, and an empty
+deck reshuffles it through the injected `shuffleCards` (`GameFlowService` constructor, Fisher–Yates
+over `Math.random` by default). A TT skip draws before it discards, so it never returns the
+skipped card. When deck and discard pile are both empty the game finishes with the most-cards
+winner, ties by the earliest reveal that reached the count (starting cards count first).
+`claimChallenge` takes `nowEpochMs` and owns the deadline check (`isChallengeWindowExpired`,
+also used by the server's auto-resolve timer); `GameFlowService.skipTurn` owns the host
+skip-versus-cancel decision. The lobby indicator stays with `04` WP 2.
+Proof: `packages/game-engine/tests/deckExhaustion.test.ts` (8 cases),
+`packages/game-engine/tests/transitionPurity.test.ts` (15 transitions deep-equal before and
+after, 4 clock and skip cases; in a new file because `gameFlow.test.ts` is on the size
+allowlist), `apps/server/tests/rooms/kickDuringRound.test.ts` (host skip of a claimed challenge).
 
 ### A4 · Error contract (B-10)
 
@@ -320,7 +319,7 @@ their files do not overlap.
 | ----- | --------------------------- | --------------------------------- | --------------------------------------- | ------------------------------------------------- |
 | 1     | **A1** (shipped 2026-10-07) | —                                 | `write-tests`, `verify`                 | Answer leak and unauthenticated third-party calls |
 | 2     | **A2** (shipped 2026-10-07) | —                                 | `write-tests`                           | Ghost players, silent lobby loss, rename breakage |
-| 3     | A3                          | `04` WP 2 (deck contract) or none | `write-tests`                           | Game soft-lock; decision 6                        |
+| 3     | **A3** (shipped 2026-10-07) | `04` WP 2 (deck contract) or none | `write-tests`                           | Game soft-lock; decision 6                        |
 | 4     | A4, B1                      | —                                 | `add-socket-action` (A4), `write-tests` | Error contract feeds B2's toasts                  |
 | 5     | A8, B2                      | A4                                | `add-socket-action`, `e2e-scenario`     | Honest connection state end to end                |
 | 6     | A5, A6, A7                  | A1                                | `write-tests`                           | Abuse limits and transport                        |
@@ -331,7 +330,7 @@ their files do not overlap.
 | 11    | A9, A10                     | A2                                | `write-tests`                           | Small server costs, measured broadcast decision   |
 | 12    | E2                          | E1                                | `add-ui-component`                      | Largest UI refactor last                          |
 
-A1 and A2 shipped on 2026-10-07; A3 is next.
+A1, A2 and A3 shipped on 2026-10-07; A4 and B1 are next.
 
 ## 9. Corrections to the work-breakdown documents
 

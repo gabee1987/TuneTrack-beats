@@ -1,15 +1,17 @@
 import type { GameState } from "../domain/GameState.js";
 import type { RevealState } from "../domain/RevealState.js";
 import type { TimelineCard } from "../domain/TimelineCard.js";
+import { drawNextCard, type ShuffleCards } from "./deckFlow.js";
 import {
   assertPlayerHasEnoughTt,
-  drawNextCard,
   findFirstValidSlotIndex,
   insertTimelineCard,
   updatePlayerTokenCount,
 } from "./gameFlowHelpers.js";
 
 export class TtActionService {
+  public constructor(private readonly shuffleCards: ShuffleCards) {}
+
   public awardTtTokens(gameState: GameState, playerId: string, tokenAmount: number): GameState {
     if (!Number.isInteger(tokenAmount) || tokenAmount === 0) {
       throw new Error("INVALID_TT_AMOUNT");
@@ -40,16 +42,19 @@ export class TtActionService {
       throw new Error("SKIP_ALREADY_USED_THIS_TURN");
     }
 
-    const nextTrackCard = drawNextCard(gameState.deck);
+    // Drawing before discarding keeps a paid skip from handing back the skipped card.
+    const draw = drawNextCard(gameState, this.shuffleCards);
 
-    if (!nextTrackCard) {
+    if (!draw.card) {
       throw new Error("NOT_ENOUGH_CARDS");
     }
 
     return {
       ...gameState,
       players: updatePlayerTokenCount(gameState.players, playerId, -1),
-      currentTrackCard: nextTrackCard,
+      deck: draw.deck,
+      discardPile: [...draw.discardPile, gameState.currentTrackCard],
+      currentTrackCard: draw.card,
       turn: {
         ...gameState.turn,
         hasUsedSkipTrackWithTt: true,

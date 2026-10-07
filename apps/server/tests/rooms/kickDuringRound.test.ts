@@ -145,3 +145,18 @@ describe("removing a player from a running game without a kick", () => {
     expect(roomState.turn?.activePlayerId).toBe(challengerId);
   });
 });
+
+describe("host skip during a claimed challenge", () => {
+  it("cancels the challenge, keeps the challenger's TT and passes the turn on", () => {
+    const { roomRegistry, challengerId } = startGameWithGuestOnTurn({ isChallengeEnabled: true });
+    roomRegistry.placeCard("placer-socket", { roomId: TEST_ROOM_ID, selectedSlotIndex: 1 });
+    roomRegistry.claimChallenge("challenger-socket", { roomId: TEST_ROOM_ID });
+
+    const roomState = roomRegistry.skipTurn("host-socket", { roomId: TEST_ROOM_ID });
+
+    expect(roomState.status).toBe("turn");
+    expect(roomState.challengeState).toBeNull();
+    expect(roomState.turn?.activePlayerId).toBe(challengerId);
+    expect(roomState.players.find((player) => player.id === challengerId)?.ttTokenCount).toBe(1);
+  });
+});

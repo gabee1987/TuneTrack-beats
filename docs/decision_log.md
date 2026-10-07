@@ -12,6 +12,15 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Deck-exhaustion discards (2026-10-07)
+
+- **Every card that leaves play without reaching a timeline is discarded**, not only wrong
+  placements and TT skips: cards of host-skipped or auto-skipped turns, cancelled challenges and
+  a removed active player return too. Why: fewer cards are lost for good, so a small deck lasts
+  longer and the finish-on-empty rule triggers as late as possible. A TT skip draws before it
+  discards so a paid skip never returns the same card. Engine rule shipped (`05` A3); the lobby
+  indicator is still pending (`04` WP 2).
+
 ### Phase 5 and 6 owner decisions (2026-10-07)
 
 Answers to `05-performance-and-robustness-plan.md` §11 and `06-structure-and-test-plan.md` §10:

@@ -493,6 +493,7 @@ function createTurnGameState(overrides: Partial<GameState> = {}): GameState {
       [GUEST_ID]: [],
     },
     deck: [trackB],
+    discardPile: [],
     currentTrackCard: trackA,
     turn: {
       activePlayerId: HOST_ID,
