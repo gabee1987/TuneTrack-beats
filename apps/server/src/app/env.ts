@@ -33,6 +33,9 @@ const envSchema = z
       .int()
       .positive()
       .default(60 * 60 * 1_000),
+    // Proxies in front of the server whose X-Forwarded-For entry is trusted: 0 when clients
+    // connect directly (a client could otherwise fake its address), 1 behind Railway's edge.
+    TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(3).default(0),
     CLIENT_ORIGIN: z.string().url().default("http://localhost:5173"),
     SPOTIFY_CLIENT_ID: trimmedNonEmptyString,
     SPOTIFY_CLIENT_SECRET: trimmedNonEmptyString,

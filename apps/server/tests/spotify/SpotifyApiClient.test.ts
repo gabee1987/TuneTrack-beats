@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { SpotifyApiClient } from "../../src/spotify/SpotifyApiClient.js";
+import { MAX_PLAYLIST_PAGE_COUNT, SpotifyApiClient } from "../../src/spotify/SpotifyApiClient.js";
 
 describe("SpotifyApiClient", () => {
   afterEach(() => {
@@ -30,6 +30,28 @@ describe("SpotifyApiClient", () => {
 
     expect(fetchMock.mock.calls[0]?.[0]).toBe("http://127.0.0.1:3102/accounts/api/token");
     expect(fetchMock.mock.calls[1]?.[0]).toBe("http://127.0.0.1:3102/api/me");
+  });
+
+  describe("getAllPlaylistTracks", () => {
+    it("stops after the page cap even when Spotify reports more pages", async () => {
+      const fetchMock = vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              next: "http://127.0.0.1:3102/api/playlists/TEST_PLAYLIST/tracks?offset=next",
+              items: [{ track: { id: "track-12345", name: "Test Song" } }],
+            }),
+            { status: 200 },
+          ),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+
+      const client = new SpotifyApiClient({ apiBaseUrl: "http://127.0.0.1:3102/api" });
+      const tracks = await client.getAllPlaylistTracks("TEST_PLAYLIST", "access-token");
+
+      expect(fetchMock).toHaveBeenCalledTimes(MAX_PLAYLIST_PAGE_COUNT);
+      expect(tracks).toHaveLength(MAX_PLAYLIST_PAGE_COUNT);
+    });
   });
 
   describe("searchPlaylists", () => {

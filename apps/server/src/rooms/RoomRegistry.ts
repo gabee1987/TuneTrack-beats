@@ -28,7 +28,13 @@ import {
 import { RoomConnectionService } from "./RoomConnectionService.js";
 import { RoomGameplayService } from "./RoomGameplayService.js";
 import { RoomLobbyService } from "./RoomLobbyService.js";
-import { type JoinRoomResult, type KickPlayerResult, RoomStore } from "./RoomStore.js";
+import {
+  type ActionAckScope,
+  type JoinRoomResult,
+  type KickPlayerResult,
+  RoomStore,
+  type SocketRoomMembership,
+} from "./RoomStore.js";
 import { RoomTimerCoordinator } from "./RoomTimerCoordinator.js";
 
 export type { JoinRoomResult, KickPlayerResult } from "./RoomStore.js";
@@ -236,17 +242,38 @@ export class RoomRegistry {
     return this.store.getRoomRecordForMember(socketId, roomId).roomState;
   }
 
-  public getProcessedActionAck(
-    socketId: string,
-    roomId: RoomId,
-    requestId: string,
-  ): ActionAck | undefined {
-    this.store.getRoomRecordForMember(socketId, roomId);
-    return this.store.getProcessedActionAck(roomId, requestId);
+  public getProcessedActionAck(scope: ActionAckScope, requestId: string): ActionAck | undefined {
+    const membership = this.findAckMembership(scope);
+    if (!membership) throw new DomainError("ROOM_MEMBERSHIP_NOT_FOUND");
+    return this.store.getProcessedActionAck(
+      membership.roomId,
+      membership.sessionId,
+      scope.event,
+      requestId,
+    );
   }
 
-  public rememberProcessedActionAck(roomId: RoomId, ack: ActionAck): void {
-    this.store.rememberProcessedActionAck(roomId, ack);
+  public rememberProcessedActionAck(scope: ActionAckScope, ack: ActionAck): void {
+    const membership = this.findAckMembership(scope);
+    if (!membership) return;
+    this.store.rememberProcessedActionAck(
+      membership.roomId,
+      membership.sessionId,
+      scope.event,
+      ack,
+    );
+  }
+
+  // A rename moves the caller to the new code; a retry still names the previous one.
+  private findAckMembership({
+    socketId,
+    roomId,
+  }: ActionAckScope): SocketRoomMembership | undefined {
+    const membership = this.store.getSocketMembership(socketId);
+    if (!membership || !this.store.hasRoom(membership.roomId)) return undefined;
+    const isSameRoom =
+      membership.roomId === roomId || this.store.getRedirect(roomId) === membership.roomId;
+    return isSameRoom ? membership : undefined;
   }
 
   public startGame(

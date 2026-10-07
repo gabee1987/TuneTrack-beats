@@ -1,9 +1,9 @@
 # 12 — Backend Stability and Session Ownership
 
-> **Status (2026-10-07):** Phase 1 (in-game identity retention), Phase 3.1 (graceful shutdown)
-> and Phase 3.3 (lifecycle periods from configuration) shipped; Phase 3.2 (timer references) is
-> superseded by `05` A8. Phase 2 (Socket.IO configuration and rate limiting), Phase 4 (façade collapse —
-> `RoomService.ts` has grown to 718 lines) and Phase 5 (membership indexes) are open.
+> **Status (2026-10-07):** Phase 1 (in-game identity retention), Phase 2 (Socket.IO configuration
+> and rate limiting), Phase 3.1 (graceful shutdown) and Phase 3.3 (lifecycle periods from
+> configuration) shipped; Phase 3.2 (timer references) is superseded by `05` A8. Phase 4 (façade
+> collapse — `RoomService.ts` is 703 lines) and Phase 5 (membership indexes) are open.
 > **Folded from** `docs/plans/2026-09-stability-performance/04-backend-stability-and-sessions.md`
 > on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
 > Addresses findings **B-07, B-08, B-11, B-15** of `01-review-findings.md`, with a dependency
@@ -51,113 +51,12 @@ players; the code never did, and decision 8 confirms the code.
 
 ## 2. Phase 2 — Configure Socket.IO for mobile networks
 
-**Finding:** B-15 (recovery assumption), B-07 (abuse surface, no rate limit), T-08
-(`createSocketServer` untested).
-
-E2E E7 and E8 already prove that the session-id rejoin path restores a guest or host after
-a short in-game interruption (`13-network-protocol-and-resilience.md`). Everything below is
-open.
-
-`apps/server/src/app/createSocketServer.ts` currently sets only `cors` and
-`maxHttpBufferSize`.
-
-### 2.1 Connection state recovery
-
-Socket.IO 4.6+ `connectionStateRecovery` transparently restores the session id, rooms and
-missed packets across a short disconnection. For a game played on phones in a living room
-this is the single highest-value server setting available.
-
-    connectionStateRecovery: {
-      maxDisconnectionDuration: 120_000,
-      skipMiddlewares: false,
-    }
-
-Consequences that must be handled deliberately:
-
-- **Correction (B-15):** the 2026-09 plan assumed that a recovered socket keeps a valid
-  membership because `RoomStore.socketMemberships` is keyed by socket id. It does not: the
-  disconnect handler (`registerDisconnectHandler` in `realtime/handlers/lobbyHandlers.ts`)
-  calls `RoomConnectionService.removePlayerBySocketId` immediately, so the membership is
-  gone before any recovery can occur, and enabling the option alone changes nothing. The
-  design must either defer membership removal until the recovery window has elapsed (a
-  timer owned by `RoomTimerCoordinator`, re-checking state before it fires) or treat a
-  socket with `socket.recovered === true` as an implicit rejoin that re-establishes the
-  membership from the session id. Decide this before implementation and write the chosen
-  variant into `13-network-protocol-and-resilience.md` §3, because the client must not
-  blindly re-emit a join on recovery.
-- `skipMiddlewares: false` keeps the audit middleware
-  (`registerSocketAuditMiddleware`) running on recovery, which is what we want for
-  traceability.
-- Missed packets are replayed. Because every mutation currently broadcasts full room state
-  (B-16), replay is safe — the last packet wins. Once
-  `13-network-protocol-and-resilience.md` §4 introduces deltas, replay ordering becomes
-  load-bearing; that document carries the dependency.
-
-### 2.2 Heartbeat tuning
-
-Defaults are `pingInterval: 25 000`, `pingTimeout: 20 000`. A backgrounded mobile browser
-can be throttled hard enough to miss a ping, producing a spurious disconnect. Set:
-
-    pingInterval: 20_000,
-    pingTimeout: 25_000,
-
-A `pingTimeout` longer than `pingInterval` gives the client a full extra interval to
-respond before the server gives up, which is the right trade for this workload. Document
-the reasoning inline as a non-obvious "why" comment.
-
-### 2.3 Transport policy
-
-Leave the default upgrade path (polling then WebSocket) — it is the most compatible.
-Do **not** force `transports: ["websocket"]`; some domestic networks and captive portals
-break it, and this app has to work at a family gathering.
-
-### 2.4 Per-socket rate limiting
-
-There is currently no limit on how fast a client can emit. A buggy or hostile client can
-drive unbounded `list_rooms`, `refresh_spotify_token` or `place_card` traffic, each of
-which triggers work and, for the Spotify ones, outbound third-party calls. B-07 adds that
-`import_playlist` performs the full Spotify fetch before any authorisation check and that
-the OAuth callback is unlimited too; the authorisation ordering is Phase 5 of the review
-programme, the limiter is this phase.
-
-Add a small token-bucket guard in the realtime layer — this is a transport concern and
-belongs in `apps/server/src/realtime/`, not in `rooms/`:
-
-- New `apps/server/src/realtime/rateLimit.ts`: per-socket, per-event token bucket with a
-  default of 20 events per 10 s and tighter buckets for the expensive events:
-
-  | Event class                                                            | Limit     |
-  | ---------------------------------------------------------------------- | --------- |
-  | Gameplay mutations (`place_card`, `confirm_reveal`, ...)               | 10 / 5 s  |
-  | Discovery / search (`search_spotify_*`, `generate_spotify_candidates`) | 5 / 10 s  |
-  | `refresh_spotify_token`                                                | 3 / 60 s  |
-  | `list_rooms`, `get_room_preview`                                       | 10 / 10 s |
-  | Everything else                                                        | 20 / 10 s |
-
-- Wire it inside `createSocketHandler` so every registered handler is covered by
-  construction and no handler can forget it. Note that five async handlers currently bypass
-  `createSocketHandler` (B-21); route them through it first, or the limiter has holes.
-- On breach: emit the existing `Error` event with a new code `RATE_LIMITED`, log at `warn`,
-  and record an audit event. Do not disconnect — a legitimate client with a stuck button
-  should recover, not be ejected.
-- Add `RATE_LIMITED` to `apps/server/src/realtime/errorMessages.ts` and to
-  `apps/web/src/features/i18n/localizedErrors.ts` with a user-facing message in both
-  catalogues.
-
-This is a defence-in-depth control, in line with ISO/IEC 27001 Annex A.8 expectations for
-availability of an internet-facing service, and it is cheap.
-
-### Acceptance
-
-- [ ] New test `apps/server/tests/app/createSocketServer.test.ts` asserts the configured
-      options (recovery window, ping values, buffer size, CORS validator wiring).
-- [ ] New test `apps/server/tests/realtime/rateLimit.test.ts` covers: under-limit passes,
-      over-limit emits `RATE_LIMITED`, bucket refills, buckets are per-socket and
-      per-event-class, and no socket is disconnected.
-- [ ] An integration test drops and restores a client socket inside the recovery window
-      and asserts the player is still a room member with no rejoin emitted.
-- [ ] Manual check: put a phone in flight mode for 10 s during a game, restore it, and
-      confirm play continues with no error toast.
+**Shipped 2026-10-07** as `05` A6 and A7: recovery stays off (the session-id rejoin restores
+everything; the former §2.1 design is superseded), `pingInterval` 20 s and `pingTimeout` 25 s,
+default transports, and a per-socket `socket.use` token bucket (`realtime/rateLimit.ts`,
+`RATE_LIMITED`, no disconnect) instead of a limiter inside `createSocketHandler`, so the async
+handlers are covered too. Proof: `apps/server/tests/app/createSocketServer.test.ts`,
+`apps/server/tests/realtime/rateLimit.test.ts`. Remaining: the 10 s flight-mode device check.
 
 ## 3. Phase 3 — Graceful shutdown and timer ownership
 

@@ -16,6 +16,7 @@ import { logger } from "../../app/logger.js";
 import type { RoomService } from "../../rooms/RoomService.js";
 import { broadcastRoomDirectory } from "../broadcastRoomDirectory.js";
 import { broadcastRoomState, createSocketHandler } from "../createSocketHandler.js";
+import { roomActionIdempotency } from "../roomActionIdempotency.js";
 import {
   awardTtErrorMessages,
   buyTimelineCardWithTtErrorMessages,
@@ -62,17 +63,7 @@ function registerStartGameHandler(io: Server, socket: Socket, roomService: RoomS
       broadcastRoomState(io, roomService.startGame(data, socket.id));
       broadcastRoomDirectory(io, roomService);
     },
-    idempotency: {
-      find: (data) =>
-        data.requestId
-          ? roomService.getProcessedActionAck(socket.id, data.roomId, data.requestId)
-          : undefined,
-      remember: (data, ack) => {
-        if (data.requestId) {
-          roomService.rememberProcessedActionAck(data.roomId, ack);
-        }
-      },
-    },
+    idempotency: roomActionIdempotency(roomService, socket, ClientToServerEvent.StartGame),
     fallbackErrorCode: "START_GAME_FAILED",
     errorMessages: startGameErrorMessages,
   });
@@ -100,17 +91,7 @@ function registerPlaceCardHandler(io: Server, socket: Socket, roomService: RoomS
     handle: (data) => {
       broadcastRoomState(io, roomService.placeCard(data, socket.id));
     },
-    idempotency: {
-      find: (data) =>
-        data.requestId
-          ? roomService.getProcessedActionAck(socket.id, data.roomId, data.requestId)
-          : undefined,
-      remember: (data, ack) => {
-        if (data.requestId) {
-          roomService.rememberProcessedActionAck(data.roomId, ack);
-        }
-      },
-    },
+    idempotency: roomActionIdempotency(roomService, socket, ClientToServerEvent.PlaceCard),
     fallbackErrorCode: "PLACE_CARD_FAILED",
     errorMessages: placeCardErrorMessages,
   });
@@ -131,17 +112,7 @@ function registerConfirmRevealHandler(io: Server, socket: Socket, roomService: R
     handle: (data) => {
       broadcastRoomState(io, roomService.confirmReveal(data, socket.id));
     },
-    idempotency: {
-      find: (data) =>
-        data.requestId
-          ? roomService.getProcessedActionAck(socket.id, data.roomId, data.requestId)
-          : undefined,
-      remember: (data, ack) => {
-        if (data.requestId) {
-          roomService.rememberProcessedActionAck(data.roomId, ack);
-        }
-      },
-    },
+    idempotency: roomActionIdempotency(roomService, socket, ClientToServerEvent.ConfirmReveal),
     fallbackErrorCode: "CONFIRM_REVEAL_FAILED",
     errorMessages: confirmRevealErrorMessages,
   });
@@ -162,17 +133,7 @@ function registerClaimChallengeHandler(io: Server, socket: Socket, roomService: 
     handle: (data) => {
       broadcastRoomState(io, roomService.claimChallenge(data, socket.id));
     },
-    idempotency: {
-      find: (data) =>
-        data.requestId
-          ? roomService.getProcessedActionAck(socket.id, data.roomId, data.requestId)
-          : undefined,
-      remember: (data, ack) => {
-        if (data.requestId) {
-          roomService.rememberProcessedActionAck(data.roomId, ack);
-        }
-      },
-    },
+    idempotency: roomActionIdempotency(roomService, socket, ClientToServerEvent.ClaimChallenge),
     fallbackErrorCode: "CLAIM_CHALLENGE_FAILED",
     errorMessages: claimChallengeErrorMessages,
   });
@@ -200,17 +161,7 @@ function registerPlaceChallengeHandler(io: Server, socket: Socket, roomService: 
     handle: (data) => {
       broadcastRoomState(io, roomService.placeChallenge(data, socket.id));
     },
-    idempotency: {
-      find: (data) =>
-        data.requestId
-          ? roomService.getProcessedActionAck(socket.id, data.roomId, data.requestId)
-          : undefined,
-      remember: (data, ack) => {
-        if (data.requestId) {
-          roomService.rememberProcessedActionAck(data.roomId, ack);
-        }
-      },
-    },
+    idempotency: roomActionIdempotency(roomService, socket, ClientToServerEvent.PlaceChallenge),
     fallbackErrorCode: "PLACE_CHALLENGE_FAILED",
     errorMessages: placeChallengeErrorMessages,
   });
@@ -232,17 +183,11 @@ function registerResolveChallengeWindowHandler(
     handle: (data) => {
       broadcastRoomState(io, roomService.resolveChallengeWindow(data, socket.id));
     },
-    idempotency: {
-      find: (data) =>
-        data.requestId
-          ? roomService.getProcessedActionAck(socket.id, data.roomId, data.requestId)
-          : undefined,
-      remember: (data, ack) => {
-        if (data.requestId) {
-          roomService.rememberProcessedActionAck(data.roomId, ack);
-        }
-      },
-    },
+    idempotency: roomActionIdempotency(
+      roomService,
+      socket,
+      ClientToServerEvent.ResolveChallengeWindow,
+    ),
     fallbackErrorCode: "RESOLVE_CHALLENGE_WINDOW_FAILED",
     errorMessages: resolveChallengeWindowErrorMessages,
   });
@@ -271,17 +216,7 @@ function registerAwardTtHandler(io: Server, socket: Socket, roomService: RoomSer
     handle: (data) => {
       broadcastRoomState(io, roomService.awardTt(data, socket.id));
     },
-    idempotency: {
-      find: (data) =>
-        data.requestId
-          ? roomService.getProcessedActionAck(socket.id, data.roomId, data.requestId)
-          : undefined,
-      remember: (data, ack) => {
-        if (data.requestId) {
-          roomService.rememberProcessedActionAck(data.roomId, ack);
-        }
-      },
-    },
+    idempotency: roomActionIdempotency(roomService, socket, ClientToServerEvent.AwardTt),
     fallbackErrorCode: "AWARD_TT_FAILED",
     errorMessages: awardTtErrorMessages,
   });
@@ -306,17 +241,7 @@ function registerSkipTrackWithTtHandler(
     handle: (data) => {
       broadcastRoomState(io, roomService.skipTrackWithTt(data, socket.id));
     },
-    idempotency: {
-      find: (data) =>
-        data.requestId
-          ? roomService.getProcessedActionAck(socket.id, data.roomId, data.requestId)
-          : undefined,
-      remember: (data, ack) => {
-        if (data.requestId) {
-          roomService.rememberProcessedActionAck(data.roomId, ack);
-        }
-      },
-    },
+    idempotency: roomActionIdempotency(roomService, socket, ClientToServerEvent.SkipTrackWithTt),
     fallbackErrorCode: "SKIP_TRACK_WITH_TT_FAILED",
     errorMessages: skipTrackWithTtErrorMessages,
   });
@@ -337,17 +262,7 @@ function registerSkipTurnHandler(io: Server, socket: Socket, roomService: RoomSe
     handle: (data) => {
       broadcastRoomState(io, roomService.skipTurn(data, socket.id));
     },
-    idempotency: {
-      find: (data) =>
-        data.requestId
-          ? roomService.getProcessedActionAck(socket.id, data.roomId, data.requestId)
-          : undefined,
-      remember: (data, ack) => {
-        if (data.requestId) {
-          roomService.rememberProcessedActionAck(data.roomId, ack);
-        }
-      },
-    },
+    idempotency: roomActionIdempotency(roomService, socket, ClientToServerEvent.SkipTurn),
     fallbackErrorCode: "SKIP_TURN_FAILED",
     errorMessages: skipTurnErrorMessages,
   });
@@ -369,17 +284,11 @@ function registerBuyTimelineCardWithTtHandler(
     handle: (data) => {
       broadcastRoomState(io, roomService.buyTimelineCardWithTt(data, socket.id));
     },
-    idempotency: {
-      find: (data) =>
-        data.requestId
-          ? roomService.getProcessedActionAck(socket.id, data.roomId, data.requestId)
-          : undefined,
-      remember: (data, ack) => {
-        if (data.requestId) {
-          roomService.rememberProcessedActionAck(data.roomId, ack);
-        }
-      },
-    },
+    idempotency: roomActionIdempotency(
+      roomService,
+      socket,
+      ClientToServerEvent.BuyTimelineCardWithTt,
+    ),
     fallbackErrorCode: "BUY_TIMELINE_CARD_WITH_TT_FAILED",
     errorMessages: buyTimelineCardWithTtErrorMessages,
   });

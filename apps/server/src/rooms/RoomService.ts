@@ -58,6 +58,7 @@ import type {
 import type { ImportPlaylistResultPayload } from "@tunetrack/shared";
 import { cardToPublicTrackInfo } from "./publicTrackInfo.js";
 import { type JoinRoomResult, type KickPlayerResult, RoomRegistry } from "./RoomRegistry.js";
+import type { ActionAckScope } from "./RoomStore.js";
 
 export interface ImportPlaylistServiceResult {
   roomState: PublicRoomState;
@@ -162,16 +163,12 @@ export class RoomService {
     return this.roomRegistry.getRoomSummary(payload.roomId);
   }
 
-  public getProcessedActionAck(
-    socketId: string,
-    roomId: string,
-    requestId: string,
-  ): ActionAck | undefined {
-    return this.roomRegistry.getProcessedActionAck(socketId, roomId, requestId);
+  public getProcessedActionAck(scope: ActionAckScope, requestId: string): ActionAck | undefined {
+    return this.roomRegistry.getProcessedActionAck(scope, requestId);
   }
 
-  public rememberProcessedActionAck(roomId: string, ack: ActionAck): void {
-    this.roomRegistry.rememberProcessedActionAck(roomId, ack);
+  public rememberProcessedActionAck(scope: ActionAckScope, ack: ActionAck): void {
+    this.roomRegistry.rememberProcessedActionAck(scope, ack);
   }
 
   public updateRoomSettings(

@@ -5,6 +5,7 @@ import { logAuditEvent } from "../app/auditLogger.js";
 import { logger } from "../app/logger.js";
 import type { RoomService } from "../rooms/RoomService.js";
 import type { SpotifyAuthService } from "../spotify/SpotifyAuthService.js";
+import { createCallbackRateLimit } from "./callbackRateLimit.js";
 
 export function registerSpotifyRoutes(
   app: Express,
@@ -12,7 +13,7 @@ export function registerSpotifyRoutes(
   spotifyAuthService: SpotifyAuthService,
   roomService: RoomService,
 ): void {
-  app.get("/api/spotify/callback", (req: Request, res: Response) => {
+  app.get("/api/spotify/callback", createCallbackRateLimit(), (req: Request, res: Response) => {
     void handleSpotifyCallback(req, res, io, spotifyAuthService, roomService);
   });
 }

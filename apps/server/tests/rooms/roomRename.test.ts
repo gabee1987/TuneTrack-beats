@@ -1,4 +1,5 @@
 import {
+  ClientToServerEvent,
   generateSpotifyCandidatesPayloadSchema,
   refreshSpotifyTokenPayloadSchema,
   registerSpotifyPlaybackDevicePayloadSchema,
@@ -177,12 +178,19 @@ describe("renaming a room keeps every room-keyed record", () => {
   it("replays an action acknowledged before the rename", () => {
     const { roomService } = createHostRoom();
     const ack = { ok: true, requestId: "00000000-0000-4000-8000-000000012345" };
-    roomService.rememberProcessedActionAck(PREVIOUS_ROOM_ID, ack);
+    const event = ClientToServerEvent.SkipTurn;
+    roomService.rememberProcessedActionAck(
+      { socketId: HOST_SOCKET_ID, roomId: PREVIOUS_ROOM_ID, event },
+      ack,
+    );
 
     renameRoom(roomService);
 
-    expect(roomService.getProcessedActionAck(HOST_SOCKET_ID, NEXT_ROOM_ID, ack.requestId)).toEqual(
-      ack,
-    );
+    expect(
+      roomService.getProcessedActionAck(
+        { socketId: HOST_SOCKET_ID, roomId: NEXT_ROOM_ID, event },
+        ack.requestId,
+      ),
+    ).toEqual(ack);
   });
 });

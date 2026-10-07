@@ -1,5 +1,8 @@
 import { env } from "../app/env.js";
 
+/** 10 pages of 100 tracks: the curated playlist limit of 1 000 tracks (`05` §2.4). */
+export const MAX_PLAYLIST_PAGE_COUNT = 10;
+
 export interface SpotifyApiTrack {
   id: string;
   name: string;
@@ -475,8 +478,10 @@ export class SpotifyApiClient {
     const tracks: SpotifyApiTrack[] = [];
     let nextUrl: string | null =
       `${this.apiBaseUrl}/playlists/${playlistId}/tracks?limit=100&fields=next,total,items(track(id,name,artists,album,preview_url,uri))`;
+    let pageCount = 0;
 
-    while (nextUrl) {
+    while (nextUrl && pageCount < MAX_PLAYLIST_PAGE_COUNT) {
+      pageCount += 1;
       const response = await fetch(nextUrl, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });

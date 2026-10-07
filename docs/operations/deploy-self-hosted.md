@@ -354,6 +354,7 @@ In `apps/server`, create `.env`:
 NODE_ENV=production
 PORT=3001
 CLIENT_ORIGIN=https://tunetrack-web.onrender.com
+TRUST_PROXY_HOPS=1
 SPOTIFY_CLIENT_ID=your-spotify-client-id
 SPOTIFY_CLIENT_SECRET=your-spotify-client-secret
 SPOTIFY_REDIRECT_URI=https://tunetrack-server.YOUR-DOMAIN.com/api/spotify/callback
@@ -550,6 +551,7 @@ In `apps/server`, create `.env`:
 NODE_ENV=production
 PORT=3001
 CLIENT_ORIGIN=https://tunetrack.duckdns.org
+TRUST_PROXY_HOPS=1
 SPOTIFY_CLIENT_ID=your-spotify-client-id
 SPOTIFY_CLIENT_SECRET=your-spotify-client-secret
 SPOTIFY_REDIRECT_URI=https://tunetrack.duckdns.org/api/spotify/callback

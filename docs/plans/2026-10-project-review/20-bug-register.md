@@ -18,7 +18,7 @@ Status meanings:
 | ID  | Severity | Status                             | Next proof                                                             |
 | --- | -------- | ---------------------------------- | ---------------------------------------------------------------------- |
 | B2  | S1       | Open                               | Remaining overlay-stack component tests                                |
-| B8  | S1       | Partially fixed                    | Server transport tuning (`05` A5–A7)                                   |
+| B8  | S1       | Partially fixed                    | Phone offline for 10 s during a game recovers without an error toast   |
 | B14 | S1       | Needs reproduction                 | Capture route, connection state and overlays when the UI becomes inert |
 | B18 | S2       | Open                               | Reproduce and instrument a page exit that never completes              |
 | B4  | S1       | Open; device confirmation required | iPhone drag-versus-scroll test                                         |
@@ -67,13 +67,12 @@ that initiated navigation.
 - Closing a room keeps the device session id, and storage access never throws (`05` B1).
 - One client connection state drives the Play and Lobby chip and the game banner; offline
   gameplay actions are refused with a toast (`05` B2, E2E `connection-status.spec.ts`).
+- Recovery stays off, the heartbeat is 20 s / 25 s and every socket is rate limited (`05` A6,
+  A7); a restart ends games with the "server restarted" dialog (`05` A8, B2).
 
 ### Remaining
 
-- Decide and verify Socket.IO recovery, ping and rate-limit settings using measured failure
-  cases rather than speculative tuning.
-- Keep server restart behavior explicit: room state is in memory and is not recoverable
-  after a process restart.
+- Confirm on a phone that a 10 s network loss during a game recovers without an error toast.
 
 ## B14 · App can become unresponsive and return Home
 

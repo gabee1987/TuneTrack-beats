@@ -13,6 +13,13 @@ export interface SessionRoomMembership {
   roomId: RoomId;
 }
 
+/** Who asked, where and for which event; acks are replayed only within this scope. */
+export interface ActionAckScope {
+  socketId: string;
+  roomId: RoomId;
+  event: string;
+}
+
 export interface RoomRecord {
   gameState: GameState | null;
   roomState: PublicRoomState;
@@ -60,15 +67,21 @@ export class RoomStore {
     this.processedActionAcksByRoomId.delete(roomId);
   }
 
-  public getProcessedActionAck(roomId: RoomId, requestId: string): ActionAck | undefined {
+  public getProcessedActionAck(
+    roomId: RoomId,
+    sessionId: string,
+    event: string,
+    requestId: string,
+  ): ActionAck | undefined {
+    const ackKey = buildProcessedActionKey(sessionId, event, requestId);
     const roomAcks = this.processedActionAcksByRoomId.get(roomId);
-    const ack = roomAcks?.get(requestId);
+    const ack = roomAcks?.get(ackKey);
     if (!roomAcks || !ack) {
       return undefined;
     }
 
-    roomAcks.delete(requestId);
-    roomAcks.set(requestId, ack);
+    roomAcks.delete(ackKey);
+    roomAcks.set(ackKey, ack);
     return ack;
   }
 
@@ -79,16 +92,22 @@ export class RoomStore {
     this.processedActionAcksByRoomId.set(nextRoomId, roomAcks);
   }
 
-  public rememberProcessedActionAck(roomId: RoomId, ack: ActionAck): void {
+  public rememberProcessedActionAck(
+    roomId: RoomId,
+    sessionId: string,
+    event: string,
+    ack: ActionAck,
+  ): void {
+    const ackKey = buildProcessedActionKey(sessionId, event, ack.requestId);
     const roomAcks = this.processedActionAcksByRoomId.get(roomId) ?? new Map();
-    roomAcks.delete(ack.requestId);
-    roomAcks.set(ack.requestId, ack);
+    roomAcks.delete(ackKey);
+    roomAcks.set(ackKey, ack);
     this.processedActionAcksByRoomId.set(roomId, roomAcks);
 
     if (roomAcks.size > RoomStore.MAX_PROCESSED_ACTION_COUNT) {
-      const oldestRequestId = roomAcks.keys().next().value;
-      if (oldestRequestId) {
-        roomAcks.delete(oldestRequestId);
+      const oldestAckKey = roomAcks.keys().next().value;
+      if (oldestAckKey) {
+        roomAcks.delete(oldestAckKey);
       }
     }
   }
@@ -267,4 +286,10 @@ function mapRoomStateToSummary(roomState: PublicRoomState): PublicRoomSummary {
     roomId: roomState.roomId,
     status: roomState.status,
   };
+}
+
+// Scoped to the caller's session so a member who learns another member's request id cannot
+// obtain that member's acknowledgement.
+function buildProcessedActionKey(sessionId: string, event: string, requestId: string): string {
+  return `${sessionId}:${event}:${requestId}`;
 }

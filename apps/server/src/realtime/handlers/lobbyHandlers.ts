@@ -18,6 +18,7 @@ import { logger } from "../../app/logger.js";
 import type { RoomService } from "../../rooms/RoomService.js";
 import { broadcastRoomDirectory } from "../broadcastRoomDirectory.js";
 import { broadcastRoomState, createSocketHandler } from "../createSocketHandler.js";
+import { roomActionIdempotency } from "../roomActionIdempotency.js";
 import {
   closeRoomErrorMessages,
   createRoomErrorMessages,
@@ -46,15 +47,6 @@ export function registerLobbyHandlers(io: Server, socket: Socket, roomService: R
 }
 
 function registerRenameRoomHandler(io: Server, socket: Socket, roomService: RoomService): void {
-  let lastSuccessfulRename:
-    | {
-        previousRoomId: string;
-        nextRoomId: string;
-        requestId: string;
-        ack: ActionAck;
-      }
-    | undefined;
-
   createSocketHandler({
     socket,
     event: ClientToServerEvent.RenameRoom,
@@ -81,25 +73,7 @@ function registerRenameRoomHandler(io: Server, socket: Socket, roomService: Room
       broadcastRoomState(io, roomState);
       broadcastRoomDirectory(io, roomService);
     },
-    idempotency: {
-      find: (data) =>
-        data.requestId &&
-        lastSuccessfulRename?.previousRoomId === data.roomId &&
-        lastSuccessfulRename.nextRoomId === data.nextRoomId &&
-        lastSuccessfulRename.requestId === data.requestId
-          ? lastSuccessfulRename.ack
-          : undefined,
-      remember: (data, ack) => {
-        if (data.requestId) {
-          lastSuccessfulRename = {
-            previousRoomId: data.roomId,
-            nextRoomId: data.nextRoomId,
-            requestId: data.requestId,
-            ack,
-          };
-        }
-      },
-    },
+    idempotency: roomActionIdempotency(roomService, socket, ClientToServerEvent.RenameRoom),
     fallbackErrorCode: "RENAME_ROOM_FAILED",
     errorMessages: renameRoomErrorMessages,
   });
@@ -230,17 +204,7 @@ function registerTransferHostHandler(io: Server, socket: Socket, roomService: Ro
       broadcastRoomState(io, roomService.transferHost(data, socket.id));
       broadcastRoomDirectory(io, roomService);
     },
-    idempotency: {
-      find: (data) =>
-        data.requestId
-          ? roomService.getProcessedActionAck(socket.id, data.roomId, data.requestId)
-          : undefined,
-      remember: (data, ack) => {
-        if (data.requestId) {
-          roomService.rememberProcessedActionAck(data.roomId, ack);
-        }
-      },
-    },
+    idempotency: roomActionIdempotency(roomService, socket, ClientToServerEvent.TransferHost),
     fallbackErrorCode: "TRANSFER_HOST_FAILED",
     errorMessages: transferHostErrorMessages,
   });
@@ -281,17 +245,7 @@ function registerKickPlayerHandler(io: Server, socket: Socket, roomService: Room
       broadcastRoomState(io, roomState);
       broadcastRoomDirectory(io, roomService);
     },
-    idempotency: {
-      find: (data) =>
-        data.requestId
-          ? roomService.getProcessedActionAck(socket.id, data.roomId, data.requestId)
-          : undefined,
-      remember: (data, ack) => {
-        if (data.requestId) {
-          roomService.rememberProcessedActionAck(data.roomId, ack);
-        }
-      },
-    },
+    idempotency: roomActionIdempotency(roomService, socket, ClientToServerEvent.KickPlayer),
     fallbackErrorCode: "KICK_PLAYER_FAILED",
     errorMessages: kickPlayerErrorMessages,
   });
@@ -362,6 +316,8 @@ function registerUpdateRoomSettingsHandler(
 }
 
 function registerCloseRoomHandler(io: Server, socket: Socket, roomService: RoomService): void {
+  // Closing deletes the room and every membership, so the room-scoped ack store cannot hold
+  // this ack; a per-socket replay is already limited to the caller.
   let lastSuccessfulClose: { roomId: string; requestId: string; ack: ActionAck } | undefined;
 
   createSocketHandler({

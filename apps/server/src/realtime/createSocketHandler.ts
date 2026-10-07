@@ -134,7 +134,7 @@ export function createSocketHandler<TSchema extends z.ZodTypeAny>(
   });
 }
 
-function getActionRequestId(payload: unknown): string {
+export function getActionRequestId(payload: unknown): string {
   if (payload && typeof payload === "object") {
     const requestId = (payload as { requestId?: unknown }).requestId;
     if (typeof requestId === "string" && requestId.length > 0) {

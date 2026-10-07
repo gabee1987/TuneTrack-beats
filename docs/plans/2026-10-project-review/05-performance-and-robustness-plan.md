@@ -1,7 +1,7 @@
 # 05 — Performance and Robustness Plan
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 5 of `00-index.md` §4).
-> **Status (2026-10-07):** A1–A4, A8, B1 and B2 shipped; every other package is open. Every finding below
+> **Status (2026-10-07):** A1–A8, B1 and B2 shipped; every other package is open. Every finding below
 > was re-verified in code on 2026-10-07 (line numbers drift; file and symbol names are the
 > stable reference).
 > **Authority:** this document sets the **binding numeric budgets** and the **order** of the
@@ -188,37 +188,41 @@ Spotify playback control). Proof: `apps/server/tests/realtime/createSocketHandle
 passes through), `apps/web/src/features/i18n/localizedErrors.test.ts` (every code has an `en`
 and a `hu` entry).
 
-### A5 · Idempotency scoping (B-14)
+### A5 · Idempotency scoping (B-14) — **shipped 2026-10-07**
 
-- Key acks by `sessionId:event:requestId`; keep acks across rename (A2); move `close_room` and
-  `rename_room` from per-socket `lastSuccessful*` onto the same store.
-- **Proof:** `RoomStore.test.ts`: a second member reusing a `requestId` gets a fresh result,
-  not the first member's ack; a retry of `rename_room` on a new socket after reconnect replays.
+Acks stay grouped per room (deleted with the room, retargeted on rename) and are keyed by
+`sessionId:event:requestId`; the session comes from the caller's socket membership, and a lookup
+that names a renamed room's previous code follows the redirect. All twelve room actions and
+`rename_room` share `realtime/roomActionIdempotency.ts`. `close_room` keeps its per-socket replay:
+a close deletes the room and every membership, so no room-scoped entry can outlive it, and the
+per-socket replay is already limited to the caller (§9). Proof:
+`apps/server/tests/rooms/processedActionAcks.test.ts` (another member's request id, another event,
+a non-member, a rename retried on a new socket after reconnect) and `tests/rooms/RoomStore.test.ts`.
 
-### A6 · Abuse limits (B-07)
+### A6 · Abuse limits (B-07) — **shipped 2026-10-07**
 
-- One per-socket token bucket as a **`socket.use` middleware** in `realtime/rateLimit.ts`, so
-  it sees every incoming packet including the five async handlers that bypass
-  `createSocketHandler` (B-21 is not a prerequisite). Limits per §2.4. On breach: `Error` with
-  code `RATE_LIMITED` (both catalogues), `warn` log, audit event, no disconnect.
-- OAuth callback: in-memory fixed-window limit per client address in `http/`; the address is
-  held only in memory for the window and never logged (GDPR Art. 5(1)(c)).
-- Pagination cap and discovery concurrency per §2.4; candidate sessions capped per room
-  (oldest evicted).
-- No third-party rate-limit package; the limiter is ~60 lines of in-house code.
-- **Proof:** `tests/realtime/rateLimit.test.ts` (under limit, breach, refill, per-socket and
-  per-class buckets, no disconnect); `SpotifyApiClient.test.ts` (pagination stops at 10 pages);
-  discovery test with a counting fetch stub (≤ 3 concurrent).
+`realtime/rateLimit.ts` is a per-socket `socket.use` token bucket per class (§2.4 limits;
+`play_spotify_track` and `start_game` count as gameplay, `import_playlist` and
+`open_spotify_playlist` as search). A refused packet gets a `RATE_LIMITED` ack when it carries
+one and an `Error` event; the first refusal of a breach logs at `warn` and writes a rejected
+audit event; the socket stays connected. The OAuth callback has an in-memory fixed-window limit
+per client address (`http/callbackRateLimit.ts`, 429 with `Retry-After`); the address is never
+logged. The client address depends on the new `TRUST_PROXY_HOPS` setting (default 0; 1 on
+Railway, behind a Cloudflare Tunnel or behind Caddy; documented in `docs/operations`).
+Playlist pagination stops at 10 pages, discovery fetches at most 3 playlists at a time and a room
+keeps at most 3 candidate sessions (oldest evicted). Known limit: the async search and discovery
+hooks wait for their own result event, so a refused search keeps its loading state until the next
+search; the error toast explains the refusal. Proof: `apps/server/tests/realtime/rateLimit.test.ts`,
+`tests/http/callbackRateLimit.test.ts` (including one trusted proxy hop),
+`tests/spotify/SpotifyApiClient.test.ts` (page cap) and
+`tests/spotify/SpotifyDiscoveryService.test.ts` (at most 3 concurrent fetches, session cap).
 
-### A7 · Transport configuration (B-15)
+### A7 · Transport configuration (B-15) — **shipped 2026-10-07**
 
-- **Decision: do not enable `connectionStateRecovery`.** The session-id rejoin already restores
-  room, identity and full state after any interruption (E7, E8). Recovery would add a second
-  reconnect path, packet replay and deferred membership removal for no user-visible gain while
-  every update is a full state. Revisit only if narrow events (§4.9) are ever introduced.
-- Heartbeat `pingInterval: 20_000`, `pingTimeout: 25_000` with a one-line "why" comment.
-- **Proof:** new `tests/app/createSocketServer.test.ts` asserts the options, buffer size and
-  CORS wiring, and that recovery is off.
+`connectionStateRecovery` stays off (the session-id rejoin restores everything, and every update
+is a full state); `pingInterval: 20_000`, `pingTimeout: 25_000` with the reason inline. Proof:
+`apps/server/tests/app/createSocketServer.test.ts` (heartbeat, 5 MB buffer, recovery off, CORS
+validator wiring). A phone in flight mode for 10 s during a game still needs a device check.
 
 ### A8 · Graceful shutdown (B-11 remainder) — **shipped 2026-10-07**
 
@@ -331,22 +335,22 @@ drop it on coarse pointers only if the trace shows paint cost.
 One package = one agent session. Packages in the same row can run in parallel sessions only if
 their files do not overlap.
 
-| Order | Packages                            | Depends on                        | Skills                                  | Why this order                                    |
-| ----- | ----------------------------------- | --------------------------------- | --------------------------------------- | ------------------------------------------------- |
-| 1     | **A1** (shipped 2026-10-07)         | —                                 | `write-tests`, `verify`                 | Answer leak and unauthenticated third-party calls |
-| 2     | **A2** (shipped 2026-10-07)         | —                                 | `write-tests`                           | Ghost players, silent lobby loss, rename breakage |
-| 3     | **A3** (shipped 2026-10-07)         | `04` WP 2 (deck contract) or none | `write-tests`                           | Game soft-lock; decision 6                        |
-| 4     | **A4**, **B1** (shipped 2026-10-07) | —                                 | `add-socket-action` (A4), `write-tests` | Error contract feeds B2's toasts                  |
-| 5     | **A8**, **B2** (shipped 2026-10-07) | A4                                | `add-socket-action`, `e2e-scenario`     | Honest connection state end to end                |
-| 6     | A5, A6, A7                          | A1                                | `write-tests`                           | Abuse limits and transport                        |
-| 7     | D0, C1, C2                          | —                                 | `perf-check`                            | Largest runtime win, measurable                   |
-| 8     | C3, C4, C5, C6                      | C1                                | `perf-check`                            | Drag, viewport, playback                          |
-| 9     | D1, D2, D3                          | D0                                | `perf-check`                            | Eager gate                                        |
-| 10    | C7, D4, D5, E1                      | D1 (C7)                           | `design-token-migration`, `perf-check`  | Motion and CSS budgets                            |
-| 11    | A9, A10                             | A2                                | `write-tests`                           | Small server costs, measured broadcast decision   |
-| 12    | E2                                  | E1                                | `add-ui-component`                      | Largest UI refactor last                          |
+| Order | Packages                                    | Depends on                        | Skills                                  | Why this order                                    |
+| ----- | ------------------------------------------- | --------------------------------- | --------------------------------------- | ------------------------------------------------- |
+| 1     | **A1** (shipped 2026-10-07)                 | —                                 | `write-tests`, `verify`                 | Answer leak and unauthenticated third-party calls |
+| 2     | **A2** (shipped 2026-10-07)                 | —                                 | `write-tests`                           | Ghost players, silent lobby loss, rename breakage |
+| 3     | **A3** (shipped 2026-10-07)                 | `04` WP 2 (deck contract) or none | `write-tests`                           | Game soft-lock; decision 6                        |
+| 4     | **A4**, **B1** (shipped 2026-10-07)         | —                                 | `add-socket-action` (A4), `write-tests` | Error contract feeds B2's toasts                  |
+| 5     | **A8**, **B2** (shipped 2026-10-07)         | A4                                | `add-socket-action`, `e2e-scenario`     | Honest connection state end to end                |
+| 6     | **A5**, **A6**, **A7** (shipped 2026-10-07) | A1                                | `write-tests`                           | Abuse limits and transport                        |
+| 7     | D0, C1, C2                                  | —                                 | `perf-check`                            | Largest runtime win, measurable                   |
+| 8     | C3, C4, C5, C6                              | C1                                | `perf-check`                            | Drag, viewport, playback                          |
+| 9     | D1, D2, D3                                  | D0                                | `perf-check`                            | Eager gate                                        |
+| 10    | C7, D4, D5, E1                              | D1 (C7)                           | `design-token-migration`, `perf-check`  | Motion and CSS budgets                            |
+| 11    | A9, A10                                     | A2                                | `write-tests`                           | Small server costs, measured broadcast decision   |
+| 12    | E2                                          | E1                                | `add-ui-component`                      | Largest UI refactor last                          |
 
-A1–A4, A8, B1 and B2 shipped on 2026-10-07; A5, A6 and A7 are next.
+A1–A8, B1 and B2 shipped on 2026-10-07; D0, C1 and C2 are next.
 
 ## 9. Corrections to the work-breakdown documents
 
@@ -360,6 +364,7 @@ A1–A4, A8, B1 and B2 shipped on 2026-10-07; A5, A6 and A7 are next.
 | `11` §7                       | normalised slice store                                 | superseded by §3 / C1                                              |
 | `12` §2.1                     | enable `connectionStateRecovery`                       | not enabled (A7)                                                   |
 | `12` §2.4                     | limiter inside `createSocketHandler`, needs B-21 first | `socket.use` middleware, no B-21 dependency (A6)                   |
+| `05` A5                       | `close_room` moves onto the shared ack store           | keeps its per-socket replay; the room is gone after a close        |
 | `12` §3.2                     | remove `unref()`, add `keepProcessAlive` option        | keep `unref()`, add `clearAll()` (A8)                              |
 | `13` §5.2                     | `ConnectionBanner` waits for the overlay host          | render now from the store, move onto the host later (B2)           |
 | `13` §6.1                     | playlist edits re-emit the deck "to the host"          | to the requesting socket only; reply with the edited track (A10)   |

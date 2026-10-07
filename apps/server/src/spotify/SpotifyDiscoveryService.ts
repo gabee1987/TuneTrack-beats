@@ -13,9 +13,13 @@ import { logger } from "../app/logger.js";
 import { SpotifyApiClient, SpotifyApiError } from "./SpotifyApiClient.js";
 import { mapSpotifyTrackToGameCard } from "./SpotifyTrackMapper.js";
 import { SpotifyTokenStore } from "./SpotifyTokenStore.js";
+import { mapWithConcurrency } from "./mapWithConcurrency.js";
 import { extractSpotifyPlaylistId } from "./spotifyUrlParser.js";
 
 const CANDIDATE_SESSION_TTL_MS = 30 * 60 * 1000;
+/** `05` §2.4: bounds the Spotify fan-out and the cards held per room. */
+const MAX_CONCURRENT_PLAYLIST_FETCHES = 3;
+const MAX_CANDIDATE_SESSIONS_PER_ROOM = 3;
 const MIN_CANDIDATE_TRACK_COUNT = 10;
 const SPOTIFY_PLAYLIST_SEARCH_PAGE_SIZE = 50;
 const SPOTIFY_PLAYLIST_SEARCH_MAX_PAGES = 4;
@@ -159,10 +163,10 @@ export class SpotifyDiscoveryService {
 
     try {
       const accessToken = await this.getOrRefreshClientCredentialsToken();
-      const rawTrackResults = await Promise.all(
-        uniquePlaylistIds.map((playlistId) =>
-          this.apiClient.getAllPlaylistTracks(playlistId, accessToken),
-        ),
+      const rawTrackResults = await mapWithConcurrency(
+        uniquePlaylistIds,
+        MAX_CONCURRENT_PLAYLIST_FETCHES,
+        (playlistId) => this.apiClient.getAllPlaylistTracks(playlistId, accessToken),
       );
       const cardGroups: GameTrackCard[][] = [];
       let filteredCount = 0;
@@ -212,6 +216,7 @@ export class SpotifyDiscoveryService {
       };
       this.pruneExpiredSessions();
       this.sessionsById.set(session.id, session);
+      this.evictOldestRoomSessions(roomId);
 
       logAuditEvent({
         auditKind: "spotify_import",
@@ -443,6 +448,16 @@ export class SpotifyDiscoveryService {
       if (session.roomId === previousRoomId) {
         this.sessionsById.set(id, { ...session, roomId: nextRoomId });
       }
+    }
+  }
+
+  private evictOldestRoomSessions(roomId: string): void {
+    const roomSessionIds = [...this.sessionsById.values()]
+      .filter((session) => session.roomId === roomId)
+      .map((session) => session.id);
+    const evictedCount = roomSessionIds.length - MAX_CANDIDATE_SESSIONS_PER_ROOM;
+    for (const sessionId of roomSessionIds.slice(0, Math.max(0, evictedCount))) {
+      this.sessionsById.delete(sessionId);
     }
   }
 
