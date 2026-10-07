@@ -1,3 +1,4 @@
+import { GameRuleError } from "../domain/GameRuleError.js";
 import type { GamePlayer } from "../domain/GamePlayer.js";
 import type { TimelineCard } from "../domain/TimelineCard.js";
 import { evaluateTimelinePlacement } from "../rules/placementRules.js";
@@ -25,12 +26,12 @@ export function findFirstValidSlotIndex(
     }
   }
 
-  throw new Error("VALID_SLOT_NOT_FOUND");
+  throw new GameRuleError("VALID_SLOT_NOT_FOUND");
 }
 
 export function validateStartGameInput(startGameInput: StartGameInput): void {
   if (startGameInput.players.length < 1) {
-    throw new Error("NOT_ENOUGH_PLAYERS");
+    throw new GameRuleError("NOT_ENOUGH_PLAYERS");
   }
 
   const totalStartingCardCount = startGameInput.players.reduce(
@@ -40,14 +41,14 @@ export function validateStartGameInput(startGameInput: StartGameInput): void {
   const minimumRequiredDeckSize = totalStartingCardCount + 1;
 
   if (startGameInput.deck.length < minimumRequiredDeckSize) {
-    throw new Error("NOT_ENOUGH_CARDS");
+    throw new GameRuleError("NOT_ENOUGH_CARDS");
   }
 
   if (
     !Number.isInteger(startGameInput.targetTimelineCardCount) ||
     startGameInput.targetTimelineCardCount < 1
   ) {
-    throw new Error("INVALID_TARGET_TIMELINE_CARD_COUNT");
+    throw new GameRuleError("INVALID_TARGET_TIMELINE_CARD_COUNT");
   }
 }
 
@@ -70,14 +71,14 @@ export function findNextActivePlayerId(
   const currentPlayerIndex = players.findIndex((player) => player.id === currentActivePlayerId);
 
   if (currentPlayerIndex === -1) {
-    throw new Error("ACTIVE_PLAYER_NOT_FOUND");
+    throw new GameRuleError("ACTIVE_PLAYER_NOT_FOUND");
   }
 
   const nextPlayerIndex = (currentPlayerIndex + 1) % players.length;
   const nextPlayer = players[nextPlayerIndex];
 
   if (!nextPlayer) {
-    throw new Error("ACTIVE_PLAYER_NOT_FOUND");
+    throw new GameRuleError("ACTIVE_PLAYER_NOT_FOUND");
   }
 
   return nextPlayer.id;
@@ -104,7 +105,7 @@ export function updatePlayerTokenCount(
   });
 
   if (!hasMatchingPlayer) {
-    throw new Error("PLAYER_NOT_FOUND");
+    throw new GameRuleError("PLAYER_NOT_FOUND");
   }
 
   return nextPlayers;
@@ -118,10 +119,10 @@ export function assertPlayerHasEnoughTt(
   const player = players.find((candidatePlayer) => candidatePlayer.id === playerId);
 
   if (!player) {
-    throw new Error("PLAYER_NOT_FOUND");
+    throw new GameRuleError("PLAYER_NOT_FOUND");
   }
 
   if (player.ttTokenCount < requiredTokenCount) {
-    throw new Error("INSUFFICIENT_TT");
+    throw new GameRuleError("INSUFFICIENT_TT");
   }
 }

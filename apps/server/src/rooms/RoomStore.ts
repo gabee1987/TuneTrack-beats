@@ -1,3 +1,4 @@
+import { DomainError } from "@tunetrack/shared";
 import type { GameState, GameTrackCard } from "@tunetrack/game-engine";
 import type { ActionAck, PublicRoomState, PublicRoomSummary, RoomId } from "@tunetrack/shared";
 
@@ -160,14 +161,15 @@ export class RoomStore {
 
   public requireMembership(socketId: string): SocketRoomMembership {
     const membership = this.socketMemberships.get(socketId);
-    if (!membership) throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
+    if (!membership) throw new DomainError("ROOM_MEMBERSHIP_NOT_FOUND");
     return membership;
   }
 
   public getRoomRecordForMember(socketId: string, roomId: RoomId): RoomRecord {
     const membership = this.requireMembership(socketId);
     const roomRecord = this.roomsById.get(roomId);
-    if (membership.roomId !== roomId || !roomRecord) throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
+    if (membership.roomId !== roomId || !roomRecord)
+      throw new DomainError("ROOM_MEMBERSHIP_NOT_FOUND");
     return roomRecord;
   }
 

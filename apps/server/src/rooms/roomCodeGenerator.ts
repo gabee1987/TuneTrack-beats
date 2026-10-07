@@ -1,5 +1,5 @@
 import { randomInt as cryptoRandomInt } from "node:crypto";
-import { ROOM_CODE_MAX_LENGTH, type RoomId } from "@tunetrack/shared";
+import { ROOM_CODE_MAX_LENGTH, type RoomId, DomainError } from "@tunetrack/shared";
 
 const FRIENDLY_CODE_ATTEMPT_COUNT = 5;
 const FALLBACK_ALPHABET = "23456789abcdefghijkmnpqrstuvwxyz";
@@ -99,7 +99,7 @@ export function generateUniqueRoomCode(
     }
   }
 
-  throw new Error("ROOM_CODE_GENERATION_FAILED");
+  throw new DomainError("ROOM_CODE_GENERATION_FAILED");
 }
 
 function createFriendlyRoomCode(randomInt: RandomInt): RoomId {

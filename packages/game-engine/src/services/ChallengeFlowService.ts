@@ -1,3 +1,4 @@
+import { GameRuleError } from "../domain/GameRuleError.js";
 import type { GameState } from "../domain/GameState.js";
 import type { RevealState } from "../domain/RevealState.js";
 import { isChallengeWindowExpired } from "../rules/challengeRules.js";
@@ -18,29 +19,29 @@ export class ChallengeFlowService {
     nowEpochMs: number,
   ): GameState {
     if (gameState.phase !== "challenge" || !gameState.challengeState || !gameState.turn) {
-      throw new Error("GAME_NOT_IN_CHALLENGE_PHASE");
+      throw new GameRuleError("GAME_NOT_IN_CHALLENGE_PHASE");
     }
 
     if (isChallengeWindowExpired(gameState, nowEpochMs)) {
-      throw new Error("CHALLENGE_WINDOW_EXPIRED");
+      throw new GameRuleError("CHALLENGE_WINDOW_EXPIRED");
     }
 
     if (gameState.turn.activePlayerId === challengerPlayerId) {
-      throw new Error("ACTIVE_PLAYER_CANNOT_CHALLENGE");
+      throw new GameRuleError("ACTIVE_PLAYER_CANNOT_CHALLENGE");
     }
 
     if (gameState.challengeState.challengerPlayerId) {
-      throw new Error("CHALLENGE_ALREADY_CLAIMED");
+      throw new GameRuleError("CHALLENGE_ALREADY_CLAIMED");
     }
 
     const challenger = gameState.players.find((player) => player.id === challengerPlayerId);
 
     if (!challenger) {
-      throw new Error("PLAYER_NOT_FOUND");
+      throw new GameRuleError("PLAYER_NOT_FOUND");
     }
 
     if (challenger.ttTokenCount < 1) {
-      throw new Error("INSUFFICIENT_TT");
+      throw new GameRuleError("INSUFFICIENT_TT");
     }
 
     return {
@@ -59,30 +60,30 @@ export class ChallengeFlowService {
     selectedSlotIndex: number,
   ): GameState {
     if (gameState.phase !== "challenge" || !gameState.challengeState || !gameState.turn) {
-      throw new Error("GAME_NOT_IN_CHALLENGE_PHASE");
+      throw new GameRuleError("GAME_NOT_IN_CHALLENGE_PHASE");
     }
 
     if (gameState.challengeState.challengerPlayerId !== challengerPlayerId) {
-      throw new Error("ONLY_CHALLENGE_OWNER_CAN_PLACE");
+      throw new GameRuleError("ONLY_CHALLENGE_OWNER_CAN_PLACE");
     }
 
     const originalPlayerId = gameState.challengeState.originalPlayerId;
     const originalTimeline = gameState.timelines[originalPlayerId];
 
     if (!originalTimeline) {
-      throw new Error("PLAYER_TIMELINE_NOT_FOUND");
+      throw new GameRuleError("PLAYER_TIMELINE_NOT_FOUND");
     }
 
     if (!Number.isInteger(selectedSlotIndex) || selectedSlotIndex < 0) {
-      throw new Error("INVALID_SLOT_INDEX");
+      throw new GameRuleError("INVALID_SLOT_INDEX");
     }
 
     if (selectedSlotIndex > originalTimeline.length) {
-      throw new Error("INVALID_SLOT_INDEX");
+      throw new GameRuleError("INVALID_SLOT_INDEX");
     }
 
     if (selectedSlotIndex === gameState.challengeState.originalSelectedSlotIndex) {
-      throw new Error("CHALLENGE_SLOT_MUST_DIFFER");
+      throw new GameRuleError("CHALLENGE_SLOT_MUST_DIFFER");
     }
 
     const challengerPlacement = evaluateTimelinePlacement(
@@ -101,7 +102,7 @@ export class ChallengeFlowService {
     const challengerTimeline = gameState.timelines[challengerPlayerId];
 
     if (!challengerTimeline) {
-      throw new Error("PLAYER_TIMELINE_NOT_FOUND");
+      throw new GameRuleError("PLAYER_TIMELINE_NOT_FOUND");
     }
 
     const challengerAwardSlotIndex = challengeWasSuccessful
@@ -170,18 +171,18 @@ export class ChallengeFlowService {
 
   public resolveChallengeWindow(gameState: GameState): GameState {
     if (gameState.phase !== "challenge" || !gameState.challengeState) {
-      throw new Error("GAME_NOT_IN_CHALLENGE_PHASE");
+      throw new GameRuleError("GAME_NOT_IN_CHALLENGE_PHASE");
     }
 
     if (gameState.challengeState.challengerPlayerId) {
-      throw new Error("CHALLENGE_ALREADY_CLAIMED");
+      throw new GameRuleError("CHALLENGE_ALREADY_CLAIMED");
     }
 
     const originalPlayerId = gameState.challengeState.originalPlayerId;
     const originalTimeline = gameState.timelines[originalPlayerId];
 
     if (!originalTimeline) {
-      throw new Error("PLAYER_TIMELINE_NOT_FOUND");
+      throw new GameRuleError("PLAYER_TIMELINE_NOT_FOUND");
     }
 
     const nextTimeline = gameState.challengeState.originalWasCorrect
@@ -233,7 +234,7 @@ export class ChallengeFlowService {
       gameState.challengeState?.phase !== "claimed" ||
       !gameState.turn
     ) {
-      throw new Error("GAME_NOT_IN_CLAIMED_CHALLENGE_PHASE");
+      throw new GameRuleError("GAME_NOT_IN_CLAIMED_CHALLENGE_PHASE");
     }
 
     return beginTurnOfNextPlayer(gameState, this.shuffleCards);

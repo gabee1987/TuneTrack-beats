@@ -1,3 +1,4 @@
+import { GameRuleError } from "../domain/GameRuleError.js";
 import type { GameState } from "../domain/GameState.js";
 import type { ChallengeFlowService } from "./ChallengeFlowService.js";
 import { beginNextTurn, type ShuffleCards } from "./deckFlow.js";
@@ -15,7 +16,7 @@ export class PlayerRemovalService {
 
   public removePlayer(gameState: GameState, playerId: string): GameState {
     if (!gameState.players.some((player) => player.id === playerId)) {
-      throw new Error("PLAYER_NOT_FOUND");
+      throw new GameRuleError("PLAYER_NOT_FOUND");
     }
 
     return withoutPlayer(this.settleRoundWithoutPlayer(gameState, playerId), playerId);

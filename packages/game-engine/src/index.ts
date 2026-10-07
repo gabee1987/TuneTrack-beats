@@ -1,5 +1,6 @@
 export * from "./domain/ChallengeState.js";
 export * from "./domain/GamePlayer.js";
+export * from "./domain/GameRuleError.js";
 export * from "./domain/GameState.js";
 export * from "./domain/GameTrackCard.js";
 export * from "./domain/PlayerTimeline.js";

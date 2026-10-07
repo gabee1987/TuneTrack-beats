@@ -1,3 +1,4 @@
+import type { ServerErrorCode } from "../errors/serverErrors.js";
 import type { PlayerId } from "../game/player.js";
 import type { PublicRoomState } from "../game/roomState.js";
 import type { ImportPlaylistResultPayload } from "../spotify/playlistImport.js";
@@ -44,7 +45,7 @@ export interface StateUpdatePayload {
 }
 
 export interface ServerErrorPayload {
-  code: string;
+  code: ServerErrorCode;
   message: string;
 }
 

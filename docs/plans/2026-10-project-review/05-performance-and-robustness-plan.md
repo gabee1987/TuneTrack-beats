@@ -1,7 +1,7 @@
 # 05 — Performance and Robustness Plan
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 5 of `00-index.md` §4).
-> **Status (2026-10-07):** A1, A2 and A3 shipped; every other package is open. Every finding below
+> **Status (2026-10-07):** A1–A4 shipped; every other package is open. Every finding below
 > was re-verified in code on 2026-10-07 (line numbers drift; file and symbol names are the
 > stable reference).
 > **Authority:** this document sets the **binding numeric budgets** and the **order** of the
@@ -173,16 +173,20 @@ Proof: `packages/game-engine/tests/deckExhaustion.test.ts` (8 cases),
 after, 4 clock and skip cases; in a new file because `gameFlow.test.ts` is on the size
 allowlist), `apps/server/tests/rooms/kickDuringRound.test.ts` (host skip of a claimed challenge).
 
-### A4 · Error contract (B-10)
+### A4 · Error contract (B-10) — **shipped 2026-10-07**
 
-- `DomainError(code: ServerErrorCode)` in the engine and server; `ServerErrorCode` is a union
-  exported from `packages/shared` and used by the web `SERVER_ERROR_KEY_BY_CODE` map.
-- `emitServerError` sends the code of a `DomainError`, the handler's fallback code for anything
-  else, and logs unknown errors at `error` with the stack.
-- **Proof:** `createSocketHandler.test.ts`: a thrown `TypeError` reaches the client as the
-  fallback code and is logged with a stack; a type test fails if a web map key is not a
-  `ServerErrorCode`; a test asserts every `ServerErrorCode` has an `en` and a `hu` catalogue
-  entry (added 2026-10-07 by `06` §8: about ten codes show the generic message today).
+`packages/shared` exports `SERVER_ERROR_CODES`, `ServerErrorCode`, `isServerErrorCode` and
+`DomainError`; the engine throws `GameRuleError` with a `GameRuleErrorCode` union that the
+server's `resolveDomainErrorCode` only compiles against while it stays inside
+`ServerErrorCode`. `ServerErrorPayload.code` and `ActionAck.code` are `ServerErrorCode`.
+`emitServerError` sends the code of a typed error, sends the handler's fallback code for
+anything else (a plain `Error` too) and logs those at `error` with the stack. The web
+`SERVER_ERROR_KEY_BY_CODE` `satisfies Record<ServerErrorCode, string>`, so a missing or unknown
+key fails the typecheck; the 32 codes without an entry now have one (two new catalogue keys for
+Spotify playback control). Proof: `apps/server/tests/realtime/createSocketHandler.test.ts`
+(`TypeError` and plain `Error` become the fallback and are logged with a stack, engine code
+passes through), `apps/web/src/features/i18n/localizedErrors.test.ts` (every code has an `en`
+and a `hu` entry).
 
 ### A5 · Idempotency scoping (B-14)
 
@@ -315,22 +319,22 @@ drop it on coarse pointers only if the trace shows paint cost.
 One package = one agent session. Packages in the same row can run in parallel sessions only if
 their files do not overlap.
 
-| Order | Packages                    | Depends on                        | Skills                                  | Why this order                                    |
-| ----- | --------------------------- | --------------------------------- | --------------------------------------- | ------------------------------------------------- |
-| 1     | **A1** (shipped 2026-10-07) | —                                 | `write-tests`, `verify`                 | Answer leak and unauthenticated third-party calls |
-| 2     | **A2** (shipped 2026-10-07) | —                                 | `write-tests`                           | Ghost players, silent lobby loss, rename breakage |
-| 3     | **A3** (shipped 2026-10-07) | `04` WP 2 (deck contract) or none | `write-tests`                           | Game soft-lock; decision 6                        |
-| 4     | A4, B1                      | —                                 | `add-socket-action` (A4), `write-tests` | Error contract feeds B2's toasts                  |
-| 5     | A8, B2                      | A4                                | `add-socket-action`, `e2e-scenario`     | Honest connection state end to end                |
-| 6     | A5, A6, A7                  | A1                                | `write-tests`                           | Abuse limits and transport                        |
-| 7     | D0, C1, C2                  | —                                 | `perf-check`                            | Largest runtime win, measurable                   |
-| 8     | C3, C4, C5, C6              | C1                                | `perf-check`                            | Drag, viewport, playback                          |
-| 9     | D1, D2, D3                  | D0                                | `perf-check`                            | Eager gate                                        |
-| 10    | C7, D4, D5, E1              | D1 (C7)                           | `design-token-migration`, `perf-check`  | Motion and CSS budgets                            |
-| 11    | A9, A10                     | A2                                | `write-tests`                           | Small server costs, measured broadcast decision   |
-| 12    | E2                          | E1                                | `add-ui-component`                      | Largest UI refactor last                          |
+| Order | Packages                        | Depends on                        | Skills                                  | Why this order                                    |
+| ----- | ------------------------------- | --------------------------------- | --------------------------------------- | ------------------------------------------------- |
+| 1     | **A1** (shipped 2026-10-07)     | —                                 | `write-tests`, `verify`                 | Answer leak and unauthenticated third-party calls |
+| 2     | **A2** (shipped 2026-10-07)     | —                                 | `write-tests`                           | Ghost players, silent lobby loss, rename breakage |
+| 3     | **A3** (shipped 2026-10-07)     | `04` WP 2 (deck contract) or none | `write-tests`                           | Game soft-lock; decision 6                        |
+| 4     | **A4** (shipped 2026-10-07), B1 | —                                 | `add-socket-action` (A4), `write-tests` | Error contract feeds B2's toasts                  |
+| 5     | A8, B2                          | A4                                | `add-socket-action`, `e2e-scenario`     | Honest connection state end to end                |
+| 6     | A5, A6, A7                      | A1                                | `write-tests`                           | Abuse limits and transport                        |
+| 7     | D0, C1, C2                      | —                                 | `perf-check`                            | Largest runtime win, measurable                   |
+| 8     | C3, C4, C5, C6                  | C1                                | `perf-check`                            | Drag, viewport, playback                          |
+| 9     | D1, D2, D3                      | D0                                | `perf-check`                            | Eager gate                                        |
+| 10    | C7, D4, D5, E1                  | D1 (C7)                           | `design-token-migration`, `perf-check`  | Motion and CSS budgets                            |
+| 11    | A9, A10                         | A2                                | `write-tests`                           | Small server costs, measured broadcast decision   |
+| 12    | E2                              | E1                                | `add-ui-component`                      | Largest UI refactor last                          |
 
-A1, A2 and A3 shipped on 2026-10-07; A4 and B1 are next.
+A1–A4 shipped on 2026-10-07; B1 is next.
 
 ## 9. Corrections to the work-breakdown documents
 

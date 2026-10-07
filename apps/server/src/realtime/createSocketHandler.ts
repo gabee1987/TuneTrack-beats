@@ -1,20 +1,38 @@
 import { randomUUID } from "node:crypto";
-import { ServerToClientEvent, type ActionAck, type PublicRoomState } from "@tunetrack/shared";
+import { GameRuleError } from "@tunetrack/game-engine";
+import {
+  DomainError,
+  ServerToClientEvent,
+  type ActionAck,
+  type PublicRoomState,
+  type ServerErrorCode,
+} from "@tunetrack/shared";
 import type { z } from "zod";
 import type { Server, Socket } from "socket.io";
 import { logger } from "../app/logger.js";
-import { resolveSocketErrorMessage } from "./errorMessages.js";
+import { resolveSocketErrorMessage, type SocketErrorMessages } from "./errorMessages.js";
 import { logRejectedSocketEvent } from "./realtimeAuditLogger.js";
 
 export function emitServerError(
   socket: Socket,
   eventName: string,
   error: unknown,
-  fallbackCode: string,
-  messageByCode: Record<string, string>,
-): string {
-  const errorCode = error instanceof Error ? error.message : fallbackCode;
-  logger.warn({ socketId: socket.id, event: eventName, code: errorCode }, "socket action rejected");
+  fallbackCode: ServerErrorCode,
+  messageByCode: SocketErrorMessages,
+): ServerErrorCode {
+  const domainErrorCode = resolveDomainErrorCode(error);
+  const errorCode = domainErrorCode ?? fallbackCode;
+  if (domainErrorCode) {
+    logger.warn(
+      { socketId: socket.id, event: eventName, code: errorCode },
+      "socket action rejected",
+    );
+  } else {
+    logger.error(
+      { err: error, socketId: socket.id, event: eventName, code: errorCode },
+      "socket action failed unexpectedly",
+    );
+  }
   logRejectedSocketEvent(socket, eventName, errorCode);
 
   socket.emit(ServerToClientEvent.Error, {
@@ -24,14 +42,20 @@ export function emitServerError(
   return errorCode;
 }
 
+// A plain Error's message may be any internal text, so only typed errors reach the client.
+function resolveDomainErrorCode(error: unknown): ServerErrorCode | null {
+  if (error instanceof DomainError || error instanceof GameRuleError) return error.code;
+  return null;
+}
+
 // Starts an asynchronous room request whose service method authorises synchronously, so a
 // refused caller gets the domain error code instead of the request's generic failure result.
 export function startAuthorizedRequest<TResult>(
   socket: Socket,
   eventName: string,
   start: () => Promise<TResult>,
-  fallbackCode: string,
-  messageByCode: Record<string, string>,
+  fallbackCode: ServerErrorCode,
+  messageByCode: SocketErrorMessages,
 ): Promise<TResult> | null {
   try {
     return start();
@@ -52,13 +76,13 @@ type CreateSocketHandlerOptions<TSchema extends z.ZodTypeAny> = {
   event: string;
   schema: TSchema;
   invalidPayload: {
-    code: string;
+    code: ServerErrorCode;
     message: string;
   };
   log?: (parsed: z.output<TSchema>) => void;
   handle: (parsed: z.output<TSchema>) => void;
-  fallbackErrorCode: string;
-  errorMessages: Record<string, string>;
+  fallbackErrorCode: ServerErrorCode;
+  errorMessages: SocketErrorMessages;
   idempotency?: {
     find: (parsed: z.output<TSchema>) => ActionAck | undefined;
     remember: (parsed: z.output<TSchema>, ack: ActionAck) => void;

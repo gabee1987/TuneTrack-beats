@@ -12,6 +12,8 @@ import {
   type UpdatePlayerProfilePayloadParsed,
   type UpdatePlayerSettingsPayloadParsed,
   type UpdateRoomSettingsPayloadParsed,
+  DomainError,
+  type ServerErrorCode,
 } from "@tunetrack/shared";
 import type { RoomConnectionService } from "./RoomConnectionService.js";
 import {
@@ -87,7 +89,7 @@ export class RoomLobbyService {
     }
 
     if (existingRoomRecord) {
-      throw new Error("ROOM_ALREADY_EXISTS");
+      throw new DomainError("ROOM_ALREADY_EXISTS");
     }
 
     const isLeavingFreeingARoom =
@@ -95,7 +97,7 @@ export class RoomLobbyService {
       this.store.getRoom(existingSessionMembership.roomId)?.roomState.players.length === 1;
     const roomCountAfterLeaving = this.store.roomCount - (isLeavingFreeingARoom ? 1 : 0);
     if (roomCountAfterLeaving >= this.maxActiveRoomCount) {
-      throw new Error("ROOM_LIMIT_REACHED");
+      throw new DomainError("ROOM_LIMIT_REACHED");
     }
 
     if (existingSessionMembership) this.leaveCurrentRoom(sessionId);
@@ -145,11 +147,11 @@ export class RoomLobbyService {
     }
 
     if (!existingRoomRecord) {
-      throw new Error("ROOM_NOT_FOUND");
+      throw new DomainError("ROOM_NOT_FOUND");
     }
 
     if (existingRoomRecord.roomState.status !== "lobby") {
-      throw new Error("GAME_ALREADY_STARTED");
+      throw new DomainError("GAME_ALREADY_STARTED");
     }
 
     if (existingSessionMembership) this.leaveCurrentRoom(sessionId);
@@ -174,7 +176,7 @@ export class RoomLobbyService {
     const roomRecord = this.store.getRoomRecordForMember(socketId, roomId);
     const membership = this.store.requireMembership(socketId);
     if (roomRecord.roomState.hostId !== membership.playerId) {
-      throw new Error("ONLY_HOST_CAN_UPDATE_ROOM_SETTINGS");
+      throw new DomainError("ONLY_HOST_CAN_UPDATE_ROOM_SETTINGS");
     }
 
     const nextRoomState = buildUpdatedSettingsRoomState(roomRecord.roomState, payload);
@@ -194,16 +196,16 @@ export class RoomLobbyService {
     }
 
     if (this.store.hasRoom(payload.nextRoomId)) {
-      throw new Error("ROOM_ALREADY_EXISTS");
+      throw new DomainError("ROOM_ALREADY_EXISTS");
     }
 
     const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.store.requireMembership(socketId);
     if (roomRecord.roomState.hostId !== membership.playerId) {
-      throw new Error("ONLY_HOST_CAN_RENAME_ROOM");
+      throw new DomainError("ONLY_HOST_CAN_RENAME_ROOM");
     }
     if (roomRecord.roomState.status !== "lobby") {
-      throw new Error("GAME_ALREADY_STARTED");
+      throw new DomainError("GAME_ALREADY_STARTED");
     }
 
     const nextRoomState = buildRenamedRoomState(roomRecord.roomState, payload.nextRoomId);
@@ -227,10 +229,10 @@ export class RoomLobbyService {
     const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.store.requireMembership(socketId);
     if (roomRecord.roomState.hostId !== membership.playerId) {
-      throw new Error("ONLY_HOST_CAN_UPDATE_PLAYER_SETTINGS");
+      throw new DomainError("ONLY_HOST_CAN_UPDATE_PLAYER_SETTINGS");
     }
     if (!roomRecord.roomState.players.some((p) => p.id === payload.playerId)) {
-      throw new Error("PLAYER_NOT_FOUND");
+      throw new DomainError("PLAYER_NOT_FOUND");
     }
 
     const nextRoomState = buildUpdatedPlayerSettingsRoomState(roomRecord.roomState, payload);
@@ -244,7 +246,7 @@ export class RoomLobbyService {
   ): PublicRoomState {
     const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.store.requireMembership(socketId);
-    if (roomRecord.roomState.status !== "lobby") throw new Error("GAME_ALREADY_STARTED");
+    if (roomRecord.roomState.status !== "lobby") throw new DomainError("GAME_ALREADY_STARTED");
 
     const nextRoomState = buildUpdatedProfileRoomState(
       roomRecord.roomState,
@@ -259,9 +261,9 @@ export class RoomLobbyService {
     const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.store.requireMembership(socketId);
     if (roomRecord.roomState.hostId !== membership.playerId)
-      throw new Error("ONLY_HOST_CAN_AWARD_TT");
+      throw new DomainError("ONLY_HOST_CAN_AWARD_TT");
     if (!roomRecord.roomState.players.some((p) => p.id === payload.playerId)) {
-      throw new Error("PLAYER_NOT_FOUND");
+      throw new DomainError("PLAYER_NOT_FOUND");
     }
 
     const nextGameState = roomRecord.gameState
@@ -285,11 +287,15 @@ export class RoomLobbyService {
 
   // The deck carries every release year, so reading or changing it is a host tool for the lobby
   // only; the host is also a player and must not see the answers once the game runs.
-  public requireHostInLobby(socketId: string, roomId: RoomId, notHostCode: string): RoomRecord {
+  public requireHostInLobby(
+    socketId: string,
+    roomId: RoomId,
+    notHostCode: ServerErrorCode,
+  ): RoomRecord {
     const roomRecord = this.store.getRoomRecordForMember(socketId, roomId);
     const membership = this.store.requireMembership(socketId);
-    if (roomRecord.roomState.hostId !== membership.playerId) throw new Error(notHostCode);
-    if (roomRecord.roomState.status !== "lobby") throw new Error("GAME_ALREADY_STARTED");
+    if (roomRecord.roomState.hostId !== membership.playerId) throw new DomainError(notHostCode);
+    if (roomRecord.roomState.status !== "lobby") throw new DomainError("GAME_ALREADY_STARTED");
     return roomRecord;
   }
 
@@ -326,7 +332,7 @@ export class RoomLobbyService {
     const roomRecord = this.store.getRoomRecordForMember(socketId, roomId);
     const membership = this.store.requireMembership(socketId);
     if (roomRecord.roomState.hostId !== membership.playerId)
-      throw new Error("ONLY_HOST_CAN_SET_SPOTIFY_AUTH");
+      throw new DomainError("ONLY_HOST_CAN_SET_SPOTIFY_AUTH");
 
     const nextRoomState = buildSpotifyAuthRoomState(
       roomRecord.roomState,
@@ -344,7 +350,7 @@ export class RoomLobbyService {
     trackIds: string[],
   ): PublicRoomState {
     const roomRecord = this.requireHostInLobby(socketId, roomId, "ONLY_HOST_CAN_EDIT_PLAYLIST");
-    if (!roomRecord.importedDeck) throw new Error("NO_PLAYLIST_IMPORTED");
+    if (!roomRecord.importedDeck) throw new DomainError("NO_PLAYLIST_IMPORTED");
 
     const removeSet = new Set(trackIds);
     const nextDeck = roomRecord.importedDeck.filter((card) => !removeSet.has(card.id));
@@ -366,7 +372,7 @@ export class RoomLobbyService {
       payload.roomId,
       "ONLY_HOST_CAN_EDIT_PLAYLIST",
     );
-    if (!roomRecord.importedDeck) throw new Error("NO_PLAYLIST_IMPORTED");
+    if (!roomRecord.importedDeck) throw new DomainError("NO_PLAYLIST_IMPORTED");
 
     let didUpdateTrack = false;
     const nextDeck = roomRecord.importedDeck.map((card) => {
@@ -393,7 +399,7 @@ export class RoomLobbyService {
       };
     });
 
-    if (!didUpdateTrack) throw new Error("PLAYLIST_TRACK_NOT_FOUND");
+    if (!didUpdateTrack) throw new DomainError("PLAYLIST_TRACK_NOT_FOUND");
 
     const nextRoomState = buildImportedDeckRoomState(roomRecord.roomState, nextDeck);
     this.store.setRoom(payload.roomId, {
@@ -408,7 +414,7 @@ export class RoomLobbyService {
     const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.store.requireMembership(socketId);
     if (roomRecord.roomState.hostId !== membership.playerId)
-      throw new Error("ONLY_HOST_CAN_CLOSE_ROOM");
+      throw new DomainError("ONLY_HOST_CAN_CLOSE_ROOM");
 
     this.timers.clearForRoom(payload.roomId);
     this.store.clearMembershipsForRoom(payload.roomId);

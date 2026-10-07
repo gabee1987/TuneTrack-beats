@@ -38,8 +38,10 @@ validation happens at the boundary, every mutation is acknowledged.
   `rememberProcessedActionAck`.
 - `handle` calls the service and then `broadcastRoomState(io, state)`; call
   `broadcastRoomDirectory(io, roomService)` only when lobby-visible data changed.
-- Error codes are `UPPER_SNAKE` strings thrown as `new Error("CODE")`. Add the message map to
-  `realtime/errorMessages.ts` (server-side fallback; the client localises).
+- Error codes are `UPPER_SNAKE` members of `SERVER_ERROR_CODES` (`packages/shared`
+  `errors/serverErrors.ts`), thrown as `new DomainError("CODE")` (engine rules:
+  `GameRuleError`). A plain `Error` reaches the client as the handler's fallback code. Add the
+  message map to `realtime/errorMessages.ts` (server-side fallback; the client localises).
 - `realtime/registerSocketHandlers.ts` changes only when you add a new handler file.
 
 ### 3. `apps/web`

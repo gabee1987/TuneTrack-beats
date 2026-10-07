@@ -1,4 +1,5 @@
 export * from "./constants/gameplay.js";
+export * from "./errors/serverErrors.js";
 export * from "./events/actionAck.js";
 export * from "./events/clientEvents.js";
 export * from "./events/schemas.js";

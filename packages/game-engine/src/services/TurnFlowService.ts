@@ -1,3 +1,4 @@
+import { GameRuleError } from "../domain/GameRuleError.js";
 import type { ChallengeState } from "../domain/ChallengeState.js";
 import type { GameState } from "../domain/GameState.js";
 import type { RevealState } from "../domain/RevealState.js";
@@ -16,7 +17,7 @@ export class TurnFlowService {
     const firstPlayer = startGameInput.players[0];
 
     if (!firstPlayer) {
-      throw new Error("NOT_ENOUGH_PLAYERS");
+      throw new GameRuleError("NOT_ENOUGH_PLAYERS");
     }
 
     let deck = startGameInput.deck;
@@ -62,29 +63,29 @@ export class TurnFlowService {
     placeCardOptions: PlaceCardOptions = {},
   ): GameState {
     if (gameState.phase !== "turn" || !gameState.turn) {
-      throw new Error("GAME_NOT_IN_TURN_PHASE");
+      throw new GameRuleError("GAME_NOT_IN_TURN_PHASE");
     }
 
     if (gameState.turn.activePlayerId !== playerId) {
-      throw new Error("NOT_ACTIVE_PLAYER");
+      throw new GameRuleError("NOT_ACTIVE_PLAYER");
     }
 
     if (!gameState.currentTrackCard) {
-      throw new Error("CURRENT_CARD_NOT_AVAILABLE");
+      throw new GameRuleError("CURRENT_CARD_NOT_AVAILABLE");
     }
 
     const playerTimeline = gameState.timelines[playerId];
 
     if (!playerTimeline) {
-      throw new Error("PLAYER_TIMELINE_NOT_FOUND");
+      throw new GameRuleError("PLAYER_TIMELINE_NOT_FOUND");
     }
 
     if (!Number.isInteger(selectedSlotIndex) || selectedSlotIndex < 0) {
-      throw new Error("INVALID_SLOT_INDEX");
+      throw new GameRuleError("INVALID_SLOT_INDEX");
     }
 
     if (selectedSlotIndex > playerTimeline.length) {
-      throw new Error("INVALID_SLOT_INDEX");
+      throw new GameRuleError("INVALID_SLOT_INDEX");
     }
 
     const placementResult = evaluateTimelinePlacement(
@@ -156,7 +157,7 @@ export class TurnFlowService {
 
   public confirmReveal(gameState: GameState): GameState {
     if (gameState.phase !== "reveal" || !gameState.turn || !gameState.revealState) {
-      throw new Error("GAME_NOT_IN_REVEAL_PHASE");
+      throw new GameRuleError("GAME_NOT_IN_REVEAL_PHASE");
     }
 
     if (gameState.winnerPlayerId) {
@@ -174,15 +175,15 @@ export class TurnFlowService {
 
   public advanceTurnToPlayer(gameState: GameState, nextActivePlayerId: string): GameState {
     if (gameState.phase !== "turn" || !gameState.turn) {
-      throw new Error("GAME_NOT_IN_TURN_PHASE");
+      throw new GameRuleError("GAME_NOT_IN_TURN_PHASE");
     }
 
     if (!gameState.players.some((player) => player.id === nextActivePlayerId)) {
-      throw new Error("PLAYER_NOT_FOUND");
+      throw new GameRuleError("PLAYER_NOT_FOUND");
     }
 
     if (gameState.turn.activePlayerId === nextActivePlayerId) {
-      throw new Error("ACTIVE_PLAYER_UNCHANGED");
+      throw new GameRuleError("ACTIVE_PLAYER_UNCHANGED");
     }
 
     return {
@@ -199,7 +200,7 @@ export class TurnFlowService {
 
   public skipOfflinePlayerTurn(gameState: GameState): GameState {
     if (gameState.phase !== "turn" || !gameState.turn) {
-      throw new Error("GAME_NOT_IN_TURN_PHASE");
+      throw new GameRuleError("GAME_NOT_IN_TURN_PHASE");
     }
 
     return beginTurnOfNextPlayer(gameState, this.shuffleCards);
@@ -207,11 +208,11 @@ export class TurnFlowService {
 
   public skipTurnToPlayer(gameState: GameState, nextActivePlayerId: string): GameState {
     if (gameState.phase !== "turn" || !gameState.turn) {
-      throw new Error("GAME_NOT_IN_TURN_PHASE");
+      throw new GameRuleError("GAME_NOT_IN_TURN_PHASE");
     }
 
     if (!gameState.players.some((player) => player.id === nextActivePlayerId)) {
-      throw new Error("PLAYER_NOT_FOUND");
+      throw new GameRuleError("PLAYER_NOT_FOUND");
     }
 
     return beginNextTurn(gameState, nextActivePlayerId, this.shuffleCards);

@@ -11,6 +11,7 @@ import {
   type PublicRoomState,
   type TimelineCardPublic,
   type TrackCardPublic,
+  DomainError,
 } from "@tunetrack/shared";
 
 /** Public `state_update` history is capped so payloads stay bounded as games lengthen. */
@@ -139,7 +140,7 @@ function mapTimelineCardToPublicTimelineCard(
   trackCardsById: Map<string, GameTrackCard>,
 ): TimelineCardPublic {
   const trackCard = trackCardsById.get(timelineCard.id);
-  if (!trackCard) throw new Error("TRACK_CARD_NOT_FOUND");
+  if (!trackCard) throw new DomainError("TRACK_CARD_NOT_FOUND");
 
   return {
     ...mapTrackCardToPublicTrackCard(trackCard, true),

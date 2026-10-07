@@ -1,3 +1,4 @@
+import { GameRuleError } from "../domain/GameRuleError.js";
 import type { GameState } from "../domain/GameState.js";
 import type { RevealState } from "../domain/RevealState.js";
 import type { TimelineCard } from "../domain/TimelineCard.js";
@@ -14,7 +15,7 @@ export class TtActionService {
 
   public awardTtTokens(gameState: GameState, playerId: string, tokenAmount: number): GameState {
     if (!Number.isInteger(tokenAmount) || tokenAmount === 0) {
-      throw new Error("INVALID_TT_AMOUNT");
+      throw new GameRuleError("INVALID_TT_AMOUNT");
     }
 
     return {
@@ -25,28 +26,28 @@ export class TtActionService {
 
   public skipCurrentTrackWithTt(gameState: GameState, playerId: string): GameState {
     if (gameState.phase !== "turn" || !gameState.turn) {
-      throw new Error("GAME_NOT_IN_TURN_PHASE");
+      throw new GameRuleError("GAME_NOT_IN_TURN_PHASE");
     }
 
     if (gameState.turn.activePlayerId !== playerId) {
-      throw new Error("NOT_ACTIVE_PLAYER");
+      throw new GameRuleError("NOT_ACTIVE_PLAYER");
     }
 
     if (!gameState.currentTrackCard) {
-      throw new Error("CURRENT_CARD_NOT_AVAILABLE");
+      throw new GameRuleError("CURRENT_CARD_NOT_AVAILABLE");
     }
 
     assertPlayerHasEnoughTt(gameState.players, playerId, 1);
 
     if (gameState.turn.hasUsedSkipTrackWithTt) {
-      throw new Error("SKIP_ALREADY_USED_THIS_TURN");
+      throw new GameRuleError("SKIP_ALREADY_USED_THIS_TURN");
     }
 
     // Drawing before discarding keeps a paid skip from handing back the skipped card.
     const draw = drawNextCard(gameState, this.shuffleCards);
 
     if (!draw.card) {
-      throw new Error("NOT_ENOUGH_CARDS");
+      throw new GameRuleError("NOT_ENOUGH_CARDS");
     }
 
     return {
@@ -66,17 +67,17 @@ export class TtActionService {
 
   public buyTimelineCardWithTt(gameState: GameState, playerId: string): GameState {
     if (gameState.phase !== "turn" || !gameState.turn) {
-      throw new Error("GAME_NOT_IN_TURN_PHASE");
+      throw new GameRuleError("GAME_NOT_IN_TURN_PHASE");
     }
 
     if (gameState.turn.activePlayerId !== playerId) {
-      throw new Error("NOT_ACTIVE_PLAYER");
+      throw new GameRuleError("NOT_ACTIVE_PLAYER");
     }
 
     const playerTimeline = gameState.timelines[playerId];
 
     if (!playerTimeline) {
-      throw new Error("PLAYER_TIMELINE_NOT_FOUND");
+      throw new GameRuleError("PLAYER_TIMELINE_NOT_FOUND");
     }
 
     assertPlayerHasEnoughTt(gameState.players, playerId, 3);
@@ -84,7 +85,7 @@ export class TtActionService {
     const boughtTrackCard = gameState.currentTrackCard;
 
     if (!boughtTrackCard) {
-      throw new Error("CURRENT_CARD_NOT_AVAILABLE");
+      throw new GameRuleError("CURRENT_CARD_NOT_AVAILABLE");
     }
 
     const awardedSlotIndex = findFirstValidSlotIndex(playerTimeline, boughtTrackCard.releaseYear);

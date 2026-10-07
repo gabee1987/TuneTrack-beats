@@ -22,6 +22,8 @@ import {
   type UpdatePlayerProfilePayloadParsed,
   type UpdatePlayerSettingsPayloadParsed,
   type UpdateRoomSettingsPayloadParsed,
+  type ServerErrorCode,
+  DomainError,
 } from "@tunetrack/shared";
 import { RoomConnectionService } from "./RoomConnectionService.js";
 import { RoomGameplayService } from "./RoomGameplayService.js";
@@ -304,11 +306,11 @@ export class RoomRegistry {
     const membership = this.store.requireMembership(socketId);
     const roomRecord = this.store.getRoomRecordForMember(socketId, roomId);
     if (roomRecord.roomState.hostId !== membership.playerId) {
-      throw new Error("ONLY_HOST_CAN_CONTROL_SPOTIFY_PLAYBACK");
+      throw new DomainError("ONLY_HOST_CAN_CONTROL_SPOTIFY_PLAYBACK");
     }
   }
 
-  public requireHostInLobby(socketId: string, roomId: RoomId, notHostCode: string): void {
+  public requireHostInLobby(socketId: string, roomId: RoomId, notHostCode: ServerErrorCode): void {
     this.lobby.requireHostInLobby(socketId, roomId, notHostCode);
   }
 
@@ -326,7 +328,7 @@ export class RoomRegistry {
     const roomRecord = this.store.getRoomRecordForMember(socketId, roomId);
     const ownerPlayerId = roomRecord.roomState.settings.spotifyPlaybackOwnerPlayerId;
     if (!ownerPlayerId || ownerPlayerId !== membership.playerId) {
-      throw new Error("ONLY_SPOTIFY_PLAYBACK_OWNER_CAN_CONTROL");
+      throw new DomainError("ONLY_SPOTIFY_PLAYBACK_OWNER_CAN_CONTROL");
     }
   }
 }

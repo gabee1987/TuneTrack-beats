@@ -1,3 +1,4 @@
+import { DomainError } from "@tunetrack/shared";
 import { GameFlowService } from "@tunetrack/game-engine";
 import type { PublicRoomState, RoomId, TransferHostPayloadParsed } from "@tunetrack/shared";
 import {
@@ -63,7 +64,7 @@ export class RoomConnectionService {
     const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.store.requireMembership(socketId);
     if (roomRecord.roomState.hostId !== membership.playerId)
-      throw new Error("ONLY_HOST_CAN_TRANSFER_HOST");
+      throw new DomainError("ONLY_HOST_CAN_TRANSFER_HOST");
     return this.applyHostTransfer(payload.roomId, payload.playerId, {
       requireConnectedTarget: true,
     });
@@ -76,10 +77,10 @@ export class RoomConnectionService {
     const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.store.requireMembership(socketId);
     if (roomRecord.roomState.hostId !== membership.playerId)
-      throw new Error("ONLY_HOST_CAN_KICK_PLAYER");
-    if (payload.playerId === membership.playerId) throw new Error("CANNOT_KICK_YOURSELF");
+      throw new DomainError("ONLY_HOST_CAN_KICK_PLAYER");
+    if (payload.playerId === membership.playerId) throw new DomainError("CANNOT_KICK_YOURSELF");
     if (!roomRecord.roomState.players.find((p) => p.id === payload.playerId))
-      throw new Error("PLAYER_NOT_FOUND");
+      throw new DomainError("PLAYER_NOT_FOUND");
 
     const targetSessionId = this.store.findSessionIdForPlayer(payload.roomId, payload.playerId);
     if (targetSessionId) {
@@ -103,7 +104,7 @@ export class RoomConnectionService {
     if (!baseRoomState) {
       this.timers.clearForRoom(payload.roomId);
       this.store.deleteRoom(payload.roomId);
-      throw new Error("ROOM_EMPTY_AFTER_KICK");
+      throw new DomainError("ROOM_EMPTY_AFTER_KICK");
     }
 
     const previousPlaybackOwner = roomRecord.roomState.settings.spotifyPlaybackOwnerPlayerId;
@@ -139,7 +140,7 @@ export class RoomConnectionService {
     }
     if (!roomRecord || !roomRecord.roomState.players.find((p) => p.id === playerId)) {
       this.store.deleteSessionMembership(sessionId);
-      throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
+      throw new DomainError("ROOM_MEMBERSHIP_NOT_FOUND");
     }
 
     this.timers.clearAllPlayersOffline(roomId);
@@ -336,7 +337,7 @@ export class RoomConnectionService {
 
   private markPlayerConnected(roomId: RoomId, playerId: string): PublicRoomState {
     const roomRecord = this.store.getRoom(roomId);
-    if (!roomRecord) throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
+    if (!roomRecord) throw new DomainError("ROOM_MEMBERSHIP_NOT_FOUND");
 
     const connectedRoomState = buildConnectedRoomState(roomRecord.roomState, playerId);
     this.store.setRoom(roomId, { ...roomRecord, roomState: connectedRoomState });
@@ -424,14 +425,14 @@ export class RoomConnectionService {
     options: { requireConnectedTarget: boolean },
   ): PublicRoomState {
     const roomRecord = this.store.getRoom(roomId);
-    if (!roomRecord) throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
+    if (!roomRecord) throw new DomainError("ROOM_MEMBERSHIP_NOT_FOUND");
 
     const targetPlayer = roomRecord.roomState.players.find((p) => p.id === targetPlayerId);
-    if (!targetPlayer) throw new Error("HOST_TRANSFER_TARGET_NOT_FOUND");
+    if (!targetPlayer) throw new DomainError("HOST_TRANSFER_TARGET_NOT_FOUND");
     if (roomRecord.roomState.hostId === targetPlayerId)
-      throw new Error("HOST_TRANSFER_TARGET_IS_ALREADY_HOST");
+      throw new DomainError("HOST_TRANSFER_TARGET_IS_ALREADY_HOST");
     if (options.requireConnectedTarget && targetPlayer.connectionStatus !== "connected") {
-      throw new Error("HOST_TRANSFER_TARGET_DISCONNECTED");
+      throw new DomainError("HOST_TRANSFER_TARGET_DISCONNECTED");
     }
 
     const previousPlaybackOwner = roomRecord.roomState.settings.spotifyPlaybackOwnerPlayerId;

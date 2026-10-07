@@ -15,6 +15,7 @@ import {
   type RoomId,
   type SkipTrackWithTtPayloadParsed,
   type StartGamePayloadParsed,
+  DomainError,
 } from "@tunetrack/shared";
 import { selectNextConnectedTurnPlayer } from "./roomConnectionBuilders.js";
 import { createTrackCardMap, mapGameStateToPublicRoomState } from "./roomStateMappers.js";
@@ -39,8 +40,8 @@ export class RoomGameplayService {
     const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.store.requireMembership(socketId);
     if (roomRecord.roomState.hostId !== membership.playerId)
-      throw new Error("ONLY_HOST_CAN_START_GAME");
-    if (roomRecord.roomState.status !== "lobby") throw new Error("GAME_ALREADY_STARTED");
+      throw new DomainError("ONLY_HOST_CAN_START_GAME");
+    if (roomRecord.roomState.status !== "lobby") throw new DomainError("GAME_ALREADY_STARTED");
 
     const gameState = this.gameFlowService.startGame({
       players: roomRecord.roomState.players.map((player) => ({
@@ -71,8 +72,8 @@ export class RoomGameplayService {
     const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.store.requireMembership(socketId);
     if (roomRecord.roomState.hostId !== membership.playerId)
-      throw new Error("ONLY_HOST_CAN_SKIP_TURN");
-    if (!roomRecord.gameState) throw new Error("GAME_NOT_STARTED");
+      throw new DomainError("ONLY_HOST_CAN_SKIP_TURN");
+    if (!roomRecord.gameState) throw new DomainError("GAME_NOT_STARTED");
 
     const { gameState } = roomRecord;
     const nextConnectedPlayer = selectNextConnectedTurnPlayer(
@@ -101,8 +102,8 @@ export class RoomGameplayService {
   public skipTrackWithTt(socketId: string, payload: SkipTrackWithTtPayloadParsed): PublicRoomState {
     const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.store.requireMembership(socketId);
-    if (!roomRecord.roomState.settings.ttModeEnabled) throw new Error("TT_MODE_DISABLED");
-    if (!roomRecord.gameState) throw new Error("GAME_NOT_STARTED");
+    if (!roomRecord.roomState.settings.ttModeEnabled) throw new DomainError("TT_MODE_DISABLED");
+    if (!roomRecord.gameState) throw new DomainError("GAME_NOT_STARTED");
 
     const nextGameState = this.gameFlowService.skipCurrentTrackWithTt(
       roomRecord.gameState,
@@ -127,8 +128,8 @@ export class RoomGameplayService {
   ): PublicRoomState {
     const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.store.requireMembership(socketId);
-    if (!roomRecord.roomState.settings.ttModeEnabled) throw new Error("TT_MODE_DISABLED");
-    if (!roomRecord.gameState) throw new Error("GAME_NOT_STARTED");
+    if (!roomRecord.roomState.settings.ttModeEnabled) throw new DomainError("TT_MODE_DISABLED");
+    if (!roomRecord.gameState) throw new DomainError("GAME_NOT_STARTED");
 
     const nextGameState = this.gameFlowService.buyTimelineCardWithTt(
       roomRecord.gameState,
@@ -150,7 +151,7 @@ export class RoomGameplayService {
   public placeCard(socketId: string, payload: PlaceCardPayloadParsed): PublicRoomState {
     const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.store.requireMembership(socketId);
-    if (!roomRecord.gameState) throw new Error("GAME_NOT_STARTED");
+    if (!roomRecord.gameState) throw new DomainError("GAME_NOT_STARTED");
 
     const gameState = this.gameFlowService.placeCard(
       roomRecord.gameState,
@@ -178,7 +179,7 @@ export class RoomGameplayService {
   public claimChallenge(socketId: string, payload: ClaimChallengePayloadParsed): PublicRoomState {
     const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.store.requireMembership(socketId);
-    if (!roomRecord.gameState) throw new Error("GAME_NOT_STARTED");
+    if (!roomRecord.gameState) throw new DomainError("GAME_NOT_STARTED");
 
     const gameState = this.gameFlowService.claimChallenge(
       roomRecord.gameState,
@@ -198,7 +199,7 @@ export class RoomGameplayService {
   public placeChallenge(socketId: string, payload: PlaceChallengePayloadParsed): PublicRoomState {
     const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.store.requireMembership(socketId);
-    if (!roomRecord.gameState) throw new Error("GAME_NOT_STARTED");
+    if (!roomRecord.gameState) throw new DomainError("GAME_NOT_STARTED");
 
     const gameState = this.gameFlowService.placeChallengeCard(
       roomRecord.gameState,
@@ -221,20 +222,20 @@ export class RoomGameplayService {
   ): PublicRoomState {
     const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.store.requireMembership(socketId);
-    if (!roomRecord.gameState) throw new Error("GAME_NOT_STARTED");
+    if (!roomRecord.gameState) throw new DomainError("GAME_NOT_STARTED");
 
     if (
       roomRecord.roomState.settings.revealConfirmMode === "host_only" &&
       roomRecord.roomState.hostId !== membership.playerId
     )
-      throw new Error("ONLY_HOST_CAN_RESOLVE_CHALLENGE_WINDOW");
+      throw new DomainError("ONLY_HOST_CAN_RESOLVE_CHALLENGE_WINDOW");
 
     if (
       roomRecord.roomState.settings.revealConfirmMode === "host_or_active_player" &&
       roomRecord.roomState.hostId !== membership.playerId &&
       roomRecord.gameState.turn?.activePlayerId !== membership.playerId
     )
-      throw new Error("ONLY_HOST_OR_ACTIVE_PLAYER_CAN_RESOLVE_CHALLENGE_WINDOW");
+      throw new DomainError("ONLY_HOST_OR_ACTIVE_PLAYER_CAN_RESOLVE_CHALLENGE_WINDOW");
 
     const gameState = this.gameFlowService.resolveChallengeWindow(roomRecord.gameState);
     const roomState = mapGameStateToPublicRoomState(
@@ -250,20 +251,20 @@ export class RoomGameplayService {
   public confirmReveal(socketId: string, payload: ConfirmRevealPayloadParsed): PublicRoomState {
     const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.store.requireMembership(socketId);
-    if (!roomRecord.gameState?.turn) throw new Error("GAME_NOT_STARTED");
+    if (!roomRecord.gameState?.turn) throw new DomainError("GAME_NOT_STARTED");
 
     if (
       roomRecord.roomState.settings.revealConfirmMode === "host_only" &&
       roomRecord.roomState.hostId !== membership.playerId
     )
-      throw new Error("ONLY_HOST_CAN_CONFIRM_REVEAL");
+      throw new DomainError("ONLY_HOST_CAN_CONFIRM_REVEAL");
 
     if (
       roomRecord.roomState.settings.revealConfirmMode === "host_or_active_player" &&
       roomRecord.roomState.hostId !== membership.playerId &&
       roomRecord.gameState.turn.activePlayerId !== membership.playerId
     )
-      throw new Error("ONLY_HOST_OR_ACTIVE_PLAYER_CAN_CONFIRM_REVEAL");
+      throw new DomainError("ONLY_HOST_OR_ACTIVE_PLAYER_CAN_CONFIRM_REVEAL");
 
     const gameState = this.gameFlowService.confirmReveal(roomRecord.gameState);
     const roomState = mapGameStateToPublicRoomState(

@@ -66,8 +66,10 @@ file that grows a second responsibility is split, not extended.
 
 ## 6. Errors
 
-- Use stable, typed error codes for every failure category a client can act on; map them
-  to client-safe messages in one place (`realtime/errorMessages.ts`).
+- Use stable, typed error codes for every failure category a client can act on: a
+  `ServerErrorCode` thrown as `DomainError` (server) or `GameRuleError` (engine); map them to
+  client-safe messages in one place (`realtime/errorMessages.ts`). `emitServerError` sends any
+  other error as the handler's fallback code and logs it at `error` with its stack.
 - Never leak stack traces, internal messages, third-party API responses or file paths to
   clients. Unexpected errors become a generic code plus a server log with a correlation id.
 - Do not throw a generic error where a domain code exists.

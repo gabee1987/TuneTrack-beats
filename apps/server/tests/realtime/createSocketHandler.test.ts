@@ -1,9 +1,12 @@
+import { GameRuleError } from "@tunetrack/game-engine";
 import {
   ClientToServerEvent,
+  DomainError,
   ServerToClientEvent,
   startGamePayloadSchema,
 } from "@tunetrack/shared";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { logger } from "../../src/app/logger.js";
 import { createSocketHandler, emitServerError } from "../../src/realtime/createSocketHandler.js";
 import {
   DEFAULT_SOCKET_ERROR_MESSAGE,
@@ -40,21 +43,25 @@ describe("resolveSocketErrorMessage", () => {
     );
   });
 
-  it("returns the default message for an unknown code", () => {
-    expect(resolveSocketErrorMessage("UNKNOWN_CODE", startGameErrorMessages)).toBe(
+  it("returns the default message for a code the event does not map", () => {
+    expect(resolveSocketErrorMessage("ROOM_NOT_FOUND", startGameErrorMessages)).toBe(
       DEFAULT_SOCKET_ERROR_MESSAGE,
     );
   });
 });
 
 describe("emitServerError", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("emits the thrown error code with catalog message", () => {
     const socket = createMockSocket();
 
     emitServerError(
       socket as never,
       "start_game",
-      new Error("ONLY_HOST_CAN_START_GAME"),
+      new DomainError("ONLY_HOST_CAN_START_GAME"),
       "START_GAME_FAILED",
       {
         ONLY_HOST_CAN_START_GAME: "Only the host can start the game.",
@@ -78,7 +85,7 @@ describe("emitServerError", () => {
     emitServerError(
       socket as never,
       "start_game",
-      new Error("SOME_NEW_CODE"),
+      new DomainError("ROOM_NOT_FOUND"),
       "START_GAME_FAILED",
       {},
     );
@@ -87,11 +94,54 @@ describe("emitServerError", () => {
       {
         event: ServerToClientEvent.Error,
         payload: {
-          code: "SOME_NEW_CODE",
+          code: "ROOM_NOT_FOUND",
           message: DEFAULT_SOCKET_ERROR_MESSAGE,
         },
       },
     ]);
+  });
+
+  it("passes an engine rule code through", () => {
+    const socket = createMockSocket();
+
+    const code = emitServerError(
+      socket as never,
+      "place_card",
+      new GameRuleError("NOT_ACTIVE_PLAYER"),
+      "PLACE_CARD_FAILED",
+      {},
+    );
+
+    expect(code).toBe("NOT_ACTIVE_PLAYER");
+  });
+
+  it.each([
+    ["a TypeError", new TypeError("Cannot read properties of undefined (reading 'turn')")],
+    ["a plain Error", new Error("ONLY_HOST_CAN_START_GAME")],
+  ])("reports %s as the fallback code and logs it with its stack", (_name, error) => {
+    const socket = createMockSocket();
+    const logError = vi.spyOn(logger, "error").mockImplementation(() => undefined);
+
+    const code = emitServerError(
+      socket as never,
+      "start_game",
+      error,
+      "START_GAME_FAILED",
+      startGameErrorMessages,
+    );
+
+    expect(code).toBe("START_GAME_FAILED");
+    expect(socket.emitted).toEqual([
+      {
+        event: ServerToClientEvent.Error,
+        payload: { code: "START_GAME_FAILED", message: DEFAULT_SOCKET_ERROR_MESSAGE },
+      },
+    ]);
+    expect(logError).toHaveBeenCalledWith(
+      expect.objectContaining({ err: error, code: "START_GAME_FAILED" }),
+      "socket action failed unexpectedly",
+    );
+    expect(error.stack).toBeTruthy();
   });
 });
 
@@ -177,7 +227,7 @@ describe("createSocketHandler", () => {
         message: "Room code is invalid.",
       },
       handle: () => {
-        throw new Error("ONLY_HOST_CAN_START_GAME");
+        throw new DomainError("ONLY_HOST_CAN_START_GAME");
       },
       fallbackErrorCode: "START_GAME_FAILED",
       errorMessages: startGameErrorMessages,
@@ -262,7 +312,7 @@ describe("createSocketHandler", () => {
         message: "Room code is invalid.",
       },
       handle: () => {
-        throw new Error("ONLY_HOST_CAN_START_GAME");
+        throw new DomainError("ONLY_HOST_CAN_START_GAME");
       },
       fallbackErrorCode: "START_GAME_FAILED",
       errorMessages: startGameErrorMessages,

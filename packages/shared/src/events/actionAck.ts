@@ -1,6 +1,8 @@
+import type { ServerErrorCode } from "../errors/serverErrors.js";
+
 export interface ActionAck<TResult = void> {
   ok: boolean;
   requestId: string;
-  code?: string;
+  code?: ServerErrorCode;
   result?: TResult;
 }
