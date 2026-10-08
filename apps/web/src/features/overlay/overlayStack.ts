@@ -1,9 +1,12 @@
 export type OverlayKind = "blocking" | "dialog" | "sheet";
 
+/** A `view` is a step inside an open panel (`PanelView`): it stacks for Escape, focus and Back but takes no layer. */
+export type OverlayStackKind = OverlayKind | "view";
+
 export interface OverlayStackEntry {
   dismissible: boolean;
   id: string;
-  kind: OverlayKind;
+  kind: OverlayStackKind;
 }
 
 const BASE_LAYER: Record<OverlayKind, string> = {
@@ -62,9 +65,15 @@ export function getOverlayLayer(
   const index = stack.findIndex((entry) => entry.id === id);
   const entry = stack[index];
 
-  if (!entry) {
+  if (!entry || entry.kind === "view") {
     return undefined;
   }
 
   return index === 0 ? BASE_LAYER[entry.kind] : NESTED_LAYER[entry.kind];
+}
+
+/** Whether every entry above `id` is a view inside it, so a tap on its scrim belongs to the top view. */
+export function isTopWithinOverlay(stack: readonly OverlayStackEntry[], id: string): boolean {
+  const index = stack.findIndex((entry) => entry.id === id);
+  return index !== -1 && stack.slice(index + 1).every((entry) => entry.kind === "view");
 }

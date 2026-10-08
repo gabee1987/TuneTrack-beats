@@ -1,8 +1,10 @@
 import { m, useIsPresent, type TargetAndTransition, type Transition } from "framer-motion";
 import {
+  useCallback,
   useEffect,
   useId,
   useRef,
+  useState,
   useSyncExternalStore,
   type ComponentProps,
   type ReactNode,
@@ -18,13 +20,9 @@ import {
   useReducedMotionPreference,
 } from "../motion";
 import { useOverlayHistoryEntry } from "./overlayHistory";
+import { PanelViewHostContext, useOverlayRegistration } from "./overlayRegistration";
 import { getOverlayLayer, type OverlayKind } from "./overlayStack";
-import {
-  dismissTopOverlay,
-  getOverlayStack,
-  registerOverlay,
-  subscribeOverlayStack,
-} from "./overlayStore";
+import { dismissFromScrim, getOverlayStack, subscribeOverlayStack } from "./overlayStore";
 
 type MotionTargets = Record<"initial" | "animate" | "exit", TargetAndTransition>;
 
@@ -117,35 +115,16 @@ function OverlayView({
 }: OverlayViewProps) {
   const reduceMotion = useReducedMotionPreference();
   const panelRef = useRef<HTMLDivElement | null>(null);
-  const onDismissRef = useRef(onDismiss);
-  onDismissRef.current = onDismiss;
+  const [panelElement, setPanelElement] = useState<HTMLDivElement | null>(null);
+  const attachPanel = useCallback((node: HTMLDivElement | null) => {
+    panelRef.current = node;
+    setPanelElement(node);
+  }, []);
   const layer = useSyncExternalStore(subscribeOverlayStack, () =>
     getOverlayLayer(getOverlayStack(), id),
   );
 
-  useEffect(() => {
-    if (!isShown) {
-      return undefined;
-    }
-
-    const trigger = document.activeElement;
-    const unregister = registerOverlay({
-      dismiss: () => onDismissRef.current(),
-      dismissible,
-      getPanel: () => panelRef.current,
-      id,
-      kind,
-    });
-    panelRef.current?.focus({ preventScroll: true });
-
-    return () => {
-      unregister();
-
-      if (trigger instanceof HTMLElement && trigger.isConnected) {
-        trigger.focus({ preventScroll: true });
-      }
-    };
-  }, [dismissible, id, isShown, kind]);
+  useOverlayRegistration({ dismissible, id, isShown, kind, onDismiss, panelRef });
 
   const scrimProps = {
     animate: "animate",
@@ -154,7 +133,7 @@ function OverlayView({
     initial: "initial",
     onClick: (event: { stopPropagation: () => void }) => {
       event.stopPropagation();
-      dismissTopOverlay(id);
+      dismissFromScrim(id);
     },
     onUpdate: keepFadeOnMainThread,
     role: "presentation",
@@ -171,13 +150,13 @@ function OverlayView({
       initial="initial"
       onClick={(event) => event.stopPropagation()}
       onUpdate={keepFadeOnMainThread}
-      ref={panelRef}
+      ref={attachPanel}
       role="dialog"
       tabIndex={-1}
       transition={panelTransition ?? createStandardTransition(reduceMotion)}
       variants={panelMotion ?? createDialogCardMotion(reduceMotion)}
     >
-      {children}
+      <PanelViewHostContext.Provider value={panelElement}>{children}</PanelViewHostContext.Provider>
     </m.div>
   );
 

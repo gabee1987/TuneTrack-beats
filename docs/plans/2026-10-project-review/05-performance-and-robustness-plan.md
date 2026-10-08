@@ -403,6 +403,7 @@ A1–A10, B1, B2, C1–C7, D0–D5 and E1 shipped on 2026-10-07, E2 on 2026-10-0
 | `14` §4.1 kind `hint`         | stack kind `hint`                                                                                     | non-modal layers use `LayerPortal` and take no stack entry                                                                                                                                              |
 | `14` §4.1 scroll locking      | `overflow: hidden` on the root, iOS `position: fixed` pattern (§7 risk row)                           | a scroll guard on `touchmove` and `wheel` outside the top panel: an unscrollable root made Android Chrome resize its viewport under the opening overlay (flicker, offset taps; owner report 2026-10-08) |
 | `14` §4.3 sheet motion        | each sheet keeps its own motion                                                                       | one opaque full-width slide for every side sheet (`createSideSheetMotion`); a fading panel showed the screen underneath through it (decision log 2026-10-08)                                            |
+| `14` §4.3 step 7              | `PlaylistEditModal` plus `PlaylistTrackDetailsSheet` as a nested sheet pair                           | both are `PanelView`s inside Music Setup: no sheet stacks on a sheet (decision log 2026-10-08)                                                                                                          |
 
 ## 10. Compliance and security notes
 

@@ -1,11 +1,6 @@
 import { useMemo, useState } from "react";
 import { useI18n } from "../../../features/i18n";
-import {
-  createSideSheetMotion,
-  createSideSheetScrimMotion,
-  useReducedMotionPreference,
-} from "../../../features/motion";
-import { Overlay } from "../../../features/overlay";
+import { PanelView } from "../../../features/overlay";
 import { ActionButton } from "../../../features/ui/ActionButton";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { usePlaylistEditor, type SortField } from "../hooks/usePlaylistEditor";
@@ -23,7 +18,6 @@ const SORT_FIELDS: SortField[] = ["title", "artist", "year"];
 
 export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
   const { t } = useI18n();
-  const reduceMotion = useReducedMotionPreference();
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
 
   if (!isOpen && selectedTrackId !== null) {
@@ -49,16 +43,12 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
   );
 
   return (
-    <Overlay
+    // A view inside Music Setup, not a sheet on top of it (`PanelView`).
+    <PanelView
+      className={chromeStyles.sheet}
       isOpen={isOpen}
-      kind="sheet"
       label={t("lobby.playlist.editLabel")}
-      layerClassName={chromeStyles.layer}
       onDismiss={onClose}
-      panelClassName={chromeStyles.sheet}
-      panelMotion={createSideSheetMotion(reduceMotion)}
-      scrimClassName={chromeStyles.overlay}
-      scrimMotion={createSideSheetScrimMotion(reduceMotion)}
     >
       <div className={chromeStyles.header}>
         <div className={chromeStyles.headerLeft}>
@@ -111,7 +101,7 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
         onSave={updateTrack}
         track={selectedTrack}
       />
-    </Overlay>
+    </PanelView>
   );
 }
 

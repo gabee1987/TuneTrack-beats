@@ -162,12 +162,16 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
         onClose={() => setIsSetupOpen(false)}
         onSourceChange={setActiveSource}
         spotifyState={spotifyState}
-      />
-      {hasOpenedEditModal ? (
-        <Suspense fallback={null}>
-          <PlaylistEditModal isOpen={isEditModalOpen} onClose={spotifyState.queue.closeEditModal} />
-        </Suspense>
-      ) : null}
+      >
+        {hasOpenedEditModal ? (
+          <Suspense fallback={null}>
+            <PlaylistEditModal
+              isOpen={isEditModalOpen}
+              onClose={spotifyState.queue.closeEditModal}
+            />
+          </Suspense>
+        ) : null}
+      </SpotifySetupModal>
     </>
   );
 }

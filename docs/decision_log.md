@@ -12,6 +12,14 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### No sheet on a sheet: Music Setup steps are panel views (2026-10-08)
+
+- **The playlist editor and the song editor open as `PanelView`s inside the Music Setup panel,
+  sliding in over its content, instead of as further sheets with their own scrims.** Back,
+  Escape and a scrim tap close one step. Why: stacked sheets kept flickering the sheet
+  underneath into view (owner report and decision). Small confirmation dialogs may still open
+  over a sheet.
+
 ### One opaque slide for every side sheet (2026-10-08)
 
 - **Settings, Music Setup, the playlist editor and the song editor share `createSideSheetMotion`:

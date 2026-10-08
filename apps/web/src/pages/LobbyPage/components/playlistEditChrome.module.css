@@ -1,29 +1,6 @@
-/* The scrim sits beside the sheet, not around it, so their fades do not multiply. */
-.layer {
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-sheet);
-  display: flex;
-  justify-content: flex-end;
-  align-items: stretch;
-}
-
-.overlay {
-  position: absolute;
-  inset: 0;
-  background: var(--color-overlay-strong);
-}
-
+/* A `PanelView` that fills Music Setup; the view places and sizes it. */
 .sheet {
-  position: relative;
-  width: min(100%, 680px);
-  height: 100%;
   background: var(--color-bg-app);
-  border-left: 0;
-  box-shadow: var(--shadow-overlay);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
 }
 
 .sheet::after {
@@ -99,30 +76,9 @@
  * playlist sheet it landed under that sheet's `.header` (z-index 4), which covered its
  * close button and swallowed the taps meant for it.
  */
-.detailsLayer {
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-sheet-nested);
-  display: flex;
-  justify-content: flex-end;
-}
-
-.detailsOverlay {
-  position: absolute;
-  inset: 0;
-  background: var(--color-overlay-strong);
-}
-
+/* A `PanelView` that fills Music Setup; the view places and sizes it. */
 .detailsSheet {
-  position: relative;
-  width: min(100%, 520px);
-  height: 100%;
-  border: none;
-  border-left: 1px solid var(--color-border-subtle);
   background: var(--color-surface-elevated-solid);
-  box-shadow: -18px 0 38px color-mix(in srgb, black 26%, transparent);
-  display: flex;
-  flex-direction: column;
   color: var(--color-text-primary);
 }
 

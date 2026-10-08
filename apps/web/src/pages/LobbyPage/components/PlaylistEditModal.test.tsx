@@ -3,6 +3,7 @@ import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { Overlay } from "../../../features/overlay";
 import { getSharedFakeSocket, resetSharedFakeSocket } from "../../../test/fakeSocket";
 import {
   HISTORY_ROUTE_PATH,
@@ -36,13 +37,17 @@ function buildTrack(overrides: Partial<PublicTrackInfo> = {}): PublicTrackInfo {
   } as PublicTrackInfo;
 }
 
+/** The editor is a view inside Music Setup, as in `LobbySpotifySection`. */
 function PlaylistEditorScreen() {
   const [isOpen, setIsOpen] = useState(true);
 
   return (
     <>
       <p>Lobby screen</p>
-      <PlaylistEditModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
+      <Overlay isOpen kind="sheet" label="Spotify music setup" onDismiss={() => undefined}>
+        <p>Music setup</p>
+        <PlaylistEditModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
+      </Overlay>
     </>
   );
 }
@@ -191,6 +196,7 @@ describe("PlaylistEditModal", () => {
       expect(screen.queryByRole("dialog", { name: "Edit playlist" })).not.toBeInTheDocument();
     });
     expect(screen.getByText("Lobby screen")).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Spotify music setup" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe(HISTORY_ROUTE_PATH);
   });
 });

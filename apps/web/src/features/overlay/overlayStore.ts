@@ -1,5 +1,6 @@
 import {
   getTopOverlayEntry,
+  isTopWithinOverlay,
   pushOverlayEntry,
   removeOverlayEntry,
   type OverlayStackEntry,
@@ -47,6 +48,15 @@ export function registerOverlay(registration: OverlayRegistration): () => void {
     registrations.delete(registration.id);
     setStack(removeOverlayEntry(stack, registration.id));
   };
+}
+
+/** A scrim tap closes one step: the top view inside this overlay, or the overlay itself. */
+export function dismissFromScrim(id: string): void {
+  const top = getTopOverlayEntry(stack);
+
+  if (top && isTopWithinOverlay(stack, id)) {
+    dismissTopOverlay(top.id);
+  }
 }
 
 export function dismissTopOverlay(id: string): void {

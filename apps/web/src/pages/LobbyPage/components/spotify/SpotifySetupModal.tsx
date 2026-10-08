@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import type { PublicRoomSettings } from "@tunetrack/shared/client";
 import {
   createSideSheetMotion,
@@ -29,6 +29,8 @@ const SpotifySetupContent = lazy(async () => {
 
 interface SpotifySetupModalProps {
   activeSource: SpotifySetupSource;
+  /** Deeper steps (the playlist editor) open as `PanelView`s inside this panel. */
+  children?: ReactNode;
   currentSettings: PublicRoomSettings;
   isOpen: boolean;
   onClose: () => void;
@@ -38,6 +40,7 @@ interface SpotifySetupModalProps {
 
 export function SpotifySetupModal({
   activeSource,
+  children,
   currentSettings,
   isOpen,
   onClose,
@@ -98,6 +101,7 @@ export function SpotifySetupModal({
           )}
         </Suspense>
       </div>
+      {children}
     </Overlay>
   );
 }

@@ -1,12 +1,7 @@
 import type { PublicTrackInfo, TrackMetadataStatus } from "@tunetrack/shared/client";
 import { type FormEvent, useEffect, useState } from "react";
 import { useI18n } from "../../../features/i18n";
-import {
-  createSideSheetMotion,
-  createSideSheetScrimMotion,
-  useReducedMotionPreference,
-} from "../../../features/motion";
-import { Overlay } from "../../../features/overlay";
+import { PanelView } from "../../../features/overlay";
 import { ActionButton } from "../../../features/ui/ActionButton";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { TextInput } from "../../../features/ui/TextInput";
@@ -28,7 +23,6 @@ export function PlaylistTrackDetailsSheet({
   track,
 }: PlaylistTrackDetailsSheetProps) {
   const { t } = useI18n();
-  const reduceMotion = useReducedMotionPreference();
   const [title, setTitle] = useState("");
   const [artist, setArtist] = useState("");
   const [albumTitle, setAlbumTitle] = useState("");
@@ -68,19 +62,14 @@ export function PlaylistTrackDetailsSheet({
 
   const flags = track ? getPlaylistTrackCurationFlags(track) : [];
 
-  // A separate overlay, never nested in the panel that opened it: inside that panel it sat
-  // below the panel header stacking context (B1).
+  // A view over the whole Music Setup panel, never nested in the list that opened it: inside
+  // that list it sat below the panel header stacking context (B1).
   return (
-    <Overlay
+    <PanelView
+      className={styles.detailsSheet}
       isOpen={track !== null}
-      kind="sheet"
       label={t("lobby.playlist.detailsTitle")}
-      layerClassName={styles.detailsLayer}
       onDismiss={onClose}
-      panelClassName={styles.detailsSheet}
-      panelMotion={createSideSheetMotion(reduceMotion)}
-      scrimClassName={styles.detailsOverlay}
-      scrimMotion={createSideSheetScrimMotion(reduceMotion)}
     >
       {track ? (
         <form className={styles.detailsForm} onSubmit={handleSubmit}>
@@ -203,7 +192,7 @@ export function PlaylistTrackDetailsSheet({
           </div>
         </form>
       ) : null}
-    </Overlay>
+    </PanelView>
   );
 }
 
