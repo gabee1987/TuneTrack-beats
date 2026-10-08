@@ -1,20 +1,11 @@
 export { MotionFeatureProvider } from "./MotionFeatureProvider";
 export { MotionPresence } from "./MotionPresence";
 export { PageTransition } from "./PageTransition";
-export { MotionDialogPortal } from "./MotionDialogPortal";
 export { prefersReducedMotion } from "./prefersReducedMotion";
 export { useReducedMotionPreference } from "./useReducedMotionPreference";
 export type { ScreenTransitionDirection } from "./coreMotionTokens";
-export {
-  createAppShellMenuSheetMotionTargets,
-  createMenuTabActivationTransition,
-  createAppShellMenuTransition,
-  keepFadeOnMainThread,
-} from "./appShellMotionTokens";
-export {
-  createModalOverlayMotionTargets,
-  createModalSheetMotionTargets,
-} from "./modalMotionTokens";
+export { createMenuTabActivationTransition, keepFadeOnMainThread } from "./appShellMotionTokens";
+export { createSideSheetMotion, createSideSheetScrimMotion } from "./sideSheetMotionTokens";
 export { createToggleHintFadeMotion, createMeasuredDisclosureMotion } from "./lobbyMotionTokens";
 export {
   createPreviewCardReplaceEnterInitial,

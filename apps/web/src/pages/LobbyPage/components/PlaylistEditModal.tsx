@@ -1,21 +1,13 @@
-import { m } from "framer-motion";
-import { useMemo } from "react";
-import { createPortal } from "react-dom";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
 import { useI18n } from "../../../features/i18n";
 import {
-  createFadeMotion,
-  createStandardTransition,
+  createSideSheetMotion,
+  createSideSheetScrimMotion,
   useReducedMotionPreference,
 } from "../../../features/motion";
+import { Overlay } from "../../../features/overlay";
 import { ActionButton } from "../../../features/ui/ActionButton";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
-import {
-  isHistoryState,
-  playlistEditorHistoryStateKey,
-  playlistTrackHistoryStateKey,
-  useCurrentHistoryState,
-} from "../hooks/playlistEditorHistory";
 import { usePlaylistEditor, type SortField } from "../hooks/usePlaylistEditor";
 import { PlaylistTrackDetailsSheet } from "./PlaylistTrackDetailsSheet";
 import { PlaylistTrackList } from "./PlaylistTrackList";
@@ -29,27 +21,14 @@ interface PlaylistEditModalProps {
 
 const SORT_FIELDS: SortField[] = ["title", "artist", "year"];
 
-function createSheetMotion(reduceMotion: boolean) {
-  if (reduceMotion) {
-    return { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } };
-  }
-  return {
-    initial: { opacity: 0, x: 56 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: 56 },
-  };
-}
-
 export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
   const { t } = useI18n();
   const reduceMotion = useReducedMotionPreference();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const locationState = useCurrentHistoryState(location.state);
-  const historyEntryId = locationState[playlistEditorHistoryStateKey];
-  const selectedTrackId =
-    typeof historyEntryId === "string" ? getSelectedTrackId(locationState, historyEntryId) : null;
-  const isHistoryOpen = isOpen && typeof historyEntryId === "string";
+  const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
+
+  if (!isOpen && selectedTrackId !== null) {
+    setSelectedTrackId(null);
+  }
 
   const {
     isLoading,
@@ -69,128 +48,71 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
     [selectedTrackId, tracks],
   );
 
-  const portalTarget = typeof document !== "undefined" ? document.body : null;
-  if (!portalTarget || !isHistoryOpen) return null;
-
-  function navigateCurrentPath(state: Record<string, unknown>) {
-    navigate(
-      {
-        hash: location.hash,
-        pathname: location.pathname,
-        search: location.search,
-      },
-      { state },
-    );
-  }
-
-  function closePlaylistEditor() {
-    onClose();
-  }
-
-  function openTrackEditor(trackId: string) {
-    if (typeof historyEntryId !== "string") return;
-
-    navigateCurrentPath({
-      ...locationState,
-      [playlistEditorHistoryStateKey]: historyEntryId,
-      [playlistTrackHistoryStateKey]: { historyEntryId, trackId },
-    });
-  }
-
-  function closeTrackEditor() {
-    if (selectedTrackId) {
-      navigate(-1);
-    }
-  }
-
-  return createPortal(
-    <m.div
-      animate="animate"
-      className={chromeStyles.overlay}
-      initial={false}
-      onClick={closePlaylistEditor}
-      style={{ pointerEvents: "auto" }}
-      transition={createStandardTransition(reduceMotion)}
-      variants={createFadeMotion(reduceMotion)}
+  return (
+    <Overlay
+      isOpen={isOpen}
+      kind="sheet"
+      label={t("lobby.playlist.editLabel")}
+      layerClassName={chromeStyles.layer}
+      onDismiss={onClose}
+      panelClassName={chromeStyles.sheet}
+      panelMotion={createSideSheetMotion(reduceMotion)}
+      scrimClassName={chromeStyles.overlay}
+      scrimMotion={createSideSheetScrimMotion(reduceMotion)}
     >
-      <m.div
-        animate="animate"
-        aria-label={t("lobby.playlist.editLabel")}
-        aria-modal="true"
-        className={chromeStyles.sheet}
-        initial={false}
-        onClick={(event) => event.stopPropagation()}
-        role="dialog"
-        transition={createStandardTransition(reduceMotion)}
-        variants={createSheetMotion(reduceMotion)}
-      >
-        <div className={chromeStyles.header}>
-          <div className={chromeStyles.headerLeft}>
-            <h2 className={chromeStyles.title}>{t("lobby.playlist.title")}</h2>
-            {!isLoading && (
-              <span className={chromeStyles.trackCount}>
-                {t("lobby.playlist.trackCount", { count: tracks.length })}
-              </span>
-            )}
-          </div>
-          <div className={chromeStyles.headerActions}>
-            <CloseIconButton ariaLabel={t("lobby.playlist.close")} onClick={closePlaylistEditor} />
-          </div>
+      <div className={chromeStyles.header}>
+        <div className={chromeStyles.headerLeft}>
+          <h2 className={chromeStyles.title}>{t("lobby.playlist.title")}</h2>
+          {!isLoading && (
+            <span className={chromeStyles.trackCount}>
+              {t("lobby.playlist.trackCount", { count: tracks.length })}
+            </span>
+          )}
         </div>
+        <div className={chromeStyles.headerActions}>
+          <CloseIconButton ariaLabel={t("lobby.playlist.close")} onClick={onClose} />
+        </div>
+      </div>
 
-        <PlaylistSortBar activeField={sortField} direction={sortDir} onToggleSort={toggleSort} />
+      <PlaylistSortBar activeField={sortField} direction={sortDir} onToggleSort={toggleSort} />
 
-        {isLoading ? (
-          <div className={listStyles.loadingState}>
-            <div className={listStyles.loadingSpinner} />
-            <span>{t("lobby.playlist.loading")}</span>
-          </div>
-        ) : tracks.length === 0 ? (
-          <div className={listStyles.emptyState}>{t("lobby.playlist.empty")}</div>
-        ) : (
-          <PlaylistTrackList
-            onOpenTrack={(track) => openTrackEditor(track.id)}
-            onRemoveTrack={removeTrack}
-            onToggleSelection={toggleSelection}
-            selectedIds={selectedIds}
-            tracks={tracks}
-          />
-        )}
-
-        {selectedIds.size > 0 && (
-          <div className={listStyles.batchToolbar}>
-            <ActionButton
-              className={listStyles.batchDeleteBtn}
-              onClick={removeSelected}
-              type="button"
-              variant="danger"
-            >
-              {t("lobby.playlist.remove", { count: selectedIds.size })}
-            </ActionButton>
-          </div>
-        )}
-
-        <PlaylistTrackDetailsSheet
-          onClose={closeTrackEditor}
-          onSave={updateTrack}
-          track={selectedTrack}
+      {isLoading ? (
+        <div className={listStyles.loadingState}>
+          <div className={listStyles.loadingSpinner} />
+          <span>{t("lobby.playlist.loading")}</span>
+        </div>
+      ) : tracks.length === 0 ? (
+        <div className={listStyles.emptyState}>{t("lobby.playlist.empty")}</div>
+      ) : (
+        <PlaylistTrackList
+          onOpenTrack={(track) => setSelectedTrackId(track.id)}
+          onRemoveTrack={removeTrack}
+          onToggleSelection={toggleSelection}
+          selectedIds={selectedIds}
+          tracks={tracks}
         />
-      </m.div>
-    </m.div>,
-    portalTarget,
+      )}
+
+      {selectedIds.size > 0 && (
+        <div className={listStyles.batchToolbar}>
+          <ActionButton
+            className={listStyles.batchDeleteBtn}
+            onClick={removeSelected}
+            type="button"
+            variant="danger"
+          >
+            {t("lobby.playlist.remove", { count: selectedIds.size })}
+          </ActionButton>
+        </div>
+      )}
+
+      <PlaylistTrackDetailsSheet
+        onClose={() => setSelectedTrackId(null)}
+        onSave={updateTrack}
+        track={selectedTrack}
+      />
+    </Overlay>
   );
-}
-
-function getSelectedTrackId(
-  locationState: Record<string, unknown>,
-  historyEntryId: string,
-): string | null {
-  const entry = locationState[playlistTrackHistoryStateKey];
-  if (!isHistoryState(entry) || entry["historyEntryId"] !== historyEntryId) {
-    return null;
-  }
-
-  return typeof entry["trackId"] === "string" ? entry["trackId"] : null;
 }
 
 interface PlaylistSortBarProps {

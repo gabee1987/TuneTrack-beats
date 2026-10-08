@@ -1,6 +1,6 @@
 # 17 — Room Creation Flow, Player Identity and In-Game Metadata Override
 
-> **Status (2026-10-06):** Phases 1–2 shipped (device-level player profile, server-generated room codes, room-directory push; B12 resolved 2026-09-16) and Phase 3 shipped except two layout acceptance items. Open: Phase 4 (in-game host correction of a wrong release year — the only remaining engine change in the programme, needs a new shared event and an engine function) and the Phase 5 cleanup (three references to `getRememberedPlayerDisplayName` remain).
+> **Status (2026-10-08):** Phases 1–2 shipped (device-level player profile, server-generated room codes, room-directory push; B12 resolved 2026-09-16) and Phase 3 shipped except two layout acceptance items. Open: Phase 4 (in-game host correction of a wrong release year — the only remaining engine change in the programme, needs a new shared event and an engine function) and the Phase 5 cleanup (three references to `getRememberedPlayerDisplayName` remain), and Phase 6 (leave room for players, owner request 2026-10-08).
 > **Folded from** `docs/plans/2026-09-stability-performance/09-room-and-player-identity-flow.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
 
 > Owning layers: `apps/web/src/pages/{PlayPage,JoinRoomPage,LobbyPage}`, `apps/web/src/features/profile`,
@@ -163,3 +163,23 @@ Remaining items (everything else in the original list was deleted):
 | The metadata override lets a host rewrite a game outcome unfairly | The correction is announced to every player, host-only, audit-logged, and confined to the track currently being revealed. A deliberate owner trade (`00-index.md` §7); record it in the decision log. |
 | Re-evaluating a challenge outcome double-refunds TT tokens        | Engine-level token-conservation assertions in every override test.                                                                                                                                    |
 | Lobby layout work regresses desktop                               | Desktop assembly is separate (`LobbyPageDesktop`); the review Phase 4 specification changes mobile first and ports deliberately, with screenshots.                                                    |
+
+## 6. Phase 6 — Leave room for players · **S2** · open
+
+Owner request 2026-10-08: a connected player who is not the host needs a "Leave room" action;
+today the settings footer offers only the host's Skip turn and Close room.
+
+Facts in code: the protocol has no leave event, so the leave-game guard closes the socket to
+signal a deliberate leave (`pages/GamePage/hooks/useLeaveGameGuard.ts`), and an in-game player
+who disconnects stays reserved until they return, the host removes them or the room closes
+(`CLAUDE.md`, Connection lifecycle).
+
+Open owner decisions before design:
+
+- [ ] What happens to the leaving player's timeline, tokens and turn in a running game: removed
+      as by a host kick, or kept reserved?
+- [ ] Can the host leave, and does that transfer host immediately?
+- [ ] Is a confirmation required in the lobby as well as in a running game?
+
+Delivery follows `add-socket-action` (shared schema, ack and `requestId`, both i18n catalogues,
+server and client tests) and opens the action from the settings footer through `onClosed`.

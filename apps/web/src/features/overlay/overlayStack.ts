@@ -1,4 +1,4 @@
-export type OverlayKind = "dialog" | "sheet";
+export type OverlayKind = "blocking" | "dialog" | "sheet";
 
 export interface OverlayStackEntry {
   dismissible: boolean;
@@ -7,20 +7,35 @@ export interface OverlayStackEntry {
 }
 
 const BASE_LAYER: Record<OverlayKind, string> = {
+  blocking: "var(--z-blocking)",
   dialog: "var(--z-dialog)",
   sheet: "var(--z-sheet)",
 };
 
 const NESTED_LAYER: Record<OverlayKind, string> = {
+  blocking: "var(--z-blocking)",
   dialog: "var(--z-dialog-nested)",
   sheet: "var(--z-sheet-nested)",
 };
 
+/**
+ * A blocking entry paints above every other layer, so it also stays on top of the stack:
+ * Escape and the focus trap must never reach a dialog hidden underneath it.
+ */
 export function pushOverlayEntry(
   stack: readonly OverlayStackEntry[],
   entry: OverlayStackEntry,
 ): OverlayStackEntry[] {
-  return [...stack.filter((current) => current.id !== entry.id), entry];
+  const rest = stack.filter((current) => current.id !== entry.id);
+
+  if (entry.kind === "blocking") {
+    return [...rest, entry];
+  }
+
+  const firstBlocking = rest.findIndex((current) => current.kind === "blocking");
+  return firstBlocking === -1
+    ? [...rest, entry]
+    : [...rest.slice(0, firstBlocking), entry, ...rest.slice(firstBlocking)];
 }
 
 export function removeOverlayEntry(

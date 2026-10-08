@@ -1,7 +1,7 @@
 import { CHALLENGE_TT_COST } from "@tunetrack/shared/client";
 import { m, useIsPresent } from "framer-motion";
 import { useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { LayerPortal } from "../../../features/overlay";
 import {
   MotionPresence,
   createChallengePanelMotion,
@@ -280,7 +280,7 @@ export function ChallengeActionPanel({
 
   return portalTarget ? (
     <>
-      {createPortal(challengeCallout, portalTarget)}
+      <LayerPortal>{challengeCallout}</LayerPortal>
       {challengePhase ? actionDock : null}
       {challengeHint}
     </>

@@ -90,7 +90,7 @@ Scenario list (all pass in Chromium):
 | E10 | Guest disconnects during their turn; all remaining clients see the offline state; only the host manually skips; the guest remains reserved | Owner decision 2026-09-30                                                             |
 | E11 | All players disconnect; after the configured expiry the abandoned room closes atomically; any earlier reconnect cancels cleanup            | Owner decision 2026-09-30                                                             |
 | E12 | Host closes the room; both clients land on Home and Start is immediately usable                                                            | Exiting page must not intercept input (`14-navigation-and-overlays.md`)               |
-| E13 | Open settings on the game page; press browser back; the panel closes and the game remains                                                  | B2, `14-navigation-and-overlays.md` §4.2                                              |
+| E13 | Open settings on the game page; press browser back; the panel closes and the game remains                                                  | B2, `14-navigation-and-overlays.md` §4                                                |
 | E14 | Open Music Setup, then playlist and song editors; edit and save the year; close each layer back to room settings                           | B1, B2                                                                                |
 | E15 | First-run session sees the placement-rules hint first; dismissal persists across reload                                                    | `18-onboarding-hint-system.md`                                                        |
 

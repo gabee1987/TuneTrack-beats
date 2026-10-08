@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { I18nProvider } from "../i18n";
+import { readOverlayHistoryIds } from "../overlay/overlayHistory";
 import { AppShellMenu } from "./AppShellMenu";
 import type { AppShellMenuFooterAction } from "./AppShellMenu.types";
 
@@ -56,6 +57,9 @@ describe("AppShellMenu history", () => {
 
     await user.click(screen.getByRole("button", { name: "Open game menu" }));
     await screen.findByRole("button", { name: "Close menu" }, { timeout: 5_000 });
+    await waitFor(() => {
+      expect(readOverlayHistoryIds(router.state.location.state)).toHaveLength(1);
+    });
 
     await act(async () => {
       await router.navigate(-1);
@@ -69,13 +73,17 @@ describe("AppShellMenu history", () => {
 
   it("closes its history entry before running a footer action", async () => {
     const user = userEvent.setup();
-    const action = vi.fn();
+    const openOverlaysWhenActionRan: string[][] = [];
+    const action = vi.fn(() => {
+      openOverlaysWhenActionRan.push(readOverlayHistoryIds(router.state.location.state));
+    });
     const router = renderGameRoute({ label: "Test action", onClick: action });
 
     await user.click(screen.getByRole("button", { name: "Open game menu" }));
     await user.click(await screen.findByRole("button", { name: "Test action" }));
 
     await waitFor(() => expect(action).toHaveBeenCalledOnce());
+    expect(openOverlaysWhenActionRan).toEqual([[]]);
     await waitFor(() => {
       expect(screen.queryByRole("button", { name: "Close menu" })).toBeNull();
     });

@@ -1,5 +1,5 @@
 import { m } from "framer-motion";
-import { createPortal } from "react-dom";
+import { LayerPortal } from "../../../features/overlay";
 import type { HiddenCardMode, ThemeId } from "../../../features/preferences/uiPreferences";
 import {
   createTimelineFlyAnimationVariants,
@@ -43,37 +43,38 @@ export function TimelinePanelFlyAnimation({
     (flyAnimationState.sourceRect.top + flyAnimationState.sourceRect.height / 2);
   const flyVariants = createTimelineFlyAnimationVariants(reduceMotion, deltaX, deltaY);
 
-  return createPortal(
-    <m.div
-      animate="animate"
-      className={styles.flyToMineCard}
-      initial="initial"
-      style={{
-        height: flyAnimationState.sourceRect.height,
-        left: flyAnimationState.sourceRect.left,
-        top: flyAnimationState.sourceRect.top,
-        width: flyAnimationState.sourceRect.width,
-      }}
-      transition={createTimelineFlyAnimationTransition(reduceMotion)}
-      variants={flyVariants}
-    >
-      <PreviewCard
-        hiddenCardMode={"gradient" as HiddenCardMode}
-        isChallengeSlot={false}
-        isGhosted={false}
-        isOriginalSlot={false}
-        previewCard={flyAnimationState.card}
-        selectable={false}
-        showDevAlbumInfo={showDevAlbumInfo}
-        showDevCardInfo={true}
-        showDevGenreInfo={showDevGenreInfo}
-        showDevYearInfo={true}
-        showRevealedContent={true}
-        theme={theme}
-        tone="success"
-        transitionEvent={null}
-      />
-    </m.div>,
-    document.body,
+  return (
+    <LayerPortal>
+      <m.div
+        animate="animate"
+        className={styles.flyToMineCard}
+        initial="initial"
+        style={{
+          height: flyAnimationState.sourceRect.height,
+          left: flyAnimationState.sourceRect.left,
+          top: flyAnimationState.sourceRect.top,
+          width: flyAnimationState.sourceRect.width,
+        }}
+        transition={createTimelineFlyAnimationTransition(reduceMotion)}
+        variants={flyVariants}
+      >
+        <PreviewCard
+          hiddenCardMode={"gradient" as HiddenCardMode}
+          isChallengeSlot={false}
+          isGhosted={false}
+          isOriginalSlot={false}
+          previewCard={flyAnimationState.card}
+          selectable={false}
+          showDevAlbumInfo={showDevAlbumInfo}
+          showDevCardInfo={true}
+          showDevGenreInfo={showDevGenreInfo}
+          showDevYearInfo={true}
+          showRevealedContent={true}
+          theme={theme}
+          tone="success"
+          transitionEvent={null}
+        />
+      </m.div>
+    </LayerPortal>
   );
 }

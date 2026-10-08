@@ -1,6 +1,6 @@
 import { m, useIsPresent } from "framer-motion";
 import { useSyncExternalStore } from "react";
-import { createPortal } from "react-dom";
+import { LayerPortal } from "../../../features/overlay";
 import {
   createActionDockMotion,
   createStandardTransition,
@@ -52,7 +52,7 @@ export function ActionDock({ children, className, containerRef }: ActionDockProp
     </m.div>
   );
 
-  return portalTarget ? createPortal(dock, portalTarget) : dock;
+  return portalTarget ? <LayerPortal>{dock}</LayerPortal> : dock;
 }
 
 interface ActionButtonProps {

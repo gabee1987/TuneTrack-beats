@@ -1,9 +1,12 @@
 import type { PublicTrackInfo, TrackMetadataStatus } from "@tunetrack/shared/client";
-import { m } from "framer-motion";
 import { type FormEvent, useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { useI18n } from "../../../features/i18n";
-import { MotionPresence, useReducedMotionPreference } from "../../../features/motion";
+import {
+  createSideSheetMotion,
+  createSideSheetScrimMotion,
+  useReducedMotionPreference,
+} from "../../../features/motion";
+import { Overlay } from "../../../features/overlay";
 import { ActionButton } from "../../../features/ui/ActionButton";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { TextInput } from "../../../features/ui/TextInput";
@@ -65,160 +68,143 @@ export function PlaylistTrackDetailsSheet({
 
   const flags = track ? getPlaylistTrackCurationFlags(track) : [];
 
-  const detailsSheet = (
-    <MotionPresence>
+  // A separate overlay, never nested in the panel that opened it: inside that panel it sat
+  // below the panel header stacking context (B1).
+  return (
+    <Overlay
+      isOpen={track !== null}
+      kind="sheet"
+      label={t("lobby.playlist.detailsTitle")}
+      layerClassName={styles.detailsLayer}
+      onDismiss={onClose}
+      panelClassName={styles.detailsSheet}
+      panelMotion={createSideSheetMotion(reduceMotion)}
+      scrimClassName={styles.detailsOverlay}
+      scrimMotion={createSideSheetScrimMotion(reduceMotion)}
+    >
       {track ? (
-        <m.div
-          animate={{ opacity: 1 }}
-          className={styles.detailsOverlay}
-          exit={{ opacity: 0 }}
-          initial={{ opacity: 0 }}
-          onClick={onClose}
-          transition={{ duration: 0.16 }}
-        >
-          <m.form
-            animate={{ x: 0 }}
-            className={styles.detailsSheet}
-            exit={{ x: reduceMotion ? 0 : 40 }}
-            initial={{ x: reduceMotion ? 0 : 40 }}
-            onClick={(event) => event.stopPropagation()}
-            onSubmit={handleSubmit}
-            transition={
-              reduceMotion
-                ? { duration: 0.15 }
-                : { type: "spring", damping: 30, stiffness: 360, mass: 0.8 }
-            }
-          >
-            <div className={styles.detailsHeader}>
-              <div>
-                <p className={styles.detailsEyebrow}>{t("lobby.playlist.detailsEyebrow")}</p>
-                <h3 className={styles.detailsTitle}>{t("lobby.playlist.detailsTitle")}</h3>
-              </div>
-              <CloseIconButton ariaLabel={t("lobby.playlist.detailsClose")} onClick={onClose} />
+        <form className={styles.detailsForm} onSubmit={handleSubmit}>
+          <div className={styles.detailsHeader}>
+            <div>
+              <p className={styles.detailsEyebrow}>{t("lobby.playlist.detailsEyebrow")}</p>
+              <h3 className={styles.detailsTitle}>{t("lobby.playlist.detailsTitle")}</h3>
             </div>
+            <CloseIconButton ariaLabel={t("lobby.playlist.detailsClose")} onClick={onClose} />
+          </div>
 
-            <div className={styles.detailsArtworkRow}>
-              <div className={styles.detailsArtwork}>
-                {track.artworkUrl ? (
-                  <img alt="" className={styles.trackArtworkImg} src={track.artworkUrl} />
-                ) : (
-                  <MusicNoteIcon />
-                )}
+          <div className={styles.detailsArtworkRow}>
+            <div className={styles.detailsArtwork}>
+              {track.artworkUrl ? (
+                <img alt="" className={styles.trackArtworkImg} src={track.artworkUrl} />
+              ) : (
+                <MusicNoteIcon />
+              )}
+            </div>
+            <div className={styles.detailsSummary}>
+              <div className={styles.detailsAlbumRow}>
+                <span className={styles.detailsAlbumTitle}>{track.albumTitle}</span>
+                <span
+                  className={styles.detailsSourceYear}
+                  title={t("lobby.playlist.sourceYearShort", {
+                    year: track.sourceReleaseYear ?? track.releaseYear,
+                  })}
+                >
+                  {track.sourceReleaseYear ?? track.releaseYear}
+                </span>
               </div>
-              <div className={styles.detailsSummary}>
-                <div className={styles.detailsAlbumRow}>
-                  <span className={styles.detailsAlbumTitle}>{track.albumTitle}</span>
-                  <span
-                    className={styles.detailsSourceYear}
-                    title={t("lobby.playlist.sourceYearShort", {
-                      year: track.sourceReleaseYear ?? track.releaseYear,
-                    })}
+              <strong>{track.title}</strong>
+              <span className={styles.detailsArtist}>{track.artist}</span>
+              {flags.includes("suspicious_album") ? (
+                <span className={styles.detailsWarning}>
+                  <WarningIcon />
+                  {t("lobby.playlist.statusCheck")}
+                </span>
+              ) : null}
+            </div>
+          </div>
+
+          <div className={styles.detailsFields}>
+            <label className={styles.fieldLabel}>
+              <span>{t("lobby.playlist.fieldTitle")}</span>
+              <TextInput
+                className={styles.detailsTextInput}
+                maxLength={200}
+                onChange={(event) => setTitle(event.target.value)}
+                required
+                type="text"
+                value={title}
+              />
+            </label>
+            <label className={styles.fieldLabel}>
+              <span>{t("lobby.playlist.fieldArtist")}</span>
+              <TextInput
+                className={styles.detailsTextInput}
+                maxLength={200}
+                onChange={(event) => setArtist(event.target.value)}
+                required
+                type="text"
+                value={artist}
+              />
+            </label>
+            <label className={styles.fieldLabel}>
+              <span>{t("lobby.playlist.fieldAlbum")}</span>
+              <TextInput
+                className={styles.detailsTextInput}
+                maxLength={200}
+                onChange={(event) => setAlbumTitle(event.target.value)}
+                required
+                type="text"
+                value={albumTitle}
+              />
+            </label>
+            <label className={styles.fieldLabel}>
+              <span>{t("lobby.playlist.fieldReleaseYear")}</span>
+              <TextInput
+                className={styles.detailsTextInput}
+                max={new Date().getFullYear() + 1}
+                min={1900}
+                onChange={(event) => setReleaseYear(event.target.value)}
+                required
+                type="number"
+                value={releaseYear}
+              />
+            </label>
+            <div className={styles.statusField}>
+              <span>{t("lobby.playlist.fieldStatus")}</span>
+              <div className={styles.statusSegmentedControl}>
+                {METADATA_STATUS_OPTIONS.map((status) => (
+                  <button
+                    key={status}
+                    className={`${styles.statusOption} ${
+                      metadataStatus === status ? styles.statusOptionActive : ""
+                    }`}
+                    onClick={() => setMetadataStatus(status)}
+                    type="button"
                   >
-                    {track.sourceReleaseYear ?? track.releaseYear}
-                  </span>
-                </div>
-                <strong>{track.title}</strong>
-                <span className={styles.detailsArtist}>{track.artist}</span>
-                {flags.includes("suspicious_album") ? (
-                  <span className={styles.detailsWarning}>
-                    <WarningIcon />
-                    {t("lobby.playlist.statusCheck")}
-                  </span>
-                ) : null}
+                    {getStatusLabel(t, status)}
+                  </button>
+                ))}
               </div>
             </div>
+          </div>
 
-            <div className={styles.detailsFields}>
-              <label className={styles.fieldLabel}>
-                <span>{t("lobby.playlist.fieldTitle")}</span>
-                <TextInput
-                  className={styles.detailsTextInput}
-                  maxLength={200}
-                  onChange={(event) => setTitle(event.target.value)}
-                  required
-                  type="text"
-                  value={title}
-                />
-              </label>
-              <label className={styles.fieldLabel}>
-                <span>{t("lobby.playlist.fieldArtist")}</span>
-                <TextInput
-                  className={styles.detailsTextInput}
-                  maxLength={200}
-                  onChange={(event) => setArtist(event.target.value)}
-                  required
-                  type="text"
-                  value={artist}
-                />
-              </label>
-              <label className={styles.fieldLabel}>
-                <span>{t("lobby.playlist.fieldAlbum")}</span>
-                <TextInput
-                  className={styles.detailsTextInput}
-                  maxLength={200}
-                  onChange={(event) => setAlbumTitle(event.target.value)}
-                  required
-                  type="text"
-                  value={albumTitle}
-                />
-              </label>
-              <label className={styles.fieldLabel}>
-                <span>{t("lobby.playlist.fieldReleaseYear")}</span>
-                <TextInput
-                  className={styles.detailsTextInput}
-                  max={new Date().getFullYear() + 1}
-                  min={1900}
-                  onChange={(event) => setReleaseYear(event.target.value)}
-                  required
-                  type="number"
-                  value={releaseYear}
-                />
-              </label>
-              <div className={styles.statusField}>
-                <span>{t("lobby.playlist.fieldStatus")}</span>
-                <div className={styles.statusSegmentedControl}>
-                  {METADATA_STATUS_OPTIONS.map((status) => (
-                    <button
-                      key={status}
-                      className={`${styles.statusOption} ${
-                        metadataStatus === status ? styles.statusOptionActive : ""
-                      }`}
-                      onClick={() => setMetadataStatus(status)}
-                      type="button"
-                    >
-                      {getStatusLabel(t, status)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className={styles.detailsActions}>
-              <ActionButton
-                className={styles.secondaryButton}
-                onClick={onClose}
-                type="button"
-                variant="neutral"
-              >
-                {t("common.cancel")}
-              </ActionButton>
-              <ActionButton className={styles.primaryButton} type="submit">
-                {t("lobby.playlist.saveTrack")}
-              </ActionButton>
-            </div>
-          </m.form>
-        </m.div>
+          <div className={styles.detailsActions}>
+            <ActionButton
+              className={styles.secondaryButton}
+              onClick={onClose}
+              type="button"
+              variant="neutral"
+            >
+              {t("common.cancel")}
+            </ActionButton>
+            <ActionButton className={styles.primaryButton} type="submit">
+              {t("lobby.playlist.saveTrack")}
+            </ActionButton>
+          </div>
+        </form>
       ) : null}
-    </MotionPresence>
+    </Overlay>
   );
-
-  if (typeof document === "undefined") {
-    return null;
-  }
-
-  // Always portalled: nesting this inside the panel that opened it puts it below that
-  // panel's own header stacking context.
-  return createPortal(detailsSheet, document.body);
 }
 
 interface EditableTrackFields {

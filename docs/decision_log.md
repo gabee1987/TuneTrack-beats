@@ -12,6 +12,30 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### One opaque slide for every side sheet (2026-10-08)
+
+- **Settings, Music Setup, the playlist editor and the song editor share `createSideSheetMotion`:
+  the panel stays opaque and travels its full width (320 ms emphasised decelerate in, 240 ms
+  emphasised accelerate out); only the scrim fades, on the same timing.** Why: the panels faded
+  while sliding, so the screen underneath showed through on every open (frame capture), and
+  each sheet moved differently (owner report). Replaces the settings menu's 64 px slide-and-fade.
+
+### Overlays guard scrolling instead of locking the root (2026-10-08)
+
+- **An open overlay refuses touch and wheel gestures that start outside its panel; it never
+  sets `overflow: hidden` on `html` or `body`.** Why: on Android Chrome an unscrollable root
+  brings the address bar back, so the viewport resized under every opening overlay; the page
+  re-laid out (flicker, glitching motion) and taps landed offset until the next scroll (owner
+  report). Exiting overlays also stop taking input at once, so a stalled exit cannot block the
+  page (`05` E2, §9).
+
+### Back on the room-closed dialog resets (2026-10-08)
+
+- **Browser and Android Back on `RoomResetModal` run its action: reset and go Home.** Why:
+  leaving the page by Back skipped the socket reset and could land on the dead room's lobby;
+  Escape and the scrim still do nothing. The button pops the dialog's history entry before
+  the reset, so Home replaces the room entry as before (`05` E2, §9).
+
 ### Overlay host: declarative overlays on one stack (2026-10-08)
 
 - **Callers render `Overlay` where they are; `features/overlay` keeps one stack.** Why: the

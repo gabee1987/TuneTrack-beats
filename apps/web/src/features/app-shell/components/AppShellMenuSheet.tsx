@@ -1,12 +1,6 @@
 import { AnimatePresence, LayoutGroup, m } from "framer-motion";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import {
-  createAppShellMenuSheetMotionTargets,
-  createAppShellMenuTransition,
-  createMenuTabActivationTransition,
-  keepFadeOnMainThread,
-  useReducedMotionPreference,
-} from "../../motion";
+import { createMenuTabActivationTransition, useReducedMotionPreference } from "../../motion";
 import { useI18n } from "../../i18n";
 import { subscribeViewportResize } from "../../viewport/viewportStore";
 import type {
@@ -47,7 +41,6 @@ export function AppShellMenuSheet({
   const [showTopFade, setShowTopFade] = useState(false);
   const [showBottomFade, setShowBottomFade] = useState(false);
   const resolvedFooterActions = footerActions ?? (footerAction ? [footerAction] : []);
-  const menuSheetMotionTargets = createAppShellMenuSheetMotionTargets(reduceMotion);
   const updatePanelFadeState = useCallback(() => {
     const panelElement = panelRef.current;
     if (!panelElement) {
@@ -100,14 +93,7 @@ export function AppShellMenuSheet({
   );
 
   return (
-    <m.aside
-      animate={menuSheetMotionTargets.animate}
-      className={styles.menuSheet}
-      exit={menuSheetMotionTargets.exit}
-      initial={menuSheetMotionTargets.initial}
-      onUpdate={keepFadeOnMainThread}
-      transition={createAppShellMenuTransition(reduceMotion)}
-    >
+    <>
       <header className={styles.menuHeader}>
         <div>
           {subtitle ? <p className={styles.menuSubtitle}>{subtitle}</p> : null}
@@ -202,6 +188,6 @@ export function AppShellMenuSheet({
           )}
         </footer>
       ) : null}
-    </m.aside>
+    </>
   );
 }

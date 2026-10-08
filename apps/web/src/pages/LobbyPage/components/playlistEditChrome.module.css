@@ -1,11 +1,17 @@
-.overlay {
+/* The scrim sits beside the sheet, not around it, so their fades do not multiply. */
+.layer {
   position: fixed;
   inset: 0;
   z-index: var(--z-sheet);
-  background: var(--color-overlay-strong);
   display: flex;
   justify-content: flex-end;
   align-items: stretch;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--color-overlay-strong);
 }
 
 .sheet {
@@ -93,16 +99,22 @@
  * playlist sheet it landed under that sheet's `.header` (z-index 4), which covered its
  * close button and swallowed the taps meant for it.
  */
-.detailsOverlay {
+.detailsLayer {
   position: fixed;
   inset: 0;
   z-index: var(--z-sheet-nested);
-  background: var(--color-overlay-strong);
   display: flex;
   justify-content: flex-end;
 }
 
+.detailsOverlay {
+  position: absolute;
+  inset: 0;
+  background: var(--color-overlay-strong);
+}
+
 .detailsSheet {
+  position: relative;
   width: min(100%, 520px);
   height: 100%;
   border: none;
@@ -112,6 +124,11 @@
   display: flex;
   flex-direction: column;
   color: var(--color-text-primary);
+}
+
+/* The overlay panel is the flex column; the form only groups the fields for submit. */
+.detailsForm {
+  display: contents;
 }
 
 .detailsHeader {

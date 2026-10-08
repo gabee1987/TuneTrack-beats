@@ -1,5 +1,5 @@
-import { m } from "framer-motion";
-import { MotionPresence, createDialogCardMotion, useReducedMotionPreference } from "../motion";
+import { useReducedMotionPreference } from "../motion";
+import { Overlay } from "../overlay";
 import type { AppLoadingState } from "./AppLoading.types";
 import styles from "./AppLoadingOverlay.module.css";
 
@@ -9,39 +9,32 @@ interface AppLoadingOverlayProps {
 
 export function AppLoadingOverlay({ loading }: AppLoadingOverlayProps) {
   const reduceMotion = useReducedMotionPreference();
-  const overlayMotion = createLoadingOverlayMotion(reduceMotion);
 
   return (
-    <MotionPresence>
+    <Overlay
+      dismissible={false}
+      isOpen={loading !== null}
+      kind="blocking"
+      label={loading?.title ?? ""}
+      onDismiss={ignoreDismiss}
+      panelClassName={styles.panel}
+      scrimClassName={styles.overlay}
+      scrimMotion={createLoadingOverlayMotion(reduceMotion)}
+    >
       {loading ? (
-        <m.div
-          animate="animate"
-          aria-live="polite"
-          aria-modal="true"
-          className={styles.overlay}
-          exit="exit"
-          initial="initial"
-          role="dialog"
-          variants={overlayMotion}
-        >
-          <m.div
-            animate="animate"
-            className={styles.panel}
-            exit="exit"
-            initial="initial"
-            variants={createDialogCardMotion(reduceMotion)}
-          >
-            <MusicLoadingAnimation />
-            <div className={styles.copy}>
-              <strong>{loading.title}</strong>
-              {loading.message ? <span>{loading.message}</span> : null}
-            </div>
-          </m.div>
-        </m.div>
+        <>
+          <MusicLoadingAnimation />
+          <div aria-live="polite" className={styles.copy}>
+            <strong>{loading.title}</strong>
+            {loading.message ? <span>{loading.message}</span> : null}
+          </div>
+        </>
       ) : null}
-    </MotionPresence>
+    </Overlay>
   );
 }
+
+function ignoreDismiss() {}
 
 function createLoadingOverlayMotion(reduceMotion: boolean) {
   return {

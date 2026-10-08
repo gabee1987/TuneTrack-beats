@@ -51,17 +51,24 @@
   background: var(--color-accent-brand-hover);
 }
 
-.spotifySetupOverlay {
+/* The scrim sits beside the sheet, not around it, so their fades do not multiply. */
+.spotifySetupLayer {
   position: fixed;
   inset: 0;
   z-index: var(--z-sheet);
   padding: 18px;
-  background: color-mix(in srgb, var(--color-overlay, rgba(3, 4, 12, 0.72)) 92%, black 8%);
   display: grid;
   place-items: center;
 }
 
+.spotifySetupOverlay {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--color-overlay, rgba(3, 4, 12, 0.72)) 92%, black 8%);
+}
+
 .spotifySetupSheet {
+  position: relative;
   width: min(1180px, 100%);
   height: min(900px, 100%);
   max-height: calc(100vh - 28px);
@@ -412,7 +419,7 @@
 }
 
 @media (max-width: 440px) {
-  .spotifySetupOverlay {
+  .spotifySetupLayer {
     padding: 0;
   }
 

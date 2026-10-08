@@ -1,6 +1,6 @@
 # 14 — Navigation and Overlay System
 
-> **Status (2026-10-07):** Phase 1 (z-index scale and guard, `05` E1), Phase 2 §3.2 (push/replace semantics), Phase 4 (B1, song-editor layering) and Phase 5 (B5, settings flicker) shipped; the browser and Android back button closes settings, Music Setup and the nested playlist/track editors through same-path router state (E13, E14). The overlay host and the first migrations shipped 2026-10-08 (`05` E2a: steps 1–4 and the info dialogs). Open: the transition guard and route order (Phase 2 §3.1, §3.3), §4.3 steps 5–10 (`05` E2b), the overlay contract (Phase 6).
+> **Status (2026-10-08):** Phase 1 (z-index scale and guard, `05` E1), Phase 2 §3.2 (push/replace semantics), Phase 4 (B1, song-editor layering) and Phase 5 (B5, settings flicker) shipped; the browser and Android back button closes settings, Music Setup and the nested playlist/track editors through same-path router state (E13, E14). Phase 3, the overlay host, shipped 2026-10-08 (`05` E2). Open: the transition guard and route order (Phase 2 §3.1, §3.3), the overlay contract (Phase 6).
 > **Folded from** `docs/plans/2026-09-stability-performance/06-navigation-and-overlays.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
 >
 > **Binding budgets, order and corrections (2026-10-07):** `05-performance-and-robustness-plan.md` §2 (budgets), §8 (rollout order), §9 (corrections to this document). Where they differ, `05` wins.
@@ -117,122 +117,16 @@ sit at 0 alongside `/`, so Home to Play has no direction. Extend the ladder:
 - [ ] Home to Play and Play to Lobby animate with a forward direction; the reverse animates
       backwards.
 
-## 4. Phase 3 — An app-level overlay host · **S1** · partly shipped (`05` E2a)
+## 4. Phase 3 — An app-level overlay host · **S1** · shipped (`05` E2)
 
-**Review finding:** F-06. **Bug register:** B2 (remaining overlay-stack component tests).
-
-### 4.1 Design
-
-One host, mounted **outside** the page-transition tree so it is never captured by an
-exiting page, and one stack so ordering, focus, scroll locking and back handling are
-solved once.
-
-    apps/web/src/features/overlay/
-      OverlayHost.tsx          // renders the stack; mounted in App.tsx, sibling to RouterProvider
-      OverlayProvider.tsx      // context + reducer holding the stack
-      useOverlay.ts            // open/close API for callers
-      overlayStack.ts          // pure reducer + selectors  (unit-tested)
-      overlayHistory.ts        // router-state integration  (unit-tested)
-      OverlayScrim.tsx         // shared scrim with the standard fade
-      types.ts
-
-Stack entry:
-
-    interface OverlayEntry {
-      id: string;
-      kind: "dialog" | "sheet" | "blocking" | "hint";
-      dismissible: boolean;      // false for the recovery modal
-      render: () => ReactNode;
-      onDismiss?: () => void;
-    }
-
-Behaviour:
-
-- The topmost dismissible entry closes on Escape, on scrim click, and on back.
-- `kind` selects the z-layer from the Phase 1 token scale, and nesting depth selects
-  between `--z-dialog` and `--z-dialog-nested` (likewise for sheets) — which is the
-  systematic fix behind B1.
-- Body scroll is locked while any entry is open, and restored (including scroll position)
-  when the stack empties. Implement once here; today no overlay locks scroll at all, which
-  is why background content moves under open sheets on iOS.
-- Focus is trapped in the topmost entry and restored to the trigger on close. No overlay
-  does this today, so the app is currently not keyboard- or screen-reader-navigable once a
-  dialog opens.
-- `aria-modal`, `role="dialog"` and a labelled title are provided by the host, not by each
-  caller.
-
-### 4.2 Back-button integration
-
-**Mechanism decided:** overlays record themselves as **same-path React Router history
-entries carrying router state**, not raw `history.pushState`. Recorded in
-`docs/decision_log.md` (2026-10-06). The decision was settled in practice by E13 and E14:
-`AppShellMenu`, Music Setup and the nested playlist/track editors push one same-path
-router-state entry each (`pages/LobbyPage/hooks/playlistEditorHistory.ts`), browser and
-Android back close only the topmost migrated overlay without leaving or remounting the
-page, and programmatic close follows the same history path. Route transitions are keyed by
-pathname rather than the opaque history key so that a same-path entry does not remount the
-page or rebuild its socket.
-
-`overlayHistory.ts` generalises that pattern so each overlay stops re-implementing it:
-
-- When the stack goes from empty to non-empty, navigate to the current pathname with
-  `{ state: { overlayDepth: n } }`; each additional entry pushes again, so depth matches
-  the stack.
-- A location change whose state carries a lower `overlayDepth` closes the topmost entry and
-  does **not** navigate anywhere else.
-- Closing an entry programmatically (button, scrim, Escape) calls `navigate(-1)` if the
-  entry owns a history record, so the two paths converge on one code path rather than
-  diverging.
-- Guard against re-entrancy with a flag, so a history-driven close does not itself call
-  `navigate(-1)`.
-- On a pathname change, close the whole stack and reconcile depth.
-
-The overlays still outside history are `SongInfoModal`, the kick confirmation,
-`RoomResetModal` and `BottomSheet` (with `AdaptiveSelectSheet`), plus the generic `Dialog`
-primitive (F-06). They are migrated onto the host in §4.3 rather than given one more
-bespoke history hook.
-
-### 4.3 Migration
-
-Migrate one overlay at a time, in ascending risk order, keeping the old component's public
-props so call sites do not change in the same commit:
-
-1. `SongInfoModal` — simplest, read-only.
-2. Kick confirmation in `GameMenuPlayerItem`.
-3. `features/ui/primitives/Dialog`.
-4. `features/ui/BottomSheet` and `AdaptiveSelectSheet`.
-5. `AppShellMenuDialog` (settings) — history already works; move the bespoke entry onto
-   the host without changing behaviour (E13 must stay green).
-6. `SpotifySetupModal` — as above (E14).
-7. `PlaylistEditModal` plus `PlaylistTrackDetailsSheet` as a nested pair — history already
-   works (E14); the host assigns `--z-sheet-nested` and removes the raw 1400 literal.
-8. `RoomResetModal` as `kind: "blocking"`, `dismissible: false` — the entry lives in the
-   host, not in the page being unmounted.
-9. `AppLoadingOverlay` as `kind: "blocking"`.
-10. `ConnectionBanner` from `13-network-protocol-and-resilience.md` §5.2 — new, built on
-    the host from the start.
-
-`MotionDialogPortal` becomes an internal implementation detail of the host and is no longer
-imported by pages.
-
-### Acceptance
-
-- [ ] No page component calls `createPortal` directly — ratchet in
-      `test/guards/overlaySites.test.ts`; nine files remain for E2b.
-- [x] Component tests (`19-testing-strategy.md` §4): Escape closes the top entry only; scrim
-      click closes the top entry only; back closes the top entry and does not navigate; a
-      non-dismissible entry ignores all three; focus returns to the trigger; body scroll is
-      locked while open and restored after — `features/overlay/Overlay.test.tsx` (a
-      non-dismissible entry takes no history entry; Back on one is settled with
-      `RoomResetModal` in E2b).
-- [x] E2E: open settings on the game page, press browser back, panel closes and the game is
-      still on screen (E13).
-- [x] E2E: open Music Setup, then the playlist and song editors; close each layer and
-      verify playlist close reveals Music Setup before Music Setup close returns to room
-      settings (E14).
-- [x] E2E or component test: back closes `SongInfoModal`, the kick confirmation and an
-      `AdaptiveSelectSheet` without leaving the page — `SongInfoModal.test.tsx`,
-      `AdaptiveSelectSheet.test.tsx`; the kick confirmation is the same `Overlay`.
+**Shipped 2026-10-08** (`05` E2, decision 21; deviations in `05` §9). A declarative
+`Overlay` on one stack in `features/overlay` owns the layer, Escape and scrim for the top
+entry, focus and its return, the Tab trap, a scroll guard (no root overflow change; `05` §9) and one same-path history entry
+per overlay; `LayerPortal` lifts non-modal layers. Every dialog and sheet runs on it, and no
+page calls `createPortal`. Proof: `features/overlay/Overlay.test.tsx`, `overlayStack.test.ts`,
+`SongInfoModal.test.tsx`, `AdaptiveSelectSheet.test.tsx`, `AppShellMenu.test.tsx`,
+`PlaylistEditModal.test.tsx`, `RoomResetModal.test.tsx`, `test/guards/overlaySites.test.ts`,
+E2E E13 and E14.
 
 ## 5. Phase 4 — Fix the song-editor layering explicitly · **S1** · shipped (B1)
 

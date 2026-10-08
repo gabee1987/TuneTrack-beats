@@ -146,13 +146,13 @@ these documents ships, update that document (shipped note + proving test), this 
 | `11-runtime-and-motion-performance.md`  | 03            | Phases 2–6 shipped 2026-10-07 (`05` C1–C7); Phase 1 reverted by decision 19. Device traces and `runtime-baseline.md` open.                                                                                                                                                 |
 | `12-backend-stability-and-sessions.md`  | 04            | Phase 1 shipped (`disconnectLifecycle.test.ts`, E10/E11). Phase 2 shipped 2026-10-07 (`05` A6, A7); phases 4, 5 open; 3.1 shipped 2026-10-07 (`05` A8), 3.2 superseded, 3.3 shipped. Hotfixes B-01, B-02, B-03 and B-11 (timer guards, fatal handlers) shipped 2026-10-06. |
 | `13-network-protocol-and-resilience.md` | 05            | Phase 1 partial, Phase 2 shipped 2026-10-07 (`05` B1), Phases 3–4 shipped (acks + `requestId`), Phase 5 shipped 2026-10-07 (`05` B2), Phase 6 open.                                                                                                                        |
-| `14-navigation-and-overlays.md`         | 06            | Phase 1 shipped 2026-10-07 (`05` E1); 3.1 and 3.3 open, 3.2 shipped; overlay host and steps 1–4 shipped 2026-10-08 (`05` E2a), steps 5–10 open (E2b); Phases 4–5 shipped; Phase 6 contract unwritten.                                                                      |
+| `14-navigation-and-overlays.md`         | 06            | Phase 1 shipped 2026-10-07 (`05` E1); 3.1 and 3.3 open, 3.2 shipped; Phase 3 (overlay host) shipped 2026-10-08 (`05` E2); Phases 4–5 shipped; Phase 6 contract unwritten.                                                                                                  |
 | `15-design-system-consolidation.md`     | 07            | Phases 1–5 open; Phase 6 partial (`/dev/ui` exists). Guard tests exist with allowlists.                                                                                                                                                                                    |
 | `16-spotify-session-and-playback.md`    | 08            | Phases 1–2 shipped except Free-tier parity (3.5) and Media Session (3.6). Phase 3 gated by decision 10. Phase 4 open (`useSpotifyPlaybackSdk.ts` 746 lines).                                                                                                               |
-| `17-room-and-player-identity-flow.md`   | 09            | Phases 1–2 shipped, Phase 3 two layout items open, Phase 4 (in-game metadata correction) open — the only engine change in the programme, Phase 5 three stale references.                                                                                                   |
+| `17-room-and-player-identity-flow.md`   | 09            | Phases 1–2 shipped, Phase 3 two layout items open, Phase 4 (in-game metadata correction) open — the only engine change in the programme, Phase 5 three stale references, Phase 6 (leave room, owner request 2026-10-08) open.                                              |
 | `18-onboarding-hint-system.md`          | 10            | Shipped (11 hints, settings, en/hu, E15). Open: history-back dismissal, anchor visibility, replay UI, bubble tests, `home-start` hint, budget check. Catalogue rules remain normative.                                                                                     |
 | `19-testing-strategy.md`                | 11            | Phase 1 shipped; Phase 2 three of four guards; Phase 3 Chromium only, one 848-line spec to split; Phase 4 two of eleven files; Phase 5 (coverage, CI, root `verify`) open. Phase 3 of this programme turns §8/§9 into skills.                                              |
-| `20-bug-register.md`                    | 12            | Accurate. B2, B8, B14, B18, B4, B3, B11 active; thirteen resolved; three tech-debt notes added.                                                                                                                                                                            |
+| `20-bug-register.md`                    | 12            | Accurate. B8, B14, B18, B4, B3, B11 active; fourteen resolved; three tech-debt notes added.                                                                                                                                                                                |
 
 ### Programme exit criteria (corrected 2026-10-06)
 
@@ -161,9 +161,9 @@ these documents ships, update that document (shipped note + proving test), this 
 - [x] `vendor-zod` absent from the web bundle (`10`) — `05` D2, `measure:bundle`.
 - [x] No raw `z-index` literal in CSS modules; `zIndexScale` guard exists (`14`) — `05` E1.
 - [ ] One button, one icon-button and one dialog/sheet component in use (`15`).
-- [ ] Browser and Android Back close the topmost overlay — partial: settings, Music Setup,
-      playlist and track editors, `SongInfoModal`, kick confirm, `Dialog` and `BottomSheet`
-      done (`05` E2a); `RoomResetModal` open (`14`).
+- [x] Browser and Android Back close the topmost overlay — every dialog and sheet runs on
+      `features/overlay` (`05` E2); Back on `RoomResetModal` resets like its button.
+      `Overlay.test.tsx`, E2E E13 and E14.
 - [x] Host reconnect rejoins the same room and identity — proven by E2E E8. [ ] Server
       integration test still missing (`12`, `13`).
 - [x] In-game disconnect retained, offline state visible, host can skip (E10,

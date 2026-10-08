@@ -70,25 +70,38 @@ function setStack(nextStack: OverlayStackEntry[]) {
   listeners.forEach((listener) => listener());
 }
 
-/** Escape, the focus trap and the scroll lock exist once for the whole stack. */
+/**
+ * Escape, the focus trap and the scroll guard exist once for the whole stack.
+ *
+ * The page behind is held still by refusing scroll gestures that start outside the top panel,
+ * never by `overflow: hidden` on the root: an unscrollable root makes Android Chrome bring its
+ * address bar back, the viewport resizes under the opening overlay, the page re-lays out
+ * (flicker) and taps land offset by the bar's height (decision log 2026-10-08).
+ */
 function holdDocument(): () => void {
-  const { body, documentElement } = document;
-  const scrollY = window.scrollY;
-  const previousBodyOverflow = body.style.overflow;
-  const previousRootOverflow = documentElement.style.overflow;
-  body.style.overflow = "hidden";
-  documentElement.style.overflow = "hidden";
+  const listenerOptions = { capture: true, passive: false };
   document.addEventListener("keydown", handleKeyDown);
+  document.addEventListener("touchmove", guardScroll, listenerOptions);
+  document.addEventListener("wheel", guardScroll, listenerOptions);
 
   return () => {
     document.removeEventListener("keydown", handleKeyDown);
-    body.style.overflow = previousBodyOverflow;
-    documentElement.style.overflow = previousRootOverflow;
-
-    if (window.scrollY !== scrollY) {
-      window.scrollTo(0, scrollY);
-    }
+    document.removeEventListener("touchmove", guardScroll, listenerOptions);
+    document.removeEventListener("wheel", guardScroll, listenerOptions);
   };
+}
+
+function guardScroll(event: Event) {
+  const top = getTopOverlayEntry(stack);
+  const panel = top ? (registrations.get(top.id)?.getPanel() ?? null) : null;
+
+  if (!event.cancelable || !panel) {
+    return;
+  }
+
+  if (!(event.target instanceof Node) || !panel.contains(event.target)) {
+    event.preventDefault();
+  }
 }
 
 function handleKeyDown(event: KeyboardEvent) {

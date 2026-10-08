@@ -1,6 +1,6 @@
 # 20 — Active Defect Register
 
-> **Status (2026-10-06):** accurate against code. Seven active defects; thirteen resolved.
+> **Status (2026-10-08):** accurate against code. Six active defects; fourteen resolved.
 > **Folded from** `docs/plans/2026-09-stability-performance/12-bug-register.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`. The findings register `01-review-findings.md` holds the review findings (`B-`/`F-`/`U-`/`D-`/`T-` ids); this file holds user-visible defects (`B1`–`B20`).
 
 This register contains only actionable defects. Resolved items are kept as a compact ledger
@@ -17,40 +17,12 @@ Status meanings:
 
 | ID  | Severity | Status                             | Next proof                                                             |
 | --- | -------- | ---------------------------------- | ---------------------------------------------------------------------- |
-| B2  | S1       | Open                               | Remaining overlay-stack component tests                                |
 | B8  | S1       | Partially fixed                    | Phone offline for 10 s during a game recovers without an error toast   |
 | B14 | S1       | Needs reproduction                 | Capture route, connection state and overlays when the UI becomes inert |
 | B18 | S2       | Open                               | Reproduce and instrument a page exit that never completes              |
 | B4  | S1       | Open; device confirmation required | iPhone drag-versus-scroll test                                         |
 | B3  | S2       | Open                               | Design-system consolidation acceptance criteria                        |
 | B11 | S3       | Partially fixed                    | One shared destructive icon-button treatment                           |
-
-## B2 · Navigation and overlays behave inconsistently
-
-**Severity:** S1 · **Status:** Open · **Plan:** `14-navigation-and-overlays.md`
-
-### Remaining problem
-
-Overlays do not share one history-aware owner. Browser or Android back can navigate away
-instead of closing the topmost panel, and page-owned portals can outlive the state change
-that initiated navigation.
-
-### Required outcome
-
-- Back closes only the topmost dismissible overlay.
-- Blocking overlays ignore back, Escape and scrim dismissal.
-- Room closure uses replacement navigation and leaves Home immediately interactive.
-- Music Setup and nested playlist and track editors close one level at a time in stack
-  order.
-- Focus and body-scroll state are restored when an overlay closes.
-
-### Verification
-
-- [x] E12: host closes a room; both clients reach Home and Start works immediately.
-- [x] E13: back closes game settings without leaving or remounting the game.
-- [x] E14: back/close unwinds track editor, playlist editor, and Music Setup one level at a
-      time without leaving the lobby.
-- Component coverage for stack order, focus restoration, scroll locking and blocking entries.
 
 ## B8 · Network recovery needs final hardening
 
@@ -169,6 +141,7 @@ removed from the live register on 2026-09-30. They remain in git history.
 | B22 | 2026-10-07 | Drag edge scroll is dnd-kit's auto-scroll alone at ≤ 200 px/s, without scroll snap while dragging; the per-event scroll had sped up with the event rate after `05` C3.                                                                                                                                                                                                                                                                                                    |
 | B23 | 2026-10-07 | A card released half over a neighbour snapped back: the preview moved only once the card centre passed the neighbour's centre, and a crossing inside the reorder throttle was lost on release. The slot under the card centre now wins (8 % keep margin), and the drop recomputes from the release position (`timelineDragGeometry.test.ts`).                                                                                                                             |
 | B24 | 2026-10-07 | Spotify playback stalled until reload after a new game: each player build used two token refreshes against a 3-per-minute socket budget, a `RATE_LIMITED` refusal waited out the 10 s timeout, and an unanswered SDK `getOAuthToken` left `connect()` pending for good. One refresh per build, refusals answer at once, the SDK always gets a token, `connect()` times out after 15 s and the build retries; budget 6 per minute (`useSpotifyPlaybackSdk.token.test.ts`). |
+| B2  | 2026-10-08 | One overlay host owns every dialog and sheet: Back, Escape and the scrim close only the topmost dismissible overlay, focus and scroll are restored, blocking dialogs ignore Escape and the scrim, and Back on the room-closed dialog resets like its button (`05` E2; `Overlay.test.tsx`, `RoomResetModal.test.tsx`, E12–E14).                                                                                                                                            |
 
 ## Feature work tracked elsewhere
 

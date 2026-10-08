@@ -34,6 +34,15 @@ describe("overlayStack", () => {
     expect(getOverlayLayer([dialog], "dialog-1")).toBe("var(--z-dialog)");
   });
 
+  it("keeps a blocking entry on top of the stack and of every layer", () => {
+    const blocking: OverlayStackEntry = { dismissible: false, id: "blocking-1", kind: "blocking" };
+    const stack = pushOverlayEntry(pushOverlayEntry([sheet], blocking), dialog);
+
+    expect(stack.map((entry) => entry.id)).toEqual(["sheet-1", "dialog-1", "blocking-1"]);
+    expect(getTopOverlayEntry(stack)).toBe(blocking);
+    expect(getOverlayLayer(stack, "blocking-1")).toBe("var(--z-blocking)");
+  });
+
   it("has no layer for an entry that is not open", () => {
     expect(getOverlayLayer([sheet], "dialog-1")).toBeUndefined();
   });

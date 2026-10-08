@@ -1,6 +1,6 @@
 import { m } from "framer-motion";
 import { useEffect, useId, useLayoutEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import { LayerPortal } from "../overlay";
 import { createStandardTransition, motionEasings, useReducedMotionPreference } from "../motion";
 import { IconButton } from "../ui/primitives";
 import { subscribeViewportResize } from "../viewport/viewportStore";
@@ -70,53 +70,54 @@ export function HintBubble({ anchor, body, dismissLabel, onDismiss, title }: Hin
     };
   }, [onDismiss, titleId]);
 
-  return createPortal(
-    <m.aside
-      animate={{ opacity: 1, x: "-50%", y: verticalPosition }}
-      aria-describedby={bodyId}
-      aria-labelledby={titleId}
-      aria-live="polite"
-      className={styles.bubble}
-      data-hint-bubble="true"
-      data-placement={position.placement}
-      exit={{
-        opacity: 0,
-        x: "-50%",
-        y: getExitY(position.placement, reduceMotion),
-      }}
-      initial={{
-        opacity: 0,
-        x: "-50%",
-        y: getInitialY(position.placement, reduceMotion),
-      }}
-      role="dialog"
-      style={{ left: position.left, top: position.top }}
-      transition={{
-        ...createStandardTransition(reduceMotion),
-        ease: reduceMotion ? motionEasings.standard : motionEasings.emphasized,
-      }}
-    >
-      <div className={styles.copy}>
-        <strong className={styles.title} id={titleId}>
-          {title}
-        </strong>
-        <p className={styles.body} id={bodyId}>
-          {body}
-        </p>
-      </div>
-      <IconButton aria-label={dismissLabel} onClick={onDismiss} variant="ghost">
-        <svg aria-hidden="true" viewBox="0 0 24 24">
-          <path
-            d="m6.7 6.7 10.6 10.6m0-10.6L6.7 17.3"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeWidth="2"
-          />
-        </svg>
-      </IconButton>
-    </m.aside>,
-    document.body,
+  return (
+    <LayerPortal>
+      <m.aside
+        animate={{ opacity: 1, x: "-50%", y: verticalPosition }}
+        aria-describedby={bodyId}
+        aria-labelledby={titleId}
+        aria-live="polite"
+        className={styles.bubble}
+        data-hint-bubble="true"
+        data-placement={position.placement}
+        exit={{
+          opacity: 0,
+          x: "-50%",
+          y: getExitY(position.placement, reduceMotion),
+        }}
+        initial={{
+          opacity: 0,
+          x: "-50%",
+          y: getInitialY(position.placement, reduceMotion),
+        }}
+        role="dialog"
+        style={{ left: position.left, top: position.top }}
+        transition={{
+          ...createStandardTransition(reduceMotion),
+          ease: reduceMotion ? motionEasings.standard : motionEasings.emphasized,
+        }}
+      >
+        <div className={styles.copy}>
+          <strong className={styles.title} id={titleId}>
+            {title}
+          </strong>
+          <p className={styles.body} id={bodyId}>
+            {body}
+          </p>
+        </div>
+        <IconButton aria-label={dismissLabel} onClick={onDismiss} variant="ghost">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path
+              d="m6.7 6.7 10.6 10.6m0-10.6L6.7 17.3"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeWidth="2"
+            />
+          </svg>
+        </IconButton>
+      </m.aside>
+    </LayerPortal>
   );
 }
 
