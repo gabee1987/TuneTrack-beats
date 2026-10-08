@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
-import { MotionDialogPortal } from "../motion";
 import { useI18n } from "../i18n";
 import { CloseIconButton } from "./CloseIconButton";
+import { Overlay } from "../overlay";
 import styles from "./SettingField.module.css";
 
 interface SettingFieldProps {
@@ -62,12 +62,12 @@ export function SettingInfoButton({ info, label }: SettingInfoButtonProps) {
       >
         <InfoGlyph />
       </button>
-      <MotionDialogPortal
-        cardClassName={styles.infoCard}
+      <Overlay
+        panelClassName={styles.infoCard}
         isOpen={isOpen}
         label={label}
-        onClose={() => setIsOpen(false)}
-        overlayClassName={styles.infoOverlay}
+        onDismiss={() => setIsOpen(false)}
+        scrimClassName={styles.infoOverlay}
       >
         <CloseIconButton
           ariaLabel={t("lobby.info.close")}
@@ -84,7 +84,7 @@ export function SettingInfoButton({ info, label }: SettingInfoButtonProps) {
           <span className={styles.infoTitle}>{label}</span>
           <span className={styles.infoBody}>{info}</span>
         </div>
-      </MotionDialogPortal>
+      </Overlay>
     </span>
   );
 }

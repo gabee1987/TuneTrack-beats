@@ -1,16 +1,13 @@
-import type { MouseEventHandler, ReactNode } from "react";
-import { m } from "framer-motion";
-import {
-  createBottomSheetMotion,
-  createFadeMotion,
-  createStandardTransition,
-  useReducedMotionPreference,
-} from "../motion";
+import type { ReactNode } from "react";
+import { createBottomSheetMotion, useReducedMotionPreference } from "../motion";
+import { Overlay } from "../overlay";
 import { classNames } from "./classNames";
 import styles from "./BottomSheet.module.css";
 
 interface BottomSheetProps {
   children: ReactNode;
+  isOpen: boolean;
+  label: string;
   onClose: () => void;
   overlayClassName?: string | undefined;
   sheetClassName?: string | undefined;
@@ -19,44 +16,31 @@ interface BottomSheetProps {
 
 export function BottomSheet({
   children,
+  isOpen,
+  label,
   onClose,
   overlayClassName,
   sheetClassName,
   showHandle = true,
 }: BottomSheetProps) {
   const reduceMotion = useReducedMotionPreference();
-  const stopPropagation: MouseEventHandler<HTMLDivElement> = (event) => {
-    event.stopPropagation();
-  };
 
   return (
-    <m.div
-      animate="animate"
-      className={classNames(styles.overlay, overlayClassName)}
-      exit="exit"
-      initial="initial"
-      onClick={onClose}
-      role="presentation"
-      transition={createStandardTransition(reduceMotion)}
-      variants={createFadeMotion(reduceMotion)}
+    <Overlay
+      isOpen={isOpen}
+      kind="sheet"
+      label={label}
+      onDismiss={onClose}
+      panelClassName={classNames(styles.sheet, sheetClassName)}
+      panelMotion={createBottomSheetMotion(reduceMotion)}
+      scrimClassName={classNames(styles.overlay, overlayClassName)}
     >
-      <m.div
-        animate="animate"
-        className={classNames(styles.sheet, sheetClassName)}
-        exit="exit"
-        initial="initial"
-        onClick={stopPropagation}
-        role="dialog"
-        transition={createStandardTransition(reduceMotion)}
-        variants={createBottomSheetMotion(reduceMotion)}
-      >
-        {showHandle ? (
-          <div className={styles.handleRow} aria-hidden="true">
-            <div className={styles.handle} />
-          </div>
-        ) : null}
-        <div className={styles.content}>{children}</div>
-      </m.div>
-    </m.div>
+      {showHandle ? (
+        <div className={styles.handleRow} aria-hidden="true">
+          <div className={styles.handle} />
+        </div>
+      ) : null}
+      <div className={styles.content}>{children}</div>
+    </Overlay>
   );
 }

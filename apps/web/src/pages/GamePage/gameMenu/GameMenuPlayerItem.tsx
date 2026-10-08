@@ -2,7 +2,6 @@ import { type PublicPlayerState, type PublicRoomState } from "@tunetrack/shared/
 import { m } from "framer-motion";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
-  MotionDialogPortal,
   createMeasuredDisclosureMotion,
   createStandardTransition,
   useReducedMotionPreference,
@@ -12,6 +11,7 @@ import { Badge } from "../../../features/ui/Badge";
 import { CardCountAmount } from "../../../features/ui/CardCountAmount";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
+import { Overlay } from "../../../features/overlay";
 import styles from "../gamePageMenu.module.css";
 import type {
   AwardTtActionState,
@@ -272,12 +272,12 @@ export function GameMenuPlayerItem({
           ) : null}
         </div>
       </m.div>
-      <MotionDialogPortal
-        cardClassName={styles.transferConfirmCard}
+      <Overlay
+        panelClassName={styles.transferConfirmCard}
         isOpen={isTransferConfirmOpen}
         label={t("gameMenu.transferHostControls")}
-        onClose={() => setIsTransferConfirmOpen(false)}
-        overlayClassName={styles.transferConfirmOverlay}
+        onDismiss={() => setIsTransferConfirmOpen(false)}
+        scrimClassName={styles.transferConfirmOverlay}
       >
         <div className={styles.transferConfirmHeaderRow}>
           <p className={styles.transferConfirmEyebrow}>{t("gameMenu.hostTransfer")}</p>
@@ -309,13 +309,13 @@ export function GameMenuPlayerItem({
             {transferButtonLabel}
           </button>
         </div>
-      </MotionDialogPortal>
-      <MotionDialogPortal
-        cardClassName={styles.transferConfirmCard}
+      </Overlay>
+      <Overlay
+        panelClassName={styles.transferConfirmCard}
         isOpen={isKickConfirmOpen}
         label={t("gameMenu.kickPlayer")}
-        onClose={() => setIsKickConfirmOpen(false)}
-        overlayClassName={styles.transferConfirmOverlay}
+        onDismiss={() => setIsKickConfirmOpen(false)}
+        scrimClassName={styles.transferConfirmOverlay}
       >
         <div className={styles.transferConfirmHeaderRow}>
           <p className={styles.transferConfirmEyebrow}>{t("gameMenu.removePlayer")}</p>
@@ -349,7 +349,7 @@ export function GameMenuPlayerItem({
             {removePlayerButtonLabel}
           </button>
         </div>
-      </MotionDialogPortal>
+      </Overlay>
     </li>
   );
 }

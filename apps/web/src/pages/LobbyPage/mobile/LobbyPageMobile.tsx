@@ -2,7 +2,6 @@ import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { AppPageShell } from "../../../features/mobile-shell/AppPageShell";
 import { FirstRunHint } from "../../../features/hints/FirstRunHint";
 import { useI18n } from "../../../features/i18n";
-import { MotionDialogPortal } from "../../../features/motion";
 import { PlayerNameField } from "../../../features/profile/PlayerNameField";
 import { ConnectionStatus } from "../../../features/rooms/ConnectionStatus";
 import { StatusBanner } from "../../../features/ui/StatusBanner";
@@ -19,6 +18,7 @@ import { LobbyRoomActions } from "../components/LobbyRoomActions";
 import { LobbySectionHeader } from "../components/LobbySectionHeader";
 import { LobbyRoomSettingsStatus } from "../components/LobbyRoomSettingsStatus";
 import styles from "./LobbyPageMobile.module.css";
+import { Overlay } from "../../../features/overlay";
 
 const ROOM_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 
@@ -265,12 +265,12 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
         ) : null}
       </section>
 
-      <MotionDialogPortal
-        cardClassName={styles.infoCard}
+      <Overlay
+        panelClassName={styles.infoCard}
         isOpen={Boolean(infoContent)}
         label={infoContent?.title ?? t("lobby.info.fallbackLabel")}
-        onClose={() => setInfoContent(null)}
-        overlayClassName={styles.infoOverlay}
+        onDismiss={() => setInfoContent(null)}
+        scrimClassName={styles.infoOverlay}
       >
         {infoContent ? (
           <>
@@ -287,7 +287,7 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
             </div>
           </>
         ) : null}
-      </MotionDialogPortal>
+      </Overlay>
     </AppPageShell>
   );
 }

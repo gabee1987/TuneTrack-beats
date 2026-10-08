@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { MotionPresence } from "../../../features/motion";
 import { useI18n } from "../../../features/i18n";
 import { ActionButton } from "../../../features/ui/ActionButton";
 import { SelectInput } from "../../../features/ui/SelectInput";
@@ -73,21 +72,18 @@ export function AdaptiveSelect({
         <span className={sheetsStyles.mobileSelectChevron}>{t("lobby.select.select")}</span>
       </ActionButton>
 
-      <MotionPresence>
-        {isOpen ? (
-          <AdaptiveSelectSheet
-            label={label}
-            onChange={(nextValue) => {
-              if (!disabled) {
-                onChange(nextValue);
-              }
-            }}
-            onClose={() => setIsOpen(false)}
-            options={options}
-            value={value}
-          />
-        ) : null}
-      </MotionPresence>
+      <AdaptiveSelectSheet
+        isOpen={isOpen}
+        label={label}
+        onChange={(nextValue) => {
+          if (!disabled) {
+            onChange(nextValue);
+          }
+        }}
+        onClose={() => setIsOpen(false)}
+        options={options}
+        value={value}
+      />
     </>
   );
 }

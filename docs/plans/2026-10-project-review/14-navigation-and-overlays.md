@@ -1,6 +1,6 @@
 # 14 — Navigation and Overlay System
 
-> **Status (2026-10-07):** Phase 1 (z-index scale and guard, `05` E1), Phase 2 §3.2 (push/replace semantics), Phase 4 (B1, song-editor layering) and Phase 5 (B5, settings flicker) shipped; the browser and Android back button closes settings, Music Setup and the nested playlist/track editors through same-path router state (E13, E14). Open: the transition guard and route order (Phase 2 §3.1, §3.3), the overlay host and the four overlays still outside history (Phase 3), the overlay contract (Phase 6).
+> **Status (2026-10-07):** Phase 1 (z-index scale and guard, `05` E1), Phase 2 §3.2 (push/replace semantics), Phase 4 (B1, song-editor layering) and Phase 5 (B5, settings flicker) shipped; the browser and Android back button closes settings, Music Setup and the nested playlist/track editors through same-path router state (E13, E14). The overlay host and the first migrations shipped 2026-10-08 (`05` E2a: steps 1–4 and the info dialogs). Open: the transition guard and route order (Phase 2 §3.1, §3.3), §4.3 steps 5–10 (`05` E2b), the overlay contract (Phase 6).
 > **Folded from** `docs/plans/2026-09-stability-performance/06-navigation-and-overlays.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
 >
 > **Binding budgets, order and corrections (2026-10-07):** `05-performance-and-robustness-plan.md` §2 (budgets), §8 (rollout order), §9 (corrections to this document). Where they differ, `05` wins.
@@ -117,7 +117,7 @@ sit at 0 alongside `/`, so Home to Play has no direction. Extend the ladder:
 - [ ] Home to Play and Play to Lobby animate with a forward direction; the reverse animates
       backwards.
 
-## 4. Phase 3 — An app-level overlay host · **S1** · open
+## 4. Phase 3 — An app-level overlay host · **S1** · partly shipped (`05` E2a)
 
 **Review finding:** F-06. **Bug register:** B2 (remaining overlay-stack component tests).
 
@@ -217,18 +217,22 @@ imported by pages.
 
 ### Acceptance
 
-- [ ] No page component calls `createPortal` directly.
-- [ ] Component tests (`19-testing-strategy.md` §4): Escape closes the top entry only; scrim
+- [ ] No page component calls `createPortal` directly — ratchet in
+      `test/guards/overlaySites.test.ts`; nine files remain for E2b.
+- [x] Component tests (`19-testing-strategy.md` §4): Escape closes the top entry only; scrim
       click closes the top entry only; back closes the top entry and does not navigate; a
       non-dismissible entry ignores all three; focus returns to the trigger; body scroll is
-      locked while open and restored after.
+      locked while open and restored after — `features/overlay/Overlay.test.tsx` (a
+      non-dismissible entry takes no history entry; Back on one is settled with
+      `RoomResetModal` in E2b).
 - [x] E2E: open settings on the game page, press browser back, panel closes and the game is
       still on screen (E13).
 - [x] E2E: open Music Setup, then the playlist and song editors; close each layer and
       verify playlist close reveals Music Setup before Music Setup close returns to room
       settings (E14).
-- [ ] E2E or component test: back closes `SongInfoModal`, the kick confirmation and an
-      `AdaptiveSelectSheet` without leaving the page.
+- [x] E2E or component test: back closes `SongInfoModal`, the kick confirmation and an
+      `AdaptiveSelectSheet` without leaving the page — `SongInfoModal.test.tsx`,
+      `AdaptiveSelectSheet.test.tsx`; the kick confirmation is the same `Overlay`.
 
 ## 5. Phase 4 — Fix the song-editor layering explicitly · **S1** · shipped (B1)
 

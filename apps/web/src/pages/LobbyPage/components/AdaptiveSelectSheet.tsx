@@ -5,6 +5,7 @@ import type { AdaptiveSelectOption } from "./AdaptiveSelect";
 import styles from "../lobbySheets.module.css";
 
 interface AdaptiveSelectSheetProps {
+  isOpen: boolean;
   label: string;
   onChange: (value: string) => void;
   onClose: () => void;
@@ -13,6 +14,7 @@ interface AdaptiveSelectSheetProps {
 }
 
 export function AdaptiveSelectSheet({
+  isOpen,
   label,
   onChange,
   onClose,
@@ -23,6 +25,8 @@ export function AdaptiveSelectSheet({
 
   return (
     <BottomSheet
+      isOpen={isOpen}
+      label={label}
       onClose={onClose}
       overlayClassName={styles.mobileSelectOverlay}
       sheetClassName={styles.mobileSelectSheet}

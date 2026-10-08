@@ -12,6 +12,14 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Overlay host: declarative overlays on one stack (2026-10-08)
+
+- **Callers render `Overlay` where they are; `features/overlay` keeps one stack.** Why: the
+  plan's `open(render)` host outside the router would lose router and page context, which the
+  playlist and track editors, Music Setup, settings and the kick confirm read. The stack still
+  owns the layer, Escape, focus, scroll lock and one same-path history entry per overlay
+  (`00-index.md` decision 21, `05` E2a).
+
 ### Broadcast size: compress, keep the full state (2026-10-07)
 
 - **Socket.IO per-message compression above 4 kB; `state_update` stays a full state with

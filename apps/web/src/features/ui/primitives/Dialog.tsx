@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { MotionDialogPortal } from "../../motion";
 import { classNames } from "../classNames";
 import { IconButton } from "./IconButton";
+import { Overlay } from "../../overlay";
 import styles from "./Dialog.module.css";
 
 export interface DialogProps {
@@ -22,12 +22,12 @@ export function Dialog({
   title,
 }: DialogProps) {
   return (
-    <MotionDialogPortal
-      cardClassName={styles.card}
+    <Overlay
+      panelClassName={styles.card}
       isOpen={isOpen}
       label={title}
-      onClose={onClose}
-      overlayClassName={styles.overlay}
+      onDismiss={onClose}
+      scrimClassName={styles.overlay}
     >
       <div className={styles.header}>
         <h2 className={styles.title}>{title}</h2>
@@ -44,6 +44,6 @@ export function Dialog({
       </div>
       <div className={styles.body}>{children}</div>
       {actions ? <div className={classNames(styles.actions)}>{actions}</div> : null}
-    </MotionDialogPortal>
+    </Overlay>
   );
 }
