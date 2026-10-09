@@ -16,7 +16,7 @@ vi.mock("../../src/app/axiomLogSink.js", () => ({
 
 process.env["ENABLE_EVENT_AUDIT"] = "true";
 
-const { logRejectedSocketEvent, registerSocketAuditMiddleware } =
+const { logRejectedSocketEvent, registerSocketAuditMiddleware, settleAuditedSocketEvent } =
   await import("../../src/realtime/realtimeAuditLogger.js");
 
 interface AuditRecord {
@@ -106,5 +106,37 @@ describe("realtime audit correlation", () => {
 
     expect(rejection?.eventName).toBe("place_card");
     expect(rejection?.eventId).toBe(placeCardArrivalId);
+  });
+
+  /**
+   * Accepted events are not audited, but each arrival still queued an id; without settling,
+   * the queue grew for the socket's lifetime (B-17) and a later rejection took a stale id.
+   */
+  it("settles an accepted arrival so the next rejection gets its own id", () => {
+    const socket = createFakeSocket();
+    registerSocketAuditMiddleware(socket as never);
+
+    socket.receive("place_card", { roomId: "TEST_ROOM_1" });
+    settleAuditedSocketEvent(socket as never, "place_card");
+    socket.receive("place_card", { roomId: "TEST_ROOM_1" });
+    logRejectedSocketEvent(socket as never, "place_card", "NOT_ACTIVE_PLAYER");
+
+    const arrivalIds = auditRecords()
+      .filter((record) => record.outcome === "received")
+      .map((record) => record.eventId);
+    const rejection = auditRecords().find((record) => record.outcome === "rejected");
+
+    expect(rejection?.eventId).toBe(arrivalIds[1]);
+    expect(auditRecords().some((record) => record.outcome === "accepted")).toBe(false);
+  });
+
+  it("queues no id for an event the server does not handle", () => {
+    const socket = createFakeSocket();
+    registerSocketAuditMiddleware(socket as never);
+
+    socket.receive("not_a_client_event", { roomId: "TEST_ROOM_1" });
+    logRejectedSocketEvent(socket as never, "not_a_client_event", "RATE_LIMITED");
+
+    expect(auditRecords().map((record) => record.eventId)).toEqual([undefined, undefined]);
   });
 });

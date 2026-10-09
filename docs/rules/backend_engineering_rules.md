@@ -17,6 +17,10 @@ this, in order:
 4. acknowledge the action and broadcast the resulting room state, or acknowledge a
    client-safe error.
 
+`handle` may return a promise; its rejection takes the same path as a thrown error. A
+request/result event whose client waits on a result event (music setup, playback) answers
+its failures there through `failureReply`; the ack and the audit record are sent either way.
+
 Handlers never contain gameplay rules, never mutate room state directly, never duplicate
 authorisation that the service performs, and never branch on gameplay outcomes. A handler
 file that grows a second responsibility is split, not extended.
@@ -124,8 +128,8 @@ players' hands) is omitted, not blanked, and a test asserts the omission.
 - Log startup, shutdown, socket connect/disconnect, unexpected errors and notable room
   lifecycle events through `app/logger.ts` (Pino). Nothing in the engine logs.
 - Realtime audit events (`realtime/realtimeAuditLogger.ts`, enabled by
-  `ENABLE_EVENT_AUDIT`) carry event name, room id, player id, error code and correlation
-  id. Payload capture (`EVENT_AUDIT_INCLUDE_PAYLOADS`) may contain display names and
+  `ENABLE_EVENT_AUDIT`) carry event name, room id, socket id, error code and correlation
+  id. Accepted actions are not audited (decision 9). Payload capture (`EVENT_AUDIT_INCLUDE_PAYLOADS`) may contain display names and
   search queries; it stays off outside test sessions. Axiom is a third-party, US-hosted log
   sink: enabling it for a client-facing deployment is new processing (see
   `docs/operations/axiom_logging_setup.md`).

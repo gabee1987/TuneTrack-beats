@@ -18,6 +18,7 @@ import { logger } from "../../app/logger.js";
 import type { RoomService } from "../../rooms/RoomService.js";
 import { broadcastRoomDirectory } from "../broadcastRoomDirectory.js";
 import { broadcastRoomState, createSocketHandler } from "../createSocketHandler.js";
+import { settleAuditedSocketEvent } from "../realtimeAuditLogger.js";
 import { roomActionIdempotency } from "../roomActionIdempotency.js";
 import {
   closeRoomErrorMessages,
@@ -155,6 +156,7 @@ function registerCreateRoomHandler(io: Server, socket: Socket, roomService: Room
 
 function registerListRoomsHandler(socket: Socket, roomService: RoomService): void {
   socket.on(ClientToServerEvent.ListRooms, () => {
+    settleAuditedSocketEvent(socket, ClientToServerEvent.ListRooms);
     socket.emit(ServerToClientEvent.RoomList, {
       rooms: roomService.listRooms(),
     });

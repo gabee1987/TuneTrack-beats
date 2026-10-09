@@ -11,21 +11,18 @@ import {
   searchSpotifyPlaylistsPayloadSchema,
   unregisterSpotifyPlaybackDevicePayloadSchema,
   useSpotifyCandidatesPayloadSchema,
+  type ServerErrorCode,
 } from "@tunetrack/shared";
 import type { Server, Socket } from "socket.io";
-import { logger } from "../../app/logger.js";
+import type { z } from "zod";
 import type { RoomService } from "../../rooms/RoomService.js";
-import {
-  broadcastRoomState,
-  createSocketHandler,
-  emitServerError,
-  startAuthorizedRequest,
-} from "../createSocketHandler.js";
+import { broadcastRoomState, createSocketHandler } from "../createSocketHandler.js";
 import { musicSetupErrorMessages, useSpotifyCandidatesErrorMessages } from "../errorMessages.js";
 
 // Non-toasting error code: signals the client to resolve a pending token request and retry
 // later (reconnect race / non-owner caller) without showing a user-facing "reconnect" toast.
 const SPOTIFY_TOKEN_REFRESH_DEFERRED_CODE = "SPOTIFY_TOKEN_REFRESH_DEFERRED";
+const UNKNOWN_PLAYBACK_REQUEST_ID = "00000000-0000-0000-0000-000000000000";
 
 export function registerSpotifyHandlers(
   io: Server,
@@ -33,10 +30,7 @@ export function registerSpotifyHandlers(
   roomService: RoomService,
 ): void {
   registerRequestSpotifyAuthUrlHandler(socket, roomService);
-  registerSearchSpotifyMusicHandler(socket, roomService);
-  registerOpenSpotifyPlaylistHandler(socket, roomService);
-  registerSearchSpotifyPlaylistsHandler(socket, roomService);
-  registerGenerateSpotifyCandidatesHandler(socket, roomService);
+  registerSpotifyLookupHandlers(socket, roomService);
   registerUseSpotifyCandidatesHandler(io, socket, roomService);
   registerRefreshSpotifyTokenHandler(io, socket, roomService);
   registerPlaySpotifyTrackHandler(socket, roomService);
@@ -61,151 +55,108 @@ function registerRequestSpotifyAuthUrlHandler(socket: Socket, roomService: RoomS
   });
 }
 
-function registerSearchSpotifyMusicHandler(socket: Socket, roomService: RoomService): void {
-  socket.on(ClientToServerEvent.SearchSpotifyMusic, (payload: unknown) => {
-    const parseResult = searchSpotifyMusicPayloadSchema.safeParse(payload);
+interface SpotifyLookup<TSchema extends z.ZodTypeAny> {
+  event: string;
+  schema: TSchema;
+  resultEvent: string;
+  invalidPayload: { code: ServerErrorCode; resultCode: string; message: string };
+  failureMessage: string;
+  fallbackErrorCode: ServerErrorCode;
+  run: (data: z.output<TSchema>) => Promise<unknown>;
+}
 
-    if (!parseResult.success) {
-      socket.emit(ServerToClientEvent.SpotifySmartSearchResult, {
-        success: false,
-        code: "invalid_query",
-        message: "Search query is invalid.",
-      });
-      return;
-    }
-
-    const pendingResult = startAuthorizedRequest(
-      socket,
-      ClientToServerEvent.SearchSpotifyMusic,
-      () => roomService.searchSpotifyMusic(parseResult.data, socket.id),
-      "SEARCH_SPOTIFY_MUSIC_FAILED",
-      musicSetupErrorMessages,
-    );
-    if (!pendingResult) return;
-
-    void pendingResult
-      .then((result) => {
-        socket.emit(ServerToClientEvent.SpotifySmartSearchResult, result);
-      })
-      .catch((error: unknown) => {
-        logger.error({ error }, "search_spotify_music handler threw unexpectedly");
-        socket.emit(ServerToClientEvent.SpotifySmartSearchResult, {
+/**
+ * Music-setup lookups answer on their result event; an authorisation refusal keeps the
+ * generic `error` event so the host sees why.
+ */
+function registerSpotifyLookupHandler<TSchema extends z.ZodTypeAny>(
+  socket: Socket,
+  lookup: SpotifyLookup<TSchema>,
+): void {
+  createSocketHandler({
+    socket,
+    event: lookup.event,
+    schema: lookup.schema,
+    invalidPayload: { code: lookup.invalidPayload.code, message: lookup.invalidPayload.message },
+    handle: async (data) => {
+      socket.emit(lookup.resultEvent, await lookup.run(data));
+    },
+    failureReply: {
+      invalidPayload: () => {
+        socket.emit(lookup.resultEvent, {
+          success: false,
+          code: lookup.invalidPayload.resultCode,
+          message: lookup.invalidPayload.message,
+        });
+      },
+      unexpectedError: () => {
+        socket.emit(lookup.resultEvent, {
           success: false,
           code: "spotify_api_error",
-          message: "Spotify search failed. Please try again.",
+          message: lookup.failureMessage,
         });
-      });
+      },
+    },
+    fallbackErrorCode: lookup.fallbackErrorCode,
+    errorMessages: musicSetupErrorMessages,
   });
 }
 
-function registerOpenSpotifyPlaylistHandler(socket: Socket, roomService: RoomService): void {
-  socket.on(ClientToServerEvent.OpenSpotifyPlaylist, (payload: unknown) => {
-    const parseResult = openSpotifyPlaylistPayloadSchema.safeParse(payload);
-
-    if (!parseResult.success) {
-      socket.emit(ServerToClientEvent.SpotifyPlaylistDetail, {
-        success: false,
-        code: "invalid_playlist",
-        message: "Playlist selection is invalid.",
-      });
-      return;
-    }
-
-    const pendingResult = startAuthorizedRequest(
-      socket,
-      ClientToServerEvent.OpenSpotifyPlaylist,
-      () => roomService.openSpotifyPlaylist(parseResult.data, socket.id),
-      "OPEN_SPOTIFY_PLAYLIST_FAILED",
-      musicSetupErrorMessages,
-    );
-    if (!pendingResult) return;
-
-    void pendingResult
-      .then((result) => {
-        socket.emit(ServerToClientEvent.SpotifyPlaylistDetail, result);
-      })
-      .catch((error: unknown) => {
-        logger.error({ error }, "open_spotify_playlist handler threw unexpectedly");
-        socket.emit(ServerToClientEvent.SpotifyPlaylistDetail, {
-          success: false,
-          code: "spotify_api_error",
-          message: "Spotify playlist could not be opened. Please try again.",
-        });
-      });
+function registerSpotifyLookupHandlers(socket: Socket, roomService: RoomService): void {
+  registerSpotifyLookupHandler(socket, {
+    event: ClientToServerEvent.SearchSpotifyMusic,
+    schema: searchSpotifyMusicPayloadSchema,
+    resultEvent: ServerToClientEvent.SpotifySmartSearchResult,
+    invalidPayload: {
+      code: "INVALID_SEARCH_SPOTIFY_MUSIC_PAYLOAD",
+      resultCode: "invalid_query",
+      message: "Search query is invalid.",
+    },
+    failureMessage: "Spotify search failed. Please try again.",
+    fallbackErrorCode: "SEARCH_SPOTIFY_MUSIC_FAILED",
+    run: (data) => roomService.searchSpotifyMusic(data, socket.id),
   });
-}
 
-function registerSearchSpotifyPlaylistsHandler(socket: Socket, roomService: RoomService): void {
-  socket.on(ClientToServerEvent.SearchSpotifyPlaylists, (payload: unknown) => {
-    const parseResult = searchSpotifyPlaylistsPayloadSchema.safeParse(payload);
-
-    if (!parseResult.success) {
-      socket.emit(ServerToClientEvent.SpotifyPlaylistSearchResult, {
-        success: false,
-        code: "invalid_query",
-        message: "Search query is invalid.",
-      });
-      return;
-    }
-
-    const pendingResult = startAuthorizedRequest(
-      socket,
-      ClientToServerEvent.SearchSpotifyPlaylists,
-      () => roomService.searchSpotifyPlaylists(parseResult.data, socket.id),
-      "SEARCH_SPOTIFY_PLAYLISTS_FAILED",
-      musicSetupErrorMessages,
-    );
-    if (!pendingResult) return;
-
-    void pendingResult
-      .then((result) => {
-        socket.emit(ServerToClientEvent.SpotifyPlaylistSearchResult, result);
-      })
-      .catch((error: unknown) => {
-        logger.error({ error }, "search_spotify_playlists handler threw unexpectedly");
-        socket.emit(ServerToClientEvent.SpotifyPlaylistSearchResult, {
-          success: false,
-          code: "spotify_api_error",
-          message: "Spotify playlist search failed. Please try again.",
-        });
-      });
+  registerSpotifyLookupHandler(socket, {
+    event: ClientToServerEvent.OpenSpotifyPlaylist,
+    schema: openSpotifyPlaylistPayloadSchema,
+    resultEvent: ServerToClientEvent.SpotifyPlaylistDetail,
+    invalidPayload: {
+      code: "INVALID_OPEN_SPOTIFY_PLAYLIST_PAYLOAD",
+      resultCode: "invalid_playlist",
+      message: "Playlist selection is invalid.",
+    },
+    failureMessage: "Spotify playlist could not be opened. Please try again.",
+    fallbackErrorCode: "OPEN_SPOTIFY_PLAYLIST_FAILED",
+    run: (data) => roomService.openSpotifyPlaylist(data, socket.id),
   });
-}
 
-function registerGenerateSpotifyCandidatesHandler(socket: Socket, roomService: RoomService): void {
-  socket.on(ClientToServerEvent.GenerateSpotifyCandidates, (payload: unknown) => {
-    const parseResult = generateSpotifyCandidatesPayloadSchema.safeParse(payload);
+  registerSpotifyLookupHandler(socket, {
+    event: ClientToServerEvent.SearchSpotifyPlaylists,
+    schema: searchSpotifyPlaylistsPayloadSchema,
+    resultEvent: ServerToClientEvent.SpotifyPlaylistSearchResult,
+    invalidPayload: {
+      code: "INVALID_SEARCH_SPOTIFY_PLAYLISTS_PAYLOAD",
+      resultCode: "invalid_query",
+      message: "Search query is invalid.",
+    },
+    failureMessage: "Spotify playlist search failed. Please try again.",
+    fallbackErrorCode: "SEARCH_SPOTIFY_PLAYLISTS_FAILED",
+    run: (data) => roomService.searchSpotifyPlaylists(data, socket.id),
+  });
 
-    if (!parseResult.success) {
-      socket.emit(ServerToClientEvent.SpotifyCandidatesGenerated, {
-        success: false,
-        code: "invalid_source",
-        message: "Choose at least one Spotify playlist.",
-      });
-      return;
-    }
-
-    const pendingResult = startAuthorizedRequest(
-      socket,
-      ClientToServerEvent.GenerateSpotifyCandidates,
-      () => roomService.generateSpotifyCandidates(parseResult.data, socket.id),
-      "GENERATE_SPOTIFY_CANDIDATES_FAILED",
-      musicSetupErrorMessages,
-    );
-    if (!pendingResult) return;
-
-    void pendingResult
-      .then((result) => {
-        socket.emit(ServerToClientEvent.SpotifyCandidatesGenerated, result);
-      })
-      .catch((error: unknown) => {
-        logger.error({ error }, "generate_spotify_candidates handler threw unexpectedly");
-        socket.emit(ServerToClientEvent.SpotifyCandidatesGenerated, {
-          success: false,
-          code: "spotify_api_error",
-          message: "Could not generate tracks from those playlists. Please try again.",
-        });
-      });
+  registerSpotifyLookupHandler(socket, {
+    event: ClientToServerEvent.GenerateSpotifyCandidates,
+    schema: generateSpotifyCandidatesPayloadSchema,
+    resultEvent: ServerToClientEvent.SpotifyCandidatesGenerated,
+    invalidPayload: {
+      code: "INVALID_GENERATE_SPOTIFY_CANDIDATES_PAYLOAD",
+      resultCode: "invalid_source",
+      message: "Choose at least one Spotify playlist.",
+    },
+    failureMessage: "Could not generate tracks from those playlists. Please try again.",
+    fallbackErrorCode: "GENERATE_SPOTIFY_CANDIDATES_FAILED",
+    run: (data) => roomService.generateSpotifyCandidates(data, socket.id),
   });
 }
 
@@ -214,35 +165,34 @@ function registerUseSpotifyCandidatesHandler(
   socket: Socket,
   roomService: RoomService,
 ): void {
-  socket.on(ClientToServerEvent.UseSpotifyCandidates, (payload: unknown) => {
-    const parseResult = useSpotifyCandidatesPayloadSchema.safeParse(payload);
-
-    if (!parseResult.success) {
-      socket.emit(ServerToClientEvent.SpotifyCandidatesApplied, {
-        success: false,
-        code: "too_few_tracks",
-        message: "Keep at least 10 tracks before using this playlist.",
-      });
-      return;
-    }
-
-    try {
-      const result = roomService.useSpotifyCandidates(parseResult.data, socket.id);
+  createSocketHandler({
+    socket,
+    event: ClientToServerEvent.UseSpotifyCandidates,
+    schema: useSpotifyCandidatesPayloadSchema,
+    invalidPayload: {
+      code: "INVALID_USE_SPOTIFY_CANDIDATES_PAYLOAD",
+      message: "Keep at least 10 tracks before using this playlist.",
+    },
+    handle: (data) => {
+      const result = roomService.useSpotifyCandidates(data, socket.id);
       socket.emit(ServerToClientEvent.SpotifyCandidatesApplied, result.payload);
 
       if (result.roomState && result.tracks) {
         socket.emit(ServerToClientEvent.PlaylistTracks, { tracks: result.tracks });
         broadcastRoomState(io, result.roomState);
       }
-    } catch (error) {
-      emitServerError(
-        socket,
-        ClientToServerEvent.UseSpotifyCandidates,
-        error,
-        "USE_SPOTIFY_CANDIDATES_FAILED",
-        useSpotifyCandidatesErrorMessages,
-      );
-    }
+    },
+    failureReply: {
+      invalidPayload: () => {
+        socket.emit(ServerToClientEvent.SpotifyCandidatesApplied, {
+          success: false,
+          code: "too_few_tracks",
+          message: "Keep at least 10 tracks before using this playlist.",
+        });
+      },
+    },
+    fallbackErrorCode: "USE_SPOTIFY_CANDIDATES_FAILED",
+    errorMessages: useSpotifyCandidatesErrorMessages,
   });
 }
 
@@ -251,90 +201,94 @@ function registerRefreshSpotifyTokenHandler(
   socket: Socket,
   roomService: RoomService,
 ): void {
-  socket.on(ClientToServerEvent.RefreshSpotifyToken, (payload: unknown) => {
-    const parseResult = refreshSpotifyTokenPayloadSchema.safeParse(payload);
+  const deferRefresh = (): void => {
+    socket.emit(ServerToClientEvent.Error, {
+      code: SPOTIFY_TOKEN_REFRESH_DEFERRED_CODE,
+      message: "Spotify token refresh deferred.",
+    });
+  };
 
-    if (!parseResult.success) {
-      socket.emit(ServerToClientEvent.Error, {
-        code: "INVALID_REFRESH_SPOTIFY_TOKEN_PAYLOAD",
-        message: "Room code is invalid.",
-      });
-      return;
-    }
-
-    void roomService
-      .refreshSpotifyToken(parseResult.data, socket.id)
-      .then((result) => {
-        if (result.status === "refreshed") {
-          socket.emit(ServerToClientEvent.SpotifyTokenRefreshed, {
-            accessToken: result.accessToken,
-            expiresInSeconds: result.expiresInSeconds,
-          });
-          return;
-        }
-
-        if (result.status === "reauth_required") {
-          broadcastRoomState(io, result.roomState);
-          socket.emit(ServerToClientEvent.Error, {
-            code: "SPOTIFY_TOKEN_REFRESH_FAILED",
-            message: "Could not refresh Spotify token. Please reconnect Spotify.",
-          });
-          return;
-        }
-
-        // Deferred: transient reconnect race or non-owner caller — resolve the client's
-        // pending request without surfacing a user-facing error toast.
-        socket.emit(ServerToClientEvent.Error, {
-          code: SPOTIFY_TOKEN_REFRESH_DEFERRED_CODE,
-          message: "Spotify token refresh deferred.",
+  createSocketHandler({
+    socket,
+    event: ClientToServerEvent.RefreshSpotifyToken,
+    schema: refreshSpotifyTokenPayloadSchema,
+    invalidPayload: {
+      code: "INVALID_REFRESH_SPOTIFY_TOKEN_PAYLOAD",
+      message: "Room code is invalid.",
+    },
+    handle: async (data) => {
+      const result = await roomService.refreshSpotifyToken(data, socket.id);
+      if (result.status === "refreshed") {
+        socket.emit(ServerToClientEvent.SpotifyTokenRefreshed, {
+          accessToken: result.accessToken,
+          expiresInSeconds: result.expiresInSeconds,
         });
-      })
-      .catch((error: unknown) => {
-        logger.error({ error }, "refresh_spotify_token handler threw unexpectedly");
+        return;
+      }
+
+      if (result.status === "reauth_required") {
+        broadcastRoomState(io, result.roomState);
         socket.emit(ServerToClientEvent.Error, {
-          code: SPOTIFY_TOKEN_REFRESH_DEFERRED_CODE,
-          message: "Spotify token refresh deferred.",
+          code: "SPOTIFY_TOKEN_REFRESH_FAILED",
+          message: "Could not refresh Spotify token. Please reconnect Spotify.",
         });
-      });
+        return;
+      }
+
+      // Deferred: transient reconnect race or non-owner caller — resolve the client's
+      // pending request without surfacing a user-facing error toast.
+      deferRefresh();
+    },
+    failureReply: { domainError: deferRefresh, unexpectedError: deferRefresh },
+    fallbackErrorCode: SPOTIFY_TOKEN_REFRESH_DEFERRED_CODE,
+    errorMessages: {},
   });
 }
 
 function registerPlaySpotifyTrackHandler(socket: Socket, roomService: RoomService): void {
-  socket.on(ClientToServerEvent.PlaySpotifyTrack, (payload: unknown) => {
-    const parseResult = playSpotifyTrackPayloadSchema.safeParse(payload);
+  const replyPlaybackFailed = (requestId: string, message: string): void => {
+    socket.emit(ServerToClientEvent.SpotifyPlaybackResult, {
+      success: false,
+      requestId,
+      code: "spotify_api_error",
+      message,
+    });
+  };
+  // The client matches the result to its request by id, so every failure answers there.
+  const replyCouldNotStart = (data: { requestId: string }): void => {
+    replyPlaybackFailed(data.requestId, "Spotify could not start playback.");
+  };
 
-    if (!parseResult.success) {
-      const requestId =
-        typeof payload === "object" &&
-        payload !== null &&
-        "requestId" in payload &&
-        typeof (payload as { requestId?: unknown }).requestId === "string"
-          ? (payload as { requestId: string }).requestId
-          : "00000000-0000-0000-0000-000000000000";
-      socket.emit(ServerToClientEvent.SpotifyPlaybackResult, {
-        success: false,
-        requestId,
-        code: "spotify_api_error",
-        message: "Playback request is invalid.",
-      });
-      return;
-    }
-
-    void roomService
-      .playSpotifyTrack(parseResult.data, socket.id)
-      .then((result) => {
-        socket.emit(ServerToClientEvent.SpotifyPlaybackResult, result);
-      })
-      .catch((error: unknown) => {
-        logger.error({ error }, "play_spotify_track handler threw unexpectedly");
-        socket.emit(ServerToClientEvent.SpotifyPlaybackResult, {
-          success: false,
-          requestId: parseResult.data.requestId,
-          code: "spotify_api_error",
-          message: "Spotify could not start playback.",
-        });
-      });
+  createSocketHandler({
+    socket,
+    event: ClientToServerEvent.PlaySpotifyTrack,
+    schema: playSpotifyTrackPayloadSchema,
+    invalidPayload: {
+      code: "INVALID_PLAY_SPOTIFY_TRACK_PAYLOAD",
+      message: "Playback request is invalid.",
+    },
+    handle: async (data) => {
+      socket.emit(
+        ServerToClientEvent.SpotifyPlaybackResult,
+        await roomService.playSpotifyTrack(data, socket.id),
+      );
+    },
+    failureReply: {
+      invalidPayload: (payload) => {
+        replyPlaybackFailed(readPlaybackRequestId(payload), "Playback request is invalid.");
+      },
+      domainError: replyCouldNotStart,
+      unexpectedError: replyCouldNotStart,
+    },
+    fallbackErrorCode: "PLAY_SPOTIFY_TRACK_FAILED",
+    errorMessages: {},
   });
+}
+
+function readPlaybackRequestId(payload: unknown): string {
+  if (typeof payload !== "object" || payload === null) return UNKNOWN_PLAYBACK_REQUEST_ID;
+  const requestId = (payload as { requestId?: unknown }).requestId;
+  return typeof requestId === "string" ? requestId : UNKNOWN_PLAYBACK_REQUEST_ID;
 }
 
 function registerSpotifyPlaybackDeviceHandlers(socket: Socket, roomService: RoomService): void {

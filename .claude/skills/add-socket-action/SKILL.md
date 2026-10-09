@@ -33,9 +33,10 @@ validation happens at the boundary, every mutation is acknowledged.
 - Handler in the matching file under `realtime/handlers/` (`lobbyHandlers.ts`,
   `gameplayHandlers.ts`, `playlistHandlers.ts`, `spotifyHandlers.ts`) through
   `createSocketHandler({ socket, event, schema, invalidPayload, log, handle, idempotency, fallbackErrorCode, errorMessages })`.
-  Copy `registerSkipTurnHandler` in `gameplayHandlers.ts`: it shows the `idempotency.find` /
-  `remember` pair built on `roomService.getProcessedActionAck` and
-  `rememberProcessedActionAck`.
+  Copy `registerSkipTurnHandler` in `gameplayHandlers.ts`: a mutation passes
+  `idempotency: roomActionIdempotency(roomService, socket, event)`. An async service call is
+  returned from `handle`; never hand-roll `socket.on`. A request/result event (the client
+  waits on a result event, not an ack) adds `failureReply`, as `spotifyHandlers.ts` does.
 - `handle` calls the service and then `broadcastRoomState(io, state)`; call
   `broadcastRoomDirectory(io, roomService)` only when lobby-visible data changed.
 - Error codes are `UPPER_SNAKE` members of `SERVER_ERROR_CODES` (`packages/shared`

@@ -2,10 +2,10 @@ import { randomUUID } from "node:crypto";
 import { enqueueAxiomLogEvent } from "../app/axiomLogSink.js";
 import { env } from "../app/env.js";
 import { logger } from "../app/logger.js";
-import type { PublicRoomState } from "@tunetrack/shared";
+import { ClientToServerEvent, type PublicRoomState } from "@tunetrack/shared";
 import type { Socket } from "socket.io";
 
-type AuditOutcome = "accepted" | "broadcast" | "emitted" | "received" | "rejected";
+type AuditOutcome = "broadcast" | "emitted" | "received" | "rejected";
 
 interface AuditLogInput {
   eventId?: string | undefined;
@@ -13,9 +13,7 @@ interface AuditLogInput {
   outcome: AuditOutcome;
   socket?: Socket | undefined;
   roomId?: string | undefined;
-  playerId?: string | undefined;
   errorCode?: string | undefined;
-  durationMs?: number | undefined;
   payload?: unknown;
   roomState?: PublicRoomState | undefined;
   meta?: Record<string, unknown> | undefined;
@@ -24,9 +22,12 @@ interface AuditLogInput {
 /**
  * One arrival of an event is one entry, held in arrival order. Keying by event name alone
  * collapsed a burst of the same event into a single id, so only the first outcome could be
- * correlated back to its `received` record and the rest logged no id at all.
+ * correlated back to its `received` record and the rest logged no id at all. Every outcome
+ * consumes its entry (a rejection logs it, a success only settles it), and only known client
+ * events get one, so the queue stays bounded for the socket's lifetime.
  */
 const pendingEventIdsBySocket = new WeakMap<Socket, Map<string, string[]>>();
+const clientEventNames = new Set<string>(Object.values(ClientToServerEvent));
 
 export function registerSocketAuditMiddleware(socket: Socket): void {
   if (!env.ENABLE_EVENT_AUDIT) return;
@@ -38,15 +39,8 @@ export function registerSocketAuditMiddleware(socket: Socket): void {
       return;
     }
 
-    const eventId = randomUUID();
-    let pendingEventIds = pendingEventIdsBySocket.get(socket);
-    if (!pendingEventIds) {
-      pendingEventIds = new Map<string, string[]>();
-      pendingEventIdsBySocket.set(socket, pendingEventIds);
-    }
-    const arrivalsForEvent = pendingEventIds.get(eventName) ?? [];
-    arrivalsForEvent.push(eventId);
-    pendingEventIds.set(eventName, arrivalsForEvent);
+    const eventId = clientEventNames.has(eventName) ? randomUUID() : undefined;
+    if (eventId) queueEventId(socket, eventName, eventId);
 
     logRealtimeAudit({
       eventId,
@@ -70,21 +64,9 @@ export function registerSocketAuditMiddleware(socket: Socket): void {
   });
 }
 
-export function logAcceptedSocketEvent(
-  socket: Socket,
-  eventName: string,
-  roomState: PublicRoomState,
-  meta?: Record<string, unknown>,
-): void {
-  logRealtimeAudit({
-    eventId: consumeEventId(socket, eventName),
-    eventName,
-    outcome: "accepted",
-    socket,
-    roomId: roomState.roomId,
-    roomState,
-    meta,
-  });
+/** An accepted event is not audited (decision 9 keeps the audit scope); it only frees its id. */
+export function settleAuditedSocketEvent(socket: Socket, eventName: string): void {
+  consumeEventId(socket, eventName);
 }
 
 export function logRejectedSocketEvent(
@@ -129,9 +111,7 @@ function logRealtimeAudit(input: AuditLogInput): void {
     outcome: input.outcome,
     socketId: input.socket?.id,
     roomId: input.roomId,
-    playerId: input.playerId,
     errorCode: input.errorCode,
-    durationMs: input.durationMs,
     payload: resolveAuditPayload(input.eventName, input.payload),
     room: input.roomState ? summarizeRoomState(input.roomState) : undefined,
     ...input.meta,
@@ -163,6 +143,17 @@ function summarizeSpotifyPlaybackResult(payload: unknown): Record<string, unknow
     code: value.code,
     message: typeof value.message === "string" ? value.message : undefined,
   };
+}
+
+function queueEventId(socket: Socket, eventName: string, eventId: string): void {
+  let pendingEventIds = pendingEventIdsBySocket.get(socket);
+  if (!pendingEventIds) {
+    pendingEventIds = new Map<string, string[]>();
+    pendingEventIdsBySocket.set(socket, pendingEventIds);
+  }
+  const arrivalsForEvent = pendingEventIds.get(eventName) ?? [];
+  arrivalsForEvent.push(eventId);
+  pendingEventIds.set(eventName, arrivalsForEvent);
 }
 
 function consumeEventId(socket: Socket, eventName: string): string | undefined {

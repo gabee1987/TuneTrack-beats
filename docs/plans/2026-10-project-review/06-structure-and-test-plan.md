@@ -2,7 +2,7 @@
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 6 of `00-index.md` §4).
 > **Status (2026-10-09):** W1 and T1 shipped (code 2026-10-07, file deletions 2026-10-09); T8,
-> T10 and T5 shipped 2026-10-09 (§7 rows 1–2 done). Next: S1 (§7 row 3).
+> T10, T5 and S1 shipped 2026-10-09 (§7 rows 1–3 done). Next: S2 (§7 row 4).
 > Every finding below was re-verified
 > in code on 2026-10-07 (line numbers drift; file and symbol names are the stable reference).
 > **Authority:** this document sets the **structural rules, the test and tooling gates and the
@@ -89,22 +89,24 @@ may import `@tunetrack/shared/constants`, a dependency-free subpath, and nothing
 
 ## 3. Track S — Server and shared structure
 
-### S1 · Handler pipeline (B-21, B-17)
+### S1 · Handler pipeline (B-21, B-17) · shipped
 
-- Make `createSocketHandler` async-aware (`handle` may return a promise; rejections reach the same
-  catch, error mapping and ack). Add an `idempotent: true` option that performs the store-backed
-  replay once; replace the twelve copied blocks and both closure variants (rename and close become
-  store-backed like the rest).
-- Route the eight bypassing handlers through it, including `ImportPlaylist` (its
-  `PlaylistImportResult` keeps its contract; schema failure produces the same rejection code, ack
-  and audit `rejected` record as every other event).
-- B-17: **delete** `logAcceptedSocketEvent`, the pending-event-id map it was meant to drain and the
-  never-populated `playerId`/`durationMs` fields. Wiring it would ship every accepted payload to
-  the audit sink, which widens personal-data processing (GDPR Art. 5(1)(c)); decision 9 keeps the
-  current audit scope, not a larger one.
-- **Before/after:** `createSocketHandler.test.ts` gains async-rejection, `idempotent` replay and
-  schema-failure cases; `tests/realtime/*`, `ttActions`, `challengeFlow` and `playlistMetadata` stay green
-  unchanged. `gameplayHandlers.ts` and `lobbyHandlers.ts` each lose ≥ 100 lines.
+**Shipped 2026-10-09.** `createSocketHandler` awaits a returned promise and routes its rejection
+through the same error mapping, ack and audit `rejected` record; a synchronous handler still
+acks in the same tick, so a same-tick replay cannot run twice. A schema failure is now audited
+too. The eight bypassing handlers go through it; request/result events keep their result-event
+contract through a `failureReply` hook (invalid payload, domain error, unexpected error), and
+eight new codes (seven `INVALID_*_PAYLOAD`, `PLAY_SPOTIFY_TRACK_FAILED`) name their failures in
+acks and audit. `startAuthorizedRequest` is deleted; four Spotify lookups share one
+registration helper. B-17: `logAcceptedSocketEvent` and the never-populated `playerId` and
+`durationMs` are deleted, nothing new reaches the audit sink. Deviations: the per-arrival id
+queue stays (it carries the 2026-09-09 rejection correlation); successes settle their entry and
+only known client events get one, so it is bounded. The twelve copied replay blocks had
+already become `roomActionIdempotency` before S1, so the `idempotent: true` flag and the
+≥ 100-line reduction no longer apply; close-room keeps its per-socket replay because closing
+deletes the room-scoped ack store. Proof: `createSocketHandler.test.ts` (+6),
+`realtimeAuditLogger.test.ts` (+2), `tests/realtime/musicSetupReplies.test.ts` (4); every
+existing server test and E2E green unchanged.
 
 ### S2 · Façade collapse (B-08, B-29 `RoomService`, `RoomRegistry`)
 

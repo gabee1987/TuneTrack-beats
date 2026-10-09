@@ -10,11 +10,7 @@ import {
 import type { Server, Socket } from "socket.io";
 import { logger } from "../../app/logger.js";
 import type { RoomService } from "../../rooms/RoomService.js";
-import {
-  broadcastRoomState,
-  createSocketHandler,
-  startAuthorizedRequest,
-} from "../createSocketHandler.js";
+import { broadcastRoomState, createSocketHandler } from "../createSocketHandler.js";
 import {
   getPlaylistTracksErrorMessages,
   loadCuratedPlaylistErrorMessages,
@@ -36,43 +32,39 @@ export function registerPlaylistHandlers(
 }
 
 function registerImportPlaylistHandler(io: Server, socket: Socket, roomService: RoomService): void {
-  socket.on(ClientToServerEvent.ImportPlaylist, (payload: unknown) => {
-    const parseResult = importPlaylistPayloadSchema.safeParse(payload);
-
-    if (!parseResult.success) {
-      socket.emit(ServerToClientEvent.PlaylistImportResult, {
-        success: false,
-        code: "invalid_url",
-        message: "Playlist URL is invalid.",
-      });
-      return;
-    }
-
-    const pendingImport = startAuthorizedRequest(
-      socket,
-      ClientToServerEvent.ImportPlaylist,
-      () => roomService.importPlaylist(parseResult.data, socket.id),
-      "IMPORT_PLAYLIST_FAILED",
-      musicSetupErrorMessages,
-    );
-    if (!pendingImport) return;
-
-    void pendingImport
-      .then(({ roomState, resultPayload }) => {
-        socket.emit(ServerToClientEvent.PlaylistImportResult, resultPayload);
-
-        if (resultPayload.success) {
-          broadcastRoomState(io, roomState);
-        }
-      })
-      .catch((error: unknown) => {
-        logger.error({ error }, "import_playlist handler threw unexpectedly");
+  createSocketHandler({
+    socket,
+    event: ClientToServerEvent.ImportPlaylist,
+    schema: importPlaylistPayloadSchema,
+    invalidPayload: {
+      code: "INVALID_IMPORT_PLAYLIST_PAYLOAD",
+      message: "Playlist URL is invalid.",
+    },
+    handle: async (data) => {
+      const { roomState, resultPayload } = await roomService.importPlaylist(data, socket.id);
+      socket.emit(ServerToClientEvent.PlaylistImportResult, resultPayload);
+      if (resultPayload.success) {
+        broadcastRoomState(io, roomState);
+      }
+    },
+    failureReply: {
+      invalidPayload: () => {
+        socket.emit(ServerToClientEvent.PlaylistImportResult, {
+          success: false,
+          code: "invalid_url",
+          message: "Playlist URL is invalid.",
+        });
+      },
+      unexpectedError: () => {
         socket.emit(ServerToClientEvent.PlaylistImportResult, {
           success: false,
           code: "spotify_api_error",
           message: "An unexpected error occurred. Please try again.",
         });
-      });
+      },
+    },
+    fallbackErrorCode: "IMPORT_PLAYLIST_FAILED",
+    errorMessages: musicSetupErrorMessages,
   });
 }
 

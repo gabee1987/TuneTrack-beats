@@ -11,7 +11,7 @@ import type { z } from "zod";
 import type { Server, Socket } from "socket.io";
 import { logger } from "../app/logger.js";
 import { resolveSocketErrorMessage, type SocketErrorMessages } from "./errorMessages.js";
-import { logRejectedSocketEvent } from "./realtimeAuditLogger.js";
+import { logRejectedSocketEvent, settleAuditedSocketEvent } from "./realtimeAuditLogger.js";
 
 export function emitServerError(
   socket: Socket,
@@ -19,6 +19,20 @@ export function emitServerError(
   error: unknown,
   fallbackCode: ServerErrorCode,
   messageByCode: SocketErrorMessages,
+): ServerErrorCode {
+  const errorCode = reportServerError(socket, eventName, error, fallbackCode);
+  socket.emit(ServerToClientEvent.Error, {
+    code: errorCode,
+    message: resolveSocketErrorMessage(errorCode, messageByCode),
+  });
+  return errorCode;
+}
+
+function reportServerError(
+  socket: Socket,
+  eventName: string,
+  error: unknown,
+  fallbackCode: ServerErrorCode,
 ): ServerErrorCode {
   const domainErrorCode = resolveDomainErrorCode(error);
   const errorCode = domainErrorCode ?? fallbackCode;
@@ -34,11 +48,6 @@ export function emitServerError(
     );
   }
   logRejectedSocketEvent(socket, eventName, errorCode);
-
-  socket.emit(ServerToClientEvent.Error, {
-    code: errorCode,
-    message: resolveSocketErrorMessage(errorCode, messageByCode),
-  });
   return errorCode;
 }
 
@@ -48,28 +57,22 @@ function resolveDomainErrorCode(error: unknown): ServerErrorCode | null {
   return null;
 }
 
-// Starts an asynchronous room request whose service method authorises synchronously, so a
-// refused caller gets the domain error code instead of the request's generic failure result.
-export function startAuthorizedRequest<TResult>(
-  socket: Socket,
-  eventName: string,
-  start: () => Promise<TResult>,
-  fallbackCode: ServerErrorCode,
-  messageByCode: SocketErrorMessages,
-): Promise<TResult> | null {
-  try {
-    return start();
-  } catch (error) {
-    emitServerError(socket, eventName, error, fallbackCode, messageByCode);
-    return null;
-  }
-}
-
 export function broadcastRoomState(io: Server, roomState: PublicRoomState): void {
   io.to(roomState.roomId).emit(ServerToClientEvent.StateUpdate, {
     roomState,
   });
 }
+
+/**
+ * Request/result events (Spotify search, playlist import, playback) answer on their own result
+ * event because the client waits there, not on an ack. Each hook replaces the generic `error`
+ * event for one kind of failure; the ack and the audit record are sent either way.
+ */
+type FailureReply<TParsed> = {
+  invalidPayload?: (payload: unknown) => void;
+  domainError?: (parsed: TParsed) => void;
+  unexpectedError?: (parsed: TParsed) => void;
+};
 
 type CreateSocketHandlerOptions<TSchema extends z.ZodTypeAny> = {
   socket: Socket;
@@ -80,9 +83,11 @@ type CreateSocketHandlerOptions<TSchema extends z.ZodTypeAny> = {
     message: string;
   };
   log?: (parsed: z.output<TSchema>) => void;
-  handle: (parsed: z.output<TSchema>) => void;
+  /** A returned promise is awaited; its rejection is handled like a thrown error. */
+  handle: (parsed: z.output<TSchema>) => void | Promise<void>;
   fallbackErrorCode: ServerErrorCode;
   errorMessages: SocketErrorMessages;
+  failureReply?: FailureReply<z.output<TSchema>>;
   idempotency?: {
     find: (parsed: z.output<TSchema>) => ActionAck | undefined;
     remember: (parsed: z.output<TSchema>, ack: ActionAck) => void;
@@ -92,44 +97,61 @@ type CreateSocketHandlerOptions<TSchema extends z.ZodTypeAny> = {
 export function createSocketHandler<TSchema extends z.ZodTypeAny>(
   options: CreateSocketHandlerOptions<TSchema>,
 ): void {
-  options.socket.on(options.event, (payload: unknown, ack?: (response: ActionAck) => void) => {
+  const { socket, event, failureReply } = options;
+
+  socket.on(event, (payload: unknown, ack?: (response: ActionAck) => void) => {
     const requestId = getActionRequestId(payload);
     const parseResult = options.schema.safeParse(payload);
 
     if (!parseResult.success) {
-      ack?.({
-        ok: false,
-        requestId,
-        code: options.invalidPayload.code,
-      });
-      options.socket.emit(ServerToClientEvent.Error, {
-        code: options.invalidPayload.code,
-        message: options.invalidPayload.message,
-      });
+      const { code, message } = options.invalidPayload;
+      logRejectedSocketEvent(socket, event, code);
+      ack?.({ ok: false, requestId, code });
+      if (failureReply?.invalidPayload) {
+        failureReply.invalidPayload(payload);
+      } else {
+        socket.emit(ServerToClientEvent.Error, { code, message });
+      }
       return;
     }
 
+    const parsed: z.output<TSchema> = parseResult.data;
+    const succeed = (): void => {
+      const successAck = { ok: true, requestId } satisfies ActionAck;
+      options.idempotency?.remember(parsed, successAck);
+      settleAuditedSocketEvent(socket, event);
+      ack?.(successAck);
+    };
+    const fail = (error: unknown): void => {
+      const reply = resolveDomainErrorCode(error)
+        ? failureReply?.domainError
+        : failureReply?.unexpectedError;
+      const code = reply
+        ? reportServerError(socket, event, error, options.fallbackErrorCode)
+        : emitServerError(socket, event, error, options.fallbackErrorCode, options.errorMessages);
+      reply?.(parsed);
+      ack?.({ ok: false, requestId, code });
+    };
+
     try {
-      const replayAck = options.idempotency?.find(parseResult.data);
+      const replayAck = options.idempotency?.find(parsed);
       if (replayAck) {
+        settleAuditedSocketEvent(socket, event);
         ack?.(replayAck);
         return;
       }
 
-      options.log?.(parseResult.data);
-      options.handle(parseResult.data);
-      const successAck = { ok: true, requestId } satisfies ActionAck;
-      options.idempotency?.remember(parseResult.data, successAck);
-      ack?.(successAck);
+      options.log?.(parsed);
+      const pending = options.handle(parsed);
+      // A synchronous handler must remember its ack before the next packet is dispatched, or a
+      // replay arriving in the same tick would run the action twice.
+      if (pending) {
+        void pending.then(succeed, fail);
+        return;
+      }
+      succeed();
     } catch (error) {
-      const errorCode = emitServerError(
-        options.socket,
-        options.event,
-        error,
-        options.fallbackErrorCode,
-        options.errorMessages,
-      );
-      ack?.({ ok: false, requestId, code: errorCode });
+      fail(error);
     }
   });
 }
