@@ -9,6 +9,7 @@ import {
   selectAutomaticHostCandidate,
   selectNextConnectedTurnPlayer,
 } from "./roomConnectionBuilders.js";
+import { logPlayerLeft } from "./roomLifecycleLog.js";
 import { mapGameStateToPublicRoomState } from "./roomStateMappers.js";
 import type {
   JoinRoomResult,
@@ -23,6 +24,7 @@ type RoomStateChangedEmitter = (roomState: PublicRoomState) => void;
 type SpotifyPlaybackHandoffEmitter = (roomId: RoomId) => void;
 type RoomDirectoryChangedEmitter = () => void;
 type RoomExpiredEmitter = (roomId: RoomId) => void;
+type SocketLeftEmitter = (socketId: string) => void;
 
 export class RoomConnectionService {
   public constructor(
@@ -33,9 +35,17 @@ export class RoomConnectionService {
     private readonly emitSpotifyPlaybackHandoff: SpotifyPlaybackHandoffEmitter = () => undefined,
     private readonly emitRoomDirectoryChanged: RoomDirectoryChangedEmitter = () => undefined,
     private readonly emitRoomExpired: RoomExpiredEmitter = () => undefined,
+    private readonly emitSocketLeft: SocketLeftEmitter = () => undefined,
   ) {}
 
   public removePlayerBySocketId(socketId: string): PublicRoomState | null {
+    this.emitSocketLeft(socketId);
+    const roomState = this.removeSocketMembership(socketId);
+    if (roomState) logPlayerLeft(socketId, roomState);
+    return roomState;
+  }
+
+  private removeSocketMembership(socketId: string): PublicRoomState | null {
     const membership = this.store.getSocketMembership(socketId);
     if (!membership) return null;
 

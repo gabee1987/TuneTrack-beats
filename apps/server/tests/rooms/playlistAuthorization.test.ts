@@ -11,16 +11,13 @@ import {
   useSpotifyCandidatesPayloadSchema,
 } from "@tunetrack/shared";
 import { describe, expect, it, vi } from "vitest";
-import { DeckService } from "../../src/decks/DeckService.js";
+import type { RoomServices } from "../../src/app/createRoomServices.js";
 import { PlaylistImportService } from "../../src/decks/PlaylistImportService.js";
-import { RoomRegistry } from "../../src/rooms/RoomRegistry.js";
-import { RoomService } from "../../src/rooms/RoomService.js";
 import { SpotifyApiClient } from "../../src/spotify/SpotifyApiClient.js";
-import { SpotifyAuthService } from "../../src/spotify/SpotifyAuthService.js";
 import { SpotifyDiscoveryService } from "../../src/spotify/SpotifyDiscoveryService.js";
 import { SpotifyMusicSearchService } from "../../src/spotify/SpotifyMusicSearchService.js";
-import { SpotifyPlaybackSessionStore } from "../../src/spotify/SpotifyPlaybackSessionStore.js";
 import { SpotifyTokenStore } from "../../src/spotify/SpotifyTokenStore.js";
+import { createTestRoomServices } from "../support/roomServices.js";
 
 const TEST_ROOM_ID = "TEST_ROOM_1";
 const HOST_SOCKET_ID = "host-socket";
@@ -37,7 +34,7 @@ const curatedTracks = TRACK_IDS.map((id, index) => ({
   metadataStatus: "imported" as const,
 }));
 
-function createRoomServiceWithGuest() {
+function createServicesWithGuest() {
   const tokenStore = new SpotifyTokenStore();
   const apiClient = new SpotifyApiClient();
   const playlistImportService = new PlaylistImportService(apiClient, tokenStore);
@@ -56,24 +53,15 @@ function createRoomServiceWithGuest() {
       throw new Error("SPOTIFY_WORK_MUST_NOT_RUN");
     });
   }
-  const roomService = new RoomService(
-    new RoomRegistry(),
-    new DeckService(),
-    new SpotifyAuthService(apiClient, tokenStore),
+  const services = createTestRoomServices({
+    apiClient,
+    tokenStore,
     playlistImportService,
-    discoveryService,
-    musicSearchService,
-    new SpotifyPlaybackSessionStore(),
-  );
-  roomService.createRoom(
-    { roomId: TEST_ROOM_ID, displayName: "Player One", sessionId: "session-host" },
-    HOST_SOCKET_ID,
-  );
-  roomService.joinRoom(
-    { roomId: TEST_ROOM_ID, displayName: "Player Two", sessionId: "session-guest" },
-    GUEST_SOCKET_ID,
-  );
-  roomService.loadCuratedPlaylist(
+    spotify: { discovery: discoveryService, musicSearch: musicSearchService },
+  });
+  services.lobby.createRoom(TEST_ROOM_ID, "Player One", HOST_SOCKET_ID, "session-host");
+  services.lobby.addPlayerToRoom(TEST_ROOM_ID, "Player Two", GUEST_SOCKET_ID, "session-guest");
+  services.playlists.loadCuratedPlaylist(
     loadCuratedPlaylistPayloadSchema.parse({
       roomId: TEST_ROOM_ID,
       tracks: curatedTracks,
@@ -81,41 +69,41 @@ function createRoomServiceWithGuest() {
     }),
     HOST_SOCKET_ID,
   );
-  return { roomService, spotifyWork };
+  return { services, spotifyWork };
 }
 
-function startGame(roomService: RoomService): void {
-  roomService.startGame({ roomId: TEST_ROOM_ID }, HOST_SOCKET_ID);
+function startGame(services: RoomServices): void {
+  services.gameplay.startGame(HOST_SOCKET_ID, { roomId: TEST_ROOM_ID });
 }
 
-type PlaylistAction = (roomService: RoomService, socketId: string) => unknown;
+type PlaylistAction = (services: RoomServices, socketId: string) => unknown;
 
 const musicSetupActions: Record<string, PlaylistAction> = {
-  import_playlist: (roomService, socketId) =>
-    roomService.importPlaylist(
+  import_playlist: (services, socketId) =>
+    services.playlists.importPlaylist(
       importPlaylistPayloadSchema.parse({
         roomId: TEST_ROOM_ID,
         playlistUrl: "https://open.spotify.com/playlist/TESTPLAYLIST12345",
       }),
       socketId,
     ),
-  load_curated_playlist: (roomService, socketId) =>
-    roomService.loadCuratedPlaylist(
+  load_curated_playlist: (services, socketId) =>
+    services.playlists.loadCuratedPlaylist(
       loadCuratedPlaylistPayloadSchema.parse({ roomId: TEST_ROOM_ID, tracks: curatedTracks }),
       socketId,
     ),
-  search_spotify_playlists: (roomService, socketId) =>
-    roomService.searchSpotifyPlaylists(
+  search_spotify_playlists: (services, socketId) =>
+    services.spotify.searchSpotifyPlaylists(
       searchSpotifyPlaylistsPayloadSchema.parse({ roomId: TEST_ROOM_ID, query: "test" }),
       socketId,
     ),
-  search_spotify_music: (roomService, socketId) =>
-    roomService.searchSpotifyMusic(
+  search_spotify_music: (services, socketId) =>
+    services.spotify.searchSpotifyMusic(
       searchSpotifyMusicPayloadSchema.parse({ roomId: TEST_ROOM_ID, query: "test" }),
       socketId,
     ),
-  open_spotify_playlist: (roomService, socketId) =>
-    roomService.openSpotifyPlaylist(
+  open_spotify_playlist: (services, socketId) =>
+    services.spotify.openSpotifyPlaylist(
       openSpotifyPlaylistPayloadSchema.parse({
         roomId: TEST_ROOM_ID,
         playlistId: "TESTPLAYLIST12345",
@@ -123,16 +111,16 @@ const musicSetupActions: Record<string, PlaylistAction> = {
       }),
       socketId,
     ),
-  generate_spotify_candidates: (roomService, socketId) =>
-    roomService.generateSpotifyCandidates(
+  generate_spotify_candidates: (services, socketId) =>
+    services.spotify.generateSpotifyCandidates(
       generateSpotifyCandidatesPayloadSchema.parse({
         roomId: TEST_ROOM_ID,
         source: { type: "playlists", playlistIds: ["TESTPLAYLIST12345"] },
       }),
       socketId,
     ),
-  use_spotify_candidates: (roomService, socketId) =>
-    roomService.useSpotifyCandidates(
+  use_spotify_candidates: (services, socketId) =>
+    services.spotify.useSpotifyCandidates(
       useSpotifyCandidatesPayloadSchema.parse({
         roomId: TEST_ROOM_ID,
         candidateSessionId: "candidate-session-12345",
@@ -142,21 +130,21 @@ const musicSetupActions: Record<string, PlaylistAction> = {
     ),
 };
 
-const getPlaylistTracks: PlaylistAction = (roomService, socketId) =>
-  roomService.getPlaylistTracks(
+const getPlaylistTracks: PlaylistAction = (services, socketId) =>
+  services.playlists.getPlaylistTracks(
     getPlaylistTracksPayloadSchema.parse({ roomId: TEST_ROOM_ID }),
     socketId,
   );
 
 const playlistEditorActions: Record<string, PlaylistAction> = {
   get_playlist_tracks: getPlaylistTracks,
-  remove_playlist_tracks: (roomService, socketId) =>
-    roomService.removePlaylistTracks(
+  remove_playlist_tracks: (services, socketId) =>
+    services.playlists.removePlaylistTracks(
       removePlaylistTracksPayloadSchema.parse({ roomId: TEST_ROOM_ID, trackIds: ["track-1"] }),
       socketId,
     ),
-  update_playlist_track: (roomService, socketId) =>
-    roomService.updatePlaylistTrack(
+  update_playlist_track: (services, socketId) =>
+    services.playlists.updatePlaylistTrack(
       updatePlaylistTrackPayloadSchema.parse({
         roomId: TEST_ROOM_ID,
         trackId: "track-1",
@@ -170,9 +158,9 @@ describe("playlist and music setup authorisation", () => {
   it.each(Object.entries(musicSetupActions))(
     "refuses %s for a guest before any Spotify work",
     (_event, action) => {
-      const { roomService, spotifyWork } = createRoomServiceWithGuest();
+      const { services, spotifyWork } = createServicesWithGuest();
 
-      expect(() => action(roomService, GUEST_SOCKET_ID)).toThrow("ONLY_HOST_CAN_IMPORT_PLAYLIST");
+      expect(() => action(services, GUEST_SOCKET_ID)).toThrow("ONLY_HOST_CAN_IMPORT_PLAYLIST");
       for (const spy of spotifyWork) {
         expect(spy).not.toHaveBeenCalled();
       }
@@ -180,18 +168,18 @@ describe("playlist and music setup authorisation", () => {
   );
 
   it.each(Object.entries(playlistEditorActions))("refuses %s for a guest", (_event, action) => {
-    const { roomService } = createRoomServiceWithGuest();
+    const { services } = createServicesWithGuest();
 
-    expect(() => action(roomService, GUEST_SOCKET_ID)).toThrow("ONLY_HOST_CAN_EDIT_PLAYLIST");
+    expect(() => action(services, GUEST_SOCKET_ID)).toThrow("ONLY_HOST_CAN_EDIT_PLAYLIST");
   });
 
   it.each(Object.entries({ ...musicSetupActions, ...playlistEditorActions }))(
     "refuses %s for the host once the game has started",
     (_event, action) => {
-      const { roomService, spotifyWork } = createRoomServiceWithGuest();
-      startGame(roomService);
+      const { services, spotifyWork } = createServicesWithGuest();
+      startGame(services);
 
-      expect(() => action(roomService, HOST_SOCKET_ID)).toThrow("GAME_ALREADY_STARTED");
+      expect(() => action(services, HOST_SOCKET_ID)).toThrow("GAME_ALREADY_STARTED");
       for (const spy of spotifyWork) {
         expect(spy).not.toHaveBeenCalled();
       }
@@ -199,18 +187,18 @@ describe("playlist and music setup authorisation", () => {
   );
 
   it("never returns release years to a guest during a game", () => {
-    const { roomService } = createRoomServiceWithGuest();
-    startGame(roomService);
+    const { services } = createServicesWithGuest();
+    startGame(services);
 
-    expect(() => getPlaylistTracks(roomService, GUEST_SOCKET_ID)).toThrow(
+    expect(() => getPlaylistTracks(services, GUEST_SOCKET_ID)).toThrow(
       "ONLY_HOST_CAN_EDIT_PLAYLIST",
     );
   });
 
   it("returns the deck to the host in the lobby", () => {
-    const { roomService } = createRoomServiceWithGuest();
+    const { services } = createServicesWithGuest();
 
-    const tracks = roomService.getPlaylistTracks(
+    const tracks = services.playlists.getPlaylistTracks(
       getPlaylistTracksPayloadSchema.parse({ roomId: TEST_ROOM_ID }),
       HOST_SOCKET_ID,
     );

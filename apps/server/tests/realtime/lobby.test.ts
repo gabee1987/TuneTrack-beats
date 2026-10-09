@@ -7,7 +7,7 @@ import {
   type ServerErrorPayload,
 } from "@tunetrack/shared";
 import { describe, expect, it, vi } from "vitest";
-import { RoomRegistry } from "../../src/rooms/RoomRegistry.js";
+import { createTestRoomCore } from "../support/roomCore.js";
 import {
   createRoomAsHost,
   GUEST,
@@ -18,7 +18,7 @@ import {
 } from "../support/roomFixtures.js";
 import {
   connectTestClient,
-  createTestRoomService,
+  createSocketTestServices,
   startSocketTestServer,
 } from "../support/socketTestServer.js";
 import { nextEvent, waitForRoomList, waitForStateUpdate } from "../support/waiters.js";
@@ -59,7 +59,7 @@ describe("lobby directory", () => {
 
   it("pushes a room directory update when an abandoned lobby expires", async () => {
     const baseUrl = await startSocketTestServer(
-      createTestRoomService({ reconnectGracePeriodMs: 25 }),
+      createSocketTestServices({ reconnectGracePeriodMs: 25 }),
     );
     const directory = await connectTestClient(baseUrl);
     const createdPromise = waitForRoomList(directory, (payload) => payload.rooms.length === 1);
@@ -175,9 +175,9 @@ describe("lobby membership", () => {
 
 describe("lobby rename", () => {
   it("renames a lobby room for all members once when the request is replayed", async () => {
-    const roomService = createTestRoomService();
-    const renameRoomSpy = vi.spyOn(roomService, "renameRoom");
-    const baseUrl = await startSocketTestServer(roomService);
+    const services = createSocketTestServices();
+    const renameRoomSpy = vi.spyOn(services.lobby, "renameRoom");
+    const baseUrl = await startSocketTestServer(services);
     const { host, guest } = await openTwoPlayerLobby(baseUrl, "party-room");
     const isRenamed = (roomState: PublicRoomState) => roomState.roomId === "renamed-room";
     const renamedPromises = [
@@ -233,23 +233,23 @@ describe("lobby rename", () => {
 
 describe("lobby sessions in the registry", () => {
   it("moves an existing lobby session to a newly requested room when it is not a rename redirect", () => {
-    const roomRegistry = new RoomRegistry();
+    const roomCore = createTestRoomCore();
     const changedRoomStates: PublicRoomState[] = [];
-    roomRegistry.setRoomStateChangedListener((roomState) => changedRoomStates.push(roomState));
-    const hostJoin = roomRegistry.createRoom(
+    roomCore.events.on("roomStateChanged", (roomState) => changedRoomStates.push(roomState));
+    const hostJoin = roomCore.lobby.createRoom(
       "room-a",
       "Host Player",
       "host-socket",
       "host-session",
     );
-    const guestJoin = roomRegistry.addPlayerToRoom(
+    const guestJoin = roomCore.lobby.addPlayerToRoom(
       "room-a",
       "Guest Player",
       "guest-socket",
       "guest-session",
     );
 
-    const moved = roomRegistry.createRoom(
+    const moved = roomCore.lobby.createRoom(
       "room-b",
       "Guest Player",
       "guest-socket",
@@ -261,7 +261,7 @@ describe("lobby sessions in the registry", () => {
     );
     expect(moved.playerId).not.toBe(guestJoin.playerId);
     expect(moved.roomState.players).toHaveLength(1);
-    expect(roomRegistry.getRoomStateForMember("host-socket", "room-a").players).toEqual([
+    expect(roomCore.store.getRoomStateForMember("host-socket", "room-a").players).toEqual([
       expect.objectContaining({ id: hostJoin.playerId, displayName: "Host Player" }),
     ]);
     expect(changedRoomStates.at(-1)).toEqual(
@@ -273,44 +273,49 @@ describe("lobby sessions in the registry", () => {
   });
 
   it("keeps a reconnected player online when their stale socket later disconnects", () => {
-    const roomRegistry = new RoomRegistry();
-    const hostJoin = roomRegistry.createRoom(
+    const roomCore = createTestRoomCore();
+    const hostJoin = roomCore.lobby.createRoom(
       "reconnect-room",
       "Host Player",
       "host-socket-old",
       "host-session",
     );
-    roomRegistry.addPlayerToRoom("reconnect-room", "Guest Player", "guest-socket", "guest-session");
-    roomRegistry.addPlayerToRoom(
+    roomCore.lobby.addPlayerToRoom(
+      "reconnect-room",
+      "Guest Player",
+      "guest-socket",
+      "guest-session",
+    );
+    roomCore.lobby.addPlayerToRoom(
       "reconnect-room",
       "Host Player",
       "host-socket-new",
       "host-session",
     );
 
-    expect(roomRegistry.removePlayerBySocketId("host-socket-old")).toBeNull();
-    const roomState = roomRegistry.getRoomStateForMember("host-socket-new", "reconnect-room");
+    expect(roomCore.connection.removePlayerBySocketId("host-socket-old")).toBeNull();
+    const roomState = roomCore.store.getRoomStateForMember("host-socket-new", "reconnect-room");
     expect(roomState.players.find((player) => player.id === hostJoin.playerId)).toEqual(
       expect.objectContaining({ connectionStatus: "connected", isHost: true }),
     );
   });
 
   it("still marks a player disconnected when their only socket drops", () => {
-    const roomRegistry = new RoomRegistry();
-    const hostJoin = roomRegistry.createRoom(
+    const roomCore = createTestRoomCore();
+    const hostJoin = roomCore.lobby.createRoom(
       "solo-drop-room",
       "Host Player",
       "host-socket",
       "host-session",
     );
-    const guestJoin = roomRegistry.addPlayerToRoom(
+    const guestJoin = roomCore.lobby.addPlayerToRoom(
       "solo-drop-room",
       "Guest Player",
       "guest-socket",
       "guest-session",
     );
 
-    const roomState = roomRegistry.removePlayerBySocketId("guest-socket");
+    const roomState = roomCore.connection.removePlayerBySocketId("guest-socket");
 
     expect(roomState?.players.find((player) => player.id === guestJoin.playerId)).toEqual(
       expect.objectContaining({ connectionStatus: "disconnected" }),
@@ -319,7 +324,7 @@ describe("lobby sessions in the registry", () => {
   });
 
   it("defers a Spotify token refresh from a socket that has not rejoined yet", async () => {
-    const result = await createTestRoomService().refreshSpotifyToken(
+    const result = await createSocketTestServices().spotify.refreshSpotifyToken(
       { roomId: "reconnect-room" },
       "socket-without-membership",
     );

@@ -18,7 +18,6 @@ const ALLOWLIST = {
   "apps/web/src/pages/GamePage/hooks/useGamePageActions.test.tsx": 982,
   "packages/game-engine/tests/gameFlow.test.ts": 826,
   "apps/e2e/tests/room-entry.spec.ts": 750,
-  "apps/server/src/rooms/RoomService.ts": 701,
 };
 
 function* walk(directory) {

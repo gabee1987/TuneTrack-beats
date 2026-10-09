@@ -192,6 +192,10 @@ export class RoomStore {
     return roomRecord;
   }
 
+  public getRoomStateForMember(socketId: string, roomId: RoomId): PublicRoomState {
+    return this.getRoomRecordForMember(socketId, roomId).roomState;
+  }
+
   public findSessionIdForPlayer(roomId: string, playerId: string): string | undefined {
     for (const [sessionId, membership] of this.sessionMemberships) {
       if (membership.roomId === roomId && membership.playerId === playerId) return sessionId;

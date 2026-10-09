@@ -1,6 +1,6 @@
 import { ServerToClientEvent } from "@tunetrack/shared";
 import type { Server } from "socket.io";
-import type { RoomService } from "../rooms/RoomService.js";
+import type { RoomServices } from "../app/createRoomServices.js";
 
 /** Sockets in no game room watch the directory. The colon cannot occur in a room code. */
 export const ROOM_DIRECTORY_WATCHERS = "directory:watchers";
@@ -39,7 +39,7 @@ export function trackRoomDirectoryWatchers(io: Server): void {
  * Sends the room list to every directory watcher once per tick: a lobby join reaches this both
  * from its handler and from the state listener, and used to broadcast twice (B-26).
  */
-export function broadcastRoomDirectory(io: Server, roomService: RoomService): void {
+export function broadcastRoomDirectory(io: Server, services: RoomServices): void {
   if (serversWithPendingBroadcast.has(io)) {
     return;
   }
@@ -48,7 +48,7 @@ export function broadcastRoomDirectory(io: Server, roomService: RoomService): vo
   queueMicrotask(() => {
     serversWithPendingBroadcast.delete(io);
     io.to(ROOM_DIRECTORY_WATCHERS).emit(ServerToClientEvent.RoomList, {
-      rooms: roomService.listRooms(),
+      rooms: services.store.listLobbySummaries(),
     });
   });
 }

@@ -4,10 +4,10 @@ import {
   type ServerErrorPayload,
 } from "@tunetrack/shared";
 import { describe, expect, it, vi } from "vitest";
-import { RoomRegistry } from "../../src/rooms/RoomRegistry.js";
+import { createTestRoomCore } from "../support/roomCore.js";
 import { turnOrderDeck } from "../support/decks.js";
 import { expectAppliedOnce, openTwoPlayerLobby, sendTwice } from "../support/roomFixtures.js";
-import { createTestRoomService, startSocketTestServer } from "../support/socketTestServer.js";
+import { createSocketTestServices, startSocketTestServer } from "../support/socketTestServer.js";
 import { nextEvent, waitForStateUpdate } from "../support/waiters.js";
 
 interface RoomClosedPayload {
@@ -19,10 +19,10 @@ interface RoomClosedPayload {
 
 describe("host moderation over sockets", () => {
   it("transfers host controls once when the request is replayed", async () => {
-    const roomService = createTestRoomService();
-    const transferHostSpy = vi.spyOn(roomService, "transferHost");
+    const services = createSocketTestServices();
+    const transferHostSpy = vi.spyOn(services.connection, "transferHost");
     const { host, guest } = await openTwoPlayerLobby(
-      await startSocketTestServer(roomService),
+      await startSocketTestServer(services),
       "xfer-room",
     );
     const transferredPromise = waitForStateUpdate(
@@ -78,10 +78,10 @@ describe("host moderation over sockets", () => {
   });
 
   it("lets the host close the room for everyone once when replayed", async () => {
-    const roomService = createTestRoomService();
-    const closeRoomSpy = vi.spyOn(roomService, "closeRoom");
+    const services = createSocketTestServices();
+    const closeRoomSpy = vi.spyOn(services.lobby, "closeRoom");
     const { host, guest } = await openTwoPlayerLobby(
-      await startSocketTestServer(roomService),
+      await startSocketTestServer(services),
       "close-room",
     );
     const closedPromise = nextEvent<RoomClosedPayload>(
@@ -103,10 +103,10 @@ describe("host moderation over sockets", () => {
   });
 
   it("notifies a kicked player once so their client can leave the room", async () => {
-    const roomService = createTestRoomService();
-    const kickPlayerSpy = vi.spyOn(roomService, "kickPlayer");
+    const services = createSocketTestServices();
+    const kickPlayerSpy = vi.spyOn(services.connection, "kickPlayer");
     const { host, guest } = await openTwoPlayerLobby(
-      await startSocketTestServer(roomService),
+      await startSocketTestServer(services),
       "kick-room",
     );
     const kickedNotifications = vi.fn();
@@ -143,37 +143,39 @@ describe("host moderation over sockets", () => {
 
 describe("host moderation in the registry", () => {
   function startThreePlayerGame(roomId: string, thirdName: string) {
-    const roomRegistry = new RoomRegistry();
-    const host = roomRegistry.createRoom(roomId, "Host Player", "host-socket", "host-session");
-    const guest = roomRegistry.addPlayerToRoom(
+    const roomCore = createTestRoomCore();
+    const host = roomCore.lobby.createRoom(roomId, "Host Player", "host-socket", "host-session");
+    const guest = roomCore.lobby.addPlayerToRoom(
       roomId,
       "Guest Player",
       "guest-socket",
       "guest-session",
     );
-    const third = roomRegistry.addPlayerToRoom(roomId, thirdName, "third-socket", "third-session");
-    roomRegistry.startGame("host-socket", { roomId }, turnOrderDeck());
-    roomRegistry.placeCard("host-socket", { roomId, selectedSlotIndex: 1 });
-    const guestTurn = roomRegistry.confirmReveal("host-socket", { roomId });
+    const third = roomCore.lobby.addPlayerToRoom(
+      roomId,
+      thirdName,
+      "third-socket",
+      "third-session",
+    );
+    roomCore.gameplay.startGame("host-socket", { roomId }, turnOrderDeck());
+    roomCore.gameplay.placeCard("host-socket", { roomId, selectedSlotIndex: 1 });
+    const guestTurn = roomCore.gameplay.confirmReveal("host-socket", { roomId });
     expect(guestTurn.turn?.activePlayerId).toBe(guest.playerId);
-    return { roomRegistry, host, guest, third };
+    return { roomCore, host, guest, third };
   }
 
   it("removes kicked players from future turn order during a game", () => {
-    const { roomRegistry, host, guest, third } = startThreePlayerGame(
-      "kick-turn-room",
-      "Kicked Guest",
-    );
+    const { roomCore, host, guest, third } = startThreePlayerGame("kick-turn-room", "Kicked Guest");
 
-    const afterKick = roomRegistry.kickPlayer("host-socket", {
+    const afterKick = roomCore.connection.kickPlayer("host-socket", {
       roomId: "kick-turn-room",
       playerId: third.playerId,
     }).roomState;
     expect(afterKick.turn?.activePlayerId).toBe(guest.playerId);
     expect(afterKick.players.map((player) => player.id)).not.toContain(third.playerId);
 
-    roomRegistry.placeCard("guest-socket", { roomId: "kick-turn-room", selectedSlotIndex: 0 });
-    const hostTurn = roomRegistry.confirmReveal("host-socket", { roomId: "kick-turn-room" });
+    roomCore.gameplay.placeCard("guest-socket", { roomId: "kick-turn-room", selectedSlotIndex: 0 });
+    const hostTurn = roomCore.gameplay.confirmReveal("host-socket", { roomId: "kick-turn-room" });
 
     expect(hostTurn.turn?.activePlayerId).toBe(host.playerId);
     expect(hostTurn.players.map((player) => player.id)).not.toContain(third.playerId);
@@ -183,8 +185,8 @@ describe("host moderation in the registry", () => {
     vi.useFakeTimers();
 
     try {
-      const { roomRegistry, guest, third } = startThreePlayerGame("skip-room", "Third Player");
-      const disconnected = roomRegistry.removePlayerBySocketId("guest-socket");
+      const { roomCore, guest, third } = startThreePlayerGame("skip-room", "Third Player");
+      const disconnected = roomCore.connection.removePlayerBySocketId("guest-socket");
       expect(disconnected?.players.find((player) => player.id === guest.playerId)).toEqual(
         expect.objectContaining({
           connectionStatus: "disconnected",
@@ -192,17 +194,17 @@ describe("host moderation in the registry", () => {
         }),
       );
 
-      const afterSkip = roomRegistry.skipTurn("host-socket", { roomId: "skip-room" });
+      const afterSkip = roomCore.gameplay.skipTurn("host-socket", { roomId: "skip-room" });
       expect(afterSkip.turn?.activePlayerId).toBe(third.playerId);
       expect(afterSkip.players.map((player) => player.id)).toContain(guest.playerId);
 
       vi.advanceTimersByTime(24 * 60 * 60 * 1_000);
-      const retained = roomRegistry.getRoomStateForMember("host-socket", "skip-room");
+      const retained = roomCore.store.getRoomStateForMember("host-socket", "skip-room");
       expect(retained.players.find((player) => player.id === guest.playerId)).toEqual(
         expect.objectContaining({ connectionStatus: "disconnected" }),
       );
 
-      const restored = roomRegistry.addPlayerToRoom(
+      const restored = roomCore.lobby.addPlayerToRoom(
         "skip-room",
         "Guest Player",
         "restored-guest-socket",

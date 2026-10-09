@@ -3,7 +3,7 @@
 > **Status (2026-10-07):** Phase 1 (in-game identity retention), Phase 2 (Socket.IO configuration
 > and rate limiting), Phase 3.1 (graceful shutdown) and Phase 3.3 (lifecycle periods from
 > configuration) shipped; Phase 3.2 (timer references) is superseded by `05` A8. Phase 4 (façade
-> collapse — `RoomService.ts` is 703 lines) and Phase 5 (membership indexes) are open.
+> collapse) shipped 2026-10-09 (`06` S2); Phase 5 (membership indexes) is open.
 > **Folded from** `docs/plans/2026-09-stability-performance/04-backend-stability-and-sessions.md`
 > on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
 > Addresses findings **B-07, B-08, B-11, B-15** of `01-review-findings.md`, with a dependency
@@ -87,75 +87,12 @@ alive; the `keepProcessAlive` option is dropped. `clearAll()` shipped on both ma
 - [ ] `docs/operations/axiom_logging_setup.md` updated with the new `server_stopped` audit
       action.
 
-## 4. Phase 4 — Collapse the double delegation layer
+## 4. Phase 4 — Collapse the double delegation layer · shipped
 
-**Finding:** B-08, owned by Phase 6 of the review programme; `06-structure-and-test-plan.md` S1–S2
-packages and orders it (and corrects B-08: `requireHost` is not dead). This is a maintainability change with no
-behavioural intent. Schedule it **after** Phases 1–3, and treat any behaviour change as a
-defect.
-
-The owner's hard file-size limit is **700 lines** (decision 3, `00-index.md` §5).
-`RoomService.ts` is at 718 lines on 2026-10-06 (696 when this plan was written) and is one
-of only two source files in the repository that violate the hard rule. B-29 lists the
-further backend splits, which are maintainability work rather than rule violations.
-
-### 4.1 Current shape
-
-    realtime/handlers/*  →  RoomService (718 lines)  →  RoomRegistry (319 lines)  →  RoomLobbyService
-                                                                                  →  RoomGameplayService
-                                                                                  →  RoomConnectionService
-                                                                                  →  RoomStore / RoomTimerCoordinator
-
-`RoomRegistry` is almost entirely one-line pass-throughs (`RoomRegistry.requireHost` is dead
-code, B-08). `RoomService` wraps them again, adding logging plus all Spotify orchestration.
-Every new event costs two mechanical edits in files that are already at or over the size
-limit.
-
-### 4.2 Target shape
-
-    realtime/handlers/lobbyHandlers      →  RoomLobbyService
-    realtime/handlers/gameplayHandlers   →  RoomGameplayService
-    realtime/handlers/playlistHandlers   →  PlaylistService        (new: extracted from RoomService)
-    realtime/handlers/spotifyHandlers    →  SpotifyOrchestrator    (new: extracted from RoomService)
-    (connection lifecycle)               →  RoomConnectionService
-
-with a thin `RoomServices` container object created in `app/` wiring and handed to the
-handler registrars, replacing both façades.
-
-### 4.3 Migration, one handler group at a time
-
-1. Extract Spotify orchestration from `RoomService` into
-   `apps/server/src/spotify/SpotifyOrchestrator.ts`. This is the largest single block
-   (`buildSpotifyAuthUrl`, `searchSpotifyPlaylists`, `searchSpotifyMusic`,
-   `openSpotifyPlaylist`, `generateSpotifyCandidates`, `useSpotifyCandidates`,
-   `refreshSpotifyToken`, `playSpotifyTrack`, `registerSpotifyPlaybackDevice`,
-   `unregisterSpotifyPlaybackDevice`, `updateSpotifyAuthStatus`) and moving it takes
-   `RoomService` well under its limit on its own. It needs the room state accessor and the
-   playback-owner guard, which it should receive as narrow injected functions rather than
-   the whole registry.
-2. Extract playlist orchestration (`importPlaylist`, `loadCuratedPlaylist`,
-   `getPlaylistTracks`, `removePlaylistTracks`, `updatePlaylistTrack`) into
-   `apps/server/src/decks/PlaylistOrchestrator.ts`.
-3. Point `playlistHandlers` and `spotifyHandlers` at the new services.
-4. Point `lobbyHandlers` and `gameplayHandlers` at `RoomLobbyService` /
-   `RoomGameplayService` directly, moving the logging that lived in `RoomService` into the
-   handlers (logging is a transport-edge concern, which is where `CLAUDE.md` puts it).
-5. Delete `RoomRegistry` and `RoomService`, keeping `RoomLobbyService.requireHost` /
-   `requireSpotifyPlaybackOwner` — move those two guards onto `RoomStore` or a small
-   `roomAuthorization.ts`, since they are authorisation predicates, not lifecycle.
-
-Each step keeps the socket suites in `apps/server/tests/realtime/` and the other integration
-suites green without modification, because they exercise the socket surface rather than the
-internal classes. That is the safety net that makes this refactor tractable.
-
-### Acceptance
-
-- [ ] No file in `apps/server/src` exceeds 400 lines (plan target; the binding rule is
-      700 lines, decision 3).
-- [ ] No class exists whose methods are more than 80 % single-line delegations.
-- [ ] Every existing server test passes with **zero** modifications.
-- [ ] `CLAUDE.md`'s backend layer-ownership table still describes the code accurately;
-      update the table if the new services change it.
+**Shipped 2026-10-09** as `06` S2: handlers call `RoomLobbyService`, `RoomGameplayService`,
+`RoomConnectionService`, `decks/PlaylistOrchestrator` and `spotify/SpotifyOrchestrator` through the
+`RoomServices` container built in `app/createRoomServices.ts`; `RoomRegistry` and `RoomService` are
+deleted. Deviations and proof are in `06` S2.
 
 ## 5. Phase 5 — Index the membership maps
 

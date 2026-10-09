@@ -1,14 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { DeckService } from "../../src/decks/DeckService.js";
-import { PlaylistImportService } from "../../src/decks/PlaylistImportService.js";
-import { RoomRegistry } from "../../src/rooms/RoomRegistry.js";
-import { RoomService } from "../../src/rooms/RoomService.js";
 import { SpotifyApiClient } from "../../src/spotify/SpotifyApiClient.js";
 import { SpotifyAuthService } from "../../src/spotify/SpotifyAuthService.js";
-import { SpotifyDiscoveryService } from "../../src/spotify/SpotifyDiscoveryService.js";
-import { SpotifyMusicSearchService } from "../../src/spotify/SpotifyMusicSearchService.js";
-import { SpotifyPlaybackSessionStore } from "../../src/spotify/SpotifyPlaybackSessionStore.js";
 import { SpotifyTokenStore } from "../../src/spotify/SpotifyTokenStore.js";
+import { createTestRoomServices } from "../support/roomServices.js";
 
 const TEST_ROOM_ID = "TEST_ROOM_1";
 const HOST_SOCKET_ID = "host-socket";
@@ -129,66 +123,52 @@ describe("Spotify OAuth state", () => {
 });
 
 describe("Spotify auth URL and room close authorisation", () => {
-  function createRoomServiceWithGuest() {
+  function createServicesWithGuest() {
     const tokenStore = new SpotifyTokenStore();
     const apiClient = new SpotifyApiClient();
-    const roomService = new RoomService(
-      new RoomRegistry(),
-      new DeckService(),
-      new SpotifyAuthService(apiClient, tokenStore),
-      new PlaylistImportService(apiClient, tokenStore),
-      new SpotifyDiscoveryService(apiClient, tokenStore),
-      new SpotifyMusicSearchService(apiClient, tokenStore),
-      new SpotifyPlaybackSessionStore(),
-    );
-    roomService.createRoom(
-      { roomId: TEST_ROOM_ID, displayName: "Player One", sessionId: "session-host" },
-      HOST_SOCKET_ID,
-    );
-    roomService.joinRoom(
-      { roomId: TEST_ROOM_ID, displayName: "Player Two", sessionId: "session-guest" },
-      GUEST_SOCKET_ID,
-    );
-    return { roomService, tokenStore };
+    const services = createTestRoomServices({ apiClient, tokenStore });
+    services.lobby.createRoom(TEST_ROOM_ID, "Player One", HOST_SOCKET_ID, "session-host");
+    services.lobby.addPlayerToRoom(TEST_ROOM_ID, "Player Two", GUEST_SOCKET_ID, "session-guest");
+    return { services, tokenStore };
   }
 
   it("issues an auth URL to the host", () => {
-    const { roomService } = createRoomServiceWithGuest();
+    const { services } = createServicesWithGuest();
 
-    expect(roomService.buildSpotifyAuthUrl({ roomId: TEST_ROOM_ID }, HOST_SOCKET_ID)).toContain(
-      "state=",
-    );
+    expect(
+      services.spotify.buildSpotifyAuthUrl({ roomId: TEST_ROOM_ID }, HOST_SOCKET_ID),
+    ).toContain("state=");
   });
 
   it("refuses an auth URL to a guest of the room", () => {
-    const { roomService } = createRoomServiceWithGuest();
+    const { services } = createServicesWithGuest();
 
     expect(() =>
-      roomService.buildSpotifyAuthUrl({ roomId: TEST_ROOM_ID }, GUEST_SOCKET_ID),
+      services.spotify.buildSpotifyAuthUrl({ roomId: TEST_ROOM_ID }, GUEST_SOCKET_ID),
     ).toThrow();
   });
 
   it("refuses an auth URL to a socket outside the room", () => {
-    const { roomService } = createRoomServiceWithGuest();
+    const { services } = createServicesWithGuest();
 
     expect(() =>
-      roomService.buildSpotifyAuthUrl({ roomId: TEST_ROOM_ID }, OUTSIDER_SOCKET_ID),
+      services.spotify.buildSpotifyAuthUrl({ roomId: TEST_ROOM_ID }, OUTSIDER_SOCKET_ID),
     ).toThrow();
   });
 
   it("treats a callback socket as host only while it hosts the room", () => {
-    const { roomService } = createRoomServiceWithGuest();
+    const { services } = createServicesWithGuest();
 
-    expect(roomService.isRoomHostSocket(TEST_ROOM_ID, HOST_SOCKET_ID)).toBe(true);
-    expect(roomService.isRoomHostSocket(TEST_ROOM_ID, GUEST_SOCKET_ID)).toBe(false);
-    expect(roomService.isRoomHostSocket(TEST_ROOM_ID, OUTSIDER_SOCKET_ID)).toBe(false);
+    expect(services.spotify.isRoomHostSocket(TEST_ROOM_ID, HOST_SOCKET_ID)).toBe(true);
+    expect(services.spotify.isRoomHostSocket(TEST_ROOM_ID, GUEST_SOCKET_ID)).toBe(false);
+    expect(services.spotify.isRoomHostSocket(TEST_ROOM_ID, OUTSIDER_SOCKET_ID)).toBe(false);
   });
 
   it("leaves the host tokens intact when a non-host tries to close the room", () => {
-    const { roomService, tokenStore } = createRoomServiceWithGuest();
+    const { services, tokenStore } = createServicesWithGuest();
     tokenStore.setHostTokens(TEST_ROOM_ID, "access-token", "refresh-token", 3600, "premium");
 
-    expect(() => roomService.closeRoom({ roomId: TEST_ROOM_ID }, GUEST_SOCKET_ID)).toThrow(
+    expect(() => services.lobby.closeRoom(GUEST_SOCKET_ID, { roomId: TEST_ROOM_ID })).toThrow(
       "ONLY_HOST_CAN_CLOSE_ROOM",
     );
     expect(tokenStore.getHostTokenRecord(TEST_ROOM_ID)).not.toBeNull();

@@ -55,8 +55,11 @@ file that grows a second responsibility is split, not extended.
 - Membership bookkeeping, game flow, timers and transport semantics are separate steps,
   not one branch.
 - Prefer returning new snapshots over in-place edits; isolate mutation to the owning class.
-- `RoomRegistry` and `RoomService` are façades. Do not add logic to them; add it to the
-  narrower collaborator and expose it. Collapsing the double façade is tracked work.
+- Handlers reach the rooms layer through the `RoomServices` container (`app/createRoomServices.ts`):
+  `lobby`, `gameplay`, `connection`, `acks`, `playlists`, `spotify`. Host and playback-owner
+  checks live in `rooms/roomAuthorization.ts`, each caller passing its own refusal code.
+  Spotify reacts to rename, close, expiry and socket departure through `rooms/RoomEvents`; the
+  rooms layer never imports Spotify code.
 
 ## 5. Domain boundary
 

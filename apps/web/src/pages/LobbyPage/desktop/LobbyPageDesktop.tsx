@@ -7,13 +7,14 @@ import { LobbyHeader } from "../components/LobbyHeader";
 import { LobbyHostSettingsPanel } from "../components/LobbyHostSettingsPanel";
 import { LobbyPlayerList } from "../components/LobbyPlayerList";
 import { LobbyRoomActions } from "../components/LobbyRoomActions";
+import { LobbyRoomRenameCard } from "../components/LobbyRoomRenameCard";
 import { LobbySectionHeader } from "../components/LobbySectionHeader";
 import { LobbySummaryCard } from "../components/LobbySummaryCard";
 import styles from "./LobbyPageDesktop.module.css";
 
 export function LobbyPageDesktop({ model }: LobbyPageAssemblyProps) {
   const { t } = useI18n();
-  const { shell, room, hostSettings, players, roomActions } = model;
+  const { shell, room, hostSettings, players, roomActions, identity } = model;
 
   return (
     <AppPageShell panelClassName={styles.panelShell} screenClassName={styles.screenShell}>
@@ -38,17 +39,25 @@ export function LobbyPageDesktop({ model }: LobbyPageAssemblyProps) {
               />
             </SurfaceCard>
           ) : room.isHost ? (
-            <LobbyHostSettingsPanel
-              currentSettings={hostSettings.currentSettings}
-              isRoomSettingsPending={hostSettings.isRoomSettingsPending}
-              isStartGamePending={hostSettings.isStartGamePending}
-              onIntentToStartGame={hostSettings.onIntentToStartGame}
-              onRoomSettingsChange={hostSettings.onRoomSettingsChange}
-              onStartGame={hostSettings.onStartGame}
-              onToggleTtMode={hostSettings.onToggleTtMode}
-              roomSettingsActionStatus={hostSettings.roomSettingsActionStatus}
-              startGameActionStatus={hostSettings.startGameActionStatus}
-            />
+            <>
+              <LobbyRoomRenameCard
+                actionState={identity.identityActionState}
+                isPending={identity.isIdentityActionPending}
+                onRename={identity.onRoomRename}
+                roomId={identity.resolvedRoomId}
+              />
+              <LobbyHostSettingsPanel
+                currentSettings={hostSettings.currentSettings}
+                isRoomSettingsPending={hostSettings.isRoomSettingsPending}
+                isStartGamePending={hostSettings.isStartGamePending}
+                onIntentToStartGame={hostSettings.onIntentToStartGame}
+                onRoomSettingsChange={hostSettings.onRoomSettingsChange}
+                onStartGame={hostSettings.onStartGame}
+                onToggleTtMode={hostSettings.onToggleTtMode}
+                roomSettingsActionStatus={hostSettings.roomSettingsActionStatus}
+                startGameActionStatus={hostSettings.startGameActionStatus}
+              />
+            </>
           ) : (
             <SurfaceCard className={styles.waitingCard}>
               <LobbySectionHeader

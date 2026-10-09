@@ -1,4 +1,5 @@
 import { createHttpServer } from "./app/createHttpServer.js";
+import { createRoomServices, roomDurationsFromEnv } from "./app/createRoomServices.js";
 import { createSocketServer } from "./app/createSocketServer.js";
 import { logAuditEvent } from "./app/auditLogger.js";
 import { drainAxiomLogEvents } from "./app/axiomLogSink.js";
@@ -10,8 +11,6 @@ import { DeckService } from "./decks/DeckService.js";
 import { PlaylistImportService } from "./decks/PlaylistImportService.js";
 import { registerSpotifyRoutes } from "./http/spotifyRoutes.js";
 import { registerSocketHandlers } from "./realtime/registerSocketHandlers.js";
-import { RoomRegistry } from "./rooms/RoomRegistry.js";
-import { RoomService } from "./rooms/RoomService.js";
 import { SpotifyApiClient } from "./spotify/SpotifyApiClient.js";
 import { SpotifyAuthService } from "./spotify/SpotifyAuthService.js";
 import { SpotifyDiscoveryService } from "./spotify/SpotifyDiscoveryService.js";
@@ -46,29 +45,23 @@ const deckService = new DeckService(
   undefined,
   testDeckRandomValue === undefined ? undefined : () => testDeckRandomValue,
 );
-const roomRegistry = new RoomRegistry(
-  undefined,
-  env.RECONNECT_GRACE_MS,
-  env.HOST_TRANSFER_GRACE_MS,
-  env.TURN_SKIP_GRACE_MS,
-  env.MAX_ACTIVE_ROOMS,
-  env.ALL_PLAYERS_OFFLINE_ROOM_TTL_MS,
-);
-const roomService = new RoomService(
-  roomRegistry,
+const roomServices = createRoomServices({
+  durations: roomDurationsFromEnv(),
   deckService,
-  spotifyAuthService,
   playlistImportService,
-  spotifyDiscoveryService,
-  spotifyMusicSearchService,
-  spotifyPlaybackSessions,
-);
+  spotify: {
+    auth: spotifyAuthService,
+    discovery: spotifyDiscoveryService,
+    musicSearch: spotifyMusicSearchService,
+    playbackSessions: spotifyPlaybackSessions,
+  },
+});
 
-registerSpotifyRoutes(app, io, spotifyAuthService, roomService);
-registerSocketHandlers(io, roomService);
+registerSpotifyRoutes(app, io, spotifyAuthService, roomServices);
+registerSocketHandlers(io, roomServices);
 registerGracefulShutdown(process, {
   socketServer: io,
-  clearRoomTimers: () => roomRegistry.clearAllTimers(),
+  clearRoomTimers: () => roomServices.timers.clearAll(),
   recordServerStopped: (signal) =>
     logAuditEvent({
       auditKind: "server",

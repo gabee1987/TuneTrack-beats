@@ -15,7 +15,7 @@ import {
 } from "@tunetrack/shared";
 import type { Server, Socket } from "socket.io";
 import { logger } from "../../app/logger.js";
-import type { RoomService } from "../../rooms/RoomService.js";
+import type { RoomServices } from "../../app/createRoomServices.js";
 import { broadcastRoomDirectory } from "../broadcastRoomDirectory.js";
 import { broadcastRoomState, createSocketHandler } from "../createSocketHandler.js";
 import { settleAuditedSocketEvent } from "../realtimeAuditLogger.js";
@@ -32,22 +32,22 @@ import {
   transferHostErrorMessages,
 } from "../errorMessages.js";
 
-export function registerLobbyHandlers(io: Server, socket: Socket, roomService: RoomService): void {
-  registerCreateRoomHandler(io, socket, roomService);
-  registerJoinRoomHandler(io, socket, roomService);
-  registerListRoomsHandler(socket, roomService);
-  registerGetRoomPreviewHandler(socket, roomService);
-  registerRenameRoomHandler(io, socket, roomService);
-  registerTransferHostHandler(io, socket, roomService);
-  registerKickPlayerHandler(io, socket, roomService);
-  registerUpdateRoomSettingsHandler(io, socket, roomService);
-  registerUpdatePlayerSettingsHandler(io, socket, roomService);
-  registerUpdatePlayerProfileHandler(io, socket, roomService);
-  registerCloseRoomHandler(io, socket, roomService);
-  registerDisconnectHandler(io, socket, roomService);
+export function registerLobbyHandlers(io: Server, socket: Socket, services: RoomServices): void {
+  registerCreateRoomHandler(io, socket, services);
+  registerJoinRoomHandler(io, socket, services);
+  registerListRoomsHandler(socket, services);
+  registerGetRoomPreviewHandler(socket, services);
+  registerRenameRoomHandler(io, socket, services);
+  registerTransferHostHandler(io, socket, services);
+  registerKickPlayerHandler(io, socket, services);
+  registerUpdateRoomSettingsHandler(io, socket, services);
+  registerUpdatePlayerSettingsHandler(io, socket, services);
+  registerUpdatePlayerProfileHandler(io, socket, services);
+  registerCloseRoomHandler(io, socket, services);
+  registerDisconnectHandler(io, socket, services);
 }
 
-function registerRenameRoomHandler(io: Server, socket: Socket, roomService: RoomService): void {
+function registerRenameRoomHandler(io: Server, socket: Socket, services: RoomServices): void {
   createSocketHandler({
     socket,
     event: ClientToServerEvent.RenameRoom,
@@ -67,20 +67,20 @@ function registerRenameRoomHandler(io: Server, socket: Socket, roomService: Room
       );
     },
     handle: (data) => {
-      const { previousRoomId, roomState } = roomService.renameRoom(data, socket.id);
+      const { previousRoomId, roomState } = services.lobby.renameRoom(socket.id, data);
 
       io.in(previousRoomId).socketsJoin(roomState.roomId);
       io.in(previousRoomId).socketsLeave(previousRoomId);
       broadcastRoomState(io, roomState);
-      broadcastRoomDirectory(io, roomService);
+      broadcastRoomDirectory(io, services);
     },
-    idempotency: roomActionIdempotency(roomService, socket, ClientToServerEvent.RenameRoom),
+    idempotency: roomActionIdempotency(services, socket, ClientToServerEvent.RenameRoom),
     fallbackErrorCode: "RENAME_ROOM_FAILED",
     errorMessages: renameRoomErrorMessages,
   });
 }
 
-function registerJoinRoomHandler(io: Server, socket: Socket, roomService: RoomService): void {
+function registerJoinRoomHandler(io: Server, socket: Socket, services: RoomServices): void {
   createSocketHandler({
     socket,
     event: ClientToServerEvent.JoinRoom,
@@ -101,7 +101,12 @@ function registerJoinRoomHandler(io: Server, socket: Socket, roomService: RoomSe
     },
     handle: (data) => {
       const previousSocketRoomIds = [...socket.rooms].filter((roomId) => roomId !== socket.id);
-      const { playerId, roomState } = roomService.joinRoom(data, socket.id);
+      const { playerId, roomState } = services.lobby.addPlayerToRoom(
+        data.roomId,
+        data.displayName,
+        socket.id,
+        data.sessionId,
+      );
       for (const previousSocketRoomId of previousSocketRoomIds) {
         if (previousSocketRoomId !== roomState.roomId) {
           socket.leave(previousSocketRoomId);
@@ -110,14 +115,14 @@ function registerJoinRoomHandler(io: Server, socket: Socket, roomService: RoomSe
       socket.join(roomState.roomId);
       socket.emit(ServerToClientEvent.PlayerIdentity, { playerId });
       broadcastRoomState(io, roomState);
-      broadcastRoomDirectory(io, roomService);
+      broadcastRoomDirectory(io, services);
     },
     fallbackErrorCode: "JOIN_ROOM_FAILED",
     errorMessages: joinRoomErrorMessages,
   });
 }
 
-function registerCreateRoomHandler(io: Server, socket: Socket, roomService: RoomService): void {
+function registerCreateRoomHandler(io: Server, socket: Socket, services: RoomServices): void {
   createSocketHandler({
     socket,
     event: ClientToServerEvent.CreateRoom,
@@ -138,7 +143,12 @@ function registerCreateRoomHandler(io: Server, socket: Socket, roomService: Room
     },
     handle: (data) => {
       const previousSocketRoomIds = [...socket.rooms].filter((roomId) => roomId !== socket.id);
-      const { playerId, roomState } = roomService.createRoom(data, socket.id);
+      const { playerId, roomState } = services.lobby.createRoom(
+        data.roomId,
+        data.displayName,
+        socket.id,
+        data.sessionId,
+      );
       for (const previousSocketRoomId of previousSocketRoomIds) {
         if (previousSocketRoomId !== roomState.roomId) {
           socket.leave(previousSocketRoomId);
@@ -147,23 +157,23 @@ function registerCreateRoomHandler(io: Server, socket: Socket, roomService: Room
       socket.join(roomState.roomId);
       socket.emit(ServerToClientEvent.PlayerIdentity, { playerId });
       broadcastRoomState(io, roomState);
-      broadcastRoomDirectory(io, roomService);
+      broadcastRoomDirectory(io, services);
     },
     fallbackErrorCode: "CREATE_ROOM_FAILED",
     errorMessages: createRoomErrorMessages,
   });
 }
 
-function registerListRoomsHandler(socket: Socket, roomService: RoomService): void {
+function registerListRoomsHandler(socket: Socket, services: RoomServices): void {
   socket.on(ClientToServerEvent.ListRooms, () => {
     settleAuditedSocketEvent(socket, ClientToServerEvent.ListRooms);
     socket.emit(ServerToClientEvent.RoomList, {
-      rooms: roomService.listRooms(),
+      rooms: services.store.listLobbySummaries(),
     });
   });
 }
 
-function registerGetRoomPreviewHandler(socket: Socket, roomService: RoomService): void {
+function registerGetRoomPreviewHandler(socket: Socket, services: RoomServices): void {
   createSocketHandler({
     socket,
     event: ClientToServerEvent.GetRoomPreview,
@@ -175,7 +185,7 @@ function registerGetRoomPreviewHandler(socket: Socket, roomService: RoomService)
     handle: (data) => {
       socket.emit(ServerToClientEvent.RoomPreview, {
         requestedRoomId: data.roomId,
-        room: roomService.getRoomPreview(data),
+        room: services.store.getLobbySummary(data.roomId),
       });
     },
     fallbackErrorCode: "GET_ROOM_PREVIEW_FAILED",
@@ -183,7 +193,7 @@ function registerGetRoomPreviewHandler(socket: Socket, roomService: RoomService)
   });
 }
 
-function registerTransferHostHandler(io: Server, socket: Socket, roomService: RoomService): void {
+function registerTransferHostHandler(io: Server, socket: Socket, services: RoomServices): void {
   createSocketHandler({
     socket,
     event: ClientToServerEvent.TransferHost,
@@ -203,16 +213,16 @@ function registerTransferHostHandler(io: Server, socket: Socket, roomService: Ro
       );
     },
     handle: (data) => {
-      broadcastRoomState(io, roomService.transferHost(data, socket.id));
-      broadcastRoomDirectory(io, roomService);
+      broadcastRoomState(io, services.connection.transferHost(socket.id, data));
+      broadcastRoomDirectory(io, services);
     },
-    idempotency: roomActionIdempotency(roomService, socket, ClientToServerEvent.TransferHost),
+    idempotency: roomActionIdempotency(services, socket, ClientToServerEvent.TransferHost),
     fallbackErrorCode: "TRANSFER_HOST_FAILED",
     errorMessages: transferHostErrorMessages,
   });
 }
 
-function registerKickPlayerHandler(io: Server, socket: Socket, roomService: RoomService): void {
+function registerKickPlayerHandler(io: Server, socket: Socket, services: RoomServices): void {
   createSocketHandler({
     socket,
     event: ClientToServerEvent.KickPlayer,
@@ -232,7 +242,7 @@ function registerKickPlayerHandler(io: Server, socket: Socket, roomService: Room
       );
     },
     handle: (data) => {
-      const { kickedSocketIds, roomState } = roomService.kickPlayer(data, socket.id);
+      const { kickedSocketIds, roomState } = services.connection.kickPlayer(socket.id, data);
 
       for (const kickedSocketId of kickedSocketIds) {
         io.to(kickedSocketId).emit(ServerToClientEvent.RoomClosed, {
@@ -245,9 +255,9 @@ function registerKickPlayerHandler(io: Server, socket: Socket, roomService: Room
       }
 
       broadcastRoomState(io, roomState);
-      broadcastRoomDirectory(io, roomService);
+      broadcastRoomDirectory(io, services);
     },
-    idempotency: roomActionIdempotency(roomService, socket, ClientToServerEvent.KickPlayer),
+    idempotency: roomActionIdempotency(services, socket, ClientToServerEvent.KickPlayer),
     fallbackErrorCode: "KICK_PLAYER_FAILED",
     errorMessages: kickPlayerErrorMessages,
   });
@@ -256,7 +266,7 @@ function registerKickPlayerHandler(io: Server, socket: Socket, roomService: Room
 function registerUpdatePlayerSettingsHandler(
   io: Server,
   socket: Socket,
-  roomService: RoomService,
+  services: RoomServices,
 ): void {
   createSocketHandler({
     socket,
@@ -267,7 +277,7 @@ function registerUpdatePlayerSettingsHandler(
       message: "Player starting-card count is invalid.",
     },
     handle: (data) => {
-      broadcastRoomState(io, roomService.updatePlayerSettings(data, socket.id));
+      broadcastRoomState(io, services.lobby.updatePlayerSettings(socket.id, data));
     },
     fallbackErrorCode: "PLAYER_SETTINGS_UPDATE_FAILED",
     errorMessages: playerSettingsErrorMessages,
@@ -277,7 +287,7 @@ function registerUpdatePlayerSettingsHandler(
 function registerUpdatePlayerProfileHandler(
   io: Server,
   socket: Socket,
-  roomService: RoomService,
+  services: RoomServices,
 ): void {
   createSocketHandler({
     socket,
@@ -288,8 +298,8 @@ function registerUpdatePlayerProfileHandler(
       message: "Player name is invalid.",
     },
     handle: (data) => {
-      broadcastRoomState(io, roomService.updatePlayerProfile(data, socket.id));
-      broadcastRoomDirectory(io, roomService);
+      broadcastRoomState(io, services.lobby.updatePlayerProfile(socket.id, data));
+      broadcastRoomDirectory(io, services);
     },
     fallbackErrorCode: "PLAYER_PROFILE_UPDATE_FAILED",
     errorMessages: playerProfileErrorMessages,
@@ -299,7 +309,7 @@ function registerUpdatePlayerProfileHandler(
 function registerUpdateRoomSettingsHandler(
   io: Server,
   socket: Socket,
-  roomService: RoomService,
+  services: RoomServices,
 ): void {
   createSocketHandler({
     socket,
@@ -310,14 +320,14 @@ function registerUpdateRoomSettingsHandler(
       message: "Target card count must stay within the allowed range.",
     },
     handle: (data) => {
-      broadcastRoomState(io, roomService.updateRoomSettings(data, socket.id));
+      broadcastRoomState(io, services.lobby.updateRoomSettings(socket.id, data.roomId, data));
     },
     fallbackErrorCode: "ROOM_SETTINGS_UPDATE_FAILED",
     errorMessages: roomSettingsErrorMessages,
   });
 }
 
-function registerCloseRoomHandler(io: Server, socket: Socket, roomService: RoomService): void {
+function registerCloseRoomHandler(io: Server, socket: Socket, services: RoomServices): void {
   // Closing deletes the room and every membership, so the room-scoped ack store cannot hold
   // this ack; a per-socket replay is already limited to the caller.
   let lastSuccessfulClose: { roomId: string; requestId: string; ack: ActionAck } | undefined;
@@ -334,14 +344,14 @@ function registerCloseRoomHandler(io: Server, socket: Socket, roomService: RoomS
       logger.info({ socketId: socket.id, roomId: data.roomId }, "close_room");
     },
     handle: (data) => {
-      const roomId = roomService.closeRoom(data, socket.id);
+      const roomId = services.lobby.closeRoom(socket.id, data);
 
       io.to(roomId).emit(ServerToClientEvent.RoomClosed, {
         roomId,
         message: "The host closed this room.",
       });
       io.in(roomId).socketsLeave(roomId);
-      broadcastRoomDirectory(io, roomService);
+      broadcastRoomDirectory(io, services);
     },
     idempotency: {
       find: (data) =>
@@ -361,11 +371,11 @@ function registerCloseRoomHandler(io: Server, socket: Socket, roomService: RoomS
   });
 }
 
-function registerDisconnectHandler(io: Server, socket: Socket, roomService: RoomService): void {
+function registerDisconnectHandler(io: Server, socket: Socket, services: RoomServices): void {
   socket.on("disconnect", () => {
     logger.info({ socketId: socket.id }, "socket disconnected");
 
-    const roomState = roomService.removePlayer(socket.id);
+    const roomState = services.connection.removePlayerBySocketId(socket.id);
 
     if (roomState) {
       broadcastRoomState(io, roomState);

@@ -43,12 +43,14 @@ Web (`apps/web/src/test/`):
 - `vitest.setup.ts` installs storage, matchMedia, observers, viewport and element-rect stubs
   and resets them after each test; do not re-stub them in a file.
 
-Server: `apps/server/vitest.setup.ts` sets the Spotify env. Registry-level tests construct
-`RoomRegistry` directly with shortened durations, as `disconnectLifecycle.test.ts` does.
+Server: `apps/server/vitest.setup.ts` sets the Spotify env. Rooms-level tests use
+`createTestRoomCore({ reconnectGracePeriodMs, … })` (`tests/support/roomCore.ts`, env durations
+unless overridden), as `disconnectLifecycle.test.ts` does; service-level tests use
+`createTestRoomServices({ apiClient, tokenStore, spotify })` (`tests/support/roomServices.ts`).
 Socket tests use `apps/server/tests/support/`:
 
 - `socketTestServer.ts` — `startSocketTestServer`, `connectTestClient`,
-  `createTestRoomService({ deck, reconnectGracePeriodMs })`; teardown closes everything and
+  `createSocketTestServices({ deck, reconnectGracePeriodMs })`; teardown closes everything and
   clears room timers.
 - `waiters.ts` — `nextEvent`, `waitForStateUpdate`, `waitForRoomList`: bounded, and a timeout
   names the awaited event.

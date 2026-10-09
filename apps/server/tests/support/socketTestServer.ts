@@ -2,18 +2,11 @@ import type { GameTrackCard } from "@tunetrack/game-engine";
 import { io as createSocketClient, type Socket } from "socket.io-client";
 import { afterEach } from "vitest";
 import { createHttpServer } from "../../src/app/createHttpServer.js";
+import type { RoomServices } from "../../src/app/createRoomServices.js";
 import { createSocketServer } from "../../src/app/createSocketServer.js";
-import { DeckService } from "../../src/decks/DeckService.js";
-import { PlaylistImportService } from "../../src/decks/PlaylistImportService.js";
 import { registerSocketHandlers } from "../../src/realtime/registerSocketHandlers.js";
-import { RoomRegistry } from "../../src/rooms/RoomRegistry.js";
-import { RoomService } from "../../src/rooms/RoomService.js";
-import { SpotifyApiClient } from "../../src/spotify/SpotifyApiClient.js";
-import { SpotifyAuthService } from "../../src/spotify/SpotifyAuthService.js";
-import { SpotifyDiscoveryService } from "../../src/spotify/SpotifyDiscoveryService.js";
-import { SpotifyMusicSearchService } from "../../src/spotify/SpotifyMusicSearchService.js";
-import { SpotifyPlaybackSessionStore } from "../../src/spotify/SpotifyPlaybackSessionStore.js";
-import { SpotifyTokenStore } from "../../src/spotify/SpotifyTokenStore.js";
+import type { RoomTimerCoordinator } from "../../src/rooms/RoomTimerCoordinator.js";
+import { createTestRoomServices } from "./roomServices.js";
 
 export { nextEvent } from "./waiters.js";
 
@@ -24,7 +17,7 @@ export { nextEvent } from "./waiters.js";
  */
 const sockets: Socket[] = [];
 const closers: Array<() => Promise<void>> = [];
-const registries: RoomRegistry[] = [];
+const roomTimers: RoomTimerCoordinator[] = [];
 
 afterEach(async () => {
   sockets.forEach((socket) => {
@@ -34,48 +27,35 @@ afterEach(async () => {
   sockets.length = 0;
   await Promise.all(closers.map((close) => close()));
   closers.length = 0;
-  registries.forEach((registry) => registry.clearAllTimers());
-  registries.length = 0;
+  roomTimers.forEach((timers) => timers.clearAll());
+  roomTimers.length = 0;
 });
 
-class FixedDeckService extends DeckService {
-  public constructor(private readonly deck: readonly GameTrackCard[]) {
-    super();
-  }
-
-  public override createShuffledDeck(): GameTrackCard[] {
-    return this.deck.map((card) => ({ ...card }));
-  }
-}
-
-export interface TestRoomServiceOptions {
+export interface SocketTestServicesOptions {
   /** Dealt in this order instead of the shuffled practice deck. */
   deck?: readonly GameTrackCard[];
   reconnectGracePeriodMs?: number;
 }
 
-export function createTestRoomService(options: TestRoomServiceOptions = {}): RoomService {
-  const tokenStore = new SpotifyTokenStore();
-  const apiClient = new SpotifyApiClient();
-  const registry = new RoomRegistry(undefined, options.reconnectGracePeriodMs ?? 500, 25, 25);
-  registries.push(registry);
-  return new RoomService(
-    registry,
-    options.deck ? new FixedDeckService(options.deck) : new DeckService(),
-    new SpotifyAuthService(apiClient, tokenStore),
-    new PlaylistImportService(apiClient, tokenStore),
-    new SpotifyDiscoveryService(apiClient, tokenStore),
-    new SpotifyMusicSearchService(apiClient, tokenStore),
-    new SpotifyPlaybackSessionStore(),
-  );
+/** Short grace periods so lifecycle tests run in milliseconds. */
+export function createSocketTestServices(options: SocketTestServicesOptions = {}): RoomServices {
+  return createTestRoomServices({
+    ...(options.deck ? { deck: options.deck } : {}),
+    durations: {
+      reconnectGracePeriodMs: options.reconnectGracePeriodMs ?? 500,
+      hostTransferGracePeriodMs: 25,
+      turnSkipGracePeriodMs: 25,
+    },
+  });
 }
 
 export async function startSocketTestServer(
-  roomService = createTestRoomService(),
+  services = createSocketTestServices(),
 ): Promise<string> {
+  roomTimers.push(services.timers);
   const { httpServer } = createHttpServer();
   const io = createSocketServer(httpServer);
-  registerSocketHandlers(io, roomService);
+  registerSocketHandlers(io, services);
   await new Promise<void>((resolve) => httpServer.listen(0, resolve));
   closers.push(() => new Promise<void>((resolve) => io.close(() => resolve())));
   const address = httpServer.address();

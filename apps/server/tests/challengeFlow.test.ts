@@ -1,6 +1,6 @@
 import { type GameTrackCard } from "@tunetrack/game-engine";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { RoomRegistry } from "../src/rooms/RoomRegistry.js";
+import { createTestRoomCore } from "./support/roomCore.js";
 
 const challengeDeck: GameTrackCard[] = [
   {
@@ -44,16 +44,21 @@ describe("challenge flow", () => {
   });
 
   it("opens a challenge window and lets the host manually resolve it when nobody claims Beat!", () => {
-    const roomRegistry = new RoomRegistry();
-    const hostJoin = roomRegistry.createRoom(
+    const roomCore = createTestRoomCore();
+    const hostJoin = roomCore.lobby.createRoom(
       "challenge-room",
       "Host Player",
       "host-socket",
       "host-session",
     );
-    roomRegistry.addPlayerToRoom("challenge-room", "Guest Player", "guest-socket", "guest-session");
+    roomCore.lobby.addPlayerToRoom(
+      "challenge-room",
+      "Guest Player",
+      "guest-socket",
+      "guest-session",
+    );
 
-    roomRegistry.updateRoomSettings("host-socket", "challenge-room", {
+    roomCore.lobby.updateRoomSettings("host-socket", "challenge-room", {
       roomId: "challenge-room",
       targetTimelineCardCount: 12,
       defaultStartingTimelineCardCount: 1,
@@ -63,9 +68,9 @@ describe("challenge flow", () => {
       challengeWindowDurationSeconds: null,
     });
 
-    roomRegistry.startGame("host-socket", { roomId: "challenge-room" }, challengeDeck);
+    roomCore.gameplay.startGame("host-socket", { roomId: "challenge-room" }, challengeDeck);
 
-    const challengeState = roomRegistry.placeCard("host-socket", {
+    const challengeState = roomCore.gameplay.placeCard("host-socket", {
       roomId: "challenge-room",
       selectedSlotIndex: 0,
     });
@@ -80,7 +85,7 @@ describe("challenge flow", () => {
       challengerSelectedSlotIndex: null,
     });
 
-    const revealState = roomRegistry.resolveChallengeWindow("host-socket", {
+    const revealState = roomCore.gameplay.resolveChallengeWindow("host-socket", {
       roomId: "challenge-room",
     });
 
@@ -110,16 +115,16 @@ describe("challenge flow", () => {
   });
 
   it("lets the active player resolve the challenge window when reveal confirmation allows it", () => {
-    const roomRegistry = new RoomRegistry();
-    roomRegistry.createRoom("active-resolve-room", "Host Player", "host-socket", "host-session");
-    const guestJoin = roomRegistry.addPlayerToRoom(
+    const roomCore = createTestRoomCore();
+    roomCore.lobby.createRoom("active-resolve-room", "Host Player", "host-socket", "host-session");
+    const guestJoin = roomCore.lobby.addPlayerToRoom(
       "active-resolve-room",
       "Guest Player",
       "guest-socket",
       "guest-session",
     );
 
-    roomRegistry.updateRoomSettings("host-socket", "active-resolve-room", {
+    roomCore.lobby.updateRoomSettings("host-socket", "active-resolve-room", {
       roomId: "active-resolve-room",
       targetTimelineCardCount: 12,
       defaultStartingTimelineCardCount: 1,
@@ -129,23 +134,23 @@ describe("challenge flow", () => {
       challengeWindowDurationSeconds: null,
     });
 
-    roomRegistry.startGame("host-socket", { roomId: "active-resolve-room" }, challengeDeck);
-    roomRegistry.placeCard("host-socket", {
+    roomCore.gameplay.startGame("host-socket", { roomId: "active-resolve-room" }, challengeDeck);
+    roomCore.gameplay.placeCard("host-socket", {
       roomId: "active-resolve-room",
       selectedSlotIndex: 0,
     });
-    roomRegistry.resolveChallengeWindow("host-socket", {
+    roomCore.gameplay.resolveChallengeWindow("host-socket", {
       roomId: "active-resolve-room",
     });
-    roomRegistry.confirmReveal("host-socket", {
+    roomCore.gameplay.confirmReveal("host-socket", {
       roomId: "active-resolve-room",
     });
-    roomRegistry.placeCard("guest-socket", {
+    roomCore.gameplay.placeCard("guest-socket", {
       roomId: "active-resolve-room",
       selectedSlotIndex: 0,
     });
 
-    const revealState = roomRegistry.resolveChallengeWindow("guest-socket", {
+    const revealState = roomCore.gameplay.resolveChallengeWindow("guest-socket", {
       roomId: "active-resolve-room",
     });
 
@@ -154,21 +159,21 @@ describe("challenge flow", () => {
   });
 
   it("lets a guest with TT claim Beat! and resolve a successful challenge", () => {
-    const roomRegistry = new RoomRegistry();
-    const hostJoin = roomRegistry.createRoom(
+    const roomCore = createTestRoomCore();
+    const hostJoin = roomCore.lobby.createRoom(
       "challenge-claim-room",
       "Host Player",
       "host-socket",
       "host-session",
     );
-    const guestJoin = roomRegistry.addPlayerToRoom(
+    const guestJoin = roomCore.lobby.addPlayerToRoom(
       "challenge-claim-room",
       "Guest Player",
       "guest-socket",
       "guest-session",
     );
 
-    roomRegistry.updateRoomSettings("host-socket", "challenge-claim-room", {
+    roomCore.lobby.updateRoomSettings("host-socket", "challenge-claim-room", {
       roomId: "challenge-claim-room",
       targetTimelineCardCount: 12,
       defaultStartingTimelineCardCount: 1,
@@ -178,7 +183,7 @@ describe("challenge flow", () => {
       challengeWindowDurationSeconds: null,
     });
 
-    const startedGameState = roomRegistry.startGame(
+    const startedGameState = roomCore.gameplay.startGame(
       "host-socket",
       { roomId: "challenge-claim-room" },
       challengeDeck,
@@ -188,12 +193,12 @@ describe("challenge flow", () => {
       startedGameState.players.find((player) => player.id === guestJoin.playerId)?.ttTokenCount,
     ).toBe(1);
 
-    roomRegistry.placeCard("host-socket", {
+    roomCore.gameplay.placeCard("host-socket", {
       roomId: "challenge-claim-room",
       selectedSlotIndex: 0,
     });
 
-    const claimedChallengeState = roomRegistry.claimChallenge("guest-socket", {
+    const claimedChallengeState = roomCore.gameplay.claimChallenge("guest-socket", {
       roomId: "challenge-claim-room",
     });
 
@@ -206,7 +211,7 @@ describe("challenge flow", () => {
       challengerSelectedSlotIndex: null,
     });
 
-    const revealState = roomRegistry.placeChallenge("guest-socket", {
+    const revealState = roomCore.gameplay.placeChallenge("guest-socket", {
       roomId: "challenge-claim-room",
       selectedSlotIndex: 1,
     });
@@ -274,19 +279,19 @@ describe("challenge flow", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-04-07T12:00:00.000Z"));
 
-    const roomRegistry = new RoomRegistry();
+    const roomCore = createTestRoomCore();
     let latestRoomState = null as
-      | ReturnType<(typeof roomRegistry)["createRoom"]>["roomState"]
+      | ReturnType<(typeof roomCore.lobby)["createRoom"]>["roomState"]
       | null;
 
-    roomRegistry.setRoomStateChangedListener((roomState) => {
+    roomCore.events.on("roomStateChanged", (roomState) => {
       latestRoomState = roomState;
     });
 
-    roomRegistry.createRoom("timed-room", "Host Player", "host-socket", "host-session");
-    roomRegistry.addPlayerToRoom("timed-room", "Guest Player", "guest-socket", "guest-session");
+    roomCore.lobby.createRoom("timed-room", "Host Player", "host-socket", "host-session");
+    roomCore.lobby.addPlayerToRoom("timed-room", "Guest Player", "guest-socket", "guest-session");
 
-    roomRegistry.updateRoomSettings("host-socket", "timed-room", {
+    roomCore.lobby.updateRoomSettings("host-socket", "timed-room", {
       roomId: "timed-room",
       targetTimelineCardCount: 12,
       defaultStartingTimelineCardCount: 1,
@@ -296,8 +301,8 @@ describe("challenge flow", () => {
       challengeWindowDurationSeconds: 1,
     });
 
-    roomRegistry.startGame("host-socket", { roomId: "timed-room" }, challengeDeck);
-    const challengeState = roomRegistry.placeCard("host-socket", {
+    roomCore.gameplay.startGame("host-socket", { roomId: "timed-room" }, challengeDeck);
+    const challengeState = roomCore.gameplay.placeCard("host-socket", {
       roomId: "timed-room",
       selectedSlotIndex: 0,
     });
@@ -320,16 +325,16 @@ describe("challenge flow", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-04-07T12:00:00.000Z"));
 
-    const roomRegistry = new RoomRegistry();
-    roomRegistry.createRoom("claimed-timed-room", "Host Player", "host-socket", "host-session");
-    roomRegistry.addPlayerToRoom(
+    const roomCore = createTestRoomCore();
+    roomCore.lobby.createRoom("claimed-timed-room", "Host Player", "host-socket", "host-session");
+    roomCore.lobby.addPlayerToRoom(
       "claimed-timed-room",
       "Guest Player",
       "guest-socket",
       "guest-session",
     );
 
-    roomRegistry.updateRoomSettings("host-socket", "claimed-timed-room", {
+    roomCore.lobby.updateRoomSettings("host-socket", "claimed-timed-room", {
       roomId: "claimed-timed-room",
       targetTimelineCardCount: 12,
       defaultStartingTimelineCardCount: 1,
@@ -339,18 +344,18 @@ describe("challenge flow", () => {
       challengeWindowDurationSeconds: 1,
     });
 
-    roomRegistry.startGame("host-socket", { roomId: "claimed-timed-room" }, challengeDeck);
-    roomRegistry.placeCard("host-socket", {
+    roomCore.gameplay.startGame("host-socket", { roomId: "claimed-timed-room" }, challengeDeck);
+    roomCore.gameplay.placeCard("host-socket", {
       roomId: "claimed-timed-room",
       selectedSlotIndex: 0,
     });
-    roomRegistry.claimChallenge("guest-socket", {
+    roomCore.gameplay.claimChallenge("guest-socket", {
       roomId: "claimed-timed-room",
     });
 
     vi.advanceTimersByTime(5_000);
 
-    const revealState = roomRegistry.placeChallenge("guest-socket", {
+    const revealState = roomCore.gameplay.placeChallenge("guest-socket", {
       roomId: "claimed-timed-room",
       selectedSlotIndex: 1,
     });

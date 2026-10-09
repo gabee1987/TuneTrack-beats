@@ -18,11 +18,14 @@ import {
   DomainError,
 } from "@tunetrack/shared";
 import { selectNextConnectedTurnPlayer } from "./roomConnectionBuilders.js";
+import { logGameStarted, logTurnProgress } from "./roomLifecycleLog.js";
 import { createTrackCardMap, mapGameStateToPublicRoomState } from "./roomStateMappers.js";
 import type { RoomStore } from "./RoomStore.js";
 import type { RoomTimerCoordinator } from "./RoomTimerCoordinator.js";
 
 type RoomStateChangedEmitter = (roomState: PublicRoomState) => void;
+/** The room's imported deck when the host loaded one, otherwise the practice deck. */
+type StartingDeckFactory = (roomId: RoomId) => GameTrackCard[];
 
 export class RoomGameplayService {
   public constructor(
@@ -30,12 +33,13 @@ export class RoomGameplayService {
     private readonly timers: RoomTimerCoordinator,
     private readonly gameFlowService: GameFlowService,
     private readonly emitRoomStateChanged: RoomStateChangedEmitter,
+    private readonly createStartingDeck: StartingDeckFactory = () => [],
   ) {}
 
   public startGame(
     socketId: string,
     payload: StartGamePayloadParsed,
-    deckCards: GameTrackCard[],
+    deckCards: GameTrackCard[] = this.createStartingDeck(payload.roomId),
   ): PublicRoomState {
     const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.store.requireMembership(socketId);
@@ -65,6 +69,7 @@ export class RoomGameplayService {
       trackCardsById,
       importedDeck: roomRecord.importedDeck,
     });
+    logGameStarted(roomState, deckCards.length, roomRecord.importedDeck !== null);
     return roomState;
   }
 
@@ -173,6 +178,7 @@ export class RoomGameplayService {
     );
     this.store.setRoom(payload.roomId, { ...roomRecord, gameState, roomState });
     this.scheduleChallengeAutoResolve(payload.roomId, gameState);
+    logTurnProgress(roomState);
     return roomState;
   }
 
@@ -274,6 +280,7 @@ export class RoomGameplayService {
     );
     this.store.setRoom(payload.roomId, { ...roomRecord, gameState, roomState });
     this.timers.clearChallenge(payload.roomId);
+    logTurnProgress(roomState);
     return roomState;
   }
 

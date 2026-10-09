@@ -152,16 +152,16 @@ packages/shared        — public contracts, event names, Zod schemas, constants
 
 ### Backend layer ownership (`apps/server/src`)
 
-| Layer                  | Owns                                                                                                |
-| ---------------------- | --------------------------------------------------------------------------------------------------- |
-| `app/`                 | bootstrap, validated `env`, logger, audit logger and Axiom sink, HTTP and Socket.IO server creation |
-| `http/`                | health routes, Spotify OAuth callback routes                                                        |
-| `realtime/`            | socket event registration, payload parsing, acks, error mapping, broadcasts, room directory         |
-| `rooms/`               | room lifecycle, membership and reconnect, orchestration, timers, public-state mapping               |
-| `decks/`               | deck loading and validation, playlist import into track cards                                       |
-| `spotify/`             | OAuth, per-room token and playback-session stores, Web API client, search and discovery, mapping    |
-| `packages/game-engine` | rules, placement, challenge and reveal, turn progression                                            |
-| `packages/shared`      | public contracts, payload schemas, ack contract, constants                                          |
+| Layer                  | Owns                                                                                                       |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `app/`                 | bootstrap, validated `env`, logger, audit logger and Axiom sink, server creation, `RoomServices` container |
+| `http/`                | health routes, Spotify OAuth callback routes                                                               |
+| `realtime/`            | socket event registration, payload parsing, acks, error mapping, broadcasts, room directory                |
+| `rooms/`               | room lifecycle, membership and reconnect, orchestration, timers, lifecycle events, authorisation           |
+| `decks/`               | deck loading and validation, playlist import, room-deck curation (`PlaylistOrchestrator`)                  |
+| `spotify/`             | OAuth, token and playback-session stores, Web API client, search, discovery, `SpotifyOrchestrator`         |
+| `packages/game-engine` | rules, placement, challenge and reveal, turn progression                                                   |
+| `packages/shared`      | public contracts, payload schemas, ack contract, constants                                                 |
 
 ### Frontend layer ownership (`apps/web/src`)
 
@@ -181,8 +181,8 @@ packages/shared        — public contracts, event names, Zod schemas, constants
 - **File size: a source file above 700 lines must be split before the change is finished.**
   Soft guidance: component ~200 lines, controller hook ~300, service ~300, CSS module ~300,
   utility ~150. When a file grows past its soft limit, extract rather than accumulate.
-- Do not add responsibilities to `RoomRegistry` or `RoomService`; extract narrower
-  collaborators instead.
+- Handlers call the narrow services on `RoomServices` directly; never reintroduce a façade
+  that only forwards calls. A new cross-layer reaction subscribes to `rooms/RoomEvents`.
 
 ### Animation
 

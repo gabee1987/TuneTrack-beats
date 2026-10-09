@@ -6,7 +6,7 @@ import {
 } from "@tunetrack/shared";
 import type { Socket } from "socket.io-client";
 import { describe, expect, it, vi } from "vitest";
-import type { RoomService } from "../../src/rooms/RoomService.js";
+import type { RoomServices } from "../../src/app/createRoomServices.js";
 import { turnOrderDeck } from "../support/decks.js";
 import {
   createRoomAsHost,
@@ -18,17 +18,17 @@ import {
 } from "../support/roomFixtures.js";
 import {
   connectTestClient,
-  createTestRoomService,
+  createSocketTestServices,
   startSocketTestServer,
 } from "../support/socketTestServer.js";
 import { nextEvent, waitForStateUpdate } from "../support/waiters.js";
 
-function createDealtRoomService(): RoomService {
-  return createTestRoomService({ deck: turnOrderDeck() });
+function createDealtServices(): RoomServices {
+  return createSocketTestServices({ deck: turnOrderDeck() });
 }
 
-async function startTwoPlayerGame(roomService: RoomService, roomId: string) {
-  const baseUrl = await startSocketTestServer(roomService);
+async function startTwoPlayerGame(services: RoomServices, roomId: string) {
+  const baseUrl = await startSocketTestServer(services);
   const seats = await openTwoPlayerLobby(baseUrl, roomId);
   await startGame(seats.host.socket, roomId, seats.guest.socket);
   return { baseUrl, ...seats };
@@ -42,12 +42,9 @@ async function expectError(socket: Socket, emit: () => void, error: ServerErrorP
 
 describe("turn actions", () => {
   it("starts a game once when the start is replayed and hides the dealt card's year", async () => {
-    const roomService = createDealtRoomService();
-    const startGameSpy = vi.spyOn(roomService, "startGame");
-    const { host } = await openTwoPlayerLobby(
-      await startSocketTestServer(roomService),
-      "game-room",
-    );
+    const services = createDealtServices();
+    const startGameSpy = vi.spyOn(services.gameplay, "startGame");
+    const { host } = await openTwoPlayerLobby(await startSocketTestServer(services), "game-room");
     const turnPromise = waitForStateUpdate(host.socket, (state) => state.turn?.turnNumber === 1);
 
     const requestId = "00000000-0000-4000-8000-000000000100";
@@ -85,9 +82,9 @@ describe("turn actions", () => {
   });
 
   it("places a replayed card once and reveals it, refusing a player who is not on turn", async () => {
-    const roomService = createDealtRoomService();
-    const placeCardSpy = vi.spyOn(roomService, "placeCard");
-    const { host, guest } = await startTwoPlayerGame(roomService, "game-room");
+    const services = createDealtServices();
+    const placeCardSpy = vi.spyOn(services.gameplay, "placeCard");
+    const { host, guest } = await startTwoPlayerGame(services, "game-room");
     await expectError(
       guest.socket,
       () =>
@@ -134,9 +131,9 @@ describe("turn actions", () => {
   });
 
   it("lets only the host confirm a reveal and advances the turn once when replayed", async () => {
-    const roomService = createDealtRoomService();
-    const confirmRevealSpy = vi.spyOn(roomService, "confirmReveal");
-    const { host, guest } = await startTwoPlayerGame(roomService, "game-room");
+    const services = createDealtServices();
+    const confirmRevealSpy = vi.spyOn(services.gameplay, "confirmReveal");
+    const { host, guest } = await startTwoPlayerGame(services, "game-room");
     const revealPromise = waitForStateUpdate(guest.socket, (state) => state.status === "reveal");
     host.socket.emit(ClientToServerEvent.PlaceCard, { roomId: "game-room", selectedSlotIndex: 1 });
     await revealPromise;
@@ -170,10 +167,7 @@ describe("turn actions", () => {
   });
 
   it("restores the same player identity after a refresh during an active game", async () => {
-    const { baseUrl, host, guest } = await startTwoPlayerGame(
-      createDealtRoomService(),
-      "rejoin-room",
-    );
+    const { baseUrl, host, guest } = await startTwoPlayerGame(createDealtServices(), "rejoin-room");
     const transferredPromise = waitForStateUpdate(
       guest.socket,
       (state) => state.hostId === guest.playerId,
@@ -203,8 +197,8 @@ describe("turn actions", () => {
 });
 
 describe("challenge actions", () => {
-  async function startChallengeGame(roomService: RoomService) {
-    const baseUrl = await startSocketTestServer(roomService);
+  async function startChallengeGame(services: RoomServices) {
+    const baseUrl = await startSocketTestServer(services);
     const seats = await openTwoPlayerLobby(baseUrl, "beat-room");
     const settingsPromise = waitForStateUpdate(
       seats.guest.socket,
@@ -231,9 +225,9 @@ describe("challenge actions", () => {
   }
 
   it("resolves a replayed challenge window once", async () => {
-    const roomService = createDealtRoomService();
-    const resolveSpy = vi.spyOn(roomService, "resolveChallengeWindow");
-    const { host, guest } = await startChallengeGame(roomService);
+    const services = createDealtServices();
+    const resolveSpy = vi.spyOn(services.gameplay, "resolveChallengeWindow");
+    const { host, guest } = await startChallengeGame(services);
     await placeAndOpenChallenge(host.socket, guest.socket);
     const revealPromise = waitForStateUpdate(guest.socket, (state) => state.status === "reveal");
 
@@ -248,10 +242,10 @@ describe("challenge actions", () => {
   });
 
   it("claims and places a replayed challenge once each", async () => {
-    const roomService = createDealtRoomService();
-    const claimSpy = vi.spyOn(roomService, "claimChallenge");
-    const placeChallengeSpy = vi.spyOn(roomService, "placeChallenge");
-    const { host, guest } = await startChallengeGame(roomService);
+    const services = createDealtServices();
+    const claimSpy = vi.spyOn(services.gameplay, "claimChallenge");
+    const placeChallengeSpy = vi.spyOn(services.gameplay, "placeChallenge");
+    const { host, guest } = await startChallengeGame(services);
     await placeAndOpenChallenge(host.socket, guest.socket);
     const secondTurnPromise = waitForStateUpdate(
       guest.socket,
@@ -290,9 +284,9 @@ describe("challenge actions", () => {
 
 describe("token actions", () => {
   it("lets the host award TT once when the request is replayed", async () => {
-    const roomService = createDealtRoomService();
-    const awardTtSpy = vi.spyOn(roomService, "awardTt");
-    const { host, guest } = await startTwoPlayerGame(roomService, "award-room");
+    const services = createDealtServices();
+    const awardTtSpy = vi.spyOn(services.lobby, "awardTt");
+    const { host, guest } = await startTwoPlayerGame(services, "award-room");
     const guestTokens = (state: { players: Array<{ id: string; ttTokenCount: number }> }) =>
       state.players.find((player) => player.id === guest.playerId)?.ttTokenCount;
     const awardPromise = waitForStateUpdate(guest.socket, (state) => guestTokens(state) === 1);
@@ -310,13 +304,13 @@ describe("token actions", () => {
   });
 
   it("applies replayed turn and token-spending actions once", async () => {
-    const roomService = createDealtRoomService();
+    const services = createDealtServices();
     const spies = {
-      buy: vi.spyOn(roomService, "buyTimelineCardWithTt"),
-      skipTrack: vi.spyOn(roomService, "skipTrackWithTt"),
-      skipTurn: vi.spyOn(roomService, "skipTurn"),
+      buy: vi.spyOn(services.gameplay, "buyTimelineCardWithTt"),
+      skipTrack: vi.spyOn(services.gameplay, "skipTrackWithTt"),
+      skipTurn: vi.spyOn(services.gameplay, "skipTurn"),
     };
-    const host = await createRoomAsHost(await startSocketTestServer(roomService), "buy-room");
+    const host = await createRoomAsHost(await startSocketTestServer(services), "buy-room");
     const hostTokens = (state: { players: Array<{ id: string; ttTokenCount: number }> }) =>
       state.players.find((player) => player.id === host.playerId)?.ttTokenCount;
     const settingsPromise = waitForStateUpdate(host.socket, (state) => hostTokens(state) === 4);

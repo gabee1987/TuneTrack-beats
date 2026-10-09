@@ -26,19 +26,20 @@ validation happens at the boundary, every mutation is acknowledged.
 
 ### 2. `apps/server`
 
-- Service method on the façade `rooms/RoomService.ts`, delegating to `RoomRegistry` and then
-  `RoomLobbyService`, `RoomGameplayService` or `RoomConnectionService`. Authorise (host,
+- Service method on the owning service: `RoomLobbyService`, `RoomGameplayService` or
+  `RoomConnectionService` (`rooms/`), `PlaylistOrchestrator` (`decks/`) or
+  `SpotifyOrchestrator` (`spotify/`); handlers reach them through `RoomServices`. Authorise (host,
   membership, phase) **before** any side effect. Game rules go to `packages/game-engine`,
   never into `rooms/` or a handler.
 - Handler in the matching file under `realtime/handlers/` (`lobbyHandlers.ts`,
   `gameplayHandlers.ts`, `playlistHandlers.ts`, `spotifyHandlers.ts`) through
   `createSocketHandler({ socket, event, schema, invalidPayload, log, handle, idempotency, fallbackErrorCode, errorMessages })`.
   Copy `registerSkipTurnHandler` in `gameplayHandlers.ts`: a mutation passes
-  `idempotency: roomActionIdempotency(roomService, socket, event)`. An async service call is
+  `idempotency: roomActionIdempotency(services, socket, event)`. An async service call is
   returned from `handle`; never hand-roll `socket.on`. A request/result event (the client
   waits on a result event, not an ack) adds `failureReply`, as `spotifyHandlers.ts` does.
 - `handle` calls the service and then `broadcastRoomState(io, state)`; call
-  `broadcastRoomDirectory(io, roomService)` only when lobby-visible data changed.
+  `broadcastRoomDirectory(io, services)` only when lobby-visible data changed.
 - Error codes are `UPPER_SNAKE` members of `SERVER_ERROR_CODES` (`packages/shared`
   `errors/serverErrors.ts`), thrown as `new DomainError("CODE")` (engine rules:
   `GameRuleError`). A plain `Error` reaches the client as the handler's fallback code. Add the

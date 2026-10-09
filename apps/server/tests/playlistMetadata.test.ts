@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { RoomRegistry } from "../src/rooms/RoomRegistry.js";
+import { createTestRoomCore } from "./support/roomCore.js";
 
 describe("playlist metadata curation", () => {
   it("lets the host edit imported deck track metadata", () => {
-    const roomRegistry = new RoomRegistry();
-    roomRegistry.createRoom("playlist-room", "Host", "host-socket", "host-session");
-    roomRegistry.setImportedDeck("host-socket", "playlist-room", [
+    const roomCore = createTestRoomCore();
+    roomCore.lobby.createRoom("playlist-room", "Host", "host-socket", "host-session");
+    roomCore.lobby.setImportedDeck("host-socket", "playlist-room", [
       {
         id: "track-1",
         title: "Original Title",
@@ -17,7 +17,7 @@ describe("playlist metadata curation", () => {
       },
     ]);
 
-    roomRegistry.updateImportedDeckTrack("host-socket", {
+    roomCore.lobby.updateImportedDeckTrack("host-socket", {
       roomId: "playlist-room",
       trackId: "track-1",
       title: "Curated Title",
@@ -26,7 +26,7 @@ describe("playlist metadata curation", () => {
       releaseYear: 1986,
     });
 
-    expect(roomRegistry.getImportedDeck("playlist-room")).toEqual([
+    expect(roomCore.store.getImportedDeck("playlist-room")).toEqual([
       expect.objectContaining({
         id: "track-1",
         title: "Curated Title",
@@ -40,9 +40,9 @@ describe("playlist metadata curation", () => {
   });
 
   it("lets the host mark imported metadata verified without changing source year", () => {
-    const roomRegistry = new RoomRegistry();
-    roomRegistry.createRoom("verify-room", "Host", "host-socket", "host-session");
-    roomRegistry.setImportedDeck("host-socket", "verify-room", [
+    const roomCore = createTestRoomCore();
+    roomCore.lobby.createRoom("verify-room", "Host", "host-socket", "host-session");
+    roomCore.lobby.setImportedDeck("host-socket", "verify-room", [
       {
         id: "track-1",
         title: "Known Song",
@@ -52,13 +52,13 @@ describe("playlist metadata curation", () => {
       },
     ]);
 
-    roomRegistry.updateImportedDeckTrack("host-socket", {
+    roomCore.lobby.updateImportedDeckTrack("host-socket", {
       roomId: "verify-room",
       trackId: "track-1",
       metadataStatus: "verified",
     });
 
-    expect(roomRegistry.getImportedDeck("verify-room")).toEqual([
+    expect(roomCore.store.getImportedDeck("verify-room")).toEqual([
       expect.objectContaining({
         releaseYear: 1991,
         sourceReleaseYear: 1991,
@@ -68,10 +68,10 @@ describe("playlist metadata curation", () => {
   });
 
   it("rejects imported deck metadata edits from non-host players", () => {
-    const roomRegistry = new RoomRegistry();
-    roomRegistry.createRoom("protected-room", "Host", "host-socket", "host-session");
-    roomRegistry.addPlayerToRoom("protected-room", "Guest", "guest-socket", "guest-session");
-    roomRegistry.setImportedDeck("host-socket", "protected-room", [
+    const roomCore = createTestRoomCore();
+    roomCore.lobby.createRoom("protected-room", "Host", "host-socket", "host-session");
+    roomCore.lobby.addPlayerToRoom("protected-room", "Guest", "guest-socket", "guest-session");
+    roomCore.lobby.setImportedDeck("host-socket", "protected-room", [
       {
         id: "track-1",
         title: "Song",
@@ -82,14 +82,14 @@ describe("playlist metadata curation", () => {
     ]);
 
     expect(() =>
-      roomRegistry.updateImportedDeckTrack("guest-socket", {
+      roomCore.lobby.updateImportedDeckTrack("guest-socket", {
         roomId: "protected-room",
         trackId: "track-1",
         releaseYear: 1986,
       }),
     ).toThrow("ONLY_HOST_CAN_EDIT_PLAYLIST");
 
-    const deck = roomRegistry.getImportedDeck("protected-room");
+    const deck = roomCore.store.getImportedDeck("protected-room");
     expect(deck?.[0]?.releaseYear).toBe(2000);
     expect(deck?.[0]?.metadataStatus).toBeUndefined();
   });

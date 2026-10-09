@@ -3,7 +3,7 @@ import type { Server } from "socket.io";
 import { ServerToClientEvent } from "@tunetrack/shared";
 import { logAuditEvent } from "../app/auditLogger.js";
 import { logger } from "../app/logger.js";
-import type { RoomService } from "../rooms/RoomService.js";
+import type { RoomServices } from "../app/createRoomServices.js";
 import type { SpotifyAuthService } from "../spotify/SpotifyAuthService.js";
 import { createCallbackRateLimit } from "./callbackRateLimit.js";
 
@@ -11,10 +11,10 @@ export function registerSpotifyRoutes(
   app: Express,
   io: Server,
   spotifyAuthService: SpotifyAuthService,
-  roomService: RoomService,
+  services: RoomServices,
 ): void {
   app.get("/api/spotify/callback", createCallbackRateLimit(), (req: Request, res: Response) => {
-    void handleSpotifyCallback(req, res, io, spotifyAuthService, roomService);
+    void handleSpotifyCallback(req, res, io, spotifyAuthService, services);
   });
 }
 
@@ -23,7 +23,7 @@ async function handleSpotifyCallback(
   res: Response,
   io: Server,
   spotifyAuthService: SpotifyAuthService,
-  roomService: RoomService,
+  services: RoomServices,
 ): Promise<void> {
   const code = typeof req.query["code"] === "string" ? req.query["code"] : undefined;
   const state = typeof req.query["state"] === "string" ? req.query["state"] : undefined;
@@ -46,7 +46,7 @@ async function handleSpotifyCallback(
     state,
     error,
     (callbackRoomId, callbackSocketId) =>
-      roomService.isRoomHostSocket(callbackRoomId, callbackSocketId),
+      services.spotify.isRoomHostSocket(callbackRoomId, callbackSocketId),
   );
   logAuditEvent({
     auditKind: "spotify_auth",
@@ -65,7 +65,7 @@ async function handleSpotifyCallback(
 
   if (authResult.success && roomId && socketId) {
     try {
-      const roomState = roomService.updateSpotifyAuthStatus(
+      const roomState = services.spotify.updateSpotifyAuthStatus(
         roomId,
         socketId,
         true,

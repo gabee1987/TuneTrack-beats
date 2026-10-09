@@ -17,10 +17,9 @@ import { LobbyPlayerList } from "../components/LobbyPlayerList";
 import { LobbyRoomActions } from "../components/LobbyRoomActions";
 import { LobbySectionHeader } from "../components/LobbySectionHeader";
 import { LobbyRoomSettingsStatus } from "../components/LobbyRoomSettingsStatus";
+import { isValidRoomName } from "../lobbyRoomName";
 import styles from "./LobbyPageMobile.module.css";
 import { Overlay } from "../../../features/overlay";
-
-const ROOM_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 
 type InfoContent = {
   body: string;
@@ -45,7 +44,7 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
   }, [resolvedRoomId]);
 
   const trimmedRoomId = draftRoomId.trim();
-  const isRoomIdValid = ROOM_ID_PATTERN.test(trimmedRoomId);
+  const isRoomIdValid = isValidRoomName(trimmedRoomId);
   const canApplyRoomChange = Boolean(trimmedRoomId && isRoomIdValid);
   const hasRoomChange = trimmedRoomId !== resolvedRoomId;
 

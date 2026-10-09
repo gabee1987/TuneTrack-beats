@@ -16,6 +16,13 @@ import {
   type ServerErrorCode,
 } from "@tunetrack/shared";
 import type { RoomConnectionService } from "./RoomConnectionService.js";
+import { requireHost } from "./roomAuthorization.js";
+import {
+  logPlayerJoined,
+  logRoomClosed,
+  logRoomCreated,
+  logRoomRenamed,
+} from "./roomLifecycleLog.js";
 import {
   buildAwardedTtLobbyRoomState,
   buildImportedDeckRoomState,
@@ -34,6 +41,8 @@ import type { JoinRoomResult, RoomRecord, RoomStore } from "./RoomStore.js";
 import type { RoomTimerCoordinator } from "./RoomTimerCoordinator.js";
 
 type RoomStateChangedEmitter = (roomState: PublicRoomState) => void;
+type RoomRenamedEmitter = (previousRoomId: RoomId, nextRoomId: RoomId) => void;
+type RoomClosedEmitter = (roomId: RoomId) => void;
 
 export class RoomLobbyService {
   public constructor(
@@ -43,6 +52,8 @@ export class RoomLobbyService {
     private readonly connection: RoomConnectionService,
     private readonly emitRoomStateChanged: RoomStateChangedEmitter,
     private readonly maxActiveRoomCount: number,
+    private readonly emitRoomRenamed: RoomRenamedEmitter = () => undefined,
+    private readonly emitRoomClosed: RoomClosedEmitter = () => undefined,
   ) {}
 
   public createRoom(
@@ -112,7 +123,9 @@ export class RoomLobbyService {
     });
     this.store.setSocketMembership(socketId, { playerId, roomId, sessionId });
     this.store.setSessionMembership(sessionId, { playerId, roomId });
-    return { playerId, roomState };
+    const result = { playerId, roomState };
+    logRoomCreated(result, displayName);
+    return result;
   }
 
   public addPlayerToRoom(
@@ -165,7 +178,9 @@ export class RoomLobbyService {
     this.store.setRoom(roomId, { ...existingRoomRecord, roomState: nextRoomState });
     this.store.setSocketMembership(socketId, { playerId, roomId, sessionId });
     this.store.setSessionMembership(sessionId, { playerId, roomId });
-    return { playerId, roomState: nextRoomState };
+    const result = { playerId, roomState: nextRoomState };
+    logPlayerJoined(result, displayName);
+    return result;
   }
 
   public updateRoomSettings(
@@ -218,6 +233,8 @@ export class RoomLobbyService {
       roomState: nextRoomState,
     });
     this.store.retargetMembershipsToRoom(payload.roomId, payload.nextRoomId);
+    this.emitRoomRenamed(payload.roomId, payload.nextRoomId);
+    logRoomRenamed(payload.roomId, payload.nextRoomId, socketId);
 
     return { previousRoomId: payload.roomId, roomState: nextRoomState };
   }
@@ -292,9 +309,8 @@ export class RoomLobbyService {
     roomId: RoomId,
     notHostCode: ServerErrorCode,
   ): RoomRecord {
+    requireHost(this.store, socketId, roomId, notHostCode);
     const roomRecord = this.store.getRoomRecordForMember(socketId, roomId);
-    const membership = this.store.requireMembership(socketId);
-    if (roomRecord.roomState.hostId !== membership.playerId) throw new DomainError(notHostCode);
     if (roomRecord.roomState.status !== "lobby") throw new DomainError("GAME_ALREADY_STARTED");
     return roomRecord;
   }
@@ -420,6 +436,8 @@ export class RoomLobbyService {
     this.store.clearMembershipsForRoom(payload.roomId);
     this.store.deleteRoom(payload.roomId);
     this.store.clearRoomRedirects(payload.roomId);
+    this.emitRoomClosed(payload.roomId);
+    logRoomClosed(payload.roomId, socketId);
     return payload.roomId;
   }
 

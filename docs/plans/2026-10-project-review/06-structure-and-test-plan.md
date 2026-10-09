@@ -2,7 +2,7 @@
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 6 of `00-index.md` §4).
 > **Status (2026-10-09):** W1 and T1 shipped (code 2026-10-07, file deletions 2026-10-09); T8,
-> T10, T5 and S1 shipped 2026-10-09 (§7 rows 1–3 done). Next: S2 (§7 row 4).
+> T10, T5, S1 and S2 shipped 2026-10-09 (§7 rows 1–4 done). Next: S3 and S4 (§7 row 5).
 > Every finding below was re-verified
 > in code on 2026-10-07 (line numbers drift; file and symbol names are the stable reference).
 > **Authority:** this document sets the **structural rules, the test and tooling gates and the
@@ -108,21 +108,23 @@ deletes the room-scoped ack store. Proof: `createSocketHandler.test.ts` (+6),
 `realtimeAuditLogger.test.ts` (+2), `tests/realtime/musicSetupReplies.test.ts` (4); every
 existing server test and E2E green unchanged.
 
-### S2 · Façade collapse (B-08, B-29 `RoomService`, `RoomRegistry`)
+### S2 · Façade collapse (B-08, B-29 `RoomService`, `RoomRegistry`) · shipped
 
-Step detail: `12-backend-stability-and-sessions.md` §4.2–4.3 (target shape: handlers call
-`RoomLobbyService`, `RoomGameplayService`, `RoomConnectionService`, a new `PlaylistService` and a
-new `spotify/SpotifyOrchestrator` through one `RoomServices` container built in `app/`).
-
-- Replace `requireHost`'s Spotify-specific error with a generic `rooms/roomAuthorization.ts`
-  (`requireHost`, `requireMember`, `requireSpotifyPlaybackOwner`) that each caller parameterises
-  with its own error code; `05` A1 and A2 then use the same helpers.
-- Remove the grace defaults duplicated between `RoomRegistry` and `env.ts` (B-28): `env.ts` is the
-  only source.
-- Delete `RoomRegistry.ts` and `RoomService.ts` last; nine server test files construct
-  `RoomRegistry` and move to a `createTestRoomServices()` helper (T5).
-- **Before/after:** the full server suite is green before and after with only construction changes
-  in tests; no file in `rooms/` or `spotify/` above 450 lines after S2 and S3.
+**Shipped 2026-10-09.** `RoomRegistry.ts` and `RoomService.ts` are deleted. `app/createRoomServices.ts`
+builds one `RoomServices` container (`lobby`, `gameplay`, `connection`, `acks`, `store`, `events`,
+`playlists` = `decks/PlaylistOrchestrator`, `spotify` = `spotify/SpotifyOrchestrator`) that every
+handler, the OAuth route and shutdown receive. `rooms/RoomEvents` announces rename, close, expiry,
+socket departure and playback handoff; the Spotify orchestrator subscribes, so `rooms/` imports no
+Spotify code. `rooms/roomAuthorization.ts` holds `requireHost` (caller-supplied code), `isHost`
+and `requireSpotifyPlaybackOwner`; `RoomActionAcks` owns replay lookup. Durations come only from
+`env.ts` (B-28 duplicate defaults gone); tests use `createTestRoomCore` / `createTestRoomServices`.
+Deviations: lifecycle logging moved into the room services through `rooms/roomLifecycleLog.ts`,
+not into handlers (a handler would have to branch on the game outcome, which §1 of the backend
+rules forbids); the other inline host checks in the room services are unchanged; test call sites
+changed with construction (each call now names its owning service), so plan 12's "zero test
+modifications" did not hold. `RoomLobbyService` (466) and `RoomConnectionService` (462) exceed the
+450-line target; their split is S4. Proof: 257 existing server tests green,
+`tests/app/createRoomServices.test.ts` (3, wiring), E2E green.
 
 ### S3 · Spotify module splits and duplicates (B-29, B-22)
 
@@ -486,8 +488,8 @@ found only in the raw reports and now have an owner.
       allowlist is empty (decision 3).
 - [x] `npm run verify` exists, includes format and size checks, and is the gate (T1).
 - [ ] Every test file is typechecked; no `dist/` contains a test file.
-- [ ] One socket handler pipeline; no copied idempotency block; `RoomRegistry` and `RoomService`
-      deleted.
+- [x] One socket handler pipeline; no copied idempotency block; `RoomRegistry` and `RoomService`
+      deleted (S1, S2).
 - [ ] One payload type source (Zod), one owner per gameplay constant, no duplicated helper from
       B-22.
 - [ ] Boundary lint and the z-index, hint-key and `rgb()` guards run in `verify`.
