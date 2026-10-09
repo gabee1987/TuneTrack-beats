@@ -13,7 +13,7 @@ Rules: `CLAUDE.md` → Testing; `docs/rules/backend_engineering_rules.md` §15;
 
 | Behaviour under test                              | Workspace / location                               | Pattern file                                                 |
 | ------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------ |
-| Placement, challenge, reveal, turn order, removal | `packages/game-engine/tests/*.test.ts`             | `tests/gameFlow.test.ts`                                     |
+| Placement, challenge, reveal, turn order, removal | `packages/game-engine/tests/*.test.ts`             | `tests/turnFlow.test.ts`                                     |
 | Payload schema bounds                             | `packages/shared/src/events/schemas.test.ts`       | same file                                                    |
 | Room lifecycle, reconnect, host transfer, timers  | `apps/server/tests/rooms/*.test.ts`                | `tests/rooms/disconnectLifecycle.test.ts`                    |
 | Handler parsing, acks, `requestId` replay         | `apps/server/tests/realtime/*.test.ts`             | `tests/realtime/createSocketHandler.test.ts`                 |

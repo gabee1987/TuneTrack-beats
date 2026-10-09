@@ -1,6 +1,6 @@
 # 16 — Spotify Session Persistence and Deterministic Playback
 
-> **Status (2026-10-06):** Phase 1 (deterministic start position) and Phase 2 items 3.1–3.4 (restart, end-of-track detection, tap-to-play) shipped; bug register B7 and B9 resolved 2026-09-09. Open: Phase 2 items 3.5 (Free-tier parity, unverified) and 3.6 (Media Session), Phase 3 (persistent authorisation — gated by owner decision 10, stays per room pending compliance review) and Phase 4 (playback diagnostics; 14 `console.*` calls remain in a 746-line hook that also violates the 700-line rule).
+> **Status (2026-10-06):** Phase 1 (deterministic start position) and Phase 2 items 3.1–3.4 (restart, end-of-track detection, tap-to-play) shipped; bug register B7 and B9 resolved 2026-09-09. Open: Phase 2 items 3.5 (Free-tier parity, unverified) and 3.6 (Media Session), Phase 3 (persistent authorisation — gated by owner decision 10, stays per room pending compliance review) and Phase 4 (playback diagnostics; 14 `console.*` calls remain in the playback hooks, split 2026-10-09 by `06` W2).
 > **Folded from** `docs/plans/2026-09-stability-performance/08-spotify-session-and-playback.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
 
 > Owning layers: `apps/server/src/spotify`, `apps/server/src/http/spotifyRoutes.ts`,
@@ -142,8 +142,8 @@ Non-negotiable for this phase:
    audit path and asserts it is absent from the output.
 7. **No token to the client.** The browser never sees the refresh token. The access token already
    reaches the browser, which is unavoidable for the Web Playback SDK, but it must stay short-lived
-   and must never be written to storage. `useSpotifyPlaybackSdk` keeps it in a ref only, which is
-   correct.
+   and must never be written to storage. The playback hooks hand it straight to the SDK and keep no
+   copy, which is correct.
 8. **OAuth state.** Single-use enforcement and expiry of the OAuth `state` parameter are now
    finding **B-01** on the hotfix track (`00-index.md` §4), independent of this phase, and must be
    fixed before any further external test session.
@@ -173,14 +173,10 @@ script that closes the window. Two issues:
 
 ## 4. Phase 4 — Playback diagnostics · **S3**
 
-`apps/web/src/pages/GamePage/hooks/useSpotifyPlaybackSdk.ts` has **14** `console.error` /
+The playback hooks under `apps/web/src/pages/GamePage/hooks/spotifyPlayback/` have **14** `console.error` /
 `console.info` / `console.warn` calls (F-22). They are the only visibility into playback failures,
 which means the console is currently load-bearing — and it is also why `10-bundle-and-startup.md`
 §7.3 defers dropping console output in production builds.
-
-The same file is **746 lines** and violates the 700-line hard limit (owner decision 3). Its split is
-finding **F-26**, owned by Phase 6 of the review programme; do the split first or together with this
-phase, never add the diagnostics channel into the unsplit file.
 
 Replace the console calls with a small structured channel:
 
@@ -204,7 +200,8 @@ telemetry, which it currently lacks.
 - [ ] Playback failures appear as audit events, rate-limited, with no token material.
 - [ ] `10-bundle-and-startup.md` §7.3 can now safely enable `drop: ["console"]` in production
       builds.
-- [ ] `useSpotifyPlaybackSdk.ts` is below 700 lines (F-26) and has a test (T-06).
+- [x] `useSpotifyPlaybackSdk.ts` is below 700 lines (F-26) and has a test (T-06) — `06` W2,
+      `useSpotifyPlaybackSdk.lifecycle.test.ts`.
 
 ## 5. Compliance review checklist for Phase 3
 

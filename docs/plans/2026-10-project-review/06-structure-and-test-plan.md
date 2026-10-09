@@ -2,7 +2,7 @@
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 6 of `00-index.md` §4).
 > **Status (2026-10-09):** W1 and T1 shipped (code 2026-10-07, file deletions 2026-10-09); T8,
-> T10, T5 and S1–S5 shipped 2026-10-09 (§7 rows 1–6 done). Next: W2 and T7 (§7 row 7).
+> T10, T5, S1–S5, W2 and T7 shipped 2026-10-09 (§7 rows 1–7 done). Next: T2 and T3 (§7 row 8).
 > Every finding below was re-verified
 > in code on 2026-10-07 (line numbers drift; file and symbol names are the stable reference).
 > **Authority:** this document sets the **structural rules, the test and tooling gates and the
@@ -180,14 +180,19 @@ components with their CSS and colour-guard entry, `GamePageReconnectToast` (+ CS
 and the overlay leftovers `MotionDialogPortal`, `modalMotionTokens` and
 `playlistEditorHistory` (the overlay ratchet is now a plain rule).
 
-### W2 · `useSpotifyPlaybackSdk` (746, hard violation; F-22)
+### W2 · `useSpotifyPlaybackSdk` (746, hard violation; F-22) · shipped
 
-Split into `spotifySdkLoader.ts`, `useSpotifyToken`, `useSpotifyPlayerLifecycle`,
-`useSpotifyPlayRequest` and a pure `playbackPositionInterpolation.ts`. Move the `RoomClosed`
-subscription into the room connection hook's callbacks. The console calls move unchanged; the
-diagnostics channel is `16` §5 and starts only after this split. **Before/after:** add
-`playbackPositionInterpolation.test.ts` and a `useSpotifyPlayerLifecycle` test with
-`fakeSpotifyPlayer` **before** moving code; `useHostPlayback.test.ts` green throughout.
+**Shipped 2026-10-09.** `useSpotifyPlaybackSdk` (700 → 104 lines) composes
+`GamePage/hooks/spotifyPlayback/`: `spotifySdkLoader`, `useSpotifyToken`,
+`useSpotifyPlayerLifecycle`, `useSpotifyPlayRequest`, `useSpotifyPlaybackState` and the pure
+`spotifyEndOfContext` and `spotifyPlayConfirmation`. Position interpolation already lived in
+`useInterpolatedPlaybackPosition` (`05` C6), so no interpolation module was needed. The
+`RoomClosed` subscription is gone rather than moved: the room connection hook navigates away on
+`RoomClosed`, and the unmount pauses, disconnects and unregisters the device. A write-only
+access-token ref was dropped. The console calls moved unchanged (`16` Phase 4). Proof:
+`useSpotifyPlaybackSdk.lifecycle.test.ts` (10, written and green before the split),
+`spotifyEndOfContext.test.ts`, `spotifyPlayConfirmation.test.ts`; `useHostPlayback.test.ts`
+and the token test green throughout.
 
 ### W3 · `useGamePageActions` (455) and its test (1 086)
 
@@ -321,11 +326,13 @@ planned: teardown clears every room timer the test started, but does not assert
 their features (`05` A6, A8; `17` §3; `05` A10). `supertest` is kept because `http/routes.test.ts`
 uses it.
 
-### T7 · Engine (T-09)
+### T7 · Engine (T-09) · shipped
 
-Split `gameFlow.test.ts` (903) into `turnFlow`, `challengeFlow` and `ttActions` test files. Add
-same-year cases through the challenge path (challenger places inside the same-year block; both
-placements valid). Deck exhaustion tests come with `05` A3. Target ≈ 90 engine tests (`19` §2).
+**Shipped 2026-10-09.** `gameFlow.test.ts` split into `turnFlow`, `challengeFlow` and
+`ttActions` over `tests/fixtures/twoPlayerGame.ts`, and its allowlist entry removed. New cases:
+same-year blocks through placement, challenge (both inside the block: the original stands;
+original misses: the challenger steals) and TT buy, start-game validation, slot bounds, turn
+wrap, offline skip, TT floor and refusals outside the turn phase. Engine tests 69 → 93.
 
 ### T8 · Shared contracts (T-07) · shipped
 

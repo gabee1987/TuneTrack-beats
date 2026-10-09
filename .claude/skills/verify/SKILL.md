@@ -47,7 +47,7 @@ Single file while iterating (no build needed):
 ```
 npm exec -w @tunetrack/web -- vitest run src/path/to/file.test.tsx
 npm exec -w @tunetrack/server -- vitest run tests/rooms/RoomStore.test.ts
-npm exec -w @tunetrack/game-engine -- vitest run tests/gameFlow.test.ts
+npm exec -w @tunetrack/game-engine -- vitest run tests/turnFlow.test.ts
 ```
 
 Paths are relative to the workspace. Run from the workspace, never with `--config` from the
