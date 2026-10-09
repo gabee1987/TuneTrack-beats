@@ -1,7 +1,7 @@
-import type { GameTrackCard } from "@tunetrack/game-engine";
 import { updateRoomSettingsPayloadSchema } from "@tunetrack/shared";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { RoomRegistry } from "../../src/rooms/RoomRegistry.js";
+import { buildYearDeck } from "../support/decks.js";
 
 const TEST_ROOM_ID = "TEST_ROOM_1";
 const CHALLENGE_WINDOW_SECONDS = 10;
@@ -9,16 +9,6 @@ const CHALLENGE_WINDOW_SECONDS = 10;
 afterEach(() => {
   vi.useRealTimers();
 });
-
-function buildDeck(): GameTrackCard[] {
-  return [1980, 1990, 2000, 2010, 2020, 2030, 2040].map((releaseYear, index) => ({
-    id: `kick-track-${index + 1}`,
-    title: `Track ${index + 1}`,
-    artist: "Test Artist",
-    albumTitle: "Test Album",
-    releaseYear,
-  }));
-}
 
 /** Host, Player Two and Player Three; Player Two holds the turn and Player Three has 1 TT. */
 function startGameWithGuestOnTurn(options: { isChallengeEnabled: boolean }) {
@@ -51,7 +41,11 @@ function startGameWithGuestOnTurn(options: { isChallengeEnabled: boolean }) {
     startingTimelineCardCount: 1,
     startingTtTokenCount: 1,
   });
-  roomRegistry.startGame("host-socket", { roomId: TEST_ROOM_ID }, buildDeck());
+  roomRegistry.startGame(
+    "host-socket",
+    { roomId: TEST_ROOM_ID },
+    buildYearDeck([1980, 1990, 2000, 2010, 2020, 2030, 2040], "kick-track"),
+  );
   roomRegistry.skipTurn("host-socket", { roomId: TEST_ROOM_ID });
 
   return { roomRegistry, placerId: placer.playerId, challengerId: challenger.playerId };
@@ -119,7 +113,11 @@ describe("removing a player from a running game without a kick", () => {
       "guest-session",
     );
     roomRegistry.removePlayerBySocketId("guest-socket");
-    roomRegistry.startGame("host-socket", { roomId: TEST_ROOM_ID }, buildDeck());
+    roomRegistry.startGame(
+      "host-socket",
+      { roomId: TEST_ROOM_ID },
+      buildYearDeck([1980, 1990, 2000, 2010, 2020, 2030, 2040], "kick-track"),
+    );
 
     vi.advanceTimersByTime(reconnectGracePeriodMs + 1);
 

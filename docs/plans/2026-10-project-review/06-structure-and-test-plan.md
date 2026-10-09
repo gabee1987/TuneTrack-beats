@@ -1,8 +1,8 @@
 # 06 — Codebase Structure and Test Plan
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 6 of `00-index.md` §4).
-> **Status (2026-10-09):** W1 and T1 shipped (code 2026-10-07, file deletions 2026-10-09); T8
-> shipped 2026-10-09. Next: T10 and T5 (§7 row 2).
+> **Status (2026-10-09):** W1 and T1 shipped (code 2026-10-07, file deletions 2026-10-09); T8,
+> T10 and T5 shipped 2026-10-09 (§7 rows 1–2 done). Next: S1 (§7 row 3).
 > Every finding below was re-verified
 > in code on 2026-10-07 (line numbers drift; file and symbol names are the stable reference).
 > **Authority:** this document sets the **structural rules, the test and tooling gates and the
@@ -103,7 +103,7 @@ may import `@tunetrack/shared/constants`, a dependency-free subpath, and nothing
   the audit sink, which widens personal-data processing (GDPR Art. 5(1)(c)); decision 9 keeps the
   current audit scope, not a larger one.
 - **Before/after:** `createSocketHandler.test.ts` gains async-rejection, `idempotent` replay and
-  schema-failure cases; `roomFlow`, `ttActions`, `challengeFlow` and `playlistMetadata` stay green
+  schema-failure cases; `tests/realtime/*`, `ttActions`, `challengeFlow` and `playlistMetadata` stay green
   unchanged. `gameplayHandlers.ts` and `lobbyHandlers.ts` each lose ≥ 100 lines.
 
 ### S2 · Façade collapse (B-08, B-29 `RoomService`, `RoomRegistry`)
@@ -301,16 +301,19 @@ already supplies test values under `NODE_ENV=test`); artefact retention ≤ 7 da
 contain placeholder data only. The merge requirement on `main` is a repository setting the owner
 applies.
 
-### T5 · Server test structure (T-11, T-08 leak guard)
+### T5 · Server test structure (T-11, T-08 leak guard) · shipped
 
-- `apps/server/tests/helpers/`: `socketTestServer.ts` (start, connect clients, `afterEach`
-  `roomCount === 0` assertion, close), `waiters.ts` (every wait has a timeout and a message naming
-  the awaited event), `decks.ts` (the five private deck builders become named fixtures),
-  `createTestRoomServices()` (S2).
-- Split `roomFlow.test.ts` into `lobby`, `gameplayReplay`, `moderation` and `curatedPlaylist`
-  files; no test above ~60 lines.
-- `hostTransfer.test.ts`: replace the real 25 ms wait with fake timers.
-- **Before/after:** the test count does not drop; the server suite's wall time does not grow.
+**Shipped 2026-10-09.** `roomFlow.test.ts` became `tests/realtime/{lobby,gameplayReplay,
+moderation,curatedPlaylist}.test.ts` (longest test 59 lines) on helpers in `tests/support/`
+(the existing folder, not a new `helpers/`): `socketTestServer.ts` (server, clients,
+`createTestRoomService({ deck })`), `waiters.ts` (every wait times out after 2 s naming the
+awaited event), `roomFixtures.ts` (host/guest seats, `sendTwice`, `expectAppliedOnce`) and
+`decks.ts` (the six private decks are now `buildYearDeck`, `fourDecadeDeck`,
+`turnOrderDeck`). `hostTransfer.test.ts` uses fake timers. 238 → 245 server tests (long tests
+split, none dropped); suite wall time 3.4 s → 1.5 s. The leak guard is narrower than
+planned: teardown clears every room timer the test started, but does not assert
+`roomCount === 0`, because in-game rooms deliberately outlive their sockets (reserved players,
+1 h offline TTL).
 
 ### T6 · Server coverage holes (T-05, T-08, review additions)
 
@@ -360,15 +363,13 @@ exported payload schema has no case. Proof: `packages/shared/tests/payloadSchema
 - Page render tests: `HomePage`, `GamePageHeader`; `LobbyPageMobile.test.tsx` stops mocking six
   children to `null` once `04` WP makes the assembly layout-only.
 
-### T10 · Guards (T-12, F-18)
+### T10 · Guards (T-12, F-18) · shipped
 
-- `zIndexScale.test.ts`: every `z-index` in a CSS module is `var(--z-*)` or an integer in
-  `[-1, 9]`; seeded with the current offenders as an allowlist that may only shrink (`05` E1 /
-  `14` Phase 1 empty it).
-- `i18nKeyParity`: every `titleKey`/`bodyKey` in `features/hints/hintRegistry.ts` exists in both
-  catalogues.
-- `noHardcodedColors`: also match `rgb()`/`rgba()` literals, with their own allowlist (F-18; the
-  migration itself is `15` Phase 3).
+**Shipped 2026-10-09.** `zIndexScale.test.ts` already existed;
+`i18nKeyParity.test.ts` now fails when a `hintRegistry` title or body key is missing from a
+catalogue; `noHardcodedColors.test.ts` adds an `rgb()`/`rgba()` ratchet (literal channels
+only) seeded with nine files. Proof: a planted missing hint key and a planted `rgba()` in
+`HintBubble.module.css` each fail exactly their new test.
 
 ### T11 · End to end (T-10)
 

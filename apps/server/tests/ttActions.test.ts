@@ -1,6 +1,6 @@
-import type { GameTrackCard } from "@tunetrack/game-engine";
 import { describe, expect, it } from "vitest";
 import { RoomRegistry } from "../src/rooms/RoomRegistry.js";
+import { buildYearDeck } from "./support/decks.js";
 
 describe("tt actions", () => {
   it("lets the active player skip and buy with TT when TT mode is enabled", () => {
@@ -46,7 +46,7 @@ describe("tt actions", () => {
     const startedRoomState = roomRegistry.startGame(
       "host-socket",
       { roomId: "tt-room" },
-      getTtActionDeck(),
+      buildYearDeck([1980, 1990, 2000, 2005, 2010, 2020], "tt-track"),
     );
 
     expect(startedRoomState.turn?.activePlayerId).toBe(hostJoin.playerId);
@@ -100,50 +100,3 @@ describe("tt actions", () => {
     expect(guestJoin.playerId).toBeDefined();
   });
 });
-
-function getTtActionDeck(): GameTrackCard[] {
-  return [
-    {
-      id: "tt-track-1",
-      title: "Track 1",
-      artist: "Artist 1",
-      albumTitle: "Album 1",
-      releaseYear: 1980,
-    },
-    {
-      id: "tt-track-2",
-      title: "Track 2",
-      artist: "Artist 2",
-      albumTitle: "Album 2",
-      releaseYear: 1990,
-    },
-    {
-      id: "tt-track-3",
-      title: "Track 3",
-      artist: "Artist 3",
-      albumTitle: "Album 3",
-      releaseYear: 2000,
-    },
-    {
-      id: "tt-track-4",
-      title: "Track 4",
-      artist: "Artist 4",
-      albumTitle: "Album 4",
-      releaseYear: 2005,
-    },
-    {
-      id: "tt-track-5",
-      title: "Track 5",
-      artist: "Artist 5",
-      albumTitle: "Album 5",
-      releaseYear: 2010,
-    },
-    {
-      id: "tt-track-6",
-      title: "Track 6",
-      artist: "Artist 6",
-      albumTitle: "Album 6",
-      releaseYear: 2020,
-    },
-  ];
-}

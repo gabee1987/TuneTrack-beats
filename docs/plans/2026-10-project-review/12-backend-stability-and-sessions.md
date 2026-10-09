@@ -144,8 +144,8 @@ handler registrars, replacing both façades.
    `requireSpotifyPlaybackOwner` — move those two guards onto `RoomStore` or a small
    `roomAuthorization.ts`, since they are authorisation predicates, not lifecycle.
 
-Each step keeps `apps/server/tests/roomFlow.test.ts` and the other integration suites
-green without modification, because they exercise the socket surface rather than the
+Each step keeps the socket suites in `apps/server/tests/realtime/` and the other integration
+suites green without modification, because they exercise the socket surface rather than the
 internal classes. That is the safety net that makes this refactor tractable.
 
 ### Acceptance

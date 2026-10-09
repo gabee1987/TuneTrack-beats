@@ -1,6 +1,6 @@
-import type { GameTrackCard } from "@tunetrack/game-engine";
 import { describe, expect, it, vi } from "vitest";
 import { RoomRegistry } from "../../src/rooms/RoomRegistry.js";
+import { fourDecadeDeck } from "../support/decks.js";
 
 describe("in-game disconnect lifecycle", () => {
   it("closes a room after every player stays offline for the one-hour default", () => {
@@ -10,7 +10,11 @@ describe("in-game disconnect lifecycle", () => {
       const roomRegistry = new RoomRegistry(undefined, undefined, undefined, undefined, 1);
       roomRegistry.createRoom("abandoned-game", "Host", "host-socket", "host-session");
       roomRegistry.addPlayerToRoom("abandoned-game", "Guest", "guest-socket", "guest-session");
-      roomRegistry.startGame("host-socket", { roomId: "abandoned-game" }, getLifecycleDeck());
+      roomRegistry.startGame(
+        "host-socket",
+        { roomId: "abandoned-game" },
+        fourDecadeDeck("lifecycle-track"),
+      );
 
       roomRegistry.removePlayerBySocketId("host-socket");
       roomRegistry.removePlayerBySocketId("guest-socket");
@@ -59,7 +63,11 @@ describe("in-game disconnect lifecycle", () => {
         "guest-socket",
         "guest-session",
       );
-      roomRegistry.startGame("host-socket", { roomId: "returning-game" }, getLifecycleDeck());
+      roomRegistry.startGame(
+        "host-socket",
+        { roomId: "returning-game" },
+        fourDecadeDeck("lifecycle-track"),
+      );
 
       roomRegistry.removePlayerBySocketId("host-socket");
       roomRegistry.removePlayerBySocketId("guest-socket");
@@ -94,36 +102,3 @@ describe("in-game disconnect lifecycle", () => {
     }
   });
 });
-
-function getLifecycleDeck(): GameTrackCard[] {
-  return [
-    {
-      id: "lifecycle-track-1",
-      title: "Track 1",
-      artist: "Artist 1",
-      albumTitle: "Album 1",
-      releaseYear: 1980,
-    },
-    {
-      id: "lifecycle-track-2",
-      title: "Track 2",
-      artist: "Artist 2",
-      albumTitle: "Album 2",
-      releaseYear: 1990,
-    },
-    {
-      id: "lifecycle-track-3",
-      title: "Track 3",
-      artist: "Artist 3",
-      albumTitle: "Album 3",
-      releaseYear: 2000,
-    },
-    {
-      id: "lifecycle-track-4",
-      title: "Track 4",
-      artist: "Artist 4",
-      albumTitle: "Album 4",
-      releaseYear: 2010,
-    },
-  ];
-}

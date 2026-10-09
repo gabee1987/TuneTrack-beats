@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
+import { hintRegistry } from "../../features/hints/hintRegistry";
 import {
   availableLanguages,
   defaultLanguageId,
@@ -56,6 +57,16 @@ describe("i18n key parity", () => {
       .sort();
 
     expect(empty, `${languageId} has keys with an empty value`).toEqual([]);
+  });
+
+  it.each(languageIds)("%s defines every hint title and body", (languageId) => {
+    const keys = keySet(languageId);
+    const missing = Object.values(hintRegistry)
+      .flatMap((hint) => [hint.titleKey, hint.bodyKey])
+      .filter((key) => !keys.has(key))
+      .sort();
+
+    expect(missing, `${languageId} is missing hint keys from hintRegistry`).toEqual([]);
   });
 
   it.each(languageIds)("%s metadata matches its catalogue", (languageId) => {

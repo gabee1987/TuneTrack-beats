@@ -25,7 +25,7 @@ Rules: `CLAUDE.md` → Testing; `docs/rules/backend_engineering_rules.md` §15;
 | Repository-wide invariant                         | `apps/web/src/test/guards/*.test.ts`               | `noHardcodedColors.test.ts` (ratchet)                        |
 
 Server tests mirror `src/` under `tests/`; a few older root-level files
-(`roomFlow.test.ts`, `challengeFlow.test.ts`, `ttActions.test.ts`) stay where they are.
+(`challengeFlow.test.ts`, `ttActions.test.ts`, `hostTransfer.test.ts`) stay where they are.
 
 ## 2. Harness — never hand-roll these
 
@@ -43,9 +43,20 @@ Web (`apps/web/src/test/`):
 - `vitest.setup.ts` installs storage, matchMedia, observers, viewport and element-rect stubs
   and resets them after each test; do not re-stub them in a file.
 
-Server: `apps/server/vitest.setup.ts` sets the Spotify env; construct `RoomRegistry` /
-`RoomService` directly with shortened durations (constructor args), as
-`disconnectLifecycle.test.ts` does. Engine: plain objects, no mocks.
+Server: `apps/server/vitest.setup.ts` sets the Spotify env. Registry-level tests construct
+`RoomRegistry` directly with shortened durations, as `disconnectLifecycle.test.ts` does.
+Socket tests use `apps/server/tests/support/`:
+
+- `socketTestServer.ts` — `startSocketTestServer`, `connectTestClient`,
+  `createTestRoomService({ deck, reconnectGracePeriodMs })`; teardown closes everything and
+  clears room timers.
+- `waiters.ts` — `nextEvent`, `waitForStateUpdate`, `waitForRoomList`: bounded, and a timeout
+  names the awaited event.
+- `roomFixtures.ts` — `createRoomAsHost`, `openTwoPlayerLobby`, `startGame`, `sendTwice` +
+  `expectAppliedOnce` for `requestId` replay.
+- `decks.ts` — `buildYearDeck`, `fourDecadeDeck`, `turnOrderDeck`; no private deck literals.
+
+Engine: plain objects, no mocks.
 
 ## 3. Rules that make tests cheap to keep
 

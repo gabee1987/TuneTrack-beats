@@ -1,3 +1,4 @@
+import type { GameTrackCard } from "@tunetrack/game-engine";
 import { io as createSocketClient, type Socket } from "socket.io-client";
 import { afterEach } from "vitest";
 import { createHttpServer } from "../../src/app/createHttpServer.js";
@@ -14,26 +15,53 @@ import { SpotifyMusicSearchService } from "../../src/spotify/SpotifyMusicSearchS
 import { SpotifyPlaybackSessionStore } from "../../src/spotify/SpotifyPlaybackSessionStore.js";
 import { SpotifyTokenStore } from "../../src/spotify/SpotifyTokenStore.js";
 
+export { nextEvent } from "./waiters.js";
+
 /**
  * A real Socket.IO server on a free port with the production handlers, and connected clients.
- * Everything a test opens is closed after it.
+ * Everything a test opens is closed after it, and the room timers it started are cleared so
+ * none fires into a later test.
  */
 const sockets: Socket[] = [];
 const closers: Array<() => Promise<void>> = [];
+const registries: RoomRegistry[] = [];
 
 afterEach(async () => {
-  sockets.forEach((socket) => socket.disconnect());
+  sockets.forEach((socket) => {
+    socket.removeAllListeners();
+    socket.disconnect();
+  });
   sockets.length = 0;
   await Promise.all(closers.map((close) => close()));
   closers.length = 0;
+  registries.forEach((registry) => registry.clearAllTimers());
+  registries.length = 0;
 });
 
-function createRoomService(): RoomService {
+class FixedDeckService extends DeckService {
+  public constructor(private readonly deck: readonly GameTrackCard[]) {
+    super();
+  }
+
+  public override createShuffledDeck(): GameTrackCard[] {
+    return this.deck.map((card) => ({ ...card }));
+  }
+}
+
+export interface TestRoomServiceOptions {
+  /** Dealt in this order instead of the shuffled practice deck. */
+  deck?: readonly GameTrackCard[];
+  reconnectGracePeriodMs?: number;
+}
+
+export function createTestRoomService(options: TestRoomServiceOptions = {}): RoomService {
   const tokenStore = new SpotifyTokenStore();
   const apiClient = new SpotifyApiClient();
+  const registry = new RoomRegistry(undefined, options.reconnectGracePeriodMs ?? 500, 25, 25);
+  registries.push(registry);
   return new RoomService(
-    new RoomRegistry(undefined, 500, 25, 25),
-    new DeckService(),
+    registry,
+    options.deck ? new FixedDeckService(options.deck) : new DeckService(),
     new SpotifyAuthService(apiClient, tokenStore),
     new PlaylistImportService(apiClient, tokenStore),
     new SpotifyDiscoveryService(apiClient, tokenStore),
@@ -42,10 +70,12 @@ function createRoomService(): RoomService {
   );
 }
 
-export async function startSocketTestServer(): Promise<string> {
+export async function startSocketTestServer(
+  roomService = createTestRoomService(),
+): Promise<string> {
   const { httpServer } = createHttpServer();
   const io = createSocketServer(httpServer);
-  registerSocketHandlers(io, createRoomService());
+  registerSocketHandlers(io, roomService);
   await new Promise<void>((resolve) => httpServer.listen(0, resolve));
   closers.push(() => new Promise<void>((resolve) => io.close(() => resolve())));
   const address = httpServer.address();
@@ -64,8 +94,4 @@ export async function connectTestClient(baseUrl: string): Promise<Socket> {
   sockets.push(socket);
   await new Promise<void>((resolve) => socket.once("connect", () => resolve()));
   return socket;
-}
-
-export function nextEvent<TPayload>(socket: Socket, eventName: string): Promise<TPayload> {
-  return new Promise((resolve) => socket.once(eventName, (payload: TPayload) => resolve(payload)));
 }

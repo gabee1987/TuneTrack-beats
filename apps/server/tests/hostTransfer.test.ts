@@ -1,6 +1,6 @@
-import type { GameTrackCard } from "@tunetrack/game-engine";
 import { describe, expect, it, vi } from "vitest";
 import { RoomRegistry } from "../src/rooms/RoomRegistry.js";
+import { fourDecadeDeck } from "./support/decks.js";
 
 describe("host transfer", () => {
   it("waits 30 seconds before transferring an in-game host by default", () => {
@@ -23,7 +23,7 @@ describe("host transfer", () => {
       roomRegistry.startGame(
         "host-socket",
         { roomId: "default-transfer-grace-room" },
-        getHostTransferDeck(),
+        fourDecadeDeck("host-transfer-track"),
       );
 
       roomRegistry.removePlayerBySocketId("host-socket");
@@ -43,7 +43,8 @@ describe("host transfer", () => {
     }
   });
 
-  it("does not automatically transfer lobby host while they are reconnecting", async () => {
+  it("does not automatically transfer lobby host while they are reconnecting", () => {
+    vi.useFakeTimers();
     const roomRegistry = new RoomRegistry(undefined, 1_000, 10);
     const changedRoomStates: string[] = [];
     const hostJoin = roomRegistry.createRoom(
@@ -64,7 +65,7 @@ describe("host transfer", () => {
 
     const roomAfterDisconnect = roomRegistry.removePlayerBySocketId("host-socket");
 
-    await new Promise((resolve) => setTimeout(resolve, 25));
+    vi.advanceTimersByTime(25);
 
     const roomAfterGuestReconnect = roomRegistry.addPlayerToRoom(
       "lobby-host-room",
@@ -77,6 +78,7 @@ describe("host transfer", () => {
     expect(roomAfterGuestReconnect.roomState.hostId).toBe(hostJoin.playerId);
     expect(roomAfterGuestReconnect.playerId).toBe(guestJoin.playerId);
     expect(changedRoomStates).not.toContain(guestJoin.playerId);
+    vi.useRealTimers();
   });
 
   it("keeps an active-game host player reserved during the transfer grace period", () => {
@@ -97,7 +99,7 @@ describe("host transfer", () => {
     roomRegistry.startGame(
       "host-socket",
       { roomId: "active-transfer-room" },
-      getHostTransferDeck(),
+      fourDecadeDeck("host-transfer-track"),
     );
 
     const roomAfterDisconnect = roomRegistry.removePlayerBySocketId("host-socket");
@@ -133,7 +135,11 @@ describe("host transfer", () => {
       "guest-session",
     );
 
-    roomRegistry.startGame("host-socket", { roomId: "former-host-room" }, getHostTransferDeck());
+    roomRegistry.startGame(
+      "host-socket",
+      { roomId: "former-host-room" },
+      fourDecadeDeck("host-transfer-track"),
+    );
 
     roomRegistry.removePlayerBySocketId("host-socket");
     const restoredHostJoin = roomRegistry.addPlayerToRoom(
@@ -172,7 +178,7 @@ describe("host transfer", () => {
     const startedRoom = roomRegistry.startGame(
       "host-socket",
       { roomId: "active-turn-room" },
-      getHostTransferDeck(),
+      fourDecadeDeck("host-transfer-track"),
     );
 
     const roomAfterDisconnect = roomRegistry.removePlayerBySocketId("host-socket");
@@ -198,7 +204,11 @@ describe("host transfer", () => {
       "host-socket",
       "host-session",
     );
-    roomRegistry.startGame("host-socket", { roomId: "solo-turn-room" }, getHostTransferDeck());
+    roomRegistry.startGame(
+      "host-socket",
+      { roomId: "solo-turn-room" },
+      fourDecadeDeck("host-transfer-track"),
+    );
 
     const roomAfterDisconnect = roomRegistry.removePlayerBySocketId("host-socket");
 
@@ -261,36 +271,3 @@ describe("host transfer", () => {
     ).toThrow("ONLY_HOST_CAN_TRANSFER_HOST");
   });
 });
-
-function getHostTransferDeck(): GameTrackCard[] {
-  return [
-    {
-      id: "host-transfer-track-1",
-      title: "Track 1",
-      artist: "Artist 1",
-      albumTitle: "Album 1",
-      releaseYear: 1980,
-    },
-    {
-      id: "host-transfer-track-2",
-      title: "Track 2",
-      artist: "Artist 2",
-      albumTitle: "Album 2",
-      releaseYear: 1990,
-    },
-    {
-      id: "host-transfer-track-3",
-      title: "Track 3",
-      artist: "Artist 3",
-      albumTitle: "Album 3",
-      releaseYear: 2000,
-    },
-    {
-      id: "host-transfer-track-4",
-      title: "Track 4",
-      artist: "Artist 4",
-      albumTitle: "Album 4",
-      releaseYear: 2010,
-    },
-  ];
-}

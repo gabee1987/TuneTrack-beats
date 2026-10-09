@@ -1,6 +1,6 @@
-import type { GameTrackCard } from "@tunetrack/game-engine";
 import { describe, expect, it } from "vitest";
 import { RoomRegistry } from "../../src/rooms/RoomRegistry.js";
+import { buildYearDeck } from "../support/decks.js";
 
 describe("RoomLobbyService.createRoom", () => {
   it("creates a room with a server-generated code when no custom id is provided", () => {
@@ -123,7 +123,11 @@ describe("RoomLobbyService leaving the current lobby", () => {
     const roomRegistry = new RoomRegistry();
     const guestId = createLobbyWithGuest(roomRegistry);
     roomRegistry.createRoom("TEST_ROOM_2", "Player Three", "TEST_SOCKET_3", "TEST_SESSION_3");
-    roomRegistry.startGame("TEST_SOCKET_3", { roomId: "TEST_ROOM_2" }, buildDeck());
+    roomRegistry.startGame(
+      "TEST_SOCKET_3",
+      { roomId: "TEST_ROOM_2" },
+      buildYearDeck([1980, 1990, 2000], "lobby-track"),
+    );
 
     expect(() =>
       roomRegistry.addPlayerToRoom("TEST_ROOM_2", "Player Two", "TEST_SOCKET_2", "TEST_SESSION_2"),
@@ -141,13 +145,3 @@ describe("RoomLobbyService leaving the current lobby", () => {
     expectGuestStillInLobby(roomRegistry, guestId);
   });
 });
-
-function buildDeck(): GameTrackCard[] {
-  return [1980, 1990, 2000].map((releaseYear, index) => ({
-    id: `lobby-track-${index + 1}`,
-    title: `Track ${index + 1}`,
-    artist: "Test Artist",
-    albumTitle: "Test Album",
-    releaseYear,
-  }));
-}
