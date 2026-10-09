@@ -59,11 +59,15 @@ primitive, never a page-level override.
 
 ## 5. Dismissible overlays (dialog, sheet, editor)
 
-- Build on `Dialog` or `BottomSheet`; they come from `MotionDialogPortal` and own focus trap,
-  scroll lock, Escape and scrim behaviour.
-- Push **one same-path router-state history entry** on open so Browser/Android Back closes only
-  the topmost overlay (pattern: `pages/LobbyPage/hooks/playlistEditorHistory.ts`). Blocking
-  overlays ignore Back, Escape and scrim taps.
+- Build on `Dialog` or `BottomSheet`, or render an `Overlay` from `features/overlay` directly.
+  The overlay owns the layer, the focus trap, the scroll guard, Escape, scrim taps and one
+  same-path history entry, so Browser/Android Back closes only the topmost overlay. Never call
+  `createPortal` yourself (`test/guards/overlaySites.test.ts`).
+- A deeper step inside an open sheet (an editor opened from a list in the sheet) is a
+  `PanelView`, never a second sheet on top (decision log 2026-10-08).
+- Side sheets use `createSideSheetMotion`: an opaque panel, only the scrim fades.
+- Blocking overlays pass `dismissible={false}` and ignore Escape and scrim taps; `onBack` is
+  for the rare one whose Back runs its action (`RoomResetModal`).
 - Layer with `--z-*` tokens only. Closing removes the portal; no hidden interactive DOM.
 
 ## 6. Test (required)

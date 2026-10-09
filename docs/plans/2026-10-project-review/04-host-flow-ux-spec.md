@@ -101,9 +101,9 @@ replaces the desktop `LobbyHeader` badge, which today compares English literals
 ### 2.4 Overlays opened by this flow
 
 Every overlay this flow opens (rename dialog, name dialog, kick confirm, info dialogs, adaptive
-select sheets, practice-deck confirm) pushes one same-path router-state history entry so Back
-closes only the topmost overlay, following `pages/LobbyPage/hooks/playlistEditorHistory.ts`. When
-the overlay host of `14-navigation-and-overlays.md` Phase 3 lands, these migrate with the rest.
+select sheets, practice-deck confirm) is an `Overlay` from `features/overlay` (`14` Phase 3,
+shipped 2026-10-08), which gives it one same-path history entry so Back closes only the
+topmost overlay; a step inside an open sheet is a `PanelView`.
 
 ## 3. Screens
 

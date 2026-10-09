@@ -77,8 +77,8 @@ by the ack-driven pending states from `13-network-protocol-and-resilience.md` §
 ### 2.3 Migration order
 
 1. Extend `Button` with the `tertiary` and `spotify` variants and a `loading` state.
-2. Delete `RoomPrimaryActionButton` and `RoomDangerActionButton` with their stylesheets
-   (no importers remain).
+2. ~~Delete `RoomPrimaryActionButton` and `RoomDangerActionButton` with their stylesheets.~~
+   Done 2026-10-09 (`06` W1).
 3. Replace `ActionButton` usages with `Button`; delete `ActionButton.tsx`. Keep
    `FormControls.module.css` only for the input styles it also holds, then move those into
    the input primitives (section 3) and delete it too.

@@ -12,7 +12,6 @@ import { expectRatchet, listCssModules } from "./cssSourceFiles";
 const PENDING_MIGRATION = [
   "features/app-shell/AppShellMenu.module.css",
   "features/loading/AppLoadingOverlay.module.css",
-  "features/ui/RoomPrimaryActionButton.module.css",
   "features/ui/RoomResetModal.module.css",
   "features/ui/SettingField.module.css",
   "features/ui/ToggleSwitch.module.css",

@@ -19,7 +19,7 @@ This document builds that abstraction. It is a prerequisite for
 hint system (`18-onboarding-hint-system.md`) and the room flow
 (`17-room-and-player-identity-flow.md`) shipped without it, so it no longer blocks them.
 
-## 1. Current inventory of overlays
+## 1. Overlay inventory before the host (2026-10-06; superseded by §4)
 
 | Overlay                     | Implementation                                                                         | Portal target                      | z-index            | Back button             |
 | --------------------------- | -------------------------------------------------------------------------------------- | ---------------------------------- | ------------------ | ----------------------- |

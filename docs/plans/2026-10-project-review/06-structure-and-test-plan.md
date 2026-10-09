@@ -1,7 +1,9 @@
 # 06 — Codebase Structure and Test Plan
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 6 of `00-index.md` §4).
-> **Status:** specification only; no source code has changed. Every finding below was re-verified
+> **Status (2026-10-09):** W1 and T1 shipped (code 2026-10-07, file deletions 2026-10-09); T8
+> shipped 2026-10-09. Next: T10 and T5 (§7 row 2).
+> Every finding below was re-verified
 > in code on 2026-10-07 (line numbers drift; file and symbol names are the stable reference).
 > **Authority:** this document sets the **structural rules, the test and tooling gates and the
 > order** of the structure and test work. Step detail stays in `12` §4 (façade collapse), `15`
@@ -181,25 +183,14 @@ new `spotify/SpotifyOrchestrator` through one `RoomServices` container built in 
 
 ## 4. Track W — Web structure
 
-### W1 · Dead code and dead files (F-23, F-07 dead buttons, F-25 scripts) — **do first**
+### W1 · Dead code and dead files (F-23, F-07 dead buttons, F-25 scripts) · shipped
 
-Delete, each with a zero-importer check at the time of deletion:
-
-- `features/ui/RoomPrimaryActionButton.tsx` and `RoomDangerActionButton.tsx` with their CSS
-  modules (and the colour-guard allowlist entry);
-- `GamePageReconnectToast` (+ CSS) and `usePlayerReconnectToast` — `05` B2's connection-state
-  store replaces them; if B2 has landed and reuses either, keep that one;
-- `useGamePageChallengeCelebrationState`, `gamePage.utils.ts` `formatPhaseLabel`;
-- test-only or unused exports: `getServerErrorTranslationKey`, `getPlayerProfile`,
-  `disconnectSocketClient`, `hasSeenHint` (move to the test that needs it or delete);
-- drop `export` (file-internal use only): `getCardGradient`, `clampQuickPickTargetCount`,
-  `getPlaylistImportAction`, `SpotifyImportPlaylistResultRow`, `getSmartSearchResultTypeLabel`,
-  `preloadLobbyPage`, `preloadGamePage` (if still unreferenced);
-- `apps/web/scripts/*.py` (five one-off migration and audit scripts, unreferenced);
-- the dead branches in `createToggleHintFadeMotion` / `createFadeMotion` and the no-op `useMemo`
-  in `AppShellMenuDialog`.
-
-**Before/after:** `verify` green; the colour guard's allowlist shrinks by one.
+**Shipped 2026-10-07** (unused exports, dead helpers and duplicate motion branches removed).
+The dead files followed on 2026-10-09 after a zero-importer check: both `Room*ActionButton`
+components with their CSS and colour-guard entry, `GamePageReconnectToast` (+ CSS),
+`usePlayerReconnectToast`, `useGamePageChallengeCelebrationState`, `apps/web/scripts/*.py`,
+and the overlay leftovers `MotionDialogPortal`, `modalMotionTokens` and
+`playlistEditorHistory` (the overlay ratchet is now a plain rule).
 
 ### W2 · `useSpotifyPlaybackSdk` (746, hard violation; F-22)
 
@@ -270,21 +261,13 @@ with replacing its `transition: left` by a `transform` (salvaged, §9). Button c
 
 ## 5. Track T — Tests and tooling
 
-### T1 · Tooling baseline (T-01, T-03, T-12 part) — **first in this track**
+### T1 · Tooling baseline (T-01, T-03, T-12 part) · shipped
 
-- Root scripts: `verify` (`format:check`, `check:size`, `typecheck`, `lint`, `test`),
-  `verify:full` (`verify` then `e2e`), `format:check`, `check:size`; `03` §5 is updated to include
-  the two checks.
-- `.prettierignore` excluding `docs/archive/`, `dist/`, `coverage/`, Playwright output and
-  lockfiles; format the remaining non-archive offenders in one formatting-only item.
-- Tests are typechecked: each of `apps/server`, `packages/game-engine` and `packages/shared` gets a
-  `tsconfig.test.json` (extends the build config, `noEmit`, includes `tests/`) wired into the
-  workspace `typecheck` script; build configs keep `include: ["src"]`.
-- Move `packages/shared/src/events/schemas.test.ts` to `packages/shared/tests/`; delete the stale
-  `packages/game-engine/dist/tests/`; drop the unused `vitest/globals` type from the engine.
-- Lint scope covers the web Vitest setup and configs and `apps/e2e/fake-spotify-server.mjs`.
-- **Before/after:** `npm run verify` exists and is green; a type error placed in a server test
-  fails `typecheck`; `packages/shared/dist` contains no `*.test.*` after a clean build.
+**Shipped 2026-10-07**: root `verify` and `verify:full`, `format:check`, `check:size`,
+`.prettierignore`, `tsconfig.test.json` in server, engine and shared, wider lint scope. On
+2026-10-09 the shared build config excluded `src/**/*.test.ts`, so a clean build ships no test
+file (proof: a planted type error in `schemas.test.ts` still fails `typecheck`); the stale
+`packages/game-engine/dist/tests/` was removed the same day.
 
 ### T2 · Boundary lint (T-02)
 
@@ -353,11 +336,13 @@ Split `gameFlow.test.ts` (903) into `turnFlow`, `challengeFlow` and `ttActions` 
 same-year cases through the challenge path (challenger places inside the same-year block; both
 placements valid). Deck exhaustion tests come with `05` A3. Target ≈ 90 engine tests (`19` §2).
 
-### T8 · Shared contracts (T-07)
+### T8 · Shared contracts (T-07) · shipped
 
-One table-driven test per schema family (`lobby`, `gameplay`, `playlist`, `spotify`) covering
-**all 35** schemas: a valid payload is accepted, each documented limit rejects just past the edge,
-defaults are applied. Lands before S5.
+**Shipped 2026-10-09.** Table-driven tests for the `lobby`, `gameplay`, `playlist` and `spotify`
+families cover all 35 payload schemas: a valid payload passes, each documented limit passes on
+its edge and fails one step past it, defaults are applied, and a coverage test fails when an
+exported payload schema has no case. Proof: `packages/shared/tests/payloadSchemas.test.ts`
+(214 shared tests; raising the name limit to 25 fails exactly the three name cases).
 
 ### T9 · Web tests (T-04, T-06, T-11 web)
 
@@ -496,7 +481,7 @@ found only in the raw reports and now have an owner.
 
 - [ ] No `.ts`/`.tsx`/`.mjs` file in `apps/` or `packages/` above 700 lines; the size-check
       allowlist is empty (decision 3).
-- [ ] `npm run verify` exists, includes format and size checks, and is the gate.
+- [x] `npm run verify` exists, includes format and size checks, and is the gate (T1).
 - [ ] Every test file is typechecked; no `dist/` contains a test file.
 - [ ] One socket handler pipeline; no copied idempotency block; `RoomRegistry` and `RoomService`
       deleted.
