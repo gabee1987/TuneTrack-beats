@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { SpotifyApiClient } from "../../src/spotify/SpotifyApiClient.js";
+import type { SpotifyAccountsClient } from "../../src/spotify/SpotifyAccountsClient.js";
 import { SpotifyAuthService } from "../../src/spotify/SpotifyAuthService.js";
 import { SpotifyTokenStore } from "../../src/spotify/SpotifyTokenStore.js";
 import { createTestRoomServices } from "../support/roomServices.js";
@@ -21,7 +21,7 @@ function buildAuthService() {
       expires_in: 3600,
     })),
     getUserProfile: vi.fn(async () => ({ product: "premium" })),
-  } as unknown as SpotifyApiClient;
+  } as unknown as SpotifyAccountsClient;
   const tokenStore = new SpotifyTokenStore();
   const setHostTokens = vi.spyOn(tokenStore, "setHostTokens");
   const service = new SpotifyAuthService(apiClient, tokenStore);
@@ -125,8 +125,7 @@ describe("Spotify OAuth state", () => {
 describe("Spotify auth URL and room close authorisation", () => {
   function createServicesWithGuest() {
     const tokenStore = new SpotifyTokenStore();
-    const apiClient = new SpotifyApiClient();
-    const services = createTestRoomServices({ apiClient, tokenStore });
+    const services = createTestRoomServices({ tokenStore });
     services.lobby.createRoom(TEST_ROOM_ID, "Player One", HOST_SOCKET_ID, "session-host");
     services.lobby.addPlayerToRoom(TEST_ROOM_ID, "Player Two", GUEST_SOCKET_ID, "session-guest");
     return { services, tokenStore };

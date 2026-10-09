@@ -9,7 +9,9 @@ import {
 } from "@tunetrack/shared";
 import { describe, expect, it, vi } from "vitest";
 import type { RoomServices } from "../../src/app/createRoomServices.js";
-import type { SpotifyApiClient, SpotifyApiTrack } from "../../src/spotify/SpotifyApiClient.js";
+import type { SpotifyAccountsClient } from "../../src/spotify/SpotifyAccountsClient.js";
+import type { SpotifyApiTrack } from "../../src/spotify/spotifyApiTypes.js";
+import type { SpotifyCatalogClient } from "../../src/spotify/SpotifyCatalogClient.js";
 import { SpotifyAuthService } from "../../src/spotify/SpotifyAuthService.js";
 import { SpotifyPlaybackSessionStore } from "../../src/spotify/SpotifyPlaybackSessionStore.js";
 import { SpotifyTokenStore } from "../../src/spotify/SpotifyTokenStore.js";
@@ -47,13 +49,17 @@ function createHostRoom() {
     getAllPlaylistTracks: vi.fn(async () =>
       Array.from({ length: CANDIDATE_TRACK_COUNT }, (_, index) => buildPlaylistTrack(index)),
     ),
-  } as unknown as SpotifyApiClient;
+  };
   const tokenStore = new SpotifyTokenStore();
   tokenStore.setClientCredentials("client-token", 3600);
-  const spotifyAuthService = new SpotifyAuthService(apiClient, tokenStore);
+  const spotifyAuthService = new SpotifyAuthService(
+    apiClient as unknown as SpotifyAccountsClient,
+    tokenStore,
+  );
   const playbackSessions = new SpotifyPlaybackSessionStore();
   const services = createTestRoomServices({
-    apiClient,
+    accounts: apiClient as unknown as SpotifyAccountsClient,
+    catalog: apiClient as unknown as SpotifyCatalogClient,
     tokenStore,
     spotify: { auth: spotifyAuthService, playbackSessions },
   });

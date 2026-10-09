@@ -216,8 +216,8 @@ keeps at most 3 candidate sessions (oldest evicted). Known limit: the async sear
 hooks wait for their own result event, so a refused search keeps its loading state until the next
 search; the error toast explains the refusal. Proof: `apps/server/tests/realtime/rateLimit.test.ts`,
 `tests/http/callbackRateLimit.test.ts` (including one trusted proxy hop),
-`tests/spotify/SpotifyApiClient.test.ts` (page cap) and
-`tests/spotify/SpotifyDiscoveryService.test.ts` (at most 3 concurrent fetches, session cap).
+`tests/spotify/spotifyClients.test.ts` (page cap) and
+`tests/spotify/SpotifyCandidateGenerator.test.ts` (at most 3 concurrent fetches, session cap).
 
 ### A7 · Transport configuration (B-15) — **shipped 2026-10-07**
 
@@ -247,7 +247,7 @@ per process (every game gets its own card copies). Directory watchers are the So
 `directory:watchers`, kept in step with game-room membership through the adapter's join and
 leave events; `broadcastRoomDirectory` sends once per tick. A host token refresh keeps a
 rotated `refresh_token`, and concurrent refreshes of a room share one request; the
-client-credentials token is shared the same way (`spotify/clientCredentialsToken.ts`, used by
+client-credentials token is shared the same way (`spotify/SpotifyClientCredentials.ts`, used by
 import, discovery and search). The `user-read-email` scope stays (§9).
 
 **Proof:** `tests/decks/DeckService.test.ts` (one load for two games, own card copies, any

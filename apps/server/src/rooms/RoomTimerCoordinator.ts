@@ -1,14 +1,13 @@
 import type { RoomId } from "@tunetrack/shared";
-import { ChallengeTimerManager } from "./ChallengeTimerManager.js";
-import { DisconnectTimerManager } from "./DisconnectTimerManager.js";
+import { KeyedTimerManager } from "./KeyedTimerManager.js";
 import type { RoomStore } from "./RoomStore.js";
 
 export class RoomTimerCoordinator {
-  private readonly allPlayersOfflineTimers = new DisconnectTimerManager("all_players_offline");
-  private readonly challengeTimers = new ChallengeTimerManager();
-  private readonly disconnectTimers = new DisconnectTimerManager("reconnect");
-  private readonly hostTransferTimers = new DisconnectTimerManager("host_transfer");
-  private readonly turnSkipTimers = new DisconnectTimerManager("turn_skip");
+  private readonly allPlayersOfflineTimers = new KeyedTimerManager("all_players_offline");
+  private readonly challengeTimers = new KeyedTimerManager("challenge");
+  private readonly disconnectTimers = new KeyedTimerManager("reconnect");
+  private readonly hostTransferTimers = new KeyedTimerManager("host_transfer");
+  private readonly turnSkipTimers = new KeyedTimerManager("turn_skip");
 
   public constructor(
     private readonly store: RoomStore,

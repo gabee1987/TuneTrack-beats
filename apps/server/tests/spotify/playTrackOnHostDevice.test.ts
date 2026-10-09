@@ -1,24 +1,28 @@
 import { describe, expect, it, vi } from "vitest";
-import { SpotifyApiClient, SpotifyApiError } from "../../src/spotify/SpotifyApiClient.js";
+import type { SpotifyAccountsClient } from "../../src/spotify/SpotifyAccountsClient.js";
+import { SpotifyApiError } from "../../src/spotify/spotifyApiTypes.js";
 import { SpotifyAuthService } from "../../src/spotify/SpotifyAuthService.js";
+import { SpotifyPlaybackController } from "../../src/spotify/SpotifyPlaybackController.js";
+import type { SpotifyPlayerClient } from "../../src/spotify/SpotifyPlayerClient.js";
 import { SpotifyTokenStore } from "../../src/spotify/SpotifyTokenStore.js";
 
 const TEST_ROOM_ID = "ROOM1";
 const TEST_DEVICE_ID = "TEST_DEVICE_1";
 const TEST_TRACK_URI = "spotify:track:TEST0000000000000001";
 
-function buildService(apiClientOverrides: Partial<SpotifyApiClient>) {
+function buildService(apiClientOverrides: Partial<SpotifyPlayerClient>) {
   const apiClient = {
     listPlaybackDevices: vi.fn(async () => [{ id: TEST_DEVICE_ID, is_restricted: false }]),
     transferPlaybackToDevice: vi.fn(async () => undefined),
     playTracksOnDevice: vi.fn(async () => undefined),
     ...apiClientOverrides,
-  } as unknown as SpotifyApiClient;
+  } as unknown as SpotifyPlayerClient;
 
   const tokenStore = new SpotifyTokenStore();
   tokenStore.setHostTokens(TEST_ROOM_ID, "access-token", "refresh-token", 3600, "premium");
 
-  return { apiClient, service: new SpotifyAuthService(apiClient, tokenStore) };
+  const auth = new SpotifyAuthService({} as SpotifyAccountsClient, tokenStore);
+  return { apiClient, service: new SpotifyPlaybackController(auth, apiClient) };
 }
 
 describe("playTrackOnHostDevice", () => {

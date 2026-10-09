@@ -7,17 +7,24 @@ import type {
   SpotifySmartSearchTypeFilter,
 } from "@tunetrack/shared";
 import { logger } from "../app/logger.js";
-import type { SpotifyApiAlbum, SpotifyApiArtist, SpotifyApiTrack } from "./SpotifyApiClient.js";
-import { SpotifyApiClient, SpotifyApiError } from "./SpotifyApiClient.js";
+import { dedupeTracks } from "../decks/trackDedupe.js";
+import type { SpotifyApiTrack } from "./spotifyApiTypes.js";
+import type { SpotifyCatalogClient } from "./SpotifyCatalogClient.js";
+import type { SpotifyClientCredentials } from "./SpotifyClientCredentials.js";
 import { mapSpotifyTrackToGameCard } from "./SpotifyTrackMapper.js";
-import { SpotifyTokenStore } from "./SpotifyTokenStore.js";
 import { parseSpotifySmartSearchQuery } from "./SpotifySmartSearchParser.js";
-import { getClientCredentialsAccessToken } from "./clientCredentialsToken.js";
+import {
+  buildTrackSearchQuery,
+  getTrackReleaseYear,
+  mapAlbumResult,
+  mapArtistResult,
+  mapTrackResult,
+} from "./musicSearchMappers.js";
 
 export class SpotifyMusicSearchService {
   public constructor(
-    private readonly apiClient: SpotifyApiClient,
-    private readonly tokenStore: SpotifyTokenStore,
+    private readonly catalog: SpotifyCatalogClient,
+    private readonly clientCredentials: SpotifyClientCredentials,
   ) {}
 
   public async search(
@@ -37,7 +44,7 @@ export class SpotifyMusicSearchService {
     }
 
     try {
-      const accessToken = await this.getOrRefreshClientCredentialsToken();
+      const accessToken = await this.clientCredentials.getAccessToken();
       const searchResult =
         parsed.kind === "playlist_url"
           ? await this.searchPlaylistUrl(parsed, accessToken)
@@ -78,14 +85,14 @@ export class SpotifyMusicSearchService {
     }
 
     try {
-      const accessToken = await this.getOrRefreshClientCredentialsToken();
+      const accessToken = await this.clientCredentials.getAccessToken();
       const source = await this.getSourceTracks(normalizedPlaylistId, sourceType, accessToken);
 
       const tracks = source.rawTracks.flatMap((track) => {
         const card = mapSpotifyTrackToGameCard(track);
         return card ? [{ ...card, metadataStatus: card.metadataStatus ?? "imported" }] : [];
       });
-      const { dedupedCards, duplicateCount } = dedupePublicTracks(tracks);
+      const { tracks: dedupedCards, duplicateCount } = dedupeTracks(tracks);
 
       return {
         success: true,
@@ -117,7 +124,7 @@ export class SpotifyMusicSearchService {
   ): Promise<SpotifySearchPage> {
     if (!parsed.playlistId) return { results: [], hasMore: false };
 
-    const playlist = await this.apiClient.getPlaylistSearchItem(parsed.playlistId, accessToken);
+    const playlist = await this.catalog.getPlaylistSearchItem(parsed.playlistId, accessToken);
     return {
       results: [
         {
@@ -145,10 +152,10 @@ export class SpotifyMusicSearchService {
     const trackQuery = buildTrackSearchQuery(parsed);
     const [tracks, albums, artists] = await Promise.all([
       types.includes("track")
-        ? this.apiClient.searchTracks(trackQuery, accessToken, perTypeLimit, offset)
+        ? this.catalog.searchTracks(trackQuery, accessToken, perTypeLimit, offset)
         : Promise.resolve([]),
       types.includes("album")
-        ? this.apiClient.searchAlbums(
+        ? this.catalog.searchAlbums(
             parsed.queryWithoutQualifiers,
             accessToken,
             perTypeLimit,
@@ -156,7 +163,7 @@ export class SpotifyMusicSearchService {
           )
         : Promise.resolve([]),
       types.includes("artist")
-        ? this.apiClient.searchArtists(
+        ? this.catalog.searchArtists(
             parsed.queryWithoutQualifiers,
             accessToken,
             perTypeLimit,
@@ -184,7 +191,7 @@ export class SpotifyMusicSearchService {
     accessToken: string,
   ): Promise<SpotifySourceTracks> {
     if (sourceType === "album") {
-      const rawTracks = await this.apiClient.getAlbumTracks(sourceId, accessToken);
+      const rawTracks = await this.catalog.getAlbumTracks(sourceId, accessToken);
       const firstTrack = rawTracks[0];
       return {
         title: firstTrack?.album.name ?? "Spotify album",
@@ -195,7 +202,7 @@ export class SpotifyMusicSearchService {
     }
 
     if (sourceType === "artist") {
-      const rawTracks = await this.apiClient.getArtistTopTracks(sourceId, accessToken);
+      const rawTracks = await this.catalog.getArtistTopTracks(sourceId, accessToken);
       const firstArtist = rawTracks[0]?.artists[0]?.name ?? "Spotify artist";
       return {
         title: firstArtist,
@@ -208,8 +215,8 @@ export class SpotifyMusicSearchService {
     }
 
     const [playlist, rawTracks] = await Promise.all([
-      this.apiClient.getPlaylistSearchItem(sourceId, accessToken),
-      this.apiClient.getAllPlaylistTracks(sourceId, accessToken),
+      this.catalog.getPlaylistSearchItem(sourceId, accessToken),
+      this.catalog.getAllPlaylistTracks(sourceId, accessToken),
     ]);
 
     return {
@@ -218,15 +225,6 @@ export class SpotifyMusicSearchService {
       ...(playlist.images[0]?.url ? { imageUrl: playlist.images[0].url } : {}),
       rawTracks,
     };
-  }
-
-  private async getOrRefreshClientCredentialsToken(): Promise<string> {
-    try {
-      return await getClientCredentialsAccessToken(this.apiClient, this.tokenStore);
-    } catch (err) {
-      if (err instanceof SpotifyApiError) throw err;
-      throw new SpotifyApiError("api_error", "Failed to obtain client credentials token");
-    }
   }
 }
 
@@ -241,88 +239,4 @@ interface SpotifySourceTracks {
   rawTracks: SpotifyApiTrack[];
   subtitle: string;
   title: string;
-}
-
-function buildTrackSearchQuery(parsed: SpotifySmartSearchIntent): string {
-  if (!parsed.year) return parsed.queryWithoutQualifiers;
-  return `${parsed.queryWithoutQualifiers} year:${parsed.year}`;
-}
-
-function mapTrackResult(track: SpotifyApiTrack): SpotifySmartSearchResult {
-  const releaseYear = getTrackReleaseYear(track);
-  const artist = track.artists.map((item) => item.name).join(", ");
-  return {
-    id: track.id,
-    type: "track",
-    title: track.name,
-    subtitle: [artist, releaseYear ? String(releaseYear) : track.album.name]
-      .filter(Boolean)
-      .join(" · "),
-    artist,
-    albumTitle: track.album.name,
-    ...(releaseYear ? { releaseYear } : {}),
-    ...(track.preview_url ? { previewUrl: track.preview_url } : {}),
-    spotifyUri: track.uri,
-    ...(track.album.images[0]?.url ? { imageUrl: track.album.images[0].url } : {}),
-  };
-}
-
-function mapAlbumResult(album: SpotifyApiAlbum): SpotifySmartSearchResult {
-  const artist = album.artists.map((item) => item.name).join(", ");
-  const releaseYear = Number.parseInt(album.release_date.slice(0, 4), 10);
-  return {
-    id: album.id,
-    type: "album",
-    title: album.name,
-    subtitle: [artist, Number.isFinite(releaseYear) ? String(releaseYear) : null]
-      .filter(Boolean)
-      .join(" · "),
-    artist,
-    trackCount: album.total_tracks,
-    ...(Number.isFinite(releaseYear) ? { releaseYear } : {}),
-    spotifyUri: album.uri,
-    ...(album.images[0]?.url ? { imageUrl: album.images[0].url } : {}),
-  };
-}
-
-function mapArtistResult(artist: SpotifyApiArtist): SpotifySmartSearchResult {
-  return {
-    id: artist.id,
-    type: "artist",
-    title: artist.name,
-    subtitle: "Artist",
-    spotifyUri: artist.uri,
-    ...(artist.images[0]?.url ? { imageUrl: artist.images[0].url } : {}),
-  };
-}
-
-function getTrackReleaseYear(track: SpotifyApiTrack): number | null {
-  const year = Number.parseInt(track.album.release_date.slice(0, 4), 10);
-  return Number.isFinite(year) ? year : null;
-}
-
-function dedupePublicTracks(tracks: PublicTrackInfo[]): {
-  dedupedCards: PublicTrackInfo[];
-  duplicateCount: number;
-} {
-  const seen = new Set<string>();
-  const dedupedCards: PublicTrackInfo[] = [];
-
-  for (const track of tracks) {
-    const key =
-      track.spotifyTrackUri ??
-      `${normalizePublicTrackKey(track.title)}:${normalizePublicTrackKey(track.artist)}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    dedupedCards.push(track);
-  }
-
-  return {
-    dedupedCards,
-    duplicateCount: tracks.length - dedupedCards.length,
-  };
-}
-
-function normalizePublicTrackKey(value: string): string {
-  return value.trim().toLocaleLowerCase().replace(/\s+/g, " ");
 }

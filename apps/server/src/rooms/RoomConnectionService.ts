@@ -4,11 +4,11 @@ import type { PublicRoomState, RoomId, TransferHostPayloadParsed } from "@tunetr
 import {
   buildConnectedRoomState,
   buildDisconnectedRoomState,
-  buildHostTransferredRoomState,
   buildPlayerRemovedRoomState,
-  selectAutomaticHostCandidate,
-  selectNextConnectedTurnPlayer,
+  didSpotifyPlaybackOwnerChange,
 } from "./roomConnectionBuilders.js";
+import type { RoomDisconnectPolicy } from "./RoomDisconnectPolicy.js";
+import type { RoomHostTransfer } from "./RoomHostTransfer.js";
 import { logPlayerLeft } from "./roomLifecycleLog.js";
 import { mapGameStateToPublicRoomState } from "./roomStateMappers.js";
 import type {
@@ -23,7 +23,6 @@ import type { RoomTimerCoordinator } from "./RoomTimerCoordinator.js";
 type RoomStateChangedEmitter = (roomState: PublicRoomState) => void;
 type SpotifyPlaybackHandoffEmitter = (roomId: RoomId) => void;
 type RoomDirectoryChangedEmitter = () => void;
-type RoomExpiredEmitter = (roomId: RoomId) => void;
 type SocketLeftEmitter = (socketId: string) => void;
 
 export class RoomConnectionService {
@@ -31,11 +30,12 @@ export class RoomConnectionService {
     private readonly store: RoomStore,
     private readonly timers: RoomTimerCoordinator,
     private readonly gameFlowService: GameFlowService,
+    private readonly hostTransfer: RoomHostTransfer,
+    private readonly disconnectPolicy: RoomDisconnectPolicy,
     private readonly emitRoomStateChanged: RoomStateChangedEmitter,
-    private readonly emitSpotifyPlaybackHandoff: SpotifyPlaybackHandoffEmitter = () => undefined,
-    private readonly emitRoomDirectoryChanged: RoomDirectoryChangedEmitter = () => undefined,
-    private readonly emitRoomExpired: RoomExpiredEmitter = () => undefined,
-    private readonly emitSocketLeft: SocketLeftEmitter = () => undefined,
+    private readonly emitSpotifyPlaybackHandoff: SpotifyPlaybackHandoffEmitter,
+    private readonly emitRoomDirectoryChanged: RoomDirectoryChangedEmitter,
+    private readonly emitSocketLeft: SocketLeftEmitter,
   ) {}
 
   public removePlayerBySocketId(socketId: string): PublicRoomState | null {
@@ -75,7 +75,7 @@ export class RoomConnectionService {
     const membership = this.store.requireMembership(socketId);
     if (roomRecord.roomState.hostId !== membership.playerId)
       throw new DomainError("ONLY_HOST_CAN_TRANSFER_HOST");
-    return this.applyHostTransfer(payload.roomId, payload.playerId, {
+    return this.hostTransfer.apply(payload.roomId, payload.playerId, {
       requireConnectedTarget: true,
     });
   }
@@ -117,21 +117,12 @@ export class RoomConnectionService {
       throw new DomainError("ROOM_EMPTY_AFTER_KICK");
     }
 
-    const previousPlaybackOwner = roomRecord.roomState.settings.spotifyPlaybackOwnerPlayerId;
-    const previousPlaybackGeneration = roomRecord.roomState.settings.spotifyPlaybackGeneration;
-
     const nextRoomState = gameState
       ? mapGameStateToPublicRoomState(baseRoomState, gameState, roomRecord.trackCardsById)
       : baseRoomState;
 
     this.store.setRoom(payload.roomId, { ...roomRecord, gameState, roomState: nextRoomState });
-
-    if (
-      nextRoomState.settings.spotifyPlaybackOwnerPlayerId !== previousPlaybackOwner ||
-      nextRoomState.settings.spotifyPlaybackGeneration !== previousPlaybackGeneration
-    ) {
-      this.emitSpotifyPlaybackHandoff(payload.roomId);
-    }
+    this.afterPlayerRemoved(payload.roomId, roomRecord.roomState, nextRoomState);
 
     return { kickedSocketIds, roomState: nextRoomState };
   }
@@ -187,8 +178,6 @@ export class RoomConnectionService {
     const roomRecord = this.store.getRoom(membership.roomId);
     if (!roomRecord) return null;
 
-    const previousPlaybackOwner = roomRecord.roomState.settings.spotifyPlaybackOwnerPlayerId;
-    const previousPlaybackGeneration = roomRecord.roomState.settings.spotifyPlaybackGeneration;
     const { nextRoomState: baseRoomState } = buildPlayerRemovedRoomState(
       roomRecord.roomState,
       membership.playerId,
@@ -210,15 +199,20 @@ export class RoomConnectionService {
       : baseRoomState;
 
     this.store.setRoom(membership.roomId, { ...roomRecord, gameState, roomState: nextRoomState });
-
-    if (
-      nextRoomState.settings.spotifyPlaybackOwnerPlayerId !== previousPlaybackOwner ||
-      nextRoomState.settings.spotifyPlaybackGeneration !== previousPlaybackGeneration
-    ) {
-      this.emitSpotifyPlaybackHandoff(membership.roomId);
-    }
+    this.afterPlayerRemoved(membership.roomId, roomRecord.roomState, nextRoomState);
 
     return nextRoomState;
+  }
+
+  private afterPlayerRemoved(
+    roomId: RoomId,
+    previousRoomState: PublicRoomState,
+    nextRoomState: PublicRoomState,
+  ): void {
+    if (didSpotifyPlaybackOwnerChange(previousRoomState, nextRoomState)) {
+      this.emitSpotifyPlaybackHandoff(roomId);
+    }
+    this.disconnectPolicy.scheduleExpiryIfEveryoneOffline(roomId, nextRoomState);
   }
 
   // A game started inside the grace keeps the player reserved like any in-game disconnect.
@@ -248,101 +242,12 @@ export class RoomConnectionService {
     );
     this.store.setRoom(membership.roomId, { ...roomRecord, roomState: disconnectedRoomState });
 
-    if (
-      disconnectedRoomState.status !== "lobby" &&
-      disconnectedRoomState.hostId === membership.playerId
-    ) {
-      this.timers.scheduleHostTransfer(
-        membership.roomId,
-        this.timers.hostTransferGracePeriodMs,
-        () => {
-          const current = this.store.getRoom(membership.roomId);
-          if (!current) return;
-          const player = current.roomState.players.find((p) => p.id === membership.playerId);
-          if (
-            player?.connectionStatus !== "disconnected" ||
-            current.roomState.hostId !== membership.playerId
-          )
-            return;
-          const candidate = selectAutomaticHostCandidate(current.roomState);
-          if (candidate) {
-            const nextState = this.applyHostTransfer(membership.roomId, candidate.id, {
-              requireConnectedTarget: true,
-            });
-            this.emitRoomStateChanged(nextState);
-          }
-        },
-      );
-    }
-
-    const isActiveTurnPlayer =
-      !!roomRecord.gameState &&
-      roomRecord.gameState.phase === "turn" &&
-      roomRecord.gameState.turn?.activePlayerId === membership.playerId;
-
-    const isChallengeClaimedChallenger =
-      !!roomRecord.gameState &&
-      roomRecord.gameState.phase === "challenge" &&
-      roomRecord.gameState.challengeState?.phase === "claimed" &&
-      roomRecord.gameState.challengeState.challengerPlayerId === membership.playerId;
-
-    let effectiveRoomState = disconnectedRoomState;
-    if ((isActiveTurnPlayer || isChallengeClaimedChallenger) && disconnectedRoomState.turn) {
-      const turnSkipDeadlineEpochMs = disconnectedAtEpochMs + this.timers.turnSkipGracePeriodMs;
-      effectiveRoomState = {
-        ...disconnectedRoomState,
-        turn: { ...disconnectedRoomState.turn, turnSkipDeadlineEpochMs },
-      };
-      this.store.setRoom(membership.roomId, { ...roomRecord, roomState: effectiveRoomState });
-    }
-
-    if (isActiveTurnPlayer) {
-      this.timers.scheduleTurnSkip(membership.sessionId, this.timers.turnSkipGracePeriodMs, () => {
-        const nextState = this.advanceTurnIfDisconnectedActivePlayer(
-          membership.roomId,
-          membership.playerId,
-        );
-        if (nextState) this.emitRoomStateChanged(nextState);
-      });
-    }
-
-    if (isChallengeClaimedChallenger) {
-      this.timers.scheduleTurnSkip(membership.sessionId, this.timers.turnSkipGracePeriodMs, () => {
-        const nextState = this.cancelChallengeIfDisconnectedChallenger(
-          membership.roomId,
-          membership.playerId,
-        );
-        if (nextState) this.emitRoomStateChanged(nextState);
-      });
-    }
-
-    if (
-      effectiveRoomState.status !== "lobby" &&
-      effectiveRoomState.players.every((player) => player.connectionStatus === "disconnected")
-    ) {
-      this.timers.scheduleAllPlayersOffline(membership.roomId, () => {
-        this.closeRoomIfEveryPlayerIsOffline(membership.roomId);
-      });
-    }
-
-    return effectiveRoomState;
-  }
-
-  private closeRoomIfEveryPlayerIsOffline(roomId: RoomId): void {
-    const roomRecord = this.store.getRoom(roomId);
-    if (
-      !roomRecord ||
-      roomRecord.roomState.status === "lobby" ||
-      roomRecord.roomState.players.some((player) => player.connectionStatus === "connected")
-    ) {
-      return;
-    }
-
-    this.timers.clearForRoom(roomId);
-    this.store.clearMembershipsForRoom(roomId);
-    this.store.deleteRoom(roomId);
-    this.store.clearRoomRedirects(roomId);
-    this.emitRoomExpired(roomId);
+    return this.disconnectPolicy.startGraces(
+      membership,
+      roomRecord,
+      disconnectedRoomState,
+      disconnectedAtEpochMs,
+    );
   }
 
   private markPlayerConnected(roomId: RoomId, playerId: string): PublicRoomState {
@@ -351,112 +256,6 @@ export class RoomConnectionService {
 
     const connectedRoomState = buildConnectedRoomState(roomRecord.roomState, playerId);
     this.store.setRoom(roomId, { ...roomRecord, roomState: connectedRoomState });
-
-    const currentHost = connectedRoomState.players.find((p) => p.id === connectedRoomState.hostId);
-    if (currentHost?.connectionStatus !== "disconnected") return connectedRoomState;
-    if (connectedRoomState.status === "lobby") return connectedRoomState;
-    if (this.timers.hasHostTransfer(roomId)) return connectedRoomState;
-
-    const candidate = selectAutomaticHostCandidate(connectedRoomState);
-    if (!candidate) return connectedRoomState;
-    return this.applyHostTransfer(roomId, candidate.id, { requireConnectedTarget: true });
-  }
-
-  private advanceTurnIfDisconnectedActivePlayer(
-    roomId: RoomId,
-    disconnectedPlayerId: string,
-  ): PublicRoomState | null {
-    const roomRecord = this.store.getRoom(roomId);
-    if (
-      !roomRecord?.gameState ||
-      roomRecord.gameState.phase !== "turn" ||
-      roomRecord.gameState.turn?.activePlayerId !== disconnectedPlayerId
-    )
-      return null;
-
-    const nextActivePlayer = selectNextConnectedTurnPlayer(
-      roomRecord.roomState,
-      disconnectedPlayerId,
-    );
-    if (!nextActivePlayer) return null;
-
-    const nextGameState = this.gameFlowService.advanceTurnToPlayer(
-      roomRecord.gameState,
-      nextActivePlayer.id,
-    );
-    const nextRoomState = mapGameStateToPublicRoomState(
-      roomRecord.roomState,
-      nextGameState,
-      roomRecord.trackCardsById,
-    );
-    this.store.setRoom(roomId, {
-      ...roomRecord,
-      gameState: nextGameState,
-      roomState: nextRoomState,
-    });
-    return nextRoomState;
-  }
-
-  private cancelChallengeIfDisconnectedChallenger(
-    roomId: RoomId,
-    disconnectedPlayerId: string,
-  ): PublicRoomState | null {
-    const roomRecord = this.store.getRoom(roomId);
-    if (
-      !roomRecord?.gameState ||
-      roomRecord.gameState.phase !== "challenge" ||
-      roomRecord.gameState.challengeState?.phase !== "claimed" ||
-      roomRecord.gameState.challengeState.challengerPlayerId !== disconnectedPlayerId
-    )
-      return null;
-
-    const challenger = roomRecord.roomState.players.find((p) => p.id === disconnectedPlayerId);
-    if (challenger?.connectionStatus !== "disconnected") return null;
-
-    const nextGameState = this.gameFlowService.cancelClaimedChallengeForOfflineChallenger(
-      roomRecord.gameState,
-    );
-    const nextRoomState = mapGameStateToPublicRoomState(
-      roomRecord.roomState,
-      nextGameState,
-      roomRecord.trackCardsById,
-    );
-    this.store.setRoom(roomId, {
-      ...roomRecord,
-      gameState: nextGameState,
-      roomState: nextRoomState,
-    });
-    return nextRoomState;
-  }
-
-  private applyHostTransfer(
-    roomId: RoomId,
-    targetPlayerId: string,
-    options: { requireConnectedTarget: boolean },
-  ): PublicRoomState {
-    const roomRecord = this.store.getRoom(roomId);
-    if (!roomRecord) throw new DomainError("ROOM_MEMBERSHIP_NOT_FOUND");
-
-    const targetPlayer = roomRecord.roomState.players.find((p) => p.id === targetPlayerId);
-    if (!targetPlayer) throw new DomainError("HOST_TRANSFER_TARGET_NOT_FOUND");
-    if (roomRecord.roomState.hostId === targetPlayerId)
-      throw new DomainError("HOST_TRANSFER_TARGET_IS_ALREADY_HOST");
-    if (options.requireConnectedTarget && targetPlayer.connectionStatus !== "connected") {
-      throw new DomainError("HOST_TRANSFER_TARGET_DISCONNECTED");
-    }
-
-    const previousPlaybackOwner = roomRecord.roomState.settings.spotifyPlaybackOwnerPlayerId;
-    const previousPlaybackGeneration = roomRecord.roomState.settings.spotifyPlaybackGeneration;
-    const nextRoomState = buildHostTransferredRoomState(roomRecord.roomState, targetPlayerId);
-    this.store.setRoom(roomId, { ...roomRecord, roomState: nextRoomState });
-
-    if (
-      nextRoomState.settings.spotifyPlaybackOwnerPlayerId !== previousPlaybackOwner ||
-      nextRoomState.settings.spotifyPlaybackGeneration !== previousPlaybackGeneration
-    ) {
-      this.emitSpotifyPlaybackHandoff(roomId);
-    }
-
-    return nextRoomState;
+    return this.hostTransfer.promoteIfHostOffline(roomId, connectedRoomState);
   }
 }

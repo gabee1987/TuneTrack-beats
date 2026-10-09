@@ -159,7 +159,7 @@ packages/shared        — public contracts, event names, Zod schemas, constants
 | `realtime/`            | socket event registration, payload parsing, acks, error mapping, broadcasts, room directory                |
 | `rooms/`               | room lifecycle, membership and reconnect, orchestration, timers, lifecycle events, authorisation           |
 | `decks/`               | deck loading and validation, playlist import, room-deck curation (`PlaylistOrchestrator`)                  |
-| `spotify/`             | OAuth, token and playback-session stores, Web API client, search, discovery, `SpotifyOrchestrator`         |
+| `spotify/`             | OAuth, token and playback-session stores, Web API clients, search, candidates, `SpotifyOrchestrator`       |
 | `packages/game-engine` | rules, placement, challenge and reveal, turn progression                                                   |
 | `packages/shared`      | public contracts, payload schemas, ack contract, constants                                                 |
 

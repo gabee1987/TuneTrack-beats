@@ -69,11 +69,14 @@ describe("host moderation over sockets", () => {
 
     const updatedPromise = waitForStateUpdate(
       host.socket,
-      (state) => state.targetTimelineCardCount === 12,
+      (state) => state.settings.targetTimelineCardCount === 12,
     );
     guest.socket.emit(ClientToServerEvent.UpdateRoomSettings, settings);
     await expect(updatedPromise).resolves.toEqual(
-      expect.objectContaining({ hostId: guest.playerId, targetTimelineCardCount: 12 }),
+      expect.objectContaining({
+        hostId: guest.playerId,
+        settings: expect.objectContaining({ targetTimelineCardCount: 12 }),
+      }),
     );
   });
 

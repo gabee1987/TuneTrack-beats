@@ -1,5 +1,5 @@
 import type { GameTrackCard } from "@tunetrack/game-engine";
-import type { SpotifyApiTrack } from "./SpotifyApiClient.js";
+import type { SpotifyApiTrack } from "./spotifyApiTypes.js";
 
 export function mapSpotifyTrackToGameCard(track: SpotifyApiTrack): GameTrackCard | null {
   if (!track.id || !track.name || !track.album?.release_date) {

@@ -127,3 +127,16 @@ export function selectAutomaticHostCandidate(roomState: PublicRoomState): Public
     ) ?? null
   );
 }
+
+/** A new playback owner or generation means the previous host device must release Spotify. */
+export function didSpotifyPlaybackOwnerChange(
+  previousRoomState: PublicRoomState,
+  nextRoomState: PublicRoomState,
+): boolean {
+  return (
+    nextRoomState.settings.spotifyPlaybackOwnerPlayerId !==
+      previousRoomState.settings.spotifyPlaybackOwnerPlayerId ||
+    nextRoomState.settings.spotifyPlaybackGeneration !==
+      previousRoomState.settings.spotifyPlaybackGeneration
+  );
+}

@@ -13,9 +13,12 @@ import {
 import { describe, expect, it, vi } from "vitest";
 import type { RoomServices } from "../../src/app/createRoomServices.js";
 import { PlaylistImportService } from "../../src/decks/PlaylistImportService.js";
-import { SpotifyApiClient } from "../../src/spotify/SpotifyApiClient.js";
-import { SpotifyDiscoveryService } from "../../src/spotify/SpotifyDiscoveryService.js";
+import { SpotifyAccountsClient } from "../../src/spotify/SpotifyAccountsClient.js";
+import { SpotifyCandidateGenerator } from "../../src/spotify/SpotifyCandidateGenerator.js";
+import { SpotifyCatalogClient } from "../../src/spotify/SpotifyCatalogClient.js";
+import { SpotifyClientCredentials } from "../../src/spotify/SpotifyClientCredentials.js";
 import { SpotifyMusicSearchService } from "../../src/spotify/SpotifyMusicSearchService.js";
+import { SpotifyPlaylistSearch } from "../../src/spotify/SpotifyPlaylistSearch.js";
 import { SpotifyTokenStore } from "../../src/spotify/SpotifyTokenStore.js";
 import { createTestRoomServices } from "../support/roomServices.js";
 
@@ -36,15 +39,17 @@ const curatedTracks = TRACK_IDS.map((id, index) => ({
 
 function createServicesWithGuest() {
   const tokenStore = new SpotifyTokenStore();
-  const apiClient = new SpotifyApiClient();
-  const playlistImportService = new PlaylistImportService(apiClient, tokenStore);
-  const discoveryService = new SpotifyDiscoveryService(apiClient, tokenStore);
-  const musicSearchService = new SpotifyMusicSearchService(apiClient, tokenStore);
+  const catalog = new SpotifyCatalogClient();
+  const clientCredentials = new SpotifyClientCredentials(new SpotifyAccountsClient(), tokenStore);
+  const playlistImportService = new PlaylistImportService(catalog, clientCredentials);
+  const playlistSearch = new SpotifyPlaylistSearch(catalog, clientCredentials);
+  const candidates = new SpotifyCandidateGenerator(catalog, clientCredentials, playlistSearch);
+  const musicSearchService = new SpotifyMusicSearchService(catalog, clientCredentials);
   const spotifyWork = [
     vi.spyOn(playlistImportService, "importFromUrl"),
-    vi.spyOn(discoveryService, "searchPlaylists"),
-    vi.spyOn(discoveryService, "generateCandidates"),
-    vi.spyOn(discoveryService, "applyCandidates"),
+    vi.spyOn(playlistSearch, "searchPlaylists"),
+    vi.spyOn(candidates, "generateCandidates"),
+    vi.spyOn(candidates, "applyCandidates"),
     vi.spyOn(musicSearchService, "search"),
     vi.spyOn(musicSearchService, "getPlaylistDetail"),
   ];
@@ -54,10 +59,9 @@ function createServicesWithGuest() {
     });
   }
   const services = createTestRoomServices({
-    apiClient,
     tokenStore,
     playlistImportService,
-    spotify: { discovery: discoveryService, musicSearch: musicSearchService },
+    spotify: { candidates, musicSearch: musicSearchService, playlistSearch },
   });
   services.lobby.createRoom(TEST_ROOM_ID, "Player One", HOST_SOCKET_ID, "session-host");
   services.lobby.addPlayerToRoom(TEST_ROOM_ID, "Player Two", GUEST_SOCKET_ID, "session-guest");

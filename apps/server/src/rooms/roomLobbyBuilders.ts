@@ -52,7 +52,6 @@ export function buildInitialRoomState(
     players: [player],
     timelines: { [playerId]: [] },
     currentTrackCard: null,
-    targetTimelineCardCount: DEFAULT_TARGET_TIMELINE_CARD_COUNT,
     settings,
     turn: null,
     challengeState: null,
@@ -99,7 +98,6 @@ export function buildUpdatedSettingsRoomState(
 
   return {
     ...roomState,
-    targetTimelineCardCount: payload.targetTimelineCardCount,
     players:
       didDefaultStartingCardCountChange || shouldResetStartingTtTokenCount
         ? roomState.players.map((player) => ({

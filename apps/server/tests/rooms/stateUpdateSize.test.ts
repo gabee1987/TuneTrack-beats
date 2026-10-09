@@ -111,7 +111,6 @@ function buildLargestRoomState(): PublicRoomState {
     })),
     timelines: {},
     currentTrackCard: null,
-    targetTimelineCardCount: CARDS_PER_TIMELINE,
     settings: {
       targetTimelineCardCount: CARDS_PER_TIMELINE,
       defaultStartingTimelineCardCount: 1,

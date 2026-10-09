@@ -1,6 +1,7 @@
 import { DomainError } from "@tunetrack/shared";
 import type { GameState, GameTrackCard } from "@tunetrack/game-engine";
 import type { ActionAck, PublicRoomState, PublicRoomSummary, RoomId } from "@tunetrack/shared";
+import { mapRoomStateToSummary } from "./roomStateMappers.js";
 
 export interface SocketRoomMembership {
   playerId: string;
@@ -279,17 +280,6 @@ export class RoomStore {
     }
     return socketIds;
   }
-}
-
-function mapRoomStateToSummary(roomState: PublicRoomState): PublicRoomSummary {
-  const hostPlayer = roomState.players.find((player) => player.id === roomState.hostId);
-
-  return {
-    hostName: hostPlayer?.displayName ?? "Host",
-    playerCount: roomState.players.length,
-    roomId: roomState.roomId,
-    status: roomState.status,
-  };
 }
 
 // Scoped to the caller's session so a member who learns another member's request id cannot

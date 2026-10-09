@@ -97,4 +97,34 @@ describe("in-game disconnect lifecycle", () => {
       vi.useRealTimers();
     }
   });
+
+  it("closes a room whose last online player leaves while the others are offline (B-28)", () => {
+    vi.useFakeTimers();
+
+    try {
+      const roomCore = createTestRoomCore({ allPlayersOfflineRoomTtlMs: 1_000 });
+      roomCore.lobby.createRoom("left-behind-game", "Host", "host-socket", "host-session");
+      roomCore.lobby.addPlayerToRoom("left-behind-game", "Guest", "guest-socket", "guest-session");
+      roomCore.gameplay.startGame(
+        "host-socket",
+        { roomId: "left-behind-game" },
+        fourDecadeDeck("lifecycle-track"),
+      );
+      roomCore.connection.removePlayerBySocketId("guest-socket");
+
+      roomCore.lobby.createRoom("host-next-room", "Host", "host-socket", "host-session");
+      vi.advanceTimersByTime(1_000);
+
+      expect(() =>
+        roomCore.lobby.addPlayerToRoom(
+          "left-behind-game",
+          "Guest",
+          "restored-guest-socket",
+          "guest-session",
+        ),
+      ).toThrow("ROOM_NOT_FOUND");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

@@ -11,7 +11,7 @@ import type {
 } from "@tunetrack/shared";
 import { logger } from "../app/logger.js";
 import { cardToPublicTrackInfo } from "../rooms/publicTrackInfo.js";
-import type { RoomLobbyService } from "../rooms/RoomLobbyService.js";
+import type { RoomDeckService } from "../rooms/RoomDeckService.js";
 import type { RoomStore } from "../rooms/RoomStore.js";
 import type { PlaylistImportService } from "./PlaylistImportService.js";
 
@@ -26,7 +26,7 @@ const NOT_MUSIC_SETUP_HOST = "ONLY_HOST_CAN_IMPORT_PLAYLIST";
 export class PlaylistOrchestrator {
   public constructor(
     private readonly store: RoomStore,
-    private readonly lobby: RoomLobbyService,
+    private readonly deck: RoomDeckService,
     private readonly playlistImportService: PlaylistImportService,
   ) {}
 
@@ -34,7 +34,7 @@ export class PlaylistOrchestrator {
     payload: ImportPlaylistPayloadParsed,
     socketId: string,
   ): Promise<ImportPlaylistServiceResult> {
-    this.lobby.requireHostInLobby(socketId, payload.roomId, NOT_MUSIC_SETUP_HOST);
+    this.deck.requireHostInLobby(socketId, payload.roomId, NOT_MUSIC_SETUP_HOST);
     return this.importAuthorizedPlaylist(payload, socketId);
   }
 
@@ -51,7 +51,7 @@ export class PlaylistOrchestrator {
       };
     }
 
-    const roomState = this.lobby.setImportedDeck(socketId, payload.roomId, outcome.cards);
+    const roomState = this.deck.setImportedDeck(socketId, payload.roomId, outcome.cards);
 
     return {
       roomState,
@@ -82,7 +82,7 @@ export class PlaylistOrchestrator {
       ...(track.spotifyTrackUri ? { spotifyTrackUri: track.spotifyTrackUri } : {}),
     }));
 
-    const { roomState, deck: nextDeck } = this.lobby.updateImportedDeck(
+    const { roomState, deck: nextDeck } = this.deck.updateImportedDeck(
       socketId,
       payload.roomId,
       deck,
@@ -99,7 +99,7 @@ export class PlaylistOrchestrator {
     payload: GetPlaylistTracksPayloadParsed,
     socketId: string,
   ): PublicTrackInfo[] {
-    this.lobby.requireHostInLobby(socketId, payload.roomId, "ONLY_HOST_CAN_EDIT_PLAYLIST");
+    this.deck.requireHostInLobby(socketId, payload.roomId, "ONLY_HOST_CAN_EDIT_PLAYLIST");
     const deck = this.store.getImportedDeck(payload.roomId);
     if (!deck) return [];
     return deck.map(cardToPublicTrackInfo);
@@ -109,7 +109,7 @@ export class PlaylistOrchestrator {
     payload: RemovePlaylistTracksPayloadParsed,
     socketId: string,
   ): { roomState: PublicRoomState; tracks: PublicTrackInfo[] } {
-    const roomState = this.lobby.removeTracksFromImportedDeck(
+    const roomState = this.deck.removeTracksFromImportedDeck(
       socketId,
       payload.roomId,
       payload.trackIds,
@@ -131,7 +131,7 @@ export class PlaylistOrchestrator {
     payload: UpdatePlaylistTrackPayloadParsed,
     socketId: string,
   ): { roomState: PublicRoomState; track: PublicTrackInfo } {
-    const { roomState, track } = this.lobby.updateImportedDeckTrack(socketId, payload);
+    const { roomState, track } = this.deck.updateImportedDeckTrack(socketId, payload);
     logger.info({ roomId: payload.roomId, trackId: payload.trackId }, "playlist track updated");
     return { roomState, track: cardToPublicTrackInfo(track) };
   }

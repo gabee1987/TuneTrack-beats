@@ -138,7 +138,7 @@ describe("lobby membership", () => {
 
     const updatedPromise = waitForStateUpdate(
       host.socket,
-      (roomState) => roomState.targetTimelineCardCount === 12,
+      (roomState) => roomState.settings.targetTimelineCardCount === 12,
     );
     host.socket.emit(ClientToServerEvent.UpdateRoomSettings, {
       roomId: "party-room",
@@ -146,7 +146,9 @@ describe("lobby membership", () => {
     });
 
     await expect(updatedPromise).resolves.toEqual(
-      expect.objectContaining({ targetTimelineCardCount: 12 }),
+      expect.objectContaining({
+        settings: expect.objectContaining({ targetTimelineCardCount: 12 }),
+      }),
     );
   });
 

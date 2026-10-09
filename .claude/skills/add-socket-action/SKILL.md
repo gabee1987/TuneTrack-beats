@@ -26,8 +26,8 @@ validation happens at the boundary, every mutation is acknowledged.
 
 ### 2. `apps/server`
 
-- Service method on the owning service: `RoomLobbyService`, `RoomGameplayService` or
-  `RoomConnectionService` (`rooms/`), `PlaylistOrchestrator` (`decks/`) or
+- Service method on the owning service: `RoomLobbyService`, `RoomDeckService`,
+  `RoomGameplayService` or `RoomConnectionService` (`rooms/`), `PlaylistOrchestrator` (`decks/`) or
   `SpotifyOrchestrator` (`spotify/`); handlers reach them through `RoomServices`. Authorise (host,
   membership, phase) **before** any side effect. Game rules go to `packages/game-engine`,
   never into `rooms/` or a handler.

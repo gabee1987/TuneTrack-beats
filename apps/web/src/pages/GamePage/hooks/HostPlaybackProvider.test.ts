@@ -13,7 +13,6 @@ function createRoomState(
     players: [],
     timelines: {},
     currentTrackCard: null,
-    targetTimelineCardCount: 10,
     settings: {
       challengeWindowDurationSeconds: 10,
       defaultStartingTimelineCardCount: 1,

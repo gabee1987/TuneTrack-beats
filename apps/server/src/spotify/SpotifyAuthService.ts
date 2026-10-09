@@ -1,7 +1,8 @@
 import type { SpotifyAccountType, SpotifyAuthResultPayload } from "@tunetrack/shared";
 import { logAuditEvent } from "../app/auditLogger.js";
 import { logger } from "../app/logger.js";
-import { SpotifyApiClient, SpotifyApiError } from "./SpotifyApiClient.js";
+import type { SpotifyAccountsClient } from "./SpotifyAccountsClient.js";
+import { SpotifyApiError } from "./spotifyApiTypes.js";
 import { SpotifyOAuthStateStore, type PendingOAuthState } from "./SpotifyOAuthStateStore.js";
 import { SpotifyTokenStore } from "./SpotifyTokenStore.js";
 import type { RoomId } from "@tunetrack/shared";
@@ -21,7 +22,7 @@ export type SpotifyRefreshHostTokenResult =
 
 export class SpotifyAuthService {
   public constructor(
-    private readonly apiClient: SpotifyApiClient,
+    private readonly accounts: SpotifyAccountsClient,
     private readonly tokenStore: SpotifyTokenStore,
     private readonly oauthStates = new SpotifyOAuthStateStore(),
   ) {}
@@ -45,7 +46,7 @@ export class SpotifyAuthService {
         redirectUri,
       },
     });
-    return this.apiClient.buildAuthUrl(state, redirectUri);
+    return this.accounts.buildAuthUrl(state, redirectUri);
   }
 
   public async handleCallback(
@@ -90,7 +91,7 @@ export class SpotifyAuthService {
     }
 
     try {
-      const tokenResponse = await this.apiClient.exchangeCodeForTokens(code, state.redirectUri);
+      const tokenResponse = await this.accounts.exchangeCodeForTokens(code, state.redirectUri);
 
       if (!tokenResponse.refresh_token) {
         logAuditEvent({
@@ -111,7 +112,7 @@ export class SpotifyAuthService {
         };
       }
 
-      const profile = await this.apiClient.getUserProfile(tokenResponse.access_token);
+      const profile = await this.accounts.getUserProfile(tokenResponse.access_token);
       const accountType = resolveAccountType(profile.product);
 
       // Host may have changed or left while the browser was on the Spotify consent page.
@@ -193,7 +194,7 @@ export class SpotifyAuthService {
     if (!record) return { success: false, reason: "failed" };
 
     try {
-      const tokenResponse = await this.apiClient.refreshAccessToken(record.refreshToken);
+      const tokenResponse = await this.accounts.refreshAccessToken(record.refreshToken);
 
       this.tokenStore.updateHostAccessToken(
         roomId,
@@ -263,191 +264,14 @@ export class SpotifyAuthService {
     return this.tokenStore.getHostTokenRecord(roomId) !== null;
   }
 
-  /**
-   * Best-effort pause so a previous host device releases the Spotify account
-   * before the next host's Web Playback device takes over.
-   */
-  public async pauseRoomPlayback(roomId: RoomId): Promise<void> {
-    let accessToken = this.getValidHostAccessToken(roomId);
-    if (!accessToken) {
-      const refreshed = await this.refreshHostToken(roomId);
-      if (!refreshed.success) {
-        return;
-      }
-      accessToken = refreshed.accessToken;
-    }
+  /** A usable host token: the stored one, or a refreshed one once it expired. */
+  public async resolveHostAccessToken(roomId: RoomId): Promise<string | null> {
+    const accessToken = this.getValidHostAccessToken(roomId);
+    if (accessToken) return accessToken;
 
-    try {
-      await this.apiClient.pausePlayback(accessToken);
-    } catch (error) {
-      logger.warn(
-        { roomId, error: summarizeUnknownError(error) },
-        "Spotify pause during playback handoff failed",
-      );
-    }
+    const refreshed = await this.refreshHostToken(roomId);
+    return refreshed.success ? refreshed.accessToken : null;
   }
-
-  public async playTrackOnHostDevice(
-    roomId: RoomId,
-    deviceId: string,
-    spotifyTrackUri: string,
-    options: {
-      requestId: string;
-      isSuperseded: () => boolean;
-    },
-  ): Promise<
-    | { success: true; requestId: string }
-    | {
-        success: false;
-        requestId: string;
-        code: "device_not_found" | "not_connected" | "spotify_api_error" | "superseded";
-        message: string;
-      }
-  > {
-    const { requestId, isSuperseded } = options;
-
-    if (isSuperseded()) {
-      return {
-        success: false,
-        requestId,
-        code: "superseded",
-        message: "A newer playback request replaced this one.",
-      };
-    }
-
-    let accessToken = this.getValidHostAccessToken(roomId);
-    if (!accessToken) {
-      const refreshed = await this.refreshHostToken(roomId);
-      if (!refreshed.success) {
-        return {
-          success: false,
-          requestId,
-          code: "not_connected",
-          message: "Spotify is not connected for this room.",
-        };
-      }
-      accessToken = refreshed.accessToken;
-    }
-
-    // Web Playback SDK "ready" often precedes Connect device-list visibility,
-    // especially right after a host transfer. Poll long enough for Spotify.
-    const retryDelaysMs = [0, 500, 1000, 1500, 2000, 3000, 4000, 5000, 6000];
-    let lastError: unknown;
-
-    for (let attemptIndex = 0; attemptIndex < retryDelaysMs.length; attemptIndex += 1) {
-      const delayMs = retryDelaysMs[attemptIndex] ?? 0;
-      if (isSuperseded()) {
-        return {
-          success: false,
-          requestId,
-          code: "superseded",
-          message: "A newer playback request replaced this one.",
-        };
-      }
-
-      if (delayMs > 0) {
-        await sleep(delayMs);
-      }
-
-      if (isSuperseded()) {
-        return {
-          success: false,
-          requestId,
-          code: "superseded",
-          message: "A newer playback request replaced this one.",
-        };
-      }
-
-      try {
-        const listedDeviceId = await this.resolvePlayableDeviceId(accessToken, deviceId);
-        // Prefer a listed device, but still attempt the SDK-reported id — Spotify
-        // sometimes accepts play before the device appears in /me/player/devices.
-        const playableDeviceId = listedDeviceId ?? deviceId;
-
-        // Transfer is recovery, not routine. A play request already targets the device, while
-        // a transfer carries `play: false` — "keep the current playback state" — which hands
-        // the device the *previous* track at its current position. Sent alongside the play on
-        // every card, the two commands raced inside Spotify, and whenever the transfer settled
-        // last the host heard the previous song resume mid-way with nothing to correct it.
-        if (attemptIndex > 0) {
-          try {
-            await this.apiClient.transferPlaybackToDevice(accessToken, playableDeviceId, false);
-          } catch (transferError) {
-            if (!(transferError instanceof SpotifyApiError && transferError.code === "not_found")) {
-              lastError = transferError;
-            }
-          }
-
-          if (isSuperseded()) {
-            return {
-              success: false,
-              requestId,
-              code: "superseded",
-              message: "A newer playback request replaced this one.",
-            };
-          }
-        }
-
-        await this.apiClient.playTracksOnDevice(accessToken, playableDeviceId, [spotifyTrackUri]);
-        return { success: true, requestId };
-      } catch (error) {
-        lastError = error;
-        if (error instanceof SpotifyApiError && error.code === "not_found") {
-          continue;
-        }
-
-        return {
-          success: false,
-          requestId,
-          code: "spotify_api_error",
-          message: "Spotify could not start playback.",
-        };
-      }
-    }
-
-    logger.warn(
-      { roomId, deviceId, requestId, lastError: summarizeUnknownError(lastError) },
-      "Spotify play device never became available",
-    );
-
-    return {
-      success: false,
-      requestId,
-      code: "device_not_found",
-      message: "Spotify player device is not ready yet. Try again in a moment.",
-    };
-  }
-
-  private async resolvePlayableDeviceId(
-    accessToken: string,
-    preferredDeviceId: string,
-  ): Promise<string | null> {
-    try {
-      const devices = await this.apiClient.listPlaybackDevices(accessToken);
-      const preferred = devices.find(
-        (device) => device.id === preferredDeviceId && !device.is_restricted,
-      );
-      // Do not fall back to another TuneTrack device — after host transfer the
-      // previous browser's device can still linger and would steal playback.
-      return preferred?.id ?? null;
-    } catch (error) {
-      logger.warn({ error }, "Could not list Spotify playback devices");
-      return preferredDeviceId;
-    }
-  }
-}
-
-function summarizeUnknownError(error: unknown): string | undefined {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return undefined;
-}
-
-function sleep(delayMs: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, delayMs);
-  });
 }
 
 function rejectNonHostCallback(

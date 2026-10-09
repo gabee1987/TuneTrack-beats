@@ -53,7 +53,7 @@ function registerStartGameHandler(io: Server, socket: Socket, services: RoomServ
       message: "Room code is invalid.",
     },
     log: (data) => {
-      logger.info({ socketId: socket.id, roomId: data.roomId }, "start_game");
+      logger.debug({ socketId: socket.id, roomId: data.roomId }, "start_game");
     },
     handle: (data) => {
       broadcastRoomState(io, services.gameplay.startGame(socket.id, data));
@@ -75,7 +75,7 @@ function registerPlaceCardHandler(io: Server, socket: Socket, services: RoomServ
       message: "Selected timeline slot is invalid.",
     },
     log: (data) => {
-      logger.info(
+      logger.debug(
         {
           socketId: socket.id,
           roomId: data.roomId,
@@ -103,7 +103,7 @@ function registerConfirmRevealHandler(io: Server, socket: Socket, services: Room
       message: "Room code is invalid.",
     },
     log: (data) => {
-      logger.info({ socketId: socket.id, roomId: data.roomId }, "confirm_reveal");
+      logger.debug({ socketId: socket.id, roomId: data.roomId }, "confirm_reveal");
     },
     handle: (data) => {
       broadcastRoomState(io, services.gameplay.confirmReveal(socket.id, data));
@@ -124,7 +124,7 @@ function registerClaimChallengeHandler(io: Server, socket: Socket, services: Roo
       message: "Room code is invalid.",
     },
     log: (data) => {
-      logger.info({ socketId: socket.id, roomId: data.roomId }, "claim_challenge");
+      logger.debug({ socketId: socket.id, roomId: data.roomId }, "claim_challenge");
     },
     handle: (data) => {
       broadcastRoomState(io, services.gameplay.claimChallenge(socket.id, data));
@@ -145,7 +145,7 @@ function registerPlaceChallengeHandler(io: Server, socket: Socket, services: Roo
       message: "Selected timeline slot is invalid.",
     },
     log: (data) => {
-      logger.info(
+      logger.debug(
         {
           socketId: socket.id,
           roomId: data.roomId,
@@ -199,7 +199,7 @@ function registerAwardTtHandler(io: Server, socket: Socket, services: RoomServic
       message: "TT award payload is invalid.",
     },
     log: (data) => {
-      logger.info(
+      logger.debug(
         {
           socketId: socket.id,
           roomId: data.roomId,
@@ -228,7 +228,7 @@ function registerSkipTrackWithTtHandler(io: Server, socket: Socket, services: Ro
       message: "Skip request payload is invalid.",
     },
     log: (data) => {
-      logger.info({ socketId: socket.id, roomId: data.roomId }, "skip_track_with_tt");
+      logger.debug({ socketId: socket.id, roomId: data.roomId }, "skip_track_with_tt");
     },
     handle: (data) => {
       broadcastRoomState(io, services.gameplay.skipTrackWithTt(socket.id, data));
@@ -249,7 +249,7 @@ function registerSkipTurnHandler(io: Server, socket: Socket, services: RoomServi
       message: "Skip turn request payload is invalid.",
     },
     log: (data) => {
-      logger.info({ socketId: socket.id, roomId: data.roomId }, "skip_turn");
+      logger.debug({ socketId: socket.id, roomId: data.roomId }, "skip_turn");
     },
     handle: (data) => {
       broadcastRoomState(io, services.gameplay.skipTurn(socket.id, data));

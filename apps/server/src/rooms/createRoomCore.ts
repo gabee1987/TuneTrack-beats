@@ -2,8 +2,11 @@ import { GameFlowService, type GameTrackCard } from "@tunetrack/game-engine";
 import type { PublicRoomState, RoomId } from "@tunetrack/shared";
 import { RoomActionAcks } from "./RoomActionAcks.js";
 import { RoomConnectionService } from "./RoomConnectionService.js";
+import { RoomDeckService } from "./RoomDeckService.js";
+import { RoomDisconnectPolicy } from "./RoomDisconnectPolicy.js";
 import { RoomEvents } from "./RoomEvents.js";
 import { RoomGameplayService } from "./RoomGameplayService.js";
+import { RoomHostTransfer } from "./RoomHostTransfer.js";
 import { RoomLobbyService } from "./RoomLobbyService.js";
 import { RoomStore } from "./RoomStore.js";
 import { RoomTimerCoordinator } from "./RoomTimerCoordinator.js";
@@ -23,6 +26,7 @@ export interface RoomCore {
   events: RoomEvents;
   acks: RoomActionAcks;
   lobby: RoomLobbyService;
+  deck: RoomDeckService;
   gameplay: RoomGameplayService;
   connection: RoomConnectionService;
 }
@@ -43,14 +47,26 @@ export function createRoomCore(
   );
   const emitRoomStateChanged = (roomState: PublicRoomState): void =>
     events.emit("roomStateChanged", roomState);
+  const emitSpotifyPlaybackHandoff = (roomId: RoomId): void =>
+    events.emit("spotifyPlaybackHandoff", roomId);
+  const hostTransfer = new RoomHostTransfer(store, timers, emitSpotifyPlaybackHandoff);
+  const disconnectPolicy = new RoomDisconnectPolicy(
+    store,
+    timers,
+    gameFlowService,
+    hostTransfer,
+    emitRoomStateChanged,
+    (roomId) => events.emit("roomExpired", roomId),
+  );
   const connection = new RoomConnectionService(
     store,
     timers,
     gameFlowService,
+    hostTransfer,
+    disconnectPolicy,
     emitRoomStateChanged,
-    (roomId) => events.emit("spotifyPlaybackHandoff", roomId),
+    emitSpotifyPlaybackHandoff,
     () => events.emit("roomDirectoryChanged"),
-    (roomId) => events.emit("roomExpired", roomId),
     (socketId) => events.emit("socketLeft", socketId),
   );
   const lobby = new RoomLobbyService(
@@ -71,5 +87,14 @@ export function createRoomCore(
     createStartingDeck,
   );
 
-  return { store, timers, events, acks: new RoomActionAcks(store), lobby, gameplay, connection };
+  return {
+    store,
+    timers,
+    events,
+    acks: new RoomActionAcks(store),
+    lobby,
+    deck: new RoomDeckService(store),
+    gameplay,
+    connection,
+  };
 }

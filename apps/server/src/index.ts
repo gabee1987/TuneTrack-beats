@@ -11,12 +11,17 @@ import { DeckService } from "./decks/DeckService.js";
 import { PlaylistImportService } from "./decks/PlaylistImportService.js";
 import { registerSpotifyRoutes } from "./http/spotifyRoutes.js";
 import { registerSocketHandlers } from "./realtime/registerSocketHandlers.js";
-import { SpotifyApiClient } from "./spotify/SpotifyApiClient.js";
+import { SpotifyAccountsClient } from "./spotify/SpotifyAccountsClient.js";
 import { SpotifyAuthService } from "./spotify/SpotifyAuthService.js";
-import { SpotifyDiscoveryService } from "./spotify/SpotifyDiscoveryService.js";
+import { SpotifyCandidateGenerator } from "./spotify/SpotifyCandidateGenerator.js";
+import { SpotifyCatalogClient } from "./spotify/SpotifyCatalogClient.js";
+import { SpotifyClientCredentials } from "./spotify/SpotifyClientCredentials.js";
 import { SpotifyMusicSearchService } from "./spotify/SpotifyMusicSearchService.js";
-import { SpotifyTokenStore } from "./spotify/SpotifyTokenStore.js";
+import { SpotifyPlaybackController } from "./spotify/SpotifyPlaybackController.js";
 import { SpotifyPlaybackSessionStore } from "./spotify/SpotifyPlaybackSessionStore.js";
+import { SpotifyPlayerClient } from "./spotify/SpotifyPlayerClient.js";
+import { SpotifyPlaylistSearch } from "./spotify/SpotifyPlaylistSearch.js";
+import { SpotifyTokenStore } from "./spotify/SpotifyTokenStore.js";
 import {
   getConfiguredSpotifyRedirectUris,
   listSuggestedLanSpotifyRedirectUris,
@@ -27,19 +32,17 @@ registerProcessFatalHandlers(process, logger, (code) => process.exit(code));
 const { app, httpServer } = createHttpServer();
 const io = createSocketServer(httpServer);
 
-const spotifyTokenStore = new SpotifyTokenStore();
-const spotifyApiClient = new SpotifyApiClient({
+const spotifyClientOptions = {
   ...(env.SPOTIFY_ACCOUNTS_BASE_URL ? { accountsBaseUrl: env.SPOTIFY_ACCOUNTS_BASE_URL } : {}),
   ...(env.SPOTIFY_API_BASE_URL ? { apiBaseUrl: env.SPOTIFY_API_BASE_URL } : {}),
-});
-const spotifyAuthService = new SpotifyAuthService(spotifyApiClient, spotifyTokenStore);
-const spotifyPlaybackSessions = new SpotifyPlaybackSessionStore();
-const playlistImportService = new PlaylistImportService(spotifyApiClient, spotifyTokenStore);
-const spotifyDiscoveryService = new SpotifyDiscoveryService(spotifyApiClient, spotifyTokenStore);
-const spotifyMusicSearchService = new SpotifyMusicSearchService(
-  spotifyApiClient,
-  spotifyTokenStore,
-);
+};
+const spotifyTokenStore = new SpotifyTokenStore();
+const spotifyAccounts = new SpotifyAccountsClient(spotifyClientOptions);
+const spotifyCatalog = new SpotifyCatalogClient(spotifyClientOptions);
+const spotifyClientCredentials = new SpotifyClientCredentials(spotifyAccounts, spotifyTokenStore);
+const spotifyAuthService = new SpotifyAuthService(spotifyAccounts, spotifyTokenStore);
+const spotifyPlaylistSearch = new SpotifyPlaylistSearch(spotifyCatalog, spotifyClientCredentials);
+const playlistImportService = new PlaylistImportService(spotifyCatalog, spotifyClientCredentials);
 const testDeckRandomValue = env.TEST_DECK_RANDOM_VALUE;
 const deckService = new DeckService(
   undefined,
@@ -51,9 +54,18 @@ const roomServices = createRoomServices({
   playlistImportService,
   spotify: {
     auth: spotifyAuthService,
-    discovery: spotifyDiscoveryService,
-    musicSearch: spotifyMusicSearchService,
-    playbackSessions: spotifyPlaybackSessions,
+    candidates: new SpotifyCandidateGenerator(
+      spotifyCatalog,
+      spotifyClientCredentials,
+      spotifyPlaylistSearch,
+    ),
+    musicSearch: new SpotifyMusicSearchService(spotifyCatalog, spotifyClientCredentials),
+    playback: new SpotifyPlaybackController(
+      spotifyAuthService,
+      new SpotifyPlayerClient(spotifyClientOptions),
+    ),
+    playbackSessions: new SpotifyPlaybackSessionStore(),
+    playlistSearch: spotifyPlaylistSearch,
   },
 });
 

@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import type { SpotifyApiClient } from "../../src/spotify/SpotifyApiClient.js";
+import type { SpotifyAccountsClient } from "../../src/spotify/SpotifyAccountsClient.js";
 import { SpotifyAuthService } from "../../src/spotify/SpotifyAuthService.js";
 import { SpotifyTokenStore } from "../../src/spotify/SpotifyTokenStore.js";
-import { getClientCredentialsAccessToken } from "../../src/spotify/clientCredentialsToken.js";
 
 const ROOM_ID = "TEST_ROOM_1";
 
@@ -30,7 +29,7 @@ describe("SpotifyAuthService host token refresh (B-19)", () => {
         expires_in: 3600,
         refresh_token: "TEST_REFRESH_ROTATED",
       }),
-    } as unknown as SpotifyApiClient;
+    } as unknown as SpotifyAccountsClient;
 
     await new SpotifyAuthService(apiClient, tokenStore).refreshHostToken(ROOM_ID);
 
@@ -48,7 +47,7 @@ describe("SpotifyAuthService host token refresh (B-19)", () => {
         token_type: "Bearer",
         expires_in: 3600,
       }),
-    } as unknown as SpotifyApiClient;
+    } as unknown as SpotifyAccountsClient;
 
     await new SpotifyAuthService(apiClient, tokenStore).refreshHostToken(ROOM_ID);
 
@@ -63,7 +62,7 @@ describe("SpotifyAuthService host token refresh (B-19)", () => {
     }>();
     const apiClient = {
       refreshAccessToken: vi.fn().mockReturnValue(tokenResponse.promise),
-    } as unknown as SpotifyApiClient;
+    } as unknown as SpotifyAccountsClient;
     const authService = new SpotifyAuthService(apiClient, createTokenStore());
 
     const first = authService.refreshHostToken(ROOM_ID);
@@ -82,35 +81,5 @@ describe("SpotifyAuthService host token refresh (B-19)", () => {
 
     await authService.refreshHostToken(ROOM_ID);
     expect(apiClient.refreshAccessToken).toHaveBeenCalledTimes(2);
-  });
-});
-
-describe("client-credentials token (B-22)", () => {
-  it("fetches once for concurrent callers and reuses the stored token afterwards", async () => {
-    const tokenResponse = deferred<{
-      access_token: string;
-      token_type: string;
-      expires_in: number;
-    }>();
-    const apiClient = {
-      getClientCredentialsToken: vi.fn().mockReturnValue(tokenResponse.promise),
-    } as unknown as SpotifyApiClient;
-    const tokenStore = new SpotifyTokenStore();
-
-    const callers = [
-      getClientCredentialsAccessToken(apiClient, tokenStore),
-      getClientCredentialsAccessToken(apiClient, tokenStore),
-    ];
-    tokenResponse.resolve({
-      access_token: "TEST_APP_TOKEN",
-      token_type: "Bearer",
-      expires_in: 3600,
-    });
-
-    await expect(Promise.all(callers)).resolves.toEqual(["TEST_APP_TOKEN", "TEST_APP_TOKEN"]);
-    await expect(getClientCredentialsAccessToken(apiClient, tokenStore)).resolves.toBe(
-      "TEST_APP_TOKEN",
-    );
-    expect(apiClient.getClientCredentialsToken).toHaveBeenCalledTimes(1);
   });
 });

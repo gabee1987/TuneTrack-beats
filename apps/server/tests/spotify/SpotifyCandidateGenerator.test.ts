@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { SpotifyApiClient, SpotifyApiTrack } from "../../src/spotify/SpotifyApiClient.js";
-import { SpotifyDiscoveryService } from "../../src/spotify/SpotifyDiscoveryService.js";
+import type { SpotifyAccountsClient } from "../../src/spotify/SpotifyAccountsClient.js";
+import type { SpotifyApiTrack } from "../../src/spotify/spotifyApiTypes.js";
+import { SpotifyCandidateGenerator } from "../../src/spotify/SpotifyCandidateGenerator.js";
+import type { SpotifyCatalogClient } from "../../src/spotify/SpotifyCatalogClient.js";
+import { SpotifyClientCredentials } from "../../src/spotify/SpotifyClientCredentials.js";
+import { SpotifyPlaylistSearch } from "../../src/spotify/SpotifyPlaylistSearch.js";
 import { SpotifyTokenStore } from "../../src/spotify/SpotifyTokenStore.js";
 
 const ROOM_ID = "TEST_ROOM_1";
@@ -17,7 +21,7 @@ function buildPlaylistTracks(playlistId: string): SpotifyApiTrack[] {
   }));
 }
 
-function createDiscoveryService() {
+function createCandidateGenerator() {
   const fetches = { inFlight: 0, maxInFlight: 0 };
   const apiClient = {
     getAllPlaylistTracks: async (playlistId: string) => {
@@ -27,21 +31,26 @@ function createDiscoveryService() {
       fetches.inFlight -= 1;
       return buildPlaylistTracks(playlistId);
     },
-  } as unknown as SpotifyApiClient;
+  } as unknown as SpotifyCatalogClient;
   const tokenStore = new SpotifyTokenStore();
   tokenStore.setClientCredentials("client-token", 3600);
-  return { discovery: new SpotifyDiscoveryService(apiClient, tokenStore), fetches };
+  const credentials = new SpotifyClientCredentials({} as SpotifyAccountsClient, tokenStore);
+  const playlistSearch = new SpotifyPlaylistSearch(apiClient, credentials);
+  return {
+    discovery: new SpotifyCandidateGenerator(apiClient, credentials, playlistSearch),
+    fetches,
+  };
 }
 
-async function generateSession(discovery: SpotifyDiscoveryService, playlistId: string) {
+async function generateSession(discovery: SpotifyCandidateGenerator, playlistId: string) {
   const { payload } = await discovery.generateFromPlaylists(ROOM_ID, [playlistId], 10);
   if (!payload.success) throw new Error(payload.message);
   return payload;
 }
 
-describe("SpotifyDiscoveryService limits", () => {
+describe("SpotifyCandidateGenerator limits", () => {
   it("fetches at most three playlists at a time and keeps their order", async () => {
-    const { discovery, fetches } = createDiscoveryService();
+    const { discovery, fetches } = createCandidateGenerator();
     const playlistIds = Array.from({ length: 8 }, (_, index) => `playlist${index + 1}`);
 
     const { payload } = await discovery.generateFromPlaylists(ROOM_ID, playlistIds, 200);
@@ -51,7 +60,7 @@ describe("SpotifyDiscoveryService limits", () => {
   });
 
   it("keeps three candidate sessions per room and evicts the oldest", async () => {
-    const { discovery } = createDiscoveryService();
+    const { discovery } = createCandidateGenerator();
     const sessions: Awaited<ReturnType<typeof generateSession>>[] = [];
     for (const playlistId of ["playlistA", "playlistB", "playlistC", "playlistD"]) {
       sessions.push(await generateSession(discovery, playlistId));

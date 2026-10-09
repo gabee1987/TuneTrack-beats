@@ -43,7 +43,6 @@ function createRoomState(overrides: Partial<PublicRoomState> = {}): PublicRoomSt
       releaseYear: 2000,
       title: "Song",
     },
-    targetTimelineCardCount: 10,
     settings: {
       challengeWindowDurationSeconds: 10,
       defaultStartingTimelineCardCount: 1,

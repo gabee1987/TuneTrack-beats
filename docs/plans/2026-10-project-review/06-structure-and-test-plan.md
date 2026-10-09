@@ -2,7 +2,7 @@
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 6 of `00-index.md` §4).
 > **Status (2026-10-09):** W1 and T1 shipped (code 2026-10-07, file deletions 2026-10-09); T8,
-> T10, T5, S1 and S2 shipped 2026-10-09 (§7 rows 1–4 done). Next: S3 and S4 (§7 row 5).
+> T10, T5, S1, S2, S3 and S4 shipped 2026-10-09 (§7 rows 1–5 done). Next: S5 (§7 row 6).
 > Every finding below was re-verified
 > in code on 2026-10-07 (line numbers drift; file and symbol names are the stable reference).
 > **Authority:** this document sets the **structural rules, the test and tooling gates and the
@@ -126,43 +126,33 @@ modifications" did not hold. `RoomLobbyService` (466) and `RoomConnectionService
 450-line target; their split is S4. Proof: 257 existing server tests green,
 `tests/app/createRoomServices.test.ts` (3, wiring), E2E green.
 
-### S3 · Spotify module splits and duplicates (B-29, B-22)
+### S3 · Spotify module splits and duplicates (B-29, B-22) · shipped
 
-| File (lines)                         | Split into                                                                                                                                                 |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SpotifyApiClient.ts` (692)          | `SpotifyAccountsClient` (tokens), `SpotifyCatalogClient` (search, playlists, tracks), `SpotifyPlayerClient`, `spotifyApiTypes.ts` with the response guards |
-| `SpotifyDiscoveryService.ts` (595)   | `SpotifyPlaylistSearch`, `SpotifyCandidateGenerator`, `CandidateSessionStore`, pure `candidateSelection.ts`                                                |
-| `SpotifyAuthService.ts` (458)        | `SpotifyOAuthService` (URL, state, callback) and `SpotifyPlaybackController` (device, play)                                                                |
-| `SpotifyMusicSearchService.ts` (322) | service plus pure `musicSearchMappers.ts`                                                                                                                  |
+**Shipped 2026-10-09.** `SpotifyApiClient` became `SpotifyAccountsClient`, `SpotifyCatalogClient`
+and `SpotifyPlayerClient` over `spotifyApiTypes.ts` and one status mapping (`spotifyRequest.ts`);
+`SpotifyDiscoveryService` became `SpotifyPlaylistSearch`, `SpotifyCandidateGenerator`,
+`CandidateSessionStore` and pure `candidateSelection.ts`; playback left `SpotifyAuthService` for
+`SpotifyPlaybackController`; music-search mappers moved to `musicSearchMappers.ts`. One
+`SpotifyClientCredentials` replaces the three private token wrappers, `decks/trackDedupe.ts` the four
+dedupe copies (URI or normalised title + primary artist, so album and compilation copies count once),
+`cardToPublicTrackInfo` exists once and the inline playback-result type is gone. Largest Spotify file
+333 lines. Deviations: the client-credentials test moved from `SpotifyAuthService.test.ts` to
+`SpotifyClientCredentials.test.ts` (the in-flight sharing itself shipped with `05` A9); every Web API
+read now maps 401/403/404 the same way. Proof: `tests/decks/trackDedupe.test.ts` (5),
+`spotifyClients.test.ts`, `SpotifyCandidateGenerator.test.ts`, every existing Spotify test green.
 
-- One `spotify/spotifyClientCredentials.ts` replaces the three private
-  `getOrRefreshClientCredentialsToken` copies and **de-duplicates in-flight refreshes** (one
-  pending promise per process).
-- One pure `decks/trackDedupe.ts` replaces the four dedupe copies. Identity is the Spotify URI,
-  then a normalised `title + primary artist` key (case-folded, diacritics and bracketed suffixes
-  such as "Remastered 2011" or "Radio Edit" removed), so the same song from an album and a
-  compilation enters a deck once (salvaged, §9).
-- `cardToPublicTrackInfo` exists once, in the rooms mappers.
-- Delete the inline duplicate of `SpotifyPlaybackResultPayload` in `playTrackOnHostDevice`.
-- **Before/after:** existing `spotify/*` tests stay green; new `trackDedupe.test.ts` and
-  `spotifyClientCredentials.test.ts` (two concurrent callers → one token request).
+### S4 · Rooms and timers (B-29, B-28) · shipped
 
-### S4 · Rooms and timers (B-29, B-28)
-
-- `RoomLobbyService.ts` (438): move imported-deck and playlist mutation to `rooms/RoomDeckService`
-  (`CLAUDE.md`: imported-deck mutation belongs in `rooms/`).
-- `RoomConnectionService.ts` (436): `RoomDisconnectPolicy` (grace decisions) and host transfer out;
-  coordinate with `05` A2, which edits `removePlayerBySessionId` — A2 first.
-- Merge the identical `ChallengeTimerManager` and `DisconnectTimerManager` into one
-  `KeyedTimerManager`; `RoomTimerCoordinator` stays the single owner.
-- Move `mapRoomStateToSummary` from `RoomStore` to the mappers.
-- B-28 remainder: `targetTimelineCardCount` lives in settings only; `CLIENT_ORIGIN` is validated as
-  the comma list it is consumed as; each gameplay action logs once, at `debug`;
-  `spotifyRoutes.ts` awaits `handleSpotifyCallback` and answers 500 on a throw instead of hanging;
-  kicking the last online player schedules the all-offline expiry (the one behavioural item here —
-  failing test first in `disconnectLifecycle.test.ts`).
-- **Before/after:** `RoomLobbyService.test.ts`, `disconnectLifecycle.test.ts`,
-  `timerCallbackGuard.test.ts` green before and after; new direct `KeyedTimerManager.test.ts`.
+**Shipped 2026-10-09.** Imported-deck mutation moved to `rooms/RoomDeckService` (`services.deck`);
+`RoomConnectionService` hands grace decisions to `RoomDisconnectPolicy` and host changes to
+`RoomHostTransfer`; one `KeyedTimerManager` replaces both timer managers; `mapRoomStateToSummary`
+lives in `roomStateMappers.ts`. B-28: the root `PublicRoomState.targetTimelineCardCount` is gone
+(settings only); `CLIENT_ORIGIN` is validated per entry; gameplay handler logs are `debug`;
+`spotifyRoutes.ts` awaits the callback and answers 500 on a throw; removing a player while the rest
+are offline schedules the all-offline expiry. Deviation: a kick cannot cause that state (the kicker
+is the connected host), so the failing test uses the leave path that shares the removal code.
+`RoomLobbyService` 339 and `RoomConnectionService` 261 lines. Proof: `disconnectLifecycle.test.ts`
+(+1), `tests/http/spotifyRoutes.test.ts` (2), `KeyedTimerManager.test.ts` (3); existing suites green.
 
 ### S5 · Shared contracts (B-13, B-23, B-28 contract nits)
 
@@ -447,7 +437,7 @@ found only in the raw reports and now have an owner.
 | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
 | The Spotify search and opened-playlist events need only membership, so a guest can spend the room's Spotify quota                                   | `05` A1 (§8)                                                  |
 | About ten engine and store error codes have no catalogue entry and show the generic message                                                         | `05` A4 (§8) — resolved 2026-10-07                            |
-| The same song on an album and a compilation enters the deck twice (two Spotify ids)                                                                 | S3 (`trackDedupe`)                                            |
+| The same song on an album and a compilation enters the deck twice (two Spotify ids)                                                                 | S3 (`trackDedupe`) — resolved 2026-10-09                      |
 | Spotify Free: no state distinguishes "loading" from "this song has no preview" during a turn                                                        | `16` §2 (Free-tier parity)                                    |
 | A playback hint ("audio plays on the host's phone") was proposed and neither added nor declined                                                     | `04` §7 (owner of the catalogue)                              |
 | Year-flag patterns miss singles re-released on later albums, soundtracks and "(Radio Edit)"; suggest the earliest known album year for compilations | `04` §3.7                                                     |
@@ -457,7 +447,7 @@ found only in the raw reports and now have an owner.
 | `index.html` lacks `preconnect` to the Spotify SDK host and hard-codes the theme colour                                                             | `10`                                                          |
 | `SettingField.module.css` animates `left`                                                                                                           | W6                                                            |
 | Framer `drag="x"` swipe-to-delete is a second drag system next to @dnd-kit; record it as deliberate                                                 | `docs/rules/frontend_engineering_rules.md` when W5 touches it |
-| Dev CORS admits private IPv4 ranges for LAN play; document it                                                                                       | `docs/rules/backend_engineering_rules.md` with S4             |
+| Dev CORS admits private IPv4 ranges for LAN play; document it                                                                                       | `docs/rules/backend_engineering_rules.md` §10 — done with S4  |
 | `savedPlaylists` stores third-party artwork and preview URLs on the device                                                                          | §10 (data-minimisation note)                                  |
 
 ## 10. Compliance, security and open owner decisions

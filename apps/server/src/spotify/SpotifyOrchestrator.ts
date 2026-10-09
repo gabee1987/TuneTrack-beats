@@ -24,13 +24,16 @@ import { logAuditEvent } from "../app/auditLogger.js";
 import { logger } from "../app/logger.js";
 import { cardToPublicTrackInfo } from "../rooms/publicTrackInfo.js";
 import { isHost, requireHost, requireSpotifyPlaybackOwner } from "../rooms/roomAuthorization.js";
+import type { RoomDeckService } from "../rooms/RoomDeckService.js";
 import type { RoomEvents } from "../rooms/RoomEvents.js";
 import type { RoomLobbyService } from "../rooms/RoomLobbyService.js";
 import type { RoomStore } from "../rooms/RoomStore.js";
 import type { SpotifyAuthService } from "./SpotifyAuthService.js";
-import type { SpotifyDiscoveryService } from "./SpotifyDiscoveryService.js";
+import type { SpotifyCandidateGenerator } from "./SpotifyCandidateGenerator.js";
 import type { SpotifyMusicSearchService } from "./SpotifyMusicSearchService.js";
+import type { SpotifyPlaybackController } from "./SpotifyPlaybackController.js";
 import type { SpotifyPlaybackSessionStore } from "./SpotifyPlaybackSessionStore.js";
+import type { SpotifyPlaylistSearch } from "./SpotifyPlaylistSearch.js";
 
 export type RefreshTokenResult =
   | { status: "refreshed"; accessToken: string; expiresInSeconds: number }
@@ -45,9 +48,11 @@ export interface UseSpotifyCandidatesResult {
 
 export interface SpotifyServices {
   auth: SpotifyAuthService;
-  discovery: SpotifyDiscoveryService;
+  candidates: SpotifyCandidateGenerator;
   musicSearch: SpotifyMusicSearchService;
+  playback: SpotifyPlaybackController;
   playbackSessions: SpotifyPlaybackSessionStore;
+  playlistSearch: SpotifyPlaylistSearch;
 }
 
 const NOT_MUSIC_SETUP_HOST = "ONLY_HOST_CAN_IMPORT_PLAYLIST";
@@ -57,6 +62,7 @@ export class SpotifyOrchestrator {
   public constructor(
     private readonly store: RoomStore,
     private readonly lobby: RoomLobbyService,
+    private readonly deck: RoomDeckService,
     private readonly spotify: SpotifyServices,
   ) {}
 
@@ -70,7 +76,7 @@ export class SpotifyOrchestrator {
         outcome: "succeeded",
         roomId,
       });
-      void this.spotify.auth.pauseRoomPlayback(roomId);
+      void this.spotify.playback.pauseRoomPlayback(roomId);
     });
     events.on("roomExpired", (roomId) => {
       this.clearRoom(roomId);
@@ -80,7 +86,7 @@ export class SpotifyOrchestrator {
     events.on("roomRenamed", (previousRoomId, nextRoomId) => {
       this.spotify.auth.retargetRoom(previousRoomId, nextRoomId);
       this.spotify.playbackSessions.retargetRoom(previousRoomId, nextRoomId);
-      this.spotify.discovery.retargetRoom(previousRoomId, nextRoomId);
+      this.spotify.candidates.retargetRoom(previousRoomId, nextRoomId);
     });
     events.on("socketLeft", (socketId) => {
       this.spotify.playbackSessions.unregisterBySocketId(socketId);
@@ -108,15 +114,19 @@ export class SpotifyOrchestrator {
     payload: SearchSpotifyPlaylistsPayloadParsed,
     socketId: string,
   ): Promise<SpotifyPlaylistSearchResultPayload> {
-    this.lobby.requireHostInLobby(socketId, payload.roomId, NOT_MUSIC_SETUP_HOST);
-    return this.spotify.discovery.searchPlaylists(payload.roomId, payload.query, payload.limit);
+    this.deck.requireHostInLobby(socketId, payload.roomId, NOT_MUSIC_SETUP_HOST);
+    return this.spotify.playlistSearch.searchPlaylists(
+      payload.roomId,
+      payload.query,
+      payload.limit,
+    );
   }
 
   public searchSpotifyMusic(
     payload: SearchSpotifyMusicPayloadParsed,
     socketId: string,
   ): Promise<SpotifySmartSearchResultPayload> {
-    this.lobby.requireHostInLobby(socketId, payload.roomId, NOT_MUSIC_SETUP_HOST);
+    this.deck.requireHostInLobby(socketId, payload.roomId, NOT_MUSIC_SETUP_HOST);
     return this.spotify.musicSearch.search(
       payload.roomId,
       payload.query,
@@ -130,7 +140,7 @@ export class SpotifyOrchestrator {
     payload: OpenSpotifyPlaylistPayloadParsed,
     socketId: string,
   ): Promise<SpotifyPlaylistDetailPayload> {
-    this.lobby.requireHostInLobby(socketId, payload.roomId, NOT_MUSIC_SETUP_HOST);
+    this.deck.requireHostInLobby(socketId, payload.roomId, NOT_MUSIC_SETUP_HOST);
     return this.spotify.musicSearch.getPlaylistDetail(
       payload.roomId,
       payload.playlistId,
@@ -142,8 +152,8 @@ export class SpotifyOrchestrator {
     payload: GenerateSpotifyCandidatesPayloadParsed,
     socketId: string,
   ): Promise<SpotifyCandidatesGeneratedPayload> {
-    this.lobby.requireHostInLobby(socketId, payload.roomId, NOT_MUSIC_SETUP_HOST);
-    return this.spotify.discovery
+    this.deck.requireHostInLobby(socketId, payload.roomId, NOT_MUSIC_SETUP_HOST);
+    return this.spotify.candidates
       .generateCandidates(payload.roomId, payload.source)
       .then((result) => result.payload);
   }
@@ -152,8 +162,8 @@ export class SpotifyOrchestrator {
     payload: UseSpotifyCandidatesPayloadParsed,
     socketId: string,
   ): UseSpotifyCandidatesResult {
-    this.lobby.requireHostInLobby(socketId, payload.roomId, NOT_MUSIC_SETUP_HOST);
-    const result = this.spotify.discovery.applyCandidates(
+    this.deck.requireHostInLobby(socketId, payload.roomId, NOT_MUSIC_SETUP_HOST);
+    const result = this.spotify.candidates.applyCandidates(
       payload.roomId,
       payload.candidateSessionId,
       payload.trackIds,
@@ -164,7 +174,7 @@ export class SpotifyOrchestrator {
       return { payload: result.payload, roomState: null, tracks: null };
     }
 
-    const { roomState, deck } = this.lobby.updateImportedDeck(
+    const { roomState, deck } = this.deck.updateImportedDeck(
       socketId,
       payload.roomId,
       result.cards,
@@ -255,7 +265,7 @@ export class SpotifyOrchestrator {
         } as const;
       }
 
-      return this.spotify.auth.playTrackOnHostDevice(
+      return this.spotify.playback.playTrackOnHostDevice(
         payload.roomId,
         payload.deviceId,
         payload.spotifyTrackUri,

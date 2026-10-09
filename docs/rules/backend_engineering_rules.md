@@ -48,7 +48,9 @@ file that grows a second responsibility is split, not extended.
 ## 4. Explicit, narrow mutation
 
 - Every room mutation happens through one clearly named method on the owning room service
-  (`RoomLobbyService`, `RoomGameplayService`, `RoomConnectionService`).
+  (`RoomLobbyService`, `RoomGameplayService`, `RoomConnectionService`, and `RoomDeckService` for
+  the imported deck). `RoomConnectionService` delegates grace decisions to `RoomDisconnectPolicy`
+  and host changes to `RoomHostTransfer`.
 - Validate fully before mutating anything; never leave state half-changed when an operation
   turns out to be invalid. Authorisation checks (host, membership, phase) come **before**
   side effects such as clearing Spotify tokens or timers.
@@ -56,7 +58,7 @@ file that grows a second responsibility is split, not extended.
   not one branch.
 - Prefer returning new snapshots over in-place edits; isolate mutation to the owning class.
 - Handlers reach the rooms layer through the `RoomServices` container (`app/createRoomServices.ts`):
-  `lobby`, `gameplay`, `connection`, `acks`, `playlists`, `spotify`. Host and playback-owner
+  `lobby`, `deck`, `gameplay`, `connection`, `acks`, `playlists`, `spotify`. Host and playback-owner
   checks live in `rooms/roomAuthorization.ts`, each caller passing its own refusal code.
   Spotify reacts to rename, close, expiry and socket departure through `rooms/RoomEvents`; the
   rooms layer never imports Spotify code.
@@ -91,8 +93,8 @@ players' hands) is omitted, not blanked, and a test asserts the omission.
 ## 8. Timers and process lifecycle
 
 - `rooms/RoomTimerCoordinator.ts` owns every timer (challenge auto-resolve, lobby
-  reconnect grace, host transfer, turn skip, all-offline room TTL). No timer is created
-  anywhere else.
+  reconnect grace, host transfer, turn skip, all-offline room TTL), one `KeyedTimerManager`
+  per kind. No timer is created anywhere else.
 - Every timer has an owner, a cleanup path on room close and on phase change, and
   re-reads current state before mutating; it never trusts values captured at schedule time.
 - Timer callbacks are guarded: they log and never throw. The process installs
@@ -104,9 +106,14 @@ players' hands) is omitted, not blanked, and a test asserts the omission.
 
 ## 9. Spotify module
 
-- `spotify/` owns OAuth, token refresh, playback sessions and Web API access. Tokens and
-  playback sessions are keyed **per room** and cleared when the room closes; they are never
-  logged, never broadcast and never persisted beyond the room lifetime (owner decision
+- `spotify/` owns OAuth, token refresh, playback sessions and Web API access. The Web API is
+  split by concern: `SpotifyAccountsClient` (tokens, profile, auth URL), `SpotifyCatalogClient`
+  (search, playlists, albums, artists) and `SpotifyPlayerClient` (Connect playback); the app
+  token comes only from `SpotifyClientCredentials`, which shares one request between callers.
+- Deck deduplication has one owner, `decks/trackDedupe.ts`: Spotify URI first, then the
+  normalised title and primary artist, so one song from an album and a compilation counts once.
+- Tokens and playback sessions are keyed **per room** and cleared when the room closes; they
+  are never logged, never broadcast and never persisted beyond the room lifetime (owner decision
   2026-10-06; any change is new processing and needs compliance review first).
 - The OAuth `state` is a server-issued, single-use nonce bound to the room and the host;
   requesting an auth URL and completing the callback both require the caller to be the
@@ -123,6 +130,9 @@ players' hands) is omitted, not blanked, and a test asserts the omission.
   host-only action, including room close, rename, kick, skip, settings and Spotify actions.
 - Socket server: bounded `maxHttpBufferSize`, explicit CORS origins, rate limiting on
   connection and per-event, no `unref()` on timers whose work must complete.
+- `CLIENT_ORIGIN` is a comma-separated list of URLs. With `NODE_ENV=development` only, CORS
+  also admits `localhost`, `127.0.0.1` and private IPv4 ranges (10/8, 172.16/12, 192.168/16)
+  so phones on the same LAN can play against a dev server; production admits the list only.
 - Room state is in memory only and is lost on restart; say so in behaviour, never pretend
   recovery.
 

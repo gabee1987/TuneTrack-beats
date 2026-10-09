@@ -37,7 +37,6 @@ function createController(overrides: Partial<LobbyPageController> = {}): LobbyPa
     ],
     timelines: {},
     currentTrackCard: null,
-    targetTimelineCardCount: 10,
     settings,
     turn: null,
     challengeState: null,

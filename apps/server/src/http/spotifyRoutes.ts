@@ -13,9 +13,18 @@ export function registerSpotifyRoutes(
   spotifyAuthService: SpotifyAuthService,
   services: RoomServices,
 ): void {
-  app.get("/api/spotify/callback", createCallbackRateLimit(), (req: Request, res: Response) => {
-    void handleSpotifyCallback(req, res, io, spotifyAuthService, services);
-  });
+  app.get(
+    "/api/spotify/callback",
+    createCallbackRateLimit(),
+    async (req: Request, res: Response) => {
+      try {
+        await handleSpotifyCallback(req, res, io, spotifyAuthService, services);
+      } catch (err) {
+        logger.error({ err }, "Spotify OAuth callback route failed");
+        if (!res.headersSent) res.status(500).type("text/plain").send("Spotify login failed.");
+      }
+    },
+  );
 }
 
 async function handleSpotifyCallback(

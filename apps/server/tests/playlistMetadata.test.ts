@@ -5,7 +5,7 @@ describe("playlist metadata curation", () => {
   it("lets the host edit imported deck track metadata", () => {
     const roomCore = createTestRoomCore();
     roomCore.lobby.createRoom("playlist-room", "Host", "host-socket", "host-session");
-    roomCore.lobby.setImportedDeck("host-socket", "playlist-room", [
+    roomCore.deck.setImportedDeck("host-socket", "playlist-room", [
       {
         id: "track-1",
         title: "Original Title",
@@ -17,7 +17,7 @@ describe("playlist metadata curation", () => {
       },
     ]);
 
-    roomCore.lobby.updateImportedDeckTrack("host-socket", {
+    roomCore.deck.updateImportedDeckTrack("host-socket", {
       roomId: "playlist-room",
       trackId: "track-1",
       title: "Curated Title",
@@ -42,7 +42,7 @@ describe("playlist metadata curation", () => {
   it("lets the host mark imported metadata verified without changing source year", () => {
     const roomCore = createTestRoomCore();
     roomCore.lobby.createRoom("verify-room", "Host", "host-socket", "host-session");
-    roomCore.lobby.setImportedDeck("host-socket", "verify-room", [
+    roomCore.deck.setImportedDeck("host-socket", "verify-room", [
       {
         id: "track-1",
         title: "Known Song",
@@ -52,7 +52,7 @@ describe("playlist metadata curation", () => {
       },
     ]);
 
-    roomCore.lobby.updateImportedDeckTrack("host-socket", {
+    roomCore.deck.updateImportedDeckTrack("host-socket", {
       roomId: "verify-room",
       trackId: "track-1",
       metadataStatus: "verified",
@@ -71,7 +71,7 @@ describe("playlist metadata curation", () => {
     const roomCore = createTestRoomCore();
     roomCore.lobby.createRoom("protected-room", "Host", "host-socket", "host-session");
     roomCore.lobby.addPlayerToRoom("protected-room", "Guest", "guest-socket", "guest-session");
-    roomCore.lobby.setImportedDeck("host-socket", "protected-room", [
+    roomCore.deck.setImportedDeck("host-socket", "protected-room", [
       {
         id: "track-1",
         title: "Song",
@@ -82,7 +82,7 @@ describe("playlist metadata curation", () => {
     ]);
 
     expect(() =>
-      roomCore.lobby.updateImportedDeckTrack("guest-socket", {
+      roomCore.deck.updateImportedDeckTrack("guest-socket", {
         roomId: "protected-room",
         trackId: "track-1",
         releaseYear: 1986,

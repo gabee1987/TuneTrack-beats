@@ -1,7 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { MAX_PLAYLIST_PAGE_COUNT, SpotifyApiClient } from "../../src/spotify/SpotifyApiClient.js";
+import { SpotifyAccountsClient } from "../../src/spotify/SpotifyAccountsClient.js";
+import {
+  MAX_PLAYLIST_PAGE_COUNT,
+  SpotifyCatalogClient,
+} from "../../src/spotify/SpotifyCatalogClient.js";
+import { SpotifyPlayerClient } from "../../src/spotify/SpotifyPlayerClient.js";
 
-describe("SpotifyApiClient", () => {
+describe("Spotify Web API clients", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
@@ -20,7 +25,7 @@ describe("SpotifyApiClient", () => {
       );
     vi.stubGlobal("fetch", fetchMock);
 
-    const client = new SpotifyApiClient({
+    const client = new SpotifyAccountsClient({
       accountsBaseUrl: "http://127.0.0.1:3102/accounts",
       apiBaseUrl: "http://127.0.0.1:3102/api",
     });
@@ -46,7 +51,7 @@ describe("SpotifyApiClient", () => {
       );
       vi.stubGlobal("fetch", fetchMock);
 
-      const client = new SpotifyApiClient({ apiBaseUrl: "http://127.0.0.1:3102/api" });
+      const client = new SpotifyCatalogClient({ apiBaseUrl: "http://127.0.0.1:3102/api" });
       const tracks = await client.getAllPlaylistTracks("TEST_PLAYLIST", "access-token");
 
       expect(fetchMock).toHaveBeenCalledTimes(MAX_PLAYLIST_PAGE_COUNT);
@@ -77,7 +82,7 @@ describe("SpotifyApiClient", () => {
       );
       vi.stubGlobal("fetch", fetchMock);
 
-      const client = new SpotifyApiClient();
+      const client = new SpotifyCatalogClient();
       const playlists = await client.searchPlaylists("japanese rock", "access-token", 10);
 
       expect(playlists).toEqual([
@@ -96,7 +101,7 @@ describe("SpotifyApiClient", () => {
         );
       vi.stubGlobal("fetch", fetchMock);
 
-      const client = new SpotifyApiClient();
+      const client = new SpotifyCatalogClient();
       await client.searchPlaylists("metal", "access-token", 50, 100);
 
       const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
@@ -124,7 +129,7 @@ describe("SpotifyApiClient", () => {
       );
       vi.stubGlobal("fetch", fetchMock);
 
-      const client = new SpotifyApiClient();
+      const client = new SpotifyCatalogClient();
       const playlist = await client.getPlaylistSearchItem("5gDErv7bMFuCFL8HO5TCdm", "access-token");
 
       expect(playlist).toEqual(
@@ -146,7 +151,7 @@ describe("SpotifyApiClient", () => {
       const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
       vi.stubGlobal("fetch", fetchMock);
 
-      const client = new SpotifyApiClient();
+      const client = new SpotifyPlayerClient();
       await client.playTracksOnDevice("access-token", "TEST_DEVICE_1", [
         "spotify:track:TEST0000000000000001",
       ]);
@@ -163,7 +168,7 @@ describe("SpotifyApiClient", () => {
       const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
       vi.stubGlobal("fetch", fetchMock);
 
-      const client = new SpotifyApiClient();
+      const client = new SpotifyPlayerClient();
       await client.playTracksOnDevice(
         "access-token",
         "TEST_DEVICE_1",

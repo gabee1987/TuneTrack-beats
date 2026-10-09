@@ -84,7 +84,6 @@ export function buildLobbyRoomState(overrides: Partial<PublicRoomState> = {}): P
     ],
     timelines: {},
     currentTrackCard: null,
-    targetTimelineCardCount: DEFAULT_TARGET_TIMELINE_CARD_COUNT,
     settings: buildRoomSettings(),
     turn: null,
     challengeState: null,

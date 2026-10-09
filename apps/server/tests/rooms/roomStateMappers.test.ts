@@ -60,7 +60,6 @@ describe("mapGameStateToPublicRoomState", () => {
     expect(publicState.roomId).toBe(roomState.roomId);
     expect(publicState.hostId).toBe(roomState.hostId);
     expect(publicState.settings).toEqual(roomState.settings);
-    expect(publicState.targetTimelineCardCount).toBe(roomState.targetTimelineCardCount);
     expect(publicState.status).toBe("turn");
     expect(publicState.players).toEqual([
       expect.objectContaining({ id: HOST_ID, ttTokenCount: 2, displayName: "Host Player" }),
@@ -448,7 +447,6 @@ function createLobbyRoomState(): PublicRoomState {
     ],
     timelines: {},
     currentTrackCard: null,
-    targetTimelineCardCount: 10,
     settings: {
       targetTimelineCardCount: 10,
       defaultStartingTimelineCardCount: 1,

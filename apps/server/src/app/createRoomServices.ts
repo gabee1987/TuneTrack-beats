@@ -26,12 +26,12 @@ export function createRoomServices(dependencies: RoomServiceDependencies): RoomS
       ? deckService.createShuffledDeckFromCards(importedDeck)
       : deckService.createShuffledDeck();
   });
-  const spotify = new SpotifyOrchestrator(core.store, core.lobby, dependencies.spotify);
+  const spotify = new SpotifyOrchestrator(core.store, core.lobby, core.deck, dependencies.spotify);
   spotify.followRoomLifecycle(core.events);
 
   return {
     ...core,
-    playlists: new PlaylistOrchestrator(core.store, core.lobby, dependencies.playlistImportService),
+    playlists: new PlaylistOrchestrator(core.store, core.deck, dependencies.playlistImportService),
     spotify,
   };
 }
