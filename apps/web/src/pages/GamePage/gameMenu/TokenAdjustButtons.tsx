@@ -7,6 +7,7 @@ import {
   createMenuTokenAdjustFlyoutPopVariants,
   createMenuTokenAdjustFlyoutTransition,
   createMenuTokenAdjustFlyoutVariants,
+  keepFlyoutOpacityOnMainThread,
   useReducedMotionPreference,
 } from "../../../features/motion";
 import { TtTokenIcon } from "../../../features/ui/TtToken";
@@ -176,6 +177,7 @@ export function TokenAdjustButtons({
             }`}
             initial="initial"
             onAnimationComplete={() => clearFlyAnimation(flyAnimation.key)}
+            onUpdate={keepFlyoutOpacityOnMainThread}
             transition={createMenuTokenAdjustFlyoutTransition(reduceMotion)}
             variants={createMenuTokenAdjustFlyoutVariants(reduceMotion, flyAnimation.direction)}
           >
@@ -183,6 +185,7 @@ export function TokenAdjustButtons({
               animate="animate"
               className={styles.menuTokenFlyoutContent}
               initial="initial"
+              onUpdate={keepFlyoutOpacityOnMainThread}
               transition={createMenuTokenAdjustFlyoutPopTransition(reduceMotion)}
               variants={createMenuTokenAdjustFlyoutPopVariants(reduceMotion)}
             >

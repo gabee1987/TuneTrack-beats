@@ -1,10 +1,9 @@
+import { MAX_TT_TOKEN_COUNT } from "@tunetrack/shared/constants";
 import { GameRuleError } from "../domain/GameRuleError.js";
 import type { GamePlayer } from "../domain/GamePlayer.js";
 import type { TimelineCard } from "../domain/TimelineCard.js";
 import { evaluateTimelinePlacement } from "../rules/placementRules.js";
 import type { StartGameInput } from "./gameFlowTypes.js";
-
-export const MAX_TT_TOKEN_COUNT = 5;
 
 export function findFirstValidSlotIndex(
   timelineCards: TimelineCard[],

@@ -1,5 +1,5 @@
 import type { GameTrackCard } from "@tunetrack/game-engine";
-import type { ImportPlaylistResultPayload } from "@tunetrack/shared";
+import { MIN_PLAYLIST_TRACK_COUNT, type ImportPlaylistResultPayload } from "@tunetrack/shared";
 import { logAuditEvent } from "../app/auditLogger.js";
 import { logger } from "../app/logger.js";
 import { SpotifyApiError } from "../spotify/spotifyApiTypes.js";
@@ -8,8 +8,6 @@ import type { SpotifyClientCredentials } from "../spotify/SpotifyClientCredentia
 import { mapSpotifyTrackToGameCard } from "../spotify/SpotifyTrackMapper.js";
 import { extractSpotifyPlaylistId } from "../spotify/spotifyUrlParser.js";
 import { dedupeTracks } from "./trackDedupe.js";
-
-const MIN_IMPORTABLE_TRACK_COUNT = 10;
 
 export interface PlaylistImportSuccess {
   success: true;
@@ -94,7 +92,7 @@ export class PlaylistImportService {
       const { tracks: dedupedCards, duplicateCount } = dedupeTracks(cards);
       const usableCount = dedupedCards.length;
 
-      if (usableCount < MIN_IMPORTABLE_TRACK_COUNT) {
+      if (usableCount < MIN_PLAYLIST_TRACK_COUNT) {
         logAuditEvent({
           auditKind: "spotify_import",
           action: "playlist_import_rejected",
@@ -113,7 +111,7 @@ export class PlaylistImportService {
           payload: {
             success: false,
             code: "too_few_tracks",
-            message: `The playlist only has ${usableCount} usable track${usableCount === 1 ? "" : "s"}. At least ${MIN_IMPORTABLE_TRACK_COUNT} are needed.`,
+            message: `The playlist only has ${usableCount} usable track${usableCount === 1 ? "" : "s"}. At least ${MIN_PLAYLIST_TRACK_COUNT} are needed.`,
           },
         };
       }

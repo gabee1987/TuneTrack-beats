@@ -1,3 +1,4 @@
+import { MIN_PLAYLIST_TRACK_COUNT } from "@tunetrack/shared/client";
 import { m } from "framer-motion";
 import { useEffect, useState } from "react";
 import { createStandardTransition, useReducedMotionPreference } from "../../../../features/motion";
@@ -48,7 +49,7 @@ export function SpotifyCandidateReviewPanel({
   const selectedCandidateCount = selectedCandidateTrackIds.size;
   const applyTrackIds =
     selectedCandidateCount > 0 ? Array.from(selectedCandidateTrackIds) : undefined;
-  const canUseFullGeneratedSet = candidateTracks.length >= 10;
+  const canUseFullGeneratedSet = candidateTracks.length >= MIN_PLAYLIST_TRACK_COUNT;
   const canUseSelectedTracks = selectedCandidateCount > 0;
   const canUseTracks = canUseSelectedTracks || canUseFullGeneratedSet;
 

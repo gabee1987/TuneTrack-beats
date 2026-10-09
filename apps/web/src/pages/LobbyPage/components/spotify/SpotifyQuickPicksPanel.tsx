@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  MIN_PLAYLIST_TRACK_COUNT,
   SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT,
   SPOTIFY_QUICK_PICK_PRESETS,
   type PublicRoomSettings,
@@ -52,7 +53,7 @@ export function SpotifyQuickPicksPanel({
             <TextInput
               inputMode="numeric"
               max={SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT}
-              min={10}
+              min={MIN_PLAYLIST_TRACK_COUNT}
               onChange={(event) => setTargetCountInput(event.target.value)}
               type="number"
               value={targetCountInput}

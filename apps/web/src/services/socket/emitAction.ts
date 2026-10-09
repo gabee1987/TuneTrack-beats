@@ -1,4 +1,8 @@
-import type { ActionAck, ClientToServerEventName } from "@tunetrack/shared/client";
+import type {
+  ActionAck,
+  ClientToServerEventName,
+  ClientToServerPayloads,
+} from "@tunetrack/shared/client";
 import { createSessionId } from "../session/sessionId";
 import { getSocketClient } from "./socketClient";
 
@@ -16,9 +20,15 @@ interface EmitActionOptions {
   timeoutMs?: number;
 }
 
-export async function emitAction<TPayload extends object>(
-  event: ClientToServerEventName,
-  payload: TPayload,
+/** `emitAction` adds the `requestId` itself. */
+export type ActionPayload<TEvent extends ClientToServerEventName> = Omit<
+  ClientToServerPayloads[TEvent],
+  "requestId"
+>;
+
+export async function emitAction<TEvent extends ClientToServerEventName>(
+  event: TEvent,
+  payload: ActionPayload<TEvent>,
   options: EmitActionOptions = {},
 ): Promise<EmitActionResult> {
   const socketClient = await getSocketClient();

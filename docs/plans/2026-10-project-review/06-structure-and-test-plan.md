@@ -2,7 +2,7 @@
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 6 of `00-index.md` §4).
 > **Status (2026-10-09):** W1 and T1 shipped (code 2026-10-07, file deletions 2026-10-09); T8,
-> T10, T5, S1, S2, S3 and S4 shipped 2026-10-09 (§7 rows 1–5 done). Next: S5 (§7 row 6).
+> T10, T5 and S1–S5 shipped 2026-10-09 (§7 rows 1–6 done). Next: W2 and T7 (§7 row 7).
 > Every finding below was re-verified
 > in code on 2026-10-07 (line numbers drift; file and symbol names are the stable reference).
 > **Authority:** this document sets the **structural rules, the test and tooling gates and the
@@ -154,26 +154,20 @@ is the connected host), so the failing test uses the leave path that shares the 
 `RoomLobbyService` 339 and `RoomConnectionService` 261 lines. Proof: `disconnectLifecycle.test.ts`
 (+1), `tests/http/spotifyRoutes.test.ts` (2), `KeyedTimerManager.test.ts` (3); existing suites green.
 
-### S5 · Shared contracts (B-13, B-23, B-28 contract nits)
+### S5 · Shared contracts (B-13, B-23, B-28 contract nits) · shipped
 
-- **One source per payload type:** client payload types are `z.input<typeof …Schema>` exported
-  from the schema modules; delete the 36 hand-written interfaces in `clientEvents.ts` (they drift
-  today: optional-with-default fields are required in the interfaces, and
-  `UseSpotifyCandidatesPayload.tracks` has the wrong element type).
-- Split `schemas.ts` (436) into `lobbySchemas`, `gameplaySchemas`, `playlistSchemas`,
-  `spotifySchemas` behind the existing export path.
-- Merge the near-identical track shapes into one public track type plus the curated variant;
-  delete the unused `TrackCardInternal`.
-- **Gameplay constants have one owner:** `packages/shared/src/constants/` becomes a dependency-free
-  subpath export `@tunetrack/shared/constants`; the engine imports TT costs and the token cap from
-  it (B-13); `errorMessages.ts` interpolates costs instead of the literals "1 TT" and "3 TT". Add
-  `MIN_RELEASE_YEAR` and `MIN_PLAYLIST_TRACK_COUNT` and use them in schemas, services and the web
-  (`PlaylistTrackDetailsSheet` `min={1900}`, `SpotifyQuickPicksPanel` `10`).
-- Remove contract values nothing produces: `RoomClosedPayload.reason: "closed"`, `"not_host"`,
-  the unused `ActionAck<TResult>` generic and `ROOM_EMPTY_AFTER_KICK`. `ServerErrorPayload.code`
-  becomes the `ServerErrorCode` union from `05` A4 — do S5 after A4.
-- **Before/after:** typecheck across all workspaces is the proof that types still line up; the
-  T8 schema tests (§5) land first so behaviour of every schema is pinned before the split.
+**Shipped 2026-10-09.** `schemas.ts` is a barrel over `events/schemas/` (`common`, `lobby`,
+`gameplay`, `playlist`, `spotify`); every client payload type is the schema's `z.input`, the 36
+hand-written interfaces are gone and `clientPayloads.ts` maps each event to its payload type, so
+`emitAction` is typed per event (all 19 call sites already matched). `PublicTrackInfo` extends
+`TrackCardPublic`; `TrackCardInternal` is deleted; the curated variant is the schema input. B-13:
+`@tunetrack/shared/constants` is a dependency-free subpath; the engine takes TT costs and the token
+cap from it and `errorMessages.ts` interpolates them; `MIN_RELEASE_YEAR` and
+`MIN_PLAYLIST_TRACK_COUNT` replace the literals in schemas, services and the web. Removed:
+`RoomClosedPayload.reason: "closed"`, `"not_host"`, `ActionAck.result` and its generic, and
+`ROOM_EMPTY_AFTER_KICK` (the unreachable kick branch now throws a plain invariant error).
+`ServerErrorPayload.code` was already the union (`05` A4). Proof: typecheck across all workspaces,
+the T8 schema tests and every suite green; no Zod in the web bundle.
 
 ## 4. Track W — Web structure
 

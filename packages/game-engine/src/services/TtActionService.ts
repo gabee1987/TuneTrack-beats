@@ -1,3 +1,4 @@
+import { BUY_TIMELINE_CARD_TT_COST, SKIP_TRACK_TT_COST } from "@tunetrack/shared/constants";
 import { GameRuleError } from "../domain/GameRuleError.js";
 import type { GameState } from "../domain/GameState.js";
 import type { RevealState } from "../domain/RevealState.js";
@@ -37,7 +38,7 @@ export class TtActionService {
       throw new GameRuleError("CURRENT_CARD_NOT_AVAILABLE");
     }
 
-    assertPlayerHasEnoughTt(gameState.players, playerId, 1);
+    assertPlayerHasEnoughTt(gameState.players, playerId, SKIP_TRACK_TT_COST);
 
     if (gameState.turn.hasUsedSkipTrackWithTt) {
       throw new GameRuleError("SKIP_ALREADY_USED_THIS_TURN");
@@ -52,7 +53,7 @@ export class TtActionService {
 
     return {
       ...gameState,
-      players: updatePlayerTokenCount(gameState.players, playerId, -1),
+      players: updatePlayerTokenCount(gameState.players, playerId, -SKIP_TRACK_TT_COST),
       deck: draw.deck,
       discardPile: [...draw.discardPile, gameState.currentTrackCard],
       currentTrackCard: draw.card,
@@ -80,7 +81,7 @@ export class TtActionService {
       throw new GameRuleError("PLAYER_TIMELINE_NOT_FOUND");
     }
 
-    assertPlayerHasEnoughTt(gameState.players, playerId, 3);
+    assertPlayerHasEnoughTt(gameState.players, playerId, BUY_TIMELINE_CARD_TT_COST);
 
     const boughtTrackCard = gameState.currentTrackCard;
 
@@ -112,7 +113,7 @@ export class TtActionService {
     return {
       ...gameState,
       phase: "reveal",
-      players: updatePlayerTokenCount(gameState.players, playerId, -3),
+      players: updatePlayerTokenCount(gameState.players, playerId, -BUY_TIMELINE_CARD_TT_COST),
       timelines: {
         ...gameState.timelines,
         [playerId]: nextTimeline,

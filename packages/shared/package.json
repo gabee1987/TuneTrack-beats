@@ -14,6 +14,10 @@
     "./client": {
       "types": "./src/client.ts",
       "default": "./dist/client.js"
+    },
+    "./constants": {
+      "types": "./src/constants/gameplay.ts",
+      "default": "./dist/constants/gameplay.js"
     }
   },
   "scripts": {

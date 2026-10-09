@@ -17,3 +17,7 @@ export const BUY_TIMELINE_CARD_TT_COST = 3;
 export const DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS = 10;
 export const MIN_CHALLENGE_WINDOW_DURATION_SECONDS = 3;
 export const MAX_CHALLENGE_WINDOW_DURATION_SECONDS = 30;
+export const MAX_TT_TOKEN_COUNT = 5;
+export const MIN_RELEASE_YEAR = 1900;
+/** A playlist, generated or imported, needs at least this many usable tracks for a deck. */
+export const MIN_PLAYLIST_TRACK_COUNT = 10;

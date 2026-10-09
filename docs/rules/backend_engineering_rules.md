@@ -11,7 +11,7 @@
 Every client event is registered through `realtime/createSocketHandler.ts` and does exactly
 this, in order:
 
-1. parse the payload with the shared Zod schema (`packages/shared/src/events/schemas.ts`);
+1. parse the payload with the shared Zod schema (`packages/shared/src/events/schemas/`);
 2. resolve the acting player from the socket's session, never from the payload;
 3. call one service or orchestrator method;
 4. acknowledge the action and broadcast the resulting room state, or acknowledge a

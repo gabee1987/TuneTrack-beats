@@ -4,7 +4,7 @@ import type {
   SpotifyCandidatesAppliedPayload,
   SpotifyCandidatesGeneratedPayload,
 } from "@tunetrack/shared";
-import { getSpotifyQuickPickPreset } from "@tunetrack/shared";
+import { getSpotifyQuickPickPreset, MIN_PLAYLIST_TRACK_COUNT } from "@tunetrack/shared";
 import { logAuditEvent } from "../app/auditLogger.js";
 import { logger } from "../app/logger.js";
 import { dedupeTracks } from "../decks/trackDedupe.js";
@@ -27,7 +27,6 @@ import { mapWithConcurrency } from "./mapWithConcurrency.js";
 
 /** `05` §2.4: bounds the Spotify fan-out. */
 const MAX_CONCURRENT_PLAYLIST_FETCHES = 3;
-const MIN_CANDIDATE_TRACK_COUNT = 10;
 const SPOTIFY_QUICK_PICK_PLAYLISTS_PER_QUERY = 5;
 const SPOTIFY_QUICK_PICK_MAX_PLAYLISTS = 18;
 
@@ -109,7 +108,7 @@ export class SpotifyCandidateGenerator {
         ? selectBalancedByYear(yearFilteredCards, targetCount)
         : yearFilteredCards.slice(0, targetCount);
 
-      if (selectedCards.length < MIN_CANDIDATE_TRACK_COUNT) {
+      if (selectedCards.length < MIN_PLAYLIST_TRACK_COUNT) {
         return {
           payload: {
             success: false,
@@ -280,13 +279,13 @@ export class SpotifyCandidateGenerator {
       .filter((track) => selectedIds.has(track.id))
       .map((track) => applyCandidateTrackEdits(track, editedTracksById.get(track.id)));
 
-    if (selectedCards.length < MIN_CANDIDATE_TRACK_COUNT) {
+    if (selectedCards.length < MIN_PLAYLIST_TRACK_COUNT) {
       return {
         cards: null,
         payload: {
           success: false,
           code: "too_few_tracks",
-          message: `Keep at least ${MIN_CANDIDATE_TRACK_COUNT} tracks before using this playlist.`,
+          message: `Keep at least ${MIN_PLAYLIST_TRACK_COUNT} tracks before using this playlist.`,
         },
       };
     }

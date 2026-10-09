@@ -53,7 +53,7 @@ export interface ServerErrorPayload {
 
 export interface RoomClosedPayload {
   roomId: string;
-  reason?: "closed" | "kicked";
+  reason?: "kicked";
   roomName?: string;
   message: string;
 }
@@ -90,7 +90,6 @@ export type SpotifyPlaybackResultPayload =
       requestId: string;
       code:
         | "device_not_found"
-        | "not_host"
         | "not_playback_owner"
         | "stale_playback_generation"
         | "spotify_api_error"

@@ -180,3 +180,10 @@ export function createMenuTokenAdjustFlyoutPopTransition(reduceMotion: boolean):
     },
   };
 }
+
+/**
+ * Pass as `onUpdate` to keep opacity off the browser's accelerated animations. When one of those
+ * finishes, Framer Motion cancels it a frame before it writes the final value, so a flyout that
+ * ends at a different opacity than it started flashed its start opacity for one frame.
+ */
+export function keepFlyoutOpacityOnMainThread(): void {}

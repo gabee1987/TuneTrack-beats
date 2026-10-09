@@ -1,18 +1,11 @@
-import type { TrackMetadataStatus } from "../game/track.js";
+import type { TrackCardPublic, TrackMetadataStatus } from "../game/track.js";
 
 export type PlaylistQueueUpdateMode = "append" | "replace";
 
-export interface PublicTrackInfo {
-  id: string;
-  title: string;
-  artist: string;
-  albumTitle: string;
+/** A deck track as the host curates it in the lobby, where the year is always shown. */
+export interface PublicTrackInfo extends TrackCardPublic {
   releaseYear: number;
-  sourceReleaseYear?: number;
   metadataStatus: TrackMetadataStatus;
-  artworkUrl?: string;
-  previewUrl?: string;
-  spotifyTrackUri?: string;
 }
 
 export interface PlaylistTracksPayload {

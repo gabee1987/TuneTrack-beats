@@ -111,11 +111,8 @@ export class RoomConnectionService {
       roomRecord.roomState,
       payload.playerId,
     );
-    if (!baseRoomState) {
-      this.timers.clearForRoom(payload.roomId);
-      this.store.deleteRoom(payload.roomId);
-      throw new DomainError("ROOM_EMPTY_AFTER_KICK");
-    }
+    // The kicking host stays in the room, so removing someone else never empties it.
+    if (!baseRoomState) throw new Error("Kick removed the last player of the room");
 
     const nextRoomState = gameState
       ? mapGameStateToPublicRoomState(baseRoomState, gameState, roomRecord.trackCardsById)

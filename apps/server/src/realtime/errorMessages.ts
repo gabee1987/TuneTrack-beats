@@ -1,4 +1,9 @@
-import type { ServerErrorCode } from "@tunetrack/shared";
+import {
+  BUY_TIMELINE_CARD_TT_COST,
+  CHALLENGE_TT_COST,
+  SKIP_TRACK_TT_COST,
+  type ServerErrorCode,
+} from "@tunetrack/shared";
 
 /** Server-side English text per code; the client localises the code itself. */
 export type SocketErrorMessages = Partial<Record<ServerErrorCode, string>>;
@@ -60,7 +65,7 @@ export const claimChallengeErrorMessages: SocketErrorMessages = {
   CHALLENGE_ALREADY_CLAIMED: "Another player already claimed Beat! first.",
   CHALLENGE_WINDOW_EXPIRED: "The Beat! window already expired.",
   GAME_NOT_IN_CHALLENGE_PHASE: "Beat! is only available during the challenge window.",
-  INSUFFICIENT_TT: "You need at least 1 TT to use Beat!.",
+  INSUFFICIENT_TT: `You need at least ${CHALLENGE_TT_COST} TT to use Beat!.`,
 };
 
 export const placeChallengeErrorMessages: SocketErrorMessages = {
@@ -98,7 +103,7 @@ export const awardTtErrorMessages: SocketErrorMessages = {
 export const skipTrackWithTtErrorMessages: SocketErrorMessages = {
   GAME_NOT_IN_TURN_PHASE: "You can only skip on your own turn.",
   GAME_NOT_STARTED: "The game has not started yet.",
-  INSUFFICIENT_TT: "You need at least 1 TT to skip.",
+  INSUFFICIENT_TT: `You need at least ${SKIP_TRACK_TT_COST} TT to skip.`,
   NOT_ENOUGH_CARDS: "The deck is empty, so this track cannot be skipped.",
   NOT_ACTIVE_PLAYER: "Only the active player can skip the current track.",
   SKIP_ALREADY_USED_THIS_TURN: "You already used your one allowed skip on this turn.",
@@ -114,7 +119,7 @@ export const skipTurnErrorMessages: SocketErrorMessages = {
 export const buyTimelineCardWithTtErrorMessages: SocketErrorMessages = {
   GAME_NOT_IN_TURN_PHASE: "You can only buy a card on your own turn.",
   GAME_NOT_STARTED: "The game has not started yet.",
-  INSUFFICIENT_TT: "You need at least 3 TT to buy a card.",
+  INSUFFICIENT_TT: `You need at least ${BUY_TIMELINE_CARD_TT_COST} TT to buy a card.`,
   NOT_ENOUGH_CARDS: "The deck is empty, so no card can be bought.",
   NOT_ACTIVE_PLAYER: "Only the active player can buy a timeline card.",
   TT_MODE_DISABLED: "TT mode is disabled in this room.",

@@ -16,5 +16,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
     "lint": "eslint src tests --ext .ts",
     "test": "vitest run --pool=threads"
+  },
+  "dependencies": {
+    "@tunetrack/shared": "0.1.0"
   }
 }

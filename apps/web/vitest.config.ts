@@ -5,6 +5,9 @@ export default defineConfig({
   resolve: {
     alias: {
       // Before the bare key, which would otherwise match this one as a prefix.
+      "@tunetrack/shared/constants": fileURLToPath(
+        new URL("../../packages/shared/src/constants/gameplay.ts", import.meta.url),
+      ),
       "@tunetrack/shared/client": fileURLToPath(
         new URL("../../packages/shared/src/client.ts", import.meta.url),
       ),

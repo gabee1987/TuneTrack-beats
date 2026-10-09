@@ -1,4 +1,5 @@
 import type { GameTrackCard } from "@tunetrack/game-engine";
+import { MIN_RELEASE_YEAR } from "@tunetrack/shared";
 import type { SpotifyApiTrack } from "./spotifyApiTypes.js";
 
 export function mapSpotifyTrackToGameCard(track: SpotifyApiTrack): GameTrackCard | null {
@@ -37,7 +38,7 @@ function extractReleaseYear(releaseDate: string): number | null {
   if (!yearString) return null;
 
   const year = parseInt(yearString, 10);
-  if (isNaN(year) || year < 1900 || year > new Date().getFullYear() + 1) {
+  if (isNaN(year) || year < MIN_RELEASE_YEAR || year > new Date().getFullYear() + 1) {
     return null;
   }
 

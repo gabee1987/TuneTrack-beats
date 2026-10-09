@@ -119,7 +119,7 @@ describe("closing a room, then starting a new one", () => {
     await act(async () => {
       socket.serverEmit(ServerToClientEvent.RoomClosed, {
         roomId: TEST_ROOM_ID,
-        reason: "closed",
+        message: "The host closed this room.",
       });
     });
 

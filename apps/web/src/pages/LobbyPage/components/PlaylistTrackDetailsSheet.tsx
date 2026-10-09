@@ -1,4 +1,8 @@
-import type { PublicTrackInfo, TrackMetadataStatus } from "@tunetrack/shared/client";
+import {
+  MIN_RELEASE_YEAR,
+  type PublicTrackInfo,
+  type TrackMetadataStatus,
+} from "@tunetrack/shared/client";
 import { type FormEvent, useEffect, useState } from "react";
 import { useI18n } from "../../../features/i18n";
 import { PanelView } from "../../../features/overlay";
@@ -151,7 +155,7 @@ export function PlaylistTrackDetailsSheet({
               <TextInput
                 className={styles.detailsTextInput}
                 max={new Date().getFullYear() + 1}
-                min={1900}
+                min={MIN_RELEASE_YEAR}
                 onChange={(event) => setReleaseYear(event.target.value)}
                 required
                 type="number"

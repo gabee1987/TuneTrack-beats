@@ -53,6 +53,7 @@ export {
   createMenuTokenAdjustFlyoutVariants,
   createTokenSpendFlyoutTransition,
   createTokenSpendFlyoutVariants,
+  keepFlyoutOpacityOnMainThread,
 } from "./transitions/tokenFlyoutTransition";
 export {
   createBottomSheetMotion,

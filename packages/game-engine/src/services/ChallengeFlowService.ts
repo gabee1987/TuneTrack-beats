@@ -1,3 +1,4 @@
+import { CHALLENGE_TT_COST } from "@tunetrack/shared/constants";
 import { GameRuleError } from "../domain/GameRuleError.js";
 import type { GameState } from "../domain/GameState.js";
 import type { RevealState } from "../domain/RevealState.js";
@@ -40,7 +41,7 @@ export class ChallengeFlowService {
       throw new GameRuleError("PLAYER_NOT_FOUND");
     }
 
-    if (challenger.ttTokenCount < 1) {
+    if (challenger.ttTokenCount < CHALLENGE_TT_COST) {
       throw new GameRuleError("INSUFFICIENT_TT");
     }
 
@@ -93,7 +94,7 @@ export class ChallengeFlowService {
     );
     const challengeWasSuccessful =
       !gameState.challengeState.originalWasCorrect && challengerPlacement.isCorrect;
-    const challengerTtChange = -1;
+    const challengerTtChange = -CHALLENGE_TT_COST;
     const nextPlayers = updatePlayerTokenCount(
       gameState.players,
       challengerPlayerId,

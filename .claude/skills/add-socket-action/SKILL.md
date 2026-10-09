@@ -14,11 +14,14 @@ validation happens at the boundary, every mutation is acknowledged.
 ### 1. `packages/shared`
 
 - `src/events/clientEvents.ts`: add the event to `ClientToServerEvent`
-  (`PascalCase: "snake_case"`) and a `<Name>Payload` interface. Mutations carry
-  `requestId?: string`.
-- `src/events/schemas.ts`: add `<name>PayloadSchema = z.object({...})` built from the existing
-  `roomIdSchema` and the constants in `src/constants/gameplay.ts`; add the
-  `<Name>PayloadInput` / `<Name>PayloadParsed` types next to the others.
+  (`PascalCase: "snake_case"`).
+- `src/events/schemas/<area>Schemas.ts` (lobby, gameplay, playlist or spotify): add
+  `<name>PayloadSchema` built from `commonSchemas.ts` (`roomIdSchema`, `optionalRequestIdSchema`)
+  and `src/constants/gameplay.ts`, with `<Name>Payload = z.input` and `<Name>PayloadParsed =
+z.output` next to it. Never write a payload interface by hand.
+- `src/events/clientPayloads.ts`: import and re-export `<Name>Payload` and add it to
+  `PayloadsByEventKey`; a missing entry does not compile, and `emitAction` takes its payload
+  type from this map.
 - If the server replies with data, add the payload type and event to `src/events/serverEvents.ts`.
 - `src/index.ts` re-exports every module; add a case to `src/events/schemas.test.ts` when the
   schema has non-trivial bounds.
