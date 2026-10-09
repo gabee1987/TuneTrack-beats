@@ -153,6 +153,7 @@ these documents ships, update that document (shipped note + proving test), this 
 | `18-onboarding-hint-system.md`          | 10            | Shipped (11 hints, settings, en/hu, E15). Open: history-back dismissal, anchor visibility, replay UI, bubble tests, `home-start` hint, budget check. Catalogue rules remain normative.                                                                                     |
 | `19-testing-strategy.md`                | 11            | Phase 1 shipped; Phase 2 three of four guards; Phase 3 Chromium only, one 848-line spec to split; Phase 4 two of eleven files; Phase 5 (coverage, CI, root `verify`) open. Phase 3 of this programme turns §8/§9 into skills.                                              |
 | `20-bug-register.md`                    | 12            | Accurate. B8, B14, B18, B4, B3, B11 active; fourteen resolved; three tech-debt notes added.                                                                                                                                                                                |
+| `21-music-setup-redesign.md`            | —             | Added 2026-10-09 as future work from owner feedback; Phases 1–6 open; four owner questions (§7) before Phase 2. Supersedes `06` W5 and the music-setup parts of `04` once Phase 1 lands.                                                                                   |
 
 ### Programme exit criteria (corrected 2026-10-06)
 
