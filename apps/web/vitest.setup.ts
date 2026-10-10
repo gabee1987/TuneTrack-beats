@@ -28,6 +28,10 @@ if (typeof Element !== "undefined" && !Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = vi.fn();
 }
 
+if (typeof Element !== "undefined" && !Element.prototype.scrollTo) {
+  Element.prototype.scrollTo = vi.fn();
+}
+
 // jsdom implements neither of these on HTMLMediaElement, and the free-tier playback path
 // drives real event listeners off them.
 if (typeof HTMLMediaElement !== "undefined") {

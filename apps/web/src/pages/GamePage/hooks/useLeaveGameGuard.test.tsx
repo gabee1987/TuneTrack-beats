@@ -12,9 +12,10 @@ vi.mock("framer-motion", async (importOriginal) => {
   return { ...withEagerMotion(actual), useIsPresent: () => isPresentMock() };
 });
 
-vi.mock("../../../services/socket/socketClient", () => ({
-  resetSocketClient: vi.fn(),
-}));
+vi.mock("../../../services/socket/socketClient", async () => {
+  const { socketClientMockForSharedSocket } = await import("../../../test/fakeSocket");
+  return socketClientMockForSharedSocket();
+});
 
 let guardApi: ReturnType<typeof useLeaveGameGuard> | null = null;
 let setGuardedFromTest: ((isGuarded: boolean) => void) | null = null;

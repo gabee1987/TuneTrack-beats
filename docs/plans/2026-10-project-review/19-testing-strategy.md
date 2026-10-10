@@ -1,6 +1,6 @@
 # 19 — Testing Strategy
 
-> **Status (2026-10-06):** Phase 1 (jsdom harness and test utilities) shipped; Phase 2 shipped for three of four guards; Phase 3 shipped for Chromium (E1–E15, 16 tests); Phase 4 has 7 of 11 planned server test files. Open: the `zIndexScale` guard, WebKit and mobile-viewport E2E, drag testing, the E2E runtime budget, splitting the 848-line E2E spec, four server test files (two blocked on features, one on decision 10), and CI (parked, decision 17). Boundary lint and coverage thresholds shipped 2026-10-10 (`06` T2, T3); server coverage holes 2026-10-10 (`06` T6).
+> **Status (2026-10-06):** Phase 1 (jsdom harness and test utilities) shipped; Phase 2 shipped for three of four guards; Phase 3 shipped for Chromium (E1–E15, 16 tests); Phase 4 has 7 of 11 planned server test files. Open: the `zIndexScale` guard, WebKit and mobile-viewport E2E, drag testing, the E2E runtime budget, splitting the 848-line E2E spec, four server test files (two blocked on features, one on decision 10), and CI (parked, decision 17). Boundary lint and coverage thresholds shipped 2026-10-10 (`06` T2, T3); server coverage holes and web tests 2026-10-10 (`06` T6, T9).
 > **Folded from** `docs/plans/2026-09-stability-performance/11-testing-strategy.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
 
 > Register findings: T-01 … T-12 (`01-review-findings.md`). Phase 3 of the review programme turns

@@ -9,6 +9,7 @@ import type { TimelineCelebrationTransitionEvent } from "../gamePageTransitionEv
 import { TIMELINE_AUTO_SCROLL } from "../gamePage.constants";
 import type { TimelinePanelModel } from "../GamePage.types";
 import { TimelinePanel } from "./TimelinePanel";
+import celebrationStyles from "./timelineCelebration.module.css";
 
 const sortableItemRenders = vi.hoisted(() => new Map<string, number>());
 const dndContextProps = vi.hoisted(() => ({
@@ -94,14 +95,10 @@ function renderModel(model: TimelinePanelModel) {
   );
 }
 
-// CorrectPlacementCelebration renders its children twice (shell content + the
-// wipe-fill content), while the plain card branch renders them once. Counting
-// the year text is a structural signal that survives CSS module class names
-// not resolving to anything in this test environment.
-function countYearOccurrences(container: HTMLElement, year: number): number {
-  return Array.from(container.querySelectorAll("strong")).filter(
-    (node) => node.textContent === String(year),
-  ).length;
+function isCelebrating(container: HTMLElement, year: number): boolean {
+  return Array.from(container.querySelectorAll(`.${celebrationStyles.correctPlacementShell}`)).some(
+    (card) => card.textContent?.includes(String(year)),
+  );
 }
 
 function buildCard(overrides: Partial<TimelineCardPublic> & { id: string }): TimelineCardPublic {
@@ -159,7 +156,7 @@ describe("TimelinePanel correct-placement glow", () => {
         }),
       ),
     );
-    expect(countYearOccurrences(container, 1980)).toBe(2);
+    expect(isCelebrating(container, 1980)).toBe(true);
 
     act(() => {
       vi.advanceTimersByTime(5_000);
@@ -193,7 +190,8 @@ describe("TimelinePanel correct-placement glow", () => {
     // The bought card gets its own glow, derived from its own identity — not
     // skipped because the stale event object's key still equals what the panel
     // already consumed for the *previous* card.
-    expect(countYearOccurrences(container, 2001)).toBe(2);
+    expect(isCelebrating(container, 2001)).toBe(true);
+    expect(isCelebrating(container, 1980)).toBe(false);
 
     act(() => {
       vi.advanceTimersByTime(5_000);
@@ -222,7 +220,7 @@ describe("TimelinePanel correct-placement glow", () => {
       ),
     );
 
-    expect(countYearOccurrences(container, 2010)).toBe(2);
+    expect(isCelebrating(container, 2010)).toBe(true);
   });
 });
 

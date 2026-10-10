@@ -57,6 +57,8 @@ export function createFakeSocket(options: { connected?: boolean } = {}): FakeSoc
   const emitted: EmittedEvent[] = [];
   const ackResponses = new Map<string, unknown[]>();
   const reconnectAttemptListeners = new Set<Listener>();
+  // Real Socket.IO removes a `once` listener by the function it was given, not its wrapper.
+  const onceWrappers = new Map<Listener, Listener>();
 
   function listenersFor(event: string): Set<Listener> {
     const existing = listeners.get(event);
@@ -96,7 +98,8 @@ export function createFakeSocket(options: { connected?: boolean } = {}): FakeSoc
 
     off(event, listener) {
       if (listener) {
-        listenersFor(event).delete(listener);
+        listenersFor(event).delete(onceWrappers.get(listener) ?? listener);
+        onceWrappers.delete(listener);
       } else {
         listeners.delete(event);
       }
@@ -106,8 +109,10 @@ export function createFakeSocket(options: { connected?: boolean } = {}): FakeSoc
     once(event, listener) {
       const wrapped: Listener = (...args) => {
         listenersFor(event).delete(wrapped);
+        onceWrappers.delete(listener);
         listener(...args);
       };
+      onceWrappers.set(listener, wrapped);
       listenersFor(event).add(wrapped);
       return socket;
     },

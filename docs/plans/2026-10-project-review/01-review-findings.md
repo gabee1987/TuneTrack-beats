@@ -1,38 +1,16 @@
-# 01 — Consolidated Review Findings
-
-> **Reviewed:** 2026-10-06, branch `fix/stability-hardening`, commit `629dc8a`.
-> **Method:** five parallel read-only reviews (backend, frontend, UX/host flow, documentation,
-> tests/tooling) over the whole repository, consolidated here. Both P0 findings and the P1
-> security findings were re-verified in code by the lead reviewer. Line numbers are as of
-> `629dc8a` and will drift; the file and symbol names are the stable reference.
-> **Status of the build at review time:** `npm run build`, `npm run typecheck`, `npm run lint`
-> all pass; 400 unit/integration tests pass (server 137, web 230, engine 31, shared 2); 16
-> Playwright E2E scenarios exist (Chromium only).
-> **Placeholder data only.** Every example uses values such as `TEST_ROOM_1` or `12345`.
-
-Priority key: **P0** security, crash or data loss · **P1** user-visible defect or clear
-architectural rule violation · **P2** performance or maintainability · **P3** nit.
-
-Each finding names the **phase** of [`00-index.md`](./00-index.md) that owns the fix. Findings
-marked **HOTFIX** are small, isolated and ready to hand to an implementation agent today.
-
----
-
-## 1. Measured baseline (2026-10-06)
-
-| Metric                                                      | 2026-09-08 baseline     | 2026-10-06 (this review)                                                                                                           |
-| ----------------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Unit/integration tests                                      | 240 / 47 files          | **400 / 84 files** (server 137/23, web 230/58, engine 31/2, shared 2/1)                                                            |
-| Web component tests (`*.test.tsx`)                          | 0                       | **19**                                                                                                                             |
-| E2E scenarios                                               | 0                       | **16** (one 848-line spec, Chromium desktop only)                                                                                  |
-| Coverage thresholds / CI                                    | none                    | none                                                                                                                               |
-| Eager JS + CSS on the home screen (modulepreload)           | 454 kB raw / ~145 kB gz | **462 kB raw / ~147 kB gz** (index 117 kB, react-dom 130, motion 117, router 62)                                                   |
-| `vendor-zod` chunk emitted                                  | 54.9 kB                 | 54.9 kB (unchanged)                                                                                                                |
-| Largest route chunk                                         | LobbyRoomActions 80 kB  | `LobbyRoomSettingsStatus` 83 kB JS + 69 kB CSS; `GamePage` 91 kB                                                                   |
-| Hardcoded hex colours in CSS modules                        | 94                      | 94 (+41 `rgb()/rgba()` literals the guard does not catch)                                                                          |
-| Raw `z-index` literals outside the token scale              | not counted             | 14 modules (5000, 1600×3, 1500, 1400×2, 1200×2, 1100×2, 880×2, 130, …)                                                             |
-| Source files above the 700-line hard limit (00-index §5 #3) | —                       | 2 (`RoomService.ts` 718, `useSpotifyPlaybackSdk.ts` 746); `SpotifyApiClient.ts` 692 and `SpotifyDiscoveryService.ts` 595 are close |
-| Agent mandatory reading path                                | —                       | ≈28 k words (CLAUDE + AGENT + index + rules + audit)                                                                               |
+| 6 — resolved: server 2026-10-09 (`06` T5), web 2026-10-10 (`06` T9) | undefined               | undefined                                                                                                                          | undefined | Metric | 2026-09-08 baseline | 2026-10-06 (this review) |
+| ------------------------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | --------- | ------ | ------------------- | ------------------------ |
+| Unit/integration tests                                              | 240 / 47 files          | **400 / 84 files** (server 137/23, web 230/58, engine 31/2, shared 2/1)                                                            |
+| Web component tests (`*.test.tsx`)                                  | 0                       | **19**                                                                                                                             |
+| E2E scenarios                                                       | 0                       | **16** (one 848-line spec, Chromium desktop only)                                                                                  |
+| Coverage thresholds / CI                                            | none                    | none                                                                                                                               |
+| Eager JS + CSS on the home screen (modulepreload)                   | 454 kB raw / ~145 kB gz | **462 kB raw / ~147 kB gz** (index 117 kB, react-dom 130, motion 117, router 62)                                                   |
+| `vendor-zod` chunk emitted                                          | 54.9 kB                 | 54.9 kB (unchanged)                                                                                                                |
+| Largest route chunk                                                 | LobbyRoomActions 80 kB  | `LobbyRoomSettingsStatus` 83 kB JS + 69 kB CSS; `GamePage` 91 kB                                                                   |
+| Hardcoded hex colours in CSS modules                                | 94                      | 94 (+41 `rgb()/rgba()` literals the guard does not catch)                                                                          |
+| Raw `z-index` literals outside the token scale                      | not counted             | 14 modules (5000, 1600×3, 1500, 1400×2, 1200×2, 1100×2, 880×2, 130, …)                                                             |
+| Source files above the 700-line hard limit (00-index §5 #3)         | —                       | 2 (`RoomService.ts` 718, `useSpotifyPlaybackSdk.ts` 746); `SpotifyApiClient.ts` 692 and `SpotifyDiscoveryService.ts` 595 are close |
+| Agent mandatory reading path                                        | —                       | ≈28 k words (CLAUDE + AGENT + index + rules + audit)                                                                               |
 
 Reproduce: `npm run build` (per-chunk sizes), `npm test`, `npm run typecheck && npm run lint`.
 

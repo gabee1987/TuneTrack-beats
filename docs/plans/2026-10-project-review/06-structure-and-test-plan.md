@@ -2,8 +2,8 @@
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 6 of `00-index.md` §4).
 > **Status (2026-10-10):** W1 and T1 shipped (code 2026-10-07, file deletions 2026-10-09); T8,
-> T10, T5, S1–S5, W2 and T7 shipped 2026-10-09; T2, T3 and T6 2026-10-10 (§7 rows 1–8 and the T6
-> half of row 9 done). Next: T9 (§7 row 9).
+> T10, T5, S1–S5, W2 and T7 shipped 2026-10-09; T2, T3, T6 and T9 2026-10-10 (§7 rows 1–9 done).
+> Next: T11 (§7 row 10).
 > Every finding below was re-verified
 > in code on 2026-10-07 (line numbers drift; file and symbol names are the stable reference).
 > **Authority:** this document sets the **structural rules, the test and tooling gates and the
@@ -349,21 +349,19 @@ its edge and fails one step past it, defaults are applied, and a coverage test f
 exported payload schema has no case. Proof: `packages/shared/tests/payloadSchemas.test.ts`
 (214 shared tests; raising the name limit to 25 fails exactly the three name cases).
 
-### T9 · Web tests (T-04, T-06, T-11 web)
+### T9 · Web tests (T-04, T-06, T-11 web) · shipped
 
-- `apps/web/vitest.config.ts`: `css: true`, then remove the `<strong>` counting workaround in
-  `TimelinePanel.test.tsx`.
-- Replace the eleven bespoke `vi.mock("…/socketClient")` blocks with `test/fakeSocket.ts`; make
-  `renderWithProviders` the default for component tests.
-- `useHostPlayback.test.ts`: fake timers instead of the real 3.2 s wait (the slowest web test).
-- Render tests for every `features/ui/primitives` component and for `BottomSheet`, `Dialog`,
-  `RoomResetModal` (one case per recovery reason), `ToggleSwitch`, `RangeField`,
-  `AppLoadingOverlay`, `HintBubble` and the hint anchor hook (`18`). Query by role and name.
-- Hook tests for the lobby Spotify hooks (`useLobbySpotify`, `useSpotifyAuth`,
-  `useSpotifyPlaylistImport`, `useSpotifyCandidates`, `useSpotifyOpenedPlaylist`,
-  `useSpotifySmartSearch`, `useSavedPlaylistsController`) against `fakeSocket`.
-- Page render tests: `HomePage`, `GamePageHeader`; `LobbyPageMobile.test.tsx` stops mocking six
-  children to `null` once `04` WP makes the assembly layout-only.
+**Shipped 2026-10-10.** `css: true` gives CSS modules real class names, so `TimelinePanel.test.tsx`
+checks the celebration class instead of counting `<strong>`. `useHostPlayback.test.ts` runs the
+retry ladder on fake timeouts, with a new retry case proving the advance reaches it. The last two
+bespoke socket mocks use `fakeSocket` (`emitAction.test.ts` keeps its own, as the emitter's unit
+test), and the fake `off` now removes a `once` listener as Socket.IO does. New render tests: every
+primitive (`primitives.test.tsx`), `BottomSheet`, `ToggleSwitch`, `RangeField`,
+`AppLoadingOverlay`, `HintBubble`, `FirstRunHint` with its anchor hook, `RoomResetModal` per
+reason, `HomePage` and `GamePageHeader`; hook tests for the seven lobby Spotify hooks under
+`pages/LobbyPage/hooks/spotify/`. Web tests 511 → 725; coverage 67 / 75 / 75 / 67 → 75 / 79 / 81 /
+75, now the thresholds. Open: `LobbyPageMobile.test.tsx` child mocks (after `04` WP); 15 older
+component tests still wrap a bare `I18nProvider` (new tests use `renderWithProviders`).
 
 ### T10 · Guards (T-12, F-18) · shipped
 

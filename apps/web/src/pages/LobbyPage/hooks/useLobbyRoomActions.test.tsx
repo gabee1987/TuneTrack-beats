@@ -11,18 +11,18 @@ import { LobbyPlayerListItem } from "../components/LobbyPlayerListItem";
 import { LobbyRoomActions } from "../components/LobbyRoomActions";
 import { useLobbyRoomActions } from "./useLobbyRoomActions";
 
-const { emitActionMock, getSocketClientMock } = vi.hoisted(() => ({
+const { emitActionMock } = vi.hoisted(() => ({
   emitActionMock: vi.fn(),
-  getSocketClientMock: vi.fn(),
 }));
 
 vi.mock("../../../services/socket/emitAction", () => ({
   emitAction: emitActionMock,
 }));
 
-vi.mock("../../../services/socket/socketClient", () => ({
-  getSocketClient: getSocketClientMock,
-}));
+vi.mock("../../../services/socket/socketClient", async () => {
+  const { socketClientMockForSharedSocket } = await import("../../../test/fakeSocket");
+  return socketClientMockForSharedSocket();
+});
 
 function createDeferredActionResult() {
   let resolve!: (result: EmitActionResult) => void;
@@ -129,8 +129,6 @@ function RoomSettingsHarness() {
 describe("useLobbyRoomActions start_game", () => {
   beforeEach(() => {
     emitActionMock.mockReset();
-    getSocketClientMock.mockReset();
-    getSocketClientMock.mockResolvedValue({ emit: vi.fn() });
   });
 
   it("retries one timeout, blocks duplicate starts, and exposes a final retry", async () => {
@@ -175,8 +173,6 @@ describe("useLobbyRoomActions start_game", () => {
 describe("useLobbyRoomActions close_room", () => {
   beforeEach(() => {
     emitActionMock.mockReset();
-    getSocketClientMock.mockReset();
-    getSocketClientMock.mockResolvedValue({ emit: vi.fn() });
   });
 
   it("retries one timeout, blocks duplicate closes, and exposes a final retry", async () => {
@@ -221,12 +217,6 @@ describe("useLobbyRoomActions close_room", () => {
 describe("useLobbyRoomActions kick_player", () => {
   beforeEach(() => {
     emitActionMock.mockReset();
-    getSocketClientMock.mockReset();
-    getSocketClientMock.mockResolvedValue({ emit: vi.fn() });
-    Object.defineProperty(HTMLElement.prototype, "scrollTo", {
-      configurable: true,
-      value: vi.fn(),
-    });
   });
 
   it("retries one timeout, blocks duplicate lobby removals, and exposes a final retry", async () => {
@@ -272,12 +262,6 @@ describe("useLobbyRoomActions kick_player", () => {
 describe("useLobbyRoomActions update_player_settings", () => {
   beforeEach(() => {
     emitActionMock.mockReset();
-    getSocketClientMock.mockReset();
-    getSocketClientMock.mockResolvedValue({ emit: vi.fn() });
-    Object.defineProperty(HTMLElement.prototype, "scrollTo", {
-      configurable: true,
-      value: vi.fn(),
-    });
   });
 
   it("retries one timeout, blocks duplicate player-setting updates, and exposes a final retry", async () => {
@@ -330,12 +314,6 @@ describe("useLobbyRoomActions update_player_settings", () => {
 describe("useLobbyRoomActions update_room_settings", () => {
   beforeEach(() => {
     emitActionMock.mockReset();
-    getSocketClientMock.mockReset();
-    getSocketClientMock.mockResolvedValue({ emit: vi.fn() });
-    Object.defineProperty(HTMLElement.prototype, "scrollTo", {
-      configurable: true,
-      value: vi.fn(),
-    });
   });
 
   it("retries one timeout, blocks duplicate room-setting updates, and exposes a final retry", async () => {

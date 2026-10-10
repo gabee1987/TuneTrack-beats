@@ -96,12 +96,18 @@ function playRequestCount(socket: FakeSocket): number {
 /** Long enough to cross the ladder's first retry delay of 2500 ms. */
 const PAST_FIRST_RETRY_MS = 3_200;
 
+/**
+ * Fakes timeouts from here on. Call it before the step that schedules the ladder's sleep, so the
+ * sleep is on the fake clock; the boot itself needs real timeouts. The retry test proves an
+ * advance reaches the sleep, so the tests that expect no retry cannot pass vacuously.
+ */
+function fakeRetryClock() {
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+}
+
 async function waitPastFirstRetry() {
-  // Real time rather than fake timers: the ladder's sleep is created deep inside the hook's
-  // own async flow, and swapping the clock underneath it is how a test starts passing
-  // vacuously.
   await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, PAST_FIRST_RETRY_MS));
+    await vi.advanceTimersByTimeAsync(PAST_FIRST_RETRY_MS);
   });
 }
 
@@ -149,6 +155,7 @@ describe("useHostPlayback", () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     uninstallFakeSpotifySdk();
     vi.restoreAllMocks();
   });
@@ -227,6 +234,7 @@ describe("useHostPlayback", () => {
       const { socket, view } = await bootPremiumPlayback(player);
 
       await waitFor(() => expect(playRequestCount(socket)).toBe(1));
+      fakeRetryClock();
       const requestId = latestPlayRequestId(socket);
       await act(async () => {
         socket.serverEmit(ServerToClientEvent.SpotifyPlaybackResult, {
@@ -238,24 +246,37 @@ describe("useHostPlayback", () => {
         player.emitAutoplayFailed();
       });
 
-      await waitFor(() => expect(view.result.current.needsUserGesture).toBe(true));
+      expect(view.result.current.needsUserGesture).toBe(true);
 
       await waitPastFirstRetry();
       expect(playRequestCount(socket)).toBe(1);
     });
   });
 
+  it("retries a failed play once the first retry delay has passed", async () => {
+    const { socket } = await bootPremiumPlayback(player);
+
+    await waitFor(() => expect(playRequestCount(socket)).toBe(1));
+    fakeRetryClock();
+    await failLatestPlayRequest(socket);
+    expect(playRequestCount(socket)).toBe(1);
+
+    await waitPastFirstRetry();
+    expect(playRequestCount(socket)).toBe(2);
+  });
+
   it("lets the host's own play win over a retry that is still pending", async () => {
     const { socket, view } = await bootPremiumPlayback(player);
 
     await waitFor(() => expect(playRequestCount(socket)).toBe(1));
+    fakeRetryClock();
     await failLatestPlayRequest(socket);
 
-    act(() => {
+    await act(async () => {
       view.result.current.restart();
     });
 
-    await waitFor(() => expect(playRequestCount(socket)).toBe(2));
+    expect(playRequestCount(socket)).toBe(2);
     await completeLatestPlayRequest(socket, player);
 
     // The ladder would otherwise wake at 2500 ms and supersede the host's own request,

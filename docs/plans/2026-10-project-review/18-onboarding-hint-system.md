@@ -1,6 +1,6 @@
 # 18 — Interactive First-Run Hint System
 
-> **Status (2026-10-06):** Shipped. Eleven contextual hints, the settings toggle and reset, English and Hungarian copy and Chromium E2E scenario E15 are live. Open: history-back dismissal, dismissal on anchor interaction, anchor visibility, replay and "n of m seen" UI, component tests for the bubble and anchors, the 6 kB budget check, and the planned `home-start` hint.
+> **Status (2026-10-06):** Shipped. Eleven contextual hints, the settings toggle and reset, English and Hungarian copy and Chromium E2E scenario E15 are live. Open: history-back dismissal, dismissal on anchor interaction, anchor visibility, replay and "n of m seen" UI, the 6 kB budget check, and the planned `home-start` hint.
 > **Folded from** `docs/plans/2026-09-stability-performance/10-onboarding-hint-system.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
 
 > Owning layer: `apps/web/src/features/hints`. Register findings: U-10 (hint gaps), U-12 (bubble accessibility). Catalogue changes are owned by Phase 4 of the review programme (`00-index.md` §4); component tests and the budget check by Phase 6.
@@ -35,7 +35,7 @@ The implementation deliberately differs from the original design; this section d
 | Replay and count UI                  | No "Replay the walkthrough" action and no "n of m hints seen" count in settings (U-10).                                                                                          | `04-host-flow-ux-spec.md` §7 (WP 8)                                                   |
 | `home-start` hint and catalogue gaps | `home-start` planned but absent; no share-code or playback hint; the two-per-visit cap hides most game hints on a device that plays one game (U-10; cap removed by decision 12). | `04-host-flow-ux-spec.md` §7 (WP 8)                                                   |
 | Bubble accessibility                 | `HintBubble` mixes `role="dialog"` with `aria-live`; it should not steal focus and should be announced politely (U-12).                                                          | `04-host-flow-ux-spec.md` §7 (WP 8)                                                   |
-| Component tests                      | No render tests for `HintBubble` or for the anchor hook; only the scheduler and state modules are unit-tested.                                                                   | Review Phase 6 (`19-testing-strategy.md`)                                             |
+| Component tests                      | Shipped 2026-10-10 (`06` T9): `HintBubble.test.tsx` and `FirstRunHint.test.tsx`.                                                                                                 | Review Phase 6 (`19-testing-strategy.md`)                                             |
 | Bundle budget                        | The feature is not lazily loaded and the under-6 kB gzip budget has not been measured.                                                                                           | `10-bundle-and-startup.md`                                                            |
 | Layering                             | `--z-hint` (450) sits below `--z-dialog` and the menu sheet, so a hint can render under an open settings sheet (F-05).                                                           | `14-navigation-and-overlays.md` Phase 1                                               |
 
@@ -52,5 +52,5 @@ The implementation deliberately differs from the original design; this section d
 - [x] Under `prefers-reduced-motion` hints fade rather than move.
 - [x] Blocked storage degrades to enabled-but-unremembered with no error.
 - [ ] Feature chunk under 6 kB gzip and lazily loaded.
-- [ ] Component tests for `HintBubble` and the anchor hook.
+- [x] Component tests for `HintBubble` and the anchor hook (`HintBubble.test.tsx`, `FirstRunHint.test.tsx`; 2026-10-10, `06` T9).
 - [x] E2E: a first-run session starts a game, sees `game-drag-preview` before timeline details, dismisses it, and does not see that hint again after reload (E15).

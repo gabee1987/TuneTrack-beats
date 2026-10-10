@@ -60,6 +60,17 @@ describe("RoomResetModal", () => {
     expect(router.state.location.pathname).toBe(HISTORY_ROUTE_PATH);
   });
 
+  it.each([
+    ["closed", "This room is no longer available", "The room was closed while this device"],
+    ["server_restarted", "This game has ended", "The server restarted"],
+  ] as const)("explains the %s reason and offers the way back", async (reason, title, body) => {
+    renderWithProviders(<RoomResetModal isOpen onReset={vi.fn()} reason={reason} />);
+
+    const dialog = await screen.findByRole("dialog", { name: title });
+    expect(dialog).toHaveTextContent(body);
+    expect(screen.getByRole("button", { name: "Back to main screen" })).toBeInTheDocument();
+  });
+
   it("sits on the blocking layer", async () => {
     renderWithProviders(<RoomResetModal isOpen onReset={vi.fn()} reason="server_restarted" />);
     const dialog = await screen.findByRole("dialog");
