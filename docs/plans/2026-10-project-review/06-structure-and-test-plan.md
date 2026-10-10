@@ -2,8 +2,8 @@
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 6 of `00-index.md` §4).
 > **Status (2026-10-10):** W1 and T1 shipped (code 2026-10-07, file deletions 2026-10-09); T8,
-> T10, T5, S1–S5, W2 and T7 shipped 2026-10-09; T2 and T3 2026-10-10 (§7 rows 1–8 done). Next:
-> T6 and T9 (§7 row 9).
+> T10, T5, S1–S5, W2 and T7 shipped 2026-10-09; T2, T3 and T6 2026-10-10 (§7 rows 1–8 and the T6
+> half of row 9 done). Next: T9 (§7 row 9).
 > Every finding below was re-verified
 > in code on 2026-10-07 (line numbers drift; file and symbol names are the stable reference).
 > **Authority:** this document sets the **structural rules, the test and tooling gates and the
@@ -319,23 +319,19 @@ planned: teardown clears every room timer the test started, but does not assert
 `roomCount === 0`, because in-game rooms deliberately outlive their sockets (reserved players,
 1 h offline TTL).
 
-### T6 · Server coverage holes (T-05, T-08, review additions)
+### T6 · Server coverage holes (T-05, T-08, review additions) · shipped
 
-| New file                                           | Proves                                                                                                                                                                   |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `realtime/socketAuthorization.test.ts`             | Table-driven over **every** client event: non-member, guest on host-only events, non-active player on turn actions, wrong phase — each gets its code and no state change |
-| `app/env.test.ts`                                  | Env schema defaults, rejections and the `NODE_ENV=test` override guard                                                                                                   |
-| `app/createSocketServer.test.ts`                   | Ping values, buffer size, CORS origins (shipped 2026-10-07, `05` A7)                                                                                                     |
-| `http/routes.test.ts` (uses `supertest`)           | Health route; OAuth callback success, bad `state`, upstream failure (no hang, S4)                                                                                        |
-| `spotify/SpotifyOAuthService.test.ts`              | State single use and expiry, account-type detection, error mapping                                                                                                       |
-| `spotify/SpotifyTokenStore.test.ts`                | Per-room isolation, expiry, removal on room close                                                                                                                        |
-| `spotify/SpotifySmartSearchParser.test.ts`         | Pure parser cases                                                                                                                                                        |
-| `spotify/discovery.test.ts`, `musicSearch.test.ts` | Candidate selection and mapping with a fake catalogue client                                                                                                             |
-| `spotify/noSecretsInLogs.test.ts`                  | Token-shaped values never reach a log line or audit payload                                                                                                              |
-
-`rateLimit`, `shutdown`, `metadataOverride` and the `revision` half of `statePayload` arrive with
-their features (`05` A6, A8; `17` §3; `05` A10). `supertest` is kept because `http/routes.test.ts`
-uses it.
+**Shipped 2026-10-10.** `realtime/socketAuthorization.test.ts` drives every client event over the
+real Socket.IO server: a non-member, a guest on host-only events, a non-active player on turn and TT
+actions, and the wrong phase each get their code and leave the room unchanged; a guard fails when an
+event is added without a case. Also new: `app/env.test.ts`, `http/healthRoutes.test.ts`, the success
+path in `http/spotifyRoutes.test.ts`, login and token-lifecycle cases in
+`spotify/SpotifyAuthService.test.ts`, `SpotifyTokenStore`, `SpotifySmartSearchParser`,
+`candidateSelection`, `candidateDiscovery` and `SpotifyMusicSearchService`/`SpotifyPlaylistSearch`
+over `tests/support/fakeSpotifyCatalog.ts`, the catalogue and player HTTP clients, and
+`spotify/noSecretsInLogs.test.ts` (real pino to memory, audit with payloads on). Server tests 271 →
+474; coverage 77 / 82 / 84 / 77 → 91 / 88 / 95 / 91, now the thresholds. Not done: the
+`roomCount === 0` leak guard after each suite (T-08).
 
 ### T7 · Engine (T-09) · shipped
 

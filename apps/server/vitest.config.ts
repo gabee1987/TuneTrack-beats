@@ -20,9 +20,9 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary", "lcov"],
-      // The measured baseline (06 T3), rounded down. Raise to the new floor when tests are
+      // The measured floor after 06 T6, rounded down. Raise to the new floor when tests are
       // added; never lower without a written reason in the same change.
-      thresholds: { statements: 77, branches: 82, functions: 84, lines: 77 },
+      thresholds: { statements: 91, branches: 88, functions: 95, lines: 91 },
       include: ["src/**/*.ts"],
     },
     pool: "threads",
