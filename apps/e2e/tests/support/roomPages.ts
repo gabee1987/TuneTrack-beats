@@ -3,10 +3,16 @@ import {
   type APIRequestContext,
   type Browser,
   type BrowserContext,
+  type Locator,
   type Page,
 } from "@playwright/test";
 
 const playerProfileStorageKey = "tunetrack.playerProfile.v1";
+
+export interface PlayerPage {
+  context: BrowserContext;
+  page: Page;
+}
 
 export async function expectNoUnexpectedSpotifyRequests(request: APIRequestContext): Promise<void> {
   const response = await request.get("http://127.0.0.1:3102/requests");
@@ -14,10 +20,7 @@ export async function expectNoUnexpectedSpotifyRequests(request: APIRequestConte
   await expect(response.json()).resolves.toEqual({ unexpectedRequests: [] });
 }
 
-export async function createNamedPage(
-  browser: Browser,
-  displayName: string,
-): Promise<{ context: BrowserContext; page: Page }> {
+export async function createNamedPage(browser: Browser, displayName: string): Promise<PlayerPage> {
   const context = await browser.newContext();
   await context.addInitScript(() => {
     class FakeSpotifyPlayer {
@@ -91,16 +94,28 @@ export async function hostRoom(page: Page): Promise<string> {
   return decodeURIComponent(roomId);
 }
 
-export async function expectLobbyPlayers(
-  page: Page,
-  ownDisplayName: string,
-  otherDisplayName: string,
-): Promise<void> {
-  await expect(page.getByText(ownDisplayName, { exact: true }).first()).toBeVisible();
-  await expect(page.getByRole("listitem")).toHaveCount(2);
-  await expect(
-    page.getByRole("listitem").filter({ hasText: otherDisplayName }).first(),
-  ).toBeVisible();
+export async function joinFromDirectory(page: Page, roomId: string): Promise<void> {
+  const directoryRoom = page.getByRole("button", { name: new RegExp(escapeRegex(roomId)) });
+  await expect(directoryRoom).toBeVisible();
+  await directoryRoom.click();
+}
+
+export async function startGame(host: Page, roomId: string, ...guests: Page[]): Promise<void> {
+  await host.getByRole("button", { name: "Start Game" }).first().click();
+  for (const page of [host, ...guests]) {
+    await expectGamePage(page, roomId);
+  }
+}
+
+/**
+ * Both layouts render the same roster, which names the viewer "You"; each player's own name is
+ * therefore proven on the other player's page.
+ */
+export async function expectLobbyRoster(page: Page, otherDisplayName: string): Promise<void> {
+  const roster = page.getByRole("listitem");
+  await expect(roster).toHaveCount(2);
+  await expect(roster.filter({ hasText: "You" })).toHaveCount(1);
+  await expect(roster.filter({ hasText: otherDisplayName })).toHaveCount(1);
 }
 
 export async function expectGamePage(page: Page, roomId: string): Promise<void> {
@@ -108,9 +123,32 @@ export async function expectGamePage(page: Page, roomId: string): Promise<void> 
   await expect(page.getByRole("button", { name: /leaderboard/i }).first()).toBeVisible();
 }
 
+/**
+ * The lobby keeps its own menu button until its exit animation ends; the game page is the main
+ * landmark that holds the leaderboard button.
+ */
+export async function openGameMenu(page: Page): Promise<void> {
+  const gamePage = page
+    .getByRole("main")
+    .filter({ has: page.getByRole("button", { name: /leaderboard/i }) });
+  await gamePage.getByRole("button", { name: "Open game menu", exact: true }).click();
+}
+
+/**
+ * Both layouts render the turn status in the game header; the phone layout shows the visible
+ * timeline's owner in its place, so the status is checked in the document, not on screen.
+ */
+export async function expectHeaderStatus(page: Page, statusText: string): Promise<void> {
+  await expect(page.getByText(statusText, { exact: true }).first()).toBeAttached();
+}
+
+/** Home names its primary action "Start" on desktop and "Lets go!" on a phone. */
+export function homeStartButton(page: Page): Locator {
+  return page.getByRole("button", { name: /^(Start|Lets go!)$/ });
+}
+
 export async function expectLobbyPlayerCount(page: Page, count: number): Promise<void> {
-  const playerCountMetric = page.getByText("Players here", { exact: true }).locator("..");
-  await expect(playerCountMetric.getByText(String(count), { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("listitem")).toHaveCount(count);
 }
 
 export function escapeRegex(value: string): string {

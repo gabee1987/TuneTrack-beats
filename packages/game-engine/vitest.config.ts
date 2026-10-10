@@ -12,10 +12,14 @@ export default defineConfig({
   test: {
     coverage: {
       provider: "v8",
+      // The default v8 remapping counted a different branch total per run (88.92–89 %), so the
+      // gate failed at random; the AST-aware count is identical on every run.
+      experimentalAstAwareRemapping: true,
       reporter: ["text", "json-summary", "lcov"],
-      // The measured baseline (06 T3), rounded down. Raise to the new floor when tests are
-      // added; never lower without a written reason in the same change.
-      thresholds: { statements: 94, branches: 89, functions: 100, lines: 94 },
+      // The measured baseline, rounded down. Raise to the new floor when tests are added; never
+      // lower without a written reason in the same change. Lowered from 94/89/100/94 on
+      // 2026-10-10: the AST-aware count measures 92.41/88.71/100/92.08 for the same tests.
+      thresholds: { statements: 92, branches: 88, functions: 100, lines: 92 },
       include: ["src/**/*.ts"],
     },
   },

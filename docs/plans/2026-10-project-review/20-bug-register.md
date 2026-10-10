@@ -1,7 +1,7 @@
 # 20 — Active Defect Register
 
-> **Status (2026-10-08):** accurate against code. Six active defects; fourteen resolved.
-> **Folded from** `docs/plans/2026-09-stability-performance/12-bug-register.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`. The findings register `01-review-findings.md` holds the review findings (`B-`/`F-`/`U-`/`D-`/`T-` ids); this file holds user-visible defects (`B1`–`B20`).
+> **Status (2026-10-10):** accurate against code. Eight active defects; nineteen resolved.
+> **Folded from** `docs/plans/2026-09-stability-performance/12-bug-register.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`. The findings register `01-review-findings.md` holds the review findings (`B-`/`F-`/`U-`/`D-`/`T-` ids); this file holds user-visible defects (`B1`–`B27`).
 
 This register contains only actionable defects. Resolved items are kept as a compact ledger
 at the end; their full investigations remain available in git history.
@@ -19,10 +19,12 @@ Status meanings:
 | --- | -------- | ---------------------------------- | ---------------------------------------------------------------------- |
 | B8  | S1       | Partially fixed                    | Phone offline for 10 s during a game recovers without an error toast   |
 | B14 | S1       | Needs reproduction                 | Capture route, connection state and overlays when the UI becomes inert |
-| B18 | S2       | Open                               | Reproduce and instrument a page exit that never completes              |
+| B26 | S2       | Needs reproduction                 | A track year saved in the playlist editor survives on a phone          |
 | B4  | S1       | Open; device confirmation required | iPhone drag-versus-scroll test                                         |
 | B3  | S2       | Open                               | Design-system consolidation acceptance criteria                        |
 | B11 | S3       | Partially fixed                    | One shared destructive icon-button treatment                           |
+| B25 | S3       | Open                               | `challenge.spec.ts` passes on the `mobile` project                     |
+| B27 | S3       | Needs reproduction                 | The win scenario's setting ticks stick on desktop WebKit, repeated     |
 
 ## B8 · Network recovery needs final hardening
 
@@ -62,22 +64,8 @@ Do not patch this from theory. On the next reproduction, capture:
 - whether an exiting page is still mounted;
 - the first console or server error preceding the failure.
 
-If the page is visible but ignores input, investigate B18 first.
-
-## B18 · A stalled page exit can strand portalled UI
-
-**Severity:** S2 · **Status:** Open · **Plan:** `14-navigation-and-overlays.md`
-
-B10 was fixed by unmounting the action dock during exit, but the underlying risk remains: if
-an `AnimatePresence` exit never completes, the old page can retain socket listeners, timers
-and portals. An invisible portal may intercept input on the new page.
-
-### Next investigation
-
-- Instrument exit start and `onExitComplete` against a wall-clock budget.
-- Record which exiting descendants use layout animation or portals.
-- Reproduce before changing transition variants or CSS containment.
-- Cover the confirmed trigger with E2E; jsdom cannot prove layout or pointer interception.
+If the page is visible but ignores input, first check whether an exiting page is still mounted
+(B18 was one such cause).
 
 ## B4 · Card drag competes with scrolling on iPhone
 
@@ -117,6 +105,36 @@ still needs to use the same destructive `IconButton` variant as comparable remov
 close-room actions. Verify 48 px touch targets, focus state and accessible labels on mobile
 and desktop.
 
+## B25 · The phone's challenge-window picker has no accessible name
+
+**Severity:** S3 · **Status:** Open · **Plan:** `15-design-system-consolidation.md`
+
+On a compact touch layout `AdaptiveSelect` renders a button that shows the selected option and
+"Select", but not the field's label, so assistive technology announces "Manual Select" without
+"Challenge window". The desktop `<select>` carries the label. Required outcome: the trigger is
+named by its field (for example "Challenge window: Manual"). Verification: a component test on
+`AdaptiveSelect` in the compact layout, then `challenge.spec.ts` on the `mobile` project without
+its `test.fixme`.
+
+## B26 · A playlist track edit can be lost on a phone
+
+**Severity:** S2 · **Status:** Needs reproduction · **Plan:** `21-music-setup-redesign.md`
+
+In one of two iPhone 13 E2E runs, E14 saved the release year 1977 for a track and reopened it
+showing 1980 for 10 s. The editor re-reads the track whenever it changes, so the save was lost,
+not merely shown late. Chromium and desktop WebKit never showed it. Next: repeat E14 on the
+`mobile` project with traces, and check the save acknowledgement and the playlist update order.
+
+## B27 · A lobby setting tick sometimes does not stick on desktop WebKit
+
+**Severity:** S3 · **Status:** Needs reproduction · **Plan:** `15-design-system-consolidation.md`
+
+In two of three desktop WebKit E2E runs, E6 switched token mode on and clicked "Starting tokens for
+every player: 3"; the slider stayed at 0 (once briefly 1) for 10 s. Chromium and the iPhone 13
+project never showed it. Suspects: a tick pressed while the token-mode update is still pending, or
+an older room-settings state overwriting the newer value. Next: repeat E6 on `webkit` with traces
+and compare the `update_room_settings` acknowledgements with the state updates.
+
 ## Resolved ledger
 
 The detailed root-cause narratives and implementation journals for these entries were
@@ -141,6 +159,7 @@ removed from the live register on 2026-09-30. They remain in git history.
 | B22 | 2026-10-07 | Drag edge scroll is dnd-kit's auto-scroll alone at ≤ 200 px/s, without scroll snap while dragging; the per-event scroll had sped up with the event rate after `05` C3.                                                                                                                                                                                                                                                                                                    |
 | B23 | 2026-10-07 | A card released half over a neighbour snapped back: the preview moved only once the card centre passed the neighbour's centre, and a crossing inside the reorder throttle was lost on release. The slot under the card centre now wins (8 % keep margin), and the drop recomputes from the release position (`timelineDragGeometry.test.ts`).                                                                                                                             |
 | B24 | 2026-10-07 | Spotify playback stalled until reload after a new game: each player build used two token refreshes against a 3-per-minute socket budget, a `RATE_LIMITED` refusal waited out the 10 s timeout, and an unanswered SDK `getOAuthToken` left `connect()` pending for good. One refresh per build, refusals answer at once, the SDK always gets a token, `connect()` times out after 15 s and the build retries; budget 6 per minute (`useSpotifyPlaybackSdk.token.test.ts`). |
+| B18 | 2026-10-10 | A motion element mounted inside an exiting page registered with its exit but never got the exit signal, so under load the lobby stayed mounted behind the game for good. `PageTransition` gives its content a presence context that cannot hold the exit open (`PageTransition.test.tsx`; E2E lobby-exit case, 80 of 80 under parallel load).                                                                                                                             |
 | B2  | 2026-10-08 | One overlay host owns every dialog and sheet: Back, Escape and the scrim close only the topmost dismissible overlay, focus and scroll are restored, blocking dialogs ignore Escape and the scrim, and Back on the room-closed dialog resets like its button (`05` E2; `Overlay.test.tsx`, `RoomResetModal.test.tsx`, E12–E14).                                                                                                                                            |
 
 ## Feature work tracked elsewhere

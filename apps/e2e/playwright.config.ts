@@ -3,14 +3,24 @@ import { fileURLToPath } from "node:url";
 
 const repositoryRoot = fileURLToPath(new URL("../..", import.meta.url));
 
+// `scripts/check-e2e-budget.mjs` reads this after every green run.
+const resultsFile = "test-results/e2e-results.json";
+
 export default defineConfig({
   expect: {
     timeout: 10_000,
   },
   fullyParallel: false,
-  reporter: process.env.CI ? [["line"], ["html", { open: "never" }]] : "line",
+  reporter: [
+    ["line"],
+    ["json", { outputFile: resultsFile }],
+    ...(process.env.CI ? [["html", { open: "never" }] as const] : []),
+  ],
   testDir: "./tests",
   timeout: 30_000,
+  // Every spec shares one backend whose grace periods are timed; parallel workers made those
+  // timings depend on machine load.
+  workers: 1,
   use: {
     baseURL: "https://127.0.0.1:4173",
     ignoreHTTPSErrors: true,
@@ -65,6 +75,14 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
+    },
+    {
+      name: "mobile",
+      use: { ...devices["iPhone 13"] },
     },
   ],
 });

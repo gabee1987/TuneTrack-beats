@@ -63,7 +63,7 @@ One of:
 - a component test beside the host component: render with `renderWithProviders`, make the
   hint eligible, assert `getByRole("button", { name: /dismiss hint/i })` appears once and not
   after dismissal (storage stub resets between tests);
-- or an E2E assertion in `apps/e2e/tests/room-entry.spec.ts` (E15 pattern, "a first-run player
+- or an E2E assertion in `apps/e2e/tests/hints.spec.ts` (E15 pattern, "a first-run player
   sees the placement rules…").
 
 `hintState.test.ts` and `hintScheduler.test.ts` need no change for a new id.

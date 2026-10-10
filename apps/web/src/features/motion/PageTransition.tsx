@@ -1,6 +1,6 @@
-import { m } from "framer-motion";
+import { m, PresenceContext } from "framer-motion";
 import { useReducedMotionPreference } from "./useReducedMotionPreference";
-import type { ReactNode } from "react";
+import { type ReactNode, useContext, useMemo } from "react";
 import {
   type ScreenTransitionDirection,
   createPageTransitionVariants,
@@ -12,8 +12,19 @@ interface PageTransitionProps {
   direction: ScreenTransitionDirection;
 }
 
+const keepNoExitOpen = () => () => {};
+
 export function PageTransition({ children, direction }: PageTransitionProps) {
   const reduceMotion = useReducedMotionPreference();
+  const pagePresence = useContext(PresenceContext);
+  // Only this wrapper's exit decides when the old page leaves. Every motion element inside
+  // would otherwise hold it open, and one mounted after the exit began never reports done, so
+  // the page stayed mounted for good (B18). The page still sees `isPresent` turn false.
+  const contentPresence = useMemo(() => {
+    if (!pagePresence) return null;
+    const { onExitComplete: _pageExitComplete, ...presence } = pagePresence;
+    return { ...presence, register: keepNoExitOpen };
+  }, [pagePresence]);
 
   return (
     <m.div
@@ -33,7 +44,7 @@ export function PageTransition({ children, direction }: PageTransitionProps) {
       transition={createScreenTransition(reduceMotion)}
       variants={createPageTransitionVariants(reduceMotion)}
     >
-      {children}
+      <PresenceContext.Provider value={contentPresence}>{children}</PresenceContext.Provider>
     </m.div>
   );
 }

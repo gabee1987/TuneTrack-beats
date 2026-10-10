@@ -63,11 +63,11 @@ engine tests under `packages/game-engine/tests/`.
 npm run verify   # format, size, typecheck, lint (max 17 web warnings), tests with coverage
 ```
 
-Baseline on 2026-10-10: 1 506 tests (server 474, web 725, engine 93, shared 214); coverage
+Baseline on 2026-10-10: 1 508 tests (server 474, web 727, engine 93, shared 214); coverage
 thresholds sit in each `vitest.config.ts` and may only rise. A drop in the
 count without a deleted test file is a finding, not noise.
 
-## 5. E2E (Chromium only)
+## 5. E2E (Chromium, WebKit, iPhone 13)
 
 ```
 npm run e2e            # headless; builds server + web first
@@ -75,10 +75,10 @@ npm run e2e:headed     # for debugging
 ```
 
 Facts from `apps/e2e/playwright.config.ts`: fake Spotify server on `127.0.0.1:3102`, backend
-on `3101`, Vite preview on `https://127.0.0.1:4173` (self-signed, HTTPS errors ignored,
-service workers blocked). Grace periods are shortened (`HOST_TRANSFER_GRACE_MS=5000`,
-`ALL_PLAYERS_OFFLINE_ROOM_TTL_MS=2000`). Every test ends by asserting the fake Spotify server
-saw no unexpected request. Traces are kept on failure under `apps/e2e/test-results/`.
+on `3101`, Vite preview on `https://127.0.0.1:4173` (self-signed, service workers blocked).
+Grace periods are shortened (`HOST_TRANSFER_GRACE_MS=5000`, `ALL_PLAYERS_OFFLINE_ROOM_TTL_MS=2000`).
+Every test asserts the fake Spotify server saw no unexpected request; traces on failure stay
+under `apps/e2e/test-results/`; a project over 4 minutes fails the run.
 
 If a port is busy, a previous run is still alive: stop it, do not change the ports.
 

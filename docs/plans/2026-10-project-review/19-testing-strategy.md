@@ -1,6 +1,6 @@
 # 19 — Testing Strategy
 
-> **Status (2026-10-06):** Phase 1 (jsdom harness and test utilities) shipped; Phase 2 shipped for three of four guards; Phase 3 shipped for Chromium (E1–E15, 16 tests); Phase 4 has 7 of 11 planned server test files. Open: the `zIndexScale` guard, WebKit and mobile-viewport E2E, drag testing, the E2E runtime budget, splitting the 848-line E2E spec, four server test files (two blocked on features, one on decision 10), and CI (parked, decision 17). Boundary lint and coverage thresholds shipped 2026-10-10 (`06` T2, T3); server coverage holes and web tests 2026-10-10 (`06` T6, T9).
+> **Status (2026-10-06):** Phase 1 (jsdom harness and test utilities) shipped; Phase 2 shipped for three of four guards; Phase 3 shipped for Chromium (E1–E15, 16 tests); Phase 4 has 7 of 11 planned server test files. Open: the `zIndexScale` guard, drag testing, four server test files (two blocked on features, one on decision 10), and CI (parked, decision 17). Boundary lint and coverage thresholds shipped 2026-10-10 (`06` T2, T3); server coverage holes and web tests 2026-10-10 (`06` T6, T9); E2E split, WebKit and iPhone 13 projects and the runtime budget 2026-10-10 (`06` T11).
 > **Folded from** `docs/plans/2026-09-stability-performance/11-testing-strategy.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
 
 > Register findings: T-01 … T-12 (`01-review-findings.md`). Phase 3 of the review programme turns
@@ -96,15 +96,9 @@ Scenario list (all pass in Chromium):
 
 ### 5.2 Open
 
-- **WebKit and a mobile viewport.** The project list in `apps/e2e/playwright.config.ts` has
-  Chromium desktop only. WebKit matters because several reported defects are iOS-specific, and the
-  app is mobile-first (T-10).
-- **Split the spec file.** `apps/e2e/tests/room-entry.spec.ts` is 848 lines, violates the 700-line
-  hard limit (owner decision 3) and its name no longer fits; split it per scenario with a shared
-  two-player prologue fixture instead of the 10-line prologue repeated twelve times (T-10, owned by
-  Phase 6 of the review programme; the `e2e-scenario` skill from Phase 3 documents the shape).
-- **Runtime budget unverified.** No timing reporter exists, so the 4-minute budget cannot be checked
-  (T-10).
+- **Shipped 2026-10-10 (`06` T11):** one spec per family on shared fixtures, `webkit` and
+  `mobile` (iPhone 13) projects, and a 4-minute budget per project checked after every green run.
+  Skipped until fixed: B27 on desktop WebKit, B25 on the phone (`20-bug-register.md`).
 - **Drag testing (§5.4).**
 
 ### 5.3 Harness requirements (normative for every new scenario)
@@ -135,9 +129,11 @@ The iOS drag defect (B4) is the hardest thing here to automate. Approach:
 ### Acceptance
 
 - [x] `npm run e2e` runs all scenarios headless in Chromium.
-- [ ] `npm run e2e` runs all scenarios headless in WebKit and on a mobile viewport.
-- [ ] Runtime under 4 minutes on a developer machine, measured by a timing reporter.
-- [ ] No E2E file above 700 lines; one file per scenario or scenario group.
+- [ ] `npm run e2e` runs all scenarios headless in WebKit and on a mobile viewport — runs; the
+      B25 and B27 cases are skipped until fixed.
+- [x] Runtime under 4 minutes on a developer machine, measured by a timing reporter
+      (`check-e2e-budget.mjs`, per project).
+- [x] No E2E file above 700 lines; one file per scenario or scenario group (`06` T11).
 - [x] Zero real Spotify calls (the fake fails loudly if bypassed).
 - [x] E7 to E12 pass against the hardened code and protect the reconnect, transfer, disconnect,
       expiry and explicit-close boundaries.

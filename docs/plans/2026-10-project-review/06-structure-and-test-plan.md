@@ -2,8 +2,8 @@
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 6 of `00-index.md` §4).
 > **Status (2026-10-10):** W1 and T1 shipped (code 2026-10-07, file deletions 2026-10-09); T8,
-> T10, T5, S1–S5, W2 and T7 shipped 2026-10-09; T2, T3, T6 and T9 2026-10-10 (§7 rows 1–9 done).
-> Next: T11 (§7 row 10).
+> T10, T5, S1–S5, W2 and T7 shipped 2026-10-09; T2, T3, T6, T9 and T11 2026-10-10 (§7 rows 1–10 done).
+> Next: W3 and W4 (§7 row 12, after `05` C1 and C5); T4 stays parked.
 > Every finding below was re-verified
 > in code on 2026-10-07 (line numbers drift; file and symbol names are the stable reference).
 > **Authority:** this document sets the **structural rules, the test and tooling gates and the
@@ -287,7 +287,8 @@ functions / lines): engine 94 / 89 / 100 / 94, shared 68 / 86 / 77 / 68, server 
 web 67 / 75 / 75 / 67 (web excludes `main.tsx`, `src/test/**` and `DesignSystemPage`). Each wave
 that adds tests raises the touched workspace's floor; never lower one without a written reason in the
 same change. The `19` §7.1 floors stay targets. Proof: `npm run verify` green; a raised threshold
-fails the run.
+fails the run. Engine moved to 92 / 88 / 100 / 92 on 2026-10-10 with AST-aware remapping: the
+default v8 count gave a different branch total per run around 89 %, so the gate failed at random.
 
 ### T4 · CI workflow (T-01) — **parked (decision 17)**
 
@@ -371,19 +372,20 @@ catalogue; `noHardcodedColors.test.ts` adds an `rgb()`/`rgba()` ratchet (literal
 only) seeded with nine files. Proof: a planted missing hint key and a planted `rgba()` in
 `HintBubble.module.css` each fail exactly their new test.
 
-### T11 · End to end (T-10)
+### T11 · End to end (T-10) · shipped
 
-- Split `room-entry.spec.ts` by family (`lobby`, `gameplay`, `challenge`, `resilience`,
-  `navigation`, `hints`) with a `test.extend` fixture that provides a host and a guest in a room
-  (replaces the prologue repeated in all sixteen tests); move helpers to `tests/support/`.
-- Remove the two real waits (`waitForTimeout(2_000)`, the 2.5 s `setTimeout`): wait on the state
-  they stand in for.
-- Add a JSON reporter and `apps/e2e/scripts/check-e2e-budget.mjs` (Node built-ins) that fails
-  when a project exceeds 4 minutes.
-- Add a `webkit` project and a mobile-viewport project (Playwright's `iPhone 13` descriptor); the
-  touch-drag pair from `19` §5.4 lands after `05` C3.
-- **Before/after:** sixteen scenarios still pass in Chromium after the split, before new projects
-  are added.
+**Shipped 2026-10-10.** `room-entry.spec.ts` became six family specs (`lobby`, `gameplay`,
+`challenge`, `resilience`, `navigation`, `hints`) beside `connection-status` and
+`session-identity`, on `tests/support/fixtures.ts` (`openPlayer`, `openRoom`, the
+unexpected-Spotify-request guard). The hint test now waits for the next hint and the expiry test
+polls the server through a socket probe (`roomProbe.ts`), so no real wait remains. A JSON reporter
+and `scripts/check-e2e-budget.mjs` fail a project over 4 minutes. `webkit` (Desktop Safari) and
+`mobile` (iPhone 13) run beside `chromium` with one worker, because every spec shares one backend
+whose grace periods are timed. All Chromium scenarios passed after the split,
+before the new projects. Last run: Chromium 19 passed (52.1 s), desktop WebKit 18 passed and 1
+skipped (107.2 s), iPhone 13 18 passed and 1 skipped (100.6 s). Skipped until fixed: B27 (win) on
+desktop WebKit, B25 (challenge) on the phone; the lobby-exit stall the new projects exposed was
+B18, fixed the same day. Touch drag (`19` §5.4) follows `05` C3.
 
 ## 6. What this plan deliberately leaves out
 
@@ -491,7 +493,8 @@ found only in the raw reports and now have an owner.
 - [x] Boundary lint and the z-index, hint-key and `rgb()` guards run in `verify` (T2, T10;
       `boundaryLint.test.ts`).
 - [x] Coverage thresholds committed at the measured baseline in every workspace (T3).
-- [ ] E2E split per family, WebKit and mobile projects green, runtime budget reported.
+- [ ] E2E split per family, WebKit and mobile projects green, runtime budget reported — split
+      and budget done (T11); WebKit and mobile green except the B25 and B27 cases.
 - [ ] (Parked, decision 17) CI green on `main` with traces on failure and no credential in the
       configuration.
 

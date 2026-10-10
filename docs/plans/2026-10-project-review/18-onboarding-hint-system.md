@@ -14,7 +14,7 @@ The implementation deliberately differs from the original design; this section d
 - **Scheduling** — `hintScheduler.ts` is pure (priority, once-only, enabled gate) and `hintCoordinator.ts` applies the 1.5 s quiet period and the cap of two hints per page visit; one hint shows at a time. The first gameplay hint is `game-drag-preview`, per the owner's 2026-10-02 correction.
 - **Rendering** — `useFirstRunHint` and `FirstRunHint.tsx` attach a hint to a control; `HintBubble.tsx` renders through `createPortal`. There is no overlay host integration, no `IntersectionObserver`, no `HintAnchor` and no `HintProvider`.
 - **Settings** — a "Help and hints" section in `features/app-shell/components/AppShellMenuPanels.tsx` with the enabled toggle and a reset action.
-- **Proof** — `hintScheduler.test.ts`, `hintState.test.ts`, the i18n key-parity guard for the en/hu copy, and E2E E15 (`apps/e2e/tests/room-entry.spec.ts`). First commit `7d5f1c3`.
+- **Proof** — `hintScheduler.test.ts`, `hintState.test.ts`, the i18n key-parity guard for the en/hu copy, and E2E E15 (`apps/e2e/tests/hints.spec.ts`). First commit `7d5f1c3`.
 
 ## 2. Catalogue rules (normative for every future hint)
 

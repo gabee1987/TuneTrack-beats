@@ -6,11 +6,14 @@
   "scripts": {
     "pretest:e2e": "npm run build -w @tunetrack/server && npm run build -w @tunetrack/web",
     "test:e2e": "playwright test",
+    "posttest:e2e": "node scripts/check-e2e-budget.mjs",
     "test:e2e:headed": "playwright test --headed",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint tests playwright.config.ts fake-spotify-server.mjs --ext .ts"
+    "lint": "eslint tests scripts playwright.config.ts fake-spotify-server.mjs --ext .ts"
   },
   "devDependencies": {
-    "@playwright/test": "^1.55.0"
+    "@playwright/test": "^1.55.0",
+    "@tunetrack/shared": "0.1.0",
+    "socket.io-client": "^4.7.5"
   }
 }
