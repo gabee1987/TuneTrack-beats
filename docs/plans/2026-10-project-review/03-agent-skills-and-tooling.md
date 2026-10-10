@@ -2,7 +2,7 @@
 
 > **Status (2026-10-06):** Skills and the project permission file are written and live under
 > `.claude/`. The boundary-lint ruleset (§4) and the root `verify` script (§5) are specified
-> here for an implementation agent and are **not** implemented. Addresses findings **D-06**
+> here for an implementation agent; §5 shipped 2026-10-07 (`06` T1), §4 2026-10-10 (`06` T2). Addresses findings **D-06**
 > (resolved by this document), **T-01** and **T-02** (specified; code lands in Phase 6).
 > Owner decisions that shaped it: one live plan (1), 48 px touch target (2), 700-line limit (3),
 > `AGENT.md` merged into `CLAUDE.md` (4).

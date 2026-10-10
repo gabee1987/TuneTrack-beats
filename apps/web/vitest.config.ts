@@ -20,6 +20,20 @@ export default defineConfig({
     },
   },
   test: {
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json-summary", "lcov"],
+      // The measured baseline (06 T3), rounded down. Raise to the new floor when tests are
+      // added; never lower without a written reason in the same change.
+      thresholds: { statements: 67, branches: 75, functions: 75, lines: 67 },
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: [
+        "src/main.tsx",
+        "src/test/**",
+        "src/pages/DesignSystemPage/**",
+        "src/**/*.test.{ts,tsx}",
+      ],
+    },
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
     passWithNoTests: true,
     pool: "threads",

@@ -1,6 +1,6 @@
 # 19 — Testing Strategy
 
-> **Status (2026-10-06):** Phase 1 (jsdom harness and test utilities) shipped; Phase 2 shipped for three of four guards; Phase 3 shipped for Chromium (E1–E15, 16 tests); Phase 4 has 2 of 11 planned server test files. Open: the `zIndexScale` guard and the ESLint import rules, WebKit and mobile-viewport E2E, drag testing, the E2E runtime budget, splitting the 848-line E2E spec, nine server test files, and all of Phase 5 (coverage, CI, root `verify` script).
+> **Status (2026-10-06):** Phase 1 (jsdom harness and test utilities) shipped; Phase 2 shipped for three of four guards; Phase 3 shipped for Chromium (E1–E15, 16 tests); Phase 4 has 2 of 11 planned server test files. Open: the `zIndexScale` guard, WebKit and mobile-viewport E2E, drag testing, the E2E runtime budget, splitting the 848-line E2E spec, nine server test files, and CI (parked, decision 17). Boundary lint and coverage thresholds shipped 2026-10-10 (`06` T2, T3).
 > **Folded from** `docs/plans/2026-09-stability-performance/11-testing-strategy.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
 
 > Register findings: T-01 … T-12 (`01-review-findings.md`). Phase 3 of the review programme turns
@@ -165,21 +165,15 @@ engine tests are not typechecked (T-03), no socket authorization matrix (T-08), 
 (T-09), test quality in `useGamePageActions.test.tsx` (T-11; the server half shipped in `06` T5) — all owned by
 Phase 6.
 
-## 7. Phase 5 — Coverage measurement and CI · **open** (T-01)
+## 7. Phase 5 — Coverage measurement and CI · coverage shipped, CI parked (T-01)
 
 Nothing of this phase exists: no coverage configuration (`@vitest/coverage-v8` not installed), no
 `.github/` workflow, no root `verify` script (only `apps/web` has one).
 
 ### 7.1 Coverage
 
-Enable `@vitest/coverage-v8` in all workspaces with `provider: "v8"` and
-`reporter: ["text", "lcov"]`.
-
-Set **initial thresholds at the current measured level**, then ratchet. Guessing a target produces
-either a permanently red gate or a meaningless one. Measure first, commit the numbers, then raise
-them by a few points per wave.
-
-Proposed eventual floors, to be confirmed against the first measurement:
+**Shipped 2026-10-10** (`06` T3): thresholds at the measured baseline in every `vitest.config.ts`,
+enforced by `npm run verify`. The floors below remain targets, not gates:
 
 | Workspace              | Statements | Branches | Rationale                                                        |
 | ---------------------- | ---------- | -------- | ---------------------------------------------------------------- |

@@ -68,13 +68,13 @@ export function setVisualViewportHeight(height: number): void {
 }
 
 /** Put the harness into the layout mode the app would resolve for a phone. */
-export function useMobileViewport(): void {
+export function stubMobileViewport(): void {
   setMediaQuery("(pointer: coarse)", true);
   setViewportSize(390, 844);
 }
 
 /** Put the harness into the layout mode the app would resolve for a desktop browser. */
-export function useDesktopViewport(): void {
+export function stubDesktopViewport(): void {
   setMediaQuery("(pointer: coarse)", false);
   setViewportSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 }

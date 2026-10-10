@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "../features/i18n";
 import { AppLoadingProvider } from "../features/loading";
 import { AppToastProvider } from "../features/toast";
-import { useMobileViewport, useDesktopViewport } from "./stubs/viewport";
+import { stubMobileViewport, stubDesktopViewport } from "./stubs/viewport";
 
 export interface RenderWithProvidersOptions extends Omit<RenderOptions, "wrapper"> {
   /** Initial route for the MemoryRouter. Defaults to `/`. */
@@ -36,9 +36,9 @@ export function renderWithProviders(
   const { route = "/", layout = "mobile", withRouter = true, ...renderOptions } = options;
 
   if (layout === "mobile") {
-    useMobileViewport();
+    stubMobileViewport();
   } else {
-    useDesktopViewport();
+    stubDesktopViewport();
   }
 
   function Wrapper({ children }: { children: ReactNode }) {

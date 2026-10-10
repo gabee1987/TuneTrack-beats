@@ -113,7 +113,7 @@ export interface LobbySpotifyCandidatesState {
   selectedSpotifyPlaylistIds: Set<string>;
   toggleSpotifyPlaylistSelection: (playlistId: string) => void;
   updateCandidateTrack: (trackId: string, patch: CandidateTrackUpdatePatch) => void;
-  useGeneratedCandidates: (mode?: PlaylistQueueUpdateMode, trackIds?: string[]) => void;
+  applyGeneratedCandidates: (mode?: PlaylistQueueUpdateMode, trackIds?: string[]) => void;
 }
 
 export interface LobbySpotifySavedPlaylistsState {

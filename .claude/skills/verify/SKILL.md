@@ -60,10 +60,11 @@ engine tests under `packages/game-engine/tests/`.
 ## 4. Whole repository
 
 ```
-npm run typecheck && npm run lint && npm test
+npm run verify   # format, size, typecheck, lint (max 17 web warnings), tests with coverage
 ```
 
-Baseline on 2026-10-06: 400 tests (server 137, web 230, engine 31, shared 2). A drop in the
+Baseline on 2026-10-10: 1 089 tests (server 271, web 511, engine 93, shared 214); coverage
+thresholds sit in each `vitest.config.ts` and may only rise. A drop in the
 count without a deleted test file is a finding, not noise.
 
 ## 5. E2E (Chromium only)

@@ -232,7 +232,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
       selectedSpotifyPlaylistIds: candidates.selectedSpotifyPlaylistIds,
       toggleSpotifyPlaylistSelection: candidates.toggleSpotifyPlaylistSelection,
       updateCandidateTrack: candidates.updateCandidateTrack,
-      useGeneratedCandidates: candidates.useGeneratedCandidates,
+      applyGeneratedCandidates: candidates.applyGeneratedCandidates,
     },
     savedPlaylists: {
       cancelRenamePlaylist: savedPlaylists.cancelRenamePlaylist,

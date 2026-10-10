@@ -33,7 +33,7 @@ export function SpotifyCandidateReviewPanel({
     candidateTracks,
     removeCandidateTrack,
     updateCandidateTrack,
-    useGeneratedCandidates,
+    applyGeneratedCandidates,
   } = candidates;
   const { generatedPlaylistMessage } = savedPlaylists;
   const { showToast } = useAppToast();
@@ -99,12 +99,12 @@ export function SpotifyCandidateReviewPanel({
       return;
     }
 
-    useGeneratedCandidates("replace", applyTrackIds);
+    applyGeneratedCandidates("replace", applyTrackIds);
   }
 
   function handleApplyChoice(mode: "append" | "replace") {
     setIsApplyChoiceOpen(false);
-    useGeneratedCandidates(mode, applyTrackIds);
+    applyGeneratedCandidates(mode, applyTrackIds);
   }
 
   return (

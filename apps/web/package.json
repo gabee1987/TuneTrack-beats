@@ -10,8 +10,9 @@
     "preview": "vite preview",
     "measure:bundle": "node scripts/measure-bundle.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint src vite.config.ts vitest.config.ts vitest.setup.ts --ext .ts,.tsx",
+    "lint": "eslint src vite.config.ts vitest.config.ts vitest.setup.ts --ext .ts,.tsx --max-warnings 17",
     "test": "vitest run --config vitest.config.ts --pool=threads --passWithNoTests",
+    "test:coverage": "vitest run --config vitest.config.ts --pool=threads --passWithNoTests --coverage",
     "verify": "npm run typecheck && npm run lint && npm run test",
     "test:watch": "vitest --config vitest.config.ts"
   },

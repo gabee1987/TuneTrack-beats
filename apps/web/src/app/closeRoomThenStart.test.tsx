@@ -10,7 +10,7 @@ import { AppRoutes } from "./AppRoutes";
 import { getSharedFakeSocket, resetSharedFakeSocket } from "../test/fakeSocket";
 import { buildTurnRoomState, TEST_HOST_ID, TEST_ROOM_ID } from "../test/roomStateFixtures";
 import { seedLocalStorage } from "../test/stubs/storage";
-import { useMobileViewport } from "../test/stubs/viewport";
+import { stubMobileViewport } from "../test/stubs/viewport";
 
 vi.mock("../services/socket/socketClient", async () => {
   const { socketClientMockForSharedSocket } = await import("../test/fakeSocket");
@@ -80,7 +80,7 @@ describe("closing a room, then starting a new one", () => {
 
   beforeEach(() => {
     resetSharedFakeSocket();
-    useMobileViewport();
+    stubMobileViewport();
     seedLocalStorage({ "tunetrack.playerDisplayName": "Player 1" });
   });
 

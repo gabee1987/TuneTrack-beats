@@ -1,8 +1,9 @@
 # 06 — Codebase Structure and Test Plan
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 6 of `00-index.md` §4).
-> **Status (2026-10-09):** W1 and T1 shipped (code 2026-10-07, file deletions 2026-10-09); T8,
-> T10, T5, S1–S5, W2 and T7 shipped 2026-10-09 (§7 rows 1–7 done). Next: T2 and T3 (§7 row 8).
+> **Status (2026-10-10):** W1 and T1 shipped (code 2026-10-07, file deletions 2026-10-09); T8,
+> T10, T5, S1–S5, W2 and T7 shipped 2026-10-09; T2 and T3 2026-10-10 (§7 rows 1–8 done). Next:
+> T6 and T9 (§7 row 9).
 > Every finding below was re-verified
 > in code on 2026-10-07 (line numbers drift; file and symbol names are the stable reference).
 > **Authority:** this document sets the **structural rules, the test and tooling gates and the
@@ -262,21 +263,31 @@ with replacing its `transition: left` by a `transform` (salvaged, §9). Button c
 file (proof: a planted type error in `schemas.test.ts` still fails `typecheck`); the stale
 `packages/game-engine/dist/tests/` was removed the same day.
 
-### T2 · Boundary lint (T-02)
+### T2 · Boundary lint (T-02) · shipped
 
-Implement `03` §4 (with the §8 correction). Add `eslint-plugin-react-hooks` (approved,
-decision 16); express the layer rules with the built-in `no-restricted-imports`, no extra plugin. `exhaustive-deps` starts
-as `warn` with the current count recorded and may only fall. **Before/after:** the three fixture
-imports in `03` §4 Acceptance fail `npm run lint`; the tree lints clean with seeded allowlists.
+**Shipped 2026-10-10.** The root `eslint.config.js` encodes `03` §4 with built-in rules only:
+`no-restricted-imports` per layer (engine, shared, `realtime/`, `rooms/`, web features, services,
+each page and its mobile/desktop assemblies), `@typescript-eslint/no-restricted-imports` for
+`framer-motion` and the socket client in components, `no-restricted-syntax` for
+`navigator.vibrate` and browser storage. Seeded allowlists (may only shrink): two services files,
+29 `framer-motion` sites, six storage owners. `eslint-plugin-react-hooks`: `rules-of-hooks` is an
+error, `exhaustive-deps` a warning capped by `--max-warnings 17` in the web lint script. Deviations:
+the `framer-motion` rule is an error with an allowlist rather than a warning; `rooms/` may not import
+`spotify/` at all (S2 removed the last use); four non-hook functions named `use…` were renamed
+(`applyGeneratedCandidates`, `stubMobileViewport`, `stubDesktopViewport`). Proof:
+`apps/web/src/test/guards/boundaryLint.test.ts` (12 forbidden imports including the three
+acceptance fixtures, 4 allowed).
 
-### T3 · Coverage and ratchet (T-01)
+### T3 · Coverage and ratchet (T-01) · shipped
 
-- `@vitest/coverage-v8` (approved, decision 16) in every Vitest workspace, `reporter: ["text",
-"json-summary", "lcov"]`, exclusions from `19` §7.1.
-- Measure once, commit the numbers as thresholds (rounded down to whole percent). Each wave that
-  adds tests raises the touched workspace's thresholds to its new measured floor; never lower one
-  without a written reason in the same change.
-- The eventual floors in `19` §7.1 stay targets, not gates.
+**Shipped 2026-10-10.** `@vitest/coverage-v8` in all four Vitest workspaces (`text`,
+`json-summary`, `lcov`); `test:coverage` per workspace and at the root, and root `verify` runs it
+instead of `npm test`. Thresholds = measured baseline rounded down (statements / branches /
+functions / lines): engine 94 / 89 / 100 / 94, shared 68 / 86 / 77 / 68, server 77 / 82 / 84 / 77,
+web 67 / 75 / 75 / 67 (web excludes `main.tsx`, `src/test/**` and `DesignSystemPage`). Each wave
+that adds tests raises the touched workspace's floor; never lower one without a written reason in the
+same change. The `19` §7.1 floors stay targets. Proof: `npm run verify` green; a raised threshold
+fails the run.
 
 ### T4 · CI workflow (T-01) — **parked (decision 17)**
 
@@ -483,8 +494,9 @@ found only in the raw reports and now have an owner.
       deleted (S1, S2).
 - [ ] One payload type source (Zod), one owner per gameplay constant, no duplicated helper from
       B-22.
-- [ ] Boundary lint and the z-index, hint-key and `rgb()` guards run in `verify`.
-- [ ] Coverage thresholds committed at the measured baseline in every workspace.
+- [x] Boundary lint and the z-index, hint-key and `rgb()` guards run in `verify` (T2, T10;
+      `boundaryLint.test.ts`).
+- [x] Coverage thresholds committed at the measured baseline in every workspace (T3).
 - [ ] E2E split per family, WebKit and mobile projects green, runtime budget reported.
 - [ ] (Parked, decision 17) CI green on `main` with traces on failure and no credential in the
       configuration.

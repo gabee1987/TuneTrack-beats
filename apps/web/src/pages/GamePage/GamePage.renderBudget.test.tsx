@@ -16,7 +16,7 @@ import {
   TEST_HOST_ID,
   TEST_ROOM_ID,
 } from "../../test/roomStateFixtures";
-import { useMobileViewport } from "../../test/stubs/viewport";
+import { stubMobileViewport } from "../../test/stubs/viewport";
 import { GamePage } from "./GamePage";
 
 const renderCounts = vi.hoisted(() => ({ actionPanels: 0, header: 0, timelineItems: 0 }));
@@ -94,7 +94,7 @@ function renderGamePage() {
 describe("game page render budget (05 §2.2)", () => {
   beforeEach(() => {
     resetSharedFakeSocket();
-    useMobileViewport();
+    stubMobileViewport();
     usePlayerProfileStore.getState().setDisplayName("Player One");
     renderCounts.actionPanels = 0;
     renderCounts.header = 0;

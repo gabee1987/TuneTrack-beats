@@ -24,7 +24,8 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
     "lint": "eslint src --ext .ts",
-    "test": "vitest run --pool=threads --passWithNoTests"
+    "test": "vitest run --pool=threads --passWithNoTests",
+    "test:coverage": "vitest run --pool=threads --passWithNoTests --coverage"
   },
   "dependencies": {
     "zod": "^3.23.8"

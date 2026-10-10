@@ -17,6 +17,14 @@ export default defineConfig({
     },
   },
   test: {
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json-summary", "lcov"],
+      // The measured baseline (06 T3), rounded down. Raise to the new floor when tests are
+      // added; never lower without a written reason in the same change.
+      thresholds: { statements: 77, branches: 82, functions: 84, lines: 77 },
+      include: ["src/**/*.ts"],
+    },
     pool: "threads",
     setupFiles: ["./vitest.setup.ts"],
   },
