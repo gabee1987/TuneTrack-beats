@@ -63,7 +63,10 @@ export function createGameMenuTabs({
             {roomState.players.map((player) => (
               <GameMenuPlayerItem
                 awardTtActionState={awardTtActionState}
-                currentPlayerId={currentPlayerId}
+                cardCount={roomState.timelines[player.id]?.length ?? 0}
+                isActiveTurnPlayer={player.id === roomState.turn?.activePlayerId}
+                isCurrentPlayer={player.id === currentPlayerId}
+                isViewerHost={isHost}
                 key={player.id}
                 isAwardTtPending={isAwardTtPending}
                 isKickPlayerPending={isKickPlayerPending}
@@ -74,9 +77,9 @@ export function createGameMenuTabs({
                 onRemoveTt={onRemoveTt}
                 onTransferHost={onTransferHost}
                 player={player}
-                roomState={roomState}
                 t={t}
                 transferHostActionState={transferHostActionState}
+                ttModeEnabled={roomState.settings.ttModeEnabled}
               />
             ))}
           </ul>
@@ -88,7 +91,13 @@ export function createGameMenuTabs({
           {
             id: "playback" as const,
             label: t("gameMenu.tabs.playback"),
-            content: <PlaybackTabContent roomState={roomState} t={t} />,
+            content: (
+              <PlaybackTabContent
+                currentTrackCard={roomState.currentTrackCard}
+                status={roomState.status}
+                t={t}
+              />
+            ),
           },
         ]
       : []),

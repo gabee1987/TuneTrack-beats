@@ -1,16 +1,5 @@
-import {
-  BUY_TIMELINE_CARD_TT_COST,
-  SKIP_TRACK_TT_COST,
-  type PublicRoomState,
-} from "@tunetrack/shared/client";
-import { m } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
-import {
-  MotionPresence,
-  createActionButtonExitMotion,
-  createLayoutTransition,
-  useReducedMotionPreference,
-} from "../../../features/motion";
+import type { PublicRoomState } from "@tunetrack/shared/client";
+import { useState } from "react";
 import { useI18n } from "../../../features/i18n";
 import { FirstRunHint } from "../../../features/hints/FirstRunHint";
 import type {
@@ -19,31 +8,13 @@ import type {
   SkipTrackActionStatus,
   SkipTurnActionStatus,
 } from "../GamePage.types";
-import { ActionDock, PrimaryActionButton, SecondaryActionButton } from "./ActionDock";
-import challengeStyles from "./gamePageActionPanelsChallenge.module.css";
+import { ActionDock, SecondaryActionButton } from "./ActionDock";
 import dockStyles from "./gamePageActionPanelsDock.module.css";
-
-function useTurnSkipCountdown(deadlineEpochMs: number | null): string | null {
-  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (deadlineEpochMs === null) {
-      setSecondsLeft(null);
-      return;
-    }
-
-    function update() {
-      const remaining = deadlineEpochMs! - Date.now();
-      setSecondsLeft(remaining > 0 ? Math.ceil(remaining / 1000) : null);
-    }
-
-    update();
-    const interval = setInterval(update, 1000);
-    return () => clearInterval(interval);
-  }, [deadlineEpochMs]);
-
-  return secondsLeft !== null ? `${secondsLeft}s` : null;
-}
+import { ConfirmPlacementAction } from "./turnActions/ConfirmPlacementAction";
+import { OfflinePlayerPanel } from "./turnActions/OfflinePlayerPanel";
+import type { TokenSpendAnimationStart } from "./tokenSpendOrigin";
+import { BuyCardAction, SkipTrackAction } from "./turnActions/TtSpendActions";
+import { TurnActionSlot } from "./turnActions/TurnActionSlot";
 
 interface TurnActionDockProps {
   buyTimelineCardActionStatus: BuyTimelineCardActionStatus;
@@ -60,11 +31,7 @@ interface TurnActionDockProps {
   isSkipTrackPending: boolean;
   isSkipTurnPending: boolean;
   placeCardActionStatus: PlaceCardActionStatus;
-  onTokenSpendAnimationStart?: (payload: {
-    amount: number;
-    originX: number;
-    originY: number;
-  }) => void;
+  onTokenSpendAnimationStart?: TokenSpendAnimationStart;
   /** The player a host may skip: the claimed challenger, else the active player. */
   skipCandidateName: string | null;
   skipTrackActionStatus: SkipTrackActionStatus;
@@ -72,6 +39,13 @@ interface TurnActionDockProps {
   status: PublicRoomState["status"];
   turnSkipDeadlineEpochMs: number | null;
 }
+
+const SKIP_TURN_LABEL_KEY_BY_STATUS = {
+  idle: "game.controls.skipTurn",
+  pending: "game.controls.skipTurn",
+  retrying: "game.controls.skipTurnRetrying",
+  failed: "game.controls.retrySkipTurn",
+} as const;
 
 export function TurnActionDock({
   buyTimelineCardActionStatus,
@@ -96,61 +70,10 @@ export function TurnActionDock({
   turnSkipDeadlineEpochMs,
 }: TurnActionDockProps) {
   const { t } = useI18n();
-  const reduceMotion = useReducedMotionPreference();
-  const skipCostBadgeRef = useRef<HTMLSpanElement | null>(null);
-  const buyCostBadgeRef = useRef<HTMLSpanElement | null>(null);
   const [confirmHintAnchor, setConfirmHintAnchor] = useState<HTMLElement | null>(null);
-  const offlinePlayerName = canSkipOfflinePlayer
-    ? (skipCandidateName ?? t("game.player.unknown"))
-    : null;
-  const turnSkipCountdown = useTurnSkipCountdown(
-    canSkipOfflinePlayer ? turnSkipDeadlineEpochMs : null,
-  );
-  let placeCardButtonLabel = t("game.controls.confirm");
-  if (placeCardActionStatus === "pending") {
-    placeCardButtonLabel = t("game.controls.placementPending");
-  } else if (placeCardActionStatus === "retrying") {
-    placeCardButtonLabel = t("game.controls.placementRetrying");
-  } else if (placeCardActionStatus === "failed") {
-    placeCardButtonLabel = t("game.controls.retryPlacement");
-  }
-  let buyTimelineCardButtonLabel = t("game.controls.buy");
-  if (buyTimelineCardActionStatus === "pending") {
-    buyTimelineCardButtonLabel = t("game.controls.buyPending");
-  } else if (buyTimelineCardActionStatus === "retrying") {
-    buyTimelineCardButtonLabel = t("game.controls.buyRetrying");
-  } else if (buyTimelineCardActionStatus === "failed") {
-    buyTimelineCardButtonLabel = t("game.controls.retryBuy");
-  }
-  let skipTrackButtonLabel = t("game.controls.skip");
-  if (skipTrackActionStatus === "pending") {
-    skipTrackButtonLabel = t("game.controls.skipPending");
-  } else if (skipTrackActionStatus === "retrying") {
-    skipTrackButtonLabel = t("game.controls.skipRetrying");
-  } else if (skipTrackActionStatus === "failed") {
-    skipTrackButtonLabel = t("game.controls.retrySkip");
-  }
-  let skipTurnButtonLabel = t("game.controls.skipTurn");
-  if (skipTurnActionStatus === "retrying") {
-    skipTurnButtonLabel = t("game.controls.skipTurnRetrying");
-  } else if (skipTurnActionStatus === "failed") {
-    skipTurnButtonLabel = t("game.controls.retrySkipTurn");
-  }
 
-  function resolveSpendOrigin(
-    fallbackButton: HTMLButtonElement,
-    badgeElement: HTMLSpanElement | null,
-  ) {
-    const sourceElement = badgeElement ?? fallbackButton;
-    const sourceBounds = sourceElement.getBoundingClientRect();
-    return {
-      originX: sourceBounds.left + sourceBounds.width / 2,
-      originY: sourceBounds.top + sourceBounds.height / 2,
-    };
-  }
-
-  const isChallengePhasSkip = status === "challenge" && canSkipOfflinePlayer;
-  if (status !== "turn" && !isChallengePhasSkip) {
+  const isChallengePhaseSkip = status === "challenge" && canSkipOfflinePlayer;
+  if (status !== "turn" && !isChallengePhaseSkip) {
     return null;
   }
   if (
@@ -162,193 +85,69 @@ export function TurnActionDock({
   ) {
     return null;
   }
-  const hasTurnSecondaryActions = canUseSkipTrack || canUseBuyCard;
-  const useStackedTurnActions =
-    status === "turn" && canConfirmTurnPlacement && hasTurnSecondaryActions;
+  // Only the player's own turn can show token actions and the confirm button together.
+  const isStacked =
+    status === "turn" && canConfirmTurnPlacement && (canUseSkipTrack || canUseBuyCard);
+
+  const skipTrackAction = (
+    <SkipTrackAction
+      actionStatus={skipTrackActionStatus}
+      handleSkipTrackWithTt={handleSkipTrackWithTt}
+      isAvailable={canUseSkipTrack}
+      isPending={isSkipTrackPending}
+      onTokenSpendAnimationStart={onTokenSpendAnimationStart}
+    />
+  );
+  const buyCardAction = canUseBuyCard ? (
+    <BuyCardAction
+      actionStatus={buyTimelineCardActionStatus}
+      handleBuyTimelineCardWithTt={handleBuyTimelineCardWithTt}
+      isPending={isBuyTimelineCardPending}
+      onTokenSpendAnimationStart={onTokenSpendAnimationStart}
+    />
+  ) : null;
+  const confirmPlacementAction = canConfirmTurnPlacement ? (
+    <ConfirmPlacementAction
+      actionStatus={placeCardActionStatus}
+      handlePlaceCard={handlePlaceCard}
+      isFullWidth={isStacked}
+      isPending={isPlaceCardPending}
+    />
+  ) : null;
+  const skipOfflinePlayerAction = canSkipOfflinePlayer ? (
+    <TurnActionSlot>
+      <SecondaryActionButton disabled={isSkipTurnPending} onClick={() => handleSkipOfflinePlayer()}>
+        {t(SKIP_TURN_LABEL_KEY_BY_STATUS[skipTurnActionStatus])}
+      </SecondaryActionButton>
+    </TurnActionSlot>
+  ) : null;
 
   return (
     <>
-      {canSkipOfflinePlayer && offlinePlayerName ? (
-        <div className={challengeStyles.offlinePlayerPanel}>
-          <div className={challengeStyles.offlinePlayerInfo}>
-            <span className={challengeStyles.offlinePlayerLabel}>
-              {t("game.controls.waitingFor")}
-            </span>
-            <span className={challengeStyles.offlinePlayerName}>{offlinePlayerName}</span>
-            <span className={challengeStyles.offlinePlayerStatus}>{t("gameMenu.offline")}</span>
-          </div>
-          {turnSkipCountdown ? (
-            <span className={challengeStyles.offlinePlayerCountdown}>
-              {t("game.controls.autoSkipIn", { time: turnSkipCountdown })}
-            </span>
-          ) : null}
-        </div>
+      {canSkipOfflinePlayer ? (
+        <OfflinePlayerPanel
+          playerName={skipCandidateName ?? t("game.player.unknown")}
+          turnSkipDeadlineEpochMs={turnSkipDeadlineEpochMs}
+        />
       ) : null}
       <ActionDock
-        className={useStackedTurnActions ? dockStyles.floatingActionDockStacked : ""}
+        className={isStacked ? dockStyles.floatingActionDockStacked : ""}
         containerRef={setConfirmHintAnchor}
       >
-        {useStackedTurnActions ? (
+        {isStacked ? (
           <>
             <div className={dockStyles.floatingActionSecondaryRow}>
-              <MotionPresence mode="popLayout">
-                {canUseSkipTrack ? (
-                  <m.span
-                    animate="animate"
-                    className={dockStyles.actionButtonMotionWrap}
-                    exit="exit"
-                    initial="initial"
-                    key="skip-track"
-                    layout="position"
-                    style={{ originX: 0.5 }}
-                    transition={createLayoutTransition(reduceMotion)}
-                    variants={createActionButtonExitMotion(reduceMotion)}
-                  >
-                    <SecondaryActionButton
-                      disabled={isSkipTrackPending}
-                      onClick={(event) => {
-                        const origin = resolveSpendOrigin(
-                          event.currentTarget,
-                          skipCostBadgeRef.current,
-                        );
-                        onTokenSpendAnimationStart?.({
-                          amount: -SKIP_TRACK_TT_COST,
-                          ...origin,
-                        });
-                        handleSkipTrackWithTt();
-                      }}
-                      ttCost={SKIP_TRACK_TT_COST}
-                      ttCostBadgeRef={skipCostBadgeRef}
-                    >
-                      {skipTrackButtonLabel}
-                    </SecondaryActionButton>
-                  </m.span>
-                ) : null}
-              </MotionPresence>
-              {canUseBuyCard ? (
-                <m.span
-                  className={dockStyles.actionButtonMotionWrap}
-                  layout="position"
-                  transition={createLayoutTransition(reduceMotion)}
-                >
-                  <SecondaryActionButton
-                    disabled={isBuyTimelineCardPending}
-                    onClick={(event) => {
-                      const origin = resolveSpendOrigin(
-                        event.currentTarget,
-                        buyCostBadgeRef.current,
-                      );
-                      onTokenSpendAnimationStart?.({
-                        amount: -BUY_TIMELINE_CARD_TT_COST,
-                        ...origin,
-                      });
-                      handleBuyTimelineCardWithTt();
-                    }}
-                    ttCost={BUY_TIMELINE_CARD_TT_COST}
-                    ttCostBadgeRef={buyCostBadgeRef}
-                  >
-                    {buyTimelineCardButtonLabel}
-                  </SecondaryActionButton>
-                </m.span>
-              ) : null}
+              {skipTrackAction}
+              {buyCardAction}
             </div>
-            <m.span
-              className={`${dockStyles.actionButtonMotionWrap} ${dockStyles.actionButtonMotionWrapFull}`}
-              layout="position"
-              transition={createLayoutTransition(reduceMotion)}
-            >
-              <PrimaryActionButton disabled={isPlaceCardPending} onClick={() => handlePlaceCard()}>
-                {placeCardButtonLabel}
-              </PrimaryActionButton>
-            </m.span>
+            {confirmPlacementAction}
           </>
         ) : (
           <>
-            <MotionPresence mode="popLayout">
-              {canUseSkipTrack ? (
-                <m.span
-                  animate="animate"
-                  className={dockStyles.actionButtonMotionWrap}
-                  exit="exit"
-                  initial="initial"
-                  key="skip-track"
-                  layout="position"
-                  style={{ originX: 0.5 }}
-                  transition={createLayoutTransition(reduceMotion)}
-                  variants={createActionButtonExitMotion(reduceMotion)}
-                >
-                  <SecondaryActionButton
-                    disabled={isSkipTrackPending}
-                    onClick={(event) => {
-                      const origin = resolveSpendOrigin(
-                        event.currentTarget,
-                        skipCostBadgeRef.current,
-                      );
-                      onTokenSpendAnimationStart?.({
-                        amount: -SKIP_TRACK_TT_COST,
-                        ...origin,
-                      });
-                      handleSkipTrackWithTt();
-                    }}
-                    ttCost={SKIP_TRACK_TT_COST}
-                    ttCostBadgeRef={skipCostBadgeRef}
-                  >
-                    {skipTrackButtonLabel}
-                  </SecondaryActionButton>
-                </m.span>
-              ) : null}
-            </MotionPresence>
-            {canUseBuyCard ? (
-              <m.span
-                className={dockStyles.actionButtonMotionWrap}
-                layout="position"
-                transition={createLayoutTransition(reduceMotion)}
-              >
-                <SecondaryActionButton
-                  disabled={isBuyTimelineCardPending}
-                  onClick={(event) => {
-                    const origin = resolveSpendOrigin(event.currentTarget, buyCostBadgeRef.current);
-                    onTokenSpendAnimationStart?.({
-                      amount: -BUY_TIMELINE_CARD_TT_COST,
-                      ...origin,
-                    });
-                    handleBuyTimelineCardWithTt();
-                  }}
-                  ttCost={BUY_TIMELINE_CARD_TT_COST}
-                  ttCostBadgeRef={buyCostBadgeRef}
-                >
-                  {buyTimelineCardButtonLabel}
-                </SecondaryActionButton>
-              </m.span>
-            ) : null}
-            {canConfirmTurnPlacement ? (
-              <m.span
-                className={dockStyles.actionButtonMotionWrap}
-                layout="position"
-                transition={createLayoutTransition(reduceMotion)}
-              >
-                <PrimaryActionButton
-                  disabled={isPlaceCardPending}
-                  onClick={() => handlePlaceCard()}
-                >
-                  {placeCardButtonLabel}
-                </PrimaryActionButton>
-              </m.span>
-            ) : null}
-            {canSkipOfflinePlayer ? (
-              <m.span
-                className={dockStyles.actionButtonMotionWrap}
-                layout="position"
-                transition={createLayoutTransition(reduceMotion)}
-              >
-                <SecondaryActionButton
-                  disabled={isSkipTurnPending}
-                  onClick={() => handleSkipOfflinePlayer()}
-                >
-                  {skipTurnButtonLabel}
-                </SecondaryActionButton>
-              </m.span>
-            ) : null}
+            {skipTrackAction}
+            {buyCardAction}
+            {confirmPlacementAction}
+            {skipOfflinePlayerAction}
           </>
         )}
       </ActionDock>

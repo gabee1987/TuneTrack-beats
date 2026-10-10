@@ -14,9 +14,7 @@ const SKIPPED_DIRECTORIES = new Set([
 
 // Files that were already over the limit when the gate landed. Each may only shrink; the work
 // item that splits one deletes its entry (06-structure-and-test-plan.md §2.1).
-const ALLOWLIST = {
-  "apps/web/src/pages/GamePage/hooks/useGamePageActions.test.tsx": 982,
-};
+const ALLOWLIST = {};
 
 function* walk(directory) {
   for (const entry of readdirSync(directory, { withFileTypes: true })) {

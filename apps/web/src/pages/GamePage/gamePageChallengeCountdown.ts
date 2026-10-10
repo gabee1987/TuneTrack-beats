@@ -9,6 +9,11 @@ export function formatChallengeCountdownLabel(
     return null;
   }
 
-  const secondsRemaining = Math.max(0, Math.ceil((deadlineEpochMs - nowEpochMs) / 1000));
-  return t("game.status.countdownBeat", { seconds: secondsRemaining });
+  return t("game.status.countdownBeat", {
+    seconds: getChallengeSecondsRemaining(deadlineEpochMs, nowEpochMs),
+  });
+}
+
+export function getChallengeSecondsRemaining(deadlineEpochMs: number, nowEpochMs: number) {
+  return Math.max(0, Math.ceil((deadlineEpochMs - nowEpochMs) / 1000));
 }

@@ -10,7 +10,7 @@ import { expectRatchet, listTypeScriptSources } from "./cssSourceFiles";
 const ALLOWED_LAYOUT_SITES = [
   "features/app-shell/components/AppShellMenuSheet.tsx",
   "pages/GamePage/components/TimelinePanelHeader.tsx",
-  "pages/GamePage/components/TurnActionDock.tsx",
+  "pages/GamePage/components/turnActions/TurnActionSlot.tsx",
   // Owner decision 19 (2026-10-07): the timeline column slides when the header changes height.
   "pages/GamePage/desktop/GamePageDesktop.tsx",
   "pages/GamePage/mobile/GamePageMobile.tsx",

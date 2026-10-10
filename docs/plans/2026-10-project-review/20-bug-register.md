@@ -1,7 +1,7 @@
 # 20 — Active Defect Register
 
-> **Status (2026-10-10):** accurate against code. Eight active defects; nineteen resolved.
-> **Folded from** `docs/plans/2026-09-stability-performance/12-bug-register.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`. The findings register `01-review-findings.md` holds the review findings (`B-`/`F-`/`U-`/`D-`/`T-` ids); this file holds user-visible defects (`B1`–`B27`).
+> **Status (2026-10-10):** accurate against code. Eight active defects; twenty resolved.
+> **Folded from** `docs/plans/2026-09-stability-performance/12-bug-register.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`. The findings register `01-review-findings.md` holds the review findings (`B-`/`F-`/`U-`/`D-`/`T-` ids); this file holds user-visible defects (`B1`–`B28`).
 
 This register contains only actionable defects. Resolved items are kept as a compact ledger
 at the end; their full investigations remain available in git history.
@@ -161,6 +161,7 @@ removed from the live register on 2026-09-30. They remain in git history.
 | B24 | 2026-10-07 | Spotify playback stalled until reload after a new game: each player build used two token refreshes against a 3-per-minute socket budget, a `RATE_LIMITED` refusal waited out the 10 s timeout, and an unanswered SDK `getOAuthToken` left `connect()` pending for good. One refresh per build, refusals answer at once, the SDK always gets a token, `connect()` times out after 15 s and the build retries; budget 6 per minute (`useSpotifyPlaybackSdk.token.test.ts`). |
 | B18 | 2026-10-10 | A motion element mounted inside an exiting page registered with its exit but never got the exit signal, so under load the lobby stayed mounted behind the game for good. `PageTransition` gives its content a presence context that cannot hold the exit open (`PageTransition.test.tsx`; E2E lobby-exit case, 80 of 80 under parallel load).                                                                                                                             |
 | B2  | 2026-10-08 | One overlay host owns every dialog and sheet: Back, Escape and the scrim close only the topmost dismissible overlay, focus and scroll are restored, blocking dialogs ignore Escape and the scrim, and Back on the room-closed dialog resets like its button (`05` E2; `Overlay.test.tsx`, `RoomResetModal.test.tsx`, E12–E14).                                                                                                                                            |
+| B28 | 2026-10-10 | In Hungarian the Beat! callout never warmed from yellow to orange and red, and its pulse never restarted each second: the stage was parsed from the translated label with `/(d+)s*s/`, which "12 mp" never matches. The seconds now come from the deadline (`useChallengeCountdown`; `ChallengeActionPanel.test.tsx` B28 case).                                                                                                                                           |
 
 ## Feature work tracked elsewhere
 
@@ -176,5 +177,4 @@ These are programme work, not defects, and are intentionally not duplicated here
 ## Tech debt carried over from the GamePage refactor list (archived 2026-10-06)
 
 - **Façade collapse.** `RoomService` (718 lines) wraps `RoomRegistry` (319), both mostly pass-throughs; every new socket event costs two mechanical edits. Finding B-08, owned by Phase 6 of the review programme; `RoomService.ts` also exceeds the 700-line hard limit.
-- **Missing seam tests.** Hook tests for `useGamePageStatusState`, `useGamePageTimelineState`, `useGamePageCapabilityState` and component tests for `ChallengeActionPanel`, `TurnActionDock`, `FinishedStatePanel` are still absent (`TimelinePanel`, `ActionDock` and `useGamePageActions` tests exist). Tracked in `19-testing-strategy.md`.
-- **`GamePageHeader.tsx` split trigger fired.** The file is 264 lines (trigger was 250). Extract `GamePageStatusChips` and `GamePageHeaderActions` in `06` W4. Its comparator no longer compares `roomState` (F-08 resolved 2026-10-07, `05` C1).
+- **Missing seam tests.** Hook tests for `useGamePageStatusState`, `useGamePageTimelineState`, `useGamePageCapabilityState` and a component test for `FinishedStatePanel` are still absent (`TimelinePanel`, `ActionDock`, `TurnActionDock`, `ChallengeActionPanel` and the action-family tests exist). Tracked in `19-testing-strategy.md`.

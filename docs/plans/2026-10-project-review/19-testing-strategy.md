@@ -158,7 +158,7 @@ Also add to every existing server integration suite an `afterEach` asserting `ro
 (absent today, T-08), which turns any future room leak into an immediate test failure rather than
 a slow memory problem. The review added further holes the original plan did not list — server and
 engine tests are not typechecked (T-03), no socket authorization matrix (T-08), engine breadth
-(T-09), test quality in `useGamePageActions.test.tsx` (T-11; the server half shipped in `06` T5) — all owned by
+(T-09), test quality (T-11; shipped in `06` T5, T9 and W3) — all owned by
 Phase 6.
 
 ## 7. Phase 5 — Coverage measurement and CI · coverage shipped, CI parked (T-01)

@@ -6,17 +6,8 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
-import { FirstRunHint } from "../../../features/hints/FirstRunHint";
-import { MotionPresence, timelineCelebrationTransitionContract } from "../../../features/motion";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { MotionPresence } from "../../../features/motion";
 import { usePageLayoutMode } from "../../../hooks/usePageLayoutMode";
 import type {
   GamePageCard,
@@ -27,12 +18,15 @@ import type {
 import { SongInfoModal } from "./SongInfoModal";
 import { DRAG_ACTIVATION_DISTANCE_PX, TIMELINE_AUTO_SCROLL } from "../gamePage.constants";
 import { useTimelinePreviewTransition } from "../hooks/transitions/useTimelinePreviewTransition";
+import { useCorrectPlacementAnimationKey } from "../hooks/useCorrectPlacementAnimationKey";
+import { useDragOverlaySize } from "../hooks/useDragOverlaySize";
 import { useTimelinePanelCelebrationState } from "../hooks/useTimelinePanelCelebrationState";
 import { useTimelinePanelDragState } from "../hooks/useTimelinePanelDragState";
 import { useTimelineOverflowState } from "../hooks/useTimelineOverflowState";
 import { TimelineCelebration } from "./TimelineCelebration";
 import { TimelinePanelFlyAnimation } from "./TimelinePanelFlyAnimation";
 import { TimelinePanelHeader } from "./TimelinePanelHeader";
+import { TimelinePanelHints } from "./TimelinePanelHints";
 import { TimelinePanelItems } from "./TimelinePanelItems";
 import { PreviewCard } from "./PreviewCard";
 import styles from "./timelinePanelShell.module.css";
@@ -84,40 +78,15 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
   const [timelineSwitchHintAnchor, setTimelineSwitchHintAnchor] = useState<HTMLElement | null>(
     null,
   );
-  const [dragOverlaySize, setDragOverlaySize] = useState<{
-    height: number;
-    width: number;
-  } | null>(null);
   const timelineRowRef = useRef<HTMLDivElement | null>(null);
   const previewCardElementRef = useRef<HTMLElement | null>(null);
-  const lastCorrectPlacementAnimationKeyRef = useRef<string | null>(null);
-  const [activeCorrectPlacementAnimationKey, setActiveCorrectPlacementAnimationKey] = useState<
-    string | null
-  >(null);
-  const correctPlacementCard =
-    displayShowCorrectPlacementPreview && model.interaction.originalChosenSlotIndex !== null
-      ? (model.render.timelineCards[model.interaction.originalChosenSlotIndex] ?? null)
-      : null;
-  // Derived from this render's own reveal, never from the toast celebration event: that
-  // event only exists for revealType "placement" and sits in state indefinitely once one
-  // has fired, so reading it here meant a tt_buy reveal either reused a stale, unrelated key
-  // (glowing the wrong card, or the right card under the wrong identity) or found nothing
-  // and skipped its own glow — and either way left the ref primed with a value the next
-  // genuine placement could collide with if it followed quickly.
-  const correctPlacementAnimationKey =
-    displayShowCorrectPlacementPreview && correctPlacementCard
-      ? [
-          "correct-placement",
-          model.interaction.originalChosenSlotIndex,
-          correctPlacementCard.id,
-          "revealedYear" in correctPlacementCard
-            ? correctPlacementCard.revealedYear
-            : correctPlacementCard.releaseYear,
-        ].join(":")
-      : null;
-  const shouldAnimateCorrectPlacement =
-    correctPlacementAnimationKey !== null &&
-    activeCorrectPlacementAnimationKey === correctPlacementAnimationKey;
+  const { captureDragOverlaySize, clearDragOverlaySize, dragOverlayStyle } =
+    useDragOverlaySize(previewCardElementRef);
+  const shouldAnimateCorrectPlacement = useCorrectPlacementAnimationKey({
+    isShowingCorrectPlacement: displayShowCorrectPlacementPreview,
+    originalChosenSlotIndex: model.interaction.originalChosenSlotIndex,
+    timelineCards: model.render.timelineCards,
+  });
   const itemsModel = useMemo<TimelinePanelItemsModel>(
     () => ({
       challengeMarkerTone: model.interaction.challengeMarkerTone ?? "pending",
@@ -169,31 +138,6 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
     }),
   );
 
-  useEffect(() => {
-    if (
-      correctPlacementAnimationKey === null ||
-      lastCorrectPlacementAnimationKeyRef.current === correctPlacementAnimationKey
-    ) {
-      return;
-    }
-
-    lastCorrectPlacementAnimationKeyRef.current = correctPlacementAnimationKey;
-    setActiveCorrectPlacementAnimationKey(correctPlacementAnimationKey);
-
-    const timeoutId = window.setTimeout(
-      () => {
-        setActiveCorrectPlacementAnimationKey((currentKey) =>
-          currentKey === correctPlacementAnimationKey ? null : currentKey,
-        );
-      },
-      timelineCelebrationTransitionContract.correctPlacementHeroDurationSeconds * 1000 + 250,
-    );
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [correctPlacementAnimationKey]);
-
   const {
     handleDragCancel: completeDragCancel,
     handleDragEnd: completeDragEnd,
@@ -226,23 +170,6 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
     setPreviewHintAnchor(node);
   }, []);
 
-  function captureDragOverlaySize() {
-    const previewNode = previewCardElementRef.current;
-    if (!previewNode) {
-      return;
-    }
-
-    const previewRect = previewNode.getBoundingClientRect();
-    if (previewRect.width <= 0 || previewRect.height <= 0) {
-      return;
-    }
-
-    setDragOverlaySize({
-      height: previewRect.height,
-      width: previewRect.width,
-    });
-  }
-
   function handleDragStart(...args: Parameters<typeof completeDragStart>) {
     captureDragOverlaySize();
     completeDragStart(...args);
@@ -250,22 +177,13 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
 
   function handleDragEnd(...args: Parameters<typeof completeDragEnd>) {
     completeDragEnd(...args);
-    setDragOverlaySize(null);
+    clearDragOverlaySize();
   }
 
   function handleDragCancel(...args: Parameters<typeof completeDragCancel>) {
     completeDragCancel(...args);
-    setDragOverlaySize(null);
+    clearDragOverlaySize();
   }
-
-  const dragOverlayStyle = dragOverlaySize
-    ? ({
-        width: dragOverlaySize.width,
-        height: dragOverlaySize.height,
-        ["--timeline-card-width" as string]: `${dragOverlaySize.width}px`,
-        ["--timeline-card-height" as string]: `${dragOverlaySize.height}px`,
-      } as CSSProperties)
-    : undefined;
 
   // Not measured mid-drag: every reorder would force a layout read; the drop re-measures.
   useLayoutEffect(() => {
@@ -345,26 +263,15 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
           ) : null}
         </DragOverlay>
       </DndContext>
-      <FirstRunHint
-        anchor={previewHintAnchor}
-        id="game-drag-preview"
-        isEligible={
-          model.render.isOwnTimeline && model.interaction.selectable && previewCard !== null
-        }
-      />
-      <FirstRunHint
-        anchor={timelineCardHintAnchor}
-        id="game-timeline-tap"
-        isEligible={
-          model.render.isOwnTimeline &&
-          model.render.timelineCards.length > 0 &&
-          previewCard === null
-        }
-      />
-      <FirstRunHint
-        anchor={timelineSwitchHintAnchor}
-        id="game-timeline-switch"
-        isEligible={Boolean(model.header.canToggleView)}
+      <TimelinePanelHints
+        canToggleView={Boolean(model.header.canToggleView)}
+        hasPreviewCard={previewCard !== null}
+        isOwnTimeline={model.render.isOwnTimeline}
+        isSelectable={model.interaction.selectable}
+        previewAnchor={previewHintAnchor}
+        timelineCardAnchor={timelineCardHintAnchor}
+        timelineCardCount={model.render.timelineCards.length}
+        timelineSwitchAnchor={timelineSwitchHintAnchor}
       />
       <TimelinePanelFlyAnimation
         flyAnimationState={flyAnimationState}

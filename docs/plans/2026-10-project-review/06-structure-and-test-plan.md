@@ -2,8 +2,9 @@
 
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 6 of `00-index.md` §4).
 > **Status (2026-10-10):** W1 and T1 shipped (code 2026-10-07, file deletions 2026-10-09); T8,
-> T10, T5, S1–S5, W2 and T7 shipped 2026-10-09; T2, T3, T6, T9 and T11 2026-10-10 (§7 rows 1–10 done).
-> Next: W3 and W4 (§7 row 12, after `05` C1 and C5); T4 stays parked.
+> T10, T5, S1–S5, W2 and T7 shipped 2026-10-09; T2, T3, T6, T9, T11, W3 and W4 2026-10-10 (§7 rows
+> 1–10 and 12 done). Next: W5 and W6 (§7 row 13, each with the `04` WP that touches its file); T4
+> stays parked.
 > Every finding below was re-verified
 > in code on 2026-10-07 (line numbers drift; file and symbol names are the stable reference).
 > **Authority:** this document sets the **structural rules, the test and tooling gates and the
@@ -195,31 +196,37 @@ access-token ref was dropped. The console calls moved unchanged (`16` Phase 4). 
 `spotifyEndOfContext.test.ts`, `spotifyPlayConfirmation.test.ts`; `useHostPlayback.test.ts`
 and the token test green throughout.
 
-### W3 · `useGamePageActions` (455) and its test (1 086)
+### W3 · `useGamePageActions` (455) and its test (1 086) · shipped
 
-After `05` C1 (stable handlers). Extract a generic `useAckedAction` (pending state, retry ladder,
-toast), then `usePlacementActions`, `useChallengeActions`, `useTtActions`, `useRoomActions`. The
-retry ladder is tested **once**, at `useAckedAction`; each family test checks event, payload and
-button gating only; the twelve harnesses move to `useGamePageActions.harnesses.tsx`.
-**Before/after:** the old test file stays green until the new files cover each family, then it
-is deleted; total runtime of the web suite does not grow.
+**Shipped 2026-10-10.** `hooks/actions/useAckedAction` owns the single submission, `retrying`,
+and `failed` only while the room still matches the submission; `usePlacementActions`,
+`useChallengeActions`, `useTtActions` and `useRoomActions` hold the twelve handlers, and the five
+per-action host hooks are folded into them. `useGamePageActions` (70 lines) composes the families
+with the same returned keys and stable handlers. The retry ladder is tested once
+(`useAckedAction.test.ts`); each family test (`hooks/actions/*.test.tsx`) checks event, payload,
+gating and the final retry button; the harnesses live in `useGamePageActions.harnesses.tsx`
+(excluded from coverage). The old 982-line test and `useGamePageActions.skipTurn.test.tsx` stayed
+green against the new hooks before deletion; the file-size allowlist is empty. Web suite 13.6–14.1 s
+before, 13.6–14.4 s after.
 
-### W4 · Game-page components (F-26, F-16 game half, F-19 leaf props)
+### W4 · Game-page components (F-26, F-16 game half, F-19 leaf props) · shipped
 
-After `05` C1 and C5. One item per row:
-
-| File (lines)                     | Split / change                                                                                                                                                             |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TurnActionDock.tsx` (359)       | `SkipTrackAction`, `BuyCardAction`, `ConfirmPlacementAction`, `OfflinePlayerPanel`, `useTurnSkipCountdown`; one action list rendered by a stacked or flat layout (F-16)    |
-| `ChallengeActionPanel.tsx` (303) | `ChallengeCallout`, `ChallengeActionDock`, pure `challengeCountdownStage.ts`                                                                                               |
-| `GameMenuPlayerItem.tsx` (357)   | `GameMenuPlayerRow`, `GameMenuPlayerActions`, `KickPlayerConfirmDialog`                                                                                                    |
-| `TimelinePanel.tsx` (336)        | `useCorrectPlacementAnimationKey`, `useDragOverlaySize`, `TimelinePanelHints`                                                                                              |
-| `GamePage.types.ts` (335)        | `gamePageActionTypes`, `timelinePanel.types`, `gamePageModels.types`                                                                                                       |
-| leaf props (F-19)                | `GameMenuPlayerItem` and `PlaybackTabContent` receive narrow props from the controller, not `PublicRoomState` (the other leaves shipped in `05` C1)                        |
-| small moves                      | `useMobileControlPortalTarget` out of `ActionDock.tsx` (into the `05` C5 viewport store); `useLeaveGameGuard` takes `isPresent` as an argument instead of importing Framer |
-
-**Before/after:** the component's existing test stays green; a component without one gets a
-render test first (T9).
+**Shipped 2026-10-10.** Each split got a render test first (`TurnActionDock.test.tsx`,
+`ChallengeActionPanel.test.tsx`, `GameMenuPlayerItem.test.tsx`; `TimelinePanel.test.tsx` existed).
+`TurnActionDock` builds one action list and lays it out stacked or flat from
+`components/turnActions/` (`SkipTrackAction` and `BuyCardAction`, `ConfirmPlacementAction`,
+`OfflinePlayerPanel`, `useTurnSkipCountdown`, `TurnActionSlot`); `ChallengeActionPanel` composes
+`challengeActions/` (`ChallengeCallout`, `ChallengeActionDock`, pure `challengeCountdownStage`);
+`GameMenuPlayerItem` composes `GameMenuPlayerRow`, `GameMenuPlayerActions` and one
+`PlayerConfirmDialog` used for both transfer and kick (deviation: the two dialogs differed only in
+text). `TimelinePanel` uses `useCorrectPlacementAnimationKey`, `useDragOverlaySize` and
+`TimelinePanelHints`; `GamePageHeader` (264 → 186) extracts `GamePageStatusChips` and
+`GamePageHeaderActions` (the `20` tech-debt item). `GamePage.types.ts` keeps the shared types and re-exports
+`gamePageActionTypes`, `timelinePanel.types` and `gamePageModels.types`, so its 56 importers did
+not change. F-19: `GameMenuPlayerItem` and `PlaybackTabContent` take narrow props.
+`useMobileControlPortalTarget` moved to `features/viewport`; `useLeaveGameGuard` takes
+`isPresent`, read through the new `features/motion` `useIsPagePresent`. The framer-motion import
+allowlist shrank by one. Found on the way: B28 (`20`).
 
 ### W5 · Lobby and Spotify setup (F-26)
 

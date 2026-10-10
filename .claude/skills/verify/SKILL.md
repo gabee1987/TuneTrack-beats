@@ -63,7 +63,7 @@ engine tests under `packages/game-engine/tests/`.
 npm run verify   # format, size, typecheck, lint (max 17 web warnings), tests with coverage
 ```
 
-Baseline on 2026-10-10: 1 508 tests (server 474, web 727, engine 93, shared 214); coverage
+Baseline on 2026-10-10: 1 542 tests (server 474, web 761, engine 93, shared 214); coverage
 thresholds sit in each `vitest.config.ts` and may only rise. A drop in the
 count without a deleted test file is a finding, not noise.
 

@@ -1,11 +1,20 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "../../../features/i18n";
-import { formatChallengeCountdownLabel } from "../gamePageChallengeCountdown";
+import {
+  formatChallengeCountdownLabel,
+  getChallengeSecondsRemaining,
+} from "../gamePageChallengeCountdown";
 
-export function useChallengeCountdownLabel(
+interface ChallengeCountdown {
+  label: string;
+  secondsRemaining: number;
+}
+
+/** The Beat! window countdown, ticking while `enabled` and a deadline is set; null otherwise. */
+export function useChallengeCountdown(
   deadlineEpochMs: number | null,
   enabled: boolean,
-): string | null {
+): ChallengeCountdown | null {
   const { t } = useI18n();
   const [nowEpochMs, setNowEpochMs] = useState(() => Date.now());
 
@@ -28,5 +37,8 @@ export function useChallengeCountdownLabel(
     return null;
   }
 
-  return formatChallengeCountdownLabel(deadlineEpochMs, nowEpochMs, t);
+  return {
+    label: formatChallengeCountdownLabel(deadlineEpochMs, nowEpochMs, t)!,
+    secondsRemaining: getChallengeSecondsRemaining(deadlineEpochMs, nowEpochMs),
+  };
 }

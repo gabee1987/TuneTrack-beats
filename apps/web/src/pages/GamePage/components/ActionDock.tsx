@@ -1,5 +1,4 @@
 import { m, useIsPresent } from "framer-motion";
-import { useSyncExternalStore } from "react";
 import { LayerPortal } from "../../../features/overlay";
 import {
   createActionDockMotion,
@@ -7,13 +6,8 @@ import {
   useReducedMotionPreference,
 } from "../../../features/motion";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
-import { getUsesMobileControls, subscribeViewport } from "../../../features/viewport/viewportStore";
+import { useMobileControlPortalTarget } from "../../../features/viewport/useMobileControlPortalTarget";
 import styles from "./gamePageActionPanelsDock.module.css";
-
-export function useMobileControlPortalTarget(): HTMLElement | null {
-  const usesMobileControls = useSyncExternalStore(subscribeViewport, getUsesMobileControls);
-  return usesMobileControls ? document.body : null;
-}
 
 interface ActionDockProps {
   children: React.ReactNode;

@@ -51,9 +51,9 @@ z.output` next to it. Never write a payload interface by hand.
 
 ### 3. `apps/web`
 
-- Call through `services/socket/emitAction.ts` from a page hook
-  `pages/<Page>/hooks/use<Action>Action.ts` (pattern:
-  `pages/GamePage/hooks/useSkipTurnAction.ts`). Render the result states
+- Call through `services/socket/emitAction.ts` from a page hook. On the game page, add the
+  action to its family in `pages/GamePage/hooks/actions/` (placement, challenge, TT, room) and
+  submit it through `useAckedAction`, which owns pending, retry and failed. Render the result states
   `ok | rejected | timeout | offline`; a component never emits a raw socket event.
 - Map every new error code in `features/i18n/localizedErrors.ts` (`SERVER_ERROR_KEY_BY_CODE`)
   and add the key to **both** `features/i18n/languages/en.properties` and `hu.properties`;

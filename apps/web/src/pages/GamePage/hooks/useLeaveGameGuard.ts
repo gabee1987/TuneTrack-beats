@@ -1,10 +1,11 @@
-import { useIsPresent } from "framer-motion";
 import { useEffect } from "react";
 import { useBlocker } from "react-router-dom";
 import { resetSocketClient } from "../../../services/socket/socketClient";
 
 interface UseLeaveGameGuardOptions {
   isGuarded: boolean;
+  /** False once the page has started its exit transition. */
+  isPresent: boolean;
 }
 
 export interface LeaveGameGuard {
@@ -24,8 +25,10 @@ export interface LeaveGameGuard {
  * time, and a page can stay mounted after its exit begins, so a guard that ignored presence
  * could sit blocking every later navigation for the rest of the session.
  */
-export function useLeaveGameGuard({ isGuarded }: UseLeaveGameGuardOptions): LeaveGameGuard {
-  const isPresent = useIsPresent();
+export function useLeaveGameGuard({
+  isGuarded,
+  isPresent,
+}: UseLeaveGameGuardOptions): LeaveGameGuard {
   const canBlock = isGuarded && isPresent;
   const blocker = useBlocker(
     ({ currentLocation, historyAction, nextLocation }) =>

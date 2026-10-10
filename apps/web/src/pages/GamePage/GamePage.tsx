@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { AppRouteFallback } from "../../app/components/AppRouteFallback";
 import { useI18n } from "../../features/i18n";
 import { MotionLayoutFeatures } from "../../features/motion/MotionLayoutFeatures";
+import { useIsPagePresent } from "../../features/motion/useIsPagePresent";
 import { ConnectionBanner } from "../../features/rooms/ConnectionBanner";
 import { RoomResetModal } from "../../features/ui/RoomResetModal";
 import { Button, Dialog } from "../../features/ui/primitives";
@@ -44,8 +45,10 @@ export function GamePage() {
     roomState: controller.roomState,
   });
   const layoutMode = usePageLayoutMode();
+  const isPresent = useIsPagePresent();
   const leaveGameGuard = useLeaveGameGuard({
     isGuarded: Boolean(controller.roomState) && controller.roomState?.status !== "finished",
+    isPresent,
   });
   const screenOverlays = (
     <>

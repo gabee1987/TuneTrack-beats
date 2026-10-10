@@ -32,6 +32,7 @@ export default defineConfig({
         "src/test/**",
         "src/pages/DesignSystemPage/**",
         "src/**/*.test.{ts,tsx}",
+        "src/**/*.harnesses.tsx",
       ],
     },
     include: ["src/**/*.{test,spec}.{ts,tsx}"],

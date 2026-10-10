@@ -5,7 +5,8 @@ import { useInterpolatedPlaybackPosition } from "../hooks/useInterpolatedPlaybac
 import styles from "../gamePagePlayback.module.css";
 
 interface PlaybackTabContentProps {
-  roomState: PublicRoomState;
+  currentTrackCard: PublicRoomState["currentTrackCard"];
+  status: PublicRoomState["status"];
   t: Translate;
 }
 
@@ -16,12 +17,11 @@ function formatMs(ms: number): string {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
-export function PlaybackTabContent({ roomState, t }: PlaybackTabContentProps) {
+export function PlaybackTabContent({ currentTrackCard, status, t }: PlaybackTabContentProps) {
   const { isReady, needsUserGesture, pause, restart, resume, seek } = useHostPlaybackControls();
   const progress = useHostPlaybackProgress();
   const { duration, isPlaying } = progress;
   const position = useInterpolatedPlaybackPosition(progress);
-  const { currentTrackCard, status } = roomState;
   const showTrackDetails = status === "reveal" || status === "finished";
   const hasTrack = currentTrackCard !== null;
 

@@ -1,12 +1,12 @@
 import { memo, useState } from "react";
-import { AppShellMenu } from "../../../features/app-shell/AppShellMenu";
 import { FirstRunHint } from "../../../features/hints/FirstRunHint";
 import { useI18n } from "../../../features/i18n";
 import { CardCountAmount } from "../../../features/ui/CardCountAmount";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
-import { Chip, IconButton } from "../../../features/ui/primitives";
 import { usePageLayoutMode } from "../../../hooks/usePageLayoutMode";
 import type { GamePageHeaderModel } from "../GamePage.types";
+import { GamePageHeaderActions } from "./GamePageHeaderActions";
+import { GamePageStatusChips } from "./GamePageStatusChips";
 import { HeaderLeadersStrip } from "./HeaderLeadersStrip";
 import styles from "../gamePageChrome.module.css";
 
@@ -59,37 +59,20 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
       count,
       plural: count === 1 ? "" : "s",
     });
-  let closeRoomLabel = t("game.header.closeRoom");
-  if (closeRoomActionStatus === "pending") {
-    closeRoomLabel = t("room.close.pending");
-  } else if (closeRoomActionStatus === "retrying") {
-    closeRoomLabel = t("room.close.retrying");
-  } else if (closeRoomActionStatus === "failed") {
-    closeRoomLabel = t("room.close.retry");
-  }
-  let skipTurnLabel = t("game.controls.skipTurn");
-  if (skipTurnActionStatus === "retrying") {
-    skipTurnLabel = t("game.controls.skipTurnRetrying");
-  } else if (skipTurnActionStatus === "failed") {
-    skipTurnLabel = t("game.controls.retrySkipTurn");
-  }
 
   return (
     <header
       className={`${styles.header}${layoutMode === "mobile" ? ` ${styles.headerMobile}` : ""}`}
     >
       <div className={styles.headerMain}>
-        <div className={styles.headerChipRow}>
-          {showRoomCodeChip ? <Chip>{t("game.header.roomChip", { roomId })}</Chip> : null}
-          {showPhaseChip ? <Chip>{t(`game.phase.${status}`)}</Chip> : null}
-          {showTurnNumberChip ? (
-            <Chip className={styles.headerChipTurn}>
-              {t("game.header.turnChip", {
-                turnNumber: turnNumber ?? "-",
-              })}
-            </Chip>
-          ) : null}
-        </div>
+        <GamePageStatusChips
+          roomId={roomId}
+          showPhaseChip={showPhaseChip}
+          showRoomCodeChip={showRoomCodeChip}
+          showTurnNumberChip={showTurnNumberChip}
+          status={status}
+          turnNumber={turnNumber}
+        />
         <HeaderLeadersStrip
           getCardCountLabel={getCardCountLabel}
           leadingPlayers={leadingPlayers}
@@ -132,81 +115,20 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
               ) : null}
             </span>
           </div>
-          <IconButton
-            aria-label={
-              showMiniStandings
-                ? t("game.header.hideLeaderboard")
-                : t("game.header.showLeaderboard")
-            }
-            onClick={() =>
-              updateViewPreferences({
-                showMiniStandings: !showMiniStandings,
-              })
-            }
-            title={
-              showMiniStandings
-                ? t("game.header.hideLeaderboard")
-                : t("game.header.showLeaderboard")
-            }
-          >
-            <svg aria-hidden="true" className={styles.headerIcon} fill="none" viewBox="0 0 24 24">
-              <path
-                d="M5 20H9V11H5V20Z"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-              />
-              <path
-                d="M10 20H14V4H10V20Z"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-              />
-              <path
-                d="M15 20H19V8H15V20Z"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-              />
-              <path
-                d="M4 20H20"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-              />
-            </svg>
-          </IconButton>
-          <AppShellMenu
-            subtitle={t("gameMenu.lobbyNameSubtitle")}
-            tabs={menuTabs}
-            title={roomId}
-            triggerRef={setMenuHintAnchor}
-            {...(hostId === currentPlayerId
-              ? {
-                  footerActions: [
-                    ...(status === "turn"
-                      ? [
-                          {
-                            disabled: isSkipTurnPending,
-                            label: skipTurnLabel,
-                            onClick: handleSkipTurn,
-                            tone: "neutral" as const,
-                          },
-                        ]
-                      : []),
-                    {
-                      disabled: isCloseRoomPending,
-                      label: closeRoomLabel,
-                      onClick: handleCloseRoom,
-                      tone: "danger" as const,
-                    },
-                  ],
-                }
-              : {})}
+          <GamePageHeaderActions
+            closeRoomActionStatus={closeRoomActionStatus}
+            handleCloseRoom={handleCloseRoom}
+            handleSkipTurn={handleSkipTurn}
+            isCloseRoomPending={isCloseRoomPending}
+            isHost={hostId === currentPlayerId}
+            isSkipTurnPending={isSkipTurnPending}
+            menuTabs={menuTabs}
+            menuTriggerRef={setMenuHintAnchor}
+            roomId={roomId}
+            showMiniStandings={showMiniStandings}
+            skipTurnActionStatus={skipTurnActionStatus}
+            status={status}
+            updateViewPreferences={updateViewPreferences}
           />
         </div>
         {showTimelineHints && statusDetailText ? (

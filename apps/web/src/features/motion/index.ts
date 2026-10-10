@@ -3,6 +3,7 @@ export { MotionPresence } from "./MotionPresence";
 export { PageTransition } from "./PageTransition";
 export { prefersReducedMotion } from "./prefersReducedMotion";
 export { useReducedMotionPreference } from "./useReducedMotionPreference";
+export { useIsPagePresent } from "./useIsPagePresent";
 export type { ScreenTransitionDirection } from "./coreMotionTokens";
 export { createMenuTabActivationTransition, keepFadeOnMainThread } from "./appShellMotionTokens";
 export { createSideSheetMotion, createSideSheetScrimMotion } from "./sideSheetMotionTokens";

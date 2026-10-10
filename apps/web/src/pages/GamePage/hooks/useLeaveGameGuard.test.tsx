@@ -4,13 +4,7 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { useLeaveGameGuard } from "./useLeaveGameGuard";
 
-const isPresentMock = vi.fn(() => true);
-
-vi.mock("framer-motion", async (importOriginal) => {
-  const { withEagerMotion } = await import("../../../test/stubs/framerMotion");
-  const actual = await importOriginal<typeof import("framer-motion")>();
-  return { ...withEagerMotion(actual), useIsPresent: () => isPresentMock() };
-});
+let isPagePresent = true;
 
 vi.mock("../../../services/socket/socketClient", async () => {
   const { socketClientMockForSharedSocket } = await import("../../../test/fakeSocket");
@@ -23,7 +17,7 @@ let setGuardedFromTest: ((isGuarded: boolean) => void) | null = null;
 function GameScreen({ initialGuarded }: { initialGuarded: boolean }) {
   const [isGuarded, setIsGuarded] = useState(initialGuarded);
   setGuardedFromTest = setIsGuarded;
-  guardApi = useLeaveGameGuard({ isGuarded });
+  guardApi = useLeaveGameGuard({ isGuarded, isPresent: isPagePresent });
 
   return (
     <div>
@@ -63,7 +57,7 @@ describe("useLeaveGameGuard", () => {
   });
 
   beforeEach(() => {
-    isPresentMock.mockReturnValue(true);
+    isPagePresent = true;
     guardApi = null;
     setGuardedFromTest = null;
   });
@@ -134,7 +128,7 @@ describe("useLeaveGameGuard", () => {
   });
 
   it("never holds anything for a page that is already leaving", async () => {
-    isPresentMock.mockReturnValue(false);
+    isPagePresent = false;
     const router = renderAt(true);
 
     await act(async () => {
