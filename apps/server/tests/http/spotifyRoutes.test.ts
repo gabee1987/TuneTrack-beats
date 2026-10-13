@@ -122,6 +122,26 @@ describe("Spotify OAuth callback route", () => {
     expect(response.text).toContain("window.close()");
   });
 
+  it("tells the host on the popup page whether the login worked", async () => {
+    const { app: succeededApp } = createApp(async () => LOGIN_SUCCEEDED, {
+      updateSpotifyAuthStatus: () => ({ roomId: "TEST_ROOM_1" }) as PublicRoomState,
+    });
+    const { app: failedApp } = createApp(async () => ({
+      roomId: null,
+      socketId: "",
+      authResult: { success: false, code: "auth_denied", message: "Spotify login was cancelled." },
+    }));
+
+    const succeeded = await request(succeededApp).get("/api/spotify/callback?code=code-12345");
+    const failed = await request(failedApp).get("/api/spotify/callback?error=access_denied");
+
+    expect(succeeded.text).toContain("Spotify connected. You can close this window.");
+    expect(failed.text).toContain(
+      "Spotify login failed. Close this window and try again in TuneTrack.",
+    );
+    expect(failed.text).not.toContain("Spotify login was cancelled.");
+  });
+
   it("answers 500 instead of hanging when the callback throws (B-28)", async () => {
     vi.spyOn(logger, "error").mockImplementation(() => undefined);
     const { app } = createApp(async () => {

@@ -32,7 +32,7 @@ export function LobbyHeader({ isHost, roomId }: LobbyHeaderProps) {
               <p className={styles.menuPlaceholder}>{t(tab.messageKey)}</p>
             ) : null,
           }))}
-          title="TuneTrack"
+          title={t("app.name")}
         />
       </div>
     </header>

@@ -340,7 +340,7 @@ describe("useSpotifyCandidates", () => {
         });
       });
 
-      const message = "7 generated tracks selected for this room.";
+      const message = "7 generated songs added to this room's deck.";
       expect(view.result.current.candidatePhase).toBe("idle");
       expect(view.result.current.candidateSessionId).toBeNull();
       expect(view.result.current.candidateSourceSummary).toBeNull();
@@ -364,7 +364,7 @@ describe("useSpotifyCandidates", () => {
       });
 
       expect(view.params.showGeneratedPlaylistMessage).toHaveBeenCalledWith(
-        "1 songs added to the queued playlist.",
+        "1 songs added to the deck.",
       );
     });
 

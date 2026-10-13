@@ -301,7 +301,7 @@ describe("useSpotifyAuth", () => {
     });
 
     expect(result.current.authPhase).toBe("error");
-    expect(result.current.authError).toMatch(/^Spotify login timed out\./);
+    expect(result.current.authError).toBe("Spotify login did not finish. Try again.");
     expect(popup.close).toHaveBeenCalledTimes(1);
   });
 

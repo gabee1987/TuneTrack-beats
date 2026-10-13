@@ -328,7 +328,7 @@ describe("useLobbyRoomActions update_room_settings", () => {
     fireEvent.click(targetCardButton);
 
     expect(targetCardButton).toBeDisabled();
-    expect(screen.getByRole("combobox", { name: /reveal confirmation/i })).toBeDisabled();
+    expect(screen.getByRole("combobox", { name: /who taps next/i })).toBeDisabled();
     expect(emitActionMock).toHaveBeenCalledTimes(1);
     expect(emitActionMock).toHaveBeenCalledWith(
       ClientToServerEvent.UpdateRoomSettings,

@@ -3,8 +3,8 @@
 > **Created:** 2026-10-07 on branch `fix/stability-hardening` (Phase 6 of `00-index.md` §4).
 > **Status (2026-10-10):** W1 and T1 shipped (code 2026-10-07, file deletions 2026-10-09); T8,
 > T10, T5, S1–S5, W2 and T7 shipped 2026-10-09; T2, T3, T6, T9, T11, W3 and W4 2026-10-10 (§7 rows
-> 1–10 and 12 done). Next: W5 and W6 (§7 row 13, each with the `04` WP that touches its file); T4
-> stays parked.
+> 1–10 and 12 done). Next: W5 and W6 (§7 row 13, each with the `04` WP that touches its file; `04`
+> WP 1 shipped 2026-10-13 and touched no W5/W6 file); T4 stays parked.
 > Every finding below was re-verified
 > in code on 2026-10-07 (line numbers drift; file and symbol names are the stable reference).
 > **Authority:** this document sets the **structural rules, the test and tooling gates and the

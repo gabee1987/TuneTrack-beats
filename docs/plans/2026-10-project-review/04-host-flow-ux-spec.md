@@ -1,7 +1,9 @@
 # 04 — Host Creation Flow: UX Specification
 
-> **Status (2026-10-06):** specified, not implemented. Work packages in §12 are handed to
-> implementation agents one at a time.
+> **Status (2026-10-13):** WP 1 shipped 2026-10-13 (glossary copy in `en` and `hu`, Home
+> sub-label and desktop keys, honest auth-timeout text and popup page, 41 dead keys deleted;
+> `HomePage.test.tsx`, `spotifyRoutes.test.ts`). WPs 2–10 open; WPs 5 and 6 wait for `21` Phase 1.
+> Work packages in §12 are handed to implementation agents one at a time.
 > **Owns findings:** U-01 … U-14, F-06 (host-flow overlays), F-16 (lobby part), F-24 (host-flow
 > controls). **Binding decisions:** `00-index.md` §5 — 5 (streamline, do not restructure), 6 (deck
 > size indicator and reshuffle), 7 (block Start without a deck, explicit practice deck), 10 (Spotify
@@ -438,14 +440,15 @@ The `TurnActionDock` duplication (the game half of F-16) is not host flow and st
       the short-deck warning appears and Start stays enabled.
 - [ ] Music setup tabs work without Spotify login (component test with `spotifyAuthStatus:
 "none"`); the per-room login note is visible; Free copy states previews and silence.
-- [ ] `lobby.spotify.authTimedOut` contains no file path or developer instruction.
+- [x] `lobby.spotify.authTimedOut` contains no file path or developer instruction — WP 1,
+      `useSpotifyAuth.test.ts`.
 - [ ] Playlist editor: "Needs check (K)" filter, stepper with "Looks right", "Release year" label,
       no "Metadata status" control.
 - [ ] Guest lobby shows guest copy, read-only music and rules, and the handover toast on start.
 - [ ] Every screen in §5 renders all five states (component tests with fixtures from
       `roomStateFixtures.ts`).
-- [ ] i18n parity guard passes; no deleted key is referenced; no "TT" in user-facing `en` values
-      except the hidden-year glyph.
+- [x] i18n parity guard passes; no deleted key is referenced; no "TT" in user-facing `en` values
+      except the hidden-year glyph — WP 1 (token labels are `common.tokenCount`); re-check in WP 10.
 - [ ] Every overlay opened in this flow closes with Back and Escape and restores focus.
 - [ ] No route, page or screen added or removed (diff of `app/router.tsx` is empty).
 

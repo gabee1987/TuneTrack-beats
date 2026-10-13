@@ -62,7 +62,7 @@ describe("GamePageHeader", () => {
     renderHeader({ ttModeEnabled: true, visibleTimelineCardCount: 4 });
 
     expect(screen.getByLabelText("4 cards")).toBeInTheDocument();
-    expect(screen.getByLabelText("2 TT tokens")).toBeInTheDocument();
+    expect(screen.getByLabelText("2 tokens")).toBeInTheDocument();
   });
 
   it("leaves out the host marker and tokens on a guest's timeline", () => {
@@ -88,7 +88,7 @@ describe("GamePageHeader", () => {
     );
 
     expect(screen.getByText(`Room ${TEST_ROOM_ID}`)).toBeInTheDocument();
-    expect(screen.getByText("Challenge")).toBeInTheDocument();
+    expect(screen.getByText("Beat!")).toBeInTheDocument();
     expect(screen.getByText("Turn 3")).toBeInTheDocument();
   });
 

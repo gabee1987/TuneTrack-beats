@@ -118,7 +118,7 @@ describe("ChallengeActionPanel", () => {
   it("tells the active host they close an untimed window, and lets them resolve it", () => {
     const { props } = renderPanel({ canResolveChallengeWindow: true, isCurrentPlayerTurn: true });
 
-    expect(screen.getByRole("heading", { name: "Beat Window Open" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Beat! window open" })).toBeInTheDocument();
     expect(
       screen.getByText("Your drop is live. You can close Beat! whenever the table is ready."),
     ).toBeInTheDocument();

@@ -1,3 +1,4 @@
+import { useI18n } from "../i18n";
 import { TtTokenIcon } from "./TtToken";
 import styles from "./TokenCountAmount.module.css";
 
@@ -14,9 +15,13 @@ export function TokenCountAmount({
   className,
   iconClassName,
 }: TokenCountAmountProps) {
+  const { t } = useI18n();
+  const amountLabel =
+    amount === 1 ? t("common.tokenCountOne") : t("common.tokenCount", { count: amount });
+
   return (
     <span
-      aria-label={ariaLabel ?? `${amount} TT token${amount === 1 ? "" : "s"}`}
+      aria-label={ariaLabel ?? amountLabel}
       className={`${styles.tokenCount}${className ? ` ${className}` : ""}`}
     >
       <span aria-hidden="true">{amount}</span>

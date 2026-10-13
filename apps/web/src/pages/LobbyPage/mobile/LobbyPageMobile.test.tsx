@@ -80,7 +80,7 @@ describe("LobbyPageMobile identity settings", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("textbox", { name: /room name/i })).toBeDisabled();
+    expect(screen.getByRole("textbox", { name: /room code/i })).toBeDisabled();
   });
 
   it("renames a host room without saving the player-name field", () => {
@@ -98,7 +98,7 @@ describe("LobbyPageMobile identity settings", () => {
       </MemoryRouter>,
     );
 
-    fireEvent.change(screen.getByRole("textbox", { name: /room name/i }), {
+    fireEvent.change(screen.getByRole("textbox", { name: /room code/i }), {
       target: { value: "renamed-room" },
     });
     fireEvent.click(screen.getByRole("button", { name: /apply setup/i }));

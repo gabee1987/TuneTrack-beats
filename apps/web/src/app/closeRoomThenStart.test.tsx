@@ -125,7 +125,7 @@ describe("closing a room, then starting a new one", () => {
 
     const startButton = await screen.findByRole(
       "button",
-      { name: /lets go/i },
+      { name: /let's go/i },
       { timeout: 10_000 },
     );
     await user.click(startButton);

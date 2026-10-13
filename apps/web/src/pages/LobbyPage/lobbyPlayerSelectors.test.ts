@@ -29,6 +29,7 @@ const baseRoomSettings: PublicRoomSettings = {
 };
 
 const testTranslations: Record<string, string> = {
+  "common.tokenCount": "{{count}} tokens",
   "lobby.players.cards": "{{count}} cards",
   "lobby.players.host": "Host",
   "lobby.players.startingCards": "Starting cards",
@@ -77,7 +78,7 @@ describe("lobbyPlayerSelectors", () => {
       startingCardsLabel: "Starting cards",
       counterBadges: [
         { count: 4, kind: "cardCount", label: "4 cards", variant: "neutral" },
-        { count: 2, kind: "tokenCount", label: "2 TT", variant: "neutral" },
+        { count: 2, kind: "tokenCount", label: "2 tokens", variant: "neutral" },
         { kind: "text", label: "Host", variant: "strong" },
       ],
     });

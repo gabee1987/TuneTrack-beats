@@ -43,7 +43,7 @@ export function getLobbyPlayerDisplayState({
             {
               count: player.ttTokenCount,
               kind: "tokenCount" as const,
-              label: `${player.ttTokenCount} TT`,
+              label: t("common.tokenCount", { count: player.ttTokenCount }),
               variant: "neutral" as const,
             },
           ]

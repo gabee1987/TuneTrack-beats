@@ -142,9 +142,9 @@ export async function expectHeaderStatus(page: Page, statusText: string): Promis
   await expect(page.getByText(statusText, { exact: true }).first()).toBeAttached();
 }
 
-/** Home names its primary action "Start" on desktop and "Lets go!" on a phone. */
+/** Home names its primary action "Let's go!" on both desktop and phone. */
 export function homeStartButton(page: Page): Locator {
-  return page.getByRole("button", { name: /^(Start|Lets go!)$/ });
+  return page.getByRole("button", { name: "Let's go!", exact: true });
 }
 
 export async function expectLobbyPlayerCount(page: Page, count: number): Promise<void> {

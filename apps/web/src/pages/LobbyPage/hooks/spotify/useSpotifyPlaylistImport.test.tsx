@@ -258,7 +258,7 @@ describe("useSpotifyPlaylistImport — clear current playlist", () => {
     });
     await flushMicrotasks();
 
-    expect(params.setSavedPlaylistMessage).toHaveBeenCalledWith("No queued tracks to clear.");
+    expect(params.setSavedPlaylistMessage).toHaveBeenCalledWith("The deck has no songs to clear.");
     expect(socket.emittedFor(ClientToServerEvent.RemovePlaylistTracks)).toEqual([]);
     expect(socket.listenerCount(ServerToClientEvent.PlaylistTracks)).toBe(0);
   });

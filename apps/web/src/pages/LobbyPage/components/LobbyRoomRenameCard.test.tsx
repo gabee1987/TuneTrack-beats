@@ -14,7 +14,7 @@ function renderCard(onRename = vi.fn(async () => true)) {
     />,
     { layout: "desktop" },
   );
-  return { onRename, input: screen.getByLabelText("Room name") };
+  return { onRename, input: screen.getByLabelText("Room code") };
 }
 
 describe("LobbyRoomRenameCard", () => {

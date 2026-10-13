@@ -257,7 +257,7 @@ describe("useLobbySpotify — generated playlist message", () => {
     await applyGeneratedCandidates(result, 12);
 
     expect(result().savedPlaylists.generatedPlaylistMessage).toBe(
-      "12 generated tracks selected for this room.",
+      "12 generated songs added to this room's deck.",
     );
 
     act(() => vi.advanceTimersByTime(GENERATED_MESSAGE_MS - 1));
@@ -277,7 +277,7 @@ describe("useLobbySpotify — generated playlist message", () => {
     act(() => vi.advanceTimersByTime(3000));
 
     expect(result().savedPlaylists.generatedPlaylistMessage).toBe(
-      "20 generated tracks selected for this room.",
+      "20 generated songs added to this room's deck.",
     );
 
     act(() => vi.advanceTimersByTime(GENERATED_MESSAGE_MS - 3000));

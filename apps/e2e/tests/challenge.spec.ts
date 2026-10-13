@@ -16,7 +16,7 @@ test("a guest challenge is resolved by the server before the turn advances", asy
   await tokenModeSwitch.click();
   await expect(tokenModeSwitch).toHaveAttribute("aria-checked", "true");
   const challengeWindowSelect = host.page
-    .getByRole("combobox", { name: "Challenge window", exact: true })
+    .getByRole("combobox", { name: "Beat! window", exact: true })
     .first();
   await challengeWindowSelect.selectOption("manual");
   await expect(challengeWindowSelect).toHaveValue("manual");
@@ -36,14 +36,14 @@ test("a guest challenge is resolved by the server before the turn advances", asy
   await moveCurrentCardAfterTimelineCard(guest.page);
   await guest.page.getByRole("button", { name: "Confirm Beat", exact: true }).click();
 
-  await expect(host.page.getByText("Challenge failed.", { exact: true }).first()).toBeVisible();
-  await expect(guest.page.getByText("Challenge failed.", { exact: true }).first()).toBeVisible();
+  await expect(host.page.getByText("Beat! failed.", { exact: true }).first()).toBeVisible();
+  await expect(guest.page.getByText("Beat! failed.", { exact: true }).first()).toBeVisible();
   await expect(host.page.getByLabel("2 cards").first()).toBeVisible();
   await guest.page.getByRole("button", { name: "Show leaderboard" }).first().click();
   const guestLeaderboardEntry = guest.page
     .locator("article")
     .filter({ hasText: "Challenge Guest" });
-  await expect(guestLeaderboardEntry.getByLabel("0 TT tokens")).toBeVisible();
+  await expect(guestLeaderboardEntry.getByLabel("0 tokens")).toBeVisible();
 
   await host.page.getByRole("button", { name: "Next song", exact: true }).click();
   await expectHeaderStatus(host.page, "Challenge Guest's turn");

@@ -55,7 +55,7 @@ test("nested playlist editors close one level at a time without leaving the lobb
 }) => {
   const host = await openPlayer("Playlist Host");
   const roomId = await hostRoom(host.page);
-  await host.page.getByRole("button", { name: "Open music setup", exact: true }).first().click();
+  await host.page.getByRole("button", { name: "Choose songs", exact: true }).first().click();
 
   const popupPromise = host.page.waitForEvent("popup");
   await host.page
@@ -71,7 +71,7 @@ test("nested playlist editors close one level at a time without leaving the lobb
     .first()
     .fill("spotify:playlist:TESTPLAYLIST1234567890");
   await host.page.getByRole("button", { name: "Import", exact: true }).first().click();
-  await expect(host.page.getByText("10 tracks queued up", { exact: true }).first()).toBeVisible();
+  await expect(host.page.getByText("10 songs in the deck", { exact: true }).first()).toBeVisible();
   await host.page.getByRole("button", { name: "Edit playlist", exact: true }).first().click();
 
   await expect(host.page.getByRole("dialog", { name: "Edit playlist" })).toBeVisible();
@@ -79,11 +79,11 @@ test("nested playlist editors close one level at a time without leaving the lobb
   await firstTrack.click();
 
   const releaseYearField = host.page.getByRole("spinbutton", {
-    name: "Album Release Year",
+    name: "Release year",
     exact: true,
   });
   await releaseYearField.fill("1977");
-  await host.page.getByRole("button", { name: "Save track", exact: true }).click();
+  await host.page.getByRole("button", { name: "Save song", exact: true }).click();
   await expect(releaseYearField).toHaveCount(0);
 
   await firstTrack.click();

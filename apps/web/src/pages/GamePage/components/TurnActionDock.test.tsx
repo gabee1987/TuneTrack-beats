@@ -107,7 +107,7 @@ describe("TurnActionDock", () => {
     });
 
     expect(buttonNames()).toEqual([
-      expect.stringMatching(/^Skipping track/),
+      expect.stringMatching(/^Skipping song/),
       expect.stringMatching(/^No response — retrying/),
       "Try again",
     ]);

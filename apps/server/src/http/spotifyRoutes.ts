@@ -87,15 +87,20 @@ async function handleSpotifyCallback(
   }
 
   res.setHeader("Content-Type", "text/html");
-  res.send(buildClosePopupHtml());
+  res.send(buildClosePopupHtml(authResult.success));
 }
 
-function buildClosePopupHtml(): string {
+const POPUP_MESSAGE_SUCCEEDED = "Spotify connected. You can close this window.";
+const POPUP_MESSAGE_FAILED = "Spotify login failed. Close this window and try again in TuneTrack.";
+
+function buildClosePopupHtml(isLoginSucceeded: boolean): string {
+  const message = isLoginSucceeded ? POPUP_MESSAGE_SUCCEEDED : POPUP_MESSAGE_FAILED;
+
   return `<!DOCTYPE html>
 <html>
   <head><title>Spotify Login</title></head>
   <body>
-    <p>You can close this window.</p>
+    <p>${message}</p>
     <script>window.close();</script>
   </body>
 </html>`;

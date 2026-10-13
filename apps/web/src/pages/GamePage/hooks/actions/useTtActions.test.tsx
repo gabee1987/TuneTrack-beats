@@ -70,7 +70,7 @@ describe("useTtActions", () => {
     fireEvent.click(skipButton);
     fireEvent.click(skipButton);
 
-    expect(screen.getByRole("button", { name: /skipping track/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /skipping song/i })).toBeDisabled();
     expect(emitActionMock).toHaveBeenCalledTimes(1);
     expect(emitActionMock).toHaveBeenCalledWith(
       ClientToServerEvent.SkipTrackWithTt,

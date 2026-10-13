@@ -33,15 +33,23 @@ describe("HomePage on a phone", () => {
   it("introduces the game in three steps", async () => {
     renderHome();
 
-    expect(await screen.findByRole("img", { name: "TuneTrack Beats" })).toBeInTheDocument();
+    expect(await screen.findByRole("img", { name: "TuneTrack" })).toBeInTheDocument();
     expect(
       screen.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent),
-    ).toEqual(["Guess", "Place", "Challenge"]);
+    ).toEqual(["Guess", "Place", "Beat!"]);
+  });
+
+  it("says under the primary action what the next screen offers", async () => {
+    renderHome();
+
+    expect(await screen.findByRole("button", { name: "Let's go!" })).toHaveAccessibleDescription(
+      "Host a game or join friends on the next screen.",
+    );
   });
 
   it("warms the lobby on intent and continues to room selection", async () => {
     renderHome();
-    const start = await screen.findByRole("button", { name: "Lets go!" });
+    const start = await screen.findByRole("button", { name: "Let's go!" });
 
     fireEvent.focus(start);
     expect(preloadLobbyRuntimeMock).toHaveBeenCalled();
@@ -56,7 +64,9 @@ describe("HomePage on a desktop", () => {
     renderHome("desktop");
 
     expect(await screen.findByRole("heading", { name: "TuneTrack beats" })).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Start" }));
+    const start = screen.getByRole("button", { name: "Let's go!" });
+    expect(start).toHaveAccessibleDescription("Host a game or join friends on the next screen.");
+    await userEvent.click(start);
 
     expect(screen.getByText("Room selection")).toBeInTheDocument();
   });
@@ -73,7 +83,7 @@ describe("HomePage after the player was removed from a room", () => {
 
   it("tells them while Home is open, then clears the message", async () => {
     renderHome();
-    await screen.findByRole("button", { name: "Lets go!" });
+    await screen.findByRole("button", { name: "Let's go!" });
     vi.useFakeTimers();
 
     act(() => {

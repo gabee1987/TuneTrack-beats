@@ -1,3 +1,5 @@
+import { useId } from "react";
+import { useI18n } from "../../../features/i18n";
 import { AppPageShell } from "../../../features/mobile-shell/AppPageShell";
 import { Button } from "../../../features/ui/primitives";
 import { StatusBanner } from "../../../features/ui/StatusBanner";
@@ -7,6 +9,9 @@ import { HomePageTopBar } from "../components/HomePageTopBar";
 import styles from "./HomePageDesktop.module.css";
 
 export function HomePageDesktop({ controller }: HomePageAssemblyProps) {
+  const { t } = useI18n();
+  const startDescriptionId = useId();
+
   return (
     <AppPageShell panelClassName={styles.panelShell} screenClassName={styles.screenShell}>
       <HomePageTopBar />
@@ -22,11 +27,12 @@ export function HomePageDesktop({ controller }: HomePageAssemblyProps) {
 
         <aside className={styles.formColumn}>
           <section className={styles.startPanel}>
-            <h2 className={styles.startTitle}>Play TuneTrack</h2>
-            <p className={styles.startCopy}>
-              Create a room as host or join an open room on the next screen.
+            <h2 className={styles.startTitle}>{t("home.desktop.title")}</h2>
+            <p className={styles.startCopy} id={startDescriptionId}>
+              {t("home.desktop.description")}
             </p>
             <Button
+              aria-describedby={startDescriptionId}
               className={styles.startButton}
               fullWidth
               haptic
@@ -37,7 +43,7 @@ export function HomePageDesktop({ controller }: HomePageAssemblyProps) {
               size="lg"
               type="button"
             >
-              Start
+              {t("home.desktop.start")}
             </Button>
           </section>
         </aside>

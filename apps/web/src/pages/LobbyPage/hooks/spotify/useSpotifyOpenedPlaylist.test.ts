@@ -338,7 +338,7 @@ describe("useSpotifyOpenedPlaylist", () => {
       );
       expect(view.params.currentPlaylistNameRef.current).toBe("Test Playlist");
       expect(view.params.setSavedPlaylistMessage).toHaveBeenCalledWith(
-        "Queue replaced with 2 songs.",
+        "Deck replaced with 2 songs.",
       );
       expect(socket.listenerCount(ServerToClientEvent.PlaylistTracks)).toBe(0);
     });
@@ -355,7 +355,7 @@ describe("useSpotifyOpenedPlaylist", () => {
       });
 
       expect(view.params.setSavedPlaylistMessage).toHaveBeenCalledWith(
-        "1 songs added to the queued playlist.",
+        "1 songs added to the deck.",
       );
     });
   });
@@ -401,7 +401,7 @@ describe("useSpotifyOpenedPlaylist", () => {
         new Set(["TESTTRACK2"]),
       );
       expect(view.params.setSavedPlaylistMessage).toHaveBeenCalledWith(
-        "2 songs removed from the queued playlist.",
+        "2 songs removed from the deck.",
       );
       expect(socket.listenerCount(ServerToClientEvent.PlaylistTracks)).toBe(0);
     });

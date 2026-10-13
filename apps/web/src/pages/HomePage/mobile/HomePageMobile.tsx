@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { AppPageShell } from "../../../features/mobile-shell/AppPageShell";
 import { AppShellMenu } from "../../../features/app-shell/AppShellMenu";
 import { useI18n } from "../../../features/i18n";
@@ -11,6 +12,7 @@ import styles from "./HomePageMobile.module.css";
 export function HomePageMobile({ controller }: HomePageAssemblyProps) {
   const { t } = useI18n();
   const menuTabs = getHomePageMenuTabSpecs();
+  const primaryActionHintId = useId();
 
   return (
     <AppPageShell panelClassName={styles.panelShell} screenClassName={styles.screenShell}>
@@ -36,7 +38,7 @@ export function HomePageMobile({ controller }: HomePageAssemblyProps) {
         </div>
 
         <header className={styles.hero}>
-          <img alt="TuneTrack Beats" className={styles.brandLogo} src="/logo.png" />
+          <img alt={t("app.name")} className={styles.brandLogo} src="/logo.png" />
           <p className={styles.tagline}>{t("home.roomEntryDescription")}</p>
         </header>
 
@@ -68,6 +70,7 @@ export function HomePageMobile({ controller }: HomePageAssemblyProps) {
 
         <div className={styles.actionZone}>
           <Button
+            aria-describedby={primaryActionHintId}
             fullWidth
             haptic
             onClick={controller.handleStart}
@@ -79,6 +82,9 @@ export function HomePageMobile({ controller }: HomePageAssemblyProps) {
           >
             {t("home.primaryAction")}
           </Button>
+          <p className={styles.primaryActionHint} id={primaryActionHintId}>
+            {t("home.primaryActionHint")}
+          </p>
         </div>
       </div>
     </AppPageShell>

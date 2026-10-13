@@ -378,9 +378,7 @@ describe("useSpotifySmartSearch", () => {
       expect(view.params.setSmartSearchQueuedTrackIds).toHaveBeenCalledWith(
         new Set(["TESTTRACK1"]),
       );
-      expect(view.params.setSavedPlaylistMessage).toHaveBeenCalledWith(
-        "Song added to the queued playlist.",
-      );
+      expect(view.params.setSavedPlaylistMessage).toHaveBeenCalledWith("Song added to the deck.");
       expect(socket.listenerCount(ServerToClientEvent.PlaylistTracks)).toBe(0);
     });
 
@@ -397,7 +395,7 @@ describe("useSpotifySmartSearch", () => {
       });
 
       expect(view.params.setSavedPlaylistMessage).toHaveBeenCalledWith(
-        "2 songs added to the queued playlist.",
+        "2 songs added to the deck.",
       );
     });
   });
@@ -439,7 +437,7 @@ describe("useSpotifySmartSearch", () => {
         new Set(["TESTTRACK2"]),
       );
       expect(view.params.setSavedPlaylistMessage).toHaveBeenCalledWith(
-        "1 songs removed from the queued playlist.",
+        "1 songs removed from the deck.",
       );
       expect(socket.listenerCount(ServerToClientEvent.PlaylistTracks)).toBe(0);
     });
