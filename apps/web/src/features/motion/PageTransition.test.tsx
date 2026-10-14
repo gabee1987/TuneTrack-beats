@@ -51,4 +51,25 @@ describe("PageTransition", () => {
 
     expect(screen.queryByText("late status")).not.toBeNull();
   });
+
+  it("takes the leaving page out of the accessibility tree and off the pointer", () => {
+    const { rerender } = render(
+      <MotionPresence mode="sync">
+        <PageTransition direction={1} key="old">
+          <button type="button">Use the practice deck</button>
+        </PageTransition>
+      </MotionPresence>,
+    );
+
+    rerender(
+      <MotionPresence mode="sync">
+        <PageTransition direction={1} key="new">
+          <button type="button">Use the practice deck</button>
+        </PageTransition>
+      </MotionPresence>,
+    );
+
+    expect(screen.getAllByText("Use the practice deck")).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "Use the practice deck" })).toBeInTheDocument();
+  });
 });

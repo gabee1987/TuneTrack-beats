@@ -19,7 +19,7 @@ function Probe() {
     <div>
       <p data-testid="language">{languageId}</p>
       <p data-testid="layout">{layoutMode}</p>
-      <p data-testid="translated">{t("home.primaryAction")}</p>
+      <p data-testid="translated">{t("home.host")}</p>
     </div>
   );
 }
@@ -29,7 +29,7 @@ describe("test harness", () => {
     renderWithProviders(<Probe />);
 
     expect(screen.getByTestId("language")).toHaveTextContent("en");
-    expect(screen.getByTestId("translated").textContent).not.toBe("home.primaryAction");
+    expect(screen.getByTestId("translated").textContent).not.toBe("home.host");
   });
 
   it("resolves the mobile layout mode by default", () => {

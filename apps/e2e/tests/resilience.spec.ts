@@ -113,7 +113,7 @@ test("an offline guest stays in the game while the host manually skips their tur
   const guest = await openPlayer("Turn Break Guest");
   const host = await openPlayer("Turn Break Host");
 
-  await Promise.all([observer.page.goto("/play"), guest.page.goto("/play")]);
+  await Promise.all([observer.page.goto("/join"), guest.page.goto("/join")]);
   const roomId = await hostRoom(host.page);
   for (const page of [guest.page, observer.page]) {
     await joinFromDirectory(page, roomId);

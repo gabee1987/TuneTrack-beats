@@ -50,14 +50,13 @@
   word-break: break-word;
 }
 
-.roomFacts,
-.loadingFacts {
+.roomFacts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
 }
 
-.roomFacts span {
+.fact {
   display: grid;
   gap: var(--space-1);
   padding: var(--space-4);
@@ -68,35 +67,32 @@
   line-height: var(--type-caption-leading);
 }
 
-.roomFacts strong {
+.fact strong {
   color: var(--color-text-primary);
   font-size: var(--type-body-lg-size);
   line-height: var(--type-body-lg-leading);
 }
 
-.form,
-.field {
+.factValueLine {
+  display: flex;
+  align-items: center;
+  height: var(--type-body-lg-leading);
+  font-size: var(--type-body-lg-size);
+}
+
+.factLabelLine {
+  display: flex;
+  align-items: center;
+  height: var(--type-caption-leading);
+}
+
+.identity {
+  justify-self: center;
+}
+
+.form {
   display: grid;
   gap: var(--space-3);
-}
-
-.field span {
-  color: var(--color-text-secondary);
-  font-size: var(--type-caption-size);
-  line-height: var(--type-caption-leading);
-  font-weight: var(--type-label-weight);
-}
-
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 
 @media (max-width: 560px) {

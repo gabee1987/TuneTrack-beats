@@ -28,6 +28,10 @@
   border-color: var(--color-status-danger-border, rgba(255, 41, 88, 0.568));
 }
 
+.toast--success {
+  border-color: color-mix(in srgb, var(--color-success) 60%, transparent);
+}
+
 .toastText {
   color: var(--color-text-primary);
   font-size: var(--type-body-size);

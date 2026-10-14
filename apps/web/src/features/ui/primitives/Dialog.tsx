@@ -10,6 +10,8 @@ export interface DialogProps {
   closeLabel?: string | undefined;
   isOpen: boolean;
   onClose: () => void;
+  /** Runs once the dialog has fully closed, including its history entry. */
+  onClosed?: (() => void) | undefined;
   title: string;
 }
 
@@ -19,6 +21,7 @@ export function Dialog({
   closeLabel = "Close",
   isOpen,
   onClose,
+  onClosed,
   title,
 }: DialogProps) {
   return (
@@ -28,6 +31,7 @@ export function Dialog({
       label={title}
       onDismiss={onClose}
       scrimClassName={styles.overlay}
+      {...(onClosed ? { onClosed } : {})}
     >
       <div className={styles.header}>
         <h2 className={styles.title}>{title}</h2>

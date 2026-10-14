@@ -11,6 +11,8 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   haptic?: boolean | undefined;
   /** Shows a spinner in place of the label, keeps the width and blocks presses. */
   isLoading?: boolean | undefined;
+  /** While loading, says what is happening next to the spinner instead of hiding the label. */
+  loadingLabel?: string | undefined;
   size?: ButtonSize | undefined;
   variant?: ButtonVariant | undefined;
 }
@@ -22,6 +24,7 @@ export function Button({
   fullWidth = false,
   haptic = false,
   isLoading = false,
+  loadingLabel,
   onClick,
   size = "md",
   type = "button",
@@ -52,7 +55,12 @@ export function Button({
       onClick={handleClick}
       type={type}
     >
-      {isLoading ? (
+      {isLoading && loadingLabel ? (
+        <>
+          <span aria-hidden="true" className={styles.inlineSpinner} />
+          {loadingLabel}
+        </>
+      ) : isLoading ? (
         <>
           <span className={styles.loadingLabel}>{children}</span>
           <span aria-hidden="true" className={styles.spinner} />

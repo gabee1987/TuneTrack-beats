@@ -36,7 +36,7 @@ test("a closed room keeps the device session for the next room", async ({ openRo
   expect(await readSessionId(host.page)).toBe(hostSessionId);
   expect(await readSessionId(guest.page)).toBe(guestSessionId);
 
-  await guest.page.goto("/play");
+  await guest.page.goto("/join");
   const secondRoomId = await hostRoom(host.page);
   await joinFromDirectory(guest.page, secondRoomId);
   await expectLobbyPlayerCount(host.page, 2);

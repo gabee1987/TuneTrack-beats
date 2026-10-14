@@ -17,8 +17,8 @@ export interface TwoPlayerRoom {
 }
 
 interface RoomFixtures {
-  /** A browser context with a saved profile; closed after the test. */
-  openPlayer: (displayName: string) => Promise<PlayerPage>;
+  /** A browser context with a saved name (`null`: a new device); closed after the test. */
+  openPlayer: (displayName: string | null) => Promise<PlayerPage>;
   /** A hosted lobby the guest joined from the live directory. */
   openRoom: (displayNames: { guest: string; host: string }) => Promise<TwoPlayerRoom>;
   spotifyRequestGuard: void;
@@ -50,7 +50,7 @@ export const test = base.extend<RoomFixtures>({
       const guest = await openPlayer(displayNames.guest);
       const host = await openPlayer(displayNames.host);
 
-      await guest.page.goto("/play");
+      await guest.page.goto("/join");
       const roomId = await hostRoom(host.page);
       await joinFromDirectory(guest.page, roomId);
       await expectLobbyPlayerCount(guest.page, 2);

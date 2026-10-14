@@ -77,70 +77,14 @@
   margin: 0;
   max-width: 28ch;
   color: var(--color-text-secondary);
-  font-size: var(--type-body-size);
-  line-height: var(--type-body-leading);
-  font-weight: var(--type-body-weight);
-}
-
-.featureList {
-  display: grid;
-  gap: var(--space-2);
-  margin-top: auto;
-}
-
-.featureCard {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: var(--space-3);
-  align-items: start;
-  padding: var(--space-4);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  outline: 1px solid var(--color-border-subtle);
-}
-
-.featureStep {
-  color: var(--color-accent-brand);
-  font-size: var(--type-micro-size);
-  line-height: var(--type-micro-leading);
-  font-weight: var(--type-micro-weight);
-  letter-spacing: 0.12em;
-}
-
-.featureCopy {
-  display: grid;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
-.featureTitle {
-  margin: 0;
-  color: var(--color-text-primary);
   font-size: var(--type-body-lg-size);
   line-height: var(--type-body-lg-leading);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.featureDescription {
-  margin: 0;
-  color: var(--color-text-secondary);
-  font-size: var(--type-caption-size);
-  line-height: var(--type-caption-leading);
+  font-weight: 600;
 }
 
 .actionZone {
-  display: grid;
-  gap: var(--space-2);
-  padding-top: var(--space-2);
-}
-
-.primaryActionHint {
-  margin: 0;
-  color: var(--color-text-secondary);
-  font-size: var(--type-caption-size);
-  line-height: var(--type-caption-leading);
-  text-align: center;
+  margin-top: auto;
+  padding-top: var(--space-4);
 }
 
 @media (orientation: landscape) and (max-width: 960px) {
@@ -155,15 +99,6 @@
   .brandLogo {
     max-height: min(28dvh, 220px);
   }
-
-  .featureList {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .featureCard {
-    grid-template-columns: 1fr;
-    min-height: 100%;
-  }
 }
 
 @media (max-height: 760px) {
@@ -174,9 +109,5 @@
 
   .brandLogo {
     max-height: min(32dvh, 260px);
-  }
-
-  .featureCard {
-    padding: var(--space-3);
   }
 }

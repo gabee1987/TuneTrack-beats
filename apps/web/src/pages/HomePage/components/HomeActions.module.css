@@ -1,0 +1,26 @@
+.actions {
+  display: grid;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.identity {
+  justify-self: center;
+  margin-bottom: var(--space-1);
+}
+
+.reason {
+  margin: calc(var(--space-1) * -1) 0 0;
+  color: var(--color-status-danger-text);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+  text-align: center;
+}
+
+.hint {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+  text-align: center;
+}

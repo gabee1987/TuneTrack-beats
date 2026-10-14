@@ -1,0 +1,106 @@
+/* The route wrapper clips, so the page scrolls itself. */
+.screen {
+  height: var(--app-height);
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  background: var(--gradient-app-background);
+}
+
+.screen .panel {
+  display: grid;
+  align-content: start;
+  gap: var(--space-6);
+  width: min(100%, 560px);
+  margin: 0 auto;
+  padding: calc(var(--safe-area-top) + var(--space-3))
+    calc(var(--safe-area-right) + var(--space-screen-gutter))
+    calc(var(--safe-area-bottom) + var(--space-8))
+    calc(var(--safe-area-left) + var(--space-screen-gutter));
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.header {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: calc(var(--space-2) * -1);
+}
+
+.title {
+  flex: 1;
+  margin: 0;
+  font-size: var(--type-title-lg-size);
+  line-height: var(--type-title-lg-leading);
+  font-weight: var(--type-title-lg-weight);
+  letter-spacing: var(--type-title-lg-tracking);
+}
+
+.identity {
+  justify-self: start;
+}
+
+.form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.reason {
+  margin: calc(var(--space-1) * -1) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+  text-align: center;
+}
+
+.rooms {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.sectionTitle {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-leading);
+  font-weight: var(--type-label-weight);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.note {
+  margin: 0;
+  padding: var(--space-4) 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
+}
+
+.roomList {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.roomItem {
+  animation: roomEnter var(--motion-standard-duration) var(--motion-ease-emphasized) both;
+}
+
+.roomCode {
+  font-family: var(--font-family-mono);
+  letter-spacing: 0.04em;
+}
+
+@keyframes roomEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}

@@ -75,6 +75,9 @@
   --type-micro-weight: 600;
   --type-micro-tracking: 0.02em;
 
+  /* Room codes: every character the same width, so a code reads out cleanly. */
+  --font-family-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
   /* Motion — durations and easings (mirror features/motion tokens) */
   --motion-quick-duration: 160ms;
   --motion-standard-duration: 240ms;

@@ -8,12 +8,14 @@ import { useEffect, useState } from "react";
 import { getSocketClient } from "../../services/socket/socketClient";
 
 interface UseRoomDirectoryResult {
+  /** False until the first list arrives, so a loading list is not shown as empty. */
+  hasLoaded: boolean;
   rooms: PublicRoomSummary[];
-  refreshRooms: () => void;
 }
 
 export function useRoomDirectory(): UseRoomDirectoryResult {
   const [rooms, setRooms] = useState<PublicRoomSummary[]>([]);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   useEffect(() => {
     let isDisposed = false;
@@ -24,6 +26,7 @@ export function useRoomDirectory(): UseRoomDirectoryResult {
 
       function handleRoomList(payload: RoomListPayload) {
         setRooms(payload.rooms);
+        setHasLoaded(true);
       }
 
       function requestRoomList() {
@@ -50,11 +53,6 @@ export function useRoomDirectory(): UseRoomDirectoryResult {
     };
   }, []);
 
-  function refreshRooms() {
-    void getSocketClient().then((socketClient) => {
-      socketClient.emit(ClientToServerEvent.ListRooms);
-    });
-  }
-
-  return { refreshRooms, rooms };
+  // The server pushes every change to the list while this page watches it.
+  return { hasLoaded, rooms };
 }

@@ -4,7 +4,7 @@ import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { TextInput } from "../../../features/ui/TextInput";
 import { Button } from "../../../features/ui/primitives";
 import type { LobbyAssemblyModel } from "../hooks/buildLobbyAssemblyModel";
-import { isValidRoomName } from "../lobbyRoomName";
+import { isValidRoomName } from "../../../features/rooms/roomCode";
 import styles from "./LobbyRoomRenameCard.module.css";
 
 interface LobbyRoomRenameCardProps {

@@ -2,7 +2,8 @@ import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { AppPageShell } from "../../../features/mobile-shell/AppPageShell";
 import { FirstRunHint } from "../../../features/hints/FirstRunHint";
 import { useI18n } from "../../../features/i18n";
-import { PlayerNameField } from "../../../features/profile/PlayerNameField";
+import { IdentityChip } from "../../../features/profile/IdentityChip";
+import { NameSheet } from "../../../features/profile/NameSheet";
 import { ConnectionStatus } from "../../../features/rooms/ConnectionStatus";
 import { StatusBanner } from "../../../features/ui/StatusBanner";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
@@ -17,7 +18,7 @@ import { LobbyPlayerList } from "../components/LobbyPlayerList";
 import { LobbyRoomActions } from "../components/LobbyRoomActions";
 import { LobbySectionHeader } from "../components/LobbySectionHeader";
 import { LobbyRoomSettingsStatus } from "../components/LobbyRoomSettingsStatus";
-import { isValidRoomName } from "../lobbyRoomName";
+import { isValidRoomName } from "../../../features/rooms/roomCode";
 import styles from "./LobbyPageMobile.module.css";
 import { Overlay } from "../../../features/overlay";
 
@@ -38,6 +39,7 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
   const roomNameInputId = useId();
   const [draftRoomId, setDraftRoomId] = useState(resolvedRoomId);
   const [infoContent, setInfoContent] = useState<InfoContent | null>(null);
+  const [isNameSheetOpen, setIsNameSheetOpen] = useState(false);
 
   useEffect(() => {
     setDraftRoomId(resolvedRoomId);
@@ -72,7 +74,8 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
   }
 
   function handlePlayerNameSave(displayName: string) {
-    void identity.onPlayerProfileChange(displayName);
+    setIsNameSheetOpen(false);
+    if (displayName !== visibleDisplayName) void identity.onPlayerProfileChange(displayName);
   }
 
   function scrollToAdvancedSettings() {
@@ -130,9 +133,15 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
           </div>
 
           <div className={styles.requiredFields}>
-            <PlayerNameField
+            <IdentityChip
               disabled={identity.isIdentityActionPending}
               displayName={visibleDisplayName}
+              onChange={() => setIsNameSheetOpen(true)}
+            />
+            <NameSheet
+              initialName={visibleDisplayName}
+              isOpen={isNameSheetOpen}
+              onClose={() => setIsNameSheetOpen(false)}
               onSave={handlePlayerNameSave}
             />
 

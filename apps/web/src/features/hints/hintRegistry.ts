@@ -8,12 +8,6 @@ export interface HintDefinition {
 }
 
 export const hintRegistry: Record<HintId, HintDefinition> = {
-  "profile-name": {
-    bodyKey: "hints.profileName.body",
-    id: "profile-name",
-    priority: 10,
-    titleKey: "hints.profileName.title",
-  },
   "lobby-spotify": {
     bodyKey: "hints.lobbySpotify.body",
     id: "lobby-spotify",

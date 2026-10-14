@@ -8,8 +8,9 @@ test("the game page says when the connection drops and refuses moves until it is
   // E2E grace period, which a slow reconnect would outlive.
   const { host, roomId } = await openRoom({ guest: "Banner Guest", host: "Banner Host" });
   await startGame(host.page, roomId);
-  // The lobby, with its own connection chip, stays mounted for its exit animation.
-  await expect(host.page.getByRole("button", { name: "Start Game" })).toHaveCount(0);
+  // The lobby, with its own connection chip, stays in the DOM for its exit animation; a
+  // leaving page is already out of the accessibility tree, so wait for its element to go.
+  await expect(host.page.locator("main")).toHaveCount(1);
   const offlineBanner = host.page.getByText("You are offline", { exact: true });
   await expect(offlineBanner).toHaveCount(0);
 

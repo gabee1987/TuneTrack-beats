@@ -4,7 +4,7 @@ import { renderWithProviders } from "../../test/renderWithProviders";
 import { FirstRunHint } from "./FirstRunHint";
 import { readHintState, setHintsEnabled } from "./hintState";
 
-const HINT_TITLE = "Choose your player name";
+const HINT_TITLE = "Start when everyone is ready";
 const HINT_DELAY_MS = 1_500;
 const HINT_AUTO_DISMISS_MS = 12_000;
 
@@ -19,7 +19,7 @@ function renderHint({
   isEligible = true,
 }: { anchor?: HTMLElement | null; isEligible?: boolean } = {}) {
   return renderWithProviders(
-    <FirstRunHint anchor={anchor} id="profile-name" isEligible={isEligible} />,
+    <FirstRunHint anchor={anchor} id="lobby-start" isEligible={isEligible} />,
   );
 }
 
@@ -46,7 +46,7 @@ describe("FirstRunHint and its anchor hook", () => {
 
     advance(1);
     expect(screen.getByRole("dialog", { name: HINT_TITLE })).toBeInTheDocument();
-    expect(readHintState().seenCounts["profile-name"]).toBe(1);
+    expect(readHintState().seenCounts["lobby-start"]).toBe(1);
   });
 
   it("never appears again once seen", () => {
@@ -86,7 +86,7 @@ describe("FirstRunHint and its anchor hook", () => {
     advance(HINT_DELAY_MS * 2);
 
     expect(screen.queryByRole("dialog", { name: HINT_TITLE })).not.toBeInTheDocument();
-    expect(readHintState().seenCounts["profile-name"]).toBeUndefined();
+    expect(readHintState().seenCounts["lobby-start"]).toBeUndefined();
   });
 
   it("stays hidden while hints are switched off", () => {

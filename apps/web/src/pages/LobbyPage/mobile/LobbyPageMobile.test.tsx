@@ -53,7 +53,7 @@ function createModel(onPlayerProfileChange: (displayName: string) => Promise<boo
 }
 
 describe("LobbyPageMobile identity settings", () => {
-  it("saves the player name from its own inline field", () => {
+  it("changes the player name through the Name sheet", () => {
     const onPlayerProfileChange = vi.fn(async () => true);
     render(
       <MemoryRouter>
@@ -63,12 +63,13 @@ describe("LobbyPageMobile identity settings", () => {
       </MemoryRouter>,
     );
 
-    fireEvent.change(screen.getByRole("textbox", { name: /player name/i }), {
-      target: { value: "DJ Nova" },
+    fireEvent.click(screen.getByRole("button", { name: "Change" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Your name" }), {
+      target: { value: "Player Two" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /save player name/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
 
-    expect(onPlayerProfileChange).toHaveBeenCalledWith("DJ Nova");
+    expect(onPlayerProfileChange).toHaveBeenCalledWith("Player Two");
   });
 
   it("keeps room identity read-only for guests", () => {

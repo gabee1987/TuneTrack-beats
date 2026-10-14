@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { Navigate, createBrowserRouter } from "react-router-dom";
 import { AppRoutes } from "./AppRoutes";
 import { loadLazyRoute } from "./lazyRoute";
 
@@ -18,12 +18,17 @@ export const router = createBrowserRouter([
         },
       },
       {
+        // Play was replaced by Join (`22` §3); old links and bookmarks still arrive.
         path: "play",
+        element: <Navigate replace to="/join" />,
+      },
+      {
+        path: "join",
         lazy: async () => {
-          const { PlayPage } = await loadLazyRoute(() => import("../pages/PlayPage/PlayPage"));
+          const { JoinPage } = await loadLazyRoute(() => import("../pages/JoinPage/JoinPage"));
 
           return {
-            Component: PlayPage,
+            Component: JoinPage,
           };
         },
       },

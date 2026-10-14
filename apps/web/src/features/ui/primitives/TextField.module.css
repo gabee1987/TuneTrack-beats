@@ -45,6 +45,12 @@
   outline: none;
 }
 
+.code {
+  font-family: var(--font-family-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .input:focus-visible {
   outline: none;
 }

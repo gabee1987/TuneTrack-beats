@@ -54,11 +54,15 @@ export function StartupFlowPrimitivesGallery() {
             Log in with Spotify
           </Button>
         </div>
+        <Button fullWidth isLoading loadingLabel="Setting up your room…" size="lg">
+          Host a game
+        </Button>
       </section>
 
       <section className={styles.section}>
         <h2 className="typeTitleMd">Text field</h2>
         <TextField
+          appearance="code"
           autoCapitalize="characters"
           helper="Ask the host for the code."
           label="Room code"

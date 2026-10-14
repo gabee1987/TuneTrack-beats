@@ -84,6 +84,19 @@ describe("Button", () => {
     expect(triggerPressHapticMock).not.toHaveBeenCalled();
   });
 
+  it("says what is happening next to the spinner when given a loading label", () => {
+    renderWithProviders(
+      <Button isLoading loadingLabel="Setting up your room…">
+        Host a game
+      </Button>,
+    );
+
+    const button = screen.getByRole("button", { name: "Setting up your room…" });
+
+    expect(button).toHaveAttribute("aria-busy", "true");
+    expect(button).toBeDisabled();
+  });
+
   it("neither buzzes nor reports a click while disabled", async () => {
     const onClick = vi.fn();
     renderWithProviders(

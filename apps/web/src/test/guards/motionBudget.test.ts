@@ -12,6 +12,7 @@ const LONG_RUNNING_ALLOWLIST = [
   "features/loading/AppLoadingOverlay.module.css .note",
   "features/loading/AppLoadingOverlay.module.css .record",
   "features/loading/AppLoadingOverlay.module.css .equalizer span",
+  "features/ui/primitives/Button.module.css .inlineSpinner",
   "features/ui/primitives/Button.module.css .spinner",
   "features/ui/primitives/Skeleton.module.css .skeleton",
   "pages/HomePage/mobile/AnimatedMenuBackground.module.css .orbOrange",

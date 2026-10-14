@@ -1,7 +1,7 @@
 import { expect, test } from "./support/fixtures";
 import {
   expectGamePage,
-  homeStartButton,
+  homeJoinButton,
   hostRoom,
   openGameMenu,
   startGame,
@@ -18,11 +18,20 @@ test("the host closes the room and both players can start again immediately", as
 
   for (const page of [host.page, guest.page]) {
     await expect(page).toHaveURL("/");
-    const startButton = homeStartButton(page);
-    await expect(startButton).toBeVisible();
-    await startButton.click();
-    await expect(page).toHaveURL("/play");
+    const joinButton = homeJoinButton(page);
+    await expect(joinButton).toBeVisible();
+    await joinButton.click();
+    await expect(page).toHaveURL("/join");
   }
+});
+
+test("an old Play link lands on Join", async ({ openPlayer }) => {
+  const { page } = await openPlayer("Bookmark Player");
+
+  await page.goto("/play");
+
+  await expect(page).toHaveURL("/join");
+  await expect(page.getByRole("heading", { name: "Join a game", level: 1 })).toBeVisible();
 });
 
 test("the lobby leaves the page once the game starts", async ({ openPlayer }) => {

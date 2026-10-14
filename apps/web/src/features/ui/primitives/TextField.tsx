@@ -3,6 +3,8 @@ import { classNames } from "../classNames";
 import styles from "./TextField.module.css";
 
 export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "children"> {
+  /** `code`: monospace and shown in capitals, for room codes; the value keeps what was typed. */
+  appearance?: "code" | "text" | undefined;
   /** Replaces the helper and is announced as soon as it appears. */
   error?: string | null | undefined;
   helper?: ReactNode | undefined;
@@ -12,7 +14,17 @@ export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElemen
 }
 
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextField(
-  { className, error, helper, id, label, trailing, type = "text", ...inputProps },
+  {
+    appearance = "text",
+    className,
+    error,
+    helper,
+    id,
+    label,
+    trailing,
+    type = "text",
+    ...inputProps
+  },
   ref,
 ) {
   const generatedId = useId();
@@ -31,7 +43,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
           {...inputProps}
           aria-describedby={message ? messageId : undefined}
           aria-invalid={hasError || undefined}
-          className={styles.input}
+          className={classNames(styles.input, appearance === "code" ? styles.code : undefined)}
           id={inputId}
           ref={ref}
           type={type}

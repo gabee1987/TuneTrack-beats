@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { I18nProvider } from "../features/i18n";
 import { AppLoadingProvider } from "../features/loading";
+import { usePlayerProfileStore } from "../features/profile/playerProfile";
 import { AppToastProvider } from "../features/toast";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { AppRoutes } from "./AppRoutes";
@@ -33,9 +34,9 @@ function buildRouter(initialPath: string) {
             }),
           },
           {
-            path: "play",
+            path: "join",
             lazy: async () => ({
-              Component: (await import("../pages/PlayPage/PlayPage")).PlayPage,
+              Component: (await import("../pages/JoinPage/JoinPage")).JoinPage,
             }),
           },
           {
@@ -82,9 +83,10 @@ describe("closing a room, then starting a new one", () => {
     resetSharedFakeSocket();
     stubMobileViewport();
     seedLocalStorage({ "tunetrack.playerDisplayName": "Player 1" });
+    usePlayerProfileStore.setState({ displayName: "Player 1", hasCompletedSetup: true });
   });
 
-  // Boots the real router and loads the game, home and play route modules for real, so it
+  // Boots the real router and loads the game, home and join route modules for real, so it
   // needs far more than the default budget when the rest of the suite is competing for CPU.
   it("leaves the home screen's primary action working", { timeout: 30_000 }, async () => {
     const user = userEvent.setup();
@@ -123,13 +125,13 @@ describe("closing a room, then starting a new one", () => {
       });
     });
 
-    const startButton = await screen.findByRole(
+    const joinButton = await screen.findByRole(
       "button",
-      { name: /let's go/i },
+      { name: "Join a game" },
       { timeout: 10_000 },
     );
-    await user.click(startButton);
+    await user.click(joinButton);
 
-    await waitFor(() => expect(router.state.location.pathname).toBe("/play"));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/join"));
   });
 });

@@ -22,9 +22,11 @@ function ListRowContent({ leading, subtitle, title, trailing }: ListRowContentPr
   );
 }
 
-export type ListRowProps = ListRowContentProps & HTMLAttributes<HTMLDivElement>;
+// `title` is the row's visible title, not the HTML tooltip attribute.
+export type ListRowProps = ListRowContentProps & Omit<HTMLAttributes<HTMLDivElement>, "title">;
 
-export type ListRowButtonProps = ListRowContentProps & ButtonHTMLAttributes<HTMLButtonElement>;
+export type ListRowButtonProps = ListRowContentProps &
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, "title">;
 
 export function ListRow({ className, leading, subtitle, title, trailing, ...props }: ListRowProps) {
   return (

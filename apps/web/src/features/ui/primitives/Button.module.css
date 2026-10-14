@@ -127,6 +127,16 @@
   animation: buttonSpin 0.8s linear infinite;
 }
 
+.inlineSpinner {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: var(--radius-circle);
+  animation: buttonSpin 0.8s linear infinite;
+}
+
 @keyframes buttonSpin {
   to {
     transform: rotate(360deg);

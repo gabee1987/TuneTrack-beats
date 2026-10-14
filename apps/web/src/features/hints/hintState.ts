@@ -1,5 +1,4 @@
 export type HintId =
-  | "profile-name"
   | "lobby-spotify"
   | "lobby-start"
   | "game-drag-preview"

@@ -1,4 +1,4 @@
-import { m, PresenceContext } from "framer-motion";
+import { m, PresenceContext, useIsPresent } from "framer-motion";
 import { useReducedMotionPreference } from "./useReducedMotionPreference";
 import { type ReactNode, useContext, useMemo } from "react";
 import {
@@ -17,6 +17,9 @@ const keepNoExitOpen = () => () => {};
 export function PageTransition({ children, direction }: PageTransitionProps) {
   const reduceMotion = useReducedMotionPreference();
   const pagePresence = useContext(PresenceContext);
+  // A leaving page is still drawn while it slides out, but it is no longer the page: it takes
+  // no taps and leaves the accessibility tree, so nothing finds two copies of a control.
+  const isLeaving = !useIsPresent();
   // Only this wrapper's exit decides when the old page leaves. Every motion element inside
   // would otherwise hold it open, and one mounted after the exit began never reports done, so
   // the page stayed mounted for good (B18). The page still sees `isPresent` turn false.
@@ -29,6 +32,7 @@ export function PageTransition({ children, direction }: PageTransitionProps) {
   return (
     <m.div
       animate="animate"
+      aria-hidden={isLeaving || undefined}
       custom={direction}
       exit="exit"
       initial="initial"
@@ -37,6 +41,7 @@ export function PageTransition({ children, direction }: PageTransitionProps) {
         height: "max-content",
         minHeight: "var(--app-height)",
         position: "absolute",
+        ...(isLeaving ? { pointerEvents: "none" as const } : {}),
         width: "100%",
         willChange: "transform",
         zIndex: 2,

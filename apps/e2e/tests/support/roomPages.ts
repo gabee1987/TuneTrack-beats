@@ -20,7 +20,11 @@ export async function expectNoUnexpectedSpotifyRequests(request: APIRequestConte
   await expect(response.json()).resolves.toEqual({ unexpectedRequests: [] });
 }
 
-export async function createNamedPage(browser: Browser, displayName: string): Promise<PlayerPage> {
+/** A fresh device; `null` means no saved name, as on a first visit. */
+export async function createNamedPage(
+  browser: Browser,
+  displayName: string | null,
+): Promise<PlayerPage> {
   const context = await browser.newContext();
   await context.addInitScript(() => {
     class FakeSpotifyPlayer {
@@ -71,10 +75,12 @@ export async function createNamedPage(browser: Browser, displayName: string): Pr
       }
 
       localStorage.setItem("tunetrack.language", "en");
-      localStorage.setItem(
-        storageKey,
-        JSON.stringify({ displayName: name, hasCompletedSetup: true }),
-      );
+      if (name !== null) {
+        localStorage.setItem(
+          storageKey,
+          JSON.stringify({ displayName: name, hasCompletedSetup: true }),
+        );
+      }
     },
     { name: displayName, storageKey: playerProfileStorageKey },
   );
@@ -83,8 +89,8 @@ export async function createNamedPage(browser: Browser, displayName: string): Pr
 }
 
 export async function hostRoom(page: Page): Promise<string> {
-  await page.goto("/play");
-  await page.getByRole("button", { name: "Host a game" }).click();
+  await page.goto("/");
+  await page.getByRole("button", { name: "Host a game", exact: true }).click();
   await expect(page).toHaveURL(/\/lobby\/[^/?#]+$/);
 
   const roomId = new URL(page.url()).pathname.split("/").at(-1);
@@ -98,6 +104,8 @@ export async function joinFromDirectory(page: Page, roomId: string): Promise<voi
   const directoryRoom = page.getByRole("button", { name: new RegExp(escapeRegex(roomId)) });
   await expect(directoryRoom).toBeVisible();
   await directoryRoom.click();
+  // Join's open-rooms list is a list too, so a player count only means something in the lobby.
+  await expect(page).toHaveURL(`/lobby/${roomId}`);
 }
 
 /** Start needs a deck (decision 7); the practice deck is the explicit choice that needs no Spotify. */
@@ -106,7 +114,7 @@ export async function choosePracticeDeck(host: Page): Promise<void> {
     name: "Use the practice deck",
     exact: true,
   });
-  // Right after create, the lobby that is leaving still renders until its exit transition ends.
+  // Right after create the leaving lobby is still drawn but hidden from the accessibility tree.
   await expect(practiceDeckButton).toHaveCount(1);
   await practiceDeckButton.click();
   await expect(host.getByText(/^Practice deck · \d+ songs · no audio$/)).toBeVisible();
@@ -155,9 +163,9 @@ export async function expectHeaderStatus(page: Page, statusText: string): Promis
   await expect(page.getByText(statusText, { exact: true }).first()).toBeAttached();
 }
 
-/** Home names its primary action "Let's go!" on both desktop and phone. */
-export function homeStartButton(page: Page): Locator {
-  return page.getByRole("button", { name: "Let's go!", exact: true });
+/** Home offers "Join a game" on both desktop and phone. */
+export function homeJoinButton(page: Page): Locator {
+  return page.getByRole("button", { name: "Join a game", exact: true });
 }
 
 export async function expectLobbyPlayerCount(page: Page, count: number): Promise<void> {

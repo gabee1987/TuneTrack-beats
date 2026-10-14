@@ -39,7 +39,10 @@ export function useOverlayRegistration({
       id,
       kind,
     });
-    panelRef.current?.focus({ preventScroll: true });
+    // A form overlay marks its first field `data-autofocus`, so typing can start at once.
+    const panel = panelRef.current;
+    const initialFocus = panel?.querySelector<HTMLElement>("[data-autofocus]") ?? panel;
+    initialFocus?.focus({ preventScroll: true });
 
     return () => {
       unregister();
