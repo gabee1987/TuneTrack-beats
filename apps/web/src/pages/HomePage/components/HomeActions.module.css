@@ -4,6 +4,30 @@
   width: 100%;
 }
 
+/* The chip, the two buttons and the sub-label rise in one after another when Home opens. */
+.actions > * {
+  animation: actionRise var(--motion-screen-duration) var(--motion-ease-emphasized) backwards;
+}
+
+.actions > :nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.actions > :nth-child(3) {
+  animation-delay: 120ms;
+}
+
+.actions > :nth-child(n + 4) {
+  animation-delay: 180ms;
+}
+
+@keyframes actionRise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
 .identity {
   justify-self: center;
   margin-bottom: var(--space-1);

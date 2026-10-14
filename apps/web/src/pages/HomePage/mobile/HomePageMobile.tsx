@@ -4,6 +4,7 @@ import { useI18n } from "../../../features/i18n";
 import { StatusBanner } from "../../../features/ui/StatusBanner";
 import type { HomePageAssemblyProps } from "../HomePage.types";
 import { HomeActions } from "../components/HomeActions";
+import { HomeTimelineDemo } from "../components/HomeTimelineDemo";
 import { getHomePageMenuTabSpecs } from "../homePageMenuConfig";
 import { AnimatedMenuBackground } from "./AnimatedMenuBackground";
 import styles from "./HomePageMobile.module.css";
@@ -38,6 +39,7 @@ export function HomePageMobile({ controller }: HomePageAssemblyProps) {
         <header className={styles.hero}>
           <img alt={t("app.name")} className={styles.brandLogo} src="/logo.png" />
           <p className={styles.tagline}>{t("home.tagline")}</p>
+          <HomeTimelineDemo />
         </header>
 
         <div className={styles.actionZone}>

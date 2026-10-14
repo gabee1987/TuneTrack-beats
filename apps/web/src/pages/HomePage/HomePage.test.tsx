@@ -82,6 +82,11 @@ describe.each(["mobile", "desktop"] as const)("HomePage (%s)", (layout) => {
       "You play too. Songs play on the host's phone.",
     );
     expect(screen.getByRole("button", { name: "Join a game" })).toBeEnabled();
+    expect(
+      screen.getByRole("img", {
+        name: "Example: a song from 1985 placed between 1979 and 1994.",
+      }),
+    ).toBeInTheDocument();
   });
 
   it("hosts at once with a saved name, warming the lobby first", async () => {
