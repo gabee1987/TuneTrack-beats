@@ -318,5 +318,525 @@
     "artist": "Dua Lipa",
     "albumTitle": "Future Nostalgia",
     "genre": "Disco-pop"
+  },
+  {
+    "id": "track-041",
+    "releaseYear": 2013,
+    "title": "Megitsune",
+    "artist": "BABYMETAL",
+    "albumTitle": "Babymetal",
+    "genre": "Kawaii Metal"
+  },
+  {
+    "id": "track-042",
+    "releaseYear": 2014,
+    "title": "Gimme Chocolate!!",
+    "artist": "BABYMETAL",
+    "albumTitle": "Babymetal",
+    "genre": "Kawaii Metal"
+  },
+  {
+    "id": "track-043",
+    "releaseYear": 2016,
+    "title": "Karate",
+    "artist": "BABYMETAL",
+    "albumTitle": "Metal Resistance",
+    "genre": "Kawaii Metal"
+  },
+  {
+    "id": "track-044",
+    "releaseYear": 2020,
+    "title": "Usseewa",
+    "artist": "Ado",
+    "albumTitle": "Kyōgen",
+    "genre": "J-Pop"
+  },
+  {
+    "id": "track-045",
+    "releaseYear": 2021,
+    "title": "Odo",
+    "artist": "Ado",
+    "albumTitle": "Kyōgen",
+    "genre": "J-Pop"
+  },
+  {
+    "id": "track-046",
+    "releaseYear": 2022,
+    "title": "New Genesis",
+    "artist": "Ado",
+    "albumTitle": "Uta's Songs: One Piece Film Red",
+    "genre": "J-Pop"
+  },
+  {
+    "id": "track-047",
+    "releaseYear": 2023,
+    "title": "Show",
+    "artist": "Ado",
+    "albumTitle": "Zanmu",
+    "genre": "J-Pop"
+  },
+  {
+    "id": "track-048",
+    "releaseYear": 2020,
+    "title": "Otonablue",
+    "artist": "Atarashii Gakko!",
+    "albumTitle": "Otonablue",
+    "genre": "J-Pop"
+  },
+  {
+    "id": "track-049",
+    "releaseYear": 2023,
+    "title": "Tokyo Calling",
+    "artist": "Atarashii Gakko!",
+    "albumTitle": "AG! Calling",
+    "genre": "J-Pop"
+  },
+  {
+    "id": "track-050",
+    "releaseYear": 2024,
+    "title": "Fly High",
+    "artist": "Atarashii Gakko!",
+    "albumTitle": "AG! Calling",
+    "genre": "J-Pop"
+  },
+  {
+    "id": "track-051",
+    "releaseYear": 2000,
+    "title": "Wishmaster",
+    "artist": "Nightwish",
+    "albumTitle": "Wishmaster",
+    "genre": "Symphonic Metal"
+  },
+  {
+    "id": "track-052",
+    "releaseYear": 2004,
+    "title": "Nemo",
+    "artist": "Nightwish",
+    "albumTitle": "Once",
+    "genre": "Symphonic Metal"
+  },
+  {
+    "id": "track-053",
+    "releaseYear": 2007,
+    "title": "Amaranth",
+    "artist": "Nightwish",
+    "albumTitle": "Dark Passion Play",
+    "genre": "Symphonic Metal"
+  },
+  {
+    "id": "track-054",
+    "releaseYear": 2011,
+    "title": "Storytime",
+    "artist": "Nightwish",
+    "albumTitle": "Imaginaerum",
+    "genre": "Symphonic Metal"
+  },
+  {
+    "id": "track-055",
+    "releaseYear": 2024,
+    "title": "Otomodachi",
+    "artist": "Phantom Siita",
+    "albumTitle": "Otomodachi",
+    "genre": "J-Rock"
+  },
+  {
+    "id": "track-056",
+    "releaseYear": 2024,
+    "title": "Hanabami",
+    "artist": "Phantom Siita",
+    "albumTitle": "Hanabami",
+    "genre": "J-Rock"
+  },
+  {
+    "id": "track-057",
+    "releaseYear": 2024,
+    "title": "Zoku Zoku",
+    "artist": "Phantom Siita",
+    "albumTitle": "Zoku Zoku",
+    "genre": "J-Rock"
+  },
+  {
+    "id": "track-058",
+    "releaseYear": 2001,
+    "title": "Tears of a Mandrake",
+    "artist": "Edguy",
+    "albumTitle": "Mandrake",
+    "genre": "Power Metal"
+  },
+  {
+    "id": "track-059",
+    "releaseYear": 2004,
+    "title": "Lavatory Love Machine",
+    "artist": "Edguy",
+    "albumTitle": "Hellfire Club",
+    "genre": "Power Metal"
+  },
+  {
+    "id": "track-060",
+    "releaseYear": 2005,
+    "title": "Superheroes",
+    "artist": "Edguy",
+    "albumTitle": "Superheroes",
+    "genre": "Power Metal"
+  },
+  {
+    "id": "track-061",
+    "releaseYear": 1978,
+    "title": "Don't Stop Me Now",
+    "artist": "Queen",
+    "albumTitle": "Jazz",
+    "genre": "Rock"
+  },
+  {
+    "id": "track-062",
+    "releaseYear": 1980,
+    "title": "Another One Bites the Dust",
+    "artist": "Queen",
+    "albumTitle": "The Game",
+    "genre": "Rock"
+  },
+  {
+    "id": "track-063",
+    "releaseYear": 1981,
+    "title": "Under Pressure",
+    "artist": "Queen and David Bowie",
+    "albumTitle": "Hot Space",
+    "genre": "Rock"
+  },
+  {
+    "id": "track-064",
+    "releaseYear": 1978,
+    "title": "Hold the Line",
+    "artist": "Toto",
+    "albumTitle": "Toto",
+    "genre": "Rock"
+  },
+  {
+    "id": "track-065",
+    "releaseYear": 1979,
+    "title": "99",
+    "artist": "Toto",
+    "albumTitle": "Hydra",
+    "genre": "Soft Rock"
+  },
+  {
+    "id": "track-066",
+    "releaseYear": 1982,
+    "title": "Rosanna",
+    "artist": "Toto",
+    "albumTitle": "Toto IV",
+    "genre": "Rock"
+  },
+  {
+    "id": "track-067",
+    "releaseYear": 1982,
+    "title": "Africa",
+    "artist": "Toto",
+    "albumTitle": "Toto IV",
+    "genre": "Soft Rock"
+  },
+  {
+    "id": "track-068",
+    "releaseYear": 1978,
+    "title": "Wheel in the Sky",
+    "artist": "Journey",
+    "albumTitle": "Infinity",
+    "genre": "Rock"
+  },
+  {
+    "id": "track-069",
+    "releaseYear": 1980,
+    "title": "Any Way You Want It",
+    "artist": "Journey",
+    "albumTitle": "Departure",
+    "genre": "Rock"
+  },
+  {
+    "id": "track-070",
+    "releaseYear": 1981,
+    "title": "Don't Stop Believin'",
+    "artist": "Journey",
+    "albumTitle": "Escape",
+    "genre": "Rock"
+  },
+  {
+    "id": "track-071",
+    "releaseYear": 1983,
+    "title": "Separate Ways (Worlds Apart)",
+    "artist": "Journey",
+    "albumTitle": "Frontiers",
+    "genre": "Rock"
+  },
+  {
+    "id": "track-072",
+    "releaseYear": 1976,
+    "title": "More Than a Feeling",
+    "artist": "Boston",
+    "albumTitle": "Boston",
+    "genre": "Rock"
+  },
+  {
+    "id": "track-073",
+    "releaseYear": 1978,
+    "title": "Don't Look Back",
+    "artist": "Boston",
+    "albumTitle": "Don't Look Back",
+    "genre": "Rock"
+  },
+  {
+    "id": "track-074",
+    "releaseYear": 1986,
+    "title": "Amanda",
+    "artist": "Boston",
+    "albumTitle": "Third Stage",
+    "genre": "Soft Rock"
+  },
+  {
+    "id": "track-075",
+    "releaseYear": 2018,
+    "title": "Drastic Nadeshiko",
+    "artist": "Hanabie.",
+    "albumTitle": "Kaika Sengen",
+    "genre": "Metalcore"
+  },
+  {
+    "id": "track-076",
+    "releaseYear": 2022,
+    "title": "NEET GAME",
+    "artist": "Hanabie.",
+    "albumTitle": "NEET GAME",
+    "genre": "Metalcore"
+  },
+  {
+    "id": "track-077",
+    "releaseYear": 2023,
+    "title": "Osaki ni Shitsureishimasu",
+    "artist": "Hanabie.",
+    "albumTitle": "Osaki ni Shitsureishimasu",
+    "genre": "Metalcore"
+  },
+  {
+    "id": "track-078",
+    "releaseYear": 2000,
+    "title": "In the End",
+    "artist": "Linkin Park",
+    "albumTitle": "Hybrid Theory",
+    "genre": "Nu Metal"
+  },
+  {
+    "id": "track-079",
+    "releaseYear": 2003,
+    "title": "Numb",
+    "artist": "Linkin Park",
+    "albumTitle": "Meteora",
+    "genre": "Nu Metal"
+  },
+  {
+    "id": "track-080",
+    "releaseYear": 2007,
+    "title": "What I've Done",
+    "artist": "Linkin Park",
+    "albumTitle": "Minutes to Midnight",
+    "genre": "Alternative Rock"
+  },
+  {
+    "id": "track-081",
+    "releaseYear": 2024,
+    "title": "The Emptiness Machine",
+    "artist": "Linkin Park",
+    "albumTitle": "From Zero",
+    "genre": "Alternative Rock"
+  },
+  {
+    "id": "track-082",
+    "releaseYear": 1957,
+    "title": "Jailhouse Rock",
+    "artist": "Elvis Presley",
+    "albumTitle": "Jailhouse Rock",
+    "genre": "Rock and Roll"
+  },
+  {
+    "id": "track-083",
+    "releaseYear": 1958,
+    "title": "Johnny B. Goode",
+    "artist": "Chuck Berry",
+    "albumTitle": "Chuck Berry Is on Top",
+    "genre": "Rock and Roll"
+  },
+  {
+    "id": "track-084",
+    "releaseYear": 1963,
+    "title": "Be My Baby",
+    "artist": "The Ronettes",
+    "albumTitle": "Be My Baby",
+    "genre": "Pop"
+  },
+  {
+    "id": "track-085",
+    "releaseYear": 1965,
+    "title": "(I Can't Get No) Satisfaction",
+    "artist": "The Rolling Stones",
+    "albumTitle": "Out of Our Heads",
+    "genre": "Rock"
+  },
+  {
+    "id": "track-086",
+    "releaseYear": 1969,
+    "title": "Here Comes the Sun",
+    "artist": "The Beatles",
+    "albumTitle": "Abbey Road",
+    "genre": "Rock"
+  },
+  {
+    "id": "track-087",
+    "releaseYear": 1976,
+    "title": "Dancing Queen",
+    "artist": "ABBA",
+    "albumTitle": "Arrival",
+    "genre": "Pop"
+  },
+  {
+    "id": "track-088",
+    "releaseYear": 1977,
+    "title": "Stayin' Alive",
+    "artist": "Bee Gees",
+    "albumTitle": "Saturday Night Fever",
+    "genre": "Disco"
+  },
+  {
+    "id": "track-089",
+    "releaseYear": 1983,
+    "title": "99 Luftballons",
+    "artist": "Nena",
+    "albumTitle": "Nena",
+    "genre": "Neue Deutsche Welle"
+  },
+  {
+    "id": "track-090",
+    "releaseYear": 1987,
+    "title": "I Wanna Dance with Somebody (Who Loves Me)",
+    "artist": "Whitney Houston",
+    "albumTitle": "Whitney",
+    "genre": "Pop"
+  },
+  {
+    "id": "track-091",
+    "releaseYear": 1989,
+    "title": "Like a Prayer",
+    "artist": "Madonna",
+    "albumTitle": "Like a Prayer",
+    "genre": "Pop"
+  },
+  {
+    "id": "track-092",
+    "releaseYear": 1998,
+    "title": "...Baby One More Time",
+    "artist": "Britney Spears",
+    "albumTitle": "...Baby One More Time",
+    "genre": "Pop"
+  },
+  {
+    "id": "track-093",
+    "releaseYear": 1999,
+    "title": "Smooth",
+    "artist": "Santana feat. Rob Thomas",
+    "albumTitle": "Supernatural",
+    "genre": "Latin Rock"
+  },
+  {
+    "id": "track-094",
+    "releaseYear": 2002,
+    "title": "Lose Yourself",
+    "artist": "Eminem",
+    "albumTitle": "8 Mile",
+    "genre": "Hip Hop"
+  },
+  {
+    "id": "track-095",
+    "releaseYear": 2013,
+    "title": "Do I Wanna Know?",
+    "artist": "Arctic Monkeys",
+    "albumTitle": "AM",
+    "genre": "Indie Rock"
+  },
+  {
+    "id": "track-096",
+    "releaseYear": 2015,
+    "title": "Hello",
+    "artist": "Adele",
+    "albumTitle": "25",
+    "genre": "Soul"
+  },
+  {
+    "id": "track-097",
+    "releaseYear": 2019,
+    "title": "Blinding Lights",
+    "artist": "The Weeknd",
+    "albumTitle": "After Hours",
+    "genre": "Synth-pop"
+  },
+  {
+    "id": "track-098",
+    "releaseYear": 2021,
+    "title": "drivers license",
+    "artist": "Olivia Rodrigo",
+    "albumTitle": "SOUR",
+    "genre": "Pop"
+  },
+  {
+    "id": "track-099",
+    "releaseYear": 2022,
+    "title": "As It Was",
+    "artist": "Harry Styles",
+    "albumTitle": "Harry's House",
+    "genre": "Pop"
+  },
+  {
+    "id": "track-100",
+    "releaseYear": 2024,
+    "title": "Espresso",
+    "artist": "Sabrina Carpenter",
+    "albumTitle": "Short n' Sweet",
+    "genre": "Pop"
+  },
+  {
+    "id": "track-101",
+    "releaseYear": 2011,
+    "title": "Doki Doki☆Morning",
+    "artist": "BABYMETAL",
+    "albumTitle": "Babymetal",
+    "genre": "Kawaii Metal"
+  },
+  {
+    "id": "track-102",
+    "releaseYear": 2012,
+    "title": "Headbangeeeeerrrrr!!!!!",
+    "artist": "BABYMETAL",
+    "albumTitle": "Babymetal",
+    "genre": "Kawaii Metal"
+  },
+  {
+    "id": "track-103",
+    "releaseYear": 2018,
+    "title": "Distortion",
+    "artist": "BABYMETAL",
+    "albumTitle": "Metal Galaxy",
+    "genre": "Kawaii Metal"
+  },
+  {
+    "id": "track-104",
+    "releaseYear": 2023,
+    "title": "Metali!!",
+    "artist": "BABYMETAL",
+    "albumTitle": "The Other One",
+    "genre": "Kawaii Metal"
+  },
+  {
+    "id": "track-105",
+    "releaseYear": 2024,
+    "title": "Ratatata",
+    "artist": "BABYMETAL and Electric Callboy",
+    "albumTitle": "Ratatata",
+    "genre": "Kawaii Metal"
   }
 ]

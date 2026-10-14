@@ -1,4 +1,5 @@
 import type { GameTrackCard } from "@tunetrack/game-engine";
+import { loadCuratedPlaylistPayloadSchema } from "@tunetrack/shared";
 import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { logger } from "../../src/app/logger.js";
@@ -57,6 +58,18 @@ describe("DeckService", () => {
       const secondDeck = deckService.getPracticeDeck();
 
       expect(secondDeck.find((card) => card.id === firstCard?.id)).not.toBe(firstCard);
+    });
+
+    it("marks every card for a generated cover the contract accepts", () => {
+      const deck = new DeckService().getPracticeDeck();
+
+      expect(new Set(deck.map((card) => card.id)).size).toBe(deck.length);
+      for (const card of deck) {
+        expect(card.artworkUrl).toBe(`/practice-covers/${card.id}.svg`);
+      }
+      expect(
+        loadCuratedPlaylistPayloadSchema.safeParse({ roomId: "TEST_ROOM_1", tracks: deck }).success,
+      ).toBe(true);
     });
 
     it("finds the deck files whatever the working directory", () => {

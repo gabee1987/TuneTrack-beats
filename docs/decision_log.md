@@ -12,6 +12,16 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Practice deck: 105 songs with generated covers (2026-10-14)
+
+- **The practice deck grows to 105 songs (owner-requested artists included), and every card gets
+  a cover the web app draws from the card itself** (gradient, disc and the lead artist's
+  initials, never the year). The server marks practice cards with
+  `PRACTICE_COVER_PATH_PREFIX`; no image file is stored or fetched. Why: real album art is
+  copyrighted and would need a third-party fetch with compliance review; generated covers cost
+  no bundle or repository size. E2E deals from a frozen 40-card fixture
+  (`TEST_DECKS_DIRECTORY`, test-only), so growing the shipped deck never changes E2E.
+
 ### Startup flow: full restructure (2026-10-14)
 
 - **The startup flow (Home, name, join, lobby, rules, Music setup, Start) is redesigned as a

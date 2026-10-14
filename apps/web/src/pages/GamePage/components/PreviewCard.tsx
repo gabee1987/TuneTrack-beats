@@ -12,6 +12,7 @@ import type { PreviewCardTransitionEvent } from "../gamePageTransitionEvents";
 import { getPreviewCardSurfaceStyle } from "../gamePage.utils";
 import { usePreviewCardTransition } from "../hooks/transitions/usePreviewCardTransition";
 import styles from "./timelineCards.module.css";
+import { resolveArtworkUrl } from "../../../features/ui/resolveArtworkUrl";
 
 export interface PreviewCardProps {
   attributes?: DraggableAttributes | undefined;
@@ -149,7 +150,7 @@ export const PreviewCard = forwardRef<HTMLElement, PreviewCardProps>(function Pr
       style={
         {
           ...getPreviewCardSurfaceStyle({
-            artworkUrl: previewCard.artworkUrl,
+            artworkUrl: resolveArtworkUrl(previewCard),
             hiddenCardMode,
             revealedCardMode,
             isOverlay,

@@ -12,6 +12,7 @@ import { TextInput } from "../../../features/ui/TextInput";
 import type { PlaylistTrackUpdatePatch } from "../hooks/usePlaylistEditor";
 import { getPlaylistTrackCurationFlags } from "../playlistMetadataFlags";
 import styles from "./playlistEditChrome.module.css";
+import { resolveArtworkUrl } from "../../../features/ui/resolveArtworkUrl";
 
 interface PlaylistTrackDetailsSheetProps {
   onClose: () => void;
@@ -88,7 +89,7 @@ export function PlaylistTrackDetailsSheet({
           <div className={styles.detailsArtworkRow}>
             <div className={styles.detailsArtwork}>
               {track.artworkUrl ? (
-                <img alt="" className={styles.trackArtworkImg} src={track.artworkUrl} />
+                <img alt="" className={styles.trackArtworkImg} src={resolveArtworkUrl(track)} />
               ) : (
                 <MusicNoteIcon />
               )}

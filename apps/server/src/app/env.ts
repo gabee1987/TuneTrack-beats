@@ -103,6 +103,7 @@ const envSchema = z
       .transform((value) => value === "true"),
     TEST_RUN_ID: z.string().trim().min(1).optional(),
     TEST_DECK_RANDOM_VALUE: z.coerce.number().min(0).lt(1).optional(),
+    TEST_DECKS_DIRECTORY: z.string().trim().min(1).optional(),
     AXIOM_TOKEN: z.string().trim().min(1).optional(),
     AXIOM_DATASET: z.string().trim().min(1).optional(),
     AXIOM_DOMAIN: z.string().url().default("https://us-east-1.aws.edge.axiom.co"),
@@ -112,7 +113,8 @@ const envSchema = z
       value.NODE_ENV !== "test" &&
       (value.SPOTIFY_ACCOUNTS_BASE_URL ||
         value.SPOTIFY_API_BASE_URL ||
-        value.TEST_DECK_RANDOM_VALUE !== undefined)
+        value.TEST_DECK_RANDOM_VALUE !== undefined ||
+        value.TEST_DECKS_DIRECTORY)
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

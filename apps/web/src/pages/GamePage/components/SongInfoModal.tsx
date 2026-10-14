@@ -4,6 +4,7 @@ import { Overlay } from "../../../features/overlay";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import type { GamePageCard } from "../GamePage.types";
 import styles from "./SongInfoModal.module.css";
+import { resolveArtworkUrl } from "../../../features/ui/resolveArtworkUrl";
 
 interface SongInfoModalProps {
   card: GamePageCard | null;
@@ -21,7 +22,7 @@ function MusicNoteIcon() {
 export function SongInfoModal({ card, onClose }: SongInfoModalProps) {
   const { t } = useI18n();
   const reduceMotion = useReducedMotionPreference();
-  const artworkUrl = card?.artworkUrl;
+  const artworkUrl = card ? resolveArtworkUrl(card) : undefined;
   const releaseYear = card && "revealedYear" in card ? card.revealedYear : card?.releaseYear;
 
   const hiddenOffset = reduceMotion ? 0 : "100%";

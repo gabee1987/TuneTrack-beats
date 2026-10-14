@@ -1,4 +1,5 @@
 import type { GameTrackCard } from "@tunetrack/game-engine";
+import { PRACTICE_COVER_PATH_PREFIX } from "@tunetrack/shared";
 import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -76,7 +77,7 @@ function mapParsedDeckCard(deckCard: ParsedTestDeckCard): GameTrackCard {
     albumTitle: deckCard.albumTitle,
     releaseYear: deckCard.releaseYear,
     ...(deckCard.genre ? { genre: deckCard.genre } : {}),
-    ...(deckCard.artworkUrl ? { artworkUrl: deckCard.artworkUrl } : {}),
+    artworkUrl: deckCard.artworkUrl ?? `${PRACTICE_COVER_PATH_PREFIX}${deckCard.id}.svg`,
   };
 }
 

@@ -21,3 +21,5 @@ export const MAX_TT_TOKEN_COUNT = 5;
 export const MIN_RELEASE_YEAR = 1900;
 /** A playlist, generated or imported, needs at least this many usable tracks for a deck. */
 export const MIN_PLAYLIST_TRACK_COUNT = 10;
+/** Marks a practice-deck card whose cover the web app draws itself; no file is served at this path. */
+export const PRACTICE_COVER_PATH_PREFIX = "/practice-covers/";

@@ -5,6 +5,7 @@ import { useI18n } from "../../../features/i18n";
 import { getPlaylistTrackCurationFlags } from "../playlistMetadataFlags";
 import { SelectableArtwork, SelectableArtworkImage, StaticArtwork } from "./SelectableArtwork";
 import styles from "./playlistEditList.module.css";
+import { resolveArtworkUrl } from "../../../features/ui/resolveArtworkUrl";
 
 const SWIPE_THRESHOLD = 68;
 const SWIPE_REVEAL_WIDTH = 132;
@@ -110,11 +111,19 @@ function PlaylistTrackContent({
           isSelected={isSelected}
           onToggle={onToggleSelect}
         >
-          {track.artworkUrl ? <SelectableArtworkImage src={track.artworkUrl} /> : <MusicNoteIcon />}
+          {track.artworkUrl ? (
+            <SelectableArtworkImage src={resolveArtworkUrl(track) ?? ""} />
+          ) : (
+            <MusicNoteIcon />
+          )}
         </SelectableArtwork>
       ) : (
         <StaticArtwork>
-          {track.artworkUrl ? <SelectableArtworkImage src={track.artworkUrl} /> : <MusicNoteIcon />}
+          {track.artworkUrl ? (
+            <SelectableArtworkImage src={resolveArtworkUrl(track) ?? ""} />
+          ) : (
+            <MusicNoteIcon />
+          )}
         </StaticArtwork>
       )}
       <button className={styles.trackOpenButton} onClick={onOpen} type="button">

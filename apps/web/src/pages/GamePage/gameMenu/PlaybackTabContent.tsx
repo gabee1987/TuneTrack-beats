@@ -3,6 +3,7 @@ import type { Translate } from "../../../features/i18n";
 import { useHostPlaybackControls, useHostPlaybackProgress } from "../hooks/HostPlaybackProvider";
 import { useInterpolatedPlaybackPosition } from "../hooks/useInterpolatedPlaybackPosition";
 import styles from "../gamePagePlayback.module.css";
+import { resolveArtworkUrl } from "../../../features/ui/resolveArtworkUrl";
 
 interface PlaybackTabContentProps {
   currentTrackCard: PublicRoomState["currentTrackCard"];
@@ -34,7 +35,11 @@ export function PlaybackTabContent({ currentTrackCard, status, t }: PlaybackTabC
           ) : null}
           {showTrackDetails && currentTrackCard.artworkUrl ? (
             <div className={styles.playbackArtworkWrapper}>
-              <img alt="" className={styles.playbackArtworkImg} src={currentTrackCard.artworkUrl} />
+              <img
+                alt=""
+                className={styles.playbackArtworkImg}
+                src={resolveArtworkUrl(currentTrackCard)}
+              />
             </div>
           ) : (
             <div className={styles.playbackMusicIconBox}>

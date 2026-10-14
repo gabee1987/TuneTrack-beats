@@ -45,7 +45,7 @@ const spotifyPlaylistSearch = new SpotifyPlaylistSearch(spotifyCatalog, spotifyC
 const playlistImportService = new PlaylistImportService(spotifyCatalog, spotifyClientCredentials);
 const testDeckRandomValue = env.TEST_DECK_RANDOM_VALUE;
 const deckService = new DeckService(
-  undefined,
+  env.TEST_DECKS_DIRECTORY,
   testDeckRandomValue === undefined ? undefined : () => testDeckRandomValue,
 );
 const roomServices = createRoomServices({

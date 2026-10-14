@@ -51,6 +51,22 @@ describe("curated playlist track media URLs", () => {
     ).toBe(true);
   });
 
+  it("accepts a generated practice-deck cover as artwork only", () => {
+    expect(parseTrackWith({ artworkUrl: "/practice-covers/track-001.svg" }).success).toBe(true);
+    expect(parseTrackWith({ previewUrl: "/practice-covers/track-001.svg" }).success).toBe(false);
+  });
+
+  for (const otherPath of [
+    "/practice-covers/../index.html",
+    "/practice-covers/track-001xsvg",
+    "/uploads/track-001.svg",
+    "//evil.example.test/a.svg",
+  ]) {
+    it(`rejects ${otherPath} as artwork`, () => {
+      expect(parseTrackWith({ artworkUrl: otherPath }).success).toBe(false);
+    });
+  }
+
   for (const unsafeUrl of [
     "javascript:alert(1)",
     "http://images.example.test/artwork.jpg",

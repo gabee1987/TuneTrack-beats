@@ -20,6 +20,7 @@ const OPTIONAL_KEYS = [
   "EVENT_AUDIT_INCLUDE_PAYLOADS",
   "TEST_RUN_ID",
   "TEST_DECK_RANDOM_VALUE",
+  "TEST_DECKS_DIRECTORY",
   "AXIOM_TOKEN",
   "AXIOM_DATASET",
   "AXIOM_DOMAIN",
@@ -101,6 +102,7 @@ describe("server environment", () => {
     { SPOTIFY_ACCOUNTS_BASE_URL: "http://127.0.0.1:3102/accounts" },
     { SPOTIFY_API_BASE_URL: "http://127.0.0.1:3102/api" },
     { TEST_DECK_RANDOM_VALUE: "0.5" },
+    { TEST_DECKS_DIRECTORY: "fixtures/practice-deck" },
   ])("refuses the test override %o outside NODE_ENV=test", async (values) => {
     await expect(loadEnv(values)).rejects.toThrow("require NODE_ENV=test");
     await expect(loadEnv({ ...values, NODE_ENV: "development" })).rejects.toThrow(

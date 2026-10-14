@@ -55,6 +55,8 @@ export default defineConfig({
         SPOTIFY_CLIENT_SECRET: "e2e-client-secret",
         SPOTIFY_REDIRECT_URI: "http://127.0.0.1:3101/api/spotify/callback",
         TEST_DECK_RANDOM_VALUE: "0.25",
+        // A frozen deck: growing the shipped practice deck must not change which cards E2E deals.
+        TEST_DECKS_DIRECTORY: fileURLToPath(new URL("./fixtures/practice-deck", import.meta.url)),
       },
       reuseExistingServer: false,
       url: "http://127.0.0.1:3101/health",

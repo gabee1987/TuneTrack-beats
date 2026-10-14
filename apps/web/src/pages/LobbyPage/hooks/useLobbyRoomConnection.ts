@@ -188,6 +188,9 @@ export function useLobbyRoomConnection({
         return;
       }
 
+      // The Start action already explains this one in a toast beside the button.
+      if (payload.code === "DECK_REQUIRED") return;
+
       setErrorCode(payload.code);
       setErrorMessage(localizeServerError(translateRef.current, payload));
     }

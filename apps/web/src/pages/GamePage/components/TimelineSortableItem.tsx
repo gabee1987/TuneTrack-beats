@@ -15,6 +15,7 @@ import { CorrectPlacementCelebration } from "./CorrectPlacementCelebration";
 import { PreviewCard } from "./PreviewCard";
 import cardsStyles from "./timelineCards.module.css";
 import shellStyles from "./timelinePanelShell.module.css";
+import { resolveArtworkUrl } from "../../../features/ui/resolveArtworkUrl";
 
 interface TimelineSortableItemProps {
   card: GamePageCard;
@@ -82,7 +83,7 @@ function TimelineSortableItemComponent({
     transform: CSS.Transform.toString(transform),
     transition,
     ...(!isPreview
-      ? getTimelineCardSurfaceStyle(theme, id, card.artworkUrl, revealedCardMode)
+      ? getTimelineCardSurfaceStyle(theme, id, resolveArtworkUrl(card), revealedCardMode)
       : {}),
   } as CSSProperties;
 

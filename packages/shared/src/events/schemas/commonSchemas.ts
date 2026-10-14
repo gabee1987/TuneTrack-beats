@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   MIN_RELEASE_YEAR,
+  PRACTICE_COVER_PATH_PREFIX,
   ROOM_CODE_MAX_LENGTH,
   ROOM_CODE_MIN_LENGTH,
 } from "../../constants/gameplay.js";
@@ -43,7 +44,22 @@ const httpsMediaUrlSchema = z
   .trim()
   .url()
   .max(1_000)
-  .refine((value) => new URL(value).protocol === "https:", { message: "URL must use https." });
+  .refine(isHttpsUrl, { message: "URL must use https." });
+
+// Zod still runs this refinement after `.url()` fails, so an unparsable value must not throw.
+function isHttpsUrl(value: string): boolean {
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+// Same-origin static files only, so the exact shape is pinned rather than any relative path.
+const practiceCoverPathSchema = z
+  .string()
+  .trim()
+  .regex(new RegExp(`^${PRACTICE_COVER_PATH_PREFIX}[a-z0-9-]+\\.svg$`));
 
 export const curatedPlaylistTrackSchema = z.object({
   id: z.string().trim().min(1).max(200),
@@ -53,7 +69,7 @@ export const curatedPlaylistTrackSchema = z.object({
   releaseYear: releaseYearSchema,
   sourceReleaseYear: releaseYearSchema.optional(),
   metadataStatus: trackMetadataStatusSchema.default("imported"),
-  artworkUrl: httpsMediaUrlSchema.optional(),
+  artworkUrl: z.union([httpsMediaUrlSchema, practiceCoverPathSchema]).optional(),
   previewUrl: httpsMediaUrlSchema.optional(),
   spotifyTrackUri: z.string().trim().min(1).max(300).optional(),
 });
