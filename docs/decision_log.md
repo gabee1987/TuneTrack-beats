@@ -12,6 +12,23 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Startup flow: full restructure (2026-10-14)
+
+- **The startup flow (Home, name, join, lobby, rules, Music setup, Start) is redesigned as a
+  whole; decision 5 ("streamline, do not restructure") is superseded.** Screens and routes may
+  change: Host is one tap from Home, the name is asked in a sheet, Join replaces Play, the lobby
+  is one guided screen with one Start dock, Music setup is Your decks + Find with one Playlist
+  view. Why: the owner found the flow hard to use and asked for an easy, straightforward,
+  engaging and beautiful startup (2026-10-14); the streamlining in `04` kept three Start
+  buttons' worth of structure. Owner: `22-game-startup-flow.md` (decision 22).
+
+### Music setup shape, saved-deck edits, desktop layout (2026-10-14)
+
+- **Your decks + Find, one Playlist view with an edit mode, quick picks inside Find** (`21` §7
+  Q1, Q3 → decision 23). **Saved-deck edits are written back at once with Undo** (Q2 → decision
+  24). **Desktop Music setup is two panes** (Q4 → decision 25). Why: fewest screens, no lost
+  curation work, and the desktop width is used.
+
 ### No sheet on a sheet: Music Setup steps are panel views (2026-10-08)
 
 - **The playlist editor and the song editor open as `PanelView`s inside the Music Setup panel,

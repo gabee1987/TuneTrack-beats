@@ -1,7 +1,9 @@
 # 21 — Music Setup and Playlist Redesign
 
-> **Status (2026-10-09):** Future work, not scheduled. Requested by the owner on 2026-10-09;
-> phases 1–6 open. Four owner questions (§7) must be answered before Phase 2 starts.
+> **Status (2026-10-14):** **Superseded by `22-game-startup-flow.md`.** The owner answered §7 on
+> 2026-10-14 (decisions 23–25 in `00-index.md` §5); the Library + Find split, covers, one editor
+> and write-back are specified in `22` §4.8–§4.9 and shipped by its S7–S10. Do not implement
+> from this document.
 
 > Owning layers: `apps/web/src/pages/LobbyPage` (Music Setup assembly, components and
 > `hooks/spotify`), `apps/web/src/services/savedPlaylists`, `apps/web/src/features/ui`

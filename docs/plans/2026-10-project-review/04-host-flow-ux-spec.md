@@ -5,8 +5,9 @@
 > `HomePage.test.tsx`, `spotifyRoutes.test.ts`). WP 2 shipped 2026-10-13 (`deckSize.ts`,
 > `deckSource`, `use_practice_deck`, `DECK_REQUIRED`, a practice-deck choice in the lobby Music
 > section until WP 3 and WP 5 replace it, E2E `choosePracticeDeck`; `deckContract.test.ts`,
-> `deckSize.test.ts`, `LobbyPracticeDeckChoice.test.tsx`). WP 3 takes over the Start reason line
-> and the size indicator display. WPs 3–10 open; WPs 5 and 6 wait for `21` Phase 1.
+> `deckSize.test.ts`, `LobbyPracticeDeckChoice.test.tsx`). **WPs 3–10 are superseded by
+> `22-game-startup-flow.md` (decision 22, 2026-10-14)**; §1, §2, §4, §6 and §8 of this document
+> stay normative and are referenced from `22`. §3, §5, §7, §9–§12 are historical.
 > Work packages in §12 are handed to implementation agents one at a time.
 > **Owns findings:** U-01 … U-14, F-06 (host-flow overlays), F-16 (lobby part), F-24 (host-flow
 > controls). **Binding decisions:** `00-index.md` §5 — 5 (streamline, do not restructure), 6 (deck

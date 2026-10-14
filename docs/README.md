@@ -35,17 +35,18 @@ Where two rules disagree, prefer the stricter one and raise the conflict.
 [`plans/2026-10-project-review/`](plans/2026-10-project-review/00-index.md) — the full project
 review of 2026-10-06 and its phased roadmap.
 
-| Document                                | Contents                                                                                                             |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `00-index.md`                           | Purpose, reading order, verified baseline, phases, hotfix track, owner decisions, folded-doc status.                 |
-| `01-review-findings.md`                 | Findings register (`B-` backend, `F-` frontend, `U-` UX, `D-` docs, `T-` tests) with priorities.                     |
-| `03-agent-skills-and-tooling.md`        | Phase 3: the skill catalogue under `.claude/skills/`, the project permission file, boundary-lint and `verify` specs. |
-| `04-host-flow-ux-spec.md`               | Phase 4: host creation flow, screen by screen, deck gating, hints, acceptance and work packages.                     |
-| `05-performance-and-robustness-plan.md` | Phase 5: binding performance budgets, measurement commands, robustness work packages and rollout order.              |
-| `06-structure-and-test-plan.md`         | Phase 6: file-size, boundary and test gates, structure and test work items, CI and coverage, rollout order.          |
-| `10`–`19`                               | Work-breakdown documents folded from the 2026-09 programme, trimmed to open work.                                    |
-| `20-bug-register.md`                    | Active defects with next proof, plus the resolved ledger and tech-debt notes.                                        |
-| `21-music-setup-redesign.md`            | Future work: Music Setup and playlist redesign (Library/Find split, wizard steps, covers, one editor style).         |
+| Document                                | Contents                                                                                                               |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `00-index.md`                           | Purpose, reading order, verified baseline, phases, hotfix track, owner decisions, folded-doc status.                   |
+| `01-review-findings.md`                 | Findings register (`B-` backend, `F-` frontend, `U-` UX, `D-` docs, `T-` tests) with priorities.                       |
+| `03-agent-skills-and-tooling.md`        | Phase 3: the skill catalogue under `.claude/skills/`, the project permission file, boundary-lint and `verify` specs.   |
+| `04-host-flow-ux-spec.md`               | Phase 4: host creation flow, screen by screen, deck gating, hints, acceptance and work packages.                       |
+| `05-performance-and-robustness-plan.md` | Phase 5: binding performance budgets, measurement commands, robustness work packages and rollout order.                |
+| `06-structure-and-test-plan.md`         | Phase 6: file-size, boundary and test gates, structure and test work items, CI and coverage, rollout order.            |
+| `10`–`19`                               | Work-breakdown documents folded from the 2026-09 programme, trimmed to open work.                                      |
+| `20-bug-register.md`                    | Active defects with next proof, plus the resolved ledger and tech-debt notes.                                          |
+| `21-music-setup-redesign.md`            | Superseded 2026-10-14 by `22`; kept for its problem statement until archived.                                          |
+| `22-game-startup-flow.md`               | Startup flow experience spec: Home, Name sheet, Join, guided lobby, Rules sheet, Music setup, Start, handover; S0–S12. |
 
 ## Operations (not on the coding path)
 
