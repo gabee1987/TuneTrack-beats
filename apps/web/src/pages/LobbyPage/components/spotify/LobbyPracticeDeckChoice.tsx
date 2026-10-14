@@ -30,6 +30,7 @@ export function LobbyPracticeDeckChoice({ currentSettings }: LobbyPracticeDeckCh
     <>
       <ActionButton
         aria-describedby={descriptionId}
+        className={setupShellStyles.spotifySetupSecondaryBtn}
         disabled={status === "pending"}
         onClick={() => void choosePracticeDeck()}
         type="button"

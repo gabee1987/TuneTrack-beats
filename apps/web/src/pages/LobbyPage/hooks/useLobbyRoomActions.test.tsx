@@ -1,8 +1,9 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { ClientToServerEvent } from "@tunetrack/shared/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { I18nProvider } from "../../../features/i18n";
 import type { EmitActionResult } from "../../../services/socket/emitAction";
+import { renderWithProviders } from "../../../test/renderWithProviders";
 import { buildLobbyRoomState } from "../../../test/roomStateFixtures";
 import { LobbyHostStartPanel } from "../components/LobbyHostStartPanel";
 import { LobbyHostCoreSettings } from "../components/LobbyHostCoreSettings";
@@ -134,7 +135,7 @@ describe("useLobbyRoomActions start_game", () => {
   it("retries one timeout, blocks duplicate starts, and exposes a final retry", async () => {
     const deferred = createDeferredActionResult();
     emitActionMock.mockReturnValueOnce(deferred.promise);
-    render(<StartGameHarness />);
+    renderWithProviders(<StartGameHarness />);
 
     const startButton = screen.getByRole("button", { name: /start game/i });
     fireEvent.click(startButton);
@@ -168,6 +169,18 @@ describe("useLobbyRoomActions start_game", () => {
 
     await waitFor(() => expect(emitActionMock).toHaveBeenCalledTimes(2));
   });
+
+  it("says what is missing in a toast when the server refuses to start without a deck", async () => {
+    emitActionMock.mockResolvedValueOnce({ status: "rejected", code: "DECK_REQUIRED" });
+    renderWithProviders(<StartGameHarness />);
+
+    fireEvent.click(screen.getByRole("button", { name: /start game/i }));
+
+    expect(
+      await screen.findByText("Add songs or choose the practice deck first."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /start game/i })).toBeEnabled();
+  });
 });
 
 describe("useLobbyRoomActions close_room", () => {
@@ -178,7 +191,7 @@ describe("useLobbyRoomActions close_room", () => {
   it("retries one timeout, blocks duplicate closes, and exposes a final retry", async () => {
     const deferred = createDeferredActionResult();
     emitActionMock.mockReturnValueOnce(deferred.promise);
-    render(<CloseRoomHarness />);
+    renderWithProviders(<CloseRoomHarness />);
 
     const closeButton = screen.getByRole("button", { name: /close room/i });
     fireEvent.click(closeButton);
@@ -222,7 +235,7 @@ describe("useLobbyRoomActions kick_player", () => {
   it("retries one timeout, blocks duplicate lobby removals, and exposes a final retry", async () => {
     const deferred = createDeferredActionResult();
     emitActionMock.mockReturnValueOnce(deferred.promise);
-    render(<KickPlayerHarness />);
+    renderWithProviders(<KickPlayerHarness />);
 
     const kickButton = screen.getByRole("button", { name: /kick player two/i });
     fireEvent.click(kickButton);
@@ -267,7 +280,7 @@ describe("useLobbyRoomActions update_player_settings", () => {
   it("retries one timeout, blocks duplicate player-setting updates, and exposes a final retry", async () => {
     const deferred = createDeferredActionResult();
     emitActionMock.mockReturnValueOnce(deferred.promise);
-    render(<KickPlayerHarness />);
+    renderWithProviders(<KickPlayerHarness />);
 
     const startingCardsButton = screen.getByRole("button", {
       name: /starting cards: 2/i,
@@ -319,7 +332,7 @@ describe("useLobbyRoomActions update_room_settings", () => {
   it("retries one timeout, blocks duplicate room-setting updates, and exposes a final retry", async () => {
     const deferred = createDeferredActionResult();
     emitActionMock.mockReturnValueOnce(deferred.promise);
-    render(<RoomSettingsHarness />);
+    renderWithProviders(<RoomSettingsHarness />);
 
     const targetCardButton = screen.getByRole("button", {
       name: /cards needed to win: 11/i,

@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ClientToServerEvent, ServerToClientEvent } from "@tunetrack/shared/client";
 import { AppRoutes } from "../../app/AppRoutes";
 import { I18nProvider } from "../../features/i18n";
+import { AppToastProvider } from "../../features/toast";
 import { usePlayerProfileStore } from "../../features/profile/playerProfile";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { getSharedFakeSocket, resetSharedFakeSocket } from "../../test/fakeSocket";
@@ -71,15 +72,17 @@ describe("PlayPage", () => {
 
     render(
       <I18nProvider>
-        <MemoryRouter initialEntries={["/play"]}>
-          <Routes>
-            <Route path="/" element={<AppRoutes />}>
-              <Route index element={<p>home route</p>} />
-              <Route path="play" element={<PlayPage />} />
-              <Route path="lobby/:roomId?" element={<ConnectedLobbyRouteProbe />} />
-            </Route>
-          </Routes>
-        </MemoryRouter>
+        <AppToastProvider>
+          <MemoryRouter initialEntries={["/play"]}>
+            <Routes>
+              <Route path="/" element={<AppRoutes />}>
+                <Route index element={<p>home route</p>} />
+                <Route path="play" element={<PlayPage />} />
+                <Route path="lobby/:roomId?" element={<ConnectedLobbyRouteProbe />} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        </AppToastProvider>
       </I18nProvider>,
     );
 

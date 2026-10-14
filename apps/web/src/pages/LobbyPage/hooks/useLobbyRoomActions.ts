@@ -5,6 +5,9 @@ import {
   type PublicRoomState,
 } from "@tunetrack/shared/client";
 import { useRef, useState } from "react";
+import { useI18n } from "../../../features/i18n";
+import { getServerErrorTranslationKey } from "../../../features/i18n/localizedErrors";
+import { useAppToast } from "../../../features/toast";
 import { emitAction } from "../../../services/socket/emitAction";
 import type {
   CloseRoomActionStatus,
@@ -58,6 +61,8 @@ export function useLobbyRoomActions({
   isHost,
   roomState,
 }: UseLobbyRoomActionsOptions): UseLobbyRoomActionsResult {
+  const { t } = useI18n();
+  const { showToast } = useAppToast();
   const roomStateRef = useRef(roomState);
   roomStateRef.current = roomState;
   const isCloseRoomPendingRef = useRef(false);
@@ -120,6 +125,13 @@ export function useLobbyRoomActions({
           retryOnTimeout: true,
         },
       );
+      if (result.status === "rejected") {
+        showToast({
+          id: "lobby-start-game-rejected",
+          message: t(getServerErrorTranslationKey(result.code)),
+          type: "error",
+        });
+      }
       setStartGameActionStatus(
         result.status === "timeout" && isSubmittedLobbyCurrent() ? "failed" : "idle",
       );

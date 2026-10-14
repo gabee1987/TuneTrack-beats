@@ -26,29 +26,43 @@
   gap: 12px;
 }
 
-.spotifySetupOpenBtn {
+.spotifySetupOpenBtn,
+.spotifySetupSecondaryBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
+  width: 100%;
   min-height: 52px;
   padding: 14px 20px;
   border: 0;
   border-radius: var(--radius-pill);
-  background: var(--color-background-spotify);
-  color: var(--color-on-spotify);
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: var(--shadow-raised);
   transition:
     background var(--motion-quick-duration) var(--motion-ease-standard),
     transform var(--motion-quick-duration) var(--motion-ease-standard);
 }
 
+.spotifySetupOpenBtn {
+  background: var(--color-background-spotify);
+  color: var(--color-on-spotify);
+  box-shadow: var(--shadow-raised);
+}
+
 .spotifySetupOpenBtn:hover:not(:disabled) {
   background: var(--color-accent-brand-hover);
+}
+
+.spotifySetupSecondaryBtn:hover:not(:disabled) {
+  background: var(--color-surface-elevated-solid);
+}
+
+.spotifySetupSecondaryBtn:disabled {
+  opacity: 0.6;
+  cursor: progress;
 }
 
 /* The scrim sits beside the sheet, not around it, so their fades do not multiply. */
@@ -445,10 +459,6 @@
 
   .spotifySetupSubtitle {
     font-size: 13px;
-  }
-
-  .spotifySetupOpenBtn {
-    width: 100%;
   }
 
   .spotifySetupDoneBtn {
