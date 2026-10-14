@@ -1,5 +1,6 @@
 import {
   MIN_RELEASE_YEAR,
+  getTrackCurationFlags,
   type PublicTrackInfo,
   type TrackMetadataStatus,
 } from "@tunetrack/shared/client";
@@ -10,7 +11,6 @@ import { ActionButton } from "../../../features/ui/ActionButton";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { TextInput } from "../../../features/ui/TextInput";
 import type { PlaylistTrackUpdatePatch } from "../hooks/usePlaylistEditor";
-import { getPlaylistTrackCurationFlags } from "../playlistMetadataFlags";
 import styles from "./playlistEditChrome.module.css";
 import { resolveArtworkUrl } from "../../../features/ui/resolveArtworkUrl";
 
@@ -65,7 +65,7 @@ export function PlaylistTrackDetailsSheet({
     onClose();
   }
 
-  const flags = track ? getPlaylistTrackCurationFlags(track) : [];
+  const flags = track ? getTrackCurationFlags(track) : [];
 
   // A view over the whole Music Setup panel, never nested in the list that opened it: inside
   // that list it sat below the panel header stacking context (B1).

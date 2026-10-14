@@ -53,6 +53,9 @@ export function getLobbyRoomStateUpdateDecision({
   shouldNavigateToRoom: boolean;
 } {
   const isStateForRequestedRoom = nextRoomId === requestedRoomId;
+  // Codes match in any case on the server; the URL then takes the code as it was created.
+  const isRequestedRoomInOtherCase =
+    !isStateForRequestedRoom && nextRoomId.toLowerCase() === requestedRoomId?.toLowerCase();
   const isStateForJoinedRoom = requestedRoomId === undefined && nextRoomId === joinedRoomId;
   const isInitialGeneratedRoom =
     isCreatingRoom && requestedRoomId === undefined && joinedRoomId === null;
@@ -62,10 +65,12 @@ export function getLobbyRoomStateUpdateDecision({
   return {
     accept:
       isStateForRequestedRoom ||
+      isRequestedRoomInOtherCase ||
       isStateForJoinedRoom ||
       isInitialGeneratedRoom ||
       isRenameFromJoinedRoom,
-    shouldNavigateToRoom: isInitialGeneratedRoom || isRenameFromJoinedRoom,
+    shouldNavigateToRoom:
+      isRequestedRoomInOtherCase || isInitialGeneratedRoom || isRenameFromJoinedRoom,
   };
 }
 

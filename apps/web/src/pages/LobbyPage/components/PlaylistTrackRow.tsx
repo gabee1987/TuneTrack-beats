@@ -1,8 +1,7 @@
-import type { PublicTrackInfo } from "@tunetrack/shared/client";
+import { getTrackCurationFlags, type PublicTrackInfo } from "@tunetrack/shared/client";
 import { animate, m, useMotionValue, useTransform } from "framer-motion";
 import { useEffect, useRef } from "react";
 import { useI18n } from "../../../features/i18n";
-import { getPlaylistTrackCurationFlags } from "../playlistMetadataFlags";
 import { SelectableArtwork, SelectableArtworkImage, StaticArtwork } from "./SelectableArtwork";
 import styles from "./playlistEditList.module.css";
 import { resolveArtworkUrl } from "../../../features/ui/resolveArtworkUrl";
@@ -101,7 +100,7 @@ function PlaylistTrackContent({
   track: PublicTrackInfo;
 }) {
   const { t } = useI18n();
-  const flags = getPlaylistTrackCurationFlags(track);
+  const flags = getTrackCurationFlags(track);
 
   return (
     <>

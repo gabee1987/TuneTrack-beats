@@ -1,6 +1,6 @@
 # 22 — Game Startup Flow: Experience Specification
 
-> **Status (2026-10-14):** Specified; work packages S0–S12 open (§15). Requested by the owner on
+> **Status (2026-10-14):** Specified; S1 shipped 2026-10-14; S0 and S2–S12 open (§15). Requested by the owner on
 > 2026-10-14 ("easy to use, straightforward, engaging, nice and beautiful"); decisions 22–25 in
 > `00-index.md` §5. This document **owns the whole startup flow** — Home, name, join, lobby (host
 > and guest), rules, Music setup, playlist and song editing, Start and handover — and
@@ -385,8 +385,8 @@ content, owned here).
 `04` §4 applies unchanged: `getRequiredDeckSize` / `getRecommendedDeckSize`
 (`packages/shared/src/game/deckSize.ts`, shipped WP 2) drive the meter (§4.6), the Start warning
 (§4.10) and the quick-picks default (§4.8). `deckSource`, `use_practice_deck` and `DECK_REQUIRED`
-shipped with WP 2; `tracksToCheckCount` (`04` §3.7, §9) is added in S2 with the year-flag rule
-moved to `packages/shared` so client and server agree.
+shipped with WP 2; `tracksToCheckCount` (`04` §3.7, §9) shipped in S1 with the year-flag rule
+moved to `packages/shared/src/game/trackFlags.ts` so client and server agree.
 
 ## 6. Spotify login and compliance
 
@@ -549,7 +549,7 @@ gate (`19` §9); merge scenarios where a shared fixture serves several assertion
 | WP  | Content                                                                                                                                                                                                                                                                                          | Depends on | Proof                                                                                                                                      | Skills                                                 |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
 | S0  | Primitives (§8): `Sheet`, `TextField`, `NumberStepper`, `SettingRow`, `CoverArt`, `SelectionActionBar`, `ListRowAction`, `Button` variants; `/dev/ui` entries; motion helpers of §10 (`createPlayerArrivalMotion`, `createStepDoneMotion`, `createReadyMotion`, `createCollapsingHeaderMotion`). | —          | component tests per primitive; `/dev/ui` renders both themes; `motionBudget.test.ts` allowlist updated                                     | `add-ui-component`, `write-tests`                      |
-| S1  | Server: duplicate-name suffix, case-insensitive code lookup and rename, `tracksToCheckCount` with the shared flag rule.                                                                                                                                                                          | —          | `tests/rooms/` cases for suffix, lookup, rename-by-case rejection, flag count                                                              | `write-tests`                                          |
+| S1  | **Shipped 2026-10-14.** Duplicate names get the lowest free suffix; codes match in any case (join, preview, create, rename); `tracksToCheckCount` from `trackFlags.ts`.                                                                                                                          | —          | `tests/rooms/lobbyNamesCodesAndChecks.test.ts`, `trackFlags.test.ts`                                                                       | `write-tests`                                          |
 | S2  | Home (§4.1), Name sheet (§4.2), Join page (§4.3), `/play` redirect, route ladder; delete `PlayPage` and `PlayerNameField` usages there.                                                                                                                                                          | S0         | `HomePage.test.tsx`, `NameSheet.test.tsx`, `JoinPage.test.tsx` (five states, reasons); E2E `startup-*.spec.ts`                             | `add-ui-component`, `e2e-scenario`                     |
 | S3  | `useLobbySetupModel` (pure selectors) + host lobby mobile: Invite card, players strip, Music card (status + meter), Rules card, Start dock, skeleton; delete the two-screen layout and the old components (§7).                                                                                  | S0, S1     | selector unit tests (reasons, readiness, meter for 1–8 players × targets 3–30); component tests; E2E `host-lobby.spec.ts`                  | `add-ui-component`, `write-tests`, `e2e-scenario`      |
 | S4  | Rules sheet (§4.7) with players, kick confirm, close room; Rename dialog; delete `LobbyHostCoreSettings`, `LobbyHostTtSettings`, `AdaptiveSelect*`, `LobbyRoomRenameCard`.                                                                                                                       | S3         | component tests per section; E2E `rules.spec.ts`                                                                                           | `add-ui-component`                                     |

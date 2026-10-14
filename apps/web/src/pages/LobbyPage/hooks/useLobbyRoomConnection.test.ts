@@ -51,6 +51,21 @@ describe("getLobbyRoomStateUpdateDecision", () => {
     });
   });
 
+  it("accepts the room joined by a code typed in another case and moves to the stored code", () => {
+    expect(
+      getLobbyRoomStateUpdateDecision({
+        isCreatingRoom: false,
+        joinedRoomId: null,
+        nextRoomId: "TEST_ROOM_1",
+        nextStatus: "lobby",
+        requestedRoomId: "test_room_1",
+      }),
+    ).toEqual({
+      accept: true,
+      shouldNavigateToRoom: true,
+    });
+  });
+
   it("navigates when an established lobby room is renamed by the host", () => {
     expect(
       getLobbyRoomStateUpdateDecision({

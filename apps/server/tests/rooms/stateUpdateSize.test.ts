@@ -120,6 +120,7 @@ function buildLargestRoomState(): PublicRoomState {
       challengeWindowDurationSeconds: 15,
       playlistImported: true,
       importedTrackCount: cards.length,
+      tracksToCheckCount: 0,
       deckSource: "spotify",
       spotifyAuthStatus: "connected",
       spotifyAccountType: "premium",

@@ -74,8 +74,9 @@ export class RoomLobbyService {
       }
     }
 
-    const roomId =
-      requestedRoomId ?? generateUniqueRoomCode((candidate) => this.store.hasRoom(candidate));
+    const roomId = requestedRoomId
+      ? (this.store.findRoomId(requestedRoomId) ?? requestedRoomId)
+      : generateUniqueRoomCode((candidate) => this.store.findRoomId(candidate) !== undefined);
     const existingRoomRecord = this.store.getRoom(roomId);
 
     if (
@@ -123,11 +124,12 @@ export class RoomLobbyService {
   }
 
   public addPlayerToRoom(
-    roomId: RoomId,
+    typedRoomId: RoomId,
     displayName: string,
     socketId: string,
     sessionId: string,
   ): JoinRoomResult {
+    const roomId = this.store.findRoomId(typedRoomId) ?? typedRoomId;
     const existingRoomRecord = this.store.getRoom(roomId);
     const existingSessionMembership = this.store.getSessionMembership(sessionId);
 
@@ -204,7 +206,10 @@ export class RoomLobbyService {
       };
     }
 
-    if (this.store.hasRoom(payload.nextRoomId)) {
+    // Codes match in any case, so a code that differs from another room's only by case is taken;
+    // changing the case of this room's own code is allowed.
+    const takenRoomId = this.store.findRoomId(payload.nextRoomId);
+    if (takenRoomId !== undefined && takenRoomId !== payload.roomId) {
       throw new DomainError("ROOM_ALREADY_EXISTS");
     }
 

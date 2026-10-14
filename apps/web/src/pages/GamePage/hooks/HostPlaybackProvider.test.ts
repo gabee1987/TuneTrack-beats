@@ -22,6 +22,7 @@ function createRoomState(
       ttModeEnabled: true,
       playlistImported: true,
       importedTrackCount: 20,
+      tracksToCheckCount: 0,
       deckSource: "spotify",
       spotifyAuthStatus: "connected",
       spotifyAccountType: "premium",

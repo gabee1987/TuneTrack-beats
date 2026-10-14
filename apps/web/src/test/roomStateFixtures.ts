@@ -65,6 +65,7 @@ export function buildRoomSettings(overrides: Partial<PublicRoomSettings> = {}): 
     challengeWindowDurationSeconds: DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
     playlistImported: false,
     importedTrackCount: 0,
+    tracksToCheckCount: 0,
     deckSource: "none",
     spotifyAuthStatus: "none",
     spotifyAccountType: null,

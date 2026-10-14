@@ -14,6 +14,8 @@ export interface PublicRoomSettings {
   challengeWindowDurationSeconds: number | null;
   playlistImported: boolean;
   importedTrackCount: number;
+  /** Songs in the room deck whose imported year still needs a look (`trackFlags.ts`). */
+  tracksToCheckCount: number;
   deckSource: DeckSource;
   spotifyAuthStatus: SpotifyAuthStatus;
   spotifyAccountType: SpotifyAccountType | null;

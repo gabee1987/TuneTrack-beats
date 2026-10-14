@@ -456,6 +456,7 @@ function createLobbyRoomState(): PublicRoomState {
       challengeWindowDurationSeconds: 15,
       playlistImported: true,
       importedTrackCount: 20,
+      tracksToCheckCount: 0,
       deckSource: "spotify",
       spotifyAuthStatus: "none",
       spotifyAccountType: null,

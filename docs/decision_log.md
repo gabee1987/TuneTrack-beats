@@ -136,7 +136,7 @@ Answers to the open questions of `docs/plans/2026-10-project-review/04-host-flow
 - **Duplicate player names are allowed and suffixed.** A second "Player One" in the same room is
   stored and shown as "Player One 2" for that room only; identity stays by player id and session.
   Rejecting the join was declined because it adds a dead end to joining. Resolves the open entry
-  of 2026-04-04. Implementation pending (WP 9).
+  of 2026-04-04. Shipped 2026-10-14 (`22` S1), with room codes matched in any case.
 - **First-run hints are a first-game tutorial.** The two-per-visit cap is removed; every relevant
   hint appears at the moment its control matters, one at a time, and counts as seen only when
   acknowledged. "Show hints again" restarts the tutorial immediately. Implementation pending

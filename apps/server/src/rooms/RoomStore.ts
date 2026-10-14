@@ -55,6 +55,20 @@ export class RoomStore {
     return this.roomsById.has(roomId);
   }
 
+  /**
+   * The stored code a typed code refers to: codes keep the case they were created with but
+   * match in any case, so a guest typing `test_room_1` reaches `TEST_ROOM_1` (`04` §6.2).
+   */
+  public findRoomId(typedRoomId: RoomId): RoomId | undefined {
+    if (this.roomsById.has(typedRoomId)) return typedRoomId;
+
+    const typedKey = typedRoomId.toLowerCase();
+    for (const roomId of this.roomsById.keys()) {
+      if (roomId.toLowerCase() === typedKey) return roomId;
+    }
+    return undefined;
+  }
+
   public getRoom(roomId: RoomId): RoomRecord | undefined {
     return this.roomsById.get(roomId);
   }
@@ -119,8 +133,9 @@ export class RoomStore {
       .filter((roomSummary) => roomSummary.status === "lobby");
   }
 
-  public getLobbySummary(roomId: RoomId): PublicRoomSummary | null {
-    const roomRecord = this.roomsById.get(roomId);
+  public getLobbySummary(typedRoomId: RoomId): PublicRoomSummary | null {
+    const roomId = this.findRoomId(typedRoomId);
+    const roomRecord = roomId === undefined ? undefined : this.roomsById.get(roomId);
     if (!roomRecord || roomRecord.roomState.status !== "lobby") {
       return null;
     }
