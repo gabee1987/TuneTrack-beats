@@ -21,10 +21,9 @@
   transition: border-color var(--motion-quick-duration) var(--motion-ease-standard);
 }
 
+/* The field's border is the focus indicator, so the input drops the global focus outline. */
 .control:focus-within {
   border-color: var(--color-accent-brand);
-  outline: 2px solid var(--color-focus-ring);
-  outline-offset: 2px;
 }
 
 .invalid,
@@ -43,6 +42,10 @@
   font: inherit;
   font-size: var(--type-body-lg-size);
   line-height: var(--type-body-lg-leading);
+  outline: none;
+}
+
+.input:focus-visible {
   outline: none;
 }
 

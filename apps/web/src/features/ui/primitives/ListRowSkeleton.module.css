@@ -1,0 +1,27 @@
+.list {
+  display: grid;
+}
+
+/* Each line keeps the height of the text it stands for, so the row is as tall as a real one. */
+.titleLine {
+  display: flex;
+  align-items: center;
+  height: var(--type-body-lg-leading);
+  font-size: var(--type-body-lg-size);
+}
+
+.subtitleLine {
+  display: flex;
+  align-items: center;
+  height: var(--type-caption-leading);
+  font-size: var(--type-caption-size);
+}
+
+/* `span.` outranks the Skeleton's own radius whatever order the stylesheets load in. */
+span.cover {
+  border-radius: var(--radius-xs);
+}
+
+span.badge {
+  border-radius: var(--radius-pill);
+}

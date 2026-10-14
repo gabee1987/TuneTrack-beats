@@ -12,6 +12,16 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Number settings, switches and skeletons (2026-10-14)
+
+- **Phones keep the ruler slider for number settings; the stepper is for desktop.** The existing
+  `RangeField` gets better touch handling in `22` S4 instead of being replaced; `NumberStepper`
+  serves the desktop assembly and the song editor's year. The green `ToggleSwitch` stays as it
+  is, and `SegmentedControl` slides its highlight between options. Why: the owner likes the
+  slider and the switches on phones; the stepper fits a mouse better. Recorded as decision 26.
+- **Skeletons mirror the content they replace** (`22` §2 principle 9): same layout, shapes and
+  line heights, so nothing jumps when data arrives.
+
 ### Practice deck: 105 songs with generated covers (2026-10-14)
 
 - **The practice deck grows to 105 songs (owner-requested artists included), and every card gets

@@ -7,6 +7,7 @@ import {
   CoverArt,
   ListRow,
   ListRowAction,
+  ListSkeleton,
   NumberStepper,
   SegmentedControl,
   SelectionActionBar,
@@ -33,6 +34,7 @@ export function StartupFlowPrimitivesGallery() {
   const [addedRows, setAddedRows] = useState<ReadonlySet<string>>(() => new Set(["Song B"]));
   const [selectedCount, setSelectedCount] = useState(0);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isListLoading, setIsListLoading] = useState(false);
   const toggleRow = (title: string) =>
     setAddedRows((current) => {
       const next = new Set(current);
@@ -131,38 +133,22 @@ export function StartupFlowPrimitivesGallery() {
       </section>
 
       <section className={styles.section}>
-        <h2 className="typeTitleMd">List row actions & selection</h2>
+        <h2 className="typeTitleMd">List row actions, skeleton & selection</h2>
+        <SegmentedControl
+          aria-label="List state"
+          onChange={(state) => setIsListLoading(state === "loading")}
+          options={[
+            { label: "Loaded", value: "loaded" },
+            { label: "Loading", value: "loading" },
+          ]}
+          value={isListLoading ? "loading" : "loaded"}
+        />
         <Card>
-          {["Song A", "Song B"].map((title, index) => {
-            const isAdded = addedRows.has(title);
-            return (
-              <ListRow
-                key={title}
-                leading={<CoverArt label={title} size="sm" src={SAMPLE_COVERS[index]} />}
-                subtitle="Test Artist · 1986"
-                title={title}
-                trailing={
-                  <ListRowAction
-                    aria-label={`Add ${title}`}
-                    kind={isAdded ? "added" : "add"}
-                    onClick={() => toggleRow(title)}
-                  />
-                }
-              />
-            );
-          })}
-          <ListRow
-            subtitle="Labelled (desktop)"
-            title="Song C"
-            trailing={<ListRowAction isLabelVisible kind="add" />}
-          />
-          <ListRow subtitle="Remove" title="Song D" trailing={<ListRowAction kind="remove" />} />
-          <ListRow
-            subtitle="Open"
-            title="Test Playlist"
-            trailing={<ListRowAction kind="chevron" />}
-          />
-          <ListRow subtitle="More" title="Test Playlist" trailing={<ListRowAction kind="more" />} />
+          {isListLoading ? (
+            <ListSkeleton count={6} trailing="action" />
+          ) : (
+            <LoadedRows addedRows={addedRows} onToggleRow={toggleRow} />
+          )}
         </Card>
         <div className={styles.row}>
           <Button onClick={() => setSelectedCount((count) => count + 1)} variant="secondary">
@@ -201,6 +187,54 @@ export function StartupFlowPrimitivesGallery() {
           </p>
         </Sheet>
       </section>
+    </>
+  );
+}
+
+interface LoadedRowsProps {
+  addedRows: ReadonlySet<string>;
+  onToggleRow: (title: string) => void;
+}
+
+/** The loaded list the skeleton stands in for: same rows, same leading cover, same action. */
+function LoadedRows({ addedRows, onToggleRow }: LoadedRowsProps) {
+  const fixedRows = [
+    {
+      title: "Song C",
+      subtitle: "Labelled (desktop)",
+      action: <ListRowAction isLabelVisible kind="add" />,
+    },
+    { title: "Song D", subtitle: "Remove", action: <ListRowAction kind="remove" /> },
+    { title: "Test Playlist", subtitle: "Open", action: <ListRowAction kind="chevron" /> },
+    { title: "Party Mix", subtitle: "More", action: <ListRowAction kind="more" /> },
+  ];
+
+  return (
+    <>
+      {["Song A", "Song B"].map((title, index) => (
+        <ListRow
+          key={title}
+          leading={<CoverArt label={title} size="sm" src={SAMPLE_COVERS[index]} />}
+          subtitle="Test Artist · 1986"
+          title={title}
+          trailing={
+            <ListRowAction
+              aria-label={`Add ${title}`}
+              kind={addedRows.has(title) ? "added" : "add"}
+              onClick={() => onToggleRow(title)}
+            />
+          }
+        />
+      ))}
+      {fixedRows.map((row, index) => (
+        <ListRow
+          key={row.title}
+          leading={<CoverArt label={row.title} size="sm" src={SAMPLE_COVERS[index + 2]} />}
+          subtitle={row.subtitle}
+          title={row.title}
+          trailing={row.action}
+        />
+      ))}
     </>
   );
 }

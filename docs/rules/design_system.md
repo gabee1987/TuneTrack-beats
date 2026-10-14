@@ -186,9 +186,10 @@ The shared library is `apps/web/src/features/ui/primitives/`. Everything else in
 ### Current primitives
 
 `Avatar`, `Button`, `Card`, `Chip` / `ChipButton`, `CoverArt`, `Dialog`, `EmptyState`,
-`IconButton`, `ListRow` / `ListRowButton`, `ListRowAction`, `NumberStepper`, `SegmentedControl`,
-`SelectionActionBar`, `SettingRow`, `Sheet`, `Skeleton`, `TextField` (the last seven added
-2026-10-14, `22` S0).
+`IconButton`, `ListRow` / `ListRowButton`, `ListRowAction`, `ListRowSkeleton` / `ListSkeleton`,
+`NumberStepper`, `SegmentedControl`, `SelectionActionBar`, `SettingRow`, `Sheet`, `Skeleton`,
+`TextField`. `CoverArt`, `ListRowAction`, `ListRowSkeleton`, `NumberStepper`,
+`SelectionActionBar`, `SettingRow`, `Sheet` and `TextField` were added 2026-10-14 (`22` S0).
 
 ### Target primitives — being promoted **(target)**
 

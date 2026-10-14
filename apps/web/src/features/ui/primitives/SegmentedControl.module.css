@@ -1,4 +1,5 @@
 .root {
+  position: relative;
   display: flex;
   gap: var(--space-1);
   padding: var(--space-1);
@@ -13,7 +14,22 @@
   display: none;
 }
 
+/* One highlight slides under the options; the selected option only changes its text colour. */
+.thumb {
+  position: absolute;
+  top: var(--space-1);
+  bottom: var(--space-1);
+  left: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-elevated-solid);
+  box-shadow: var(--shadow-raised);
+  pointer-events: none;
+  transition: transform var(--motion-standard-duration) var(--motion-ease-emphasized);
+}
+
 .option {
+  position: relative;
+  z-index: 1;
   flex: 1 0 auto;
   min-height: var(--size-touch-target);
   padding: var(--space-2) var(--space-4);
@@ -43,12 +59,11 @@
 }
 
 .selected {
-  background: var(--color-surface-elevated-solid);
   color: var(--color-text-primary);
-  box-shadow: var(--shadow-raised);
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .thumb,
   .option {
     transition: none;
   }

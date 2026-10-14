@@ -20,7 +20,7 @@ Rules: `CLAUDE.md` → Look & Feel, Frontend layer ownership, Animation;
 
 Before writing anything, check `features/ui/primitives/index.ts`: `Avatar`, `Button`, `Card`,
 `Chip`/`ChipButton`, `CoverArt`, `Dialog`, `EmptyState`, `IconButton`, `ListRow`/`ListRowButton`,
-`ListRowAction`, `NumberStepper`, `SegmentedControl`, `SelectionActionBar`, `SettingRow`, `Sheet`,
+`ListRowAction`, `ListSkeleton`, `NumberStepper`, `SegmentedControl`, `SelectionActionBar`, `SettingRow`, `Sheet`,
 `Skeleton`, `TextField` already exist. A second button, icon button, dialog or sheet
 shell is a defect (design_system §8 rule 1). Need a different look → add a **variant** to the
 primitive, never a page-level override.
@@ -81,7 +81,8 @@ anything timed.
 
 ## 7. Finish
 
-- A new or changed primitive appears on `/dev/ui` (`pages/DesignSystemPage/DesignSystemPage.tsx`)
-  in every variant and state.
+- Every shared UI element (primitive, `features/ui`, toast, banner, hint) appears on `/dev/ui`
+  in every variant and state, in the group file under `pages/DesignSystemPage/`; a deleted one
+  leaves it. The owner inspects and tunes the UI there.
 - Run `/verify` for `@tunetrack/web`. If the component is a new file over the soft limit
   (~200 lines) split it before finishing.
