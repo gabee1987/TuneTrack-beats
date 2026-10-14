@@ -33,16 +33,12 @@ export function logPlayerLeft(socketId: string, roomState: PublicRoomState): voi
   );
 }
 
-export function logGameStarted(
-  roomState: PublicRoomState,
-  deckSize: number,
-  usingImportedDeck: boolean,
-): void {
+export function logGameStarted(roomState: PublicRoomState, deckSize: number): void {
   logger.info(
     {
       roomId: roomState.roomId,
       deckSize,
-      usingImportedDeck,
+      deckSource: roomState.settings.deckSource,
       playerCount: roomState.players.length,
     },
     "game started",

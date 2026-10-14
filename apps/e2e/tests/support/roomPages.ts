@@ -100,7 +100,20 @@ export async function joinFromDirectory(page: Page, roomId: string): Promise<voi
   await directoryRoom.click();
 }
 
+/** Start needs a deck (decision 7); the practice deck is the explicit choice that needs no Spotify. */
+export async function choosePracticeDeck(host: Page): Promise<void> {
+  const practiceDeckButton = host.getByRole("button", {
+    name: "Use the practice deck",
+    exact: true,
+  });
+  // Right after create, the lobby that is leaving still renders until its exit transition ends.
+  await expect(practiceDeckButton).toHaveCount(1);
+  await practiceDeckButton.click();
+  await expect(host.getByText(/^Practice deck · \d+ songs · no audio$/)).toBeVisible();
+}
+
 export async function startGame(host: Page, roomId: string, ...guests: Page[]): Promise<void> {
+  await choosePracticeDeck(host);
   await host.getByRole("button", { name: "Start Game" }).first().click();
   for (const page of [host, ...guests]) {
     await expectGamePage(page, roomId);

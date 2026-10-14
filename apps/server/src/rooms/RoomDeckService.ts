@@ -14,7 +14,10 @@ import type { RoomRecord, RoomStore } from "./RoomStore.js";
 
 /** The room's imported deck as the host curates it in the lobby. */
 export class RoomDeckService {
-  public constructor(private readonly store: RoomStore) {}
+  public constructor(
+    private readonly store: RoomStore,
+    private readonly loadPracticeDeck: () => GameTrackCard[],
+  ) {}
 
   // The deck carries every release year, so reading or changing it is a host tool for the lobby
   // only; the host is also a player and must not see the answers once the game runs.
@@ -27,6 +30,23 @@ export class RoomDeckService {
     const roomRecord = this.store.getRoomRecordForMember(socketId, roomId);
     if (roomRecord.roomState.status !== "lobby") throw new DomainError("GAME_ALREADY_STARTED");
     return roomRecord;
+  }
+
+  /** The host's explicit choice of the bundled deck; it replaces whatever deck the room had. */
+  public usePracticeDeck(socketId: string, roomId: RoomId): PublicRoomState {
+    const roomRecord = this.requireHostInLobby(socketId, roomId, "ONLY_HOST_CAN_IMPORT_PLAYLIST");
+    const practiceDeck = this.loadPracticeDeck();
+    const nextRoomState = buildImportedDeckRoomState(
+      roomRecord.roomState,
+      practiceDeck,
+      "practice",
+    );
+    this.store.setRoom(roomId, {
+      ...roomRecord,
+      roomState: nextRoomState,
+      importedDeck: practiceDeck,
+    });
+    return nextRoomState;
   }
 
   public setImportedDeck(socketId: string, roomId: RoomId, deck: GameTrackCard[]): PublicRoomState {
@@ -44,7 +64,7 @@ export class RoomDeckService {
     const nextDeck = dedupeTracks(
       mode === "append" ? [...(roomRecord.importedDeck ?? []), ...deck] : deck,
     ).tracks;
-    const nextRoomState = buildImportedDeckRoomState(roomRecord.roomState, nextDeck);
+    const nextRoomState = buildImportedDeckRoomState(roomRecord.roomState, nextDeck, "spotify");
     this.store.setRoom(roomId, {
       ...roomRecord,
       roomState: nextRoomState,
@@ -110,7 +130,11 @@ export class RoomDeckService {
 
     if (!updatedTrack) throw new DomainError("PLAYLIST_TRACK_NOT_FOUND");
 
-    const nextRoomState = buildImportedDeckRoomState(roomRecord.roomState, nextDeck);
+    const nextRoomState = buildImportedDeckRoomState(
+      roomRecord.roomState,
+      nextDeck,
+      roomRecord.roomState.settings.deckSource === "practice" ? "practice" : "spotify",
+    );
     this.store.setRoom(payload.roomId, {
       ...roomRecord,
       roomState: nextRoomState,

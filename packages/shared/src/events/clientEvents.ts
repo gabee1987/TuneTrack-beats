@@ -34,6 +34,7 @@ export const ClientToServerEvent = {
   UpdatePlayerSettings: "update_player_settings",
   UpdatePlaylistTrack: "update_playlist_track",
   UpdateRoomSettings: "update_room_settings",
+  UsePracticeDeck: "use_practice_deck",
   UseSpotifyCandidates: "use_spotify_candidates",
 } as const;
 

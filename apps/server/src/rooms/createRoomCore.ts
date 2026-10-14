@@ -20,6 +20,12 @@ export interface RoomDurations {
   maxActiveRoomCount: number;
 }
 
+/** Where the rooms layer gets cards from; `decks/DeckService` in production. */
+export interface RoomDeckSupply {
+  getPracticeDeck(): GameTrackCard[];
+  createShuffledDeckFromCards(cards: GameTrackCard[]): GameTrackCard[];
+}
+
 export interface RoomCore {
   store: RoomStore;
   timers: RoomTimerCoordinator;
@@ -31,10 +37,7 @@ export interface RoomCore {
   connection: RoomConnectionService;
 }
 
-export function createRoomCore(
-  durations: RoomDurations,
-  createStartingDeck?: (roomId: RoomId) => GameTrackCard[],
-): RoomCore {
+export function createRoomCore(durations: RoomDurations, deckSupply: RoomDeckSupply): RoomCore {
   const gameFlowService = new GameFlowService();
   const store = new RoomStore();
   const events = new RoomEvents();
@@ -84,7 +87,10 @@ export function createRoomCore(
     timers,
     gameFlowService,
     emitRoomStateChanged,
-    createStartingDeck,
+    (roomId) => {
+      const importedDeck = store.getImportedDeck(roomId);
+      return importedDeck ? deckSupply.createShuffledDeckFromCards(importedDeck) : null;
+    },
   );
 
   return {
@@ -93,7 +99,7 @@ export function createRoomCore(
     events,
     acks: new RoomActionAcks(store),
     lobby,
-    deck: new RoomDeckService(store),
+    deck: new RoomDeckService(store, () => deckSupply.getPracticeDeck()),
     gameplay,
     connection,
   };

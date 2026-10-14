@@ -22,6 +22,7 @@ function createRoomState(
       ttModeEnabled: true,
       playlistImported: true,
       importedTrackCount: 20,
+      deckSource: "spotify",
       spotifyAuthStatus: "connected",
       spotifyAccountType: "premium",
       spotifyPlaybackOwnerPlayerId: "host-1",
@@ -82,6 +83,12 @@ describe("shouldEnableHostPlayback", () => {
         createRoomState({}, { spotifyAuthStatus: "none", spotifyPlaybackOwnerPlayerId: null }),
         "host-1",
       ),
+    ).toBe(false);
+  });
+
+  it("keeps the practice deck silent by design, even with Spotify connected", () => {
+    expect(
+      shouldEnableHostPlayback(createRoomState({}, { deckSource: "practice" }), "host-1"),
     ).toBe(false);
   });
 });

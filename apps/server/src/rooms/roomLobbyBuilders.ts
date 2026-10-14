@@ -4,6 +4,7 @@ import {
   DEFAULT_STARTING_TT_TOKEN_COUNT,
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
   MAX_STARTING_TT_TOKEN_COUNT,
+  type DeckSource,
   type PublicPlayerState,
   type PublicRoomSettings,
   type PublicRoomState,
@@ -39,6 +40,7 @@ export function buildInitialRoomState(
     challengeWindowDurationSeconds: DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
     playlistImported: false,
     importedTrackCount: 0,
+    deckSource: "none",
     spotifyAuthStatus: "none",
     spotifyAccountType: null,
     spotifyPlaybackOwnerPlayerId: null,
@@ -187,6 +189,7 @@ export function buildAwardedTtLobbyRoomState(
 export function buildImportedDeckRoomState(
   roomState: PublicRoomState,
   deck: GameTrackCard[],
+  deckSource: Exclude<DeckSource, "none">,
 ): PublicRoomState {
   return {
     ...roomState,
@@ -194,6 +197,7 @@ export function buildImportedDeckRoomState(
       ...roomState.settings,
       playlistImported: true,
       importedTrackCount: deck.length,
+      deckSource: deck.length > 0 ? deckSource : "none",
     },
   };
 }
@@ -225,6 +229,7 @@ export function buildRemovedTracksRoomState(
       ...roomState.settings,
       importedTrackCount: nextDeck.length,
       playlistImported: nextDeck.length > 0,
+      deckSource: nextDeck.length > 0 ? roomState.settings.deckSource : "none",
     },
   };
 }

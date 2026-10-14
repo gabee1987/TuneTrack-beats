@@ -24,8 +24,8 @@ import type { RoomStore } from "./RoomStore.js";
 import type { RoomTimerCoordinator } from "./RoomTimerCoordinator.js";
 
 type RoomStateChangedEmitter = (roomState: PublicRoomState) => void;
-/** The room's imported deck when the host loaded one, otherwise the practice deck. */
-type StartingDeckFactory = (roomId: RoomId) => GameTrackCard[];
+/** The room's deck, shuffled, or null when the host has not chosen one (decision 7). */
+type StartingDeckFactory = (roomId: RoomId) => GameTrackCard[] | null;
 
 export class RoomGameplayService {
   public constructor(
@@ -33,19 +33,22 @@ export class RoomGameplayService {
     private readonly timers: RoomTimerCoordinator,
     private readonly gameFlowService: GameFlowService,
     private readonly emitRoomStateChanged: RoomStateChangedEmitter,
-    private readonly createStartingDeck: StartingDeckFactory = () => [],
+    private readonly createStartingDeck: StartingDeckFactory,
   ) {}
 
+  /** `dealtDeck` lets a test deal fixed cards in order instead of the room's shuffled deck. */
   public startGame(
     socketId: string,
     payload: StartGamePayloadParsed,
-    deckCards: GameTrackCard[] = this.createStartingDeck(payload.roomId),
+    dealtDeck?: GameTrackCard[],
   ): PublicRoomState {
     const roomRecord = this.store.getRoomRecordForMember(socketId, payload.roomId);
     const membership = this.store.requireMembership(socketId);
     if (roomRecord.roomState.hostId !== membership.playerId)
       throw new DomainError("ONLY_HOST_CAN_START_GAME");
     if (roomRecord.roomState.status !== "lobby") throw new DomainError("GAME_ALREADY_STARTED");
+    const deckCards = dealtDeck ?? this.createStartingDeck(payload.roomId);
+    if (!deckCards || deckCards.length === 0) throw new DomainError("DECK_REQUIRED");
 
     const gameState = this.gameFlowService.startGame({
       players: roomRecord.roomState.players.map((player) => ({
@@ -69,7 +72,7 @@ export class RoomGameplayService {
       trackCardsById,
       importedDeck: roomRecord.importedDeck,
     });
-    logGameStarted(roomState, deckCards.length, roomRecord.importedDeck !== null);
+    logGameStarted(roomState, deckCards.length);
     return roomState;
   }
 

@@ -50,7 +50,7 @@ export function createGameMenuTabs({
   const hasPlaybackTab =
     isHost &&
     roomState.settings.spotifyAuthStatus === "connected" &&
-    roomState.settings.playlistImported;
+    roomState.settings.deckSource === "spotify";
 
   return [
     {

@@ -2,6 +2,8 @@ import type { SpotifyAccountType } from "../spotify/spotifyAuth.js";
 
 export type RevealConfirmMode = "host_only" | "host_or_active_player";
 export type SpotifyAuthStatus = "none" | "connected";
+/** Where the room's deck came from; `"none"` blocks Start (decision 7). */
+export type DeckSource = "none" | "spotify" | "practice";
 
 export interface PublicRoomSettings {
   targetTimelineCardCount: number;
@@ -12,6 +14,7 @@ export interface PublicRoomSettings {
   challengeWindowDurationSeconds: number | null;
   playlistImported: boolean;
   importedTrackCount: number;
+  deckSource: DeckSource;
   spotifyAuthStatus: SpotifyAuthStatus;
   spotifyAccountType: SpotifyAccountType | null;
   /**

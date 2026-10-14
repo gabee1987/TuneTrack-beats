@@ -2,7 +2,11 @@
 
 > **Status (2026-10-13):** WP 1 shipped 2026-10-13 (glossary copy in `en` and `hu`, Home
 > sub-label and desktop keys, honest auth-timeout text and popup page, 41 dead keys deleted;
-> `HomePage.test.tsx`, `spotifyRoutes.test.ts`). WPs 2–10 open; WPs 5 and 6 wait for `21` Phase 1.
+> `HomePage.test.tsx`, `spotifyRoutes.test.ts`). WP 2 shipped 2026-10-13 (`deckSize.ts`,
+> `deckSource`, `use_practice_deck`, `DECK_REQUIRED`, a practice-deck choice in the lobby Music
+> section until WP 3 and WP 5 replace it, E2E `choosePracticeDeck`; `deckContract.test.ts`,
+> `deckSize.test.ts`, `LobbyPracticeDeckChoice.test.tsx`). WP 3 takes over the Start reason line
+> and the size indicator display. WPs 3–10 open; WPs 5 and 6 wait for `21` Phase 1.
 > Work packages in §12 are handed to implementation agents one at a time.
 > **Owns findings:** U-01 … U-14, F-06 (host-flow overlays), F-16 (lobby part), F-24 (host-flow
 > controls). **Binding decisions:** `00-index.md` §5 — 5 (streamline, do not restructure), 6 (deck
@@ -436,8 +440,10 @@ The `TurnActionDock` duplication (the game half of F-16) is not host flow and st
       `aria-describedby` (component tests per reason).
 - [ ] Start with no deck is impossible: client disabled with reason, server returns
       `DECK_REQUIRED` (server test); the practice deck is only used after an explicit choice.
+      Server gate and explicit choice: WP 2, `deckContract.test.ts`; client reason line: WP 3.
 - [ ] Deck-size indicator matches `requiredDeckSize` for 1–8 players and targets 3–30 (unit test);
-      the short-deck warning appears and Start stays enabled.
+      the short-deck warning appears and Start stays enabled. Sizes: WP 2, `deckSize.test.ts`;
+      indicator and warning: WP 3.
 - [ ] Music setup tabs work without Spotify login (component test with `spotifyAuthStatus:
 "none"`); the per-room login note is visible; Free copy states previews and silence.
 - [x] `lobby.spotify.authTimedOut` contains no file path or developer instruction — WP 1,

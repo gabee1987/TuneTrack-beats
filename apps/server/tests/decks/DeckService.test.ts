@@ -41,8 +41,8 @@ describe("DeckService", () => {
       const deckLoaded = vi.spyOn(logger, "info");
       const deckService = new DeckService();
 
-      const firstDeck = deckService.createShuffledDeck();
-      const secondDeck = deckService.createShuffledDeck();
+      const firstDeck = deckService.getPracticeDeck();
+      const secondDeck = deckService.getPracticeDeck();
 
       expect(firstDeck.length).toBeGreaterThan(0);
       expect(secondDeck).toHaveLength(firstDeck.length);
@@ -51,10 +51,10 @@ describe("DeckService", () => {
       ).toHaveLength(1);
     });
 
-    it("gives every game its own card objects", () => {
-      const deckService = new DeckService(undefined, () => 0);
-      const [firstCard] = deckService.createShuffledDeck();
-      const secondDeck = deckService.createShuffledDeck();
+    it("gives every room its own card objects", () => {
+      const deckService = new DeckService();
+      const [firstCard] = deckService.getPracticeDeck();
+      const secondDeck = deckService.getPracticeDeck();
 
       expect(secondDeck.find((card) => card.id === firstCard?.id)).not.toBe(firstCard);
     });
@@ -62,7 +62,7 @@ describe("DeckService", () => {
     it("finds the deck files whatever the working directory", () => {
       vi.spyOn(process, "cwd").mockReturnValue(tmpdir());
 
-      expect(new DeckService().createShuffledDeck().length).toBeGreaterThan(0);
+      expect(new DeckService().getPracticeDeck().length).toBeGreaterThan(0);
     });
   });
 });

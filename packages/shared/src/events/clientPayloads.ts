@@ -32,6 +32,7 @@ import type {
   LoadCuratedPlaylistPayload,
   RemovePlaylistTracksPayload,
   UpdatePlaylistTrackPayload,
+  UsePracticeDeckPayload,
 } from "./schemas/playlistSchemas.js";
 import type {
   GenerateSpotifyCandidatesPayload,
@@ -82,6 +83,7 @@ export type {
   UpdatePlayerSettingsPayload,
   UpdatePlaylistTrackPayload,
   UpdateRoomSettingsPayload,
+  UsePracticeDeckPayload,
   UseSpotifyCandidatesPayload,
 };
 
@@ -125,6 +127,7 @@ interface PayloadsByEventKey {
   UpdatePlayerSettings: UpdatePlayerSettingsPayload;
   UpdatePlaylistTrack: UpdatePlaylistTrackPayload;
   UpdateRoomSettings: UpdateRoomSettingsPayload;
+  UsePracticeDeck: UsePracticeDeckPayload;
   UseSpotifyCandidates: UseSpotifyCandidatesPayload;
 }
 

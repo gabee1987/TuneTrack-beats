@@ -8,6 +8,7 @@ import { SettingInfoButton } from "../../../../features/ui/SettingField";
 import { SurfaceCard } from "../../../../features/ui/SurfaceCard";
 import { LobbySectionHeader } from "../LobbySectionHeader";
 import { useLobbySpotify } from "../../hooks/spotify/useLobbySpotify";
+import { LobbyPracticeDeckChoice } from "./LobbyPracticeDeckChoice";
 import { SpotifyLogo } from "./spotifySetupIcons";
 import { SpotifySetupModal } from "./SpotifySetupModal";
 import type { SpotifySetupSource } from "./spotifySetupTypes";
@@ -87,7 +88,7 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
                   {accountType ? <SpotifyAccountBadge accountType={accountType} /> : null}
                 </div>
 
-                {isImported ? (
+                {currentSettings.deckSource === "spotify" ? (
                   <div className={setupShellStyles.spotifySongsReady}>
                     <span className={setupShellStyles.spotifySongsReadyDot} />
                     <span>
@@ -150,6 +151,8 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
               {isImported ? t("lobby.spotify.openSetupReady") : t("lobby.spotify.openSetup")}
             </ActionButton>
           </div>
+
+          <LobbyPracticeDeckChoice currentSettings={currentSettings} />
         </div>
       </SurfaceCard>
 

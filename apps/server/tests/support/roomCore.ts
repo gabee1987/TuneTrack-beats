@@ -1,4 +1,5 @@
 import { roomDurationsFromEnv } from "../../src/app/createRoomServices.js";
+import { DeckService } from "../../src/decks/DeckService.js";
 import {
   createRoomCore,
   type RoomCore,
@@ -7,5 +8,5 @@ import {
 
 /** The rooms layer alone, with the validated env durations unless a test shortens one. */
 export function createTestRoomCore(overrides: Partial<RoomDurations> = {}): RoomCore {
-  return createRoomCore({ ...roomDurationsFromEnv(), ...overrides });
+  return createRoomCore({ ...roomDurationsFromEnv(), ...overrides }, new DeckService());
 }

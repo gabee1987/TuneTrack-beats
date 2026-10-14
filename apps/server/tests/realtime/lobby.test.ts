@@ -44,6 +44,7 @@ describe("lobby directory", () => {
     });
 
     const startedPromise = waitForRoomList(directory, (payload) => payload.rooms.length === 0);
+    host.socket.emit(ClientToServerEvent.UsePracticeDeck, { roomId: "listed-room" });
     host.socket.emit(ClientToServerEvent.StartGame, { roomId: "listed-room" });
     await expect(startedPromise).resolves.toEqual({ rooms: [] });
     expect(hostRoomLists).toEqual([]);

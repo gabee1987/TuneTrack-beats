@@ -19,13 +19,7 @@ export interface RoomServiceDependencies {
 }
 
 export function createRoomServices(dependencies: RoomServiceDependencies): RoomServices {
-  const { deckService } = dependencies;
-  const core: RoomCore = createRoomCore(dependencies.durations, (roomId) => {
-    const importedDeck = core.store.getImportedDeck(roomId);
-    return importedDeck
-      ? deckService.createShuffledDeckFromCards(importedDeck)
-      : deckService.createShuffledDeck();
-  });
+  const core: RoomCore = createRoomCore(dependencies.durations, dependencies.deckService);
   const spotify = new SpotifyOrchestrator(core.store, core.lobby, core.deck, dependencies.spotify);
   spotify.followRoomLifecycle(core.events);
 

@@ -41,6 +41,7 @@ export const kickPlayerErrorMessages: SocketErrorMessages = {
 
 export const startGameErrorMessages: SocketErrorMessages = {
   GAME_ALREADY_STARTED: "This game has already started.",
+  DECK_REQUIRED: "Add songs or choose the practice deck first.",
   NOT_ENOUGH_CARDS: "There are not enough cards to start this game.",
   ONLY_HOST_CAN_START_GAME: "Only the host can start the game.",
 };
@@ -143,6 +144,11 @@ export const musicSetupErrorMessages: SocketErrorMessages = {
 export const loadCuratedPlaylistErrorMessages: SocketErrorMessages = {
   GAME_ALREADY_STARTED: MUSIC_LOCKED_MESSAGE,
   ONLY_HOST_CAN_IMPORT_PLAYLIST: "Only the host can load a saved playlist.",
+};
+
+export const usePracticeDeckErrorMessages: SocketErrorMessages = {
+  GAME_ALREADY_STARTED: MUSIC_LOCKED_MESSAGE,
+  ONLY_HOST_CAN_IMPORT_PLAYLIST: "Only the host can choose the practice deck.",
 };
 
 export const useSpotifyCandidatesErrorMessages: SocketErrorMessages = {

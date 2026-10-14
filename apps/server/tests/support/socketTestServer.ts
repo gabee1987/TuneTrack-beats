@@ -32,7 +32,7 @@ afterEach(async () => {
 });
 
 export interface SocketTestServicesOptions {
-  /** Dealt in this order instead of the shuffled practice deck. */
+  /** The practice deck, dealt in this order instead of shuffled. */
   deck?: readonly GameTrackCard[];
   reconnectGracePeriodMs?: number;
 }

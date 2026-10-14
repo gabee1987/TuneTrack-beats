@@ -27,6 +27,19 @@ test("a saved player profile joins from a direct invite in one action", async ({
   await expectLobbyRoster(guest.page, "Invite Host");
 });
 
+test("a host without a deck is told to choose songs instead of getting a silent practice deck", async ({
+  openPlayer,
+}) => {
+  const host = await openPlayer("Deck Host");
+  const roomId = await hostRoom(host.page);
+
+  await host.page.getByRole("button", { name: "Start Game" }).first().click();
+
+  await expect(host.page.getByText("Add songs or choose the practice deck first.")).toBeVisible();
+  await expect(host.page).toHaveURL(`/lobby/${roomId}`);
+  await startGame(host.page, roomId);
+});
+
 test("the host starts the game for both players", async ({ openRoom }) => {
   const { guest, host, roomId } = await openRoom({ guest: "Game Guest", host: "Game Host" });
 

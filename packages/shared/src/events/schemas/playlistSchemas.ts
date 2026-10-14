@@ -3,6 +3,7 @@ import {
   curatedPlaylistTrackSchema,
   playlistQueueUpdateModeSchema,
   releaseYearSchema,
+  roomActionPayloadSchema,
   roomIdSchema,
   trackMetadataStatusSchema,
 } from "./commonSchemas.js";
@@ -19,6 +20,8 @@ export const loadCuratedPlaylistPayloadSchema = z.object({
   tracks: z.array(curatedPlaylistTrackSchema).min(1).max(MAX_CURATED_PLAYLIST_TRACK_COUNT),
   mode: playlistQueueUpdateModeSchema.default("replace"),
 });
+
+export const usePracticeDeckPayloadSchema = roomActionPayloadSchema;
 
 export const getPlaylistTracksPayloadSchema = z.object({
   roomId: roomIdSchema,
@@ -58,3 +61,5 @@ export type RemovePlaylistTracksPayload = z.input<typeof removePlaylistTracksPay
 export type RemovePlaylistTracksPayloadParsed = z.output<typeof removePlaylistTracksPayloadSchema>;
 export type UpdatePlaylistTrackPayload = z.input<typeof updatePlaylistTrackPayloadSchema>;
 export type UpdatePlaylistTrackPayloadParsed = z.output<typeof updatePlaylistTrackPayloadSchema>;
+export type UsePracticeDeckPayload = z.input<typeof usePracticeDeckPayloadSchema>;
+export type UsePracticeDeckPayloadParsed = z.output<typeof usePracticeDeckPayloadSchema>;

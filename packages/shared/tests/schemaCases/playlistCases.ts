@@ -4,6 +4,7 @@ import {
   loadCuratedPlaylistPayloadSchema,
   removePlaylistTracksPayloadSchema,
   updatePlaylistTrackPayloadSchema,
+  usePracticeDeckPayloadSchema,
 } from "../../src/events/schemas.js";
 import {
   buildIds,
@@ -16,8 +17,14 @@ import {
 } from "./schemaCase.js";
 
 const longText = (length: number) => "x".repeat(length);
+const requestIdPastLimit = { "a request id that is not a UUID": { requestId: "12345" } };
 
 export const playlistSchemaCases: SchemaCases = {
+  usePracticeDeckPayloadSchema: {
+    schema: usePracticeDeckPayloadSchema,
+    valid: { roomId: TEST_ROOM_ID },
+    pastLimits: { ...pastRoomIdLimit, ...requestIdPastLimit },
+  },
   importPlaylistPayloadSchema: {
     schema: importPlaylistPayloadSchema,
     valid: { roomId: TEST_ROOM_ID, playlistUrl: "spotify:playlist:TESTPLAYLIST1234567890" },

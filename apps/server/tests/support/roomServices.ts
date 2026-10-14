@@ -25,13 +25,17 @@ class FixedDeckService extends DeckService {
     super();
   }
 
-  public override createShuffledDeck(): GameTrackCard[] {
+  public override getPracticeDeck(): GameTrackCard[] {
     return this.deck.map((card) => ({ ...card }));
+  }
+
+  public override createShuffledDeckFromCards(cards: GameTrackCard[]): GameTrackCard[] {
+    return [...cards];
   }
 }
 
 export interface TestRoomServicesOptions {
-  /** Dealt in this order instead of the shuffled practice deck. */
+  /** The practice deck, dealt in this order instead of shuffled. */
   deck?: readonly GameTrackCard[];
   durations?: Partial<RoomDurations>;
   accounts?: SpotifyAccountsClient;

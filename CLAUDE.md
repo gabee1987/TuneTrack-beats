@@ -42,8 +42,9 @@ motion that explains what just happened.
   current player count and win target, and warns when the deck is smaller. If the deck and
   the discard pile are both empty, the game finishes: most timeline cards wins, and on a tie
   the player who reached that count first (decided 2026-10-07).
-- **No silent practice deck** (decided 2026-10-06, implementation pending): Start is blocked
-  until a deck exists; the host chooses the practice deck explicitly.
+- **No silent practice deck** (decided 2026-10-06; server gate and explicit lobby choice shipped
+  2026-10-13, Start reason line pending): Start is blocked until a deck exists; the host chooses
+  the practice deck explicitly.
 
 ### Connection lifecycle
 

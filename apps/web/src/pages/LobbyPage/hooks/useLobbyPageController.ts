@@ -23,6 +23,7 @@ const fallbackRoomSettings: PublicRoomSettings = {
   ttModeEnabled: false,
   playlistImported: false,
   importedTrackCount: 0,
+  deckSource: "none",
   spotifyAuthStatus: "none",
   spotifyAccountType: null,
   spotifyPlaybackOwnerPlayerId: null,

@@ -63,7 +63,10 @@ export async function openTwoPlayerLobby(
   return { host, guest: { socket: guestSocket, playerId }, lobby };
 }
 
-/** Starts the game from the host and resolves with the first turn as `watcher` sees it. */
+/**
+ * Chooses the practice deck, starts the game from the host and resolves with the first turn as
+ * `watcher` sees it. One socket delivers in order, so Start always finds the deck.
+ */
 export async function startGame(
   host: Socket,
   roomId: string,
@@ -73,6 +76,7 @@ export async function startGame(
     watcher,
     (roomState) => roomState.status === "turn" && roomState.turn?.turnNumber === 1,
   );
+  host.emit(ClientToServerEvent.UsePracticeDeck, { roomId });
   host.emit(ClientToServerEvent.StartGame, { roomId });
   return turnPromise;
 }

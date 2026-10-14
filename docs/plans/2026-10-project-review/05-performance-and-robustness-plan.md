@@ -169,7 +169,7 @@ skipped card. When deck and discard pile are both empty the game finishes with t
 winner, ties by the earliest reveal that reached the count (starting cards count first).
 `claimChallenge` takes `nowEpochMs` and owns the deadline check (`isChallengeWindowExpired`,
 also used by the server's auto-resolve timer); `GameFlowService.skipTurn` owns the host
-skip-versus-cancel decision. The lobby indicator stays with `04` WP 2.
+skip-versus-cancel decision. The lobby indicator: sizes shipped with `04` WP 2, display with WP 3.
 Proof: `packages/game-engine/tests/deckExhaustion.test.ts` (8 cases),
 `packages/game-engine/tests/transitionPurity.test.ts` (15 transitions deep-equal before and
 after, 4 clock and skip cases; in a new file because `gameFlow.test.ts` is on the size

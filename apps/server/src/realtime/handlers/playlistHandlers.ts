@@ -6,22 +6,26 @@ import {
   loadCuratedPlaylistPayloadSchema,
   removePlaylistTracksPayloadSchema,
   updatePlaylistTrackPayloadSchema,
+  usePracticeDeckPayloadSchema,
 } from "@tunetrack/shared";
 import type { Server, Socket } from "socket.io";
 import { logger } from "../../app/logger.js";
 import type { RoomServices } from "../../app/createRoomServices.js";
 import { broadcastRoomState, createSocketHandler } from "../createSocketHandler.js";
+import { roomActionIdempotency } from "../roomActionIdempotency.js";
 import {
   getPlaylistTracksErrorMessages,
   loadCuratedPlaylistErrorMessages,
   musicSetupErrorMessages,
   removePlaylistTracksErrorMessages,
   updatePlaylistTrackErrorMessages,
+  usePracticeDeckErrorMessages,
 } from "../errorMessages.js";
 
 export function registerPlaylistHandlers(io: Server, socket: Socket, services: RoomServices): void {
   registerImportPlaylistHandler(io, socket, services);
   registerLoadCuratedPlaylistHandler(io, socket, services);
+  registerUsePracticeDeckHandler(io, socket, services);
   registerGetPlaylistTracksHandler(socket, services);
   registerRemovePlaylistTracksHandler(io, socket, services);
   registerUpdatePlaylistTrackHandler(io, socket, services);
@@ -94,6 +98,27 @@ function registerLoadCuratedPlaylistHandler(
     },
     fallbackErrorCode: "LOAD_CURATED_PLAYLIST_FAILED",
     errorMessages: loadCuratedPlaylistErrorMessages,
+  });
+}
+
+function registerUsePracticeDeckHandler(io: Server, socket: Socket, services: RoomServices): void {
+  createSocketHandler({
+    socket,
+    event: ClientToServerEvent.UsePracticeDeck,
+    schema: usePracticeDeckPayloadSchema,
+    invalidPayload: {
+      code: "INVALID_USE_PRACTICE_DECK_PAYLOAD",
+      message: "Room code is invalid.",
+    },
+    log: (data) => {
+      logger.info({ socketId: socket.id, roomId: data.roomId }, "use_practice_deck");
+    },
+    handle: (data) => {
+      broadcastRoomState(io, services.deck.usePracticeDeck(socket.id, data.roomId));
+    },
+    idempotency: roomActionIdempotency(services, socket, ClientToServerEvent.UsePracticeDeck),
+    fallbackErrorCode: "USE_PRACTICE_DECK_FAILED",
+    errorMessages: usePracticeDeckErrorMessages,
   });
 }
 

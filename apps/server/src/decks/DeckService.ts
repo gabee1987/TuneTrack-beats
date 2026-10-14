@@ -35,12 +35,10 @@ export class DeckService {
     return shuffleDeckCards([...cards], this.randomSource);
   }
 
-  public createShuffledDeck(): GameTrackCard[] {
+  /** In file order: the room shuffles it at Start, like any other deck. */
+  public getPracticeDeck(): GameTrackCard[] {
     this.testDeckCards ??= this.loadTestDeckCards();
-    return shuffleDeckCards(
-      this.testDeckCards.map((card) => ({ ...card })),
-      this.randomSource,
-    );
+    return this.testDeckCards.map((card) => ({ ...card }));
   }
 
   /** Read and validated once per process; every game shuffles its own copy. */

@@ -10,6 +10,7 @@ import type { RoomServices } from "../../src/app/createRoomServices.js";
 import { turnOrderDeck } from "../support/decks.js";
 import {
   createRoomAsHost,
+  emitWithAck,
   expectAppliedOnce,
   HOST,
   openTwoPlayerLobby,
@@ -40,11 +41,55 @@ async function expectError(socket: Socket, emit: () => void, error: ServerErrorP
   await expect(errorPromise).resolves.toEqual(error);
 }
 
+describe("deck choice", () => {
+  it("refuses Start without a deck and tells the host what to do", async () => {
+    const { host } = await openTwoPlayerLobby(await startSocketTestServer(), "no-deck-room");
+
+    await expectError(
+      host.socket,
+      () => host.socket.emit(ClientToServerEvent.StartGame, { roomId: "no-deck-room" }),
+      { code: "DECK_REQUIRED", message: "Add songs or choose the practice deck first." },
+    );
+  });
+
+  it("loads the practice deck once when the choice is replayed, and only for the host", async () => {
+    const services = createDealtServices();
+    const usePracticeDeckSpy = vi.spyOn(services.deck, "usePracticeDeck");
+    const { host, guest } = await openTwoPlayerLobby(
+      await startSocketTestServer(services),
+      "drill-room",
+    );
+    await expectError(
+      guest.socket,
+      () => guest.socket.emit(ClientToServerEvent.UsePracticeDeck, { roomId: "drill-room" }),
+      {
+        code: "ONLY_HOST_CAN_IMPORT_PLAYLIST",
+        message: "Only the host can choose the practice deck.",
+      },
+    );
+    usePracticeDeckSpy.mockClear();
+    const deckPromise = waitForStateUpdate(
+      guest.socket,
+      (state) => state.settings.deckSource === "practice",
+    );
+
+    const requestId = "00000000-0000-4000-8000-000000000150";
+    const acks = await sendTwice(host.socket, ClientToServerEvent.UsePracticeDeck, {
+      roomId: "drill-room",
+      requestId,
+    });
+
+    expectAppliedOnce(acks, requestId, usePracticeDeckSpy);
+    expect((await deckPromise).settings.importedTrackCount).toBe(turnOrderDeck().length);
+  });
+});
+
 describe("turn actions", () => {
   it("starts a game once when the start is replayed and hides the dealt card's year", async () => {
     const services = createDealtServices();
     const startGameSpy = vi.spyOn(services.gameplay, "startGame");
     const { host } = await openTwoPlayerLobby(await startSocketTestServer(services), "game-room");
+    await emitWithAck(host.socket, ClientToServerEvent.UsePracticeDeck, { roomId: "game-room" });
     const turnPromise = waitForStateUpdate(host.socket, (state) => state.turn?.turnNumber === 1);
 
     const requestId = "00000000-0000-4000-8000-000000000100";

@@ -6,6 +6,7 @@ export * from "./events/actionAck.js";
 export * from "./events/clientEvents.js";
 export type * from "./events/clientPayloads.js";
 export * from "./events/serverEvents.js";
+export * from "./game/deckSize.js";
 export * from "./game/player.js";
 export * from "./game/roomSettings.js";
 export * from "./game/roomState.js";
