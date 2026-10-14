@@ -1,5 +1,6 @@
 export { MotionFeatureProvider } from "./MotionFeatureProvider";
 export { MotionPresence } from "./MotionPresence";
+export { MotionReveal } from "./MotionReveal";
 export { PageTransition } from "./PageTransition";
 export { prefersReducedMotion } from "./prefersReducedMotion";
 export { useReducedMotionPreference } from "./useReducedMotionPreference";
@@ -8,6 +9,14 @@ export type { ScreenTransitionDirection } from "./coreMotionTokens";
 export { createMenuTabActivationTransition, keepFadeOnMainThread } from "./appShellMotionTokens";
 export { createSideSheetMotion, createSideSheetScrimMotion } from "./sideSheetMotionTokens";
 export { createToggleHintFadeMotion, createMeasuredDisclosureMotion } from "./lobbyMotionTokens";
+export {
+  createCollapsingHeaderMotion,
+  createPlayerArrivalMotion,
+  createReadyMotion,
+  createSelectionBarMotion,
+  createStepDoneMotion,
+  type CollapsingHeaderMotion,
+} from "./startupFlowMotionTokens";
 export {
   createPreviewCardReplaceEnterInitial,
   createPreviewCardReplaceEnterMotion,

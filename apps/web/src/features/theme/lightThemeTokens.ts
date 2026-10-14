@@ -73,6 +73,11 @@ export const lightThemeDefinition: ThemeDefinition = {
     "gradient-card-hidden": "linear-gradient(145deg, #e7eef5 0%, #f2f6f9 55%, #ffffff 100%)",
     "gradient-card-artwork-scrim":
       "linear-gradient(180deg, rgba(20, 28, 40, 0.12) 0%, rgba(20, 28, 40, 0.28) 42%, rgba(20, 28, 40, 0.78) 100%)",
+    "color-cover-fallback-1": "#4b5fd0",
+    "color-cover-fallback-2": "#9a4cb0",
+    "color-cover-fallback-3": "#23806f",
+    "color-cover-fallback-4": "#b35a33",
+    "color-on-cover-fallback": "#ffffff",
 
     // Game UI
     "color-mask-solid": "#e8eef4",

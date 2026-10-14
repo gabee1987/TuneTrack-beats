@@ -19,8 +19,9 @@ Rules: `CLAUDE.md` → Look & Feel, Frontend layer ownership, Animation;
 | mobile-only or desktop-only                    | `pages/<Page>/mobile/` or `pages/<Page>/desktop/`                     |
 
 Before writing anything, check `features/ui/primitives/index.ts`: `Avatar`, `Button`, `Card`,
-`Chip`/`ChipButton`, `Dialog`, `EmptyState`, `IconButton`, `ListRow`/`ListRowButton`,
-`SegmentedControl`, `Skeleton` already exist. A second button, icon button, dialog or sheet
+`Chip`/`ChipButton`, `CoverArt`, `Dialog`, `EmptyState`, `IconButton`, `ListRow`/`ListRowButton`,
+`ListRowAction`, `NumberStepper`, `SegmentedControl`, `SelectionActionBar`, `SettingRow`, `Sheet`,
+`Skeleton`, `TextField` already exist. A second button, icon button, dialog or sheet
 shell is a defect (design_system §8 rule 1). Need a different look → add a **variant** to the
 primitive, never a page-level override.
 

@@ -17,6 +17,7 @@ import {
 } from "../../features/ui/primitives";
 import { Badge } from "../../features/ui/Badge";
 import styles from "./DesignSystemPage.module.css";
+import { StartupFlowPrimitivesGallery } from "./StartupFlowPrimitivesGallery";
 
 type ThemeChoice = "dark" | "light";
 
@@ -150,6 +151,8 @@ export function DesignSystemPage() {
           </p>
         </Dialog>
       </section>
+
+      <StartupFlowPrimitivesGallery />
     </AppPageShell>
   );
 }

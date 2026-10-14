@@ -1,0 +1,52 @@
+import { forwardRef, useId, type InputHTMLAttributes, type ReactNode } from "react";
+import { classNames } from "../classNames";
+import styles from "./TextField.module.css";
+
+export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "children"> {
+  /** Replaces the helper and is announced as soon as it appears. */
+  error?: string | null | undefined;
+  helper?: ReactNode | undefined;
+  label: string;
+  /** A control inside the field's right edge, such as a paste or clear button. */
+  trailing?: ReactNode | undefined;
+}
+
+export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextField(
+  { className, error, helper, id, label, trailing, type = "text", ...inputProps },
+  ref,
+) {
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
+  const messageId = `${inputId}-message`;
+  const hasError = Boolean(error);
+  const message = hasError ? error : helper;
+
+  return (
+    <div className={classNames(styles.field, className)}>
+      <label className={styles.label} htmlFor={inputId}>
+        {label}
+      </label>
+      <div className={classNames(styles.control, hasError ? styles.invalid : undefined)}>
+        <input
+          {...inputProps}
+          aria-describedby={message ? messageId : undefined}
+          aria-invalid={hasError || undefined}
+          className={styles.input}
+          id={inputId}
+          ref={ref}
+          type={type}
+        />
+        {trailing ? <div className={styles.trailing}>{trailing}</div> : null}
+      </div>
+      {message ? (
+        <p
+          className={hasError ? styles.error : styles.helper}
+          id={messageId}
+          role={hasError ? "alert" : undefined}
+        >
+          {message}
+        </p>
+      ) : null}
+    </div>
+  );
+});

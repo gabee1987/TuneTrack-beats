@@ -1,4 +1,5 @@
 import { PRACTICE_COVER_PATH_PREFIX } from "@tunetrack/shared/client";
+import { hashText } from "./hashText";
 
 interface ArtworkSource {
   artist: string;
@@ -60,13 +61,4 @@ function getInitials(artist: string): string {
     .slice(0, 2)
     .map((word) => word.charAt(0).toUpperCase())
     .join("");
-}
-
-function hashText(text: string): number {
-  let hash = 2166136261;
-  for (const character of text) {
-    hash ^= character.codePointAt(0) ?? 0;
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
 }

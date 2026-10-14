@@ -67,6 +67,23 @@ describe("Button", () => {
     expect(triggerPressHapticMock).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps its name, reports busy and ignores presses while loading", async () => {
+    const onClick = vi.fn();
+    renderWithProviders(
+      <Button haptic isLoading onClick={onClick} variant="spotify">
+        Log in with Spotify
+      </Button>,
+    );
+
+    const button = screen.getByRole("button", { name: "Log in with Spotify" });
+    await userEvent.click(button);
+
+    expect(button).toHaveAttribute("aria-busy", "true");
+    expect(button).toBeDisabled();
+    expect(onClick).not.toHaveBeenCalled();
+    expect(triggerPressHapticMock).not.toHaveBeenCalled();
+  });
+
   it("neither buzzes nor reports a click while disabled", async () => {
     const onClick = vi.fn();
     renderWithProviders(

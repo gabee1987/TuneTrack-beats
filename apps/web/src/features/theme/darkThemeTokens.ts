@@ -74,6 +74,12 @@ const darkThemeCssVariables = {
   "gradient-card-hidden": "linear-gradient(145deg, #2a2a2a 0%, #181818 55%, #121212 100%)",
   "gradient-card-artwork-scrim":
     "linear-gradient(180deg, rgba(10, 10, 10, 0.18) 0%, rgba(10, 10, 10, 0.34) 42%, rgba(10, 10, 10, 0.82) 100%)",
+  // Cover fallbacks: a playlist or song without artwork takes one of these by a hash of its name.
+  "color-cover-fallback-1": "#3d4fb8",
+  "color-cover-fallback-2": "#8a3f9e",
+  "color-cover-fallback-3": "#1f7a6d",
+  "color-cover-fallback-4": "#a8502c",
+  "color-on-cover-fallback": "#ffffff",
 
   // Game UI
   "color-mask-solid": "#000000",

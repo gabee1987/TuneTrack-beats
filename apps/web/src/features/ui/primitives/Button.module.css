@@ -81,6 +81,58 @@
   background: color-mix(in srgb, var(--color-status-danger-surface) 70%, white 8%);
 }
 
+.tertiary {
+  min-width: var(--size-touch-target);
+  padding-inline: var(--space-3);
+  background: transparent;
+  color: var(--color-accent-brand);
+}
+
+.tertiary:hover:not(:disabled) {
+  background: var(--color-surface-soft);
+}
+
+.spotify {
+  background: var(--color-background-spotify);
+  color: var(--color-on-spotify);
+}
+
+.spotify:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-background-spotify) 88%, var(--color-on-spotify));
+}
+
+.loading {
+  position: relative;
+}
+
+.loading:disabled {
+  cursor: progress;
+  opacity: 1;
+}
+
+/* The label stays in the layout and the accessible name; the button keeps its width. */
+.loadingLabel {
+  opacity: 0;
+}
+
+.spinner {
+  position: absolute;
+  inset: 0;
+  width: 20px;
+  height: 20px;
+  margin: auto;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: var(--radius-circle);
+  animation: buttonSpin 0.8s linear infinite;
+}
+
+@keyframes buttonSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .button {
     transition: none;
