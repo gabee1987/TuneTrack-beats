@@ -1,8 +1,12 @@
 import { memo, useMemo } from "react";
-import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
+import { SortableContext, type SortingStrategy } from "@dnd-kit/sortable";
 import type { GamePageCard, TimelinePanelItemsModel } from "../GamePage.types";
 import { buildTimelineSortableItemViewModels } from "../gamePageTimelineItemViewModels";
 import { TimelineSortableItem } from "./TimelineSortableItem";
+
+// The drag hook moves the preview through the order itself and glides the cards; dnd-kit
+// also displacing them towards its own "over" target made the neighbours snap back and forth.
+const noDisplacementStrategy: SortingStrategy = () => null;
 
 interface TimelinePanelItemsProps {
   hintAnchorRef?: (node: HTMLElement | null) => void;
@@ -40,7 +44,7 @@ function TimelinePanelItemsComponent({
   const firstTimelineItemId = itemViewModels.find((item) => !item.isPreview)?.id;
 
   return (
-    <SortableContext items={orderedItemIds} strategy={rectSortingStrategy}>
+    <SortableContext items={orderedItemIds} strategy={noDisplacementStrategy}>
       {itemViewModels.map((item) => (
         <TimelineSortableItem
           card={item.card}

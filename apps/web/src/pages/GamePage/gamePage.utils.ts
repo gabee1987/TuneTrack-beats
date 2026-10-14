@@ -1,4 +1,3 @@
-import { defaultAnimateLayoutChanges } from "@dnd-kit/sortable";
 import type { CSSProperties } from "react";
 import type {
   HiddenCardMode,
@@ -6,12 +5,6 @@ import type {
   ThemeId,
 } from "../../features/preferences/uiPreferences";
 import { themeRegistry } from "../../features/theme/themeRegistry";
-
-export function animateTimelineLayoutChanges(
-  args: Parameters<typeof defaultAnimateLayoutChanges>[0],
-) {
-  return defaultAnimateLayoutChanges(args);
-}
 
 function getCardGradient(
   theme: ThemeId,

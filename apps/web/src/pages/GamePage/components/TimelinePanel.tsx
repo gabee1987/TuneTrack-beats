@@ -7,7 +7,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { MotionPresence } from "../../../features/motion";
+import { MotionPresence, useReducedMotionPreference } from "../../../features/motion";
 import { usePageLayoutMode } from "../../../hooks/usePageLayoutMode";
 import type {
   GamePageCard,
@@ -16,12 +16,13 @@ import type {
   TimelinePanelModel,
 } from "../GamePage.types";
 import { SongInfoModal } from "./SongInfoModal";
-import { DRAG_ACTIVATION_DISTANCE_PX, TIMELINE_AUTO_SCROLL } from "../gamePage.constants";
+import { DRAG_ACTIVATION_DISTANCE_PX } from "../gamePage.constants";
 import { useTimelinePreviewTransition } from "../hooks/transitions/useTimelinePreviewTransition";
 import { useCorrectPlacementAnimationKey } from "../hooks/useCorrectPlacementAnimationKey";
 import { useDragOverlaySize } from "../hooks/useDragOverlaySize";
 import { useTimelinePanelCelebrationState } from "../hooks/useTimelinePanelCelebrationState";
 import { useTimelinePanelDragState } from "../hooks/useTimelinePanelDragState";
+import { useTimelineEdgeAutoScroll } from "../hooks/useTimelineEdgeAutoScroll";
 import { useTimelineOverflowState } from "../hooks/useTimelineOverflowState";
 import { TimelineCelebration } from "./TimelineCelebration";
 import { TimelinePanelFlyAnimation } from "./TimelinePanelFlyAnimation";
@@ -39,6 +40,7 @@ interface TimelinePanelProps {
 
 export function TimelinePanel({ model }: TimelinePanelProps) {
   const layoutMode = usePageLayoutMode();
+  const reduceMotion = useReducedMotionPreference();
   const timelineView = model.render.timelineView ?? "active";
   const {
     displayPreviewCard,
@@ -150,10 +152,12 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
     onSelectSlot: dragModel.onSelectSlot,
     previewCard: dragModel.previewCard,
     previewSlotIndex: dragModel.previewSlotIndex,
+    reduceMotion,
     selectedSlotIndex: dragModel.selectedSlotIndex,
     timelineCards: dragModel.timelineCards,
     timelineRowRef,
   });
+  useTimelineEdgeAutoScroll(timelineRowRef, isDraggingPreviewCard);
   const hasTimelineOverflow = useTimelineOverflowState({
     itemCount: orderedItemIds.length,
     timelineRowRef,
@@ -212,7 +216,7 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
         ) : null}
       </MotionPresence>
       <DndContext
-        autoScroll={TIMELINE_AUTO_SCROLL}
+        autoScroll={false}
         collisionDetection={closestCenter}
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}

@@ -6,7 +6,6 @@ import type { TimelineCardPublic } from "@tunetrack/shared/client";
 import { I18nProvider } from "../../../features/i18n";
 import { setElementBox } from "../../../test/stubs/layout";
 import type { TimelineCelebrationTransitionEvent } from "../gamePageTransitionEvents";
-import { TIMELINE_AUTO_SCROLL } from "../gamePage.constants";
 import type { TimelinePanelModel } from "../GamePage.types";
 import { TimelinePanel } from "./TimelinePanel";
 import celebrationStyles from "./timelineCelebration.module.css";
@@ -372,27 +371,12 @@ describe("TimelinePanel drag move layout reads (05 §2.2, C3)", () => {
     expect(onSelectSlot.mock.calls.map(([slotIndex]) => slotIndex)).toEqual([1, 2, 3]);
   });
 
-  it("leaves edge scrolling to a slow dnd-kit auto-scroll", () => {
+  it("turns off dnd-kit auto-scroll and tags every card for the reorder glide", () => {
     const { container } = render(renderModel(buildDragModel(vi.fn())));
-    const row = container.querySelector("[data-timeline-slot='true']")!.parentElement!;
-    setElementBox(row, { x: 0, y: 0, width: 400, height: 300 });
-    const scrollBy = vi.fn();
-    row.scrollBy = scrollBy;
 
-    act(() => {
-      dndContextProps.current?.onDragStart?.({
-        active: { id: "timeline-preview-card" },
-      } as unknown as DragStartEvent);
-    });
-    // Deep inside the right and bottom edge zones.
-    act(() => {
-      dndContextProps.current?.onDragMove?.(buildMoveEvent(390));
-    });
-
-    expect(scrollBy).not.toHaveBeenCalled();
-    expect(dndContextProps.current?.autoScroll).toBe(TIMELINE_AUTO_SCROLL);
-    const maxPxPerSecond =
-      (TIMELINE_AUTO_SCROLL.acceleration / TIMELINE_AUTO_SCROLL.interval) * 1000;
-    expect(maxPxPerSecond).toBeLessThanOrEqual(200);
+    expect(dndContextProps.current?.autoScroll).toBe(false);
+    expect(
+      container.querySelector("[data-timeline-item-id='timeline-preview-card']"),
+    ).not.toBeNull();
   });
 });

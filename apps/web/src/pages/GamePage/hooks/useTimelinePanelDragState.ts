@@ -1,6 +1,6 @@
 import { type DragEndEvent, type DragMoveEvent, type DragStartEvent } from "@dnd-kit/core";
 import type { TimelineCardPublic } from "@tunetrack/shared/client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { TIMELINE_REORDER_THROTTLE_MS } from "../gamePage.constants";
 import type { GamePageCard } from "../GamePage.types";
 import {
@@ -17,10 +17,12 @@ import {
   measureTimelineDragGeometry,
   type TimelineDragGeometry,
 } from "./timelineDragGeometry";
+import { glideTimelineReorder } from "./timelineReorderGlide";
 
 interface UseTimelinePanelDragStateOptions {
   previewCard: GamePageCard | null;
   previewSlotIndex: number | null;
+  reduceMotion: boolean;
   selectedSlotIndex: number;
   timelineCards: TimelineCardPublic[];
   timelineRowRef: React.RefObject<HTMLDivElement | null>;
@@ -51,6 +53,7 @@ interface UseTimelinePanelDragStateResult {
 export function useTimelinePanelDragState({
   previewCard,
   previewSlotIndex,
+  reduceMotion,
   selectedSlotIndex,
   timelineCards,
   timelineRowRef,
@@ -60,6 +63,10 @@ export function useTimelinePanelDragState({
   const lastPreviewReorderAtRef = useRef(0);
   const dragGeometryRef = useRef<TimelineDragGeometry | null>(null);
   const stopTrackingScrollRef = useRef<(() => void) | null>(null);
+  const pendingGlideRef = useRef<{
+    geometry: TimelineDragGeometry;
+    previousOrder: string[];
+  } | null>(null);
 
   const previewIndex = clampPreviewIndex(
     previewCard,
@@ -78,10 +85,36 @@ export function useTimelinePanelDragState({
   // of an earlier render.
   const orderedItemIdsRef = useRef(orderedItemIds);
 
-  function applyOrderedItemIds(nextOrder: string[]) {
+  function applyOrderedItemIds(
+    nextOrder: string[],
+    geometry: TimelineDragGeometry | null = dragGeometryRef.current,
+  ) {
+    if (geometry) {
+      pendingGlideRef.current = {
+        geometry,
+        previousOrder: pendingGlideRef.current?.previousOrder ?? orderedItemIdsRef.current,
+      };
+    }
     orderedItemIdsRef.current = nextOrder;
     setOrderedItemIds(nextOrder);
   }
+
+  // A drag reorder glides the cards itself; dnd-kit's displacement is switched off (see
+  // `TimelinePanelItems`), because the two fought and made neighbouring cards snap.
+  useLayoutEffect(() => {
+    const pendingGlide = pendingGlideRef.current;
+    pendingGlideRef.current = null;
+    const container = timelineRowRef.current;
+
+    if (pendingGlide && container && !reduceMotion) {
+      glideTimelineReorder(
+        container,
+        pendingGlide.previousOrder,
+        orderedItemIds,
+        pendingGlide.geometry,
+      );
+    }
+  }, [orderedItemIds, reduceMotion, timelineRowRef]);
 
   useEffect(() => {
     if (!isDraggingPreviewCard) {
@@ -164,8 +197,8 @@ export function useTimelinePanelDragState({
     setIsDraggingPreviewCard(true);
   }
 
-  // Edge scrolling is dnd-kit's auto-scroll alone (`TIMELINE_AUTO_SCROLL`); a second,
-  // per-event scroll here sped up with the pointer event rate.
+  // Edge scrolling belongs to `useTimelineEdgeAutoScroll`; a per-event scroll here would
+  // speed up with the pointer event rate.
   function handleDragMove(event: DragMoveEvent) {
     const geometry = dragGeometryRef.current;
     const translatedRect = event.active.rect.current.translated;
@@ -198,6 +231,7 @@ export function useTimelinePanelDragState({
       if (releasePreviewIndex !== currentPreviewIndex) {
         applyOrderedItemIds(
           buildOrderedTimelineItemIdsForPreviewIndex(timelineCards, releasePreviewIndex),
+          geometry,
         );
       }
     }

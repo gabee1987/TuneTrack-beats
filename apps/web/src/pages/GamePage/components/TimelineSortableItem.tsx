@@ -9,13 +9,17 @@ import type {
 } from "../../../features/preferences/uiPreferences";
 import type { ChallengeMarkerTone, GamePageCard } from "../GamePage.types";
 import type { PreviewCardTransitionEvent } from "../gamePageTransitionEvents";
-import { TIMELINE_REORDER_DURATION_MS, TIMELINE_REORDER_EASING } from "../gamePage.constants";
-import { animateTimelineLayoutChanges, getTimelineCardSurfaceStyle } from "../gamePage.utils";
+import { getTimelineCardSurfaceStyle } from "../gamePage.utils";
 import { CorrectPlacementCelebration } from "./CorrectPlacementCelebration";
 import { PreviewCard } from "./PreviewCard";
 import cardsStyles from "./timelineCards.module.css";
 import shellStyles from "./timelinePanelShell.module.css";
 import { resolveArtworkUrl } from "../../../features/ui/resolveArtworkUrl";
+
+// Reorders glide through `glideTimelineReorder`; a dnd-kit layout animation would fight it.
+function neverAnimateLayoutChanges() {
+  return false;
+}
 
 interface TimelineSortableItemProps {
   card: GamePageCard;
@@ -72,12 +76,9 @@ function TimelineSortableItemComponent({
     !isPreview && isOriginalSlot && showCorrectPlacementPreview;
   const { attributes, isDragging, listeners, setNodeRef, transform, transition } = useSortable({
     id,
-    animateLayoutChanges: animateTimelineLayoutChanges,
+    animateLayoutChanges: neverAnimateLayoutChanges,
     disabled: isPreview ? isPreviewDisabled : false,
-    transition: {
-      duration: TIMELINE_REORDER_DURATION_MS,
-      easing: TIMELINE_REORDER_EASING,
-    },
+    transition: null,
   });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -113,6 +114,7 @@ function TimelineSortableItemComponent({
       } ${isDragging && isPreview ? shellStyles.timelineItemPreviewDragging : ""} ${
         isDraggingPreviewCard && isPreview ? shellStyles.timelineItemPreviewGhost : ""
       }`}
+      data-timeline-item-id={id}
       data-timeline-slot="true"
       style={style}
       onClick={

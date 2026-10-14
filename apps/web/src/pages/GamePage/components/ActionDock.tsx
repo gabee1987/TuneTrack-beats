@@ -37,6 +37,7 @@ export function ActionDock({ children, className, containerRef }: ActionDockProp
       ref={containerRef}
       animate="animate"
       className={`${styles.floatingActionDock}${className ? ` ${className}` : ""}`}
+      data-action-dock="true"
       exit="exit"
       initial="initial"
       transition={createStandardTransition(reduceMotion)}
