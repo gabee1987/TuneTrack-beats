@@ -1,9 +1,9 @@
 import { Badge } from "../../../features/ui/Badge";
 import { useI18n } from "../../../features/i18n";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
-import { LobbyHostCoreSettings } from "./LobbyHostCoreSettings";
 import { LobbyHostStartPanel } from "./LobbyHostStartPanel";
-import { LobbyHostTtSettings } from "./LobbyHostTtSettings";
+import { RulesGameSection } from "./rules/RulesGameSection";
+import { RulesTokensSection } from "./rules/RulesTokensSection";
 import { LobbySpotifySection } from "./spotify/LobbySpotifySection";
 import { LobbySectionHeader } from "./LobbySectionHeader";
 import { LobbyRoomSettingsStatus } from "./LobbyRoomSettingsStatus";
@@ -33,17 +33,23 @@ export function LobbyHostSettingsPanel({
       <LobbyRoomSettingsStatus actionStatus={roomSettingsActionStatus} />
 
       <div className={styles.settingsGrid}>
-        <LobbyHostCoreSettings
-          currentSettings={currentSettings}
-          disabled={isRoomSettingsPending}
-          onRoomSettingsChange={onRoomSettingsChange}
-        />
-        <LobbyHostTtSettings
-          currentSettings={currentSettings}
-          disabled={isRoomSettingsPending}
-          onRoomSettingsChange={onRoomSettingsChange}
-          onToggleTtMode={onToggleTtMode}
-        />
+        <SurfaceCard className={styles.settingsGroup}>
+          <RulesGameSection
+            disabled={isRoomSettingsPending}
+            numberInput="stepper"
+            onChange={onRoomSettingsChange}
+            settings={currentSettings}
+          />
+        </SurfaceCard>
+        <SurfaceCard className={styles.settingsGroup}>
+          <RulesTokensSection
+            disabled={isRoomSettingsPending}
+            numberInput="stepper"
+            onChange={onRoomSettingsChange}
+            onToggleTokens={onToggleTtMode}
+            settings={currentSettings}
+          />
+        </SurfaceCard>
         <LobbySpotifySection currentSettings={currentSettings} />
       </div>
 

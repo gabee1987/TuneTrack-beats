@@ -1,6 +1,7 @@
 import {
   type CSSProperties,
   type KeyboardEvent,
+  type ReactNode,
   useEffect,
   useMemo,
   useRef,
@@ -8,9 +9,12 @@ import {
 } from "react";
 import styles from "./SettingField.module.css";
 import { SettingField } from "./SettingField";
+import { useRulerScroll } from "./useRulerScroll";
 
 interface RangeFieldProps {
   density?: "compact" | "default" | undefined;
+  /** One line under the label that says what the setting does. */
+  description?: ReactNode | undefined;
   disabled?: boolean;
   info?: string;
   label: string;
@@ -20,8 +24,13 @@ interface RangeFieldProps {
   value: number;
 }
 
+/**
+ * The ruler slider (decision 26). Dragging previews the value under the centre line and commits
+ * it once, when the ruler comes to rest, so a drag sends one change instead of one per frame.
+ */
 export function RangeField({
   density = "default",
+  description,
   disabled = false,
   label,
   info,
@@ -32,9 +41,6 @@ export function RangeField({
 }: RangeFieldProps) {
   const isCompact = density === "compact";
   const rangeRef = useRef<HTMLDivElement | null>(null);
-  const scrollerRef = useRef<HTMLDivElement | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
-  const isScrollSelectionRef = useRef(false);
   const [rangeWidth, setRangeWidth] = useState(0);
   const values = useMemo(
     () => Array.from({ length: max - min + 1 }, (_, index) => min + index),
@@ -53,6 +59,12 @@ export function RangeField({
     ["--snap-range-value-count" as string]: values.length,
     ["--snap-range-tick-width" as string]: `${tickWidth}px`,
   } as CSSProperties;
+  const { handleTickClick, scrollerProps, shownValue } = useRulerScroll({
+    disabled,
+    onChange,
+    tickWidth,
+    value,
+  });
 
   useEffect(() => {
     const range = rangeRef.current;
@@ -75,94 +87,6 @@ export function RangeField({
     };
   }, []);
 
-  useEffect(() => {
-    const scroller = scrollerRef.current;
-
-    if (!scroller) {
-      return;
-    }
-
-    if (isScrollSelectionRef.current) {
-      isScrollSelectionRef.current = false;
-      return;
-    }
-
-    const selectedTick = scroller.querySelector<HTMLElement>(`[data-range-value="${value}"]`);
-
-    if (!selectedTick) {
-      return;
-    }
-
-    const nextScrollLeft =
-      selectedTick.offsetLeft - scroller.clientWidth / 2 + selectedTick.offsetWidth / 2;
-    const maxScrollLeft = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
-    const clampedScrollLeft = Math.max(0, Math.min(maxScrollLeft, nextScrollLeft));
-
-    scroller.scrollTo({
-      // Avoid fighting momentum/inertial scrolling when the user flicks.
-      // Snap layout already provides smooth physical movement.
-      behavior: "auto",
-      left: clampedScrollLeft,
-    });
-  }, [tickWidth, value]);
-
-  useEffect(
-    () => () => {
-      if (animationFrameRef.current !== null) {
-        window.cancelAnimationFrame(animationFrameRef.current);
-      }
-    },
-    [],
-  );
-
-  function commitNearestValue() {
-    if (disabled) {
-      return;
-    }
-
-    const scroller = scrollerRef.current;
-
-    if (!scroller) {
-      return;
-    }
-
-    const scrollerCenter = scroller.getBoundingClientRect().left + scroller.clientWidth / 2;
-    const ticks = Array.from(scroller.querySelectorAll<HTMLElement>("[data-range-value]"));
-    const nearestTick = ticks.reduce<HTMLElement | null>((nearest, tick) => {
-      if (!nearest) {
-        return tick;
-      }
-
-      const tickCenter = tick.getBoundingClientRect().left + tick.offsetWidth / 2;
-      const nearestCenter = nearest.getBoundingClientRect().left + nearest.offsetWidth / 2;
-
-      return Math.abs(tickCenter - scrollerCenter) < Math.abs(nearestCenter - scrollerCenter)
-        ? tick
-        : nearest;
-    }, null);
-    const nextValue = Number(nearestTick?.dataset.rangeValue);
-
-    if (Number.isFinite(nextValue) && nextValue !== value) {
-      isScrollSelectionRef.current = true;
-      onChange(nextValue);
-    }
-  }
-
-  function handleScroll() {
-    if (disabled) {
-      return;
-    }
-
-    if (animationFrameRef.current !== null) {
-      window.cancelAnimationFrame(animationFrameRef.current);
-    }
-
-    animationFrameRef.current = window.requestAnimationFrame(() => {
-      animationFrameRef.current = null;
-      commitNearestValue();
-    });
-  }
-
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (disabled || (event.key !== "ArrowLeft" && event.key !== "ArrowRight")) {
       return;
@@ -176,16 +100,17 @@ export function RangeField({
   return (
     <SettingField
       className={isCompact ? styles.compactField : undefined}
+      description={description}
       info={info}
       label={label}
-      value={value}
+      value={shownValue}
     >
       <div
         aria-label={label}
         aria-disabled={disabled}
         aria-valuemax={max}
         aria-valuemin={min}
-        aria-valuenow={value}
+        aria-valuenow={shownValue}
         className={`${styles.snapRange}${isCompact ? ` ${styles.compactSnapRange}` : ""}`}
         onClick={(event) => {
           event.stopPropagation();
@@ -200,10 +125,10 @@ export function RangeField({
         tabIndex={disabled ? -1 : 0}
       >
         <div aria-hidden="true" className={styles.snapRangeCenterLine} />
-        <div className={styles.snapRangeScroller} onScroll={handleScroll} ref={scrollerRef}>
+        <div className={styles.snapRangeScroller} {...scrollerProps}>
           {values.map((rangeValue) => {
-            const distance = Math.abs(rangeValue - value);
-            const isSelected = rangeValue === value;
+            const distance = Math.abs(rangeValue - shownValue);
+            const isSelected = rangeValue === shownValue;
             const isMajorTick = rangeValue === min || rangeValue === max || distance === 0;
 
             return (
@@ -215,7 +140,7 @@ export function RangeField({
                 data-range-value={rangeValue}
                 disabled={disabled}
                 key={rangeValue}
-                onClick={() => onChange(rangeValue)}
+                onClick={(event) => handleTickClick(event, rangeValue)}
                 type="button"
               >
                 <span className={styles.snapRangeTickLine} />

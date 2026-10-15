@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { StatusBanner } from "../../../features/ui/StatusBanner";
 import { SurfaceCard } from "../../../features/ui/SurfaceCard";
 import { AppPageShell } from "../../../features/mobile-shell/AppPageShell";
@@ -5,9 +6,10 @@ import { useI18n } from "../../../features/i18n";
 import type { LobbyPageAssemblyProps } from "../LobbyPage.types";
 import { LobbyHeader } from "../components/LobbyHeader";
 import { LobbyHostSettingsPanel } from "../components/LobbyHostSettingsPanel";
-import { LobbyPlayerList } from "../components/LobbyPlayerList";
+import { Button } from "../../../features/ui/primitives";
 import { LobbyRoomActions } from "../components/LobbyRoomActions";
-import { LobbyRoomRenameCard } from "../components/LobbyRoomRenameCard";
+import { RoomRenameDialog } from "../components/RoomRenameDialog";
+import { RulesPlayersSection } from "../components/rules/RulesPlayersSection";
 import { LobbySectionHeader } from "../components/LobbySectionHeader";
 import { LobbySummaryCard } from "../components/LobbySummaryCard";
 import styles from "./LobbyPageDesktop.module.css";
@@ -15,6 +17,7 @@ import styles from "./LobbyPageDesktop.module.css";
 export function LobbyPageDesktop({ model }: LobbyPageAssemblyProps) {
   const { t } = useI18n();
   const { shell, room, hostSettings, players, roomActions, identity } = model;
+  const [isRenameOpen, setIsRenameOpen] = useState(false);
 
   return (
     <AppPageShell panelClassName={styles.panelShell} screenClassName={styles.screenShell}>
@@ -40,11 +43,18 @@ export function LobbyPageDesktop({ model }: LobbyPageAssemblyProps) {
             </SurfaceCard>
           ) : room.isHost ? (
             <>
-              <LobbyRoomRenameCard
+              <SurfaceCard className={styles.waitingCard}>
+                <Button onClick={() => setIsRenameOpen(true)} variant="secondary">
+                  {t("lobby.invite.rename")}
+                </Button>
+              </SurfaceCard>
+              <RoomRenameDialog
                 actionState={identity.identityActionState}
+                currentCode={identity.resolvedRoomId}
+                isOpen={isRenameOpen}
                 isPending={identity.isIdentityActionPending}
+                onClose={() => setIsRenameOpen(false)}
                 onRename={identity.onRoomRename}
-                roomId={identity.resolvedRoomId}
               />
               <LobbyHostSettingsPanel
                 currentSettings={hostSettings.currentSettings}
@@ -69,19 +79,9 @@ export function LobbyPageDesktop({ model }: LobbyPageAssemblyProps) {
         </div>
 
         <aside className={styles.secondaryColumn}>
-          <LobbyPlayerList
-            currentPlayerId={players.currentPlayerId}
-            isHost={players.isHost}
-            isKickPlayerPending={players.isKickPlayerPending}
-            isPlayerSettingsPending={players.isPlayerSettingsPending}
-            kickPlayerActionState={players.kickPlayerActionState}
-            playerSettingsActionState={players.playerSettingsActionState}
-            onPlayerKick={players.onPlayerKick}
-            onPlayerStartingCardCountChange={players.onPlayerStartingCardCountChange}
-            onPlayerStartingTtTokenCountChange={players.onPlayerStartingTtTokenCountChange}
-            players={players.players}
-            roomSettings={players.roomSettings}
-          />
+          <SurfaceCard className={styles.waitingCard}>
+            <RulesPlayersSection numberInput="stepper" players={players} />
+          </SurfaceCard>
 
           {roomActions.isHost ? (
             <LobbyRoomActions

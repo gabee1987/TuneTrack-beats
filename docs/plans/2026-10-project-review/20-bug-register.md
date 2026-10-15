@@ -1,6 +1,6 @@
 # 20 — Active Defect Register
 
-> **Status (2026-10-10):** accurate against code. Eight active defects; twenty resolved.
+> **Status (2026-10-15):** accurate against code. Six active defects; twenty-three resolved.
 > **Folded from** `docs/plans/2026-09-stability-performance/12-bug-register.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`. The findings register `01-review-findings.md` holds the review findings (`B-`/`F-`/`U-`/`D-`/`T-` ids); this file holds user-visible defects (`B1`–`B28`).
 
 This register contains only actionable defects. Resolved items are kept as a compact ledger
@@ -23,8 +23,6 @@ Status meanings:
 | B4  | S1       | Open; device confirmation required | iPhone drag-versus-scroll test                                         |
 | B3  | S2       | Open                               | Design-system consolidation acceptance criteria                        |
 | B11 | S3       | Partially fixed                    | One shared destructive icon-button treatment                           |
-| B25 | S3       | Open                               | `challenge.spec.ts` passes on the `mobile` project                     |
-| B27 | S3       | Needs reproduction                 | The win scenario's setting ticks stick on desktop WebKit, repeated     |
 
 ## B8 · Network recovery needs final hardening
 
@@ -105,17 +103,6 @@ still needs to use the same destructive `IconButton` variant as comparable remov
 close-room actions. Verify 48 px touch targets, focus state and accessible labels on mobile
 and desktop.
 
-## B25 · The phone's challenge-window picker has no accessible name
-
-**Severity:** S3 · **Status:** Open · **Plan:** `15-design-system-consolidation.md`
-
-On a compact touch layout `AdaptiveSelect` renders a button that shows the selected option and
-"Select", but not the field's label, so assistive technology announces "Manual Select" without
-"Challenge window". The desktop `<select>` carries the label. Required outcome: the trigger is
-named by its field (for example "Challenge window: Manual"). Verification: a component test on
-`AdaptiveSelect` in the compact layout, then `challenge.spec.ts` on the `mobile` project without
-its `test.fixme`.
-
 ## B26 · A playlist track edit can be lost on a phone
 
 **Severity:** S2 · **Status:** Needs reproduction · **Plan:** `21-music-setup-redesign.md`
@@ -124,16 +111,6 @@ In one of two iPhone 13 E2E runs, E14 saved the release year 1977 for a track an
 showing 1980 for 10 s. The editor re-reads the track whenever it changes, so the save was lost,
 not merely shown late. Chromium and desktop WebKit never showed it. Next: repeat E14 on the
 `mobile` project with traces, and check the save acknowledgement and the playlist update order.
-
-## B27 · A lobby setting tick sometimes does not stick on desktop WebKit
-
-**Severity:** S3 · **Status:** Needs reproduction · **Plan:** `15-design-system-consolidation.md`
-
-In two of three desktop WebKit E2E runs, E6 switched token mode on and clicked "Starting tokens for
-every player: 3"; the slider stayed at 0 (once briefly 1) for 10 s. Chromium and the iPhone 13
-project never showed it. Suspects: a tick pressed while the token-mode update is still pending, or
-an older room-settings state overwriting the newer value. Next: repeat E6 on `webkit` with traces
-and compare the `update_room_settings` acknowledgements with the state updates.
 
 ## Resolved ledger
 
@@ -163,6 +140,8 @@ removed from the live register on 2026-09-30. They remain in git history.
 | B2  | 2026-10-08 | One overlay host owns every dialog and sheet: Back, Escape and the scrim close only the topmost dismissible overlay, focus and scroll are restored, blocking dialogs ignore Escape and the scrim, and Back on the room-closed dialog resets like its button (`05` E2; `Overlay.test.tsx`, `RoomResetModal.test.tsx`, E12–E14).                                                                                                                                                                                                                                                   |
 | B28 | 2026-10-10 | In Hungarian the Beat! callout never warmed from yellow to orange and red, and its pulse never restarted each second: the stage was parsed from the translated label with `/(d+)s*s/`, which "12 mp" never matches. The seconds now come from the deadline (`useChallengeCountdown`; `ChallengeActionPanel.test.tsx` B28 case).                                                                                                                                                                                                                                                  |
 | B29 | 2026-10-14 | Dragging on a long grid scrolled slowly and in steps, only at the screen edge, and the cards beside the preview snapped: dnd-kit's timer auto-scroll stopped at 200 px/s and ignored the action dock, and its sortable displacement fought the drag reorder. A frame-synced edge scroll now starts at the dock's top edge (160 to 1 000 px/s by depth), dnd-kit displaces nothing, and reorders glide from each card's on-screen position (`timelineEdgeScroll.test.ts`, `useTimelineEdgeAutoScroll.test.tsx`, `timelineReorderGlide.test.ts`). Supersedes B22's scroll outcome. |
+| B25 | 2026-10-15 | The Rules sheet names every control; the Beat! window is a named segmented control and `challenge.spec.ts` runs on the `mobile` project (`22` S4).                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| B27 | 2026-10-15 | Desktop number rules are steppers and the phone ruler commits once when it settles; the win scenario passed 4 of 4 repeats on `webkit` (`22` S4).                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
 ## Feature work tracked elsewhere
 

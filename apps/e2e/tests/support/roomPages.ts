@@ -122,20 +122,52 @@ export async function choosePracticeDeck(host: Page): Promise<void> {
 
 /**
  * Phones keep the rules in the Rules sheet behind the Rules card; the desktop lobby still shows
- * them on the page (plan `22` S6), so there the edit runs in place.
+ * them on the page with steppers (plan `22` S6), so there the edit runs in place.
  */
 export async function editRules(host: Page, edit: () => Promise<void>): Promise<void> {
   const rulesCard = host.getByRole("button", { name: /^Rules\b/ });
-  const pageSlider = host.getByRole("slider", { name: "Cards needed to win" });
+  const desktopTarget = host.getByRole("spinbutton", { name: "Songs to win" });
   // Decide only once the lobby shows one of the two layouts.
-  await expect(rulesCard.or(pageSlider).first()).toBeVisible();
+  await expect(rulesCard.or(desktopTarget).first()).toBeVisible();
   const isInSheet = (await rulesCard.count()) > 0;
-  if (isInSheet) await rulesCard.click();
+  if (isInSheet) await openRulesSheet(host);
   await edit();
   if (isInSheet) {
     await host.getByRole("dialog", { name: "Rules" }).getByRole("button", { name: "Done" }).click();
     await expect(host.getByRole("dialog", { name: "Rules" })).toHaveCount(0);
   }
+}
+
+/**
+ * Opens the phone Rules sheet and waits until it has slid fully in: a tap during the slide lands
+ * on whatever has moved under the pointer by then.
+ */
+export async function openRulesSheet(host: Page): Promise<Locator> {
+  await host.getByRole("button", { name: /^Rules\b/ }).click();
+  const sheet = host.getByRole("dialog", { name: "Rules" });
+  await expect.poll(async () => Math.round((await sheet.boundingBox())?.x ?? -1)).toBe(0);
+  return sheet;
+}
+
+/**
+ * Sets a number rule the way each layout offers it: a tap on the ruler's tick on phones, typing
+ * into the stepper on desktop. Both wait until the room reports the new value.
+ */
+export async function setRuleNumber(scope: Page | Locator, label: string, value: number) {
+  // Closed player rows keep their own "Starting tokens" control mounted, out of sight.
+  const ruler = scope.getByRole("slider", { name: label, exact: true }).filter({ visible: true });
+  const stepper = scope
+    .getByRole("spinbutton", { name: label, exact: true })
+    .filter({ visible: true });
+  await expect(ruler.or(stepper)).toBeVisible();
+  if ((await ruler.count()) > 0) {
+    await ruler.getByRole("button", { name: `${label}: ${value}`, exact: true }).click();
+    await expect(ruler).toHaveAttribute("aria-valuenow", String(value));
+    return;
+  }
+  await stepper.fill(String(value));
+  await stepper.press("Enter");
+  await expect(stepper).toHaveValue(String(value));
 }
 
 export async function startGame(host: Page, roomId: string, ...guests: Page[]): Promise<void> {

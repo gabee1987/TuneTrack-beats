@@ -41,67 +41,9 @@
   line-height: var(--type-body-leading);
 }
 
-.conditionalGroup {
-  display: grid;
-  gap: 16px;
-}
-
 .ttInfoStack {
   display: grid;
   gap: 12px;
-}
-
-.ttModeTitle {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.ttModeTitleIcon {
-  width: 1.2em;
-  height: 1.2em;
-}
-
-.tokenModeToggle {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
-  align-items: center;
-  min-height: 74px;
-  padding: 12px 4px;
-  border-radius: 24px;
-}
-
-.tokenModeToggleCopy {
-  display: grid;
-  gap: 7px;
-  min-width: 0;
-}
-
-.tokenModeToggleTitleRow {
-  display: inline-flex;
-  gap: 9px;
-  align-items: center;
-  color: var(--color-text-primary);
-  font-size: 15px;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-}
-
-.tokenModeToggleIcon {
-  width: 1.28em;
-  height: 1.28em;
-  filter: drop-shadow(
-    0 0 12px color-mix(in srgb, var(--color-token-gold, #ffbf62) 36%, transparent)
-  );
-}
-
-.tokenModeToggleHint {
-  max-width: 32rem;
-  color: var(--color-text-secondary);
-  font-size: 13px;
-  font-weight: 650;
-  line-height: 1.35;
 }
 
 .ttInfoStack > span {
@@ -130,85 +72,8 @@
   border-top: 1px solid var(--color-divider);
 }
 
-.selectInput {
-  min-height: var(--input-min-height);
-  border: 0;
-  border-radius: var(--input-radius);
-  background: color-mix(in srgb, var(--input-bg) 88%, transparent);
-  color: var(--input-fg);
-  outline: 1px solid color-mix(in srgb, var(--input-border) 88%, transparent);
-  padding: var(--space-3) var(--space-4);
-}
-
 .startGameButton {
   min-width: 160px;
-}
-
-.playerList {
-  list-style: none;
-  margin: var(--space-3) 0 0;
-  padding: 0;
-  display: grid;
-  gap: var(--space-2);
-}
-
-.playerItem {
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-interactive);
-}
-
-.playerInfoRow {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  align-items: center;
-}
-
-.playerActionRow {
-  display: flex;
-  width: 100%;
-  margin-top: 10px;
-}
-
-.playerKickButton {
-  width: 100%;
-  min-height: 40px;
-  padding: 10px 14px;
-  border: 1px solid var(--color-status-danger-border);
-  border-radius: var(--radius-pill);
-  background: var(--color-status-danger-surface);
-  color: var(--color-status-danger-text);
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: none;
-}
-
-.playerKickButton:hover {
-  background: color-mix(in srgb, var(--color-status-danger-surface) 70%, white 8%);
-}
-
-.playerIdentity {
-  display: block;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.playerNameRow {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
-  align-items: center;
-  width: 100%;
-  min-width: 0;
-}
-
-.playerName {
-  overflow: hidden;
-  font-size: 15px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .playerSecondaryName {
@@ -226,40 +91,9 @@
   gap: 6px;
 }
 
-.playerCounterBadges {
-  display: inline-flex;
-  flex: 0 0 auto;
-  gap: 5px;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-.playerBadge {
-  padding: 6px 10px;
-  font-size: 11px;
-}
-
-.playerCardCount {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  line-height: 1;
-}
-
-.playerSettingField {
-  display: grid;
-  gap: 8px;
-  margin-top: 10px;
-}
-
 .roomActionsSection {
   display: grid;
   gap: var(--space-4);
-}
-
-.rosterSection {
-  display: grid;
-  gap: var(--space-3);
 }
 
 @media (min-width: 1100px) {
@@ -275,8 +109,7 @@
 }
 
 @media (max-width: 720px) {
-  .primaryActionBar,
-  .playerInfoRow {
+  .primaryActionBar {
     display: grid;
     grid-template-columns: 1fr;
   }
@@ -300,7 +133,6 @@
   }
 
   .settingsGroup,
-  .rosterSection,
   .roomActionsSection {
     gap: 20px;
     padding: 18px;
@@ -322,8 +154,6 @@
       0 18px 54px color-mix(in srgb, black 24%, transparent);
     outline: 0;
   }
-
-  .playerName,
   .primaryActionTitle {
     color: var(--color-text-primary);
   }
@@ -332,35 +162,6 @@
   .settingsInlineHint,
   .playerSecondaryName {
     color: var(--color-text-secondary);
-  }
-
-  .playerItem {
-    border: 1px solid color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
-    border-radius: 20px;
-    background:
-      radial-gradient(
-        circle at 100% 0%,
-        color-mix(in srgb, #8b5cff 10%, transparent),
-        transparent 42%
-      ),
-      color-mix(in srgb, var(--color-surface-elevated) 70%, transparent);
-    box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
-  }
-
-  .selectInput {
-    min-height: 56px;
-    padding-right: 44px;
-    background-image:
-      linear-gradient(45deg, transparent 50%, currentColor 50%),
-      linear-gradient(135deg, currentColor 50%, transparent 50%);
-    background-position:
-      calc(100% - 22px) calc(50% - 3px),
-      calc(100% - 16px) calc(50% - 3px);
-    background-size:
-      6px 6px,
-      6px 6px;
-    background-repeat: no-repeat;
-    appearance: none;
   }
 }
 
@@ -372,7 +173,6 @@
   }
 
   .settingsGroup,
-  .rosterSection,
   .roomActionsSection {
     gap: 18px;
     padding: 18px;
@@ -394,8 +194,6 @@
       0 18px 54px color-mix(in srgb, black 24%, transparent);
     outline: 0;
   }
-
-  .playerName,
   .primaryActionTitle {
     color: var(--color-text-primary);
   }
@@ -404,25 +202,6 @@
   .settingsInlineHint,
   .playerSecondaryName {
     color: var(--color-text-secondary);
-  }
-
-  .playerItem {
-    border: 1px solid color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
-    border-radius: 20px;
-    background:
-      radial-gradient(
-        circle at 100% 0%,
-        color-mix(in srgb, #8b5cff 10%, transparent),
-        transparent 42%
-      ),
-      color-mix(in srgb, var(--color-surface-elevated) 70%, transparent);
-    box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
-  }
-
-  .selectInput {
-    min-height: 56px;
-    padding-right: 44px;
-    appearance: none;
   }
 }
 
@@ -438,8 +217,7 @@
     padding: 12px;
   }
 
-  .primaryActionBar,
-  .playerInfoRow {
+  .primaryActionBar {
     gap: 10px;
   }
 }

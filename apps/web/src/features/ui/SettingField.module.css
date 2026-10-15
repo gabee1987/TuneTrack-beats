@@ -1,6 +1,6 @@
 .field {
   display: grid;
-  gap: 12px;
+  gap: var(--space-2);
 }
 
 .compactField {
@@ -16,18 +16,30 @@
   font-size: 16px;
 }
 
+/* The label reads like a `SettingRow` title, so rulers and switches line up in one list. */
 .labelRow {
   display: flex;
   justify-content: space-between;
   gap: 16px;
   align-items: center;
   color: var(--color-text-primary);
-  font-size: 14px;
+  font-size: var(--type-body-lg-size);
+  line-height: var(--type-body-lg-leading);
+  font-weight: 600;
 }
 
 .value {
   font-size: 18px;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.description {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+  font-weight: var(--type-caption-weight);
 }
 
 .labelWithInfo,
@@ -175,8 +187,9 @@
   accent-color: var(--color-accent-control);
 }
 
+/* 48 px: the whole track is the touch target, in every density (`22` S4). */
 .snapRange {
-  --snap-range-height: 44px;
+  --snap-range-height: var(--size-touch-target);
   --snap-range-tick-width: 14px;
   --snap-range-tick-short: 8px;
   --snap-range-tick-tall: 16px;
@@ -272,7 +285,6 @@
 }
 
 .compactSnapRange {
-  --snap-range-height: 36px;
   --snap-range-tick-short: 6px;
   --snap-range-tick-tall: 14px;
   border-radius: 16px;
@@ -349,10 +361,6 @@
 
   .checkbox:checked::after {
     left: calc(100% - 48px);
-  }
-
-  .snapRange {
-    --snap-range-height: 36px;
   }
 }
 

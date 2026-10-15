@@ -1,5 +1,5 @@
 import { expect, test } from "./support/fixtures";
-import { editRules, expectHeaderStatus, startGame } from "./support/roomPages";
+import { editRules, expectHeaderStatus, setRuleNumber, startGame } from "./support/roomPages";
 
 test("a correct placement is revealed before the turn advances", async ({ openRoom }) => {
   const { guest, host, roomId } = await openRoom({ guest: "Core Guest", host: "Core Host" });
@@ -44,45 +44,16 @@ test("an incorrect placement is discarded before the turn advances", async ({ op
   await expectHeaderStatus(guest.page, "Your turn");
 });
 
-test("both players see the winner when the target card count is reached", async ({
-  browserName,
-  isMobile,
-  openRoom,
-}) => {
-  test.fixme(
-    browserName === "webkit" && !isMobile,
-    "B27: a starting-token tick sometimes does not stick on desktop WebKit",
-  );
+test("both players see the winner when the target card count is reached", async ({ openRoom }) => {
   const { guest, host, roomId } = await openRoom({ guest: "Win Guest", host: "Win Host" });
 
   await editRules(host.page, async () => {
-    await host.page
-      .getByRole("button", { name: "Cards needed to win: 3", exact: true })
-      .first()
-      .click();
-    await expect(
-      host.page.getByRole("slider", { name: "Cards needed to win" }).first(),
-    ).toHaveAttribute("aria-valuenow", "3");
-    await host.page
-      .getByRole("button", { name: "Default starting cards: 2", exact: true })
-      .first()
-      .click();
-    await expect(
-      host.page.getByRole("slider", { name: "Default starting cards" }).first(),
-    ).toHaveAttribute("aria-valuenow", "2");
-    const tokenModeSwitch = host.page.getByRole("switch", { name: "Enable token mode" }).first();
-    await tokenModeSwitch.click();
-    await expect(tokenModeSwitch).toHaveAttribute("aria-checked", "true");
-    await host.page
-      .getByRole("button", {
-        name: "Starting tokens for every player: 3",
-        exact: true,
-      })
-      .first()
-      .click();
-    await expect(
-      host.page.getByRole("slider", { name: "Starting tokens for every player" }).first(),
-    ).toHaveAttribute("aria-valuenow", "3");
+    await setRuleNumber(host.page, "Songs to win", 3);
+    await setRuleNumber(host.page, "Songs to start with", 2);
+    const tokens = host.page.getByRole("switch", { name: "Tokens" });
+    await tokens.click();
+    await expect(tokens).toHaveAttribute("aria-checked", "true");
+    await setRuleNumber(host.page, "Starting tokens", 3);
   });
 
   await startGame(host.page, roomId, guest.page);

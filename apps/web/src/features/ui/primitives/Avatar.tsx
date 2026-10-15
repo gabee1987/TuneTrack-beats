@@ -16,13 +16,18 @@ function resolveInitials(initials: string | undefined): string {
     return "?";
   }
 
-  const trimmed = initials.trim();
+  const words = initials.trim().split(/\s+/);
 
-  if (trimmed.length <= 2) {
-    return trimmed.toUpperCase();
+  // A full name shows the first letter of its first two words ("Player One" → "PO").
+  if (words.length > 1) {
+    return words
+      .slice(0, 2)
+      .map((word) => word.charAt(0))
+      .join("")
+      .toUpperCase();
   }
 
-  return trimmed.slice(0, 2).toUpperCase();
+  return (words[0] ?? "").slice(0, 2).toUpperCase();
 }
 
 export function Avatar({ alt = "", className, initials, size = "md", src }: AvatarProps) {

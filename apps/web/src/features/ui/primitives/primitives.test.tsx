@@ -36,7 +36,8 @@ describe("Avatar", () => {
 
   it.each([
     ["po", "PO"],
-    ["  player one ", "PL"],
+    ["  player one ", "PO"],
+    ["Player", "PL"],
     [undefined, "?"],
   ])("shows initials %j as %s and hides them from assistive technology", (initials, shown) => {
     const { container } = renderWithProviders(<Avatar initials={initials} />);

@@ -1,6 +1,7 @@
 export { MotionFeatureProvider } from "./MotionFeatureProvider";
 export { MotionPresence } from "./MotionPresence";
 export { ArrivalListPresence, type ArrivalListItem } from "./ArrivalListPresence";
+export { MeasuredDisclosure } from "./MeasuredDisclosure";
 export { MotionReveal } from "./MotionReveal";
 export { ReadyTransition } from "./ReadyTransition";
 export { PageTransition } from "./PageTransition";

@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { ClientToServerEvent } from "@tunetrack/shared/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { I18nProvider } from "../../../features/i18n";
@@ -6,10 +6,10 @@ import type { EmitActionResult } from "../../../services/socket/emitAction";
 import { renderWithProviders } from "../../../test/renderWithProviders";
 import { buildLobbyRoomState } from "../../../test/roomStateFixtures";
 import { LobbyHostStartPanel } from "../components/LobbyHostStartPanel";
-import { LobbyHostCoreSettings } from "../components/LobbyHostCoreSettings";
 import { LobbyRoomSettingsStatus } from "../components/LobbyRoomSettingsStatus";
-import { LobbyPlayerListItem } from "../components/LobbyPlayerListItem";
 import { LobbyRoomActions } from "../components/LobbyRoomActions";
+import { RulesGameSection } from "../components/rules/RulesGameSection";
+import { RulesPlayersSection } from "../components/rules/RulesPlayersSection";
 import { useLobbyRoomActions } from "./useLobbyRoomActions";
 
 const { emitActionMock } = vi.hoisted(() => ({
@@ -87,23 +87,34 @@ function KickPlayerHarness() {
 
   return (
     <I18nProvider>
-      <ul>
-        <LobbyPlayerListItem
-          currentPlayerId={roomState.hostId}
-          isHost
-          isKickPlayerPending={actions.isKickPlayerPending}
-          isPlayerSettingsPending={actions.isPlayerSettingsPending}
-          kickPlayerActionState={actions.kickPlayerActionState}
-          playerSettingsActionState={actions.playerSettingsActionState}
-          onPlayerKick={actions.handlePlayerKick}
-          onPlayerStartingCardCountChange={actions.handlePlayerStartingCardCountChange}
-          onPlayerStartingTtTokenCountChange={actions.handlePlayerStartingTtTokenCountChange}
-          player={roomState.players[1]!}
-          roomSettings={roomState.settings}
-        />
-      </ul>
+      <RulesPlayersSection
+        numberInput="ruler"
+        players={{
+          currentPlayerId: roomState.hostId,
+          isHost: true,
+          isKickPlayerPending: actions.isKickPlayerPending,
+          isPlayerSettingsPending: actions.isPlayerSettingsPending,
+          kickPlayerActionState: actions.kickPlayerActionState,
+          onPlayerKick: actions.handlePlayerKick,
+          onPlayerStartingCardCountChange: actions.handlePlayerStartingCardCountChange,
+          onPlayerStartingTtTokenCountChange: actions.handlePlayerStartingTtTokenCountChange,
+          playerSettingsActionState: actions.playerSettingsActionState,
+          players: roomState.players,
+          roomSettings: roomState.settings,
+        }}
+      />
     </I18nProvider>
   );
+}
+
+/** Opens Player Two's row in the Rules player list and returns queries scoped to it. */
+function openGuestRow() {
+  const row = screen
+    .getAllByRole("listitem")
+    .find((item) => within(item).queryByText("Player Two") !== null);
+  if (!row) throw new Error("The player list has no row for Player Two.");
+  fireEvent.click(within(row).getByRole("button", { name: /^Player Two/ }));
+  return within(row);
 }
 
 function RoomSettingsHarness() {
@@ -117,10 +128,11 @@ function RoomSettingsHarness() {
 
   return (
     <I18nProvider>
-      <LobbyHostCoreSettings
-        currentSettings={roomState.settings}
+      <RulesGameSection
         disabled={actions.isRoomSettingsPending}
-        onRoomSettingsChange={actions.handleRoomSettingsChange}
+        numberInput="ruler"
+        onChange={actions.handleRoomSettingsChange}
+        settings={roomState.settings}
       />
       <LobbyRoomSettingsStatus actionStatus={actions.roomSettingsActionStatus} />
     </I18nProvider>
@@ -237,12 +249,13 @@ describe("useLobbyRoomActions kick_player", () => {
     emitActionMock.mockReturnValueOnce(deferred.promise);
     renderWithProviders(<KickPlayerHarness />);
 
-    const kickButton = screen.getByRole("button", { name: /kick player two/i });
-    fireEvent.click(kickButton);
-    fireEvent.click(kickButton);
+    const guestRow = openGuestRow();
+    const removeButton = guestRow.getByRole("button", { name: "Remove Player Two from the room" });
+    fireEvent.click(removeButton);
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
 
-    expect(kickButton).toBeDisabled();
-    expect(kickButton).toHaveTextContent("Kick");
+    expect(removeButton).toBeDisabled();
+    fireEvent.click(removeButton);
     expect(emitActionMock).toHaveBeenCalledTimes(1);
     expect(emitActionMock).toHaveBeenCalledWith(
       ClientToServerEvent.KickPlayer,
@@ -262,11 +275,12 @@ describe("useLobbyRoomActions kick_player", () => {
       await deferred.promise;
     });
 
-    const retryButton = await screen.findByRole("button", { name: /try removing again/i });
+    const retryButton = await guestRow.findByRole("button", { name: /try removing again/i });
     expect(retryButton).toBeEnabled();
 
     emitActionMock.mockResolvedValueOnce({ status: "ok" });
     fireEvent.click(retryButton);
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
 
     await waitFor(() => expect(emitActionMock).toHaveBeenCalledTimes(2));
   });
@@ -282,8 +296,8 @@ describe("useLobbyRoomActions update_player_settings", () => {
     emitActionMock.mockReturnValueOnce(deferred.promise);
     renderWithProviders(<KickPlayerHarness />);
 
-    const startingCardsButton = screen.getByRole("button", {
-      name: /starting cards: 2/i,
+    const startingCardsButton = openGuestRow().getByRole("button", {
+      name: "Starting songs: 2",
     });
     fireEvent.click(startingCardsButton);
     fireEvent.click(startingCardsButton);
@@ -335,13 +349,17 @@ describe("useLobbyRoomActions update_room_settings", () => {
     renderWithProviders(<RoomSettingsHarness />);
 
     const targetCardButton = screen.getByRole("button", {
-      name: /cards needed to win: 11/i,
+      name: "Songs to win: 11",
     });
     fireEvent.click(targetCardButton);
     fireEvent.click(targetCardButton);
 
     expect(targetCardButton).toBeDisabled();
-    expect(screen.getByRole("combobox", { name: /who taps next/i })).toBeDisabled();
+    for (const option of within(
+      screen.getByRole("radiogroup", { name: "Who taps Next" }),
+    ).getAllByRole("radio")) {
+      expect(option).toBeDisabled();
+    }
     expect(emitActionMock).toHaveBeenCalledTimes(1);
     expect(emitActionMock).toHaveBeenCalledWith(
       ClientToServerEvent.UpdateRoomSettings,

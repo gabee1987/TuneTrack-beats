@@ -7,6 +7,8 @@ export interface SettingRowProps {
   /** The control: a stepper, toggle or segmented control, labelled by this row's title. */
   children: ReactNode;
   description?: ReactNode | undefined;
+  /** The control takes the full width under the copy (segmented controls, sliders). */
+  isStacked?: boolean | undefined;
   title: string;
 }
 
@@ -14,7 +16,13 @@ export interface SettingRowProps {
  * One setting per row: what it is and what it does on the left, its control on the right.
  * The description sits in the row itself, so no setting needs an info button.
  */
-export function SettingRow({ children, className, description, title }: SettingRowProps) {
+export function SettingRow({
+  children,
+  className,
+  description,
+  isStacked = false,
+  title,
+}: SettingRowProps) {
   const titleId = useId();
   const descriptionId = useId();
 
@@ -22,7 +30,7 @@ export function SettingRow({ children, className, description, title }: SettingR
     <div
       aria-describedby={description ? descriptionId : undefined}
       aria-labelledby={titleId}
-      className={classNames(styles.row, className)}
+      className={classNames(styles.row, isStacked ? styles.stacked : undefined, className)}
       role="group"
     >
       <div className={styles.copy}>

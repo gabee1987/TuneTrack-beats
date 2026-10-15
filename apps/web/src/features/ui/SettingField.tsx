@@ -7,12 +7,20 @@ import styles from "./SettingField.module.css";
 interface SettingFieldProps {
   children: ReactNode;
   className?: string | undefined;
+  description?: ReactNode | undefined;
   info?: ReactNode;
   label: string;
   value?: ReactNode;
 }
 
-export function SettingField({ children, className, info, label, value }: SettingFieldProps) {
+export function SettingField({
+  children,
+  className,
+  description,
+  info,
+  label,
+  value,
+}: SettingFieldProps) {
   return (
     <div className={`${styles.field}${className ? ` ${className}` : ""}`}>
       <div className={styles.labelRow}>
@@ -24,6 +32,7 @@ export function SettingField({ children, className, info, label, value }: Settin
           <strong className={styles.value}>{value}</strong>
         ) : null}
       </div>
+      {description ? <p className={styles.description}>{description}</p> : null}
       {children}
     </div>
   );

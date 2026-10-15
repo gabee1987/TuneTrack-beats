@@ -11,7 +11,8 @@ describe("DesignSystemPage", () => {
       expect(screen.getByRole("heading", { level: 2, name: group })).toBeInTheDocument();
     }
     expect(screen.getByRole("heading", { name: "Text field" })).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: "Tokens" })).toBeInTheDocument();
+    expect(screen.getAllByRole("switch", { name: "Tokens" }).length).toBeGreaterThan(1);
+    expect(screen.getByRole("heading", { name: "Rules sheet · players" })).toBeInTheDocument();
     expect(screen.getAllByRole("meter", { name: "Songs in the deck" }).length).toBeGreaterThan(0);
   });
 });

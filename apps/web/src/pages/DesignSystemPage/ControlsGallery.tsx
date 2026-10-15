@@ -49,6 +49,7 @@ export function ControlsGallery() {
       <section className={styles.section}>
         <h2 className="typeTitleMd">Ruler slider (phones)</h2>
         <RangeField
+          description="With a description line, as in the Rules sheet."
           label="Cards to win"
           max={30}
           min={3}

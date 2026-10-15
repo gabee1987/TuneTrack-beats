@@ -107,6 +107,21 @@ export function StartupFlowPrimitivesGallery() {
               value={revealMode}
             />
           </SettingRow>
+          <SettingRow
+            description="Stacked: the control takes the full width under the copy."
+            isStacked
+            title="Who confirms the reveal (stacked)"
+          >
+            <SegmentedControl
+              aria-label="Who confirms the reveal (stacked)"
+              onChange={setRevealMode}
+              options={[
+                { label: "Host", value: "host" },
+                { label: "Host or player on turn", value: "either" },
+              ]}
+              value={revealMode}
+            />
+          </SettingRow>
           <SettingRow title="Disabled stepper">
             <NumberStepper
               disabled

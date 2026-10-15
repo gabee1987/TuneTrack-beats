@@ -1,8 +1,8 @@
 import type { PublicRoomSettings, SpotifyPlaylistSearchItem } from "@tunetrack/shared/client";
 import { useI18n } from "../../../../features/i18n";
 import { ActionButton } from "../../../../features/ui/ActionButton";
+import { SelectInput } from "../../../../features/ui/SelectInput";
 import { TextInput } from "../../../../features/ui/TextInput";
-import { AdaptiveSelect } from "../AdaptiveSelect";
 import { SpotifyLogo } from "./spotifySetupIcons";
 import type { LobbySpotifyState } from "./spotifySetupTypes";
 import setupShellStyles from "./spotifySetupShell.module.css";
@@ -323,12 +323,17 @@ export function SpotifySetupContent({ currentSettings, spotifyState }: SpotifySe
                 <span className={setupImportStyles.savedPlaylistLabel}>
                   {t("lobby.spotify.savedPlaylistSelectLabel")}
                 </span>
-                <AdaptiveSelect
-                  label={t("lobby.spotify.savedPlaylistSelectLabel")}
-                  onChange={(value) => setSelectedSavedPlaylistId(value)}
-                  options={savedPlaylistOptions}
+                <SelectInput
+                  aria-label={t("lobby.spotify.savedPlaylistSelectLabel")}
+                  onChange={(event) => setSelectedSavedPlaylistId(event.target.value)}
                   value={selectedSavedPlaylistId}
-                />
+                >
+                  {savedPlaylistOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </SelectInput>
               </div>
 
               {selectedSavedPlaylistId ? (

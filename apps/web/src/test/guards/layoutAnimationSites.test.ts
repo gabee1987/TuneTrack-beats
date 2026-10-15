@@ -14,8 +14,6 @@ const ALLOWED_LAYOUT_SITES = [
   // Owner decision 19 (2026-10-07): the timeline column slides when the header changes height.
   "pages/GamePage/desktop/GamePageDesktop.tsx",
   "pages/GamePage/mobile/GamePageMobile.tsx",
-  // Owner decision 19 (2026-10-07): the TT settings slide stays.
-  "pages/LobbyPage/components/LobbyHostTtSettings.tsx",
 ] as const;
 
 const BARE_LAYOUT_PROP =

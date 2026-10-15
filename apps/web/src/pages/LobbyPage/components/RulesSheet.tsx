@@ -3,10 +3,10 @@ import { useI18n } from "../../../features/i18n";
 import { Button, Sheet } from "../../../features/ui/primitives";
 import type { LobbyAssemblyModel } from "../hooks/buildLobbyAssemblyModel";
 import { DEFAULT_RULES } from "../hooks/lobbySetupModel";
-import { LobbyHostCoreSettings } from "./LobbyHostCoreSettings";
-import { LobbyHostTtSettings } from "./LobbyHostTtSettings";
-import { LobbyPlayerList } from "./LobbyPlayerList";
 import { LobbyRoomSettingsStatus } from "./LobbyRoomSettingsStatus";
+import { RulesGameSection } from "./rules/RulesGameSection";
+import { RulesPlayersSection } from "./rules/RulesPlayersSection";
+import { RulesTokensSection } from "./rules/RulesTokensSection";
 import styles from "./RulesSheet.module.css";
 
 interface RulesSheetProps {
@@ -17,14 +17,12 @@ interface RulesSheetProps {
   onClose: () => void;
 }
 
-/**
- * Game rules, tokens and players, applied as they change, so Done is the only way out. S3 hosts
- * the existing settings blocks here; S4 rebuilds the sections (`22` §4.7).
- */
+/** Game, tokens and players, applied as they change, so Done is the only way out (`22` §4.7). */
 export function RulesSheet({ isAtPlayers, isOpen, model, onClose }: RulesSheetProps) {
   const { t } = useI18n();
   const { hostSettings, players, setup } = model;
-  const playersRef = useRef<HTMLDivElement | null>(null);
+  const playersRef = useRef<HTMLElement | null>(null);
+  const isDisabled = hostSettings.isRoomSettingsPending;
 
   useEffect(() => {
     if (isOpen && isAtPlayers) playersRef.current?.scrollIntoView({ block: "start" });
@@ -39,40 +37,28 @@ export function RulesSheet({ isAtPlayers, isOpen, model, onClose }: RulesSheetPr
       <div className={styles.body}>
         <p className={styles.intro}>{t("lobby.rules.autoSave")}</p>
         <LobbyRoomSettingsStatus actionStatus={hostSettings.roomSettingsActionStatus} />
-        <LobbyHostCoreSettings
-          currentSettings={hostSettings.currentSettings}
-          disabled={hostSettings.isRoomSettingsPending}
-          onRoomSettingsChange={hostSettings.onRoomSettingsChange}
+        <RulesGameSection
+          disabled={isDisabled}
+          numberInput="ruler"
+          onChange={hostSettings.onRoomSettingsChange}
+          settings={hostSettings.currentSettings}
         />
-        <LobbyHostTtSettings
-          currentSettings={hostSettings.currentSettings}
-          disabled={hostSettings.isRoomSettingsPending}
-          onRoomSettingsChange={hostSettings.onRoomSettingsChange}
-          onToggleTtMode={hostSettings.onToggleTtMode}
+        <RulesTokensSection
+          disabled={isDisabled}
+          numberInput="ruler"
+          onChange={hostSettings.onRoomSettingsChange}
+          onToggleTokens={hostSettings.onToggleTtMode}
+          settings={hostSettings.currentSettings}
         />
         <Button
-          disabled={!setup.rules.isCustom || hostSettings.isRoomSettingsPending}
+          disabled={!setup.rules.isCustom || isDisabled}
           fullWidth
           onClick={resetToDefaults}
           variant="secondary"
         >
           {t("lobby.rules.reset")}
         </Button>
-        <div ref={playersRef}>
-          <LobbyPlayerList
-            currentPlayerId={players.currentPlayerId}
-            isHost={players.isHost}
-            isKickPlayerPending={players.isKickPlayerPending}
-            isPlayerSettingsPending={players.isPlayerSettingsPending}
-            kickPlayerActionState={players.kickPlayerActionState}
-            onPlayerKick={players.onPlayerKick}
-            onPlayerStartingCardCountChange={players.onPlayerStartingCardCountChange}
-            onPlayerStartingTtTokenCountChange={players.onPlayerStartingTtTokenCountChange}
-            playerSettingsActionState={players.playerSettingsActionState}
-            players={players.players}
-            roomSettings={players.roomSettings}
-          />
-        </div>
+        <RulesPlayersSection numberInput="ruler" players={players} ref={playersRef} />
       </div>
     </Sheet>
   );

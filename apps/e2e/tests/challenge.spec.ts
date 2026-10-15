@@ -1,25 +1,26 @@
 import { expect, test } from "./support/fixtures";
-import { expectHeaderStatus, startGame } from "./support/roomPages";
+import { editRules, expectHeaderStatus, startGame } from "./support/roomPages";
 import { moveCurrentCardAfterTimelineCard } from "./support/timeline";
 
 test("a guest challenge is resolved by the server before the turn advances", async ({
-  isMobile,
   openRoom,
 }) => {
-  test.fixme(isMobile, "B25: the phone's challenge-window picker has no accessible name");
   const { guest, host, roomId } = await openRoom({
     guest: "Challenge Guest",
     host: "Challenge Host",
   });
 
-  const tokenModeSwitch = host.page.getByRole("switch", { name: "Enable token mode" }).first();
-  await tokenModeSwitch.click();
-  await expect(tokenModeSwitch).toHaveAttribute("aria-checked", "true");
-  const challengeWindowSelect = host.page
-    .getByRole("combobox", { name: "Beat! window", exact: true })
-    .first();
-  await challengeWindowSelect.selectOption("manual");
-  await expect(challengeWindowSelect).toHaveValue("manual");
+  await editRules(host.page, async () => {
+    const tokens = host.page.getByRole("switch", { name: "Tokens" });
+    await tokens.click();
+    await expect(tokens).toHaveAttribute("aria-checked", "true");
+    // The longest window, so the guest's claim never races the timer.
+    const longest = host.page
+      .getByRole("radiogroup", { name: "Beat! window" })
+      .getByRole("radio", { name: "30 s" });
+    await longest.click();
+    await expect(longest).toHaveAttribute("aria-checked", "true");
+  });
 
   await startGame(host.page, roomId, guest.page);
 
