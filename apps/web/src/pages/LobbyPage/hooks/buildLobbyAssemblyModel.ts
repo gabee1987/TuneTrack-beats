@@ -1,7 +1,10 @@
 import type { PublicPlayerState, PublicRoomSettings } from "@tunetrack/shared/client";
 import type { LobbyPageController } from "../LobbyPage.types";
+import type { LobbySetupModel } from "./lobbySetupModel";
 
 export interface LobbyAssemblyModel {
+  /** Readiness, start reasons, music and rules summaries (`useLobbySetupModel`). */
+  setup: LobbySetupModel;
   shell: {
     errorMessage: string | null;
   };
@@ -63,12 +66,16 @@ export interface LobbyAssemblyModel {
   };
 }
 
-export function buildLobbyAssemblyModel(controller: LobbyPageController): LobbyAssemblyModel {
+export function buildLobbyAssemblyModel(
+  controller: LobbyPageController,
+  setup: LobbySetupModel,
+): LobbyAssemblyModel {
   const resolvedRoomId = controller.roomState?.roomId ?? controller.roomId ?? "lobby";
   const players = controller.roomState?.players ?? [];
   const hasStartedJoinError = controller.errorCode === "GAME_ALREADY_STARTED";
 
   return {
+    setup,
     shell: {
       errorMessage: controller.errorMessage,
     },

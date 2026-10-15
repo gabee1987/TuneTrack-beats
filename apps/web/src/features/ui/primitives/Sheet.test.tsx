@@ -28,7 +28,22 @@ describe("Sheet", () => {
     expect(screen.queryByRole("button", { name: "Done" })).not.toBeInTheDocument();
   });
 
-  it("closes from its close button and on Escape, and offers Done when asked", async () => {
+  it("closes from its close button and on Escape", async () => {
+    const onClose = vi.fn();
+    renderWithProviders(
+      <Sheet isOpen onClose={onClose} title="Music">
+        <p>Pick your songs.</p>
+      </Sheet>,
+      { withRouter: false },
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Close" }));
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(onClose).toHaveBeenCalledTimes(2);
+  });
+
+  it("offers Done instead of the close button for a sheet that applies changes as they are made", async () => {
     const onClose = vi.fn();
     const onDone = vi.fn();
     renderWithProviders(
@@ -38,12 +53,12 @@ describe("Sheet", () => {
       { withRouter: false },
     );
 
+    expect(screen.queryByRole("button", { name: "Close" })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Done" }));
-    await userEvent.click(screen.getByRole("button", { name: "Close" }));
     fireEvent.keyDown(document, { key: "Escape" });
 
     expect(onDone).toHaveBeenCalledTimes(1);
-    expect(onClose).toHaveBeenCalledTimes(2);
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it("hosts a deeper step as a panel view that Escape closes first", async () => {

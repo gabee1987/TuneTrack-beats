@@ -1,0 +1,26 @@
+.summary {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-2) 0;
+  text-align: center;
+}
+
+.readiness {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-leading);
+  font-weight: var(--type-label-weight);
+  font-variant-numeric: tabular-nums;
+}
+
+.line {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+}
+
+.warning {
+  color: var(--color-warning);
+}

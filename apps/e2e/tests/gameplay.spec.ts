@@ -1,5 +1,5 @@
 import { expect, test } from "./support/fixtures";
-import { expectHeaderStatus, startGame } from "./support/roomPages";
+import { editRules, expectHeaderStatus, startGame } from "./support/roomPages";
 
 test("a correct placement is revealed before the turn advances", async ({ openRoom }) => {
   const { guest, host, roomId } = await openRoom({ guest: "Core Guest", host: "Core Host" });
@@ -55,33 +55,35 @@ test("both players see the winner when the target card count is reached", async 
   );
   const { guest, host, roomId } = await openRoom({ guest: "Win Guest", host: "Win Host" });
 
-  await host.page
-    .getByRole("button", { name: "Cards needed to win: 3", exact: true })
-    .first()
-    .click();
-  await expect(
-    host.page.getByRole("slider", { name: "Cards needed to win" }).first(),
-  ).toHaveAttribute("aria-valuenow", "3");
-  await host.page
-    .getByRole("button", { name: "Default starting cards: 2", exact: true })
-    .first()
-    .click();
-  await expect(
-    host.page.getByRole("slider", { name: "Default starting cards" }).first(),
-  ).toHaveAttribute("aria-valuenow", "2");
-  const tokenModeSwitch = host.page.getByRole("switch", { name: "Enable token mode" }).first();
-  await tokenModeSwitch.click();
-  await expect(tokenModeSwitch).toHaveAttribute("aria-checked", "true");
-  await host.page
-    .getByRole("button", {
-      name: "Starting tokens for every player: 3",
-      exact: true,
-    })
-    .first()
-    .click();
-  await expect(
-    host.page.getByRole("slider", { name: "Starting tokens for every player" }).first(),
-  ).toHaveAttribute("aria-valuenow", "3");
+  await editRules(host.page, async () => {
+    await host.page
+      .getByRole("button", { name: "Cards needed to win: 3", exact: true })
+      .first()
+      .click();
+    await expect(
+      host.page.getByRole("slider", { name: "Cards needed to win" }).first(),
+    ).toHaveAttribute("aria-valuenow", "3");
+    await host.page
+      .getByRole("button", { name: "Default starting cards: 2", exact: true })
+      .first()
+      .click();
+    await expect(
+      host.page.getByRole("slider", { name: "Default starting cards" }).first(),
+    ).toHaveAttribute("aria-valuenow", "2");
+    const tokenModeSwitch = host.page.getByRole("switch", { name: "Enable token mode" }).first();
+    await tokenModeSwitch.click();
+    await expect(tokenModeSwitch).toHaveAttribute("aria-checked", "true");
+    await host.page
+      .getByRole("button", {
+        name: "Starting tokens for every player: 3",
+        exact: true,
+      })
+      .first()
+      .click();
+    await expect(
+      host.page.getByRole("slider", { name: "Starting tokens for every player" }).first(),
+    ).toHaveAttribute("aria-valuenow", "3");
+  });
 
   await startGame(host.page, roomId, guest.page);
   await expect(host.page.getByLabel("2 cards").first()).toBeVisible();

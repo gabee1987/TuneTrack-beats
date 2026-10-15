@@ -64,7 +64,11 @@ test("nested playlist editors close one level at a time without leaving the lobb
 }) => {
   const host = await openPlayer("Playlist Host");
   const roomId = await hostRoom(host.page);
-  await host.page.getByRole("button", { name: "Choose songs", exact: true }).first().click();
+  // Phones open Music setup from the Music card ("Music Choose songs").
+  await host.page
+    .getByRole("button", { name: /Choose songs/ })
+    .first()
+    .click();
 
   const popupPromise = host.page.waitForEvent("popup");
   await host.page
@@ -73,7 +77,10 @@ test("nested playlist editors close one level at a time without leaving the lobb
     .click();
   const popup = await popupPromise;
   await expect.poll(() => popup.isClosed()).toBe(true);
-  await expect(host.page.getByText("Connected", { exact: true }).first()).toBeVisible();
+  // Music setup drops its Connect button once the login lands, on both layouts.
+  await expect(
+    host.page.getByRole("button", { name: "Connect with Spotify", exact: true }),
+  ).toHaveCount(0);
 
   await host.page
     .getByPlaceholder("Paste playlist link or search playlist name")

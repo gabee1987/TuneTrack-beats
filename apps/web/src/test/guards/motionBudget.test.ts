@@ -20,6 +20,7 @@ const LONG_RUNNING_ALLOWLIST = [
   "pages/GamePage/components/gamePageActionPanelsChallenge.module.css .challengePulseBorder",
   "pages/GamePage/components/timelineCards.module.css .previewCardCorrection, .previewCardCorrectionSurface",
   "pages/HomePage/mobile/AnimatedMenuBackground.module.css .orbViolet",
+  "pages/LobbyPage/components/lobbyCard.module.css .pulse::before, .pulse::after",
   "pages/LobbyPage/components/playlistEditList.module.css .loadingSpinner",
   "pages/LobbyPage/components/spotify/spotifySetupShell.module.css .spotifyConnectedDot",
   "pages/LobbyPage/components/spotify/spotifySetupShell.module.css .spotifyPremiumBadge::before",

@@ -12,6 +12,23 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Lobby review: no step badges, slim Start dock, Back closes or leaves (2026-10-15)
+
+- **No step badges on the lobby cards**; each card states its own status. **The Start dock holds
+  only the button**, with no bar background; the readiness and reason lines sit at the end of the
+  page. **Back** in the lobby header confirms Close room (host) or Leave (guest); Close room left the
+  Rules sheet. **A sheet whose changes apply at once shows Done only** (no second close button) and
+  says that changes apply right away; the Rules sheet offers **Reset to defaults**. Page scrollbars
+  get a rounded thumb. Why: owner review of `22` S3 on a phone (screen space, unclear marks, two
+  ways to close, no way home).
+
+### The dev gallery may show page-local pieces (2026-10-15)
+
+- **`/dev/ui` may import another page's `components/` and `hooks/`**, never a page root or a
+  mobile/desktop assembly (`eslint.config.js`). Why: the owner wants every UI element on the
+  gallery (2026-10-14), including lobby-local pieces such as the step badge and deck meter, and the
+  route is built only in development, so nothing extra ships.
+
 ### Number settings, switches and skeletons (2026-10-14)
 
 - **Phones keep the ruler slider for number settings; the stepper is for desktop.** The existing

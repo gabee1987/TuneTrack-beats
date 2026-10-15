@@ -1,0 +1,85 @@
+.strip {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.count {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+  font-weight: var(--type-label-weight);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+/* Not `display: contents`: that drops the list role in some engines. */
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  min-height: 34px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-soft);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-leading);
+  font-weight: var(--type-label-weight);
+}
+
+/* The pill stays slim; the tap area around it is the full 48 px. */
+.self::after,
+.more::after {
+  content: "";
+  position: absolute;
+  inset: -7px 0;
+}
+
+.self {
+  border-color: var(--color-accent-brand);
+  cursor: pointer;
+}
+
+.self:active {
+  transform: scale(0.96);
+}
+
+.more {
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.crown {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--color-warning);
+}

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { PublicRoomSettings, PublicRoomState } from "@tunetrack/shared/client";
 import type { LobbyPageController } from "../LobbyPage.types";
 import { buildLobbyAssemblyModel } from "./buildLobbyAssemblyModel";
+import { selectLobbySetup } from "./lobbySetupModel";
 
 const settings: PublicRoomSettings = {
   targetTimelineCardCount: 10,
@@ -85,9 +86,20 @@ function createController(overrides: Partial<LobbyPageController> = {}): LobbyPa
   };
 }
 
+function build(controller: LobbyPageController) {
+  const setup = selectLobbySetup({
+    connectionStatus: "connected",
+    currentPlayerId: controller.currentPlayerId,
+    roomState: controller.roomState,
+    settings: controller.currentSettings,
+    startGameActionStatus: controller.startGameActionStatus,
+  });
+  return buildLobbyAssemblyModel(controller, setup);
+}
+
 describe("buildLobbyAssemblyModel", () => {
   it("groups shared lobby facts for mobile and desktop assemblies", () => {
-    const model = buildLobbyAssemblyModel(createController());
+    const model = build(createController());
 
     expect(model.room.resolvedRoomId).toBe("ROOM1");
     expect(model.room.players).toHaveLength(1);
@@ -104,10 +116,11 @@ describe("buildLobbyAssemblyModel", () => {
     expect(model.identity.identityActionState).toBeNull();
     expect(model.identity.isIdentityActionPending).toBe(false);
     expect(model.identity.resolvedRoomId).toBe("ROOM1");
+    expect(model.setup.roomCode).toBe("ROOM1");
   });
 
   it("marks started-join errors for both assemblies", () => {
-    const model = buildLobbyAssemblyModel(
+    const model = build(
       createController({ errorCode: "GAME_ALREADY_STARTED", errorMessage: "started" }),
     );
 
@@ -117,9 +130,7 @@ describe("buildLobbyAssemblyModel", () => {
   });
 
   it("falls back to route room id when room state is missing", () => {
-    const model = buildLobbyAssemblyModel(
-      createController({ roomState: null, roomId: "fallback-room" }),
-    );
+    const model = build(createController({ roomState: null, roomId: "fallback-room" }));
 
     expect(model.room.resolvedRoomId).toBe("fallback-room");
     expect(model.room.players).toEqual([]);

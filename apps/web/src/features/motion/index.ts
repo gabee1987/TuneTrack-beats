@@ -1,6 +1,8 @@
 export { MotionFeatureProvider } from "./MotionFeatureProvider";
 export { MotionPresence } from "./MotionPresence";
+export { ArrivalListPresence, type ArrivalListItem } from "./ArrivalListPresence";
 export { MotionReveal } from "./MotionReveal";
+export { ReadyTransition } from "./ReadyTransition";
 export { PageTransition } from "./PageTransition";
 export { prefersReducedMotion } from "./prefersReducedMotion";
 export { useReducedMotionPreference } from "./useReducedMotionPreference";

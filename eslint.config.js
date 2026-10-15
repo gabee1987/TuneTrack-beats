@@ -246,8 +246,11 @@ export default tseslint.config(
     },
   },
   ...WEB_PAGES.flatMap((page) => {
+    // The DEV-only /dev/ui gallery shows page-local pieces too (owner, 2026-10-14), so it may read
+    // another page's components/ and hooks/; never a page root or an assembly.
+    const galleryReach = page === "DesignSystemPage" ? "(?!components/|hooks/)" : "";
     const otherPage = {
-      regex: `(^|/)(?!${page}/)[A-Z]\\w*Page/`,
+      regex: `(^|/)(?!${page}/)[A-Z]\\w*Page/${galleryReach}`,
       message: `${page} imports only its own files; share through features/ or hooks/.`,
     };
     const otherAssembly = (assembly) => ({

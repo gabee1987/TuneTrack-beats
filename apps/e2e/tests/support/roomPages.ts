@@ -120,6 +120,24 @@ export async function choosePracticeDeck(host: Page): Promise<void> {
   await expect(host.getByText(/^Practice deck · \d+ songs · no audio$/)).toBeVisible();
 }
 
+/**
+ * Phones keep the rules in the Rules sheet behind the Rules card; the desktop lobby still shows
+ * them on the page (plan `22` S6), so there the edit runs in place.
+ */
+export async function editRules(host: Page, edit: () => Promise<void>): Promise<void> {
+  const rulesCard = host.getByRole("button", { name: /^Rules\b/ });
+  const pageSlider = host.getByRole("slider", { name: "Cards needed to win" });
+  // Decide only once the lobby shows one of the two layouts.
+  await expect(rulesCard.or(pageSlider).first()).toBeVisible();
+  const isInSheet = (await rulesCard.count()) > 0;
+  if (isInSheet) await rulesCard.click();
+  await edit();
+  if (isInSheet) {
+    await host.getByRole("dialog", { name: "Rules" }).getByRole("button", { name: "Done" }).click();
+    await expect(host.getByRole("dialog", { name: "Rules" })).toHaveCount(0);
+  }
+}
+
 export async function startGame(host: Page, roomId: string, ...guests: Page[]): Promise<void> {
   await choosePracticeDeck(host);
   await host.getByRole("button", { name: "Start Game" }).first().click();

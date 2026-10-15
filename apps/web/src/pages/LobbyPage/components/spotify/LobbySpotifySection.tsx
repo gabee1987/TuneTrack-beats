@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { useState } from "react";
 import type { PublicRoomSettings } from "@tunetrack/shared/client";
 import { FirstRunHint } from "../../../../features/hints/FirstRunHint";
 import { useI18n } from "../../../../features/i18n";
@@ -9,9 +9,8 @@ import { SurfaceCard } from "../../../../features/ui/SurfaceCard";
 import { LobbySectionHeader } from "../LobbySectionHeader";
 import { useLobbySpotify } from "../../hooks/spotify/useLobbySpotify";
 import { LobbyPracticeDeckChoice } from "./LobbyPracticeDeckChoice";
+import { LobbyMusicSetup } from "./LobbyMusicSetup";
 import { SpotifyLogo } from "./spotifySetupIcons";
-import { SpotifySetupModal } from "./SpotifySetupModal";
-import type { SpotifySetupSource } from "./spotifySetupTypes";
 import lobbyStyles from "../../lobbySettings.module.css";
 import setupShellStyles from "./spotifySetupShell.module.css";
 import sharedStyles from "./spotifyShared.module.css";
@@ -20,43 +19,15 @@ interface LobbySpotifySectionProps {
   currentSettings: PublicRoomSettings;
 }
 
-// Host-only and opened on demand: the editor and its stylesheets stay out of the lobby chunk (05 D4).
-async function loadPlaylistEditModal() {
-  const module = await import("../PlaylistEditModal");
-  return { default: module.PlaylistEditModal };
-}
-
-const PlaylistEditModal = lazy(loadPlaylistEditModal);
-
 export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProps) {
   const { t } = useI18n();
   const [isSetupOpen, setIsSetupOpen] = useState(false);
-  const [activeSource, setActiveSource] = useState<SpotifySetupSource>("playlistUrl");
   const [spotifyHintAnchor, setSpotifyHintAnchor] = useState<HTMLElement | null>(null);
   const spotifyState = useLobbySpotify();
   const isConnected = currentSettings.spotifyAuthStatus === "connected";
   const isImported = currentSettings.playlistImported;
   const accountType = spotifyState.auth.accountType ?? currentSettings.spotifyAccountType;
   const isConnecting = spotifyState.auth.authPhase === "connecting";
-  const isEditModalOpen = spotifyState.queue.isEditModalOpen;
-  const [hasOpenedEditModal, setHasOpenedEditModal] = useState(isEditModalOpen);
-
-  if (isEditModalOpen && !hasOpenedEditModal) {
-    setHasOpenedEditModal(true);
-  }
-
-  useEffect(() => {
-    if (isImported) {
-      void loadPlaylistEditModal();
-    }
-  }, [isImported]);
-
-  useEffect(() => {
-    if (isSetupOpen && spotifyState.savedPlaylists.generatedPlaylistMessage) {
-      setActiveSource("playlistUrl");
-    }
-  }, [isSetupOpen, spotifyState.savedPlaylists.generatedPlaylistMessage]);
-
   const connectHint = isConnected
     ? accountType === "premium"
       ? t("lobby.spotify.browserPlaybackHint")
@@ -158,23 +129,12 @@ export function LobbySpotifySection({ currentSettings }: LobbySpotifySectionProp
 
       <FirstRunHint anchor={spotifyHintAnchor} id="lobby-spotify" isEligible={!isImported} />
 
-      <SpotifySetupModal
-        activeSource={activeSource}
+      <LobbyMusicSetup
         currentSettings={currentSettings}
         isOpen={isSetupOpen}
         onClose={() => setIsSetupOpen(false)}
-        onSourceChange={setActiveSource}
         spotifyState={spotifyState}
-      >
-        {hasOpenedEditModal ? (
-          <Suspense fallback={null}>
-            <PlaylistEditModal
-              isOpen={isEditModalOpen}
-              onClose={spotifyState.queue.closeEditModal}
-            />
-          </Suspense>
-        ) : null}
-      </SpotifySetupModal>
+      />
     </>
   );
 }

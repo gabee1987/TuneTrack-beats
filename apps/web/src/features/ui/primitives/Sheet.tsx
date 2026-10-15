@@ -18,7 +18,10 @@ export interface SheetProps {
   isOpen: boolean;
   onClose: () => void;
   onClosed?: (() => void) | undefined;
-  /** Shows Done in the header; for a sheet whose changes apply as they are made. */
+  /**
+   * For a sheet whose changes apply as they are made: Done replaces the close button, so there
+   * is one way out (owner, 2026-10-15). Escape and Back still close it.
+   */
   onDone?: (() => void) | undefined;
   title: string;
 }
@@ -51,17 +54,18 @@ export function Sheet({ children, dock, isOpen, onClose, onClosed, onDone, title
             <Button onClick={onDone} variant="tertiary">
               {t("ui.sheet.done")}
             </Button>
-          ) : null}
-          <IconButton aria-label={t("common.close")} onClick={onClose} variant="ghost">
-            <svg aria-hidden="true" fill="none" height="20" viewBox="0 0 24 24" width="20">
-              <path
-                d="M6 6L18 18M18 6L6 18"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeWidth="2"
-              />
-            </svg>
-          </IconButton>
+          ) : (
+            <IconButton aria-label={t("common.close")} onClick={onClose} variant="ghost">
+              <svg aria-hidden="true" fill="none" height="20" viewBox="0 0 24 24" width="20">
+                <path
+                  d="M6 6L18 18M18 6L6 18"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeWidth="2"
+                />
+              </svg>
+            </IconButton>
+          )}
         </div>
       </header>
       <div className={styles.body}>{children}</div>
