@@ -189,7 +189,7 @@ The shared library is `apps/web/src/features/ui/primitives/`. Everything else in
 `IconButton`, `ListRow` / `ListRowButton`, `ListRowAction`, `ListRowSkeleton` / `ListSkeleton`,
 `NumberStepper`, `SegmentedControl`, `SelectionActionBar`, `SettingRow`, `Sheet`, `Skeleton`,
 `TextField`. `CoverArt`, `ListRowAction`, `ListRowSkeleton`, `NumberStepper`,
-`SelectionActionBar`, `SettingRow`, `Sheet` and `TextField` were added 2026-10-14 (`22` S0). `SettingRow` gained `isStacked` (the control under the copy, full width) on 2026-10-15 (`22` S4).
+`SelectionActionBar`, `SettingRow`, `Sheet` and `TextField` were added 2026-10-14 (`22` S0). `SettingRow` gained `isStacked` (the control under the copy, full width) on 2026-10-15 (`22` S4). `SegmentedControl` marks the selected option with an accent-filled pill, and the ruler slider (`features/ui/RangeField`) keeps its line ticks and has a quiet − and + at its two ends, sharing `StepGlyph` with `NumberStepper`, with a haptic detent per value (2026-10-15).
 
 ### Target primitives — being promoted **(target)**
 

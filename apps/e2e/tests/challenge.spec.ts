@@ -11,9 +11,11 @@ test("a guest challenge is resolved by the server before the turn advances", asy
   });
 
   await editRules(host.page, async () => {
-    const tokens = host.page.getByRole("switch", { name: "Tokens" });
-    await tokens.click();
-    await expect(tokens).toHaveAttribute("aria-checked", "true");
+    // Tokens are on in a new room.
+    await expect(host.page.getByRole("switch", { name: "Tokens" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
     // The longest window, so the guest's claim never races the timer.
     const longest = host.page
       .getByRole("radiogroup", { name: "Beat! window" })

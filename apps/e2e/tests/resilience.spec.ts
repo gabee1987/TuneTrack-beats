@@ -7,6 +7,7 @@ import {
   joinFromDirectory,
   openGameMenu,
   startGame,
+  turnTokensOff,
 } from "./support/roomPages";
 import { expectRoomClosedOnServer } from "./support/roomProbe";
 
@@ -17,6 +18,7 @@ test("a guest reconnects inside the recovery window and continues playing", asyn
     guest: "Recovery Guest",
     host: "Recovery Host",
   });
+  await turnTokensOff(host.page);
   await startGame(host.page, roomId, guest.page);
 
   await guest.context.setOffline(true);
@@ -50,6 +52,7 @@ test("a host reconnects inside the recovery window and remains host", async ({ o
     guest: "Host Recovery Guest",
     host: "Host Recovery Host",
   });
+  await turnTokensOff(host.page);
   await startGame(host.page, roomId, guest.page);
 
   await host.context.setOffline(true);
@@ -88,6 +91,7 @@ test("a permanent host disconnect transfers host controls after the grace period
     guest: "Transfer Guest",
     host: "Transfer Host",
   });
+  await turnTokensOff(host.page);
   await startGame(host.page, roomId, guest.page);
 
   await host.page.getByRole("button", { name: "Confirm", exact: true }).click();
@@ -121,6 +125,7 @@ test("an offline guest stays in the game while the host manually skips their tur
   for (const page of [host.page, guest.page, observer.page]) {
     await expectLobbyPlayerCount(page, 3);
   }
+  await turnTokensOff(host.page);
   await startGame(host.page, roomId, guest.page, observer.page);
 
   await host.page.getByRole("button", { name: "Confirm", exact: true }).click();

@@ -3,6 +3,7 @@ import {
   DEFAULT_STARTING_TIMELINE_CARD_COUNT,
   DEFAULT_STARTING_TT_TOKEN_COUNT,
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
+  DEFAULT_TT_MODE_ENABLED,
   getRequiredDeckSize,
   type PublicPlayerState,
   type PublicRoomSettings,
@@ -93,7 +94,7 @@ export const DEFAULT_RULES = {
   revealConfirmMode: "host_only",
   startingTtTokenCount: DEFAULT_STARTING_TT_TOKEN_COUNT,
   targetTimelineCardCount: DEFAULT_TARGET_TIMELINE_CARD_COUNT,
-  ttModeEnabled: false,
+  ttModeEnabled: DEFAULT_TT_MODE_ENABLED,
 } as const satisfies Partial<PublicRoomSettings>;
 
 /** Everything the lobby shows about readiness, derived in one place for both assemblies. */

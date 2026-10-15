@@ -166,8 +166,12 @@ describe("Rules sheet · Players", () => {
     ]);
 
     expect(screen.getByRole("heading", { name: "Players (2)" })).toBeInTheDocument();
-    expect(getRow("Player One").getByText("Host · You · Starts with 1 song")).toBeInTheDocument();
-    expect(getRow("Player Two").getByText("Offline · Starts with 1 song")).toBeInTheDocument();
+    expect(
+      getRow("Player One").getByText("Host · You · Starts with 1 song · 1 token"),
+    ).toBeInTheDocument();
+    expect(
+      getRow("Player Two").getByText("Offline · Starts with 1 song · 1 token"),
+    ).toBeInTheDocument();
   });
 
   it("adds the starting tokens when tokens are on", () => {
@@ -221,6 +225,8 @@ describe("Rules sheet · Players", () => {
     renderPlayers({ currentPlayerId: TEST_GUEST_ID, isHost: false });
 
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
-    expect(getRow("Player Two").getByText("You · Starts with 1 song")).toBeInTheDocument();
+    expect(
+      getRow("Player Two").getByText("You · Starts with 1 song · 1 token"),
+    ).toBeInTheDocument();
   });
 });

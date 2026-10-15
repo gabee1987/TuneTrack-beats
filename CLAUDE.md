@@ -28,7 +28,9 @@ motion that explains what just happened.
 - **Same-year rule:** every slot inside a same-year block is a valid placement.
 - **TT tokens** buy special actions on the player's own turn: skip the current card (1 TT,
   once per turn), buy the current card (3 TT, placed automatically, no challenge window) and
-  challenge ("Beat!"). The host awards TT manually.
+  challenge ("Beat!"). The host awards TT manually. Token mode is on in a new room and every
+  player starts with 1 TT; a player never holds more than 5 TT. Starting cards range 1–10
+  (decided 2026-10-15).
 - **Challenge:** any player with at least one TT may challenge a placement before reveal.
   Success steals the card onto the challenger's timeline; failure costs 1 TT (never below 0).
   Only the initial claim is timed; without a claim the server auto-resolves the placement.

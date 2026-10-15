@@ -221,7 +221,9 @@ describe("LobbyPageMobile host", () => {
     const controller = renderLobby({ settings: { targetTimelineCardCount: 12 } });
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Rules 12 songs to win · 1 to start · tokens off" }),
+      screen.getByRole("button", {
+        name: "Rules 12 songs to win · 1 to start · tokens on, Beat! 10 s",
+      }),
     );
     const sheet = screen.getByRole("dialog", { name: "Rules" });
 
@@ -231,7 +233,7 @@ describe("LobbyPageMobile host", () => {
     await userEvent.click(within(sheet).getByRole("button", { name: "Reset to defaults" }));
 
     expect(controller.handleRoomSettingsChange).toHaveBeenCalledWith(
-      expect.objectContaining({ targetTimelineCardCount: 10, ttModeEnabled: false }),
+      expect.objectContaining({ targetTimelineCardCount: 10, ttModeEnabled: true }),
     );
   });
 
@@ -261,7 +263,9 @@ describe("LobbyPageMobile guest", () => {
     expect(screen.getByRole("heading", { name: "You're in" })).toBeInTheDocument();
     expect(screen.getByText("The game starts when Player One taps Start.")).toBeInTheDocument();
     expect(screen.getByText("Player One is choosing songs")).toBeInTheDocument();
-    expect(screen.getByText("10 songs to win · 1 to start · tokens off")).toBeInTheDocument();
+    expect(
+      screen.getByText("10 songs to win · 1 to start · tokens on, Beat! 10 s"),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Start game" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Change code" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Rules/ })).not.toBeInTheDocument();

@@ -3,6 +3,7 @@ import {
   DEFAULT_STARTING_TIMELINE_CARD_COUNT,
   DEFAULT_STARTING_TT_TOKEN_COUNT,
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
+  DEFAULT_TT_MODE_ENABLED,
   type PublicRoomSettings,
 } from "@tunetrack/shared/client";
 import { useEffect, useMemo, useRef } from "react";
@@ -20,7 +21,7 @@ const fallbackRoomSettings: PublicRoomSettings = {
   revealConfirmMode: "host_only",
   startingTtTokenCount: DEFAULT_STARTING_TT_TOKEN_COUNT,
   targetTimelineCardCount: DEFAULT_TARGET_TIMELINE_CARD_COUNT,
-  ttModeEnabled: false,
+  ttModeEnabled: DEFAULT_TT_MODE_ENABLED,
   playlistImported: false,
   importedTrackCount: 0,
   tracksToCheckCount: 0,

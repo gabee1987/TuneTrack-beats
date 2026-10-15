@@ -214,7 +214,7 @@ describe("selectRulesSummary", () => {
       isCustom: false,
       starting: 1,
       target: 10,
-      tokens: null,
+      tokens: { seconds: 10 },
     });
     expect(selectRulesSummary(buildRoomSettings({ targetTimelineCardCount: 12 })).isCustom).toBe(
       true,

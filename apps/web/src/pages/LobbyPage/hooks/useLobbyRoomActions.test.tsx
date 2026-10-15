@@ -310,7 +310,7 @@ describe("useLobbyRoomActions update_player_settings", () => {
         playerId: "player-guest",
         roomId: "TEST_ROOM_1",
         startingTimelineCardCount: 2,
-        startingTtTokenCount: 0,
+        startingTtTokenCount: 1,
       },
       expect.objectContaining({ retryOnTimeout: true }),
     );

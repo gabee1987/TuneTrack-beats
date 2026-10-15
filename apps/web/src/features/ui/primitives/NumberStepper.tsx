@@ -2,6 +2,7 @@ import { useRef, useState, type KeyboardEvent } from "react";
 import { useI18n } from "../../i18n";
 import { classNames } from "../classNames";
 import { IconButton } from "./IconButton";
+import { StepGlyph } from "./StepGlyph";
 import { useRepeatPress } from "./useRepeatPress";
 import styles from "./NumberStepper.module.css";
 
@@ -172,16 +173,5 @@ function EditableValue({
       type="number"
       value={draft ?? String(value)}
     />
-  );
-}
-
-function StepGlyph({ isIncrease = false }: { isIncrease?: boolean }) {
-  return (
-    <svg aria-hidden="true" fill="none" height="18" viewBox="0 0 24 24" width="18">
-      <path d="M5 12H19" stroke="currentColor" strokeLinecap="round" strokeWidth="2.4" />
-      {isIncrease ? (
-        <path d="M12 5V19" stroke="currentColor" strokeLinecap="round" strokeWidth="2.4" />
-      ) : null}
-    </svg>
   );
 }

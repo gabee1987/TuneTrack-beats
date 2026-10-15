@@ -12,6 +12,26 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Up to 10 starting songs, tokens capped at 5, side buttons on the ruler (2026-10-15)
+
+- **Songs to start with ranges 1–10** (`MAX_STARTING_TIMELINE_CARD_COUNT`). **Tokens stay at
+  most 5**, both to start with and held in a game: a player can never have more than 5. **The
+  ruler keeps its line design** with a quiet − and + at its two ends inside the same track. Why:
+  owner review on a phone; 7 and 10 starting songs were wanted, and the ruler only needed the
+  buttons and a tactile feel.
+
+### Tokens on by default, one-word room codes, a ruler you can feel (2026-10-15)
+
+- **Token mode is on in a new room** (`DEFAULT_TT_MODE_ENABLED`), and every player starts with
+  **1 token** (`DEFAULT_STARTING_TT_TOKEN_COUNT`); Reset to defaults restores both. **Room codes are
+  one music word and two digits** (`tango42`): no hyphen, no z or y (they swap places on
+  Hungarian keyboards), no w, q or x, no doubled letters, digits 2–9 only. **The ruler slider has
+  a − and a + button**, a haptic detent for each value it passes (Android; iOS Safari has no
+  Vibration API), numbered ticks and a value that pops when it changes. **The selected option of
+  a segmented control is an accent-filled pill.** Why: owner review of `22` S4 on a phone: codes
+  were hard to say and type, the ruler did not feel like discrete steps, and the chosen option of
+  Who taps Next and the Beat! window was hard to see.
+
 ### Lobby review: no step badges, slim Start dock, Back closes or leaves (2026-10-15)
 
 - **No step badges on the lobby cards**; each card states its own status. **The Start dock holds

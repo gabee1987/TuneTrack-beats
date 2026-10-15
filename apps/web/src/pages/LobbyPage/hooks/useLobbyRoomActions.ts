@@ -1,5 +1,6 @@
 import {
   ClientToServerEvent,
+  DEFAULT_STARTING_TT_TOKEN_COUNT,
   type PublicPlayerState,
   type PublicRoomSettings,
   type PublicRoomState,
@@ -21,8 +22,6 @@ import { useLobbyIdentityActions } from "./useLobbyIdentityActions";
 import { useLobbyKickPlayerAction } from "./useLobbyKickPlayerAction";
 import { useLobbyPlayerSettingsAction } from "./useLobbyPlayerSettingsAction";
 import { useLobbyRoomSettingsAction } from "./useLobbyRoomSettingsAction";
-
-const DEFAULT_ENABLED_STARTING_TT_TOKEN_COUNT = 1;
 
 interface UseLobbyRoomActionsOptions {
   currentPlayerId: string | null;
@@ -188,7 +187,7 @@ export function useLobbyRoomActions({
             ...currentSettings,
             startingTtTokenCount: currentSettings.ttModeEnabled
               ? currentSettings.startingTtTokenCount
-              : DEFAULT_ENABLED_STARTING_TT_TOKEN_COUNT,
+              : DEFAULT_STARTING_TT_TOKEN_COUNT,
             ttModeEnabled: true,
           }
         : {

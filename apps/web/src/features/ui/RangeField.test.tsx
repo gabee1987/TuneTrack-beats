@@ -1,10 +1,13 @@
 import { act, fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { triggerPressHaptic } from "../../services/haptics/triggerPressHaptic";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { setElementBox } from "../../test/stubs/layout";
 import { RangeField } from "./RangeField";
 import { RANGE_SETTLE_MS } from "./useRulerScroll";
+
+vi.mock("../../services/haptics/triggerPressHaptic", () => ({ triggerPressHaptic: vi.fn() }));
 
 function renderRange({ value = 10, disabled = false, onChange = vi.fn() } = {}) {
   const view = renderWithProviders(
@@ -53,6 +56,7 @@ function letRulerSettle() {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.mocked(triggerPressHaptic).mockClear();
 });
 
 describe("RangeField", () => {
@@ -205,6 +209,60 @@ describe("RangeField", () => {
       detail: 1,
     });
     letRulerSettle();
+
+    expect(onChange.mock.calls).toEqual([[9]]);
+  });
+
+  it("steps with the − and + buttons and commits once the presses stop", () => {
+    vi.useFakeTimers();
+    const { onChange } = renderRange();
+    const slider = screen.getByRole("slider", { name: "Cards to win" });
+    const increase = screen.getByRole("button", { name: "Increase Cards to win" });
+
+    fireEvent.click(increase);
+    fireEvent.click(increase);
+    fireEvent.click(increase);
+
+    expect(slider).toHaveAttribute("aria-valuenow", "12");
+    expect(increase).toBeDisabled();
+    expect(onChange).not.toHaveBeenCalled();
+
+    letRulerSettle();
+
+    expect(onChange.mock.calls).toEqual([[12]]);
+  });
+
+  it("disables both step buttons while the ruler is disabled", () => {
+    renderRange({ disabled: true });
+
+    expect(screen.getByRole("button", { name: "Decrease Cards to win" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Increase Cards to win" })).toBeDisabled();
+  });
+
+  it("is felt once for each value it passes, and not for the value coming back", () => {
+    vi.useFakeTimers();
+    const { onChange, view } = renderRange();
+
+    scrollRulerTo(11);
+    scrollRulerTo(11);
+    scrollRulerTo(12);
+    expect(triggerPressHaptic).toHaveBeenCalledTimes(2);
+
+    letRulerSettle();
+    view.rerender(
+      <RangeField label="Cards to win" max={12} min={8} onChange={onChange} value={12} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Decrease Cards to win" }));
+
+    expect(triggerPressHaptic).toHaveBeenCalledTimes(3);
+  });
+
+  it("still sends a stepped value when it closes before coming to rest", () => {
+    vi.useFakeTimers();
+    const { onChange, view } = renderRange();
+
+    fireEvent.click(screen.getByRole("button", { name: "Decrease Cards to win" }));
+    view.unmount();
 
     expect(onChange.mock.calls).toEqual([[9]]);
   });

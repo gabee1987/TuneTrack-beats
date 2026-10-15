@@ -7,8 +7,10 @@ export const MIN_TARGET_TIMELINE_CARD_COUNT = 3;
 export const MAX_TARGET_TIMELINE_CARD_COUNT = 30;
 export const DEFAULT_STARTING_TIMELINE_CARD_COUNT = 1;
 export const MIN_STARTING_TIMELINE_CARD_COUNT = 1;
-export const MAX_STARTING_TIMELINE_CARD_COUNT = 5;
-export const DEFAULT_STARTING_TT_TOKEN_COUNT = 0;
+export const MAX_STARTING_TIMELINE_CARD_COUNT = 10;
+/** Token mode is on in a new room (decided 2026-10-15). */
+export const DEFAULT_TT_MODE_ENABLED = true;
+export const DEFAULT_STARTING_TT_TOKEN_COUNT = 1;
 export const MIN_STARTING_TT_TOKEN_COUNT = 0;
 export const MAX_STARTING_TT_TOKEN_COUNT = 5;
 export const SKIP_TRACK_TT_COST = 1;

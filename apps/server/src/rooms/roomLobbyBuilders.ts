@@ -3,6 +3,7 @@ import {
   DEFAULT_STARTING_TIMELINE_CARD_COUNT,
   DEFAULT_STARTING_TT_TOKEN_COUNT,
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
+  DEFAULT_TT_MODE_ENABLED,
   MAX_STARTING_TT_TOKEN_COUNT,
   PLAYER_NAME_MAX_LENGTH,
   countTracksToCheck,
@@ -29,7 +30,7 @@ export function buildInitialRoomState(
     connectionStatus: "connected",
     disconnectedAtEpochMs: null,
     reconnectExpiresAtEpochMs: null,
-    ttTokenCount: 0,
+    ttTokenCount: DEFAULT_STARTING_TT_TOKEN_COUNT,
     startingTimelineCardCount: DEFAULT_STARTING_TIMELINE_CARD_COUNT,
   };
 
@@ -38,7 +39,7 @@ export function buildInitialRoomState(
     defaultStartingTimelineCardCount: DEFAULT_STARTING_TIMELINE_CARD_COUNT,
     startingTtTokenCount: DEFAULT_STARTING_TT_TOKEN_COUNT,
     revealConfirmMode: "host_only",
-    ttModeEnabled: false,
+    ttModeEnabled: DEFAULT_TT_MODE_ENABLED,
     challengeWindowDurationSeconds: DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
     playlistImported: false,
     importedTrackCount: 0,

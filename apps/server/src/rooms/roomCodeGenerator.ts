@@ -1,79 +1,53 @@
 import { randomInt as cryptoRandomInt } from "node:crypto";
-import { ROOM_CODE_MAX_LENGTH, type RoomId, DomainError } from "@tunetrack/shared";
+import { type RoomId, DomainError } from "@tunetrack/shared";
 
 const FRIENDLY_CODE_ATTEMPT_COUNT = 5;
 const FALLBACK_ALPHABET = "23456789abcdefghijkmnpqrstuvwxyz";
 const FALLBACK_ATTEMPT_COUNT = 6;
 const FALLBACK_CODE_LENGTH = 6;
+const ROOM_CODE_DIGITS = "23456789";
+// One music word known in Hungarian and English, then two digits: "tango42" is easy to say aloud
+// and type in one go. No z or y (they swap places on Hungarian keyboards), no w, q or x, no
+// doubled letters, and no 0 or 1 to mistake for O, I or l.
 const ROOM_CODE_WORDS = [
-  "aqua",
-  "bass",
   "beat",
-  "blue",
-  "bold",
-  "bop",
-  "calm",
-  "card",
-  "clap",
-  "cool",
-  "cozy",
-  "crew",
-  "dash",
-  "deck",
-  "disc",
+  "band",
+  "banjo",
+  "blues",
+  "bongo",
+  "dance",
+  "disco",
   "drum",
-  "echo",
-  "epic",
-  "fast",
-  "flip",
-  "flow",
+  "flute",
   "folk",
   "funk",
-  "glow",
-  "gold",
-  "hop",
-  "jam",
-  "jazz",
-  "keys",
-  "lime",
-  "loop",
-  "mint",
-  "mix",
-  "moon",
-  "neon",
+  "gong",
+  "harp",
+  "hit",
+  "mambo",
+  "metal",
+  "music",
   "note",
-  "nova",
-  "play",
+  "opera",
+  "organ",
+  "piano",
   "pop",
-  "quiz",
+  "polka",
+  "radio",
+  "rap",
   "retro",
-  "riff",
   "rock",
-  "rose",
-  "ruby",
-  "rush",
-  "sky",
-  "slot",
-  "slow",
-  "snap",
+  "salsa",
+  "samba",
+  "solo",
   "song",
   "soul",
-  "spin",
+  "sound",
+  "stage",
   "star",
-  "sun",
-  "tape",
-  "team",
-  "teal",
-  "time",
-  "trio",
+  "tango",
+  "tempo",
   "tune",
-  "turn",
-  "vibe",
-  "wave",
-  "wild",
-  "year",
-  "zing",
-  "zoom",
 ] as const;
 
 type RandomInt = (maxExclusive: number) => number;
@@ -84,7 +58,7 @@ export function generateUniqueRoomCode(
 ): RoomId {
   for (let attempt = 0; attempt < FRIENDLY_CODE_ATTEMPT_COUNT; attempt += 1) {
     const roomCode = createFriendlyRoomCode(randomInt);
-    if (roomCode.length <= ROOM_CODE_MAX_LENGTH && !isRoomCodeTaken(roomCode)) {
+    if (!isRoomCodeTaken(roomCode)) {
       return roomCode;
     }
   }
@@ -103,10 +77,10 @@ export function generateUniqueRoomCode(
 }
 
 function createFriendlyRoomCode(randomInt: RandomInt): RoomId {
-  const firstWord = ROOM_CODE_WORDS[randomInt(ROOM_CODE_WORDS.length)];
-  const secondWord = ROOM_CODE_WORDS[randomInt(ROOM_CODE_WORDS.length)];
-  const suffix = randomInt(90) + 10;
-  return `${firstWord}-${secondWord}-${suffix}`;
+  const word = ROOM_CODE_WORDS[randomInt(ROOM_CODE_WORDS.length)];
+  const firstDigit = ROOM_CODE_DIGITS[randomInt(ROOM_CODE_DIGITS.length)];
+  const secondDigit = ROOM_CODE_DIGITS[randomInt(ROOM_CODE_DIGITS.length)];
+  return `${word}${firstDigit}${secondDigit}`;
 }
 
 function encodeFallbackRoomCode(value: number): RoomId {

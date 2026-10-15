@@ -1,5 +1,5 @@
 import { expect, test } from "./support/fixtures";
-import { startGame } from "./support/roomPages";
+import { startGame, turnTokensOff } from "./support/roomPages";
 
 test("the game page says when the connection drops and refuses moves until it is back", async ({
   openRoom,
@@ -7,6 +7,7 @@ test("the game page says when the connection drops and refuses moves until it is
   // The guest stays online: a room whose every player is offline closes after the shortened
   // E2E grace period, which a slow reconnect would outlive.
   const { host, roomId } = await openRoom({ guest: "Banner Guest", host: "Banner Host" });
+  await turnTokensOff(host.page);
   await startGame(host.page, roomId);
   // The lobby, with its own connection chip, stays in the DOM for its exit animation; a
   // leaving page is already out of the accessibility tree, so wait for its element to go.

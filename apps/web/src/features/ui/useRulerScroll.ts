@@ -1,9 +1,12 @@
 import { type MouseEvent, type PointerEvent, useEffect, useRef, useState } from "react";
+import { triggerPressHaptic } from "../../services/haptics/triggerPressHaptic";
 
 /** Scroll events stop this long before the ruler counts as settled (momentum and snap included). */
 export const RANGE_SETTLE_MS = 140;
 /** A finger that moves further than this between down and up was dragging, not tapping. */
 const TAP_SLOP_PX = 8;
+/** One short pulse per value the ruler passes, like the detent of a physical dial. */
+const DETENT_HAPTIC_MS = 8;
 
 interface PointerGesture {
   hasScrolled: boolean;
@@ -14,6 +17,8 @@ interface PointerGesture {
 
 interface UseRulerScrollOptions {
   disabled: boolean;
+  max: number;
+  min: number;
   onChange: (nextValue: number) => void;
   /** Re-centres the ruler when its ticks change width. */
   tickWidth: number;
@@ -23,9 +28,18 @@ interface UseRulerScrollOptions {
 /**
  * The ruler's scrolling (`22` S4): the value under the centre line is previewed while it moves and
  * committed once, when it comes to rest; a drag, or a tap that stops a moving ruler, never picks
- * the tick under the finger; and a value arriving mid-gesture never moves the ruler.
+ * the tick under the finger; and a value arriving mid-gesture never moves the ruler. Each value the
+ * ruler passes is felt as a detent, and the step buttons move the same preview, so a held button
+ * also sends one change when it is released.
  */
-export function useRulerScroll({ disabled, onChange, tickWidth, value }: UseRulerScrollOptions) {
+export function useRulerScroll({
+  disabled,
+  max,
+  min,
+  onChange,
+  tickWidth,
+  value,
+}: UseRulerScrollOptions) {
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const settleTimerRef = useRef<number | null>(null);
@@ -37,11 +51,17 @@ export function useRulerScroll({ disabled, onChange, tickWidth, value }: UseRule
   const programmaticLeftRef = useRef<number | null>(null);
   // The value under the centre line while the ruler moves; null once the parent has the value.
   const [draftValue, setDraftValue] = useState<number | null>(null);
-  const latestRef = useRef({ disabled, onChange, value });
-  latestRef.current = { disabled, onChange, value };
+  // Where the step buttons sent the ruler; it wins over the tick nearest the centre line.
+  const steppedValueRef = useRef<number | null>(null);
+  // The last value the user felt, so a detent fires once per value and never for the server's echo.
+  const feltValueRef = useRef(value);
+  const shownValue = draftValue ?? value;
+  const latestRef = useRef({ disabled, onChange, shownValue, value });
+  latestRef.current = { disabled, onChange, shownValue, value };
 
   useEffect(() => {
     setDraftValue(null);
+    feltValueRef.current = value;
   }, [value]);
 
   useEffect(() => {
@@ -64,6 +84,10 @@ export function useRulerScroll({ disabled, onChange, tickWidth, value }: UseRule
       }
       if (settleTimerRef.current !== null) {
         window.clearTimeout(settleTimerRef.current);
+        // Done right after a step or a flick closes the sheet before the ruler settles.
+        const current = latestRef.current;
+        const pendingValue = steppedValueRef.current ?? current.shownValue;
+        if (!current.disabled && pendingValue !== current.value) current.onChange(pendingValue);
       }
     },
     [],
@@ -87,7 +111,8 @@ export function useRulerScroll({ disabled, onChange, tickWidth, value }: UseRule
 
     isScrollingRef.current = false;
     const current = latestRef.current;
-    const nearestValue = findNearestValue(scrollerRef.current);
+    const nearestValue = steppedValueRef.current ?? findNearestValue(scrollerRef.current);
+    steppedValueRef.current = null;
 
     if (current.disabled || nearestValue === null || nearestValue === current.value) {
       setDraftValue(null);
@@ -115,6 +140,7 @@ export function useRulerScroll({ disabled, onChange, tickWidth, value }: UseRule
     }
 
     programmaticLeftRef.current = null;
+    steppedValueRef.current = null;
     isScrollingRef.current = true;
 
     if (gestureRef.current) {
@@ -125,10 +151,32 @@ export function useRulerScroll({ disabled, onChange, tickWidth, value }: UseRule
       animationFrameRef.current = window.requestAnimationFrame(() => {
         animationFrameRef.current = null;
         const nearestValue = findNearestValue(scrollerRef.current);
-        if (nearestValue !== null) setDraftValue(nearestValue);
+        if (nearestValue === null) return;
+        feelDetent(nearestValue);
+        setDraftValue(nearestValue);
       });
     }
 
+    scheduleSettle();
+  }
+
+  function feelDetent(nextValue: number) {
+    if (nextValue === feltValueRef.current) return;
+    feltValueRef.current = nextValue;
+    triggerPressHaptic(DETENT_HAPTIC_MS);
+  }
+
+  /** The − and + buttons: move the preview one value and commit it once the presses stop. */
+  function stepBy(delta: number) {
+    const current = latestRef.current;
+    const base = steppedValueRef.current ?? current.shownValue;
+    const nextValue = Math.min(max, Math.max(min, base + delta));
+    if (current.disabled || nextValue === base) return;
+
+    steppedValueRef.current = nextValue;
+    feelDetent(nextValue);
+    setDraftValue(nextValue);
+    programmaticLeftRef.current = scrollScrollerToValue(scrollerRef.current, nextValue);
     scheduleSettle();
   }
 
@@ -166,10 +214,11 @@ export function useRulerScroll({ disabled, onChange, tickWidth, value }: UseRule
       return;
     }
 
+    feelDetent(rangeValue);
     onChange(rangeValue);
   }
 
-  return { handleTickClick, scrollerProps, shownValue: draftValue ?? value };
+  return { handleTickClick, scrollerProps, shownValue, stepBy };
 }
 
 function findNearestValue(scroller: HTMLDivElement | null): number | null {

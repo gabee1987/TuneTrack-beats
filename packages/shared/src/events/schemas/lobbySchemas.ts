@@ -4,6 +4,7 @@ import {
   DEFAULT_STARTING_TIMELINE_CARD_COUNT,
   DEFAULT_STARTING_TT_TOKEN_COUNT,
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
+  DEFAULT_TT_MODE_ENABLED,
   MAX_CHALLENGE_WINDOW_DURATION_SECONDS,
   MAX_STARTING_TIMELINE_CARD_COUNT,
   MAX_STARTING_TT_TOKEN_COUNT,
@@ -60,7 +61,7 @@ export const updateRoomSettingsPayloadSchema = z.object({
     .max(MAX_STARTING_TT_TOKEN_COUNT)
     .default(DEFAULT_STARTING_TT_TOKEN_COUNT),
   revealConfirmMode: revealConfirmModeSchema.default("host_only"),
-  ttModeEnabled: z.boolean().default(false),
+  ttModeEnabled: z.boolean().default(DEFAULT_TT_MODE_ENABLED),
   challengeWindowDurationSeconds: z
     .number()
     .int()

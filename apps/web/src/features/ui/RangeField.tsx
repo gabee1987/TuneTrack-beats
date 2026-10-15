@@ -7,7 +7,13 @@ import {
   useRef,
   useState,
 } from "react";
-import styles from "./SettingField.module.css";
+import { useI18n } from "../i18n";
+import { classNames } from "./classNames";
+import { StepGlyph } from "./primitives/StepGlyph";
+import { useRepeatPress } from "./primitives/useRepeatPress";
+import fieldStyles from "./SettingField.module.css";
+import styles from "./RangeField.module.css";
+import { RulerTick } from "./RulerTick";
 import { SettingField } from "./SettingField";
 import { useRulerScroll } from "./useRulerScroll";
 
@@ -25,8 +31,9 @@ interface RangeFieldProps {
 }
 
 /**
- * The ruler slider (decision 26). Dragging previews the value under the centre line and commits
- * it once, when the ruler comes to rest, so a drag sends one change instead of one per frame.
+ * The ruler slider (decision 26) between a − and a + button. Dragging previews the value under the
+ * centre line and commits it once, when the ruler comes to rest, so a drag sends one change
+ * instead of one per frame; each value passed is felt as a detent.
  */
 export function RangeField({
   density = "default",
@@ -39,6 +46,7 @@ export function RangeField({
   onChange,
   value,
 }: RangeFieldProps) {
+  const { t } = useI18n();
   const isCompact = density === "compact";
   const rangeRef = useRef<HTMLDivElement | null>(null);
   const [rangeWidth, setRangeWidth] = useState(0);
@@ -59,12 +67,25 @@ export function RangeField({
     ["--snap-range-value-count" as string]: values.length,
     ["--snap-range-tick-width" as string]: `${tickWidth}px`,
   } as CSSProperties;
-  const { handleTickClick, scrollerProps, shownValue } = useRulerScroll({
+  const { handleTickClick, scrollerProps, shownValue, stepBy } = useRulerScroll({
     disabled,
+    max,
+    min,
     onChange,
     tickWidth,
     value,
   });
+  const canDecrease = !disabled && shownValue > min;
+  const canIncrease = !disabled && shownValue < max;
+  const decreasePress = useRepeatPress(() => stepBy(-1), !canDecrease);
+  const increasePress = useRepeatPress(() => stepBy(1), !canIncrease);
+  // The number pops only once it has changed, never when the field first appears.
+  const [lastShownValue, setLastShownValue] = useState(shownValue);
+  const [hasValueChanged, setHasValueChanged] = useState(false);
+  if (shownValue !== lastShownValue) {
+    setLastShownValue(shownValue);
+    setHasValueChanged(true);
+  }
 
   useEffect(() => {
     const range = rangeRef.current;
@@ -99,55 +120,69 @@ export function RangeField({
 
   return (
     <SettingField
-      className={isCompact ? styles.compactField : undefined}
+      className={isCompact ? fieldStyles.compactField : undefined}
       description={description}
       info={info}
       label={label}
-      value={shownValue}
+      value={
+        <span className={hasValueChanged ? styles.valuePop : undefined} key={shownValue}>
+          {shownValue}
+        </span>
+      }
     >
-      <div
-        aria-label={label}
-        aria-disabled={disabled}
-        aria-valuemax={max}
-        aria-valuemin={min}
-        aria-valuenow={shownValue}
-        className={`${styles.snapRange}${isCompact ? ` ${styles.compactSnapRange}` : ""}`}
-        onClick={(event) => {
-          event.stopPropagation();
-        }}
-        onKeyDown={handleKeyDown}
-        onPointerDown={(event) => {
-          event.stopPropagation();
-        }}
-        ref={rangeRef}
-        role="slider"
-        style={rangeStyle}
-        tabIndex={disabled ? -1 : 0}
-      >
-        <div aria-hidden="true" className={styles.snapRangeCenterLine} />
-        <div className={styles.snapRangeScroller} {...scrollerProps}>
-          {values.map((rangeValue) => {
-            const distance = Math.abs(rangeValue - shownValue);
-            const isSelected = rangeValue === shownValue;
-            const isMajorTick = rangeValue === min || rangeValue === max || distance === 0;
-
-            return (
-              <button
-                aria-label={`${label}: ${rangeValue}`}
-                className={`${styles.snapRangeTick}${
-                  isSelected ? ` ${styles.snapRangeTickSelected}` : ""
-                }${isMajorTick ? ` ${styles.snapRangeTickMajor}` : ""}`}
-                data-range-value={rangeValue}
+      <div className={styles.rulerRow}>
+        <button
+          {...decreasePress}
+          aria-label={t("ui.numberStepper.decrease", { label })}
+          className={styles.stepButton}
+          disabled={!canDecrease}
+          type="button"
+        >
+          <StepGlyph />
+        </button>
+        <div
+          aria-label={label}
+          aria-disabled={disabled}
+          aria-valuemax={max}
+          aria-valuemin={min}
+          aria-valuenow={shownValue}
+          className={classNames(styles.snapRange, isCompact ? styles.compactSnapRange : undefined)}
+          onClick={(event) => {
+            event.stopPropagation();
+          }}
+          onKeyDown={handleKeyDown}
+          onPointerDown={(event) => {
+            event.stopPropagation();
+          }}
+          ref={rangeRef}
+          role="slider"
+          style={rangeStyle}
+          tabIndex={disabled ? -1 : 0}
+        >
+          <div aria-hidden="true" className={styles.snapRangeCenterLine} />
+          <div className={styles.snapRangeScroller} {...scrollerProps}>
+            {values.map((rangeValue) => (
+              <RulerTick
                 disabled={disabled}
+                isEdge={rangeValue === min || rangeValue === max}
+                isSelected={rangeValue === shownValue}
                 key={rangeValue}
+                label={label}
                 onClick={(event) => handleTickClick(event, rangeValue)}
-                type="button"
-              >
-                <span className={styles.snapRangeTickLine} />
-              </button>
-            );
-          })}
+                value={rangeValue}
+              />
+            ))}
+          </div>
         </div>
+        <button
+          {...increasePress}
+          aria-label={t("ui.numberStepper.increase", { label })}
+          className={styles.stepButton}
+          disabled={!canIncrease}
+          type="button"
+        >
+          <StepGlyph isIncrease />
+        </button>
       </div>
     </SettingField>
   );

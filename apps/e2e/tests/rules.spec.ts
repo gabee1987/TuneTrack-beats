@@ -10,23 +10,20 @@ test("the host edits the rules in the sheet and the Rules card sums them up", as
 }) => {
   const { host } = await openRoom({ guest: "Setting Guest", host: "Setting Host" });
   const rulesCard = host.page.getByRole("button", { name: /^Rules\b/ });
-  await expect(rulesCard).toContainText("10 songs to win · 1 to start · tokens off");
+  await expect(rulesCard).toContainText("10 songs to win · 1 to start · tokens on, Beat! 10 s");
 
   await editRules(host.page, async () => {
     const sheet = host.page.getByRole("dialog", { name: "Rules" });
     await expect(sheet.getByRole("button", { name: "Reset to defaults" })).toBeDisabled();
     await setRuleNumber(sheet, "Songs to win", 5);
     const tokens = sheet.getByRole("switch", { name: "Tokens" });
-    await tokens.click();
     await expect(tokens).toHaveAttribute("aria-checked", "true");
-    await expect(sheet.getByRole("radio", { name: "10 s" })).toHaveAttribute(
-      "aria-checked",
-      "true",
-    );
+    await tokens.click();
+    await expect(tokens).toHaveAttribute("aria-checked", "false");
     await expect(sheet.getByRole("button", { name: "Reset to defaults" })).toBeEnabled();
   });
 
-  await expect(rulesCard).toContainText("5 songs to win · 1 to start · tokens on, Beat! 10 s");
+  await expect(rulesCard).toContainText("5 songs to win · 1 to start · tokens off");
 });
 
 test("the host removes a player only after confirming it", async ({ openRoom }) => {

@@ -160,6 +160,16 @@ describe("host moderation in the registry", () => {
       "third-socket",
       "third-session",
     );
+    // Token mode would open a Beat! window after each placement; these turns reveal at once.
+    roomCore.lobby.updateRoomSettings("host-socket", roomId, {
+      roomId,
+      targetTimelineCardCount: 10,
+      defaultStartingTimelineCardCount: 1,
+      startingTtTokenCount: 0,
+      revealConfirmMode: "host_only",
+      ttModeEnabled: false,
+      challengeWindowDurationSeconds: null,
+    });
     roomCore.gameplay.startGame("host-socket", { roomId }, turnOrderDeck());
     roomCore.gameplay.placeCard("host-socket", { roomId, selectedSlotIndex: 1 });
     const guestTurn = roomCore.gameplay.confirmReveal("host-socket", { roomId });

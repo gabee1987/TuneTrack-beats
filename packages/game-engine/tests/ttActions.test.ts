@@ -1,3 +1,4 @@
+import { MAX_TT_TOKEN_COUNT } from "@tunetrack/shared/constants";
 import { describe, expect, it } from "vitest";
 import { GameFlowService } from "../src/index.js";
 import { deck, players, sameYearGameInput, ttTokenCountOf } from "./fixtures/twoPlayerGame.js";
@@ -19,14 +20,14 @@ describe("TT actions", () => {
     );
   });
 
-  it("never lets a player go above 5 TT", () => {
+  it("never lets a player go above the token cap", () => {
     const gameState = gameFlowService.startGame({
       players: [
         {
           id: "player-1",
           displayName: "Player 1",
           startingTimelineCardCount: 1,
-          startingTtTokenCount: 5,
+          startingTtTokenCount: MAX_TT_TOKEN_COUNT,
         },
         {
           id: "player-2",
@@ -42,7 +43,7 @@ describe("TT actions", () => {
     const updatedGameState = gameFlowService.awardTtTokens(gameState, "player-1", 1);
 
     expect(updatedGameState.players.find((player) => player.id === "player-1")?.ttTokenCount).toBe(
-      5,
+      MAX_TT_TOKEN_COUNT,
     );
   });
 

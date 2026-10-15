@@ -1,8 +1,15 @@
 import { expect, test } from "./support/fixtures";
-import { editRules, expectHeaderStatus, setRuleNumber, startGame } from "./support/roomPages";
+import {
+  editRules,
+  expectHeaderStatus,
+  setRuleNumber,
+  startGame,
+  turnTokensOff,
+} from "./support/roomPages";
 
 test("a correct placement is revealed before the turn advances", async ({ openRoom }) => {
   const { guest, host, roomId } = await openRoom({ guest: "Core Guest", host: "Core Host" });
+  await turnTokensOff(host.page);
   await startGame(host.page, roomId, guest.page);
 
   await host.page.getByRole("button", { name: "Confirm", exact: true }).click();
@@ -20,6 +27,7 @@ test("an incorrect placement is discarded before the turn advances", async ({ op
     guest: "Discard Guest",
     host: "Discard Host",
   });
+  await turnTokensOff(host.page);
   await startGame(host.page, roomId, guest.page);
 
   await host.page.getByRole("button", { name: "Confirm", exact: true }).click();
@@ -50,9 +58,10 @@ test("both players see the winner when the target card count is reached", async 
   await editRules(host.page, async () => {
     await setRuleNumber(host.page, "Songs to win", 3);
     await setRuleNumber(host.page, "Songs to start with", 2);
-    const tokens = host.page.getByRole("switch", { name: "Tokens" });
-    await tokens.click();
-    await expect(tokens).toHaveAttribute("aria-checked", "true");
+    await expect(host.page.getByRole("switch", { name: "Tokens" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
     await setRuleNumber(host.page, "Starting tokens", 3);
   });
 

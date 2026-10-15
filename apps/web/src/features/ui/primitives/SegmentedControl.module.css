@@ -3,6 +3,7 @@
   display: flex;
   gap: var(--space-1);
   padding: var(--space-1);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-pill);
   background: var(--color-surface-interactive);
   overflow-x: auto;
@@ -14,15 +15,17 @@
   display: none;
 }
 
-/* One highlight slides under the options; the selected option only changes its text colour. */
+/* One accent pill slides under the options, so the choice reads at a glance (owner, 2026-10-15). */
 .thumb {
   position: absolute;
   top: var(--space-1);
   bottom: var(--space-1);
   left: 0;
   border-radius: var(--radius-pill);
-  background: var(--color-surface-elevated-solid);
-  box-shadow: var(--shadow-raised);
+  background: var(--color-accent-brand);
+  box-shadow:
+    var(--shadow-raised),
+    0 0 0 3px color-mix(in srgb, var(--color-accent-brand) 22%, transparent);
   pointer-events: none;
   transition: transform var(--motion-standard-duration) var(--motion-ease-emphasized);
 }
@@ -59,7 +62,8 @@
 }
 
 .selected {
-  color: var(--color-text-primary);
+  color: var(--color-on-accent-brand);
+  font-weight: 800;
 }
 
 @media (prefers-reduced-motion: reduce) {

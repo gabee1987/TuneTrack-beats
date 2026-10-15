@@ -150,8 +150,8 @@ export async function openRulesSheet(host: Page): Promise<Locator> {
 }
 
 /**
- * Sets a number rule the way each layout offers it: a tap on the ruler's tick on phones, typing
- * into the stepper on desktop. Both wait until the room reports the new value.
+ * Sets a number rule the way each layout offers it: the ruler's − and + buttons on phones (a tick
+ * off screen is out of a thumb's reach too), typing into the stepper on desktop.
  */
 export async function setRuleNumber(scope: Page | Locator, label: string, value: number) {
   // Closed player rows keep their own "Starting tokens" control mounted, out of sight.
@@ -161,13 +161,30 @@ export async function setRuleNumber(scope: Page | Locator, label: string, value:
     .filter({ visible: true });
   await expect(ruler.or(stepper)).toBeVisible();
   if ((await ruler.count()) > 0) {
-    await ruler.getByRole("button", { name: `${label}: ${value}`, exact: true }).click();
+    const current = Number(await ruler.getAttribute("aria-valuenow"));
+    const direction = value < current ? "Decrease" : "Increase";
+    const step = scope
+      .getByRole("button", { name: `${direction} ${label}`, exact: true })
+      .filter({ visible: true });
+    for (let count = Math.abs(value - current); count > 0; count -= 1) await step.click();
     await expect(ruler).toHaveAttribute("aria-valuenow", String(value));
     return;
   }
   await stepper.fill(String(value));
   await stepper.press("Enter");
   await expect(stepper).toHaveValue(String(value));
+}
+
+/**
+ * Tokens are on in a new room, so every placement first opens a Beat! window; a scenario about
+ * placement, reveal or recovery turns them off to reveal at once.
+ */
+export async function turnTokensOff(host: Page): Promise<void> {
+  await editRules(host, async () => {
+    const tokens = host.getByRole("switch", { name: "Tokens" });
+    await tokens.click();
+    await expect(tokens).toHaveAttribute("aria-checked", "false");
+  });
 }
 
 export async function startGame(host: Page, roomId: string, ...guests: Page[]): Promise<void> {

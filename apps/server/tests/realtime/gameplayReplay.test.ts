@@ -31,6 +31,17 @@ function createDealtServices(): RoomServices {
 async function startTwoPlayerGame(services: RoomServices, roomId: string) {
   const baseUrl = await startSocketTestServer(services);
   const seats = await openTwoPlayerLobby(baseUrl, roomId);
+  // Token mode would open a Beat! window after each placement; these turns reveal at once.
+  const settingsPromise = waitForStateUpdate(
+    seats.guest.socket,
+    (state) => !state.settings.ttModeEnabled,
+  );
+  seats.host.socket.emit(ClientToServerEvent.UpdateRoomSettings, {
+    roomId,
+    startingTtTokenCount: 0,
+    ttModeEnabled: false,
+  });
+  await settingsPromise;
   await startGame(seats.host.socket, roomId, seats.guest.socket);
   return { baseUrl, ...seats };
 }
