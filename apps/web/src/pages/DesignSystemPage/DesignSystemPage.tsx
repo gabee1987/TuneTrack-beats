@@ -4,6 +4,7 @@ import { SegmentedControl } from "../../features/ui/primitives";
 import { ControlsGallery } from "./ControlsGallery";
 import { CorePrimitivesGallery } from "./CorePrimitivesGallery";
 import { FeedbackGallery } from "./FeedbackGallery";
+import { GameHandoverGallery } from "./GameHandoverGallery";
 import { LobbyGallery } from "./LobbyGallery";
 import { ProfileGallery } from "./ProfileGallery";
 import { RulesGallery } from "./RulesGallery";
@@ -54,6 +55,7 @@ export function DesignSystemPage() {
       <h2 className={styles.groupTitle}>Lobby</h2>
       <LobbyGallery />
       <RulesGallery />
+      <GameHandoverGallery />
 
       <h2 className={styles.groupTitle}>Feedback & game</h2>
       <FeedbackGallery />

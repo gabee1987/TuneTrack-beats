@@ -29,6 +29,7 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
     isSkipTurnPending,
     leadingPlayers,
     menuTabs,
+    playbackNotice,
     roomId,
     showMiniStandings,
     showPhaseChip,
@@ -66,6 +67,7 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
     >
       <div className={styles.headerMain}>
         <GamePageStatusChips
+          playbackNotice={playbackNotice}
           roomId={roomId}
           showPhaseChip={showPhaseChip}
           showRoomCodeChip={showRoomCodeChip}
@@ -161,6 +163,7 @@ function areHeaderModelsEqual(
     previousModel.isSkipTurnPending === nextModel.isSkipTurnPending &&
     previousModel.leadingPlayers === nextModel.leadingPlayers &&
     previousModel.menuTabs === nextModel.menuTabs &&
+    previousModel.playbackNotice === nextModel.playbackNotice &&
     previousModel.roomId === nextModel.roomId &&
     previousModel.showMiniStandings === nextModel.showMiniStandings &&
     previousModel.showPhaseChip === nextModel.showPhaseChip &&

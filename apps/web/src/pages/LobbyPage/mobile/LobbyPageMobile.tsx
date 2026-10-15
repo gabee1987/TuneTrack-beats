@@ -11,6 +11,7 @@ import { LobbyExitDialog } from "../components/LobbyExitDialog";
 import { LobbyHostMusic } from "../components/LobbyHostMusic";
 import { LobbyInviteCard } from "../components/LobbyInviteCard";
 import { LobbyMusicSummary } from "../components/LobbyMusicCard";
+import { LobbyPlayersSheet } from "../components/LobbyPlayersSheet";
 import { LobbyPlayersStrip } from "../components/LobbyPlayersStrip";
 import { LobbyRulesCard } from "../components/LobbyRulesCard";
 import { LobbyStartDock, LobbyStartSummary } from "../components/LobbyStartDock";
@@ -31,6 +32,7 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
   const [isNameSheetOpen, setIsNameSheetOpen] = useState(false);
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [isExitOpen, setIsExitOpen] = useState(false);
+  const [isPlayersSheetOpen, setIsPlayersSheetOpen] = useState(false);
   const [rulesSheet, setRulesSheet] = useState<RulesSheetState>("closed");
 
   function handlePlayerNameSave(displayName: string) {
@@ -80,7 +82,9 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
                 <LobbyPlayersStrip
                   currentPlayerId={room.currentPlayerId}
                   onEditName={() => setIsNameSheetOpen(true)}
-                  onShowAll={isHost ? () => setRulesSheet("players") : undefined}
+                  onShowAll={
+                    isHost ? () => setRulesSheet("players") : () => setIsPlayersSheetOpen(true)
+                  }
                   strip={setup.playersStrip}
                 />
               }
@@ -150,7 +154,13 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
             onClose={() => setRulesSheet("closed")}
           />
         </>
-      ) : null}
+      ) : (
+        <LobbyPlayersSheet
+          isOpen={isPlayersSheetOpen}
+          onClose={() => setIsPlayersSheetOpen(false)}
+          players={model.players}
+        />
+      )}
     </AppPageShell>
   );
 }

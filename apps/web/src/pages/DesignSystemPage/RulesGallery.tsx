@@ -1,8 +1,9 @@
 import type { PublicPlayerState, PublicRoomSettings } from "@tunetrack/shared/client";
 import { useState } from "react";
-import { Card } from "../../features/ui/primitives";
+import { Button, Card } from "../../features/ui/primitives";
 import type { LobbyAssemblyModel } from "../LobbyPage/hooks/buildLobbyAssemblyModel";
 import { DEFAULT_RULES } from "../LobbyPage/hooks/lobbySetupModel";
+import { LobbyPlayersSheet } from "../LobbyPage/components/LobbyPlayersSheet";
 import { RulesGameSection } from "../LobbyPage/components/rules/RulesGameSection";
 import type { RulesNumberInput } from "../LobbyPage/components/rules/RulesNumberSetting";
 import { RulesPlayersSection } from "../LobbyPage/components/rules/RulesPlayersSection";
@@ -53,6 +54,7 @@ export function RulesGallery() {
         <Card>
           <RulesPlayersDemo isHost={false} />
         </Card>
+        <GuestPlayersSheetDemo />
       </section>
     </>
   );
@@ -115,4 +117,34 @@ function RulesPlayersDemo({ isHost }: { isHost: boolean }) {
   };
 
   return <RulesPlayersSection numberInput="ruler" players={model} />;
+}
+
+/** A guest's "+N more" opens the same list, read-only, in a sheet. */
+function GuestPlayersSheetDemo() {
+  const [isOpen, setIsOpen] = useState(false);
+  const noop = () => undefined;
+  const model: LobbyAssemblyModel["players"] = {
+    currentPlayerId: "rules-player-2",
+    isHost: false,
+    isKickPlayerPending: false,
+    isPlayerSettingsPending: false,
+    kickPlayerActionState: null,
+    onPlayerKick: noop,
+    onPlayerStartingCardCountChange: noop,
+    onPlayerStartingTtTokenCountChange: noop,
+    playerSettingsActionState: null,
+    players: SAMPLE_PLAYERS,
+    roomSettings: { ...SAMPLE_SETTINGS, ttModeEnabled: true },
+  };
+
+  return (
+    <>
+      <div className={styles.row}>
+        <Button onClick={() => setIsOpen(true)} variant="secondary">
+          Guest: all players
+        </Button>
+      </div>
+      <LobbyPlayersSheet isOpen={isOpen} onClose={() => setIsOpen(false)} players={model} />
+    </>
+  );
 }

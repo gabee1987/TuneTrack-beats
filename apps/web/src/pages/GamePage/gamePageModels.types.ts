@@ -6,6 +6,7 @@ import type {
   ThemeId,
 } from "../../features/preferences/uiPreferences";
 import type { ClosedRoomReason } from "../../features/ui/RoomResetModal";
+import type { HostPlaybackNotice } from "./handoverNotices";
 import type {
   GamePageCard,
   GamePageChallengePhase,
@@ -58,6 +59,7 @@ export interface GamePageHeaderModel extends Pick<
   | "visibleTimelineTitle"
 > {
   hostId: string;
+  playbackNotice: HostPlaybackNotice;
   roomId: string;
   status: PublicRoomState["status"];
   ttModeEnabled: boolean;

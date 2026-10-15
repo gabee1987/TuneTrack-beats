@@ -1,6 +1,8 @@
 import type { PublicRoomState } from "@tunetrack/shared/client";
 import { useEffect, useRef, useState } from "react";
+import { getGuestHandoverMessage } from "../handoverNotices";
 import {
+  HANDOVER_TOAST_DURATION_MS,
   TOAST_DURATIONS_MS,
   type GamePageToast,
   type GamePageToastType,
@@ -32,6 +34,7 @@ export function useGamePageToasts({
   const prevPlayersRef = useRef<PublicRoomState["players"]>([]);
   const activeByTypeRef = useRef<Map<GamePageToastType, ActiveToastEntry>>(new Map());
   const timersRef = useRef<Set<number>>(new Set());
+  const hasCheckedHandoverRef = useRef(false);
 
   function removeToast(id: string, type: GamePageToastType) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -52,23 +55,27 @@ export function useGamePageToasts({
     setToasts((prev) => prev.filter((toast) => toast.id !== activeToast.id));
   }
 
-  function scheduleToastRemoval(id: string, type: GamePageToastType) {
+  function scheduleToastRemoval(id: string, type: GamePageToastType, durationMs: number) {
     const timer = window.setTimeout(() => {
       timersRef.current.delete(timer);
       removeToast(id, type);
-    }, TOAST_DURATIONS_MS[type]);
+    }, durationMs);
 
     timersRef.current.add(timer);
     return timer;
   }
 
-  function pushToast(type: GamePageToastType, message: string) {
+  function pushToast(
+    type: GamePageToastType,
+    message: string,
+    durationMs = TOAST_DURATIONS_MS[type],
+  ) {
     const existing = activeByTypeRef.current.get(type);
 
     if (existing && existing.message === message) {
       window.clearTimeout(existing.timer);
       timersRef.current.delete(existing.timer);
-      const timer = scheduleToastRemoval(existing.id, type);
+      const timer = scheduleToastRemoval(existing.id, type, durationMs);
       activeByTypeRef.current.set(type, { ...existing, timer });
       return;
     }
@@ -81,7 +88,7 @@ export function useGamePageToasts({
     idRef.current += 1;
     const id = String(idRef.current);
     setToasts((prev) => [...prev.filter((t) => t.type !== type), { id, type, message }]);
-    const timer = scheduleToastRemoval(id, type);
+    const timer = scheduleToastRemoval(id, type, durationMs);
     activeByTypeRef.current.set(type, { id, message, timer });
   }
 
@@ -94,6 +101,13 @@ export function useGamePageToasts({
     if (!roomState) {
       prevPlayersRef.current = [];
       return;
+    }
+
+    // Only the first room state this page sees can be the handover; a later one never is.
+    if (currentPlayerId && !hasCheckedHandoverRef.current) {
+      hasCheckedHandoverRef.current = true;
+      const handoverMessage = getGuestHandoverMessage(roomState, currentPlayerId, t);
+      if (handoverMessage) pushToast("info", handoverMessage, HANDOVER_TOAST_DURATION_MS);
     }
 
     const prevPlayers = prevPlayersRef.current;

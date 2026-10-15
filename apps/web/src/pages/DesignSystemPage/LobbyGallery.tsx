@@ -140,7 +140,7 @@ export function LobbyGallery() {
   );
 }
 
-function strip(players: PublicPlayerState[], onShowAll?: () => void) {
+function strip(players: PublicPlayerState[], onShowAll: () => void = noop) {
   return (
     <LobbyPlayersStrip
       currentPlayerId="player-1"

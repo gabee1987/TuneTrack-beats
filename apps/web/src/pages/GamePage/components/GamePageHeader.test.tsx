@@ -17,6 +17,7 @@ function buildHeaderModel(overrides: Partial<GamePageHeaderModel> = {}): GamePag
     isSkipTurnPending: false,
     leadingPlayers: [],
     menuTabs: [],
+    playbackNotice: null,
     roomId: TEST_ROOM_ID,
     showMiniStandings: false,
     showPhaseChip: false,

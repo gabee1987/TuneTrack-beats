@@ -87,6 +87,8 @@ const translations: Record<string, string> = {
     "You called Beat! Pick the slot where the card should have gone in {{playerName}} timeline.",
   "game.status.youClaimedBeat": "You claimed Beat! Choose the slot you believe is correct.",
   "game.status.playerOwnsBeat": "{{playerName}} owns Beat!",
+  "game.status.playerDeciding": "{{playerName}} is deciding where the current song belongs.",
+  "game.status.youreNext": "You're next.",
 };
 const t = (key: string, params?: Record<string, string | number>) =>
   Object.entries(params ?? {}).reduce(
@@ -158,6 +160,24 @@ describe("gamePageStatusSelectors", () => {
       statusBadgeText: "Bob owns Beat!",
       statusDetailText: "You claimed Beat! Choose the slot you believe is correct.",
     });
+  });
+
+  it("tells the player after the active one that they are next", () => {
+    const roomState = createRoomState();
+
+    expect(
+      getGamePageStatusCopyState({
+        activePlayerId: "player-1",
+        challengeOwnerId: null,
+        currentPlayerId: "player-2",
+        canSelectChallengeSlot: false,
+        getPlayerName,
+        getPossessivePlayerName,
+        isCurrentPlayerTurn: false,
+        roomState,
+        t,
+      }).statusDetailText,
+    ).toBe("Alice is deciding where the current song belongs. You're next.");
   });
 
   it("removes current-turn instructional clutter", () => {

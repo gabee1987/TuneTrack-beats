@@ -10,8 +10,8 @@ interface LobbyPlayersStripProps {
   currentPlayerId: string | null;
   /** Own chip: opens the Name sheet. */
   onEditName: () => void;
-  /** "+N more": opens the full player list; without it the strip shows only the count. */
-  onShowAll?: (() => void) | undefined;
+  /** "+N more": the host's Players section, or a guest's read-only list. */
+  onShowAll: () => void;
   strip: LobbyPlayersStripModel;
 }
 
@@ -42,7 +42,7 @@ export function LobbyPlayersStrip({
             key: player.id,
           }))}
         />
-        {strip.hiddenCount > 0 && onShowAll ? (
+        {strip.hiddenCount > 0 ? (
           <button
             aria-label={t("lobby.players.showAll", { count: strip.total })}
             className={classNames(styles.chip, styles.more)}

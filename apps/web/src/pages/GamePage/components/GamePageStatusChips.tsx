@@ -1,9 +1,12 @@
 import type { PublicRoomState } from "@tunetrack/shared/client";
 import { useI18n } from "../../../features/i18n";
 import { Chip } from "../../../features/ui/primitives";
+import type { HostPlaybackNotice } from "../handoverNotices";
 import styles from "../gamePageChrome.module.css";
+import { HostPlaybackChip } from "./HostPlaybackChip";
 
 interface GamePageStatusChipsProps {
+  playbackNotice: HostPlaybackNotice;
   roomId: string;
   showPhaseChip: boolean;
   showRoomCodeChip: boolean;
@@ -13,6 +16,7 @@ interface GamePageStatusChipsProps {
 }
 
 export function GamePageStatusChips({
+  playbackNotice,
   roomId,
   showPhaseChip,
   showRoomCodeChip,
@@ -31,6 +35,7 @@ export function GamePageStatusChips({
           {t("game.header.turnChip", { turnNumber: turnNumber ?? "-" })}
         </Chip>
       ) : null}
+      <HostPlaybackChip notice={playbackNotice} />
     </div>
   );
 }

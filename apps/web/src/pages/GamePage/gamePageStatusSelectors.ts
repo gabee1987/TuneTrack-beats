@@ -4,6 +4,7 @@ import type {
   GamePageCard,
   GamePagePlayerNameResolver,
 } from "./GamePage.types";
+import { isViewerNextToPlay } from "./handoverNotices";
 
 interface GamePageChallengeStatusSelectorOptions {
   canSelectChallengeSlot: boolean;
@@ -175,9 +176,7 @@ export function getGamePageStatusCopyState({
           ? t("game.status.playerOfflineWaiting", {
               playerName: getPlayerName(activePlayerId),
             })
-          : t("game.status.playerDeciding", {
-              playerName: getPlayerName(activePlayerId),
-            })
+          : getPlayerDecidingText(roomState, currentPlayerId, getPlayerName(activePlayerId), t)
       : roomState?.status === "challenge"
         ? roomState.challengeState?.phase === "claimed"
           ? roomState.challengeState.challengerPlayerId === currentPlayerId
@@ -205,4 +204,16 @@ export function getGamePageStatusCopyState({
     statusBadgeText,
     statusDetailText,
   };
+}
+
+function getPlayerDecidingText(
+  roomState: PublicRoomState,
+  currentPlayerId: string | null,
+  playerName: string,
+  t: GamePageStatusCopySelectorOptions["t"],
+): string {
+  const decidingText = t("game.status.playerDeciding", { playerName });
+  return isViewerNextToPlay(roomState, currentPlayerId)
+    ? `${decidingText} ${t("game.status.youreNext")}`
+    : decidingText;
 }

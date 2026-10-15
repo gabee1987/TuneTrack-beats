@@ -1,5 +1,6 @@
 import type { PublicRoomState } from "@tunetrack/shared/client";
 import type { GamePageAssemblyModel, LoadedGamePageController } from "../GamePage.types";
+import { getHostPlaybackNotice } from "../handoverNotices";
 
 // The player a host may skip: the claimed challenger during a challenge, else the active player.
 function getSkipCandidateName(roomState: PublicRoomState): string | null {
@@ -90,6 +91,7 @@ export function buildGamePageAssemblyModel(
       visibleTimelineTtCount: controller.visibleTimelineTtCount,
       visibleTimelineTitle: controller.visibleTimelineTitle,
       hostId: roomState.hostId,
+      playbackNotice: getHostPlaybackNotice(roomState, controller.currentPlayerId),
       roomId: roomState.roomId,
       status: roomState.status,
       ttModeEnabled: roomState.settings.ttModeEnabled,

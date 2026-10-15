@@ -282,6 +282,24 @@ describe("LobbyPageMobile guest", () => {
     await waitFor(() => expect(resetSocketClient).toHaveBeenCalledTimes(1));
   });
 
+  it("opens everyone in the room from +N more, read-only", async () => {
+    const players = [
+      buildPlayer(),
+      buildPlayer({ id: TEST_GUEST_ID, displayName: "Player Two", isHost: false }),
+      buildPlayer({ id: "player-three", displayName: "Player Three", isHost: false }),
+      buildPlayer({ id: "player-four", displayName: "Player Four", isHost: false }),
+      buildPlayer({ id: "player-five", displayName: "Player Five", isHost: false }),
+    ];
+    renderLobby({ currentPlayerId: TEST_GUEST_ID, roomState: buildLobbyRoomState({ players }) });
+
+    await userEvent.click(screen.getByRole("button", { name: "Show all 5 players" }));
+    const sheet = await screen.findByRole("dialog", { name: "Players" });
+
+    expect(within(sheet).getByText("Player Five")).toBeInTheDocument();
+    expect(within(sheet).queryByRole("button", { name: /Player Five/ })).not.toBeInTheDocument();
+    expect(within(sheet).queryByRole("button", { name: "Remove" })).not.toBeInTheDocument();
+  });
+
   it("says where the music will play once the host chose a deck", () => {
     renderLobby({ currentPlayerId: TEST_GUEST_ID, settings: practiceDeck });
 
