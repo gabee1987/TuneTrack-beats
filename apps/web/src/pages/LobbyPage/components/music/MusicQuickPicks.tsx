@@ -5,13 +5,14 @@ import {
 import { useId, useState } from "react";
 import { useI18n } from "../../../../features/i18n";
 import { MeasuredDisclosure } from "../../../../features/motion";
-import { Button, CoverArt, NumberStepper } from "../../../../features/ui/primitives";
+import { Button, NumberStepper } from "../../../../features/ui/primitives";
 import {
   QUICK_PICK_MAX_SONGS,
   QUICK_PICK_MIN_SONGS,
   clampQuickPickSongs,
 } from "../../hooks/music/musicSetupSelectors";
 import type { LobbySpotifyCandidatesState } from "../../hooks/spotify/lobbySpotify.types";
+import { QuickPickArt } from "./QuickPickArt";
 import styles from "./music.module.css";
 import findStyles from "./musicFind.module.css";
 
@@ -60,7 +61,7 @@ export function MusicQuickPicks({
                 onClick={() => pick(preset.id)}
                 type="button"
               >
-                <CoverArt label={title} size="md" />
+                <QuickPickArt presetId={preset.id} />
                 <span className={findStyles.quickPickCopy}>
                   <span className={findStyles.quickPickTitle}>{title}</span>
                   <span className={findStyles.quickPickDescription}>

@@ -1,9 +1,14 @@
-import type { PublicRoomSettings, SpotifySmartSearchResult } from "@tunetrack/shared/client";
+import {
+  SPOTIFY_QUICK_PICK_PRESET_IDS,
+  type PublicRoomSettings,
+  type SpotifySmartSearchResult,
+} from "@tunetrack/shared/client";
 import { useState } from "react";
 import { Button } from "../../features/ui/primitives";
 import { MusicDecksTab } from "../LobbyPage/components/music/MusicDecksTab";
 import { MusicPlaybackBlock } from "../LobbyPage/components/music/MusicPlaybackBlock";
 import { MusicSheet } from "../LobbyPage/components/music/MusicSheet";
+import { QuickPickArt } from "../LobbyPage/components/music/QuickPickArt";
 import { DEFAULT_RULES, selectLobbySetup } from "../LobbyPage/hooks/lobbySetupModel";
 import type {
   MusicPlaybackState,
@@ -91,6 +96,11 @@ export function MusicGallery() {
         savedDecks={[]}
         statusMessage={null}
       />
+      <div className={styles.row}>
+        {SPOTIFY_QUICK_PICK_PRESET_IDS.map((presetId) => (
+          <QuickPickArt key={presetId} presetId={presetId} />
+        ))}
+      </div>
       <Button onClick={() => setIsSheetOpen(true)} variant="secondary">
         Open the Music sheet
       </Button>

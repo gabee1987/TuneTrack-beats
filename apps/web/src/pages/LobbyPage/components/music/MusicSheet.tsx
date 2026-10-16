@@ -125,7 +125,7 @@ export function MusicSheet({
       onClose={onClose}
       title={t("music.title")}
     >
-      <div className={styles.sheetBody}>
+      <div className={showsOpenedView ? styles.sheetBodyFilled : styles.sheetBody}>
         {isOffline ? (
           <div className={styles.offline}>
             <ConnectionStatus />

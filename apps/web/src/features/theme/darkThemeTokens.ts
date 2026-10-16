@@ -80,6 +80,17 @@ const darkThemeCssVariables = {
   "color-cover-fallback-3": "#1f7a6d",
   "color-cover-fallback-4": "#a8502c",
   "color-on-cover-fallback": "#ffffff",
+  // Quick-pick artwork: printed covers, so both themes keep the same colours.
+  "color-art-pink": "#ff4f9a",
+  "color-art-violet": "#6a3df0",
+  "color-art-blue": "#2f5bea",
+  "color-art-cyan": "#19b8d6",
+  "color-art-green": "#1f9d58",
+  "color-art-gold": "#ffc23d",
+  "color-art-orange": "#ff7a2f",
+  "color-art-red": "#d7263d",
+  "color-art-ink": "#15132b",
+  "color-on-art": "#ffffff",
 
   // Game UI
   "color-mask-solid": "#000000",
