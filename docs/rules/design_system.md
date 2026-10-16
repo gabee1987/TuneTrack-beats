@@ -187,10 +187,20 @@ The shared library is `apps/web/src/features/ui/primitives/`. Everything else in
 ### Current primitives
 
 `Avatar`, `Button`, `Card`, `Chip` / `ChipButton`, `CoverArt`, `Dialog`, `EmptyState`,
-`IconButton`, `ListRow` / `ListRowButton`, `ListRowAction`, `ListRowSkeleton` / `ListSkeleton`,
-`NumberStepper`, `SegmentedControl`, `SelectionActionBar`, `SettingRow`, `Sheet`, `Skeleton`,
-`TextField`. `CoverArt`, `ListRowAction`, `ListRowSkeleton`, `NumberStepper`,
+`FloatingBar`, `IconButton`, `ListRow` / `ListRowButton`, `ListRowAction`, `ListRowSkeleton` /
+`ListSkeleton`, `NumberStepper`, `PageHeader`, `SegmentedControl`, `SelectionActionBar`,
+`SettingRow`, `Sheet`, `Skeleton`, `TextField`. `CoverArt`, `ListRowAction`, `ListRowSkeleton`, `NumberStepper`,
 `SelectionActionBar`, `SettingRow`, `Sheet` and `TextField` were added 2026-10-14 (`22` S0). `SettingRow` gained `isStacked` (the control under the copy, full width) on 2026-10-15 (`22` S4). `SegmentedControl` marks the selected option with an accent-filled pill, and the ruler slider (`features/ui/RangeField`) keeps its line ticks and has a quiet − and + at its two ends, sharing `StepGlyph` with `NumberStepper`, with a haptic detent per value (2026-10-15).
+
+On 2026-10-16 (owner review): `PageHeader` is the one top bar of every page, sheet and view —
+Back on the left, a green eyebrow (where the player is), the title (what they do there) and
+optional `meta` beside it; `Sheet` uses it, so a sheet's way out is Back (no close button, no
+Done) and an open view may replace it through `header`. `FloatingBar` (`top` under a header,
+`bottom` over a list's end) has no frame: its controls float with `--shadow-raised` on a fade to
+`--color-bg-app`. `SelectionActionBar` takes `actions` — one full-width button naming the count
+and the action, or two side by side — on a bottom `FloatingBar`. `ListRow` `isLeadingSeparate`
+keeps a selecting cover outside the open button. A `readOnly` `TextField` drops its frame for a
+soft fill. `tertiary` buttons keep the main button's padding and height.
 
 ### Target primitives — being promoted **(target)**
 

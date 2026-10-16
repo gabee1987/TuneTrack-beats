@@ -84,10 +84,9 @@
   gap: var(--space-1);
 }
 
+/* Two frameless buttons the size of Edit songs, one under the other. */
 .roomDeckSecondary {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
   gap: var(--space-1);
 }
 

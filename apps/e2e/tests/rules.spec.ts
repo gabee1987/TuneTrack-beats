@@ -9,7 +9,7 @@ test("the host edits the rules in the sheet and the Rules card sums them up", as
   await expect(rulesCard).toContainText("10 songs to win · 1 to start · tokens on, Beat! 10 s");
 
   await editRules(host.page, async () => {
-    const sheet = host.page.getByRole("dialog", { name: "Rules" });
+    const sheet = host.page.getByRole("dialog", { name: "Set how you play" });
     await expect(sheet.getByRole("button", { name: "Reset to defaults" })).toBeDisabled();
     await setRuleNumber(sheet, "Songs to win", 5);
     const tokens = sheet.getByRole("switch", { name: "Tokens" });

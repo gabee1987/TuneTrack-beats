@@ -1,23 +1,18 @@
-import { m } from "framer-motion";
 import { useEffect, useState } from "react";
-import { createStandardTransition, useReducedMotionPreference } from "../../../../features/motion";
 import { useI18n } from "../../../../features/i18n";
-import { Button, IconButton } from "../../../../features/ui/primitives";
-import { MusicViewHeader } from "../music/MusicViewHeader";
+import { ListSkeleton, SelectionActionBar } from "../../../../features/ui/primitives";
+import { getAddRemoveActions } from "../music/addRemoveActions";
 import { PlaylistTrackDetailsSheet } from "../PlaylistTrackDetailsSheet";
-import { PlusIcon, ReplaceIcon, SpotifyLogo } from "./spotifySetupIcons";
 import { SpotifyOpenedTrackRow } from "./SpotifyOpenedTrackRow";
 import type { OpenedSpotifyPlaylist } from "../../hooks/spotify/lobbySpotify.types";
 import panelsStyles from "./spotifyPanels.module.css";
 import sharedStyles from "./spotifyShared.module.css";
 import discoveryStyles from "./spotifyDiscovery.module.css";
 
+/** The opened list's songs; its name, Back, Add all and Replace sit in the sheet's bar. */
 interface SpotifyOpenedPlaylistPanelProps {
-  onAddAll: () => void;
   onAddSelected: (trackIds: ReadonlySet<string>) => void;
-  onBack: () => void;
   onRemoveSelected: (trackIds: ReadonlySet<string>) => void;
-  onReplace: () => void;
   onUpdateTrack: (
     trackId: string,
     patch: {
@@ -36,11 +31,8 @@ interface SpotifyOpenedPlaylistPanelProps {
 }
 
 export function SpotifyOpenedPlaylistPanel({
-  onAddAll,
   onAddSelected,
-  onBack,
   onRemoveSelected,
-  onReplace,
   onUpdateTrack,
   phase,
   playlist,
@@ -49,7 +41,6 @@ export function SpotifyOpenedPlaylistPanel({
   queuedTrackIds,
 }: SpotifyOpenedPlaylistPanelProps) {
   const { t } = useI18n();
-  const reduceMotion = useReducedMotionPreference();
   const [selectedTrackIds, setSelectedTrackIds] = useState<Set<string>>(() => new Set());
   const [activeTrackId, setActiveTrackId] = useState<string | null>(null);
   const tracks = playlist?.tracks ?? [];
@@ -103,82 +94,21 @@ export function SpotifyOpenedPlaylistPanel({
   }
 
   if (phase === "loading") {
-    return (
-      <section className={panelsStyles.spotifyOpenedPlaylistPanel}>
-        <MusicViewHeader
-          backLabel={t("lobby.spotify.builder.backToSearch")}
-          onBack={onBack}
-          title={t("lobby.spotify.builder.openingPlaylist")}
-        />
-      </section>
-    );
+    return <ListSkeleton count={3} leading="cover-sm" trailing="action" />;
   }
 
   if (phase === "error") {
-    return (
-      <section className={panelsStyles.spotifyOpenedPlaylistPanel}>
-        <MusicViewHeader
-          backLabel={t("lobby.spotify.builder.backToSearch")}
-          onBack={onBack}
-          title={t("lobby.spotify.builder.openPlaylistFailed")}
-        />
-        {playlistError ? (
-          <p className={`${sharedStyles.spotifyStatusLine} ${sharedStyles.spotifyStatusError}`}>
-            {playlistError}
-          </p>
-        ) : null}
-      </section>
-    );
+    return playlistError ? (
+      <p className={`${sharedStyles.spotifyStatusLine} ${sharedStyles.spotifyStatusError}`}>
+        {playlistError}
+      </p>
+    ) : null;
   }
 
   if (!playlist) return null;
 
   return (
     <section className={panelsStyles.spotifyOpenedPlaylistPanel}>
-      <MusicViewHeader
-        actions={
-          <>
-            <IconButton
-              aria-label={t("lobby.spotify.builder.addAll")}
-              disabled={tracks.length === 0 || isApplying}
-              onClick={onAddAll}
-              title={t("lobby.spotify.builder.addAll")}
-            >
-              <PlusIcon />
-            </IconButton>
-            <IconButton
-              aria-label={t("lobby.spotify.builder.replaceQueue")}
-              disabled={tracks.length === 0 || isApplying}
-              onClick={onReplace}
-              title={t("lobby.spotify.builder.replaceQueue")}
-            >
-              <ReplaceIcon />
-            </IconButton>
-          </>
-        }
-        backLabel={t("lobby.spotify.builder.backToSearch")}
-        leading={
-          playlist.imageUrl ? (
-            <img
-              alt=""
-              className={panelsStyles.spotifyOpenedPlaylistImage}
-              src={playlist.imageUrl}
-            />
-          ) : (
-            <span className={discoveryStyles.spotifyPlaylistImageFallback}>
-              <SpotifyLogo />
-            </span>
-          )
-        }
-        onBack={onBack}
-        subtitle={
-          playlist.filteredCount > 0
-            ? `${playlist.subtitle} · ${t("lobby.spotify.builder.filteredTracks", { count: playlist.filteredCount })}`
-            : playlist.subtitle
-        }
-        title={playlist.title}
-      />
-
       {tracks.length > 0 ? (
         <div
           className={`${panelsStyles.spotifyOpenedTrackList} ${
@@ -204,29 +134,21 @@ export function SpotifyOpenedPlaylistPanel({
         </p>
       )}
 
-      {selectedTrackIds.size > 0 ? (
-        <m.div
-          animate={{ opacity: 1, y: 0 }}
-          className={discoveryStyles.spotifySearchSelectedAction}
-          initial={{ opacity: 0, y: 18 }}
-          transition={createStandardTransition(reduceMotion)}
-        >
-          {selectedUnqueuedTracks.length > 0 ? (
-            <Button disabled={isApplying} fullWidth onClick={handleAddSelected}>
-              {t("lobby.spotify.builder.addSelected", {
-                count: selectedUnqueuedTracks.length,
-              })}
-            </Button>
-          ) : null}
-          {selectedQueuedTracks.length > 0 ? (
-            <Button disabled={isApplying} fullWidth onClick={handleRemoveSelected} variant="danger">
-              {t("lobby.spotify.builder.removeSelected", {
-                count: selectedQueuedTracks.length,
-              })}
-            </Button>
-          ) : null}
-        </m.div>
-      ) : null}
+      <div className={panelsStyles.spotifySelectionDock}>
+        <SelectionActionBar
+          actions={getAddRemoveActions(
+            {
+              addCount: selectedUnqueuedTracks.length,
+              disabled: isApplying,
+              onAdd: handleAddSelected,
+              onRemove: handleRemoveSelected,
+              removeCount: selectedQueuedTracks.length,
+            },
+            t,
+          )}
+          count={selectedTrackIds.size}
+        />
+      </div>
 
       <PlaylistTrackDetailsSheet
         onClose={() => setActiveTrackId(null)}

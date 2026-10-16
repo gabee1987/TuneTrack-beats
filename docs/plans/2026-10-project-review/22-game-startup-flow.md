@@ -162,8 +162,8 @@ motion (≤ 240 ms). Hints: none.
 
 **Purpose:** get the room ready in three visible steps and start.
 
-One scrolling screen (the two scroll-snap screens are removed) with a sticky Start dock. Order and
-height budget at 375 × 667:
+One scrolling screen (the two scroll-snap screens are removed) that ends with Start and Close room;
+nothing is sticky (owner, 2026-10-16). Order and height budget at 375 × 667:
 
 | #   | Block              | Budget | Content                                                                                                                                                                                               |
 | --- | ------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -171,13 +171,13 @@ height budget at 375 × 667:
 | 2   | Invite card (§4.5) | 176 px | Step 1. Code hero, Copy, Share, players strip.                                                                                                                                                        |
 | 3   | Music card (§4.6)  | 104 px | Step 2. Deck status, cover mosaic, meter, one action.                                                                                                                                                 |
 | 4   | Rules card (§4.7)  | 64 px  | Step 3. Summary line, "Edit rules".                                                                                                                                                                   |
-| 5   | Start dock (§4.10) | 112 px | Readiness line, Start, reason line; sticky with the safe-area inset.                                                                                                                                  |
+| 5   | Start dock (§4.10) | 112 px | Readiness line, reason line, Start, then Close room, at the end of the scrolling content.                                                                                                             |
 
 **No step badges** (owner review 2026-10-15): numbered badges and ticks read as unexplained
 marks. Each card shows its state in its own status line instead; the Music card takes the
 warning outline while there is no deck. Cards are one tap target each (icon, title, status,
-centred chevron). The Start dock holds only the button, without a bar background; the readiness
-and reason lines sit at the end of the scrolling content and stay linked to Start through
+centred chevron). Start sits in the page under the readiness and reason lines, Close room under
+it, both full width and 56 px high; the lines stay linked to Start through
 `aria-describedby`. Back in the header asks to close the room (host) or leave it (guest); Close
 room is not in the Rules sheet.
 
@@ -231,8 +231,9 @@ plays on {{host}}'s phone" or `lobby.music.guestChoosing` = "{{host}} is choosin
 `lobby.rules.summary` = "{{target}} songs to win · {{starting}} to start · tokens off" or "… ·
 tokens on, Beat! {{seconds}} s". Action `lobby.rules.edit` = "Edit rules" → Rules sheet.
 
-**Rules sheet** (`Sheet` primitive, full height on phones, side sheet on desktop; header "Rules",
-Done). Sections, each a `SettingRow` list:
+**Rules sheet** (`Sheet` primitive, full height on phones, side sheet on desktop; the shared
+`PageHeader`: Back, eyebrow "Rules", title `lobby.rules.heading` = "Set how you play"; Back replaces
+Done, owner 2026-10-16). Sections, each a `SettingRow` list:
 
 | Section | Rows                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -296,9 +297,11 @@ decks when at least one saved deck exists, otherwise Find.
   Type chips Songs / Albums / Artists / Playlists (`ChipButton`, 48 px) under the field when a
   query is typed. Results are rows with `CoverArt`, title, subtitle and a trailing
   `ListRowAction` (Add / Added ✓ for songs; a chevron for albums, artists and playlists, which
-  open a Playlist view). Tapping a song's cover or title opens `MusicSongDetails` (artist,
-  album, Spotify year, the re-release note, Add / Remove; `ListRow` `onOpen`, owner 2026-10-16). Selection mode (Select) shows one `SelectionActionBar` at the bottom:
-  "{{count}} selected · Add to deck".
+  open a Playlist view). Tapping a song's title opens `MusicSongDetails`, the song editor's layout
+  read-only with a 200 px cover (title, artist, album, Spotify year, the re-release note, Add /
+  Remove). Tapping its cover selects it, as in every list (no Select mode); the selection shows
+  the shared `SelectionActionBar`: "Add N" and, when some are in the deck, "Remove N" beside it
+  (owner, 2026-10-16).
 - **Quick picks** (own tab, see above): `music.quickPicks.title` = "Quick picks", grid of the sixteen preset cards (Japanese Music and Hungarian Music added 2026-10-16)
   (title, description, a styled decade/genre tile as cover). Under a `music.quickPicks.more` =
   "More options" disclosure: `music.quickPicks.max` = "Max songs" stepper defaulting to
@@ -323,14 +326,14 @@ artist top tracks, playlist), a pasted link, a saved deck, a quick-pick result (
 the room deck. It replaces `SpotifyOpenedPlaylistPanel`, `SpotifyCandidateReviewPanel`,
 `PlaylistEditModal` and the opened-playlist header.
 
-| Part           | Spec                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Header         | Collapsing cover: large `CoverArt` (mosaic for decks), title, source line (`music.view.source.spotify` = "Spotify playlist", `.saved` = "Saved deck", `.room` = "In this game", `.quickPick` = "Quick pick"), "{{count}} songs", to-check chip. On scroll the cover cross-fades into a 32 px cover in the sticky title bar (`createCollapsingHeaderMotion`, `transform`/`opacity` only, scroll-driven, reduced motion → instant swap). Back (48 px) and an overflow `IconButton` "More".                         |
-| Filter chips   | `music.filter.all` = "All ({{count}})", `music.filter.needsCheck` = "Needs check ({{count}})". Default Needs check when K > 0 and the list is the room deck or a saved deck. A `music.view.review` = "Review flagged" button beside the chips when K > 0.                                                                                                                                                                                                                                                        |
-| Sort           | Shipped early (2026-10-16): one 48 px sort icon at the end of the filter row over a native select (`music.sort.original` = "Playlist order", `.title` = "Title A–Z", `.artist` = "Artist A–Z", `.yearAsc` = "Oldest first", `.yearDesc` = "Newest first"); green while not in playlist order. The title and song count share one compact header row with Close.                                                                                                                                                  |
-| List           | Virtualised (`@tanstack/react-virtual`) `ListRow`s: cover, title, artist · year, a text badge `music.row.checkYear` = "Check year" when flagged, "Year checked" tick when verified. Trailing `ListRowAction`: Add / Added ✓ (search lists), or chevron (deck lists). Tap opens the Song editor. "Select" in the header enters selection mode with checkboxes and one `SelectionActionBar` ("{{count}} selected" + Add to deck / Remove from deck). Swipe-to-delete is removed (one way to remove, discoverable). |
-| Primary action | Bottom dock, one button: search/link/quick-pick list → `music.view.use` = "Use in game" (with a deck present a choice `Dialog`: `music.view.replace` = "Replace deck" / `music.view.add` = "Add to deck" / cancel); saved deck → "Use in game"; room deck → the dock reads `music.view.inGame` = "In this game ✓" (disabled, informative) and the overflow holds the actions.                                                                                                                                    |
-| Overflow       | `music.view.save` = "Save to Your decks" (name dialog; existing overwrite / save-as-new flow becomes two dialog buttons), `music.view.rename`, `music.view.removeAll` = "Remove all songs" (confirm; for the room deck this sets `deckSource` back to none), `music.view.delete` = "Delete saved deck" (confirm).                                                                                                                                                                                                |
+| Part           | Spec                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Header         | Collapsing cover: large `CoverArt` (mosaic for decks), title, source line (`music.view.source.spotify` = "Spotify playlist", `.saved` = "Saved deck", `.room` = "In this game", `.quickPick` = "Quick pick"), "{{count}} songs", to-check chip. On scroll the cover cross-fades into a 32 px cover in the sticky title bar (`createCollapsingHeaderMotion`, `transform`/`opacity` only, scroll-driven, reduced motion → instant swap). Back (48 px) and an overflow `IconButton` "More".                                                  |
+| Filter chips   | `music.filter.all` = "All ({{count}})", `music.filter.needsCheck` = "Needs check ({{count}})". Default Needs check when K > 0 and the list is the room deck or a saved deck. A `music.view.review` = "Review flagged" button beside the chips when K > 0.                                                                                                                                                                                                                                                                                 |
+| Sort           | Shipped early (2026-10-16): one 48 px sort icon at the end of the filter row over a native select (`music.sort.original` = "Playlist order", `.title` = "Title A–Z", `.artist` = "Artist A–Z", `.yearAsc` = "Oldest first", `.yearDesc` = "Newest first"); green while not in playlist order. The shared `PageHeader` (Back, the deck's name as eyebrow, `music.editor.heading` = "Edit the songs" with the count beside it) sits over the filter row, a floating `FloatingBar` that fades into the list.                                 |
+| List           | Virtualised (`@tanstack/react-virtual`) `ListRow`s: cover, title, artist · year, a text badge `music.row.checkYear` = "Check year" when flagged, "Year checked" tick when verified. Trailing `ListRowAction`: Add / Added ✓ (search lists), or chevron (deck lists). Tap opens the Song editor; a tap on the cover selects. One floating `SelectionActionBar` names the count and the action ("Remove 3"), two buttons side by side when a selection both adds and removes. Swipe-to-delete is removed (one way to remove, discoverable). |
+| Primary action | Bottom dock, one button: search/link/quick-pick list → `music.view.use` = "Use in game" (with a deck present a choice `Dialog`: `music.view.replace` = "Replace deck" / `music.view.add` = "Add to deck" / cancel); saved deck → "Use in game"; room deck → the dock reads `music.view.inGame` = "In this game ✓" (disabled, informative) and the overflow holds the actions.                                                                                                                                                             |
+| Overflow       | `music.view.save` = "Save to Your decks" (name dialog; existing overwrite / save-as-new flow becomes two dialog buttons), `music.view.rename`, `music.view.removeAll` = "Remove all songs" (confirm; for the room deck this sets `deckSource` back to none), `music.view.delete` = "Delete saved deck" (confirm).                                                                                                                                                                                                                         |
 
 **Song editor** — a nested `PanelView` (two deep is the maximum, `14` §7): fields Title, Artist,
 Album (`TextField`), `music.song.year` = "Release year" with a `NumberStepper` ±1 beside the

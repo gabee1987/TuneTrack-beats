@@ -145,6 +145,7 @@ export function MusicGallery() {
         onEditDeck={noop}
         onEditRoomDeck={noop}
         onFind={noop}
+        onOpenSong={noop}
         onRemoveRoomDeck={noop}
         onSaveRoomDeck={noop}
         onUseDeck={noop}
@@ -164,6 +165,7 @@ export function MusicGallery() {
         onEditDeck={noop}
         onEditRoomDeck={noop}
         onFind={noop}
+        onOpenSong={noop}
         onRemoveRoomDeck={noop}
         onSaveRoomDeck={noop}
         onUseDeck={noop}

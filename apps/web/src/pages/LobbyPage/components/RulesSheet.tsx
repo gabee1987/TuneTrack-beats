@@ -22,7 +22,7 @@ interface RulesSheetProps {
   onClose: () => void;
 }
 
-/** Game, tokens and players, applied as they change, so Done is the only way out (`22` §4.7). */
+/** Game, tokens and players, applied as they change, so Back is the only way out (`22` §4.7). */
 export function RulesSheet({
   hasPlayers,
   isAtPlayers,
@@ -45,7 +45,12 @@ export function RulesSheet({
   }
 
   return (
-    <Sheet isOpen={isOpen} onClose={onClose} onDone={onClose} title={t("lobby.rules.title")}>
+    <Sheet
+      eyebrow={t("lobby.rules.title")}
+      isOpen={isOpen}
+      onClose={onClose}
+      title={t("lobby.rules.heading")}
+    >
       <div className={styles.body}>
         <p className={styles.intro}>{t("lobby.rules.autoSave")}</p>
         <LobbyRoomSettingsStatus actionStatus={hostSettings.roomSettingsActionStatus} />

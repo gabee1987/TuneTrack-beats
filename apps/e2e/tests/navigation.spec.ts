@@ -65,7 +65,7 @@ test("a link imports without login, and the editors close one level at a time wi
   const host = await openPlayer("Playlist Host");
   const roomId = await hostRoom(host.page);
   await host.page.getByRole("button", { name: "Music Choose songs" }).click();
-  const music = host.page.getByRole("dialog", { name: "Music" });
+  const music = host.page.getByRole("dialog", { name: "Choose the songs" });
   await expect(music.getByRole("button", { name: "Connect Spotify" })).toBeVisible();
 
   // Links, search and quick picks use the app's own Spotify access: no login first (`22` §4.8).
@@ -98,7 +98,10 @@ test("a link imports without login, and the editors close one level at a time wi
   await expect(releaseYearField).toHaveCount(0);
   await expect(host.page.getByRole("dialog", { name: "Edit playlist" })).toBeVisible();
 
-  await host.page.getByRole("button", { name: "Close playlist editor", exact: true }).click();
+  await host.page
+    .getByRole("dialog", { name: "Edit playlist" })
+    .getByRole("button", { name: "Back", exact: true })
+    .click();
   await expect(host.page.getByRole("dialog", { name: "Edit playlist" })).not.toBeVisible();
   await expect(music).toBeVisible();
 
@@ -109,7 +112,7 @@ test("a link imports without login, and the editors close one level at a time wi
   await expect.poll(() => popup.isClosed()).toBe(true);
   await expect(music.getByText("Spotify Premium · full songs")).toBeVisible();
 
-  await music.getByRole("button", { name: "Close", exact: true }).click();
+  await music.getByRole("button", { name: "Back", exact: true }).click();
   await expect(music).not.toBeVisible();
   await expect(host.page).toHaveURL(`/lobby/${roomId}`);
   await expect(

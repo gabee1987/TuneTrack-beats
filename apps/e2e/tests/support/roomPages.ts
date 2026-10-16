@@ -120,12 +120,15 @@ export async function choosePracticeDeck(host: Page): Promise<void> {
   await expect(host.getByText(/^Practice deck · \d+ songs · no audio$/)).toBeVisible();
 }
 
-/** Both layouts edit the rules in the Rules sheet behind the Rules card; Done closes it. */
+/** Both layouts edit the rules in the Rules sheet behind the Rules card; Back closes it. */
 export async function editRules(host: Page, edit: () => Promise<void>): Promise<void> {
   await openRulesSheet(host);
   await edit();
-  await host.getByRole("dialog", { name: "Rules" }).getByRole("button", { name: "Done" }).click();
-  await expect(host.getByRole("dialog", { name: "Rules" })).toHaveCount(0);
+  await host
+    .getByRole("dialog", { name: "Set how you play" })
+    .getByRole("button", { name: "Back" })
+    .click();
+  await expect(host.getByRole("dialog", { name: "Set how you play" })).toHaveCount(0);
 }
 
 /**
@@ -135,7 +138,7 @@ export async function editRules(host: Page, edit: () => Promise<void>): Promise<
  */
 export async function openRulesSheet(host: Page): Promise<Locator> {
   await host.getByRole("button", { name: /^Rules\b/ }).click();
-  const sheet = host.getByRole("dialog", { name: "Rules" });
+  const sheet = host.getByRole("dialog", { name: "Set how you play" });
   const viewportWidth = host.viewportSize()?.width ?? 0;
   await expect
     .poll(async () => {

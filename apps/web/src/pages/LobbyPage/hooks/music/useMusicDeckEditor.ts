@@ -16,10 +16,11 @@ const SONGS_TO_LIST = 3;
 export interface MusicDeckEditor {
   /** The covers and first flagged songs of the room deck, for its card. */
   roomCovers: string[];
+  /** The room deck's songs, for a song opened from its card. */
+  roomDeck: PlaylistEditorSource;
   roomSongsToCheck: PublicTrackInfo[];
   /** What the song editor shows: kept through its exit after it closes. */
   editorView: {
-    initialTrackId: string | undefined;
     isOpen: boolean;
     source: PlaylistEditorSource;
     target: PlaylistEditorTarget | null;
@@ -60,13 +61,13 @@ export function useMusicDeckEditor(
 
   return {
     editorView: {
-      initialTrackId: shownTarget?.deck === "room" ? shownTarget.trackId : undefined,
       isOpen: editor !== null,
       source,
       target: shownTarget,
       title: savedDeck?.name ?? t("music.decks.current"),
     },
     roomCovers: pickDeckCovers(roomTracks.tracks),
+    roomDeck: roomTracks,
     roomSongsToCheck: roomTracks.tracks.filter(needsYearCheck).slice(0, SONGS_TO_LIST),
   };
 }

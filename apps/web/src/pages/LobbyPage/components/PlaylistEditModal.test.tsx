@@ -44,11 +44,10 @@ function buildTrack(overrides: Partial<PublicTrackInfo> = {}): PublicTrackInfo {
 
 interface EditorScreenOptions {
   initialFilter?: PlaylistEditorFilter;
-  initialTrackId?: string;
 }
 
 /** The editor is a view inside the Music sheet, on the room deck. */
-function PlaylistEditorScreen({ initialFilter = "all", initialTrackId }: EditorScreenOptions) {
+function PlaylistEditorScreen({ initialFilter = "all" }: EditorScreenOptions) {
   const [isOpen, setIsOpen] = useState(true);
   const source = useRoomDeckTracks(true, "TEST_DECK");
 
@@ -59,7 +58,6 @@ function PlaylistEditorScreen({ initialFilter = "all", initialTrackId }: EditorS
         <p>Music setup</p>
         <PlaylistEditModal
           initialFilter={initialFilter}
-          initialTrackId={initialTrackId}
           isOpen={isOpen}
           onClose={() => setIsOpen(false)}
           source={source}
@@ -133,7 +131,7 @@ describe("PlaylistEditModal", () => {
       ).toBe(false);
     });
 
-    it("exposes a reachable close control on the song editor", async () => {
+    it("leaves the song editor from its Back button", async () => {
       await renderOpenEditor([buildTrack()]);
 
       await userEvent.click(await screen.findByRole("button", { name: /^Test Track One/ }));
@@ -141,8 +139,7 @@ describe("PlaylistEditModal", () => {
       const titleField = await screen.findByDisplayValue("Test Track One");
       const detailsSheet = titleField.closest("form") as HTMLElement;
 
-      const closeButton = within(detailsSheet).getByRole("button", { name: /close/i });
-      await userEvent.click(closeButton);
+      await userEvent.click(within(detailsSheet).getByRole("button", { name: "Back" }));
 
       await waitFor(() => {
         expect(screen.queryByDisplayValue("Test Track One")).not.toBeInTheDocument();
@@ -239,15 +236,6 @@ describe("PlaylistEditModal", () => {
       await userEvent.click(screen.getByRole("button", { name: "All (2)" }));
       expect(screen.getByText("Test Track One")).toBeInTheDocument();
     });
-
-    it("opens straight on the song the card linked to", async () => {
-      await renderOpenEditor([buildTrack(), flaggedTrack], {
-        initialFilter: "needsCheck",
-        initialTrackId: "track-2",
-      });
-
-      expect(await screen.findByDisplayValue("Test Track Two")).toBeInTheDocument();
-    });
   });
 
   it("sorts from one select and goes back to the deck's own order", async () => {
@@ -266,17 +254,14 @@ describe("PlaylistEditModal", () => {
     expect(titles()).toEqual(["Test Track One", "Test Track Two"]);
   });
 
-  it("removes the selected songs from the selection bar, and Done only clears it", async () => {
+  it("removes the selected songs from one button that names how many", async () => {
     await renderOpenEditor([buildTrack(), buildTrack({ id: "track-2", title: "Test Track Two" })]);
 
-    await userEvent.click(await screen.findByRole("button", { name: "Select Test Track One" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Select Test Track Two" }));
     const bar = screen.getByRole("toolbar", { name: "1 selected" });
-    await userEvent.click(within(bar).getByRole("button", { name: "Done" }));
-    await waitFor(() => expect(screen.queryByRole("toolbar")).not.toBeInTheDocument());
-    expect(socket.emittedFor("remove_playlist_tracks")).toEqual([]);
+    expect(within(bar).getAllByRole("button")).toHaveLength(1);
+    await userEvent.click(within(bar).getByRole("button", { name: "Remove 1" }));
 
-    await userEvent.click(screen.getByRole("button", { name: "Select Test Track Two" }));
-    await userEvent.click(screen.getByRole("button", { name: "Remove 1" }));
     expect(socket.emittedFor("remove_playlist_tracks")).toEqual([
       expect.objectContaining({ trackIds: ["track-2"] }),
     ]);
@@ -295,7 +280,8 @@ describe("PlaylistEditModal", () => {
       />,
     );
 
-    expect(screen.getByRole("heading", { name: "Test Deck" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Edit the songs" })).toBeInTheDocument();
+    expect(screen.getByText("Test Deck")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /^Test Track One/ }));
     const yearField = await screen.findByDisplayValue("1984");
     await userEvent.clear(yearField);

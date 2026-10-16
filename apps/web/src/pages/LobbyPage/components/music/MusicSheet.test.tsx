@@ -186,7 +186,7 @@ function renderSheet({ settings = {}, ...spotifyOptions }: RenderOptions = {}) {
 }
 
 function sheet() {
-  return screen.getByRole("dialog", { name: "Music" });
+  return screen.getByRole("dialog", { name: "Choose the songs" });
 }
 
 beforeEach(() => {
@@ -281,13 +281,13 @@ describe("MusicSheet Find results", () => {
     expect(spotify.openedPlaylist.openSmartSearchPlaylist).toHaveBeenCalledWith(ALBUM);
   });
 
-  it("opens a song's details from its row and adds it from there", async () => {
+  it("opens a song's read-only details from its row and adds it from there", async () => {
     const { spotify } = renderSheet({ results: [{ ...SONG, albumTitle: "Album One" }] });
 
     await userEvent.click(screen.getByRole("button", { name: /^Song One/ }));
-    const details = screen.getByRole("dialog", { name: "Song One" });
-    expect(within(details).getByText("Album One")).toBeInTheDocument();
-    expect(within(details).getByText("1984")).toBeInTheDocument();
+    const details = screen.getByRole("dialog", { name: "Song details" });
+    expect(within(details).getByDisplayValue("Album One")).toHaveAttribute("readonly");
+    expect(within(details).getByDisplayValue("1984")).toHaveAttribute("readonly");
 
     await userEvent.click(within(details).getByRole("button", { name: "Add to deck" }));
     expect(spotify.smartSearch.addSmartSearchTrackToQueue).toHaveBeenCalledWith({
@@ -296,12 +296,11 @@ describe("MusicSheet Find results", () => {
     });
   });
 
-  it("adds selected songs from the selection bar", async () => {
+  it("selects a song from its cover and adds it from the one counted button", async () => {
     const { spotify } = renderSheet({ results: [SONG] });
 
-    await userEvent.click(screen.getByRole("button", { name: "Select" }));
-    await userEvent.click(screen.getByRole("button", { name: /^Song One/ }));
-    await userEvent.click(screen.getByRole("button", { name: "Add to deck" }));
+    await userEvent.click(screen.getByRole("button", { name: "Select Song One" }));
+    await userEvent.click(screen.getByRole("button", { name: "Add 1" }));
 
     expect(spotify.smartSearch.addSmartSearchTracksToQueue).toHaveBeenCalledWith([SONG]);
   });
@@ -341,7 +340,7 @@ describe("MusicSheet Your decks", () => {
     expect(spotify.savedPlaylists.setSelectedSavedPlaylistId).not.toHaveBeenCalled();
   });
 
-  it("lists the songs to check on the game's deck and opens the editor on them", async () => {
+  it("lists the songs to check on the game's deck, opening one alone or the editor on all", async () => {
     const { spotify } = renderSheet({
       settings: { deckSource: "spotify", importedTrackCount: 30, tracksToCheckCount: 2 },
     });
@@ -350,11 +349,10 @@ describe("MusicSheet Your decks", () => {
 
     expect(within(roomDeck).getByText(/2 songs may have the wrong year/)).toBeInTheDocument();
     await userEvent.click(within(roomDeck).getByRole("button", { name: /^Song Two/ }));
-    expect(spotify.queue.openEditor).toHaveBeenLastCalledWith({
-      deck: "room",
-      filter: "needsCheck",
-      trackId: "TEST_TRACK_2",
-    });
+    const songTitle = await screen.findByDisplayValue("Song Two");
+    expect(spotify.queue.openEditor).not.toHaveBeenCalled();
+    const songEditor = songTitle.closest("form") as HTMLElement;
+    await userEvent.click(within(songEditor).getByRole("button", { name: "Back" }));
 
     await userEvent.click(within(roomDeck).getByRole("button", { name: "Check 2 songs" }));
     expect(spotify.queue.openEditor).toHaveBeenLastCalledWith({

@@ -21,7 +21,7 @@ import styles from "./LobbyPageMobile.module.css";
 
 type RulesSheetState = "closed" | "players" | "rules";
 
-/** One scrolling screen of the room, its music and rules over a slim Start dock (`22` §4.4). */
+/** One scrolling screen: the room, its music and rules, then Start over Close room (`22` §4.4). */
 export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
   const { t } = useI18n();
   const { hostSettings, identity, room, roomActions, setup, shell } = model;
@@ -78,31 +78,28 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
               onEdit={isHost ? () => setRulesSheet("rules") : undefined}
               rules={setup.rules}
             />
-            {isHost ? <LobbyStartSummary lineId={startLineId} start={setup.start} /> : null}
+            {isHost ? (
+              <>
+                <LobbyStartSummary lineId={startLineId} start={setup.start} />
+                <LobbyStartDock
+                  isHintEligible={setup.start.playerCount >= 2 && !setup.start.isBlocked}
+                  onIntentToStart={identity.preloadGame}
+                  onStart={identity.onStartGame}
+                  start={setup.start}
+                  startGameActionStatus={identity.startGameActionStatus}
+                  summaryLineId={startLineId}
+                />
+              </>
+            ) : (
+              <p className={styles.guestWaiting}>
+                <span aria-hidden="true" className={cardStyles.pulse} />
+                {t("lobby.guest.waiting", { host: setup.hostName ?? t("lobby.players.host") })}
+              </p>
+            )}
             <LobbyExitButton isHost={isHost} onClick={() => setIsExitOpen(true)} />
           </>
         )}
       </div>
-
-      {room.hasStartedJoinError ? null : (
-        <div className={styles.dock}>
-          {isHost ? (
-            <LobbyStartDock
-              isHintEligible={setup.start.playerCount >= 2 && !setup.start.isBlocked}
-              onIntentToStart={identity.preloadGame}
-              onStart={identity.onStartGame}
-              start={setup.start}
-              startGameActionStatus={identity.startGameActionStatus}
-              summaryLineId={startLineId}
-            />
-          ) : (
-            <p className={styles.guestWaiting}>
-              <span aria-hidden="true" className={cardStyles.pulse} />
-              {t("lobby.guest.waiting", { host: setup.hostName ?? t("lobby.players.host") })}
-            </p>
-          )}
-        </div>
-      )}
 
       <NameSheet
         initialName={visibleDisplayName}

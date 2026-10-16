@@ -1,4 +1,4 @@
-/* The route wrapper clips: the content scrolls itself above the sticky dock. */
+/* The route wrapper clips: the content scrolls itself, Start and Close room at its end. */
 .screen {
   height: var(--app-height);
   padding: 0;
@@ -10,7 +10,7 @@
   --lobby-gutter-left: calc(var(--safe-area-left) + var(--space-3));
   --lobby-gutter-right: calc(var(--safe-area-right) + var(--space-3));
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr);
   width: 100%;
   height: var(--app-height);
   padding: 0;
@@ -25,8 +25,8 @@
   align-content: start;
   gap: var(--space-3);
   min-height: 0;
-  padding: calc(var(--safe-area-top) + var(--space-2)) var(--lobby-gutter-right) var(--space-3)
-    var(--lobby-gutter-left);
+  padding: calc(var(--safe-area-top) + var(--space-2)) var(--lobby-gutter-right)
+    calc(var(--safe-area-bottom) + var(--space-4)) var(--lobby-gutter-left);
   overflow-y: auto;
   overscroll-behavior-y: contain;
 }
@@ -37,12 +37,6 @@
   font-size: var(--type-title-md-size);
   line-height: var(--type-title-md-leading);
   font-weight: var(--type-title-md-weight);
-}
-
-/* Only the main action, on the page background: no bar, nothing that eats the screen. */
-.dock {
-  padding: var(--space-2) var(--lobby-gutter-right) calc(var(--safe-area-bottom) + var(--space-2))
-    var(--lobby-gutter-left);
 }
 
 .guestWaiting {

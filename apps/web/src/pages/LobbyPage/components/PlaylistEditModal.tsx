@@ -1,9 +1,13 @@
 import { useMemo, useState } from "react";
 import { useI18n } from "../../../features/i18n";
 import { PanelView } from "../../../features/overlay";
-import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import { classNames } from "../../../features/ui/classNames";
-import { ChipButton, SelectionActionBar } from "../../../features/ui/primitives";
+import {
+  ChipButton,
+  FloatingBar,
+  PageHeader,
+  SelectionActionBar,
+} from "../../../features/ui/primitives";
 import type {
   PlaylistEditorFilter,
   PlaylistEditorSource,
@@ -17,8 +21,6 @@ import listStyles from "./playlistEditList.module.css";
 interface PlaylistEditModalProps {
   /** Needs check when opened from a "to check" link, otherwise All. */
   initialFilter: PlaylistEditorFilter;
-  /** A song to open in the details sheet straight away. */
-  initialTrackId?: string | undefined;
   isOpen: boolean;
   onClose: () => void;
   source: PlaylistEditorSource;
@@ -27,7 +29,6 @@ interface PlaylistEditModalProps {
 
 export function PlaylistEditModal({
   initialFilter,
-  initialTrackId,
   isOpen,
   onClose,
   source,
@@ -39,12 +40,11 @@ export function PlaylistEditModal({
 
   if (isOpen !== wasOpen) {
     setWasOpen(isOpen);
-    setSelectedTrackId(isOpen ? (initialTrackId ?? null) : null);
+    setSelectedTrackId(null);
   }
 
   const {
     allTracks,
-    clearSelection,
     filter,
     isLoading,
     needsCheckCount,
@@ -67,25 +67,18 @@ export function PlaylistEditModal({
 
   return (
     // A view inside Music Setup, not a sheet on top of it (`PanelView`).
-    <PanelView
-      className={chromeStyles.sheet}
-      isOpen={isOpen}
-      label={t("lobby.playlist.editLabel")}
-      onDismiss={onClose}
-    >
+    <PanelView isOpen={isOpen} label={t("lobby.playlist.editLabel")} onDismiss={onClose}>
       <div className={chromeStyles.header}>
-        <div className={chromeStyles.headerLeft}>
-          <h2 className={chromeStyles.title}>{title}</h2>
-          {!isLoading && (
-            <span className={chromeStyles.trackCount}>
-              {t("lobby.playlist.trackCount", { count: allTracks.length })}
-            </span>
-          )}
-        </div>
-        <CloseIconButton ariaLabel={t("lobby.playlist.close")} onClick={onClose} />
+        <PageHeader
+          backLabel={t("common.back")}
+          eyebrow={title}
+          meta={isLoading ? undefined : t("lobby.playlist.trackCount", { count: allTracks.length })}
+          onBack={onClose}
+          title={t("music.editor.heading")}
+        />
       </div>
 
-      <div className={listStyles.toolbar}>
+      <FloatingBar className={listStyles.toolbar} edge="top">
         <div aria-label={t("music.filter.label")} className={listStyles.filters} role="group">
           <ChipButton
             aria-pressed={filter === "all"}
@@ -103,7 +96,7 @@ export function PlaylistEditModal({
           </ChipButton>
         </div>
         <PlaylistSortSelect onChange={setSort} value={sort} />
-      </div>
+      </FloatingBar>
 
       {isLoading ? (
         <div className={listStyles.loadingState}>
@@ -128,12 +121,14 @@ export function PlaylistEditModal({
 
       <div className={listStyles.batchToolbar}>
         <SelectionActionBar
+          actions={[
+            {
+              label: t("lobby.playlist.remove", { count: selectedIds.size }),
+              onClick: removeSelected,
+              variant: "danger",
+            },
+          ]}
           count={selectedIds.size}
-          destructiveAction={{
-            label: t("lobby.playlist.remove", { count: selectedIds.size }),
-            onClick: removeSelected,
-          }}
-          primaryAction={{ label: t("music.selection.done"), onClick: clearSelection }}
         />
       </div>
 

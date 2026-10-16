@@ -1,8 +1,15 @@
 import type { SpotifySmartSearchResult } from "@tunetrack/shared/client";
-import { useState } from "react";
 import { useI18n } from "../../../../features/i18n";
-import { Button, Chip, CoverArt, Dialog } from "../../../../features/ui/primitives";
-import findStyles from "./musicFind.module.css";
+import { PanelView } from "../../../../features/overlay";
+import {
+  Button,
+  Chip,
+  CoverArt,
+  FloatingBar,
+  PageHeader,
+  TextField,
+} from "../../../../features/ui/primitives";
+import styles from "../songSheet.module.css";
 
 interface MusicSongDetailsProps {
   disabled: boolean;
@@ -12,7 +19,10 @@ interface MusicSongDetailsProps {
   song: SpotifySmartSearchResult | null;
 }
 
-/** Everything Find knows about a song, with the same Add / Remove as its row. */
+/**
+ * A song from Find, laid out like the song editor but read-only with a larger cover: nothing
+ * changes here until the song is in a deck. Add / Remove is the same as its row.
+ */
 export function MusicSongDetails({
   disabled,
   isAdded,
@@ -21,53 +31,73 @@ export function MusicSongDetails({
   song,
 }: MusicSongDetailsProps) {
   const { t } = useI18n();
-  // The song stays on screen while the dialog plays its exit.
-  const [shown, setShown] = useState(song);
-  if (song && song !== shown) setShown(song);
 
   return (
-    <Dialog
-      actions={
+    <PanelView isOpen={song !== null} label={t("lobby.playlist.detailsTitle")} onDismiss={onClose}>
+      {song ? (
         <>
-          <Button onClick={onClose} variant="ghost">
-            {t("common.close")}
-          </Button>
-          {shown ? (
-            <Button
-              disabled={disabled}
-              haptic
-              onClick={() => onToggle(shown)}
-              variant={isAdded ? "danger" : "primary"}
-            >
-              {isAdded ? t("music.find.removeFromDeck") : t("music.find.addToDeck")}
-            </Button>
-          ) : null}
+          <div className={styles.header}>
+            <PageHeader
+              backLabel={t("common.back")}
+              eyebrow={t("lobby.playlist.detailsTitle")}
+              onBack={onClose}
+              title={t("music.songDetails.heading")}
+            />
+          </div>
+
+          <div className={styles.body}>
+            <div className={styles.artworkHero}>
+              <CoverArt label={song.title} size="hero" src={song.imageUrl} />
+              <div className={styles.summary}>
+                <strong className={styles.songTitle}>{song.title}</strong>
+                <span className={styles.songArtist}>{song.artist ?? song.subtitle}</span>
+                {isAdded ? (
+                  <span className={styles.chips}>
+                    <Chip>{t("music.songDetails.inDeck")}</Chip>
+                  </span>
+                ) : null}
+              </div>
+            </div>
+
+            <div className={styles.fields}>
+              <TextField label={t("lobby.playlist.fieldTitle")} readOnly value={song.title} />
+              <TextField
+                label={t("lobby.playlist.fieldArtist")}
+                readOnly
+                value={song.artist ?? song.subtitle}
+              />
+              {song.albumTitle ? (
+                <TextField
+                  label={t("lobby.playlist.fieldAlbum")}
+                  readOnly
+                  value={song.albumTitle}
+                />
+              ) : null}
+              <TextField
+                label={t("music.songDetails.year")}
+                readOnly
+                value={song.releaseYear ? String(song.releaseYear) : "—"}
+              />
+            </div>
+            <p className={styles.note}>{t("music.songDetails.yearNote")}</p>
+          </div>
+
+          <div className={styles.actions}>
+            <FloatingBar edge="bottom">
+              <Button
+                disabled={disabled}
+                fullWidth
+                haptic
+                onClick={() => onToggle(song)}
+                size="lg"
+                variant={isAdded ? "danger" : "primary"}
+              >
+                {isAdded ? t("music.find.removeFromDeck") : t("music.find.addToDeck")}
+              </Button>
+            </FloatingBar>
+          </div>
         </>
-      }
-      closeLabel={t("common.close")}
-      isOpen={song !== null}
-      onClose={onClose}
-      title={shown?.title ?? ""}
-    >
-      {shown ? (
-        <div className={findStyles.songDetails}>
-          <CoverArt label={shown.title} size="lg" src={shown.imageUrl} />
-          {isAdded ? <Chip>{t("music.songDetails.inDeck")}</Chip> : null}
-          <dl className={findStyles.songFacts}>
-            <dt>{t("music.songDetails.artist")}</dt>
-            <dd>{shown.artist ?? shown.subtitle}</dd>
-            {shown.albumTitle ? (
-              <>
-                <dt>{t("music.songDetails.album")}</dt>
-                <dd>{shown.albumTitle}</dd>
-              </>
-            ) : null}
-            <dt>{t("music.songDetails.year")}</dt>
-            <dd>{shown.releaseYear ?? "—"}</dd>
-          </dl>
-          <p className={findStyles.songNote}>{t("music.songDetails.yearNote")}</p>
-        </div>
       ) : null}
-    </Dialog>
+    </PanelView>
   );
 }

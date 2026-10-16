@@ -13,12 +13,18 @@ function ListRowContent({ leading, subtitle, title, trailing }: ListRowContentPr
   return (
     <>
       <div className={styles.leading}>{leading}</div>
-      <div className={styles.copy}>
-        <p className={styles.title}>{title}</p>
-        {subtitle ? <p className={styles.subtitle}>{subtitle}</p> : null}
-      </div>
+      <ListRowCopy subtitle={subtitle} title={title} />
       {trailing === undefined ? null : <div className={styles.trailing}>{trailing}</div>}
     </>
+  );
+}
+
+function ListRowCopy({ subtitle, title }: Pick<ListRowContentProps, "subtitle" | "title">) {
+  return (
+    <div className={styles.copy}>
+      <p className={styles.title}>{title}</p>
+      {subtitle ? <p className={styles.subtitle}>{subtitle}</p> : null}
+    </div>
   );
 }
 
@@ -31,6 +37,8 @@ export type ListRowProps = ListRowContentProps &
      */
     onOpen?: (() => void) | undefined;
     isOpenDisabled?: boolean | undefined;
+    /** The leading control (a cover that selects the row) stays outside the open button. */
+    isLeadingSeparate?: boolean | undefined;
   };
 
 export type ListRowButtonProps = ListRowContentProps &
@@ -38,6 +46,7 @@ export type ListRowButtonProps = ListRowContentProps &
 
 export function ListRow({
   className,
+  isLeadingSeparate = false,
   isOpenDisabled,
   leading,
   onOpen,
@@ -50,6 +59,23 @@ export function ListRow({
     return (
       <div {...props} className={classNames(styles.row, className)}>
         <ListRowContent leading={leading} subtitle={subtitle} title={title} trailing={trailing} />
+      </div>
+    );
+  }
+
+  if (isLeadingSeparate) {
+    return (
+      <div {...props} className={classNames(styles.row, className)}>
+        <div className={styles.leading}>{leading}</div>
+        <button
+          className={classNames(styles.open, styles.openCopy)}
+          disabled={isOpenDisabled}
+          onClick={onOpen}
+          type="button"
+        >
+          <ListRowCopy subtitle={subtitle} title={title} />
+        </button>
+        <div className={styles.trailing}>{trailing}</div>
       </div>
     );
   }

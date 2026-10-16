@@ -59,6 +59,21 @@
   color: var(--color-text-muted);
 }
 
+/* A value to read, not to change: a soft fill instead of the field's frame. */
+.control:has(.input[readonly]) {
+  border-color: transparent;
+  background: var(--color-surface-soft);
+}
+
+.control:has(.input[readonly]):focus-within {
+  border-color: var(--color-accent-brand);
+}
+
+.input[readonly] {
+  cursor: default;
+  font-weight: 600;
+}
+
 .input:disabled {
   cursor: not-allowed;
   opacity: 0.48;

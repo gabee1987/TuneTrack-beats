@@ -1,11 +1,10 @@
-/* One row under the title: the filter on the left, the sort on the right. */
+/* One floating row under the title: the filter on the left, the sort on the right. */
 .toolbar {
   display: flex;
-  flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
-  padding: var(--space-1) 18px var(--space-2);
+  padding: var(--space-2) var(--space-4);
 }
 
 .filters {
@@ -55,7 +54,7 @@
 .listScrollArea {
   flex: 1;
   min-height: 0;
-  padding-bottom: 72px;
+  padding-bottom: 112px;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -95,7 +94,7 @@
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 0 18px;
+  padding: 0 var(--space-4);
   height: 100%;
   border: none;
   background: transparent;
@@ -226,16 +225,11 @@
 
 .batchToolbar {
   position: absolute;
-  right: 14px;
-  bottom: calc(14px + var(--safe-area-bottom));
-  left: 14px;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 4;
-  display: grid;
   pointer-events: none;
-}
-
-.batchToolbar > * {
-  pointer-events: auto;
 }
 
 @media (max-width: 520px) {
@@ -246,13 +240,5 @@
   .trackBadgeIcon {
     width: 22px;
     height: 22px;
-  }
-
-  .toolbar {
-    padding-inline: 14px;
-  }
-
-  .trackRow {
-    padding-inline: 14px;
   }
 }

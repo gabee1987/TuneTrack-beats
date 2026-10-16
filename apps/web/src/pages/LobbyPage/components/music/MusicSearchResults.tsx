@@ -10,7 +10,9 @@ import {
   ListSkeleton,
 } from "../../../../features/ui/primitives";
 import type { MusicFindState } from "../../hooks/music/useMusicFind";
-import { ChevronGlyph, CheckGlyph } from "./musicGlyphs";
+import { SelectableArtwork, SelectableArtworkImage } from "../SelectableArtwork";
+import { SpotifyLogo } from "../spotify/spotifySetupIcons";
+import { ChevronGlyph } from "./musicGlyphs";
 import { MusicSongDetails } from "./MusicSongDetails";
 import styles from "./music.module.css";
 import findStyles from "./musicFind.module.css";
@@ -21,7 +23,10 @@ interface MusicSearchResultsProps {
   onOpen: (result: SpotifySmartSearchResult) => void;
 }
 
-/** Songs add in place; albums, artists and playlists open their songs (`22` §4.8, Find). */
+/**
+ * Songs add in place, a tap on a cover selects, a tap on the text opens the song; albums,
+ * artists and playlists open their songs (`22` §4.8, Find).
+ */
 export function MusicSearchResults({ disabled, find, onOpen }: MusicSearchResultsProps) {
   const { t } = useI18n();
   const { results } = find;
@@ -45,21 +50,8 @@ export function MusicSearchResults({ disabled, find, onOpen }: MusicSearchResult
     ) : null;
   }
 
-  const hasSongs =
-    results.kind === "music" && results.results.some((result) => result.type === "track");
-
   return (
     <section aria-label={t("music.find.results")} className={findStyles.results}>
-      {hasSongs ? (
-        <div className={findStyles.resultsHeader}>
-          <Button
-            onClick={find.isSelecting ? find.endSelection : find.startSelection}
-            variant="tertiary"
-          >
-            {find.isSelecting ? t("music.find.selectDone") : t("music.find.select")}
-          </Button>
-        </div>
-      ) : null}
       <ul className={findStyles.resultList}>
         {results.kind === "playlists"
           ? results.playlists.map((playlist) => (
@@ -115,14 +107,13 @@ interface MusicResultRowProps {
 
 function MusicResultRow({ disabled, find, onDetails, onOpen, result }: MusicResultRowProps) {
   const { t } = useI18n();
-  const cover = <CoverArt label={result.title} size="sm" src={result.imageUrl} />;
   const subtitle = getResultSubtitle(result);
 
   if (result.type !== "track") {
     return (
       <ListRowButton
         disabled={disabled}
-        leading={cover}
+        leading={<CoverArt label={result.title} size="sm" src={result.imageUrl} />}
         onClick={() => onOpen(result)}
         subtitle={subtitle}
         title={result.title}
@@ -131,30 +122,21 @@ function MusicResultRow({ disabled, find, onDetails, onOpen, result }: MusicResu
     );
   }
 
-  if (find.isSelecting) {
-    const isSelected = find.selectedIds.has(result.id);
-    return (
-      <ListRowButton
-        aria-pressed={isSelected}
-        className={isSelected ? findStyles.selectedRow : undefined}
-        disabled={disabled}
-        leading={cover}
-        onClick={() => find.toggleSelected(result.id)}
-        subtitle={subtitle}
-        title={result.title}
-        trailing={
-          <span aria-hidden="true" className={findStyles.selectMark} data-selected={isSelected}>
-            {isSelected ? <CheckGlyph /> : null}
-          </span>
-        }
-      />
-    );
-  }
-
   const isAdded = find.queued.has(result.id);
+  const isSelected = find.selectedIds.has(result.id);
   return (
     <ListRow
-      leading={cover}
+      className={isSelected ? findStyles.selectedRow : undefined}
+      isLeadingSeparate
+      leading={
+        <SelectableArtwork
+          ariaLabel={t("lobby.spotify.builder.toggleTrackSelection", { title: result.title })}
+          isSelected={isSelected}
+          onToggle={() => find.toggleSelected(result.id)}
+        >
+          {result.imageUrl ? <SelectableArtworkImage src={result.imageUrl} /> : <SpotifyLogo />}
+        </SelectableArtwork>
+      }
       onOpen={() => onDetails(result)}
       subtitle={subtitle}
       title={result.title}

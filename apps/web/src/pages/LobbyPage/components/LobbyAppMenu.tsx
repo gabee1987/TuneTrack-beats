@@ -1,7 +1,7 @@
 import { AppShellMenu } from "../../../features/app-shell/AppShellMenu";
 import { useI18n } from "../../../features/i18n";
 import { getLobbyHeaderMenuTabSpecs } from "../lobbyHeaderSelectors";
-import styles from "./LobbyTopBar.module.css";
+import styles from "./LobbyAppMenu.module.css";
 
 /** The desktop lobby's app menu: language, view and the host's diagnostics. */
 export function LobbyAppMenu({ isHost }: { isHost: boolean }) {

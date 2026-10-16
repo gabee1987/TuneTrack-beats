@@ -22,7 +22,6 @@ export function useMusicFind(spotify: UseLobbySpotifyResult) {
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState<FindKind>("track");
   const [searchedPlaylistQuery, setSearchedPlaylistQuery] = useState<string | null>(null);
-  const [isSelecting, setIsSelecting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(() => new Set());
   const queued = smartSearch.smartSearchQueuedTrackIds;
   const canSearch = query.trim().length >= MIN_QUERY_LENGTH;
@@ -133,12 +132,7 @@ export function useMusicFind(spotify: UseLobbySpotifyResult) {
     endSelection();
   }
 
-  function startSelection() {
-    setIsSelecting(true);
-  }
-
   function endSelection() {
-    setIsSelecting(false);
     setSelectedIds(new Set());
   }
 
@@ -151,13 +145,11 @@ export function useMusicFind(spotify: UseLobbySpotifyResult) {
     canSearch,
     changeKind,
     changeQuery,
-    endSelection,
     hasSearched,
     hasMore: !isPlaylistKind && smartSearch.smartSearchHasMore,
     isImporting: playlistImport.importPhase === "importing",
     isLoadingMore: smartSearch.smartSearchLoadMorePhase === "loading",
     isSearching,
-    isSelecting,
     importError: playlistImport.importPhase === "error" ? playlistImport.importError : null,
     kind,
     loadMore: smartSearch.loadMoreSpotifyMusic,
@@ -170,7 +162,6 @@ export function useMusicFind(spotify: UseLobbySpotifyResult) {
     selectedIds,
     selectedQueuedCount: selectedTracks.filter((track) => queued.has(track.id)).length,
     selectedUnqueuedCount: selectedTracks.filter((track) => !queued.has(track.id)).length,
-    startSelection,
     submit,
     toggleSelected,
     toggleTrack,

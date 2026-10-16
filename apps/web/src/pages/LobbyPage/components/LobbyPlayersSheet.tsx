@@ -15,7 +15,12 @@ export function LobbyPlayersSheet({ isOpen, onClose, players }: LobbyPlayersShee
   const { t } = useI18n();
 
   return (
-    <Sheet isOpen={isOpen} onClose={onClose} title={t("lobby.players.title")}>
+    <Sheet
+      eyebrow={t("lobby.players.title")}
+      isOpen={isOpen}
+      onClose={onClose}
+      title={t("lobby.players.heading")}
+    >
       <div className={styles.body}>
         <RulesPlayersSection numberInput="ruler" players={players} />
       </div>

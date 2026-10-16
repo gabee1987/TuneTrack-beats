@@ -171,7 +171,7 @@ describe("LobbyPageMobile host", () => {
         name: "Rules 12 songs to win · 1 to start · tokens on, Beat! 10 s",
       }),
     );
-    const sheet = screen.getByRole("dialog", { name: "Rules" });
+    const sheet = screen.getByRole("dialog", { name: "Set how you play" });
 
     expect(sheet).toHaveTextContent("Changes apply right away for everyone in the room.");
     expect(within(sheet).queryByRole("button", { name: "Close" })).not.toBeInTheDocument();
@@ -249,7 +249,7 @@ describe("LobbyPageMobile guest", () => {
     renderLobby({ currentPlayerId: TEST_GUEST_ID, roomState: buildLobbyRoomState({ players }) });
 
     await userEvent.click(screen.getByRole("button", { name: "Show all 5 players" }));
-    const sheet = await screen.findByRole("dialog", { name: "Players" });
+    const sheet = await screen.findByRole("dialog", { name: "Who is in the room" });
 
     expect(within(sheet).getByText("Player Five")).toBeInTheDocument();
     expect(within(sheet).queryByRole("button", { name: /Player Five/ })).not.toBeInTheDocument();

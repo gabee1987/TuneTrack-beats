@@ -19,12 +19,14 @@ import {
 } from "../../hooks/music/musicSetupSelectors";
 import { useMusicDeckEditor } from "../../hooks/music/useMusicDeckEditor";
 import { useMusicFind } from "../../hooks/music/useMusicFind";
+import { useOpenedPlaylistActions } from "../../hooks/music/useOpenedPlaylistActions";
 import type { UseLobbySpotifyResult } from "../../hooks/spotify/lobbySpotify.types";
 import type { PracticeDeckChoiceStatus } from "../../hooks/spotify/usePracticeDeckChoice";
 import { MusicDecksTab } from "./MusicDecksTab";
 import { MusicDeckConfirmations, type DeckConfirmation } from "./MusicDeckConfirmations";
 import { MusicFindTab } from "./MusicFindTab";
-import { MusicOpenedViews, hasOpenedView } from "./MusicOpenedViews";
+import { getAddRemoveActions } from "./addRemoveActions";
+import { MusicOpenedViews, hasOpenedView, useOpenedViewHeader } from "./MusicOpenedViews";
 import { MusicPicksTab } from "./MusicPicksTab";
 import { MusicPlaybackBlock } from "./MusicPlaybackBlock";
 import { SaveDeckDialog } from "./SaveDeckDialog";
@@ -38,6 +40,12 @@ async function loadPlaylistEditModal() {
 }
 
 const PlaylistEditModal = lazy(loadPlaylistEditModal);
+
+// A song of the room deck opens on its own, without the list (owner, 2026-10-16).
+const PlaylistTrackDetailsSheet = lazy(async () => {
+  const module = await import("../PlaylistTrackDetailsSheet");
+  return { default: module.PlaylistTrackDetailsSheet };
+});
 
 interface MusicSheetProps {
   currentSettings: PublicRoomSettings;
@@ -75,6 +83,11 @@ export function MusicSheet({
   const deckEditor = useMusicDeckEditor(spotify, currentSettings, isOpen);
   const { editorView } = deckEditor;
   const [hasOpenedEditor, setHasOpenedEditor] = useState(editorView.isOpen);
+  const [roomSongId, setRoomSongId] = useState<string | null>(null);
+  const [hasOpenedSong, setHasOpenedSong] = useState(false);
+  const roomSong = deckEditor.roomDeck.tracks.find((track) => track.id === roomSongId) ?? null;
+  const openedActions = useOpenedPlaylistActions(spotify);
+  const openedHeader = useOpenedViewHeader(spotify, openedActions);
   const hasDeck = currentSettings.deckSource !== "none";
 
   if (isOpen !== wasOpen) {
@@ -82,6 +95,7 @@ export function MusicSheet({
     if (isOpen) setTab(getDefaultMusicTab(savedDecks.length));
   }
   if (editorView.isOpen && !hasOpenedEditor) setHasOpenedEditor(true);
+  if (roomSongId && !hasOpenedSong) setHasOpenedSong(true);
 
   const hasDeckToEdit = currentSettings.playlistImported || savedDecks.length > 0;
   useEffect(() => {
@@ -108,25 +122,26 @@ export function MusicSheet({
   return (
     <Sheet
       dock={
-        tab === "find" && find.isSelecting && !showsOpenedView ? (
+        tab === "find" && !showsOpenedView ? (
           <SelectionActionBar
+            actions={getAddRemoveActions(
+              {
+                addCount: find.selectedUnqueuedCount,
+                onAdd: find.addSelected,
+                onRemove: find.removeSelected,
+                removeCount: find.selectedQueuedCount,
+              },
+              t,
+            )}
             count={find.selectedIds.size}
-            destructiveAction={
-              find.selectedQueuedCount > 0
-                ? { label: t("music.find.removeFromDeck"), onClick: find.removeSelected }
-                : undefined
-            }
-            primaryAction={{
-              disabled: find.selectedUnqueuedCount === 0,
-              label: t("music.find.addToDeck"),
-              onClick: find.addSelected,
-            }}
           />
         ) : undefined
       }
+      eyebrow={t("music.title")}
+      header={showsOpenedView ? openedHeader : undefined}
       isOpen={isOpen}
       onClose={onClose}
-      title={t("music.title")}
+      title={t("music.heading")}
     >
       <div className={showsOpenedView ? styles.sheetBodyFilled : styles.sheetBody}>
         {isOffline ? (
@@ -145,6 +160,7 @@ export function MusicSheet({
 
         {showsOpenedView ? (
           <MusicOpenedViews
+            actions={openedActions}
             currentQueueCount={currentSettings.importedTrackCount}
             spotify={spotify}
           />
@@ -168,10 +184,9 @@ export function MusicSheet({
                   onEditDeck={(deck) =>
                     spotify.queue.openEditor({ deck: "saved", deckId: deck.id, filter: "all" })
                   }
-                  onEditRoomDeck={(filter, trackId) =>
-                    spotify.queue.openEditor({ deck: "room", filter, trackId })
-                  }
+                  onEditRoomDeck={(filter) => spotify.queue.openEditor({ deck: "room", filter })}
                   onFind={() => setTab("find")}
+                  onOpenSong={setRoomSongId}
                   onRemoveRoomDeck={() => setConfirmation({ kind: "removeAll" })}
                   onSaveRoomDeck={savedPlaylists.saveCurrentPlaylist}
                   onUseDeck={chooseSavedDeck}
@@ -229,11 +244,19 @@ export function MusicSheet({
         <Suspense fallback={null}>
           <PlaylistEditModal
             initialFilter={editorView.target?.filter ?? "all"}
-            initialTrackId={editorView.initialTrackId}
             isOpen={editorView.isOpen}
             onClose={spotify.queue.closeEditor}
             source={editorView.source}
             title={editorView.title}
+          />
+        </Suspense>
+      ) : null}
+      {hasOpenedSong ? (
+        <Suspense fallback={null}>
+          <PlaylistTrackDetailsSheet
+            onClose={() => setRoomSongId(null)}
+            onSave={deckEditor.roomDeck.updateTrack}
+            track={roomSong}
           />
         </Suspense>
       ) : null}

@@ -10,7 +10,7 @@ export type PlaylistEditorFilter = "all" | "needsCheck";
 
 /** Which deck the song editor opens on, and where: the room's own deck or one saved here. */
 export type PlaylistEditorTarget =
-  | { deck: "room"; filter: PlaylistEditorFilter; trackId?: string | undefined }
+  | { deck: "room"; filter: PlaylistEditorFilter }
   | { deck: "saved"; deckId: string; filter: PlaylistEditorFilter };
 
 /** One deck the editor can change, wherever its songs are kept. */

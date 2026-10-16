@@ -58,7 +58,7 @@ describe("LobbyPageDesktop host", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /^Rules\b/ }));
 
-    const sheet = screen.getByRole("dialog", { name: "Rules" });
+    const sheet = screen.getByRole("dialog", { name: "Set how you play" });
     expect(within(sheet).getByRole("spinbutton", { name: "Songs to win" })).toBeInTheDocument();
     expect(within(sheet).queryByRole("slider")).not.toBeInTheDocument();
     expect(within(sheet).queryByRole("heading", { name: "Players (2)" })).not.toBeInTheDocument();

@@ -11,7 +11,7 @@
 }
 
 .spotifySmartResultListWithAction {
-  padding-bottom: 74px;
+  padding-bottom: 112px;
 }
 
 .spotifySmartResultRowWrapper {
@@ -134,22 +134,6 @@
 .spotifySmartQueueButtonAdded svg {
   transform: none;
   color: var(--color-on-spotify);
-}
-
-.spotifySearchSelectedAction {
-  position: absolute;
-  right: 14px;
-  bottom: 14px;
-  left: 14px;
-  z-index: 4;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
-  gap: 8px;
-  pointer-events: none;
-}
-
-.spotifySearchSelectedAction > * {
-  pointer-events: auto;
 }
 
 @media (max-width: 440px) {

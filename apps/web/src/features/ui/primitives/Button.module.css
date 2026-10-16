@@ -85,9 +85,8 @@
   background: var(--button-danger-bg-active);
 }
 
+/* The main button's size and shape without its fill, so it lines up beside one. */
 .tertiary {
-  min-width: var(--size-touch-target);
-  padding-inline: var(--space-3);
   background: transparent;
   color: var(--color-accent-brand);
 }

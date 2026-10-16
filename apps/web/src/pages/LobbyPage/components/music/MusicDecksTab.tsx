@@ -29,8 +29,10 @@ interface MusicDecksTabProps {
   disabled: boolean;
   onDeckOptions: (deck: SavedDeckSummary) => void;
   onEditDeck: (deck: SavedDeckSummary) => void;
-  onEditRoomDeck: (filter: PlaylistEditorFilter, trackId?: string) => void;
+  onEditRoomDeck: (filter: PlaylistEditorFilter) => void;
   onFind: () => void;
+  /** A song from the room deck's "to check" list, opened on its own. */
+  onOpenSong: (trackId: string) => void;
   onRemoveRoomDeck: () => void;
   onSaveRoomDeck: () => void;
   onUseDeck: (deck: SavedDeckSummary) => void;
@@ -47,6 +49,7 @@ export function MusicDecksTab({
   onEditDeck,
   onEditRoomDeck,
   onFind,
+  onOpenSong,
   onRemoveRoomDeck,
   onSaveRoomDeck,
   onUseDeck,
@@ -63,6 +66,7 @@ export function MusicDecksTab({
           deck={roomDeck}
           disabled={disabled}
           onEdit={onEditRoomDeck}
+          onOpenSong={onOpenSong}
           onRemove={onRemoveRoomDeck}
           onSave={onSaveRoomDeck}
         />
@@ -142,13 +146,14 @@ export function MusicDecksTab({
 interface RoomDeckCardProps {
   deck: RoomDeckSummary;
   disabled: boolean;
-  onEdit: (filter: PlaylistEditorFilter, trackId?: string) => void;
+  onEdit: (filter: PlaylistEditorFilter) => void;
+  onOpenSong: (trackId: string) => void;
   onRemove: () => void;
   onSave: () => void;
 }
 
 /** What the game will play: how many songs, which years to check, and the way into the editor. */
-function RoomDeckCard({ deck, disabled, onEdit, onRemove, onSave }: RoomDeckCardProps) {
+function RoomDeckCard({ deck, disabled, onEdit, onOpenSong, onRemove, onSave }: RoomDeckCardProps) {
   const { t } = useI18n();
 
   return (
@@ -166,7 +171,7 @@ function RoomDeckCard({ deck, disabled, onEdit, onRemove, onSave }: RoomDeckCard
       </div>
 
       {deck.isEditable ? (
-        <RoomDeckCheck deck={deck} disabled={disabled} onEdit={onEdit} />
+        <RoomDeckCheck deck={deck} disabled={disabled} onEdit={onEdit} onOpenSong={onOpenSong} />
       ) : (
         <p className={styles.statusLine}>{t("music.decks.practiceNote")}</p>
       )}
@@ -177,10 +182,10 @@ function RoomDeckCard({ deck, disabled, onEdit, onRemove, onSave }: RoomDeckCard
             {t("music.decks.editSongs")}
           </Button>
           <div className={deckStyles.roomDeckSecondary}>
-            <Button disabled={disabled} onClick={onSave} variant="tertiary">
+            <Button disabled={disabled} fullWidth onClick={onSave} variant="tertiary">
               {t("music.decks.save")}
             </Button>
-            <Button disabled={disabled} onClick={onRemove} variant="tertiary">
+            <Button disabled={disabled} fullWidth onClick={onRemove} variant="tertiary">
               {t("music.decks.removeAll")}
             </Button>
           </div>
@@ -194,10 +199,12 @@ function RoomDeckCheck({
   deck,
   disabled,
   onEdit,
+  onOpenSong,
 }: {
   deck: RoomDeckSummary;
   disabled: boolean;
-  onEdit: (filter: PlaylistEditorFilter, trackId?: string) => void;
+  onEdit: (filter: PlaylistEditorFilter) => void;
+  onOpenSong: (trackId: string) => void;
 }) {
   const { t } = useI18n();
 
@@ -222,7 +229,7 @@ function RoomDeckCheck({
               <ListRowButton
                 disabled={disabled}
                 leading={<CoverArt label={track.title} size="sm" src={resolveArtworkUrl(track)} />}
-                onClick={() => onEdit("needsCheck", track.id)}
+                onClick={() => onOpenSong(track.id)}
                 subtitle={`${track.artist} · ${track.releaseYear}`}
                 title={track.title}
                 trailing={<Chip>{t("lobby.playlist.statusCheck")}</Chip>}

@@ -15,11 +15,6 @@
   gap: var(--space-2);
 }
 
-.resultsHeader {
-  display: flex;
-  justify-content: flex-end;
-}
-
 .resultList {
   display: grid;
   gap: var(--space-1);
@@ -30,21 +25,6 @@
 
 .selectedRow {
   background: color-mix(in srgb, var(--color-accent-brand) 12%, transparent);
-}
-
-.selectMark {
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  border: 2px solid var(--color-border-subtle);
-  border-radius: var(--radius-circle);
-  color: var(--color-on-accent-brand);
-}
-
-.selectMark[data-selected="true"] {
-  border-color: var(--color-accent-brand);
-  background: var(--color-accent-brand);
 }
 
 /* Quick picks and the practice deck */
@@ -153,39 +133,4 @@
   .cardSpinner {
     animation: none;
   }
-}
-
-/* Song details from Find. */
-.songDetails {
-  display: grid;
-  justify-items: center;
-  gap: var(--space-3);
-}
-
-.songFacts {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--space-1) var(--space-3);
-  width: 100%;
-  margin: 0;
-}
-
-.songFacts dt {
-  color: var(--color-text-secondary);
-  font-size: var(--type-caption-size);
-  line-height: var(--type-body-leading);
-}
-
-.songFacts dd {
-  margin: 0;
-  overflow-wrap: anywhere;
-  color: var(--color-text-primary);
-  font-weight: 600;
-}
-
-.songNote {
-  margin: 0;
-  color: var(--color-text-secondary);
-  font-size: var(--type-caption-size);
-  line-height: var(--type-caption-leading);
 }

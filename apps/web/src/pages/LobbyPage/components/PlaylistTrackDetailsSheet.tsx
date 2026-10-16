@@ -7,17 +7,18 @@ import {
 import { type FormEvent, useEffect, useState } from "react";
 import { useI18n } from "../../../features/i18n";
 import { PanelView } from "../../../features/overlay";
-import { CloseIconButton } from "../../../features/ui/CloseIconButton";
 import {
   Button,
   Chip,
   CoverArt,
+  FloatingBar,
+  PageHeader,
   SegmentedControl,
   TextField,
 } from "../../../features/ui/primitives";
 import { resolveArtworkUrl } from "../../../features/ui/resolveArtworkUrl";
 import type { PlaylistTrackUpdatePatch } from "../hooks/usePlaylistEditor";
-import styles from "./playlistEditChrome.module.css";
+import styles from "./songSheet.module.css";
 
 interface PlaylistTrackDetailsSheetProps {
   onClose: () => void;
@@ -75,95 +76,98 @@ export function PlaylistTrackDetailsSheet({
   // A view over the whole Music Setup panel, never nested in the list that opened it: inside
   // that list it sat below the panel header stacking context (B1).
   return (
-    <PanelView
-      className={styles.detailsSheet}
-      isOpen={track !== null}
-      label={t("lobby.playlist.detailsTitle")}
-      onDismiss={onClose}
-    >
+    <PanelView isOpen={track !== null} label={t("lobby.playlist.detailsTitle")} onDismiss={onClose}>
       {track ? (
-        <form className={styles.detailsForm} onSubmit={handleSubmit}>
+        <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.header}>
-            <h3 className={styles.title}>{t("lobby.playlist.detailsTitle")}</h3>
-            <CloseIconButton ariaLabel={t("lobby.playlist.detailsClose")} onClick={onClose} />
+            <PageHeader
+              backLabel={t("common.back")}
+              eyebrow={t("lobby.playlist.detailsTitle")}
+              onBack={onClose}
+              title={t("lobby.playlist.detailsHeading")}
+            />
           </div>
 
-          <div className={styles.detailsArtworkRow}>
-            <CoverArt label={track.title} size="md" src={resolveArtworkUrl(track)} />
-            <div className={styles.detailsSummary}>
-              <strong className={styles.detailsSongTitle}>{track.title}</strong>
-              <span className={styles.detailsArtist}>
-                {track.artist} · {track.albumTitle}
-              </span>
-              <span className={styles.detailsChips}>
-                <Chip>
-                  {t("lobby.playlist.sourceYearShort", {
-                    year: track.sourceReleaseYear ?? track.releaseYear,
-                  })}
-                </Chip>
-                {flags.includes("suspicious_album") ? (
-                  <Chip className={styles.detailsWarning}>
-                    <WarningIcon />
-                    {t("lobby.playlist.statusCheck")}
+          <div className={styles.body}>
+            <div className={styles.artworkRow}>
+              <CoverArt label={track.title} size="md" src={resolveArtworkUrl(track)} />
+              <div className={styles.summary}>
+                <strong className={styles.songTitle}>{track.title}</strong>
+                <span className={styles.songArtist}>
+                  {track.artist} · {track.albumTitle}
+                </span>
+                <span className={styles.chips}>
+                  <Chip>
+                    {t("lobby.playlist.sourceYearShort", {
+                      year: track.sourceReleaseYear ?? track.releaseYear,
+                    })}
                   </Chip>
-                ) : null}
-              </span>
+                  {flags.includes("suspicious_album") ? (
+                    <Chip className={styles.warning}>
+                      <WarningIcon />
+                      {t("lobby.playlist.statusCheck")}
+                    </Chip>
+                  ) : null}
+                </span>
+              </div>
             </div>
-          </div>
 
-          <div className={styles.detailsFields}>
-            <TextField
-              label={t("lobby.playlist.fieldTitle")}
-              maxLength={200}
-              onChange={(event) => setTitle(event.target.value)}
-              required
-              value={title}
-            />
-            <TextField
-              label={t("lobby.playlist.fieldArtist")}
-              maxLength={200}
-              onChange={(event) => setArtist(event.target.value)}
-              required
-              value={artist}
-            />
-            <TextField
-              label={t("lobby.playlist.fieldAlbum")}
-              maxLength={200}
-              onChange={(event) => setAlbumTitle(event.target.value)}
-              required
-              value={albumTitle}
-            />
-            <TextField
-              inputMode="numeric"
-              label={t("lobby.playlist.fieldReleaseYear")}
-              max={new Date().getFullYear() + 1}
-              min={MIN_RELEASE_YEAR}
-              onChange={(event) => setReleaseYear(event.target.value)}
-              required
-              type="number"
-              value={releaseYear}
-            />
-            <div className={styles.statusField}>
-              <span aria-hidden="true">{t("lobby.playlist.fieldStatus")}</span>
-              <SegmentedControl<TrackMetadataStatus>
-                aria-label={t("lobby.playlist.fieldStatus")}
-                onChange={setMetadataStatus}
-                options={METADATA_STATUS_OPTIONS.map((status) => ({
-                  label: getStatusLabel(t, status),
-                  value: status,
-                }))}
-                value={metadataStatus}
+            <div className={styles.fields}>
+              <TextField
+                label={t("lobby.playlist.fieldTitle")}
+                maxLength={200}
+                onChange={(event) => setTitle(event.target.value)}
+                required
+                value={title}
               />
+              <TextField
+                label={t("lobby.playlist.fieldArtist")}
+                maxLength={200}
+                onChange={(event) => setArtist(event.target.value)}
+                required
+                value={artist}
+              />
+              <TextField
+                label={t("lobby.playlist.fieldAlbum")}
+                maxLength={200}
+                onChange={(event) => setAlbumTitle(event.target.value)}
+                required
+                value={albumTitle}
+              />
+              <TextField
+                inputMode="numeric"
+                label={t("lobby.playlist.fieldReleaseYear")}
+                max={new Date().getFullYear() + 1}
+                min={MIN_RELEASE_YEAR}
+                onChange={(event) => setReleaseYear(event.target.value)}
+                required
+                type="number"
+                value={releaseYear}
+              />
+              <div className={styles.statusField}>
+                <span aria-hidden="true">{t("lobby.playlist.fieldStatus")}</span>
+                <SegmentedControl<TrackMetadataStatus>
+                  aria-label={t("lobby.playlist.fieldStatus")}
+                  onChange={setMetadataStatus}
+                  options={METADATA_STATUS_OPTIONS.map((status) => ({
+                    label: getStatusLabel(t, status),
+                    value: status,
+                  }))}
+                  value={metadataStatus}
+                />
+              </div>
             </div>
           </div>
 
-          <div className={styles.detailsActions}>
-            <Button onClick={onClose} size="lg" type="button" variant="secondary">
-              {t("common.cancel")}
-            </Button>
-            <Button fullWidth size="lg" type="submit">
-              {t("lobby.playlist.saveTrack")}
-            </Button>
+          <div className={styles.actions}>
+            <FloatingBar className={styles.actionRow} edge="bottom">
+              <Button onClick={onClose} size="lg" type="button" variant="secondary">
+                {t("common.cancel")}
+              </Button>
+              <Button fullWidth size="lg" type="submit">
+                {t("lobby.playlist.saveTrack")}
+              </Button>
+            </FloatingBar>
           </div>
         </form>
       ) : null}

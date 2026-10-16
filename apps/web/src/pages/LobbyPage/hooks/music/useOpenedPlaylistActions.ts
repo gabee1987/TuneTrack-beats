@@ -68,3 +68,5 @@ export function useOpenedPlaylistActions(spotify: UseLobbySpotifyResult) {
 
   return { addAll, addSelected: addTracks, removeSelected, replace };
 }
+
+export type OpenedPlaylistActions = ReturnType<typeof useOpenedPlaylistActions>;

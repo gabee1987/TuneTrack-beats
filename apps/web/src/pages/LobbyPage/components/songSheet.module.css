@@ -1,0 +1,118 @@
+/* A song's own view over the Music sheet: to edit in a deck, or to look at from Find. */
+.header {
+  flex-shrink: 0;
+  padding: calc(var(--safe-area-top) + var(--space-2)) var(--space-4) 0;
+}
+
+/* The panel is the flex column; the form only groups the fields for submit. */
+.form {
+  display: contents;
+}
+
+.body {
+  display: grid;
+  flex: 1;
+  align-content: start;
+  gap: var(--space-4);
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-3) var(--space-4) 112px;
+}
+
+.artworkRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+/* Find's view has nothing to change, so the cover leads. */
+.artworkHero {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+.summary {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.artworkHero .summary {
+  justify-items: center;
+  width: 100%;
+}
+
+.songTitle,
+.songArtist {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.songTitle {
+  font-size: var(--type-body-lg-size);
+  line-height: var(--type-body-lg-leading);
+  font-weight: 700;
+}
+
+.songArtist {
+  color: var(--color-text-secondary);
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-leading);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.artworkHero .chips {
+  justify-content: center;
+}
+
+.warning {
+  color: var(--color-warning);
+}
+
+.fields {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.statusField {
+  display: grid;
+  gap: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-leading);
+  font-weight: var(--type-label-weight);
+}
+
+.note {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+}
+
+/* Over the end of the view, on the shared fade. */
+.actions {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.actionRow {
+  display: flex;
+  gap: var(--space-2);
+}

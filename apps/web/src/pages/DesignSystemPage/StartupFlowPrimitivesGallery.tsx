@@ -4,11 +4,14 @@ import { resolveArtworkUrl } from "../../features/ui/resolveArtworkUrl";
 import {
   Button,
   Card,
+  ChipButton,
   CoverArt,
+  FloatingBar,
   ListRow,
   ListRowAction,
   ListSkeleton,
   NumberStepper,
+  PageHeader,
   SegmentedControl,
   SelectionActionBar,
   SettingRow,
@@ -44,6 +47,27 @@ export function StartupFlowPrimitivesGallery() {
 
   return (
     <>
+      <section className={styles.section}>
+        <h2 className="typeTitleMd">Page header & floating bars</h2>
+        <PageHeader
+          backLabel="Back"
+          eyebrow="Test Deck"
+          meta="24 songs"
+          onBack={() => undefined}
+          title="Edit the songs"
+        />
+        <FloatingBar className={styles.row} edge="top">
+          <ChipButton selected>All (24)</ChipButton>
+          <ChipButton>Needs check (3)</ChipButton>
+        </FloatingBar>
+        <TextField label="Title (read-only)" readOnly value="Test Song" />
+        <FloatingBar className={styles.row} edge="bottom">
+          <Button fullWidth size="lg">
+            Use these songs
+          </Button>
+        </FloatingBar>
+      </section>
+
       <section className={styles.section}>
         <h2 className="typeTitleMd">Button additions</h2>
         <div className={styles.row}>
@@ -178,9 +202,11 @@ export function StartupFlowPrimitivesGallery() {
           </Button>
         </div>
         <SelectionActionBar
+          actions={[
+            { label: `Add ${selectedCount}`, onClick: () => setSelectedCount(0) },
+            { label: "Remove 1", onClick: () => setSelectedCount(0), variant: "danger" },
+          ]}
           count={selectedCount}
-          destructiveAction={{ label: "Remove", onClick: () => setSelectedCount(0) }}
-          primaryAction={{ label: "Add to game", onClick: () => setSelectedCount(0) }}
         />
       </section>
 
@@ -191,18 +217,20 @@ export function StartupFlowPrimitivesGallery() {
         </Button>
         <Sheet
           dock={
-            <Button fullWidth haptic onClick={() => setIsSheetOpen(false)} size="lg">
-              Use in game
-            </Button>
+            <FloatingBar edge="bottom">
+              <Button fullWidth haptic onClick={() => setIsSheetOpen(false)} size="lg">
+                Use in game
+              </Button>
+            </FloatingBar>
           }
+          eyebrow="Music"
           isOpen={isSheetOpen}
           onClose={() => setIsSheetOpen(false)}
-          onDone={() => setIsSheetOpen(false)}
-          title="Music"
+          title="Choose the songs"
         >
           <p className="typeBody">
-            Full screen on phones, a side sheet on wide screens. The body scrolls; the dock stays
-            above the home indicator.
+            Full screen on phones, a side sheet on wide screens. Back is the one way out; the body
+            fades under the bar and the dock floats above the home indicator.
           </p>
         </Sheet>
       </section>

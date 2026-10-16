@@ -1,32 +1,25 @@
 import { MIN_PLAYLIST_TRACK_COUNT } from "@tunetrack/shared/client";
-import { m } from "framer-motion";
 import { useEffect, useState } from "react";
-import { createStandardTransition, useReducedMotionPreference } from "../../../../features/motion";
 import { useI18n } from "../../../../features/i18n";
 import { useAppToast } from "../../../../features/toast";
-import { Button } from "../../../../features/ui/primitives";
-import { MusicViewHeader } from "../music/MusicViewHeader";
+import { Button, FloatingBar, SelectionActionBar } from "../../../../features/ui/primitives";
 import { PlaylistTrackDetailsSheet } from "../PlaylistTrackDetailsSheet";
 import { PlaylistTrackList } from "../PlaylistTrackList";
 import type { LobbySpotifyState } from "./spotifySetupTypes";
 import sharedStyles from "./spotifyShared.module.css";
 import panelsStyles from "./spotifyPanels.module.css";
 
+/** The quick pick's songs; its title, count and Back sit in the sheet's bar. */
 interface SpotifyCandidateReviewPanelProps {
-  backLabel: string;
   currentQueueCount?: number;
-  onBack: () => void;
   spotifyState: LobbySpotifyState;
 }
 
 export function SpotifyCandidateReviewPanel({
-  backLabel,
   currentQueueCount = 0,
-  onBack,
   spotifyState,
 }: SpotifyCandidateReviewPanelProps) {
   const { t } = useI18n();
-  const reduceMotion = useReducedMotionPreference();
   const { candidates, savedPlaylists } = spotifyState;
   const {
     candidateError,
@@ -118,13 +111,6 @@ export function SpotifyCandidateReviewPanel({
 
       {hasGeneratedTracks ? (
         <section className={panelsStyles.spotifyCandidateReview}>
-          <MusicViewHeader
-            backLabel={backLabel}
-            onBack={onBack}
-            subtitle={t("lobby.spotify.review.readyCount", { count: candidateTracks.length })}
-            title={t("music.quickPicks.resultTitle")}
-          />
-
           <PlaylistTrackList
             onOpenTrack={(track) => setActiveCandidateTrackId(track.id)}
             onRemoveTrack={removeCandidateTrack}
@@ -133,39 +119,8 @@ export function SpotifyCandidateReviewPanel({
             tracks={candidateTracks}
           />
 
-          {selectedCandidateTrackIds.size > 0 ? (
-            <div className={panelsStyles.spotifyBatchToolbar}>
-              <span className={panelsStyles.spotifyBatchCount}>
-                {t("lobby.playlist.selected", { count: selectedCandidateTrackIds.size })}
-              </span>
-              <Button onClick={removeSelectedCandidateTracks} variant="danger">
-                {t("lobby.playlist.remove", { count: selectedCandidateTrackIds.size })}
-              </Button>
-            </div>
-          ) : null}
-
-          <m.div
-            animate={{ opacity: 1, y: 0 }}
-            className={panelsStyles.spotifyFloatingAction}
-            initial={{ opacity: 0, y: 18 }}
-            transition={createStandardTransition(reduceMotion)}
-          >
-            {!isApplyChoiceOpen ? (
-              <Button
-                disabled={!canUseTracks || isApplying}
-                fullWidth
-                onClick={handleUseTracks}
-                size="lg"
-              >
-                {isApplying
-                  ? t("lobby.spotify.review.applying")
-                  : selectedCandidateCount > 0
-                    ? t("lobby.spotify.review.useSelectedTracks", {
-                        count: selectedCandidateCount,
-                      })
-                    : t("lobby.spotify.review.useTracks")}
-              </Button>
-            ) : (
+          <div className={panelsStyles.spotifySelectionDock}>
+            {isApplyChoiceOpen ? (
               <div className={panelsStyles.spotifyApplyChoicePanel}>
                 <div className={panelsStyles.spotifyApplyChoiceCopy}>
                   <strong>{t("lobby.spotify.quickPicks.applyChoiceTitle")}</strong>
@@ -207,8 +162,40 @@ export function SpotifyCandidateReviewPanel({
                   </Button>
                 </div>
               </div>
+            ) : selectedCandidateCount > 0 ? (
+              <SelectionActionBar
+                actions={[
+                  {
+                    label: t("lobby.playlist.remove", { count: selectedCandidateCount }),
+                    onClick: removeSelectedCandidateTracks,
+                    variant: "danger",
+                  },
+                  {
+                    disabled: isApplying,
+                    label: t("lobby.spotify.review.useSelectedTracks", {
+                      count: selectedCandidateCount,
+                    }),
+                    onClick: handleUseTracks,
+                  },
+                ]}
+                count={selectedCandidateCount}
+              />
+            ) : (
+              <FloatingBar edge="bottom">
+                <Button
+                  disabled={!canUseFullGeneratedSet || isApplying}
+                  fullWidth
+                  haptic
+                  onClick={handleUseTracks}
+                  size="lg"
+                >
+                  {isApplying
+                    ? t("lobby.spotify.review.applying")
+                    : t("lobby.spotify.review.useTracks")}
+                </Button>
+              </FloatingBar>
             )}
-          </m.div>
+          </div>
 
           <PlaylistTrackDetailsSheet
             onClose={() => setActiveCandidateTrackId(null)}

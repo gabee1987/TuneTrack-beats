@@ -18,7 +18,7 @@
 .sheet {
   position: relative;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
   width: 100%;
   height: 100%;
   padding-top: var(--safe-area-top);
@@ -29,45 +29,44 @@
   outline: none;
 }
 
+/* The page's top bar; the body fades out under it instead of meeting a line. */
 .header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  min-height: 56px;
-  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
-  border-bottom: 1px solid var(--color-divider);
+  position: relative;
+  z-index: 2;
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-bg-app);
 }
 
-.title {
-  margin: 0;
-  min-width: 0;
-  overflow: hidden;
-  font-size: var(--type-title-md-size);
-  line-height: var(--type-title-md-leading);
-  font-weight: var(--type-title-md-weight);
-  letter-spacing: var(--type-title-md-tracking);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.headerActions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
+.header::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  height: var(--space-4);
+  background: linear-gradient(to bottom, var(--color-bg-app), transparent);
+  pointer-events: none;
 }
 
 .body {
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: var(--space-4);
+  padding: var(--space-2) var(--space-4) var(--space-4);
+}
+
+/* Room under the last rows for the floating dock. */
+.body:has(+ .dock) {
+  padding-bottom: 112px;
 }
 
 .dock {
-  padding: var(--space-3) var(--space-4) calc(var(--space-3) + var(--safe-area-bottom));
-  border-top: 1px solid var(--color-divider);
-  background: var(--color-bg-app);
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  pointer-events: none;
 }
 
 @media (min-width: 721px) {

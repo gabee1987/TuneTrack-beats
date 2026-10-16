@@ -12,6 +12,25 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### One page header, floating bars, one selection button, Start in the page (2026-10-16)
+
+- **Every page, sheet and view has the lobby's top bar** (`PageHeader`): Back on the left, a green
+  eyebrow saying where the player is, and a title saying what they do there, with optional extra
+  information beside it. It replaces the sheets' close button and the Rules sheet's Done (Back is
+  the one way out; changes still apply as made), the editors' Close and the opened lists' second
+  header: an opened album, playlist or quick pick takes over the Music sheet's bar. Why: owner
+  review; four header designs did the same job.
+- **A bar under the header, or over a list's end, has no frame** (`FloatingBar`): its controls
+  float with a shadow on a fade into what scrolls beneath. Why: owner review.
+- **One selection button:** `SelectionActionBar` is one floating button that names the count and
+  the action ("Remove 3"), or two side by side when a selection both adds and removes. Find
+  selects by tapping a cover like every other list; its Select mode is gone. Why: owner review;
+  three bar designs and two ways to select.
+- **Find's song details reuse the song editor's layout,** read-only with a larger cover, and a
+  song tapped in "In this game" opens only the song editor; Check and Edit songs open the list.
+- **Frameless (tertiary) buttons have the main button's size,** and the lobby's Start is part of
+  the page above Close room, not a sticky dock.
+
 ### Compact deck rows and editor, green scroll thumb everywhere, quick-pick loader back (2026-10-16)
 
 - **Saved decks are rows, not tiles:** cover beside name, size and "to check", then Load, Edit and
