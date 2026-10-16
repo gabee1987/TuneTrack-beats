@@ -10,10 +10,6 @@ function lobby(page: Page) {
   return page.getByRole("main");
 }
 
-test.beforeEach(({ isMobile }) => {
-  test.skip(!isMobile, "the desktop lobby is rebuilt in plan 22 S6");
-});
-
 test("the host sees the code, Start waits for songs with its reason, then the game starts", async ({
   openPlayer,
 }) => {
@@ -40,14 +36,14 @@ test("the host sees the code, Start waits for songs with its reason, then the ga
   await expectGamePage(host.page, roomId);
 });
 
-test("a guest arriving shows on the host's phone and the guest waits for Start", async ({
+test("a guest arriving shows in the host's lobby and the guest waits for Start", async ({
   openRoom,
 }) => {
   const { guest, host } = await openRoom({ guest: "Strip Guest", host: "Strip Host" });
 
   await expect(lobby(host.page).getByText("Waiting for friends to join…")).toHaveCount(0);
   await expect(
-    host.page.getByRole("list", { name: "Players (2)" }).getByText("Strip Guest"),
+    lobby(host.page).getByRole("listitem").filter({ hasText: "Strip Guest" }),
   ).toBeVisible();
   await expect(guest.page.getByRole("heading", { name: "You're in" })).toBeVisible();
   await expect(

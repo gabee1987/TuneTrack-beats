@@ -8,6 +8,7 @@ import type {
   LobbyStartReason,
 } from "../LobbyPage/hooks/lobbySetupModel";
 import { selectPlayersStrip } from "../LobbyPage/hooks/lobbySetupModel";
+import { LobbyAppMenu } from "../LobbyPage/components/LobbyAppMenu";
 import { LobbyDeckMeter as DeckMeter } from "../LobbyPage/components/LobbyDeckMeter";
 import { LobbyInviteCard } from "../LobbyPage/components/LobbyInviteCard";
 import { LobbyMusicCard, LobbyMusicSummary } from "../LobbyPage/components/LobbyMusicCard";
@@ -15,6 +16,7 @@ import { LobbyPlayersStrip } from "../LobbyPage/components/LobbyPlayersStrip";
 import { LobbyRulesCard } from "../LobbyPage/components/LobbyRulesCard";
 import { LobbyExitDialog } from "../LobbyPage/components/LobbyExitDialog";
 import { LobbyStartDock, LobbyStartSummary } from "../LobbyPage/components/LobbyStartDock";
+import { LobbyTopBar } from "../LobbyPage/components/LobbyTopBar";
 import { RoomRenameDialog } from "../LobbyPage/components/RoomRenameDialog";
 import styles from "./DesignSystemPage.module.css";
 
@@ -55,6 +57,17 @@ export function LobbyGallery() {
   return (
     <>
       <section className={styles.section}>
+        <h2 className="typeTitleMd">Lobby top bar</h2>
+        <LobbyTopBar isHost onBack={() => setExitDialog("host")} />
+        <LobbyTopBar isHost={false} onBack={() => setExitDialog("guest")} />
+        <LobbyTopBar
+          isHost
+          onBack={() => setExitDialog("host")}
+          trailing={<LobbyAppMenu isHost />}
+        />
+      </section>
+
+      <section className={styles.section}>
         <h2 className="typeTitleMd">Invite card & players strip</h2>
         <LobbyInviteCard
           isWaitingForPlayers
@@ -74,6 +87,8 @@ export function LobbyGallery() {
           players={strip([])}
           roomCode={null}
         />
+        <p className="typeCaption">Desktop: the players are listed beside the cards.</p>
+        <LobbyInviteCard isWaitingForPlayers={false} onRename={noop} roomCode="TEST_ROOM_1" />
         <RoomRenameDialog
           actionState={null}
           currentCode="TEST_ROOM_1"

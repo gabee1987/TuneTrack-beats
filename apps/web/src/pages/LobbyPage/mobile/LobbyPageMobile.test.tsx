@@ -1,18 +1,9 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { PublicRoomSettings, PublicRoomState } from "@tunetrack/shared/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import {
-  TEST_GUEST_ID,
-  TEST_HOST_ID,
-  buildLobbyRoomState,
-  buildPlayer,
-  buildRoomSettings,
-} from "../../../test/roomStateFixtures";
+import { TEST_GUEST_ID, buildLobbyRoomState, buildPlayer } from "../../../test/roomStateFixtures";
 import { renderWithProviders } from "../../../test/renderWithProviders";
-import type { LobbyPageController } from "../LobbyPage.types";
-import { buildLobbyAssemblyModel } from "../hooks/buildLobbyAssemblyModel";
-import { selectLobbySetup } from "../hooks/lobbySetupModel";
+import { buildLobbyTestModel, practiceDeck, type LobbyTestModelOptions } from "../lobbyTestModel";
 import { resetSocketClient } from "../../../services/socket/socketClient";
 import { LobbyPageMobile } from "./LobbyPageMobile";
 
@@ -21,54 +12,9 @@ vi.mock("../components/spotify/LobbyMusicSetup", () => ({ LobbyMusicSetup: () =>
 vi.mock("../../../services/socket/socketClient", () => ({ resetSocketClient: vi.fn() }));
 vi.mock("../../../services/haptics/triggerPressHaptic", () => ({ triggerPressHaptic: vi.fn() }));
 
-const practiceDeck: Partial<PublicRoomSettings> = {
-  deckSource: "practice",
-  importedTrackCount: 60,
-};
-
-interface RenderOptions {
-  currentPlayerId?: string;
-  roomState?: PublicRoomState | null;
-  settings?: Partial<PublicRoomSettings>;
-}
-
-function renderLobby({
-  currentPlayerId = TEST_HOST_ID,
-  roomState,
-  settings = {},
-}: RenderOptions = {}) {
-  const currentSettings = buildRoomSettings(settings);
-  const resolvedRoomState =
-    roomState === undefined ? buildLobbyRoomState({ settings: currentSettings }) : roomState;
-  const controller = {
-    closeRoomActionStatus: "idle",
-    handleCloseRoom: vi.fn(),
-    handleRoomSettingsChange: vi.fn(),
-    currentPlayerId,
-    currentSettings,
-    displayName: "Player One",
-    errorCode: null,
-    errorMessage: null,
-    handlePlayerProfileChange: vi.fn(async () => true),
-    handleRoomRename: vi.fn(async () => true),
-    handleStartGame: vi.fn(),
-    identityActionState: null,
-    isHost: resolvedRoomState?.hostId === currentPlayerId || resolvedRoomState === null,
-    isIdentityActionPending: false,
-    preloadGame: vi.fn(),
-    roomId: resolvedRoomState?.roomId,
-    roomState: resolvedRoomState,
-    startGameActionStatus: "idle",
-  } as unknown as LobbyPageController;
-  const setup = selectLobbySetup({
-    connectionStatus: "connected",
-    currentPlayerId,
-    roomState: resolvedRoomState,
-    settings: currentSettings,
-    startGameActionStatus: "idle",
-  });
-
-  renderWithProviders(<LobbyPageMobile model={buildLobbyAssemblyModel(controller, setup)} />);
+function renderLobby(options: LobbyTestModelOptions = {}) {
+  const { controller, model } = buildLobbyTestModel(options);
+  renderWithProviders(<LobbyPageMobile model={model} />);
   return controller;
 }
 

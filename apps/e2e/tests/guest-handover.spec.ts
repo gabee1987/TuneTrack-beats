@@ -7,10 +7,6 @@ function gamePage(page: Page) {
   return page.getByRole("main").filter({ has: page.getByRole("button", { name: /leaderboard/i }) });
 }
 
-test.beforeEach(({ isMobile }) => {
-  test.skip(!isMobile, "the desktop lobby is rebuilt in plan 22 S6");
-});
-
 // The guest lobby itself is covered by `host-lobby.spec.ts`; the notes' timing by unit tests.
 test("as the game starts the guest learns it is silent and the host sees the practice note", async ({
   openRoom,

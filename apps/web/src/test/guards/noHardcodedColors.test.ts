@@ -26,7 +26,6 @@ const PENDING_MIGRATION = [
   "pages/LobbyPage/components/spotify/spotifyDiscovery.module.css",
   "pages/LobbyPage/components/spotify/spotifyPanels.module.css",
   "pages/LobbyPage/components/spotify/spotifySetupImport.module.css",
-  "pages/LobbyPage/components/spotify/spotifySetupShell.module.css",
 ] as const;
 
 const PENDING_RGB_MIGRATION = [

@@ -1,6 +1,6 @@
 import { useI18n } from "../../../features/i18n";
 import type { RoomSettingsActionStatus } from "../LobbyPage.types";
-import styles from "../lobbySettings.module.css";
+import styles from "./LobbyRoomSettingsStatus.module.css";
 
 interface LobbyRoomSettingsStatusProps {
   actionStatus: RoomSettingsActionStatus;
@@ -14,7 +14,7 @@ export function LobbyRoomSettingsStatus({ actionStatus }: LobbyRoomSettingsStatu
   }
 
   return (
-    <p aria-live="polite" className={styles.settingsInlineHint}>
+    <p aria-live="polite" className={styles.hint}>
       {actionStatus === "retrying"
         ? t("lobby.host.settingsRetrying")
         : t("lobby.host.settingsFailed")}

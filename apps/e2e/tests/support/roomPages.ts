@@ -120,33 +120,39 @@ export async function choosePracticeDeck(host: Page): Promise<void> {
   await expect(host.getByText(/^Practice deck · \d+ songs · no audio$/)).toBeVisible();
 }
 
-/**
- * Phones keep the rules in the Rules sheet behind the Rules card; the desktop lobby still shows
- * them on the page with steppers (plan `22` S6), so there the edit runs in place.
- */
+/** Both layouts edit the rules in the Rules sheet behind the Rules card; Done closes it. */
 export async function editRules(host: Page, edit: () => Promise<void>): Promise<void> {
-  const rulesCard = host.getByRole("button", { name: /^Rules\b/ });
-  const desktopTarget = host.getByRole("spinbutton", { name: "Songs to win" });
-  // Decide only once the lobby shows one of the two layouts.
-  await expect(rulesCard.or(desktopTarget).first()).toBeVisible();
-  const isInSheet = (await rulesCard.count()) > 0;
-  if (isInSheet) await openRulesSheet(host);
+  await openRulesSheet(host);
   await edit();
-  if (isInSheet) {
-    await host.getByRole("dialog", { name: "Rules" }).getByRole("button", { name: "Done" }).click();
-    await expect(host.getByRole("dialog", { name: "Rules" })).toHaveCount(0);
-  }
+  await host.getByRole("dialog", { name: "Rules" }).getByRole("button", { name: "Done" }).click();
+  await expect(host.getByRole("dialog", { name: "Rules" })).toHaveCount(0);
 }
 
 /**
- * Opens the phone Rules sheet and waits until it has slid fully in: a tap during the slide lands
- * on whatever has moved under the pointer by then.
+ * Opens the Rules sheet and waits until it has slid fully in, flush with the right edge (the
+ * whole screen on phones, a side sheet on desktop): a tap during the slide lands on whatever has
+ * moved under the pointer by then.
  */
 export async function openRulesSheet(host: Page): Promise<Locator> {
-  await host.getByRole("button", { name: /^Rules\b/ }).click();
+  await host.getByRole("button", { name: /^Rules/ }).click();
   const sheet = host.getByRole("dialog", { name: "Rules" });
-  await expect.poll(async () => Math.round((await sheet.boundingBox())?.x ?? -1)).toBe(0);
+  const viewportWidth = host.viewportSize()?.width ?? 0;
+  await expect
+    .poll(async () => {
+      const box = await sheet.boundingBox();
+      return box ? Math.round(box.x + box.width) : -1;
+    })
+    .toBe(viewportWidth);
   return sheet;
+}
+
+/**
+ * Phones list the players in the Rules sheet; the desktop lobby lists them beside the cards.
+ * Returns where the player rows are, with the sheet open on phones.
+ */
+export async function openPlayerList(host: Page, isMobile: boolean): Promise<Locator> {
+  if (isMobile) return openRulesSheet(host);
+  return host.getByRole("main").getByRole("complementary");
 }
 
 /**
@@ -189,7 +195,7 @@ export async function turnTokensOff(host: Page): Promise<void> {
 
 export async function startGame(host: Page, roomId: string, ...guests: Page[]): Promise<void> {
   await choosePracticeDeck(host);
-  await host.getByRole("button", { name: "Start Game" }).first().click();
+  await host.getByRole("button", { name: "Start game" }).click();
   for (const page of [host, ...guests]) {
     await expectGamePage(page, roomId);
   }

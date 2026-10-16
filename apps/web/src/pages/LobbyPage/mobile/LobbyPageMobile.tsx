@@ -2,8 +2,6 @@ import { useId, useState } from "react";
 import { useI18n } from "../../../features/i18n";
 import { AppPageShell } from "../../../features/mobile-shell/AppPageShell";
 import { NameSheet } from "../../../features/profile/NameSheet";
-import { ConnectionStatus } from "../../../features/rooms/ConnectionStatus";
-import { IconButton } from "../../../features/ui/primitives";
 import { StatusBanner } from "../../../features/ui/StatusBanner";
 import type { LobbyPageAssemblyProps } from "../LobbyPage.types";
 import cardStyles from "../components/lobbyCard.module.css";
@@ -15,6 +13,7 @@ import { LobbyPlayersSheet } from "../components/LobbyPlayersSheet";
 import { LobbyPlayersStrip } from "../components/LobbyPlayersStrip";
 import { LobbyRulesCard } from "../components/LobbyRulesCard";
 import { LobbyStartDock, LobbyStartSummary } from "../components/LobbyStartDock";
+import { LobbyTopBar } from "../components/LobbyTopBar";
 import { RoomRenameDialog } from "../components/RoomRenameDialog";
 import { RulesSheet } from "../components/RulesSheet";
 import styles from "./LobbyPageMobile.module.css";
@@ -43,28 +42,7 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
   return (
     <AppPageShell panelClassName={styles.panel} screenClassName={styles.screen}>
       <div className={styles.content}>
-        <header className={styles.header}>
-          <IconButton
-            aria-label={isHost ? t("lobby.exit.closeLabel") : t("lobby.exit.leaveLabel")}
-            onClick={() => setIsExitOpen(true)}
-            variant="ghost"
-          >
-            <svg aria-hidden="true" fill="none" height="22" viewBox="0 0 24 24" width="22">
-              <path
-                d="M15 6L9 12L15 18"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2.25"
-              />
-            </svg>
-          </IconButton>
-          <div className={styles.heading}>
-            <p className={styles.eyebrow}>{t("lobby.eyebrow")}</p>
-            <h1 className={styles.title}>{t(isHost ? "lobby.title.host" : "lobby.title.guest")}</h1>
-          </div>
-          <ConnectionStatus />
-        </header>
+        <LobbyTopBar isHost={isHost} onBack={() => setIsExitOpen(true)} />
 
         {shell.errorMessage ? <StatusBanner>{shell.errorMessage}</StatusBanner> : null}
 
@@ -148,9 +126,11 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
             onRename={identity.onRoomRename}
           />
           <RulesSheet
+            hasPlayers
             isAtPlayers={rulesSheet === "players"}
             isOpen={rulesSheet !== "closed"}
             model={model}
+            numberInput="ruler"
             onClose={() => setRulesSheet("closed")}
           />
         </>

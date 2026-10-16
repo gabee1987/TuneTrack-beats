@@ -116,5 +116,5 @@ test("nested playlist editors close one level at a time without leaving the lobb
   await host.page.getByRole("button", { name: "Close music setup", exact: true }).click();
   await expect(host.page.getByRole("dialog", { name: "Spotify music setup" })).not.toBeVisible();
   await expect(host.page).toHaveURL(`/lobby/${roomId}`);
-  await expect(host.page.getByRole("button", { name: "Start Game" }).first()).toBeVisible();
+  await expect(host.page.getByRole("button", { name: "Start game" })).toBeVisible();
 });

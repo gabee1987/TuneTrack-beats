@@ -4,12 +4,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { I18nProvider } from "../../../features/i18n";
 import type { EmitActionResult } from "../../../services/socket/emitAction";
 import { renderWithProviders } from "../../../test/renderWithProviders";
-import { buildLobbyRoomState } from "../../../test/roomStateFixtures";
-import { LobbyHostStartPanel } from "../components/LobbyHostStartPanel";
+import { buildLobbyRoomState, buildRoomSettings } from "../../../test/roomStateFixtures";
+import { LobbyExitDialog } from "../components/LobbyExitDialog";
 import { LobbyRoomSettingsStatus } from "../components/LobbyRoomSettingsStatus";
-import { LobbyRoomActions } from "../components/LobbyRoomActions";
+import { LobbyStartDock, LobbyStartSummary } from "../components/LobbyStartDock";
 import { RulesGameSection } from "../components/rules/RulesGameSection";
 import { RulesPlayersSection } from "../components/rules/RulesPlayersSection";
+import { selectLobbySetup } from "./lobbySetupModel";
 import { useLobbyRoomActions } from "./useLobbyRoomActions";
 
 const { emitActionMock } = vi.hoisted(() => ({
@@ -34,22 +35,34 @@ function createDeferredActionResult() {
 }
 
 function StartGameHarness() {
-  const roomState = buildLobbyRoomState();
+  const roomState = buildLobbyRoomState({
+    settings: buildRoomSettings({ deckSource: "practice", importedTrackCount: 60 }),
+  });
   const actions = useLobbyRoomActions({
     currentPlayerId: roomState.hostId,
     currentSettings: roomState.settings,
     isHost: true,
     roomState,
   });
+  const { start } = selectLobbySetup({
+    connectionStatus: "connected",
+    currentPlayerId: roomState.hostId,
+    roomState,
+    settings: roomState.settings,
+    startGameActionStatus: actions.startGameActionStatus,
+  });
 
   return (
     <I18nProvider>
-      <LobbyHostStartPanel
-        isStartGamePending={actions.isStartGamePending}
+      <LobbyStartDock
+        isHintEligible={false}
         onIntentToStart={() => undefined}
-        onStartGame={actions.handleStartGame}
+        onStart={actions.handleStartGame}
+        start={start}
         startGameActionStatus={actions.startGameActionStatus}
+        summaryLineId="start-line"
       />
+      <LobbyStartSummary lineId="start-line" start={start} />
     </I18nProvider>
   );
 }
@@ -65,12 +78,12 @@ function CloseRoomHarness() {
 
   return (
     <I18nProvider>
-      <LobbyRoomActions
+      <LobbyExitDialog
         closeRoomActionStatus={actions.closeRoomActionStatus}
-        isCloseRoomPending={actions.isCloseRoomPending}
-        isStartGamePending={false}
+        isHost
+        isOpen
+        onClose={() => undefined}
         onCloseRoom={actions.handleCloseRoom}
-        startGameActionStatus="idle"
       />
     </I18nProvider>
   );
@@ -153,7 +166,8 @@ describe("useLobbyRoomActions start_game", () => {
     fireEvent.click(startButton);
     fireEvent.click(startButton);
 
-    expect(screen.getByRole("button", { name: /starting game/i })).toBeDisabled();
+    expect(startButton).toBeDisabled();
+    expect(startButton).toHaveAccessibleDescription("Starting game...");
     expect(emitActionMock).toHaveBeenCalledTimes(1);
     expect(emitActionMock).toHaveBeenCalledWith(
       ClientToServerEvent.StartGame,
@@ -166,7 +180,8 @@ describe("useLobbyRoomActions start_game", () => {
     };
     act(() => options.onTimeoutRetry?.());
 
-    expect(screen.getByRole("button", { name: /no response.*retrying/i })).toBeDisabled();
+    expect(startButton).toBeDisabled();
+    expect(startButton).toHaveAccessibleDescription("No response — retrying...");
 
     await act(async () => {
       deferred.resolve({ status: "timeout" });

@@ -31,40 +31,6 @@
   overscroll-behavior-y: contain;
 }
 
-.header {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-1);
-  margin-left: calc(var(--space-2) * -1);
-}
-
-.heading {
-  min-width: 0;
-}
-
-.eyebrow {
-  margin: 0;
-  color: var(--color-accent-brand);
-  font-size: var(--type-micro-size);
-  line-height: var(--type-micro-leading);
-  font-weight: var(--type-micro-weight);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.title {
-  margin: 0;
-  overflow: hidden;
-  color: var(--color-text-primary);
-  font-size: var(--type-title-md-size);
-  line-height: var(--type-title-md-leading);
-  font-weight: var(--type-title-md-weight);
-  letter-spacing: var(--type-title-md-tracking);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .noticeTitle {
   margin: 0;
   color: var(--color-text-primary);

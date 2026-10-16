@@ -1,9 +1,5 @@
 import { expect, test } from "./support/fixtures";
-import { editRules, openRulesSheet, setRuleNumber } from "./support/roomPages";
-
-test.beforeEach(({ isMobile }) => {
-  test.skip(!isMobile, "the desktop lobby gets its Rules card in plan 22 S6");
-});
+import { editRules, openPlayerList, setRuleNumber } from "./support/roomPages";
 
 test("the host edits the rules in the sheet and the Rules card sums them up", async ({
   openRoom,
@@ -26,10 +22,10 @@ test("the host edits the rules in the sheet and the Rules card sums them up", as
   await expect(rulesCard).toContainText("5 songs to win · 1 to start · tokens off");
 });
 
-test("the host removes a player only after confirming it", async ({ openRoom }) => {
+test("the host removes a player only after confirming it", async ({ isMobile, openRoom }) => {
   const { guest, host } = await openRoom({ guest: "Removed Guest", host: "Removing Host" });
 
-  const sheet = await openRulesSheet(host.page);
+  const sheet = await openPlayerList(host.page, isMobile);
   await expect(sheet.getByRole("heading", { name: "Players (2)" })).toBeVisible();
   const guestRow = sheet.getByRole("listitem").filter({ hasText: "Removed Guest" });
   await guestRow.getByRole("button", { name: /^Removed Guest/ }).click();

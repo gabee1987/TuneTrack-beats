@@ -10,8 +10,8 @@ interface LobbyInviteCardProps {
   isWaitingForPlayers: boolean;
   /** Host only: the Edit action under the code. */
   onRename?: (() => void) | undefined;
-  /** The players strip. */
-  players: ReactNode;
+  /** The players strip on phones; the desktop lobby lists the players beside the cards. */
+  players?: ReactNode | undefined;
   /** `null` while the room is being created: the code area shows its skeleton. */
   roomCode: string | null;
 }
