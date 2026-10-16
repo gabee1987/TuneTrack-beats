@@ -11,6 +11,7 @@ export * from "./game/player.js";
 export * from "./game/roomSettings.js";
 export * from "./game/roomState.js";
 export * from "./game/timeline.js";
+export * from "./game/trackEdits.js";
 export * from "./game/trackFlags.js";
 export * from "./game/track.js";
 export * from "./spotify/playlistImport.js";

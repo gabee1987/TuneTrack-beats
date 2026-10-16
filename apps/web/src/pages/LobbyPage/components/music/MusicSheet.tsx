@@ -17,6 +17,7 @@ import {
   type MusicTab,
   type SavedDeckSummary,
 } from "../../hooks/music/musicSetupSelectors";
+import { useMusicDeckEditor } from "../../hooks/music/useMusicDeckEditor";
 import { useMusicFind } from "../../hooks/music/useMusicFind";
 import type { UseLobbySpotifyResult } from "../../hooks/spotify/lobbySpotify.types";
 import type { PracticeDeckChoiceStatus } from "../../hooks/spotify/usePracticeDeckChoice";
@@ -71,19 +72,21 @@ export function MusicSheet({
   const [wasOpen, setWasOpen] = useState(isOpen);
   const [deckOptions, setDeckOptions] = useState<SavedDeckSummary | null>(null);
   const [confirmation, setConfirmation] = useState<DeckConfirmation | null>(null);
-  const isEditorOpen = spotify.queue.isEditModalOpen;
-  const [hasOpenedEditor, setHasOpenedEditor] = useState(isEditorOpen);
+  const deckEditor = useMusicDeckEditor(spotify, currentSettings, isOpen);
+  const { editorView } = deckEditor;
+  const [hasOpenedEditor, setHasOpenedEditor] = useState(editorView.isOpen);
   const hasDeck = currentSettings.deckSource !== "none";
 
   if (isOpen !== wasOpen) {
     setWasOpen(isOpen);
     if (isOpen) setTab(getDefaultMusicTab(savedDecks.length));
   }
-  if (isEditorOpen && !hasOpenedEditor) setHasOpenedEditor(true);
+  if (editorView.isOpen && !hasOpenedEditor) setHasOpenedEditor(true);
 
+  const hasDeckToEdit = currentSettings.playlistImported || savedDecks.length > 0;
   useEffect(() => {
-    if (currentSettings.playlistImported) void loadPlaylistEditModal();
-  }, [currentSettings.playlistImported]);
+    if (hasDeckToEdit) void loadPlaylistEditModal();
+  }, [hasDeckToEdit]);
 
   function chooseSavedDeck(deck: SavedDeckSummary) {
     if (hasDeck) setConfirmation({ deck, kind: "useSaved" });
@@ -159,7 +162,12 @@ export function MusicSheet({
                 <MusicDecksTab
                   disabled={isOffline}
                   onDeckOptions={setDeckOptions}
-                  onEditRoomDeck={spotify.queue.openEditModal}
+                  onEditDeck={(deck) =>
+                    spotify.queue.openEditor({ deck: "saved", deckId: deck.id, filter: "all" })
+                  }
+                  onEditRoomDeck={(filter, trackId) =>
+                    spotify.queue.openEditor({ deck: "room", filter, trackId })
+                  }
                   onFind={() => setTab("find")}
                   onRemoveRoomDeck={() => setConfirmation({ kind: "removeAll" })}
                   onSaveRoomDeck={savedPlaylists.saveCurrentPlaylist}
@@ -167,8 +175,10 @@ export function MusicSheet({
                   roomDeck={
                     hasDeck
                       ? {
+                          coverUrls: deckEditor.roomCovers,
                           isEditable: currentSettings.deckSource === "spotify",
                           songCount: currentSettings.importedTrackCount,
+                          songsToCheck: deckEditor.roomSongsToCheck,
                           toCheckCount: setup.tracksToCheckCount,
                         }
                       : null
@@ -214,7 +224,14 @@ export function MusicSheet({
       />
       {hasOpenedEditor ? (
         <Suspense fallback={null}>
-          <PlaylistEditModal isOpen={isEditorOpen} onClose={spotify.queue.closeEditModal} />
+          <PlaylistEditModal
+            initialFilter={editorView.target?.filter ?? "all"}
+            initialTrackId={editorView.initialTrackId}
+            isOpen={editorView.isOpen}
+            onClose={spotify.queue.closeEditor}
+            source={editorView.source}
+            title={editorView.title}
+          />
         </Suspense>
       ) : null}
     </Sheet>

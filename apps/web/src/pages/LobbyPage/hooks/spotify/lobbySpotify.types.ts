@@ -8,6 +8,7 @@ import type {
   SpotifySmartSearchTypeFilter,
 } from "@tunetrack/shared/client";
 import type { SavedPlaylist } from "../../../../services/savedPlaylists/savedPlaylists";
+import type { PlaylistEditorTarget } from "../music/playlistEditorTarget";
 
 export type AuthPhase = "idle" | "connecting" | "error";
 export type ImportPhase = "idle" | "importing" | "error";
@@ -141,12 +142,14 @@ export interface LobbySpotifySavedPlaylistsState {
   setSelectedSavedPlaylistId: (playlistId: string) => void;
   startRenamePlaylist: (playlistId: string) => void;
   switchToSaveAsNew: () => void;
+  updateSavedDeckTracks: (playlistId: string, tracks: PublicTrackInfo[]) => void;
 }
 
 export interface LobbySpotifyQueueState {
-  closeEditModal: () => void;
-  isEditModalOpen: boolean;
-  openEditModal: () => void;
+  closeEditor: () => void;
+  /** The deck the song editor is open on, or `null` while it is closed. */
+  editor: PlaylistEditorTarget | null;
+  openEditor: (target: PlaylistEditorTarget) => void;
 }
 
 export interface UseLobbySpotifyResult {

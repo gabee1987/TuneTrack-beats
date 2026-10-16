@@ -14,6 +14,7 @@ import { useSpotifyOpenedPlaylist } from "./useSpotifyOpenedPlaylist";
 import { useSpotifyPlaylistImport } from "./useSpotifyPlaylistImport";
 import { useSpotifyPlaylistSearch } from "./useSpotifyPlaylistSearch";
 import { useSpotifySmartSearch } from "./useSpotifySmartSearch";
+import type { PlaylistEditorTarget } from "../music/playlistEditorTarget";
 
 export function useLobbySpotify(): UseLobbySpotifyResult {
   const { roomId } = useParams<{ roomId: string }>();
@@ -25,7 +26,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
   const [savedPlaylistMessage, setSavedPlaylistMessage] = useState<string | null>(null);
   const [generatedPlaylistMessage, setGeneratedPlaylistMessage] = useState<string | null>(null);
   const [loadedSavedPlaylistId, setLoadedSavedPlaylistId] = useState<string | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editor, setEditor] = useState<PlaylistEditorTarget | null>(null);
 
   const currentPlaylistNameRef = useRef<string | undefined>(undefined);
   const generatedPlaylistMessageTimerRef = useRef<number | null>(null);
@@ -106,7 +107,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     openedPlaylist.resetOpenedPlaylist();
     candidates.resetCandidates();
     setGeneratedPlaylistMessage(null);
-    setIsEditModalOpen(false);
+    setEditor(null);
     savedPlaylists.resetSavedPlaylists();
     setLoadedSavedPlaylistId(null);
   }, [
@@ -259,11 +260,12 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
       setSelectedSavedPlaylistId: savedPlaylists.setSelectedSavedPlaylistId,
       startRenamePlaylist: savedPlaylists.startRenamePlaylist,
       switchToSaveAsNew: savedPlaylists.switchToSaveAsNew,
+      updateSavedDeckTracks: savedPlaylists.updateSavedDeckTracks,
     },
     queue: {
-      closeEditModal: () => setIsEditModalOpen(false),
-      isEditModalOpen,
-      openEditModal: () => setIsEditModalOpen(true),
+      closeEditor: () => setEditor(null),
+      editor,
+      openEditor: setEditor,
     },
   };
 }

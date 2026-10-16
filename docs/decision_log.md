@@ -12,6 +12,24 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Decks edit without loading, a Needs check filter, a Close room button (2026-10-16)
+
+- **Every saved deck has Load and Edit.** Edit opens the song editor on the saved deck itself;
+  changes are written back to this device at once and the room is not touched. A saved deck that
+  is also in the game is not updated there (write-back to the room stays with plan `22` S9).
+- **The song editor filters All / Needs check.** The "to check" chip on the Music card and
+  "Check {{count}} songs" on the In this game card open it on Needs check; Edit opens All.
+- **The In this game card says what the deck needs**: song count, the first three songs whose
+  year needs a look (each opens in the editor), "Check" and "Edit songs". It no longer shows a
+  blank cover with initials.
+- **Find opens a song's details** (album, Spotify year, a note on re-release years) with Add or
+  Remove; the row's Add button stays separate.
+- **Close room (host) / Leave room (guest) is a visible button** at the end of the lobby, beside
+  Back, which is now labelled "Back". Why: owner review; Back alone was not discoverable.
+- **Two more quick picks:** Japanese Music and Hungarian Music (16 in all).
+- Saved-deck and room-deck edits share one rule (`applyTrackEdit` in `packages/shared`): any
+  metadata change marks a song `edited` unless the host set the status.
+
 ### Scrollbars take no room; quick picks get their own tab (2026-10-16)
 
 - **No scrollbar column on any page.** Touch screens use the system overlay scrollbar, unstyled,

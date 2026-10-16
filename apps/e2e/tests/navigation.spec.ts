@@ -76,7 +76,9 @@ test("a link imports without login, and the editors close one level at a time wi
   await expect(host.page.getByText("10 songs added · 0 unavailable skipped")).toBeVisible();
 
   await music.getByRole("radio", { name: "Your decks" }).click();
-  await music.getByRole("button", { name: "In this game, 10 songs" }).click();
+  const roomDeck = music.getByRole("region", { name: "In this game" });
+  await expect(roomDeck.getByText("10 songs", { exact: true })).toBeVisible();
+  await roomDeck.getByRole("button", { name: "Edit songs" }).click();
   await expect(host.page.getByRole("dialog", { name: "Edit playlist" })).toBeVisible();
   const firstTrack = host.page.getByRole("button", { name: /^E2E Track 1\b/ });
   await firstTrack.click();

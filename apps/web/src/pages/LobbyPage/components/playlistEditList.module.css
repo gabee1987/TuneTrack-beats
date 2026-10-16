@@ -1,9 +1,15 @@
+/* The filter and sort rows sit in the flow above the list, so nothing floats over a song. */
+.filterBar {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-2);
+  padding: 0 18px var(--space-2);
+}
+
 .sortBar {
-  position: absolute;
-  top: 82px;
-  right: 18px;
-  left: 18px;
-  z-index: 3;
+  position: relative;
+  flex-shrink: 0;
+  margin: 0 18px var(--space-2);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -68,13 +74,11 @@
 .listScrollArea {
   flex: 1;
   min-height: 0;
-  padding-top: 58px;
   padding-bottom: 72px;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  scroll-padding-top: 58px;
 }
 
 .listScrollArea::-webkit-scrollbar {
@@ -274,10 +278,12 @@
     height: 22px;
   }
 
+  .filterBar {
+    padding-inline: 14px;
+  }
+
   .sortBar {
-    top: 80px;
-    right: 14px;
-    left: 14px;
+    margin-inline: 14px;
   }
 
   .trackRow {

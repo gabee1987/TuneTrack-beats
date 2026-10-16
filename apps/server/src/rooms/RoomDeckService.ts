@@ -1,6 +1,7 @@
 import type { GameTrackCard } from "@tunetrack/game-engine";
 import {
   DomainError,
+  applyTrackEdit,
   type PlaylistQueueUpdateMode,
   type PublicRoomState,
   type RoomId,
@@ -107,24 +108,7 @@ export class RoomDeckService {
     const nextDeck = roomRecord.importedDeck.map((card) => {
       if (card.id !== payload.trackId) return card;
 
-      const nextReleaseYear = payload.releaseYear ?? card.releaseYear;
-      const didChangeMetadata =
-        payload.title !== undefined ||
-        payload.artist !== undefined ||
-        payload.albumTitle !== undefined ||
-        payload.releaseYear !== undefined;
-
-      updatedTrack = {
-        ...card,
-        ...(payload.title !== undefined ? { title: payload.title } : {}),
-        ...(payload.artist !== undefined ? { artist: payload.artist } : {}),
-        ...(payload.albumTitle !== undefined ? { albumTitle: payload.albumTitle } : {}),
-        releaseYear: nextReleaseYear,
-        sourceReleaseYear: card.sourceReleaseYear ?? card.releaseYear,
-        metadataStatus:
-          payload.metadataStatus ??
-          (didChangeMetadata ? "edited" : (card.metadataStatus ?? "imported")),
-      };
+      updatedTrack = applyTrackEdit(card, payload);
       return updatedTrack;
     });
 

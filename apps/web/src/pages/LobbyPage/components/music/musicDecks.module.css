@@ -1,0 +1,138 @@
+/* Your decks: the deck in this game, then the saved decks (`22` §4.8). */
+.roomDeck,
+.deckTile {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-elevated);
+  color: var(--color-text-primary);
+}
+
+.roomDeck {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.roomDeckHead {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.roomDeckCopy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.deckName {
+  margin: 0;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--color-text-primary);
+  font-size: var(--type-body-lg-size);
+  line-height: var(--type-body-lg-leading);
+  font-weight: var(--type-label-weight);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deckMeta {
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+  font-variant-numeric: tabular-nums;
+}
+
+.checkBlock {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.checkLine {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
+}
+
+.checkList {
+  display: grid;
+  margin: 0 calc(var(--space-2) * -1);
+  padding: 0;
+  list-style: none;
+}
+
+.allChecked {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
+}
+
+.allChecked svg {
+  flex-shrink: 0;
+  color: var(--color-accent-brand);
+}
+
+.roomDeckActions {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.roomDeckSecondary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1);
+}
+
+.deckGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.deckTile {
+  position: relative;
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-3);
+}
+
+/* The tile is narrower than a 160 px cover on phones; the cover follows the tile. */
+.deckCover {
+  width: 100%;
+  max-width: 160px;
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.deckTileActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-1);
+  width: 100%;
+  margin-top: var(--space-1);
+}
+
+.deckTileActions > * {
+  min-width: 0;
+  padding-inline: var(--space-2);
+}
+
+.deckMore {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+}

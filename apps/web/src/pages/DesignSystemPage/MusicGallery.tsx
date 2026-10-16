@@ -1,6 +1,7 @@
 import {
   SPOTIFY_QUICK_PICK_PRESET_IDS,
   type PublicRoomSettings,
+  type PublicTrackInfo,
   type SpotifySmartSearchResult,
 } from "@tunetrack/shared/client";
 import { useState } from "react";
@@ -35,6 +36,25 @@ const AUTH: LobbySpotifyAuthState = {
 const SAVED_DECKS: SavedDeckSummary[] = [
   { coverUrls: [], id: "TEST_DECK_1", name: "Road Trip", songCount: 48, toCheckCount: 3 },
   { coverUrls: [], id: "TEST_DECK_2", name: "Party Classics", songCount: 120, toCheckCount: 0 },
+];
+
+const SONGS_TO_CHECK: PublicTrackInfo[] = [
+  {
+    albumTitle: "Album One (Remastered)",
+    artist: "Artist One",
+    id: "TEST_TRACK_1",
+    metadataStatus: "imported",
+    releaseYear: 2011,
+    title: "Song One",
+  },
+  {
+    albumTitle: "Greatest Hits",
+    artist: "Artist Two",
+    id: "TEST_TRACK_2",
+    metadataStatus: "imported",
+    releaseYear: 2004,
+    title: "Song Two",
+  },
 ];
 
 const RESULTS: SpotifySmartSearchResult[] = [
@@ -75,18 +95,26 @@ export function MusicGallery() {
       <MusicDecksTab
         disabled={false}
         onDeckOptions={noop}
+        onEditDeck={noop}
         onEditRoomDeck={noop}
         onFind={noop}
         onRemoveRoomDeck={noop}
         onSaveRoomDeck={noop}
         onUseDeck={noop}
-        roomDeck={{ isEditable: true, songCount: 60, toCheckCount: 4 }}
+        roomDeck={{
+          coverUrls: [],
+          isEditable: true,
+          songCount: 60,
+          songsToCheck: SONGS_TO_CHECK,
+          toCheckCount: 4,
+        }}
         savedDecks={SAVED_DECKS}
         statusMessage={null}
       />
       <MusicDecksTab
         disabled={false}
         onDeckOptions={noop}
+        onEditDeck={noop}
         onEditRoomDeck={noop}
         onFind={noop}
         onRemoveRoomDeck={noop}
@@ -165,7 +193,7 @@ const DEMO_SPOTIFY = {
     searchSpotifyPlaylists: noop,
     setPlaylistSearchQuery: noop,
   },
-  queue: { closeEditModal: noop, isEditModalOpen: false, openEditModal: noop },
+  queue: { closeEditor: noop, editor: null, openEditor: noop },
   savedPlaylists: {
     cancelRenamePlaylist: noop,
     cancelSavePlaylist: noop,
@@ -189,6 +217,7 @@ const DEMO_SPOTIFY = {
     setSelectedSavedPlaylistId: noop,
     startRenamePlaylist: noop,
     switchToSaveAsNew: noop,
+    updateSavedDeckTracks: noop,
   },
   smartSearch: {
     addSmartSearchTrackToQueue: noop,

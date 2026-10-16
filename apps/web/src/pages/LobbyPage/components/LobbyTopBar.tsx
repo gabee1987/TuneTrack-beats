@@ -6,7 +6,7 @@ import styles from "./LobbyTopBar.module.css";
 
 interface LobbyTopBarProps {
   isHost: boolean;
-  /** Back asks first: the host closes the room, a guest leaves it. */
+  /** Back asks first: the host closes the room, a guest leaves it (as the page's exit button). */
   onBack: () => void;
   /** After the connection chip: the app menu on desktop. */
   trailing?: ReactNode | undefined;
@@ -18,11 +18,7 @@ export function LobbyTopBar({ isHost, onBack, trailing }: LobbyTopBarProps) {
 
   return (
     <header className={styles.header}>
-      <IconButton
-        aria-label={isHost ? t("lobby.exit.closeLabel") : t("lobby.exit.leaveLabel")}
-        onClick={onBack}
-        variant="ghost"
-      >
+      <IconButton aria-label={t("common.back")} onClick={onBack} variant="ghost">
         <svg aria-hidden="true" fill="none" height="22" viewBox="0 0 24 24" width="22">
           <path
             d="M15 6L9 12L15 18"

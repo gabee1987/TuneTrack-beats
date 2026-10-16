@@ -169,6 +169,28 @@ const MOTIFS: Record<SpotifyQuickPickPresetId, ReactNode> = {
       <circle className={accent} cx="7" cy="41" r="1.8" />
     </>
   ),
+  japanese_music: (
+    <>
+      <circle className={accent} cx="24" cy="19" r="10" />
+      <polygon className={ink} points="2,42 18,22 30,22 46,42" />
+      <polygon className={on} points="18,22 30,22 33.5,26.5 28.5,25 24,28.5 19.5,25 14.5,26.5" />
+    </>
+  ),
+  hungarian_music: (
+    <>
+      <path className={line} d="M24 27v15" />
+      <path
+        className={on}
+        d="M24 39c-6 0-10-4-11-8 5 0 9 3 11 8ZM24 39c6 0 10-4 11-8-5 0-9 3-11 8Z"
+      />
+      <path
+        className={accent}
+        d="M24 27c-8 0-11-7-10-15 4 3 7 7 10 15ZM24 27c8 0 11-7 10-15-4 3-7 7-10 15Z"
+      />
+      <path className={accent} d="M24 8c-4 4-5 10 0 18 5-8 4-14 0-18Z" />
+      <circle className={on} cx="24" cy="20" r="1.6" />
+    </>
+  ),
 };
 
 interface QuickPickArtProps {

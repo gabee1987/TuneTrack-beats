@@ -10,6 +10,11 @@ import {
   installRouterRequestStub,
   renderOnHistoryRoute,
 } from "../../../test/renderOnHistoryRoute";
+import {
+  createSavedDeckSource,
+  type PlaylistEditorFilter,
+} from "../hooks/music/playlistEditorTarget";
+import { useRoomDeckTracks } from "../hooks/music/useRoomDeckTracks";
 import { PlaylistEditModal } from "./PlaylistEditModal";
 
 vi.mock("../../../services/socket/socketClient", async () => {
@@ -37,23 +42,36 @@ function buildTrack(overrides: Partial<PublicTrackInfo> = {}): PublicTrackInfo {
   } as PublicTrackInfo;
 }
 
-/** The editor is a view inside Music Setup, as in `LobbySpotifySection`. */
-function PlaylistEditorScreen() {
+interface EditorScreenOptions {
+  initialFilter?: PlaylistEditorFilter;
+  initialTrackId?: string;
+}
+
+/** The editor is a view inside the Music sheet, on the room deck. */
+function PlaylistEditorScreen({ initialFilter = "all", initialTrackId }: EditorScreenOptions) {
   const [isOpen, setIsOpen] = useState(true);
+  const source = useRoomDeckTracks(true, "TEST_DECK");
 
   return (
     <>
       <p>Lobby screen</p>
       <Overlay isOpen kind="sheet" label="Spotify music setup" onDismiss={() => undefined}>
         <p>Music setup</p>
-        <PlaylistEditModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
+        <PlaylistEditModal
+          initialFilter={initialFilter}
+          initialTrackId={initialTrackId}
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+          source={source}
+          title="In this game"
+        />
       </Overlay>
     </>
   );
 }
 
-async function renderOpenEditor(tracks: PublicTrackInfo[]) {
-  const router = renderOnHistoryRoute(<PlaylistEditorScreen />);
+async function renderOpenEditor(tracks: PublicTrackInfo[], options: EditorScreenOptions = {}) {
+  const router = renderOnHistoryRoute(<PlaylistEditorScreen {...options} />);
 
   await act(async () => {
     await Promise.resolve();
@@ -198,5 +216,65 @@ describe("PlaylistEditModal", () => {
     expect(screen.getByText("Lobby screen")).toBeInTheDocument();
     expect(screen.getByRole("dialog", { name: "Spotify music setup" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe(HISTORY_ROUTE_PATH);
+  });
+
+  describe("Needs check filter", () => {
+    const flaggedTrack = buildTrack({
+      albumTitle: "Test Album (Remastered)",
+      id: "track-2",
+      releaseYear: 2011,
+      title: "Test Track Two",
+    });
+
+    it("shows only the songs whose year needs a look, and All brings the rest back", async () => {
+      await renderOpenEditor([buildTrack(), flaggedTrack], { initialFilter: "needsCheck" });
+
+      expect(await screen.findByText("Test Track Two")).toBeInTheDocument();
+      expect(screen.queryByText("Test Track One")).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Needs check (1)" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+
+      await userEvent.click(screen.getByRole("button", { name: "All (2)" }));
+      expect(screen.getByText("Test Track One")).toBeInTheDocument();
+    });
+
+    it("opens straight on the song the card linked to", async () => {
+      await renderOpenEditor([buildTrack(), flaggedTrack], {
+        initialFilter: "needsCheck",
+        initialTrackId: "track-2",
+      });
+
+      expect(await screen.findByDisplayValue("Test Track Two")).toBeInTheDocument();
+    });
+  });
+
+  it("edits a saved deck on this device and never asks the server", async () => {
+    const write = vi.fn();
+    const source = createSavedDeckSource([buildTrack()], write);
+    renderOnHistoryRoute(
+      <PlaylistEditModal
+        initialFilter="all"
+        isOpen
+        onClose={() => undefined}
+        source={source}
+        title="Test Deck"
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Test Deck" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /^Test Track One/ }));
+    const yearField = await screen.findByDisplayValue("1984");
+    await userEvent.clear(yearField);
+    await userEvent.type(yearField, "1979");
+    await userEvent.click(
+      within(yearField.closest("form") as HTMLElement).getByRole("button", { name: /save/i }),
+    );
+
+    expect(write).toHaveBeenCalledWith([
+      expect.objectContaining({ id: "track-1", metadataStatus: "edited", releaseYear: 1979 }),
+    ]);
+    expect(socket.emittedFor("update_playlist_track")).toEqual([]);
   });
 });

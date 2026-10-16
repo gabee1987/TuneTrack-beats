@@ -27,6 +27,10 @@ export function LobbyHostMusic({ currentSettings, setup }: LobbyHostMusicProps) 
       <LobbyMusicCard
         deckMeter={setup.deckMeter}
         music={setup.music}
+        onCheckSongs={() => {
+          setIsSetupOpen(true);
+          spotifyState.queue.openEditor({ deck: "room", filter: "needsCheck" });
+        }}
         onOpen={() => setIsSetupOpen(true)}
         onUsePracticeDeck={() => void practiceDeck.choosePracticeDeck()}
         practiceDeckStatus={practiceDeck.status}

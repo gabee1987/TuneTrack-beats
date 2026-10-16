@@ -141,3 +141,15 @@
   --art-from: var(--color-art-green);
   --art-to: var(--color-art-cyan);
 }
+
+.art[data-art="japanese_music"] {
+  --art-from: var(--color-art-pink);
+  --art-to: var(--color-art-violet);
+  --art-accent: var(--color-art-red);
+}
+
+.art[data-art="hungarian_music"] {
+  --art-from: var(--color-art-green);
+  --art-to: var(--color-art-ink);
+  --art-accent: var(--color-art-red);
+}

@@ -15,6 +15,8 @@ type Translate = (key: string, params?: Record<string, string | number>) => stri
 interface LobbyMusicCardProps {
   deckMeter: LobbyDeckMeterModel | null;
   music: LobbyMusicStatus;
+  /** Opens the song editor on the songs whose year needs a look. */
+  onCheckSongs: () => void;
   onOpen: () => void;
   onUsePracticeDeck: () => void;
   practiceDeckStatus: PracticeDeckChoiceStatus;
@@ -23,7 +25,15 @@ interface LobbyMusicCardProps {
 
 /** The host's music: the whole card opens Music setup (`22` §4.6). */
 export const LobbyMusicCard = forwardRef<HTMLElement, LobbyMusicCardProps>(function LobbyMusicCard(
-  { deckMeter, music, onOpen, onUsePracticeDeck, practiceDeckStatus, tracksToCheckCount },
+  {
+    deckMeter,
+    music,
+    onCheckSongs,
+    onOpen,
+    onUsePracticeDeck,
+    practiceDeckStatus,
+    tracksToCheckCount,
+  },
   ref,
 ) {
   const { t } = useI18n();
@@ -40,7 +50,7 @@ export const LobbyMusicCard = forwardRef<HTMLElement, LobbyMusicCardProps>(funct
       />
       {deckMeter ? <LobbyDeckMeter meter={deckMeter} /> : null}
       {tracksToCheckCount > 0 ? (
-        <ChipButton className={styles.toCheck} onClick={onOpen}>
+        <ChipButton className={styles.toCheck} onClick={onCheckSongs}>
           {t("lobby.music.toCheck", { count: tracksToCheckCount })}
         </ChipButton>
       ) : null}

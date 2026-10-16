@@ -77,6 +77,13 @@ export function CorePrimitivesGallery() {
             subtitle="Waiting"
             title="Alex"
           />
+          <ListRow
+            leading={<Avatar initials="SO" size="sm" />}
+            onOpen={() => undefined}
+            subtitle="Opens details · the trailing button stays separate"
+            title="Song One"
+            trailing={<Badge size="sm">Add</Badge>}
+          />
         </Card>
       </section>
 

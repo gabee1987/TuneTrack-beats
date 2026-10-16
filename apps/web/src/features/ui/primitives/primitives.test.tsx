@@ -237,6 +237,30 @@ describe("ListRow", () => {
     await userEvent.click(screen.getByRole("button", { name: "Test Playlist" }));
     expect(onClick).toHaveBeenCalledTimes(1);
   });
+
+  it("opens from its cover and text without wrapping the trailing action", async () => {
+    const onOpen = vi.fn();
+    const onAdd = vi.fn();
+    renderWithProviders(
+      <ListRow
+        onOpen={onOpen}
+        subtitle="Test Artist"
+        title="Test Song"
+        trailing={
+          <button onClick={onAdd} type="button">
+            Add
+          </button>
+        }
+      />,
+    );
+
+    const open = screen.getByRole("button", { name: /Test Song/ });
+    expect(open).not.toContainElement(screen.getByRole("button", { name: "Add" }));
+    await userEvent.click(open);
+    await userEvent.click(screen.getByRole("button", { name: "Add" }));
+    expect(onOpen).toHaveBeenCalledTimes(1);
+    expect(onAdd).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("SegmentedControl", () => {

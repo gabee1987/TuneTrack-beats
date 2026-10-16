@@ -51,6 +51,7 @@ test("a guest arriving shows in the host's lobby and the guest waits for Start",
   ).toBeVisible();
   await expect(guest.page.getByRole("button", { name: "Start game" })).toHaveCount(0);
 
+  // The page's own exit button; Back asks the same question.
   await guest.page.getByRole("button", { name: "Leave room" }).click();
   await guest.page
     .getByRole("dialog", { name: "Leave the room?" })
@@ -63,7 +64,7 @@ test("the host closes the room from Back and lands on Home", async ({ openPlayer
   const host = await openPlayer("Closing Host");
   await hostRoom(host.page);
 
-  await host.page.getByRole("button", { name: "Close room" }).click();
+  await host.page.getByRole("button", { name: "Back" }).click();
   await host.page
     .getByRole("dialog", { name: "Close the room?" })
     .getByRole("button", { name: "Close room" })

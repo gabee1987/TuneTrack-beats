@@ -5,6 +5,7 @@ import { NameSheet } from "../../../features/profile/NameSheet";
 import { StatusBanner } from "../../../features/ui/StatusBanner";
 import type { LobbyPageAssemblyProps } from "../LobbyPage.types";
 import cardStyles from "../components/lobbyCard.module.css";
+import { LobbyExitButton } from "../components/LobbyExitButton";
 import { LobbyExitDialog } from "../components/LobbyExitDialog";
 import { LobbyHostMusic } from "../components/LobbyHostMusic";
 import { LobbyInviteCard } from "../components/LobbyInviteCard";
@@ -78,6 +79,7 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
               rules={setup.rules}
             />
             {isHost ? <LobbyStartSummary lineId={startLineId} start={setup.start} /> : null}
+            <LobbyExitButton isHost={isHost} onClick={() => setIsExitOpen(true)} />
           </>
         )}
       </div>

@@ -17,6 +17,23 @@ vi.mock("../../../../services/socket/connectionState", () => ({
   useConnectionStatus: () => connection.status,
 }));
 vi.mock("../../../../services/haptics/triggerPressHaptic", () => ({ triggerPressHaptic: vi.fn() }));
+vi.mock("../../hooks/music/useRoomDeckTracks", () => ({
+  useRoomDeckTracks: () => ({
+    isLoading: false,
+    removeTracks: vi.fn(),
+    tracks: [
+      {
+        albumTitle: "Album Two (Remastered)",
+        artist: "Artist Two",
+        id: "TEST_TRACK_2",
+        metadataStatus: "imported",
+        releaseYear: 2011,
+        title: "Song Two",
+      },
+    ],
+    updateTrack: vi.fn(),
+  }),
+}));
 
 const SONG: SpotifySmartSearchResult = {
   artist: "Artist One",
@@ -99,7 +116,7 @@ function buildSpotifyStub({
       searchSpotifyPlaylists: vi.fn(),
       setPlaylistSearchQuery: vi.fn(),
     },
-    queue: { closeEditModal: vi.fn(), isEditModalOpen: false, openEditModal: vi.fn() },
+    queue: { closeEditor: vi.fn(), editor: null, openEditor: vi.fn() },
     savedPlaylists: {
       cancelRenamePlaylist: vi.fn(),
       cancelSavePlaylist: vi.fn(),
@@ -111,6 +128,7 @@ function buildSpotifyStub({
       savedPlaylistMessage: null,
       savedPlaylists: savedDecks,
       setSelectedSavedPlaylistId: vi.fn(),
+      updateSavedDeckTracks: vi.fn(),
     },
     smartSearch: {
       addSmartSearchTrackToQueue: vi.fn(),
@@ -244,6 +262,21 @@ describe("MusicSheet Find results", () => {
     expect(spotify.openedPlaylist.openSmartSearchPlaylist).toHaveBeenCalledWith(ALBUM);
   });
 
+  it("opens a song's details from its row and adds it from there", async () => {
+    const { spotify } = renderSheet({ results: [{ ...SONG, albumTitle: "Album One" }] });
+
+    await userEvent.click(screen.getByRole("button", { name: /^Song One/ }));
+    const details = screen.getByRole("dialog", { name: "Song One" });
+    expect(within(details).getByText("Album One")).toBeInTheDocument();
+    expect(within(details).getByText("1984")).toBeInTheDocument();
+
+    await userEvent.click(within(details).getByRole("button", { name: "Add to deck" }));
+    expect(spotify.smartSearch.addSmartSearchTrackToQueue).toHaveBeenCalledWith({
+      ...SONG,
+      albumTitle: "Album One",
+    });
+  });
+
   it("adds selected songs from the selection bar", async () => {
     const { spotify } = renderSheet({ results: [SONG] });
 
@@ -263,15 +296,54 @@ describe("MusicSheet Your decks", () => {
     });
 
     expect(screen.getByRole("radio", { name: "Your decks" })).toBeChecked();
-    expect(screen.getByRole("button", { name: "In this game, 30 songs" })).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("region", { name: "In this game" })).getByText("30 songs"),
+    ).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: /^Road Trip/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Load Road Trip into the game" }));
     const confirm = screen.getByRole("dialog", { name: "Replace the 30 songs in your deck?" });
     await userEvent.click(within(confirm).getByRole("button", { name: "Replace" }));
 
     expect(spotify.savedPlaylists.setSelectedSavedPlaylistId).toHaveBeenCalledWith(
       "TEST_DECK_Road Trip",
     );
+  });
+
+  it("edits a saved deck without loading it", async () => {
+    const { spotify } = renderSheet({ savedDecks: [buildSavedDeck("Road Trip")] });
+
+    await userEvent.click(screen.getByRole("button", { name: "Edit Road Trip" }));
+
+    expect(spotify.queue.openEditor).toHaveBeenCalledWith({
+      deck: "saved",
+      deckId: "TEST_DECK_Road Trip",
+      filter: "all",
+    });
+    expect(spotify.savedPlaylists.setSelectedSavedPlaylistId).not.toHaveBeenCalled();
+  });
+
+  it("lists the songs to check on the game's deck and opens the editor on them", async () => {
+    const { spotify } = renderSheet({
+      settings: { deckSource: "spotify", importedTrackCount: 30, tracksToCheckCount: 2 },
+    });
+    await userEvent.click(screen.getByRole("radio", { name: "Your decks" }));
+    const roomDeck = await screen.findByRole("region", { name: "In this game" });
+
+    expect(within(roomDeck).getByText(/2 songs may have the wrong year/)).toBeInTheDocument();
+    await userEvent.click(within(roomDeck).getByRole("button", { name: /^Song Two/ }));
+    expect(spotify.queue.openEditor).toHaveBeenLastCalledWith({
+      deck: "room",
+      filter: "needsCheck",
+      trackId: "TEST_TRACK_2",
+    });
+
+    await userEvent.click(within(roomDeck).getByRole("button", { name: "Check 2 songs" }));
+    expect(spotify.queue.openEditor).toHaveBeenLastCalledWith({
+      deck: "room",
+      filter: "needsCheck",
+    });
+    await userEvent.click(within(roomDeck).getByRole("button", { name: "Edit songs" }));
+    expect(spotify.queue.openEditor).toHaveBeenLastCalledWith({ deck: "room", filter: "all" });
   });
 
   it("offers Find from an empty Your decks", async () => {

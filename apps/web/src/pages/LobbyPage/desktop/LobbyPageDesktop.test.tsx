@@ -67,7 +67,7 @@ describe("LobbyPageDesktop host", () => {
   it("closes the room from Back after a confirmation", async () => {
     const controller = renderLobby();
 
-    await userEvent.click(screen.getByRole("button", { name: "Close room" }));
+    await userEvent.click(screen.getByRole("button", { name: "Back" }));
     const dialog = screen.getByRole("dialog", { name: "Close the room?" });
     await userEvent.click(within(dialog).getByRole("button", { name: "Close room" }));
 

@@ -41,13 +41,16 @@ export function isPlaylistLink(value: string): boolean {
   return /^[a-zA-Z0-9]{22}$/.test(trimmedValue);
 }
 
-export function summarizeSavedDeck(deck: SavedPlaylist): SavedDeckSummary {
-  const coverUrls = [
-    ...new Set(deck.tracks.flatMap((track) => (track.artworkUrl ? [track.artworkUrl] : []))),
+/** Up to four different song covers for a deck's mosaic. */
+export function pickDeckCovers(tracks: readonly { artworkUrl?: string | undefined }[]): string[] {
+  return [
+    ...new Set(tracks.flatMap((track) => (track.artworkUrl ? [track.artworkUrl] : []))),
   ].slice(0, MOSAIC_COVER_COUNT);
+}
 
+export function summarizeSavedDeck(deck: SavedPlaylist): SavedDeckSummary {
   return {
-    coverUrls,
+    coverUrls: pickDeckCovers(deck.tracks),
     id: deck.id,
     name: deck.name,
     songCount: deck.tracks.length,

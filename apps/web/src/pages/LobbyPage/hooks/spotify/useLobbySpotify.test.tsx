@@ -296,15 +296,15 @@ describe("useLobbySpotify — generated playlist message", () => {
   });
 });
 
-describe("useLobbySpotify — edit modal", () => {
-  it("opens and closes the queue edit modal", () => {
+describe("useLobbySpotify — song editor", () => {
+  it("opens the editor on a deck with a filter and closes it", () => {
     const { result } = renderLobbySpotify();
 
-    expect(result().queue.isEditModalOpen).toBe(false);
-    act(() => result().queue.openEditModal());
-    expect(result().queue.isEditModalOpen).toBe(true);
-    act(() => result().queue.closeEditModal());
-    expect(result().queue.isEditModalOpen).toBe(false);
+    expect(result().queue.editor).toBeNull();
+    act(() => result().queue.openEditor({ deck: "saved", deckId: "TEST_DECK_1", filter: "all" }));
+    expect(result().queue.editor).toEqual({ deck: "saved", deckId: "TEST_DECK_1", filter: "all" });
+    act(() => result().queue.closeEditor());
+    expect(result().queue.editor).toBeNull();
   });
 });
 
@@ -330,7 +330,7 @@ describe("useLobbySpotify — room closed", () => {
       tracks: [buildTrack({ spotifyTrackUri: "spotify:track:TEST0001" })],
     });
     act(() => result().savedPlaylists.startRenamePlaylist(saved?.id ?? ""));
-    act(() => result().queue.openEditModal());
+    act(() => result().queue.openEditor({ deck: "room", filter: "needsCheck" }));
     await applyGeneratedCandidates(result, 12);
 
     expect(result().auth.authPhase).toBe("error");
@@ -349,6 +349,6 @@ describe("useLobbySpotify — room closed", () => {
     expect(result().savedPlaylists.generatedPlaylistMessage).toBeNull();
     expect(result().savedPlaylists.renamingPlaylistId).toBeNull();
     expect(result().savedPlaylists.loadedSavedPlaylistId).toBeNull();
-    expect(result().queue.isEditModalOpen).toBe(false);
+    expect(result().queue.editor).toBeNull();
   });
 });

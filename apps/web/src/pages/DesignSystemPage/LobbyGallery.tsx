@@ -181,6 +181,7 @@ function MusicCard({
     <LobbyMusicCard
       deckMeter={deckMeter}
       music={music}
+      onCheckSongs={noop}
       onOpen={noop}
       onUsePracticeDeck={noop}
       practiceDeckStatus={status}

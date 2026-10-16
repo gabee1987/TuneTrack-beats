@@ -214,6 +214,11 @@ export function useSavedPlaylistsController({
     });
   }
 
+  /** An edit made in the song editor on a saved deck, written back to this device at once. */
+  function updateSavedDeckTracks(playlistId: string, tracks: PublicTrackInfo[]) {
+    setSavedPlaylists(updateSavedPlaylist(playlistId, tracks));
+  }
+
   function deleteSavedPlaylistById(playlistId: string) {
     if (loadedSavedPlaylistId === playlistId) {
       setLoadedSavedPlaylistId(null);
@@ -261,5 +266,6 @@ export function useSavedPlaylistsController({
     setSelectedSavedPlaylistId: handleSelectSavedPlaylist,
     startRenamePlaylist,
     switchToSaveAsNew,
+    updateSavedDeckTracks,
   };
 }

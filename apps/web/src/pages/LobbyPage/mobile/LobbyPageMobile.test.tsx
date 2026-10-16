@@ -194,6 +194,16 @@ describe("LobbyPageMobile host", () => {
   it("closes the room from Back after a confirmation", async () => {
     const controller = renderLobby();
 
+    await userEvent.click(screen.getByRole("button", { name: "Back" }));
+    const dialog = screen.getByRole("dialog", { name: "Close the room?" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Close room" }));
+
+    expect(controller.handleCloseRoom).toHaveBeenCalledTimes(1);
+  });
+
+  it("closes the room from the Close room button at the end of the page", async () => {
+    const controller = renderLobby();
+
     await userEvent.click(screen.getByRole("button", { name: "Close room" }));
     const dialog = screen.getByRole("dialog", { name: "Close the room?" });
     await userEvent.click(within(dialog).getByRole("button", { name: "Close room" }));
@@ -221,7 +231,7 @@ describe("LobbyPageMobile guest", () => {
   it("leaves the room from Back after a confirmation", async () => {
     renderLobby({ currentPlayerId: TEST_GUEST_ID });
 
-    await userEvent.click(screen.getByRole("button", { name: "Leave room" }));
+    await userEvent.click(screen.getByRole("button", { name: "Back" }));
     const dialog = screen.getByRole("dialog", { name: "Leave the room?" });
     await userEvent.click(within(dialog).getByRole("button", { name: "Leave" }));
 

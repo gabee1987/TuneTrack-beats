@@ -1,34 +1,35 @@
+import type { PublicTrackInfo, TrackMetadataStatus } from "@tunetrack/shared/client";
+import { useCallback, useMemo, useState } from "react";
 import {
-  ClientToServerEvent,
-  ServerToClientEvent,
-  type PlaylistTrackUpdatedPayload,
-  type PlaylistTracksPayload,
-  type PublicTrackInfo,
-  type TrackMetadataStatus,
-} from "@tunetrack/shared/client";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
-import { getSocketClient } from "../../../services/socket/socketClient";
+  filterTracks,
+  needsYearCheck,
+  type PlaylistEditorFilter,
+  type PlaylistEditorSource,
+} from "./music/playlistEditorTarget";
 
 export type SortField = "title" | "artist" | "year";
 export type SortDir = "asc" | "desc";
 
 export interface UsePlaylistEditorResult {
-  error: string | null;
+  /** Every song in the deck, whatever the filter shows. */
+  allTracks: PublicTrackInfo[];
+  filter: PlaylistEditorFilter;
   isLoading: boolean;
-  isSelectMode: boolean;
+  needsCheckCount: number;
   removeSelected: () => void;
   removeTrack: (trackId: string) => void;
   selectedIds: ReadonlySet<string>;
-  setSelectMode: (on: boolean) => void;
+  setFilter: (filter: PlaylistEditorFilter) => void;
   sortDir: SortDir;
   sortField: SortField | null;
   toggleSort: (field: SortField) => void;
   toggleSelection: (trackId: string) => void;
+  /** The songs on screen: filtered, then sorted. */
   tracks: PublicTrackInfo[];
   updateTrack: (trackId: string, patch: PlaylistTrackUpdatePatch) => void;
 }
 
+/** What the song details sheet sends: only the fields it sets. */
 export interface PlaylistTrackUpdatePatch {
   title?: string;
   artist?: string;
@@ -37,61 +38,29 @@ export interface PlaylistTrackUpdatePatch {
   metadataStatus?: TrackMetadataStatus;
 }
 
-export function usePlaylistEditor(isOpen: boolean): UsePlaylistEditorResult {
-  const { roomId } = useParams<{ roomId: string }>();
-
-  const [rawTracks, setRawTracks] = useState<PublicTrackInfo[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
+/**
+ * Sorting, the Needs check filter and selection over one deck (`22` §4.9). The source decides
+ * where the songs live; each opening starts from `initialFilter` with nothing selected.
+ */
+export function usePlaylistEditor(
+  source: PlaylistEditorSource,
+  isOpen: boolean,
+  initialFilter: PlaylistEditorFilter,
+): UsePlaylistEditorResult {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [filter, setFilter] = useState<PlaylistEditorFilter>(initialFilter);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const [wasOpen, setWasOpen] = useState(isOpen);
 
-  const [isSelectMode, setSelectMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (!isOpen || !roomId) return;
-
-    setIsLoading(true);
-    setError(null);
-    setSelectMode(false);
-    setSelectedIds(new Set());
-    setSortField(null);
-
-    // `active` guards against the promise resolving after cleanup, which would
-    // permanently attach a listener that can never be removed.
-    let active = true;
-    let off: (() => void) | null = null;
-
-    void getSocketClient().then((socket) => {
-      if (!active) return;
-
-      function handleTracks(payload: PlaylistTracksPayload) {
-        setRawTracks(payload.tracks);
-        setIsLoading(false);
-      }
-
-      // An edit is answered with that track alone; the optimistic copy is replaced by the server's.
-      function handleTrackUpdated({ track }: PlaylistTrackUpdatedPayload) {
-        setRawTracks((current) => current.map((item) => (item.id === track.id ? track : item)));
-      }
-
-      socket.on(ServerToClientEvent.PlaylistTracks, handleTracks);
-      socket.on(ServerToClientEvent.PlaylistTrackUpdated, handleTrackUpdated);
-      socket.emit(ClientToServerEvent.GetPlaylistTracks, { roomId });
-
-      off = () => {
-        socket.off(ServerToClientEvent.PlaylistTracks, handleTracks);
-        socket.off(ServerToClientEvent.PlaylistTrackUpdated, handleTrackUpdated);
-      };
-    });
-
-    return () => {
-      active = false;
-      off?.();
-    };
-  }, [isOpen, roomId]);
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen);
+    if (isOpen) {
+      setFilter(initialFilter);
+      setSelectedIds(new Set());
+      setSortField(null);
+    }
+  }
 
   const toggleSort = useCallback((field: SortField) => {
     setSortField((prev) => {
@@ -104,9 +73,13 @@ export function usePlaylistEditor(isOpen: boolean): UsePlaylistEditorResult {
     });
   }, []);
 
+  const { removeTracks, tracks: allTracks, updateTrack } = source;
+  const needsCheckCount = useMemo(() => allTracks.filter(needsYearCheck).length, [allTracks]);
+
   const tracks = useMemo(() => {
-    if (!sortField) return rawTracks;
-    return [...rawTracks].sort((a, b) => {
+    const shown = filterTracks(allTracks, filter);
+    if (!sortField) return shown;
+    return shown.sort((a, b) => {
       let cmp: number;
       if (sortField === "year") {
         cmp = a.releaseYear - b.releaseYear;
@@ -117,18 +90,9 @@ export function usePlaylistEditor(isOpen: boolean): UsePlaylistEditorResult {
       }
       return sortDir === "asc" ? cmp : -cmp;
     });
-  }, [rawTracks, sortField, sortDir]);
+  }, [allTracks, filter, sortField, sortDir]);
 
-  const removeTrack = useCallback(
-    (trackId: string) => {
-      if (!roomId) return;
-      setRawTracks((prev) => prev.filter((t) => t.id !== trackId));
-      void getSocketClient().then((socket) => {
-        socket.emit(ClientToServerEvent.RemovePlaylistTracks, { roomId, trackIds: [trackId] });
-      });
-    },
-    [roomId],
-  );
+  const removeTrack = useCallback((trackId: string) => removeTracks([trackId]), [removeTracks]);
 
   const toggleSelection = useCallback((trackId: string) => {
     setSelectedIds((prev) => {
@@ -140,52 +104,20 @@ export function usePlaylistEditor(isOpen: boolean): UsePlaylistEditorResult {
   }, []);
 
   const removeSelected = useCallback(() => {
-    if (!roomId || selectedIds.size === 0) return;
-    const ids = [...selectedIds];
-    setRawTracks((prev) => prev.filter((t) => !selectedIds.has(t.id)));
+    if (selectedIds.size === 0) return;
+    removeTracks([...selectedIds]);
     setSelectedIds(new Set());
-    setSelectMode(false);
-    void getSocketClient().then((socket) => {
-      socket.emit(ClientToServerEvent.RemovePlaylistTracks, { roomId, trackIds: ids });
-    });
-  }, [roomId, selectedIds]);
-
-  const updateTrack = useCallback(
-    (trackId: string, patch: PlaylistTrackUpdatePatch) => {
-      if (!roomId) return;
-
-      setRawTracks((prev) =>
-        prev.map((track) =>
-          track.id === trackId
-            ? {
-                ...track,
-                ...patch,
-                sourceReleaseYear: track.sourceReleaseYear ?? track.releaseYear,
-                metadataStatus: patch.metadataStatus ?? track.metadataStatus,
-              }
-            : track,
-        ),
-      );
-
-      void getSocketClient().then((socket) => {
-        socket.emit(ClientToServerEvent.UpdatePlaylistTrack, {
-          roomId,
-          trackId,
-          ...patch,
-        });
-      });
-    },
-    [roomId],
-  );
+  }, [removeTracks, selectedIds]);
 
   return {
-    error,
-    isLoading,
-    isSelectMode,
+    allTracks,
+    filter,
+    isLoading: source.isLoading,
+    needsCheckCount,
     removeSelected,
     removeTrack,
     selectedIds,
-    setSelectMode,
+    setFilter,
     sortDir,
     sortField,
     toggleSort,

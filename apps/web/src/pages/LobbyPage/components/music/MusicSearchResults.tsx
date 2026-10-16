@@ -1,4 +1,5 @@
 import type { SpotifyPlaylistSearchItem, SpotifySmartSearchResult } from "@tunetrack/shared/client";
+import { useState } from "react";
 import { useI18n } from "../../../../features/i18n";
 import {
   Button,
@@ -10,6 +11,7 @@ import {
 } from "../../../../features/ui/primitives";
 import type { MusicFindState } from "../../hooks/music/useMusicFind";
 import { ChevronGlyph, CheckGlyph } from "./musicGlyphs";
+import { MusicSongDetails } from "./MusicSongDetails";
 import styles from "./music.module.css";
 import findStyles from "./musicFind.module.css";
 
@@ -23,6 +25,7 @@ interface MusicSearchResultsProps {
 export function MusicSearchResults({ disabled, find, onOpen }: MusicSearchResultsProps) {
   const { t } = useI18n();
   const { results } = find;
+  const [detailsSong, setDetailsSong] = useState<SpotifySmartSearchResult | null>(null);
 
   if (find.isSearching) {
     return <ListSkeleton count={3} leading="cover-sm" trailing="action" />;
@@ -70,7 +73,13 @@ export function MusicSearchResults({ disabled, find, onOpen }: MusicSearchResult
             ))
           : results.results.map((result) => (
               <li key={`${result.type}:${result.id}`}>
-                <MusicResultRow disabled={disabled} find={find} onOpen={onOpen} result={result} />
+                <MusicResultRow
+                  disabled={disabled}
+                  find={find}
+                  onDetails={setDetailsSong}
+                  onOpen={onOpen}
+                  result={result}
+                />
               </li>
             ))}
       </ul>
@@ -85,6 +94,13 @@ export function MusicSearchResults({ disabled, find, onOpen }: MusicSearchResult
           {t("music.find.loadMore")}
         </Button>
       ) : null}
+      <MusicSongDetails
+        disabled={disabled}
+        isAdded={detailsSong ? find.queued.has(detailsSong.id) : false}
+        onClose={() => setDetailsSong(null)}
+        onToggle={find.toggleTrack}
+        song={detailsSong}
+      />
     </section>
   );
 }
@@ -92,11 +108,12 @@ export function MusicSearchResults({ disabled, find, onOpen }: MusicSearchResult
 interface MusicResultRowProps {
   disabled: boolean;
   find: MusicFindState;
+  onDetails: (song: SpotifySmartSearchResult) => void;
   onOpen: (result: SpotifySmartSearchResult) => void;
   result: SpotifySmartSearchResult;
 }
 
-function MusicResultRow({ disabled, find, onOpen, result }: MusicResultRowProps) {
+function MusicResultRow({ disabled, find, onDetails, onOpen, result }: MusicResultRowProps) {
   const { t } = useI18n();
   const cover = <CoverArt label={result.title} size="sm" src={result.imageUrl} />;
   const subtitle = getResultSubtitle(result);
@@ -138,6 +155,7 @@ function MusicResultRow({ disabled, find, onOpen, result }: MusicResultRowProps)
   return (
     <ListRow
       leading={cover}
+      onOpen={() => onDetails(result)}
       subtitle={subtitle}
       title={result.title}
       trailing={

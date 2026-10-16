@@ -3,6 +3,11 @@ import { useI18n } from "../../../features/i18n";
 import { PanelView } from "../../../features/overlay";
 import { ActionButton } from "../../../features/ui/ActionButton";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
+import { ChipButton } from "../../../features/ui/primitives";
+import type {
+  PlaylistEditorFilter,
+  PlaylistEditorSource,
+} from "../hooks/music/playlistEditorTarget";
 import { usePlaylistEditor, type SortField } from "../hooks/usePlaylistEditor";
 import { PlaylistTrackDetailsSheet } from "./PlaylistTrackDetailsSheet";
 import { PlaylistTrackList } from "./PlaylistTrackList";
@@ -10,36 +15,56 @@ import chromeStyles from "./playlistEditChrome.module.css";
 import listStyles from "./playlistEditList.module.css";
 
 interface PlaylistEditModalProps {
+  /** Needs check when opened from a "to check" link, otherwise All. */
+  initialFilter: PlaylistEditorFilter;
+  /** A song to open in the details sheet straight away. */
+  initialTrackId?: string | undefined;
   isOpen: boolean;
   onClose: () => void;
+  source: PlaylistEditorSource;
+  title: string;
 }
 
 const SORT_FIELDS: SortField[] = ["title", "artist", "year"];
 
-export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
+export function PlaylistEditModal({
+  initialFilter,
+  initialTrackId,
+  isOpen,
+  onClose,
+  source,
+  title,
+}: PlaylistEditModalProps) {
   const { t } = useI18n();
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
+  const [wasOpen, setWasOpen] = useState(false);
 
-  if (!isOpen && selectedTrackId !== null) {
-    setSelectedTrackId(null);
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen);
+    setSelectedTrackId(isOpen ? (initialTrackId ?? null) : null);
   }
 
   const {
+    allTracks,
+    filter,
     isLoading,
+    needsCheckCount,
     removeSelected,
     removeTrack,
     selectedIds,
+    setFilter,
     sortDir,
     sortField,
     toggleSort,
     toggleSelection,
     tracks,
     updateTrack,
-  } = usePlaylistEditor(isOpen);
+  } = usePlaylistEditor(source, isOpen, initialFilter);
 
+  // Looked up in every song: a checked song leaves the Needs check list while its sheet is open.
   const selectedTrack = useMemo(
-    () => tracks.find((track) => track.id === selectedTrackId) ?? null,
-    [selectedTrackId, tracks],
+    () => allTracks.find((track) => track.id === selectedTrackId) ?? null,
+    [selectedTrackId, allTracks],
   );
 
   return (
@@ -52,10 +77,10 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
     >
       <div className={chromeStyles.header}>
         <div className={chromeStyles.headerLeft}>
-          <h2 className={chromeStyles.title}>{t("lobby.playlist.title")}</h2>
+          <h2 className={chromeStyles.title}>{title}</h2>
           {!isLoading && (
             <span className={chromeStyles.trackCount}>
-              {t("lobby.playlist.trackCount", { count: tracks.length })}
+              {t("lobby.playlist.trackCount", { count: allTracks.length })}
             </span>
           )}
         </div>
@@ -64,6 +89,22 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
         </div>
       </div>
 
+      <div className={listStyles.filterBar} role="group" aria-label={t("music.filter.label")}>
+        <ChipButton
+          aria-pressed={filter === "all"}
+          onClick={() => setFilter("all")}
+          selected={filter === "all"}
+        >
+          {t("music.filter.all", { count: allTracks.length })}
+        </ChipButton>
+        <ChipButton
+          aria-pressed={filter === "needsCheck"}
+          onClick={() => setFilter("needsCheck")}
+          selected={filter === "needsCheck"}
+        >
+          {t("music.filter.needsCheck", { count: needsCheckCount })}
+        </ChipButton>
+      </div>
       <PlaylistSortBar activeField={sortField} direction={sortDir} onToggleSort={toggleSort} />
 
       {isLoading ? (
@@ -72,7 +113,11 @@ export function PlaylistEditModal({ isOpen, onClose }: PlaylistEditModalProps) {
           <span>{t("lobby.playlist.loading")}</span>
         </div>
       ) : tracks.length === 0 ? (
-        <div className={listStyles.emptyState}>{t("lobby.playlist.empty")}</div>
+        <div className={listStyles.emptyState}>
+          {filter === "needsCheck" && allTracks.length > 0
+            ? t("music.filter.noneToCheck")
+            : t("lobby.playlist.empty")}
+        </div>
       ) : (
         <PlaylistTrackList
           onOpenTrack={(track) => setSelectedTrackId(track.id)}
