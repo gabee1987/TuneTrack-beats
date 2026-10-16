@@ -67,6 +67,7 @@ const EDITOR_TRACKS: PublicTrackInfo[] = Array.from({ length: 24 }, (_, index) =
   id: `TEST_EDITOR_TRACK_${index + 1}`,
   metadataStatus: index % 5 === 0 ? "verified" : "imported",
   releaseYear: 1965 + ((index * 7) % 58),
+  sourceReleaseYear: 1965 + ((index * 7) % 58),
   title: `Song ${index + 1}`,
 }));
 
@@ -90,12 +91,16 @@ const RESULTS: SpotifySmartSearchResult[] = [
   { id: "TEST_ALBUM_1", subtitle: "Artist One · 1984", title: "Album One", type: "album" },
 ];
 
-/** Music setup (`22` §4.8): the Playback states, Your decks, and the whole sheet over demo data. */
+/**
+ * Music setup (`22` §4.8): the Playback states, Your decks, and the whole sheet over demo data,
+ * with each kind of list open in the one Playlist view (§4.9).
+ */
 export function MusicGallery() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editor, setEditor] = useState<PlaylistEditorTarget | null>(null);
   const [editorTracks, setEditorTracks] = useState(EDITOR_TRACKS);
   const [isQuickPickShown, setIsQuickPickShown] = useState(false);
+  const [isPlaylistShown, setIsPlaylistShown] = useState(false);
   const spotify = useMemo(
     () =>
       ({
@@ -107,6 +112,16 @@ export function MusicGallery() {
           discardGeneratedCandidates: () => setIsQuickPickShown(false),
           removeCandidateTrack: noop,
           updateCandidateTrack: noop,
+        },
+        openedPlaylist: {
+          ...DEMO_SPOTIFY.openedPlaylist,
+          applyOpenedPlaylistTracks: noop,
+          closeOpenedPlaylist: () => setIsPlaylistShown(false),
+          openedPlaylist: isPlaylistShown ? DEMO_PLAYLIST : null,
+          openedPlaylistPhase: isPlaylistShown ? "ready" : "idle",
+          removeOpenedPlaylistTrack: noop,
+          removeOpenedPlaylistTracksFromQueue: noop,
+          updateOpenedPlaylistTrack: noop,
         },
         queue: { closeEditor: () => setEditor(null), editor, openEditor: setEditor },
         savedPlaylists: {
@@ -125,7 +140,7 @@ export function MusicGallery() {
             setEditorTracks(tracks),
         },
       }) as UseLobbySpotifyResult,
-    [editor, editorTracks, isQuickPickShown],
+    [editor, editorTracks, isPlaylistShown, isQuickPickShown],
   );
 
   return (
@@ -133,7 +148,10 @@ export function MusicGallery() {
       <h2 className="typeTitleMd">Music sheet</h2>
       {PLAYBACK_STATES.map((state) => (
         <MusicPlaybackBlock
-          auth={{ ...AUTH, authError: state === "error" ? "Spotify login did not finish." : null }}
+          auth={{
+            ...AUTH,
+            authError: state === "error" ? "Spotify login did not finish." : null,
+          }}
           disabled={false}
           key={state}
           state={state}
@@ -189,7 +207,16 @@ export function MusicGallery() {
           }}
           variant="secondary"
         >
-          Open the song editor
+          Open a saved deck
+        </Button>
+        <Button
+          onClick={() => {
+            setIsSheetOpen(true);
+            setIsPlaylistShown(true);
+          }}
+          variant="secondary"
+        >
+          Open a Spotify playlist
         </Button>
         <Button
           onClick={() => {
@@ -213,6 +240,15 @@ export function MusicGallery() {
     </section>
   );
 }
+
+const DEMO_PLAYLIST = {
+  filteredCount: 2,
+  id: "TEST_PLAYLIST_1",
+  subtitle: "Test Owner",
+  title: "Test Playlist",
+  totalFetched: 14,
+  tracks: EDITOR_TRACKS.slice(0, 12),
+};
 
 const DEMO_SETTINGS: PublicRoomSettings = {
   ...DEFAULT_RULES,

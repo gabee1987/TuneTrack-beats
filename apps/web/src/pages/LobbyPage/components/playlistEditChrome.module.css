@@ -1,6 +1,0 @@
-/* A `PanelView` that fills Music Setup; the view places and sizes it. */
-.header {
-  flex-shrink: 0;
-  padding: calc(var(--safe-area-top) + var(--space-2)) var(--space-4) 0;
-  background: var(--color-bg-app);
-}

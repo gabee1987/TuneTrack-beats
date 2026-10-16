@@ -2,21 +2,34 @@ import { createServer } from "node:http";
 
 const port = Number(process.env.PORT ?? 3102);
 const unexpectedRequests = [];
-const playlistId = "TESTPLAYLIST1234567890";
-const playlistTracks = Array.from({ length: 10 }, (_, index) => ({
-  track: {
-    id: `E2E_TRACK_${index + 1}`,
-    name: `E2E Track ${index + 1}`,
-    artists: [{ name: "E2E Artist" }],
-    album: {
-      name: "E2E Album",
-      release_date: `${1980 + index}-01-01`,
-      images: [],
-    },
-    preview_url: null,
-    uri: `spotify:track:E2E_TRACK_${index + 1}`,
-  },
-}));
+// The second playlist has two re-releases, whose years the host is asked to check.
+const playlists = new Map([
+  ["TESTPLAYLIST1234567890", { name: "E2E Playlist", tracks: buildTracks("E2E", 0) }],
+  [
+    "TESTFLAGGED1234567890",
+    { name: "E2E Flagged Playlist", tracks: buildTracks("E2E Flagged", 2) },
+  ],
+]);
+
+function buildTracks(prefix, remasteredCount) {
+  return Array.from({ length: 10 }, (_, index) => {
+    const id = `${prefix.replace(/\W+/g, "_").toUpperCase()}_TRACK_${index + 1}`;
+    return {
+      track: {
+        id,
+        name: `${prefix} Track ${index + 1}`,
+        artists: [{ name: "E2E Artist" }],
+        album: {
+          name: index < remasteredCount ? "E2E Album (Remastered)" : "E2E Album",
+          release_date: `${1980 + index}-01-01`,
+          images: [],
+        },
+        preview_url: null,
+        uri: `spotify:track:${id}`,
+      },
+    };
+  });
+}
 
 const server = createServer((request, response) => {
   const requestUrl = new URL(request.url ?? "/", `http://127.0.0.1:${port}`);
@@ -60,13 +73,14 @@ const server = createServer((request, response) => {
     return;
   }
 
-  if (requestUrl.pathname === `/api/playlists/${playlistId}/tracks`) {
-    sendJson(response, { items: playlistTracks, next: null, total: playlistTracks.length });
+  const playlistMatch = /^\/api\/playlists\/([^/]+)(\/tracks)?$/.exec(requestUrl.pathname);
+  const playlist = playlistMatch ? playlists.get(playlistMatch[1]) : undefined;
+  if (playlist && playlistMatch?.[2]) {
+    sendJson(response, { items: playlist.tracks, next: null, total: playlist.tracks.length });
     return;
   }
-
-  if (requestUrl.pathname === `/api/playlists/${playlistId}`) {
-    sendJson(response, { name: "E2E Playlist" });
+  if (playlist) {
+    sendJson(response, { name: playlist.name });
     return;
   }
 

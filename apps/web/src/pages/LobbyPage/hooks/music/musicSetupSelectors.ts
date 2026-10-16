@@ -20,6 +20,7 @@ export const QUICK_PICK_MAX_SONGS = SPOTIFY_GENERATED_PLAYLIST_TRACK_LIMIT;
 const MOSAIC_COVER_COUNT = 4;
 
 export interface SavedDeckSummary {
+  /** The Spotify playlist's own cover, or else its songs' covers as a mosaic. */
   coverUrls: string[];
   id: string;
   name: string;
@@ -50,7 +51,7 @@ export function pickDeckCovers(tracks: readonly { artworkUrl?: string | undefine
 
 export function summarizeSavedDeck(deck: SavedPlaylist): SavedDeckSummary {
   return {
-    coverUrls: pickDeckCovers(deck.tracks),
+    coverUrls: deck.imageUrl ? [deck.imageUrl] : pickDeckCovers(deck.tracks),
     id: deck.id,
     name: deck.name,
     songCount: deck.tracks.length,

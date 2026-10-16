@@ -111,4 +111,16 @@ describe("NumberStepper", () => {
     expect(onChange).toHaveBeenLastCalledWith(30);
     expect(input).toHaveValue(30);
   });
+
+  it("applies a typed value inside the range at once, before any blur", async () => {
+    const onChange = vi.fn();
+    renderWithProviders(<StepperHarness isEditable onChange={onChange} />);
+    const input = screen.getByRole("spinbutton", { name: "Cards to win" });
+
+    await userEvent.clear(input);
+    await userEvent.type(input, "12");
+
+    expect(onChange).toHaveBeenLastCalledWith(12);
+    expect(input).toHaveFocus();
+  });
 });

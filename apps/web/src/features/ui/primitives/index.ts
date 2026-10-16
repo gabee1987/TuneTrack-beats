@@ -35,6 +35,6 @@ export {
   type SelectionActionBarProps,
 } from "./SelectionActionBar";
 export { SettingRow, type SettingRowProps } from "./SettingRow";
-export { Sheet, type SheetHeader, type SheetProps } from "./Sheet";
+export { Sheet, type SheetProps } from "./Sheet";
 export { Skeleton, type SkeletonProps, type SkeletonVariant } from "./Skeleton";
 export { TextField, type TextFieldProps } from "./TextField";

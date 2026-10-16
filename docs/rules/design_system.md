@@ -195,12 +195,19 @@ The shared library is `apps/web/src/features/ui/primitives/`. Everything else in
 On 2026-10-16 (owner review): `PageHeader` is the one top bar of every page, sheet and view —
 Back on the left, a green eyebrow (where the player is), the title (what they do there) and
 optional `meta` beside it; `Sheet` uses it, so a sheet's way out is Back (no close button, no
-Done) and an open view may replace it through `header`. `FloatingBar` (`top` under a header,
+Done). `FloatingBar` (`top` under a header,
 `bottom` over a list's end) has no frame: its controls float with `--shadow-raised` on a fade to
 `--color-bg-app`. `SelectionActionBar` takes `actions` — one full-width button naming the count
 and the action, or two side by side — on a bottom `FloatingBar`. `ListRow` `isLeadingSeparate`
 keeps a selecting cover outside the open button. A `readOnly` `TextField` drops its frame for a
 soft fill. `tertiary` buttons keep the main button's padding and height.
+
+On 2026-10-16 (`22` S8): every list of songs is the one `PlaylistView` and every song the one
+Song editor (guard `oneSongList.test.ts`). Its cover folds into the bar through
+`useCollapsingHeader` with `CollapsingHeaderHero` / `CollapsingHeaderCompact`, and its rows sit in
+`ListReorderSlot`s (`features/motion`), so a new sort slides each row into place. Song rows
+swipe through `SwipeRow` (left removes, right adds), wrapped by the page's `SongSwipe`. An editable
+`NumberStepper` sizes its box to the digits of `max`, at least three.
 
 ### Target primitives — being promoted **(target)**
 

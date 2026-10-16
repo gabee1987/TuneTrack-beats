@@ -137,8 +137,13 @@ export async function editRules(host: Page, edit: () => Promise<void>): Promise<
  * moved under the pointer by then.
  */
 export async function openRulesSheet(host: Page): Promise<Locator> {
-  await host.getByRole("button", { name: /^Rules\b/ }).click();
   const sheet = host.getByRole("dialog", { name: "Set how you play" });
+  // The "Add music" hint slides in under the Music card, over the Rules card, 1.5 s after the
+  // lobby opens; a tap it catches only dismisses it, so tap again.
+  await expect(async () => {
+    await host.getByRole("button", { name: /^Rules\b/ }).click();
+    await expect(sheet).toBeVisible({ timeout: 1_000 });
+  }).toPass();
   const viewportWidth = host.viewportSize()?.width ?? 0;
   await expect
     .poll(async () => {

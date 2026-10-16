@@ -74,6 +74,7 @@ function buildSavedDeck(name: string): SavedPlaylist {
 interface SpotifyStubOptions {
   candidatePhase?: "idle" | "generating";
   candidateTracks?: unknown[];
+  editor?: UseLobbySpotifyResult["queue"]["editor"];
   results?: SpotifySmartSearchResult[];
   savedDecks?: SavedPlaylist[];
   searchPhase?: "idle" | "searching" | "error";
@@ -82,6 +83,7 @@ interface SpotifyStubOptions {
 function buildSpotifyStub({
   candidatePhase = "idle",
   candidateTracks = [],
+  editor = null,
   results = [],
   savedDecks = [],
   searchPhase = "idle",
@@ -95,6 +97,7 @@ function buildSpotifyStub({
       connectSpotify: vi.fn(),
     },
     candidates: {
+      applyGeneratedCandidates: vi.fn(),
       candidateError: null,
       candidatePhase,
       candidateTracks,
@@ -120,7 +123,7 @@ function buildSpotifyStub({
       searchSpotifyPlaylists: vi.fn(),
       setPlaylistSearchQuery: vi.fn(),
     },
-    queue: { closeEditor: vi.fn(), editor: null, openEditor: vi.fn() },
+    queue: { closeEditor: vi.fn(), editor, openEditor: vi.fn() },
     savedPlaylists: {
       cancelRenamePlaylist: vi.fn(),
       cancelSavePlaylist: vi.fn(),
@@ -256,11 +259,44 @@ describe("MusicSheet without a Spotify login", () => {
     expect(await screen.findByText("Building your music deck")).toBeInTheDocument();
   });
 
-  it("gives the whole sheet to generated songs, without the playback block", () => {
+  it("opens generated songs in the Song list over the sheet", async () => {
     renderSheet({ candidateTracks: [{ id: "TEST_TRACK_1" }] });
 
-    expect(screen.queryByRole("button", { name: "Connect Spotify" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("radio", { name: "Quick picks" })).not.toBeInTheDocument();
+    const view = await screen.findByRole("dialog", { name: "Song list" });
+    expect(within(view).getByText("Your quick pick")).toBeInTheDocument();
+    expect(within(view).getByRole("heading", { name: "Pick the songs" })).toBeInTheDocument();
+    expect(within(view).getByRole("button", { name: "Use in game" })).toBeInTheDocument();
+  });
+});
+
+describe("MusicSheet Song list", () => {
+  it("asks whether a quick pick joins the deck or replaces it", async () => {
+    const { spotify } = renderSheet({
+      candidateTracks: Array.from({ length: 10 }, (_, index) => ({ id: `TEST_TRACK_${index}` })),
+      settings: { deckSource: "spotify", importedTrackCount: 12 },
+    });
+
+    const view = await screen.findByRole("dialog", { name: "Song list" });
+    await userEvent.click(within(view).getByRole("button", { name: "Use in game" }));
+    const choice = await screen.findByRole("dialog", { name: "Add or replace?" });
+    expect(choice).toHaveTextContent("Your deck has 12 songs. Add these 10 to it");
+    await userEvent.click(within(choice).getByRole("button", { name: "Add to deck" }));
+
+    expect(spotify.candidates.applyGeneratedCandidates).toHaveBeenCalledWith("append", undefined);
+  });
+
+  it("loads a saved deck from its own list and steps back to Your decks", async () => {
+    const deck = buildSavedDeck("Party");
+    const { spotify } = renderSheet({
+      editor: { deck: "saved", deckId: deck.id, filter: "all" },
+      savedDecks: [deck],
+    });
+
+    const view = await screen.findByRole("dialog", { name: "Song list" });
+    await userEvent.click(within(view).getByRole("button", { name: "Use in game" }));
+
+    expect(spotify.savedPlaylists.setSelectedSavedPlaylistId).toHaveBeenCalledWith(deck.id);
+    expect(spotify.queue.closeEditor).toHaveBeenCalledTimes(1);
   });
 });
 

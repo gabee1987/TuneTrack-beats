@@ -1,4 +1,4 @@
-import { useRef, useState, type KeyboardEvent } from "react";
+import { useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { useI18n } from "../../i18n";
 import { classNames } from "../classNames";
 import { IconButton } from "./IconButton";
@@ -130,8 +130,12 @@ interface EditableValueProps {
   value: number;
 }
 
-// Typing is kept as a draft and applied on Enter or blur, so "15" can pass through "1" even
-// when the minimum is 3.
+// The box fits the widest value, a four-digit year as well as a count.
+const MIN_INPUT_DIGITS = 3;
+
+// Typing is kept as a draft, so "15" can pass through "1" even when the minimum is 3. A draft
+// inside the range applies at once: a tap on a button that takes no focus (Safari) still saves
+// it. Enter or blur clamps what is left.
 function EditableValue({
   clamp,
   disabled,
@@ -162,7 +166,18 @@ function EditableValue({
       max={max}
       min={min}
       onBlur={commit}
-      onChange={(event) => setDraft(event.target.value)}
+      style={
+        {
+          "--stepper-digits": Math.max(MIN_INPUT_DIGITS, String(max).length),
+        } as CSSProperties
+      }
+      onChange={(event) => {
+        setDraft(event.target.value);
+        const typed = Number(event.target.value);
+        if (Number.isInteger(typed) && typed >= min && typed <= max && typed !== value) {
+          onChange(typed);
+        }
+      }}
       onKeyDown={(event) => {
         if (event.key === "Enter") {
           commit();

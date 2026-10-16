@@ -13,6 +13,7 @@ import { renderWithProviders } from "../../../../test/renderWithProviders";
 import { buildTrackCard, TEST_ROOM_ID } from "../../../../test/roomStateFixtures";
 import { triggerResize } from "../../../../test/stubs/observers";
 import { useSpotifyPlaylistImport } from "./useSpotifyPlaylistImport";
+import type { DeckOrigin } from "./lobbySpotify.types";
 
 vi.mock("../../../../services/socket/socketClient", async () => {
   const { socketClientMockForSharedSocket } = await import("../../../../test/fakeSocket");
@@ -32,9 +33,9 @@ function buildQueuedTrack(id: string, spotifyTrackId: string): PublicTrackInfo {
 function createParams({ roomId }: { roomId: string | undefined } = { roomId: TEST_ROOM_ID }) {
   return {
     clearPlaylistSearch: vi.fn(),
-    currentPlaylistNameRef: { current: "TEST_PREVIOUS_PLAYLIST" } as MutableRefObject<
-      string | undefined
-    >,
+    currentDeckOriginRef: {
+      current: { imageUrl: undefined, name: "TEST_PREVIOUS_PLAYLIST" },
+    } as MutableRefObject<DeckOrigin>,
     roomId,
     setLoadedSavedPlaylistId: vi.fn(),
     setQueuedTrackIds: vi.fn(),
@@ -167,6 +168,7 @@ describe("useSpotifyPlaylistImport — import", () => {
         filteredCount: 3,
         totalFetched: 15,
         playlistName: "Test Playlist One",
+        playlistImageUrl: "https://images.example.test/p1.jpg",
       });
     });
 
@@ -176,7 +178,10 @@ describe("useSpotifyPlaylistImport — import", () => {
     expect(result.current.importError).toBeNull();
     expect(result.current.currentPlaylistSourceUrl).toBe(TEST_PLAYLIST_URL);
     expect(result.current.playlistUrl).toBe("");
-    expect(params.currentPlaylistNameRef.current).toBe("Test Playlist One");
+    expect(params.currentDeckOriginRef.current).toEqual({
+      imageUrl: "https://images.example.test/p1.jpg",
+      name: "Test Playlist One",
+    });
     expect(params.setLoadedSavedPlaylistId).toHaveBeenCalledWith(null);
     expect(params.setSmartSearchQueuedTrackIds).toHaveBeenCalledWith(new Set());
   });
@@ -206,7 +211,7 @@ describe("useSpotifyPlaylistImport — import", () => {
     );
     expect(result.current.playlistUrl).toBe(TEST_PLAYLIST_URL);
     expect(result.current.currentPlaylistSourceUrl).toBe("");
-    expect(params.currentPlaylistNameRef.current).toBe("TEST_PREVIOUS_PLAYLIST");
+    expect(params.currentDeckOriginRef.current.name).toBe("TEST_PREVIOUS_PLAYLIST");
     expect(params.setLoadedSavedPlaylistId).not.toHaveBeenCalled();
   });
 
@@ -319,7 +324,7 @@ describe("useSpotifyPlaylistImport — clear current playlist", () => {
       new Set(["TEST0000000000000003"]),
     );
     expect(params.setLoadedSavedPlaylistId).toHaveBeenCalledWith(null);
-    expect(params.currentPlaylistNameRef.current).toBeUndefined();
+    expect(params.currentDeckOriginRef.current.name).toBeUndefined();
     expect(result.current.currentPlaylistSourceUrl).toBe("");
     expect(params.setSavedPlaylistMessage).toHaveBeenCalledWith("Playlist cleared.");
     expect(socket.listenerCount(ServerToClientEvent.PlaylistTracks)).toBe(0);

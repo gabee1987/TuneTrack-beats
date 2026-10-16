@@ -45,29 +45,6 @@ describe("Sheet", () => {
     expect(onClose).toHaveBeenCalledTimes(2);
   });
 
-  it("lets an open view take over the bar with its own Back and title", async () => {
-    const onClose = vi.fn();
-    const onBack = vi.fn();
-    renderWithProviders(
-      <Sheet
-        eyebrow="Lobby"
-        header={{ backLabel: "Back to Find", eyebrow: "Find", onBack, title: "Test Album" }}
-        isOpen
-        onClose={onClose}
-        title="Music"
-      >
-        <p>Songs</p>
-      </Sheet>,
-      { withRouter: false },
-    );
-
-    expect(screen.getByRole("heading", { name: "Test Album" })).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Back to Find" }));
-
-    expect(onBack).toHaveBeenCalledTimes(1);
-    expect(onClose).not.toHaveBeenCalled();
-  });
-
   it("hosts a deeper step as a panel view that Escape closes first", async () => {
     const onClose = vi.fn();
     function SheetWithEditor() {

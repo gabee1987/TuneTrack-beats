@@ -21,6 +21,8 @@ export interface SavedPlaylist {
   name: string;
   source: "spotify";
   sourcePlaylistUrl?: string;
+  /** The Spotify playlist's cover; without one the deck shows its songs' covers. */
+  imageUrl?: string;
   createdAtEpochMs: number;
   updatedAtEpochMs: number;
   tracks: SavedPlaylistTrack[];
@@ -37,6 +39,7 @@ export interface StorageLike {
 }
 
 export interface SavePlaylistInput {
+  imageUrl?: string;
   name: string;
   sourcePlaylistUrl?: string;
   tracks: PublicTrackInfo[];
@@ -66,6 +69,7 @@ export function savePlaylist(
     name: input.name.trim() || "Saved playlist",
     source: "spotify",
     ...(input.sourcePlaylistUrl ? { sourcePlaylistUrl: input.sourcePlaylistUrl } : {}),
+    ...(input.imageUrl ? { imageUrl: input.imageUrl } : {}),
     createdAtEpochMs: now,
     updatedAtEpochMs: now,
     tracks: input.tracks.map(toSavedPlaylistTrack),
@@ -183,6 +187,7 @@ function isSavedPlaylist(value: unknown): value is SavedPlaylist {
     playlist.source === "spotify" &&
     typeof playlist.createdAtEpochMs === "number" &&
     typeof playlist.updatedAtEpochMs === "number" &&
+    (playlist.imageUrl === undefined || typeof playlist.imageUrl === "string") &&
     Array.isArray(playlist.tracks) &&
     playlist.tracks.every(isSavedPlaylistTrack)
   );

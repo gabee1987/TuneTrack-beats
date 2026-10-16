@@ -61,6 +61,7 @@ export class PlaylistOrchestrator {
         filteredCount: outcome.filteredCount,
         totalFetched: outcome.totalFetched,
         ...(outcome.playlistName ? { playlistName: outcome.playlistName } : {}),
+        ...(outcome.playlistImageUrl ? { playlistImageUrl: outcome.playlistImageUrl } : {}),
       },
     };
   }

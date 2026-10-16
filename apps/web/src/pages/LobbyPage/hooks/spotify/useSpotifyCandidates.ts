@@ -13,10 +13,11 @@ import { useCallback, useState } from "react";
 import type { MutableRefObject } from "react";
 import { useI18n } from "../../../../features/i18n";
 import { getSocketClient } from "../../../../services/socket/socketClient";
-import type { CandidatePhase, CandidateTrackUpdatePatch } from "./lobbySpotify.types";
+import type { PlaylistTrackUpdatePatch } from "../music/playlistEditorTarget";
+import type { CandidatePhase, DeckOrigin } from "./lobbySpotify.types";
 
 interface UseSpotifyCandidatesParams {
-  currentPlaylistNameRef: MutableRefObject<string | undefined>;
+  currentDeckOriginRef: MutableRefObject<DeckOrigin>;
   roomId: string | undefined;
   setGeneratedPlaylistMessage: (message: string | null) => void;
   setSavedPlaylistMessage: (message: string | null) => void;
@@ -24,7 +25,7 @@ interface UseSpotifyCandidatesParams {
 }
 
 export function useSpotifyCandidates({
-  currentPlaylistNameRef,
+  currentDeckOriginRef,
   roomId,
   setGeneratedPlaylistMessage,
   setSavedPlaylistMessage,
@@ -116,7 +117,7 @@ export function useSpotifyCandidates({
     setCandidateTracks((tracks) => tracks.filter((track) => track.id !== trackId));
   }
 
-  function updateCandidateTrack(trackId: string, patch: CandidateTrackUpdatePatch) {
+  function updateCandidateTrack(trackId: string, patch: PlaylistTrackUpdatePatch) {
     setCandidateTracks((tracks) =>
       tracks.map((track) =>
         track.id === trackId
@@ -161,7 +162,10 @@ export function useSpotifyCandidates({
           setCandidateSessionId(null);
           setCandidateSourceSummary(null);
           setCandidateTracks([]);
-          currentPlaylistNameRef.current = candidateSourceSummary ?? undefined;
+          currentDeckOriginRef.current = {
+            imageUrl: undefined,
+            name: candidateSourceSummary ?? undefined,
+          };
           setSavedPlaylistMessage(appliedMessage);
           showGeneratedPlaylistMessage(appliedMessage);
         } else {

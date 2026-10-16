@@ -12,6 +12,36 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Swipe on song rows, the Spotify cover on saved decks (2026-10-16)
+
+- **Song rows swipe again** (owner: "cool and handy"; reverses `22` §4.9 "Swipe-to-delete is
+  removed"): left deletes a song from a deck or a quick pick; on a found song (Find and opened
+  albums, artists and playlists) right adds it to the game, as Spotify adds to the queue, and
+  left takes it out again. Selection and the trailing Add stay; the swipe is the quick way.
+- **A saved deck keeps its Spotify playlist's cover** (`22` S9, early): the import reads the
+  playlist's name and cover together, a playlist opened from Find brings its own, and Your decks
+  and the Playlist view show it in place of the song mosaic. Older saved decks keep the mosaic.
+
+### One Playlist view, the Song editor's year controls, Review flagged (2026-10-16)
+
+- **Every list of songs opens in one Playlist view** (`22` §4.9): the deck in this game, a saved
+  deck, an album, artist or playlist from Find, and a quick pick. Bar (`PageHeader` with the
+  list's name as eyebrow), a big cover that folds into the bar as the list scrolls, the filter and
+  sort row, one virtualised list, one bottom action. It replaces the playlist editor, the opened
+  playlist panel and the quick-pick review. Why: plan `22` S8; three lists did the same job.
+- **"Use in game" is the list's one action;** with a deck in the game it asks Add to deck or
+  Replace deck in one dialog. The room deck reads "In this game ✓". The opened playlist's Add all
+  and Replace icons are gone (one way). A saved deck uses the Load path, so both ask the same.
+- **No overflow menu in the Playlist view (deviation from `22` §4.9):** Save to Your decks and
+  Remove all stay in the In this game card and Rename / Delete on the saved deck's More, where
+  the owner just sized them. A second copy in a menu would be two ways to do one thing.
+- **The Song editor's year is a ±1 stepper you can type into,** with "Spotify album year" under it
+  once it differs, and a Year checked switch replaces Imported / Edited / Verified: on → verified;
+  off → edited when a field changed or the song was verified, otherwise unchanged.
+- **Review flagged runs through the songs to check** in the list's order: "Looks right" checks
+  the year and moves on, "Next" moves on; both save what was typed, so no edit is lost. The entry
+  is a "Review N to check" button under the cover (the filter row has no room for it on phones).
+
 ### One page header, floating bars, one selection button, Start in the page (2026-10-16)
 
 - **Every page, sheet and view has the lobby's top bar** (`PageHeader`): Back on the left, a green

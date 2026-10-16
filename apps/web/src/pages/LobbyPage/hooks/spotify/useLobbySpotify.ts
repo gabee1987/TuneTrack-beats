@@ -2,7 +2,7 @@ import { ServerToClientEvent, type PlaylistTracksPayload } from "@tunetrack/shar
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getSocketClient } from "../../../../services/socket/socketClient";
-import type { UseLobbySpotifyResult } from "./lobbySpotify.types";
+import type { DeckOrigin, UseLobbySpotifyResult } from "./lobbySpotify.types";
 import {
   getQueuedTrackIdsFromPlaylistTracks,
   getQueuedSpotifyTrackIdsFromPlaylistTracks,
@@ -28,7 +28,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
   const [loadedSavedPlaylistId, setLoadedSavedPlaylistId] = useState<string | null>(null);
   const [editor, setEditor] = useState<PlaylistEditorTarget | null>(null);
 
-  const currentPlaylistNameRef = useRef<string | undefined>(undefined);
+  const currentDeckOriginRef = useRef<DeckOrigin>({ imageUrl: undefined, name: undefined });
   const generatedPlaylistMessageTimerRef = useRef<number | null>(null);
 
   const showGeneratedPlaylistMessage = useCallback((message: string) => {
@@ -46,7 +46,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
   const auth = useSpotifyAuth(roomId);
 
   const openedPlaylist = useSpotifyOpenedPlaylist({
-    currentPlaylistNameRef,
+    currentDeckOriginRef,
     roomId,
     setQueuedTrackIds,
     setSavedPlaylistMessage,
@@ -54,7 +54,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
   });
 
   const candidates = useSpotifyCandidates({
-    currentPlaylistNameRef,
+    currentDeckOriginRef,
     roomId,
     setGeneratedPlaylistMessage,
     setSavedPlaylistMessage,
@@ -70,7 +70,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
 
   const playlistImport = useSpotifyPlaylistImport({
     clearPlaylistSearch: playlistSearch.clearPlaylistSearch,
-    currentPlaylistNameRef,
+    currentDeckOriginRef,
     roomId,
     setLoadedSavedPlaylistId,
     setQueuedTrackIds,
@@ -88,7 +88,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
   });
 
   const savedPlaylists = useSavedPlaylistsController({
-    currentPlaylistNameRef,
+    currentDeckOriginRef,
     currentPlaylistSourceUrl: playlistImport.currentPlaylistSourceUrl,
     loadedSavedPlaylistId,
     roomId,
@@ -263,9 +263,9 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
       updateSavedDeckTracks: savedPlaylists.updateSavedDeckTracks,
     },
     queue: {
-      closeEditor: () => setEditor(null),
+      closeEditor: () => { console.warn("DBG closeEditor"); setEditor(null); },
       editor,
-      openEditor: setEditor,
+      openEditor: (target) => { console.warn("DBG openEditor", JSON.stringify(target)); setEditor(target); },
     },
   };
 }

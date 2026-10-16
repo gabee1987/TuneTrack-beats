@@ -26,7 +26,7 @@ function buildTracks(count: number): SpotifyApiTrack[] {
   return Array.from({ length: count }, (_, i) => buildApiTrack(`id-${i}`, `${1970 + i}`));
 }
 
-type MockSpotifyApi = Pick<SpotifyCatalogClient, "getAllPlaylistTracks" | "getPlaylistName"> &
+type MockSpotifyApi = Pick<SpotifyCatalogClient, "getAllPlaylistTracks" | "getPlaylistSummary"> &
   Pick<SpotifyAccountsClient, "getClientCredentialsToken">;
 
 function createMockApiClient(overrides: Partial<MockSpotifyApi> = {}): MockSpotifyApi {
@@ -37,7 +37,9 @@ function createMockApiClient(overrides: Partial<MockSpotifyApi> = {}): MockSpoti
       token_type: "Bearer",
     }),
     getAllPlaylistTracks: vi.fn().mockResolvedValue(buildTracks(15)),
-    getPlaylistName: vi.fn().mockResolvedValue("Test Playlist"),
+    getPlaylistSummary: vi
+      .fn()
+      .mockResolvedValue({ imageUrl: "https://images.example.test/p1.jpg", name: "Test Playlist" }),
     ...overrides,
   } as unknown as MockSpotifyApi;
 }
@@ -100,6 +102,7 @@ describe("PlaylistImportService", () => {
         expect(result.filteredCount).toBe(1);
         expect(result.totalFetched).toBe(15);
         expect(result.playlistName).toBe("Test Playlist");
+        expect(result.playlistImageUrl).toBe("https://images.example.test/p1.jpg");
         expect(result.cards).toHaveLength(14);
       }
     });

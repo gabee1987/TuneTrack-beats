@@ -14,6 +14,7 @@ import {
 import { getSharedFakeSocket, resetSharedFakeSocket } from "../../../../test/fakeSocket";
 import { TEST_ROOM_ID, buildTrackCard } from "../../../../test/roomStateFixtures";
 import { useSavedPlaylistsController } from "./useSavedPlaylistsController";
+import type { DeckOrigin } from "./lobbySpotify.types";
 
 vi.mock("../../../../services/socket/socketClient", async () => {
   const { socketClientMockForSharedSocket } = await import("../../../../test/fakeSocket");
@@ -44,10 +45,10 @@ function Wrapper({ children }: { children: ReactNode }) {
 
 function renderController(
   props: Partial<HookProps> = {},
-  options: { currentPlaylistName?: string } = {},
+  options: { currentPlaylistImageUrl?: string; currentPlaylistName?: string } = {},
 ) {
-  const currentPlaylistNameRef: MutableRefObject<string | undefined> = {
-    current: options.currentPlaylistName,
+  const currentDeckOriginRef: MutableRefObject<DeckOrigin> = {
+    current: { imageUrl: options.currentPlaylistImageUrl, name: options.currentPlaylistName },
   };
   const setLoadedSavedPlaylistId = vi.fn();
   const setSavedPlaylistMessage = vi.fn();
@@ -56,7 +57,7 @@ function renderController(
     (hookProps: HookProps) =>
       useSavedPlaylistsController({
         ...hookProps,
-        currentPlaylistNameRef,
+        currentDeckOriginRef,
         setLoadedSavedPlaylistId,
         setSavedPlaylistMessage,
       }),
@@ -71,7 +72,7 @@ function renderController(
     },
   );
 
-  return { ...hook, currentPlaylistNameRef, setLoadedSavedPlaylistId, setSavedPlaylistMessage };
+  return { ...hook, currentDeckOriginRef, setLoadedSavedPlaylistId, setSavedPlaylistMessage };
 }
 
 async function flushSocket() {
@@ -185,6 +186,19 @@ describe("useSavedPlaylistsController — saving", () => {
     expect(setSavedPlaylistMessage).toHaveBeenLastCalledWith("Playlist saved for later.");
     expect(result.current.isSavingWithName).toBe(false);
     expect(result.current.saveName).toBe("");
+  });
+
+  it("keeps the Spotify playlist's cover on the saved deck", async () => {
+    const { result } = renderController(
+      {},
+      { currentPlaylistImageUrl: "https://images.example.test/p1.jpg" },
+    );
+
+    act(() => result.current.saveCurrentPlaylist());
+    await respondWithCurrentTracks([buildTrack()]);
+    act(() => result.current.confirmSavePlaylist());
+
+    expect(listSavedPlaylists()[0]?.imageUrl).toBe("https://images.example.test/p1.jpg");
   });
 
   it("saves without a source URL when none is known", async () => {

@@ -21,8 +21,6 @@ const PENDING_MIGRATION = [
   "pages/GamePage/gamePageMenu.module.css",
   "pages/GamePage/gamePagePlayback.module.css",
   "pages/LobbyPage/components/SelectableArtwork.module.css",
-  "pages/LobbyPage/components/playlistEditList.module.css",
-  "pages/LobbyPage/components/spotify/spotifyDiscovery.module.css",
 ] as const;
 
 const PENDING_RGB_MIGRATION = [

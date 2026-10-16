@@ -19,27 +19,26 @@ import {
 } from "../../hooks/music/musicSetupSelectors";
 import { useMusicDeckEditor } from "../../hooks/music/useMusicDeckEditor";
 import { useMusicFind } from "../../hooks/music/useMusicFind";
-import { useOpenedPlaylistActions } from "../../hooks/music/useOpenedPlaylistActions";
+import { usePlaylistView } from "../../hooks/music/usePlaylistView";
 import type { UseLobbySpotifyResult } from "../../hooks/spotify/lobbySpotify.types";
 import type { PracticeDeckChoiceStatus } from "../../hooks/spotify/usePracticeDeckChoice";
 import { MusicDecksTab } from "./MusicDecksTab";
 import { MusicDeckConfirmations, type DeckConfirmation } from "./MusicDeckConfirmations";
 import { MusicFindTab } from "./MusicFindTab";
 import { getAddRemoveActions } from "./addRemoveActions";
-import { MusicOpenedViews, hasOpenedView, useOpenedViewHeader } from "./MusicOpenedViews";
 import { MusicPicksTab } from "./MusicPicksTab";
 import { MusicPlaybackBlock } from "./MusicPlaybackBlock";
 import { SaveDeckDialog } from "./SaveDeckDialog";
 import { SavedDeckDialogs } from "./SavedDeckDialogs";
 import styles from "./music.module.css";
 
-// Opened on demand from the room deck: the editor stays out of the lobby chunk (05 D4).
-async function loadPlaylistEditModal() {
-  const module = await import("../PlaylistEditModal");
-  return { default: module.PlaylistEditModal };
+// Opened on demand: the list and its virtualiser stay out of the lobby chunk (05 D4).
+async function loadPlaylistView() {
+  const module = await import("./PlaylistView");
+  return { default: module.PlaylistView };
 }
 
-const PlaylistEditModal = lazy(loadPlaylistEditModal);
+const PlaylistView = lazy(loadPlaylistView);
 
 // A song of the room deck opens on its own, without the list (owner, 2026-10-16).
 const PlaylistTrackDetailsSheet = lazy(async () => {
@@ -59,7 +58,8 @@ interface MusicSheetProps {
 
 /**
  * Music setup (`22` §4.8): where the songs play, then Your decks or Find. Nothing waits for a
- * Spotify login; offline, the sheet says so and holds every action.
+ * Spotify login; offline, the sheet says so and holds every action. A list opens over it in
+ * the one Playlist view.
  */
 export function MusicSheet({
   currentSettings,
@@ -80,31 +80,44 @@ export function MusicSheet({
   const [wasOpen, setWasOpen] = useState(isOpen);
   const [deckOptions, setDeckOptions] = useState<SavedDeckSummary | null>(null);
   const [confirmation, setConfirmation] = useState<DeckConfirmation | null>(null);
-  const deckEditor = useMusicDeckEditor(spotify, currentSettings, isOpen);
-  const { editorView } = deckEditor;
-  const [hasOpenedEditor, setHasOpenedEditor] = useState(editorView.isOpen);
+  const deckEditor = useMusicDeckEditor(currentSettings, isOpen);
   const [roomSongId, setRoomSongId] = useState<string | null>(null);
   const [hasOpenedSong, setHasOpenedSong] = useState(false);
   const roomSong = deckEditor.roomDeck.tracks.find((track) => track.id === roomSongId) ?? null;
-  const openedActions = useOpenedPlaylistActions(spotify);
-  const openedHeader = useOpenedViewHeader(spotify, openedActions);
   const hasDeck = currentSettings.deckSource !== "none";
+  const playlistView = usePlaylistView(spotify, {
+    onUse: (use) => {
+      if (hasDeck) setConfirmation({ kind: "useList", use });
+      else use.apply("replace");
+    },
+    onUseSavedDeck: (deckId) => {
+      const deck = savedDecks.find((saved) => saved.id === deckId);
+      if (deck) chooseSavedDeck(deck);
+    },
+    roomDeck: deckEditor.roomDeck,
+  });
+  const [hasOpenedView, setHasOpenedView] = useState(playlistView !== null);
 
   if (isOpen !== wasOpen) {
     setWasOpen(isOpen);
     if (isOpen) setTab(getDefaultMusicTab(savedDecks.length));
   }
-  if (editorView.isOpen && !hasOpenedEditor) setHasOpenedEditor(true);
+  if (playlistView && !hasOpenedView) setHasOpenedView(true);
   if (roomSongId && !hasOpenedSong) setHasOpenedSong(true);
 
-  const hasDeckToEdit = currentSettings.playlistImported || savedDecks.length > 0;
   useEffect(() => {
-    if (hasDeckToEdit) void loadPlaylistEditModal();
-  }, [hasDeckToEdit]);
+    if (isOpen) void loadPlaylistView();
+  }, [isOpen]);
 
   function chooseSavedDeck(deck: SavedDeckSummary) {
     if (hasDeck) setConfirmation({ deck, kind: "useSaved" });
-    else savedPlaylists.setSelectedSavedPlaylistId(deck.id);
+    else loadSavedDeck(deck.id);
+  }
+
+  // From its tile or its own view: the view steps back to Your decks with the deck in the game.
+  function loadSavedDeck(deckId: string) {
+    savedPlaylists.setSelectedSavedPlaylistId(deckId);
+    if (spotify.queue.editor) spotify.queue.closeEditor();
   }
 
   function askForPracticeDeck() {
@@ -117,12 +130,10 @@ export function MusicSheet({
     setTab("decks");
   }
 
-  const showsOpenedView = hasOpenedView(spotify);
-
   return (
     <Sheet
       dock={
-        tab === "find" && !showsOpenedView ? (
+        tab === "find" ? (
           <SelectionActionBar
             actions={getAddRemoveActions(
               {
@@ -138,88 +149,74 @@ export function MusicSheet({
         ) : undefined
       }
       eyebrow={t("music.title")}
-      header={showsOpenedView ? openedHeader : undefined}
       isOpen={isOpen}
       onClose={onClose}
       title={t("music.heading")}
     >
-      <div className={showsOpenedView ? styles.sheetBodyFilled : styles.sheetBody}>
+      <div className={styles.sheetBody}>
         {isOffline ? (
           <div className={styles.offline}>
             <ConnectionStatus />
           </div>
         ) : null}
-        {/* An opened list is about choosing songs; the whole sheet goes to the list. */}
-        {showsOpenedView ? null : (
-          <MusicPlaybackBlock
-            auth={spotify.auth}
-            disabled={isOffline}
-            state={getMusicPlaybackState(currentSettings, spotify.auth)}
-          />
-        )}
+        <MusicPlaybackBlock
+          auth={spotify.auth}
+          disabled={isOffline}
+          state={getMusicPlaybackState(currentSettings, spotify.auth)}
+        />
 
-        {showsOpenedView ? (
-          <MusicOpenedViews
-            actions={openedActions}
-            currentQueueCount={currentSettings.importedTrackCount}
-            spotify={spotify}
-          />
-        ) : (
-          <>
-            <SegmentedControl<MusicTab>
-              aria-label={t("music.title")}
-              onChange={setTab}
-              options={[
-                { label: t("music.tab.decks"), value: "decks" },
-                { label: t("music.tab.find"), value: "find" },
-                { label: t("music.tab.picks"), value: "picks" },
-              ]}
-              value={tab}
+        <SegmentedControl<MusicTab>
+          aria-label={t("music.title")}
+          onChange={setTab}
+          options={[
+            { label: t("music.tab.decks"), value: "decks" },
+            { label: t("music.tab.find"), value: "find" },
+            { label: t("music.tab.picks"), value: "picks" },
+          ]}
+          value={tab}
+        />
+        <MotionSwap motion={createTabSwapMotion(reduceMotion)} swapKey={tab}>
+          {tab === "decks" ? (
+            <MusicDecksTab
+              disabled={isOffline}
+              onDeckOptions={setDeckOptions}
+              onEditDeck={(deck) =>
+                spotify.queue.openEditor({ deck: "saved", deckId: deck.id, filter: "all" })
+              }
+              onEditRoomDeck={(filter) => spotify.queue.openEditor({ deck: "room", filter })}
+              onFind={() => setTab("find")}
+              onOpenSong={setRoomSongId}
+              onRemoveRoomDeck={() => setConfirmation({ kind: "removeAll" })}
+              onSaveRoomDeck={savedPlaylists.saveCurrentPlaylist}
+              onUseDeck={chooseSavedDeck}
+              roomDeck={
+                hasDeck
+                  ? {
+                      coverUrls: deckEditor.roomCovers,
+                      isEditable: currentSettings.deckSource === "spotify",
+                      songCount: currentSettings.importedTrackCount,
+                      songsToCheck: deckEditor.roomSongsToCheck,
+                      toCheckCount: setup.tracksToCheckCount,
+                    }
+                  : null
+              }
+              savedDecks={savedDecks}
+              statusMessage={savedPlaylists.savedPlaylistMessage}
             />
-            <MotionSwap motion={createTabSwapMotion(reduceMotion)} swapKey={tab}>
-              {tab === "decks" ? (
-                <MusicDecksTab
-                  disabled={isOffline}
-                  onDeckOptions={setDeckOptions}
-                  onEditDeck={(deck) =>
-                    spotify.queue.openEditor({ deck: "saved", deckId: deck.id, filter: "all" })
-                  }
-                  onEditRoomDeck={(filter) => spotify.queue.openEditor({ deck: "room", filter })}
-                  onFind={() => setTab("find")}
-                  onOpenSong={setRoomSongId}
-                  onRemoveRoomDeck={() => setConfirmation({ kind: "removeAll" })}
-                  onSaveRoomDeck={savedPlaylists.saveCurrentPlaylist}
-                  onUseDeck={chooseSavedDeck}
-                  roomDeck={
-                    hasDeck
-                      ? {
-                          coverUrls: deckEditor.roomCovers,
-                          isEditable: currentSettings.deckSource === "spotify",
-                          songCount: currentSettings.importedTrackCount,
-                          songsToCheck: deckEditor.roomSongsToCheck,
-                          toCheckCount: setup.tracksToCheckCount,
-                        }
-                      : null
-                  }
-                  savedDecks={savedDecks}
-                  statusMessage={savedPlaylists.savedPlaylistMessage}
-                />
-              ) : null}
-              {tab === "find" ? (
-                <MusicFindTab disabled={isOffline} find={find} spotify={spotify} />
-              ) : null}
-              {tab === "picks" ? (
-                <MusicPicksTab
-                  candidates={spotify.candidates}
-                  disabled={isOffline}
-                  onUsePracticeDeck={askForPracticeDeck}
-                  practiceDeckStatus={practiceDeckStatus}
-                  recommendedSongCount={setup.recommendedDeckSize}
-                />
-              ) : null}
-            </MotionSwap>
-          </>
-        )}
+          ) : null}
+          {tab === "find" ? (
+            <MusicFindTab disabled={isOffline} find={find} spotify={spotify} />
+          ) : null}
+          {tab === "picks" ? (
+            <MusicPicksTab
+              candidates={spotify.candidates}
+              disabled={isOffline}
+              onUsePracticeDeck={askForPracticeDeck}
+              practiceDeckStatus={practiceDeckStatus}
+              recommendedSongCount={setup.recommendedDeckSize}
+            />
+          ) : null}
+        </MotionSwap>
       </div>
 
       <SavedDeckDialogs
@@ -231,24 +228,18 @@ export function MusicSheet({
       <MusicDeckConfirmations
         confirmation={confirmation}
         onCancel={() => setConfirmation(null)}
-        onConfirm={(confirmed) => {
+        onConfirm={(confirmed, mode) => {
           setConfirmation(null);
-          if (confirmed.kind === "useSaved")
-            savedPlaylists.setSelectedSavedPlaylistId(confirmed.deck.id);
+          if (confirmed.kind === "useSaved") loadSavedDeck(confirmed.deck.id);
           if (confirmed.kind === "usePractice") choosePracticeDeck();
           if (confirmed.kind === "removeAll") spotify.import.clearCurrentPlaylist();
+          if (confirmed.kind === "useList") confirmed.use.apply(mode);
         }}
         songCount={currentSettings.importedTrackCount}
       />
-      {hasOpenedEditor ? (
+      {hasOpenedView ? (
         <Suspense fallback={null}>
-          <PlaylistEditModal
-            initialFilter={editorView.target?.filter ?? "all"}
-            isOpen={editorView.isOpen}
-            onClose={spotify.queue.closeEditor}
-            source={editorView.source}
-            title={editorView.title}
-          />
+          <PlaylistView view={playlistView} />
         </Suspense>
       ) : null}
       {hasOpenedSong ? (

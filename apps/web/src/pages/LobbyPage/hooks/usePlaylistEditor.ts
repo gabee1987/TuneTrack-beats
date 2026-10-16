@@ -1,10 +1,11 @@
-import type { PublicTrackInfo, TrackMetadataStatus } from "@tunetrack/shared/client";
+import type { PublicTrackInfo } from "@tunetrack/shared/client";
 import { useCallback, useMemo, useState } from "react";
 import {
   filterTracks,
   needsYearCheck,
   type PlaylistEditorFilter,
   type PlaylistEditorSource,
+  type PlaylistTrackUpdatePatch,
 } from "./music/playlistEditorTarget";
 
 /** "original" keeps the deck's own order. */
@@ -37,37 +38,17 @@ export interface UsePlaylistEditorResult {
   updateTrack: (trackId: string, patch: PlaylistTrackUpdatePatch) => void;
 }
 
-/** What the song details sheet sends: only the fields it sets. */
-export interface PlaylistTrackUpdatePatch {
-  title?: string;
-  artist?: string;
-  albumTitle?: string;
-  releaseYear?: number;
-  metadataStatus?: TrackMetadataStatus;
-}
-
 /**
- * Sorting, the Needs check filter and selection over one deck (`22` §4.9). The source decides
- * where the songs live; each opening starts from `initialFilter` with nothing selected.
+ * Sorting, the Needs check filter and selection over one list (`22` §4.9). The source decides
+ * where the songs live; the view mounts this afresh for each list, from `initialFilter`.
  */
 export function usePlaylistEditor(
   source: PlaylistEditorSource,
-  isOpen: boolean,
   initialFilter: PlaylistEditorFilter,
 ): UsePlaylistEditorResult {
   const [sort, setSort] = useState<PlaylistSort>("original");
   const [filter, setFilter] = useState<PlaylistEditorFilter>(initialFilter);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
-  const [wasOpen, setWasOpen] = useState(isOpen);
-
-  if (isOpen !== wasOpen) {
-    setWasOpen(isOpen);
-    if (isOpen) {
-      setFilter(initialFilter);
-      setSelectedIds(new Set());
-      setSort("original");
-    }
-  }
 
   const { removeTracks, tracks: allTracks, updateTrack } = source;
   const needsCheckCount = useMemo(() => allTracks.filter(needsYearCheck).length, [allTracks]);

@@ -14,6 +14,7 @@ import { SelectableArtwork, SelectableArtworkImage } from "../SelectableArtwork"
 import { SpotifyLogo } from "../spotify/spotifySetupIcons";
 import { ChevronGlyph } from "./musicGlyphs";
 import { MusicSongDetails } from "./MusicSongDetails";
+import { SongSwipe } from "./SongSwipe";
 import styles from "./music.module.css";
 import findStyles from "./musicFind.module.css";
 
@@ -124,7 +125,7 @@ function MusicResultRow({ disabled, find, onDetails, onOpen, result }: MusicResu
 
   const isAdded = find.queued.has(result.id);
   const isSelected = find.selectedIds.has(result.id);
-  return (
+  const row = (
     <ListRow
       className={isSelected ? findStyles.selectedRow : undefined}
       isLeadingSeparate
@@ -149,6 +150,17 @@ function MusicResultRow({ disabled, find, onDetails, onOpen, result }: MusicResu
         />
       }
     />
+  );
+  if (disabled) return row;
+
+  return (
+    <SongSwipe
+      isInGame={isAdded}
+      onAdd={() => find.toggleTrack(result)}
+      onRemoveFromGame={() => find.toggleTrack(result)}
+    >
+      {row}
+    </SongSwipe>
   );
 }
 

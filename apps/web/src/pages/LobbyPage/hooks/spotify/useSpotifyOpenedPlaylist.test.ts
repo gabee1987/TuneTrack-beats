@@ -11,6 +11,7 @@ import { I18nProvider } from "../../../../features/i18n";
 import { getSharedFakeSocket, resetSharedFakeSocket } from "../../../../test/fakeSocket";
 import { buildTrackCard, TEST_ROOM_ID } from "../../../../test/roomStateFixtures";
 import { useSpotifyOpenedPlaylist } from "./useSpotifyOpenedPlaylist";
+import type { DeckOrigin } from "./lobbySpotify.types";
 
 vi.mock("../../../../services/socket/socketClient", async () => {
   const { socketClientMockForSharedSocket } = await import("../../../../test/fakeSocket");
@@ -57,7 +58,7 @@ function renderOpenedPlaylist(
   { roomId }: { roomId: string | undefined } = { roomId: TEST_ROOM_ID },
 ) {
   const params = {
-    currentPlaylistNameRef: { current: undefined as string | undefined },
+    currentDeckOriginRef: { current: { imageUrl: undefined, name: undefined } as DeckOrigin },
     roomId,
     setQueuedTrackIds: vi.fn(),
     setSavedPlaylistMessage: vi.fn(),
@@ -83,9 +84,12 @@ function emitPlaylistDetail(overrides: Record<string, unknown> = {}) {
   });
 }
 
-async function openReadyPlaylist(view: ReturnType<typeof renderOpenedPlaylist>) {
+async function openReadyPlaylist(
+  view: ReturnType<typeof renderOpenedPlaylist>,
+  detail: Record<string, unknown> = {},
+) {
   await act(async () => view.result.current.openSmartSearchPlaylist(PLAYLIST_RESULT));
-  emitPlaylistDetail();
+  emitPlaylistDetail(detail);
 }
 
 beforeEach(() => {
@@ -322,7 +326,7 @@ describe("useSpotifyOpenedPlaylist", () => {
 
     it("syncs the queue, names the playlist and announces a replace on confirmation", async () => {
       const view = renderOpenedPlaylist();
-      await openReadyPlaylist(view);
+      await openReadyPlaylist(view, { imageUrl: "https://example.test/cover.png" });
       await act(async () => view.result.current.applyOpenedPlaylistTracks("replace"));
 
       act(() => {
@@ -336,7 +340,10 @@ describe("useSpotifyOpenedPlaylist", () => {
       expect(view.params.setSmartSearchQueuedTrackIds).toHaveBeenCalledWith(
         new Set(["TESTTRACK1", "TESTTRACK2"]),
       );
-      expect(view.params.currentPlaylistNameRef.current).toBe("Test Playlist");
+      expect(view.params.currentDeckOriginRef.current).toEqual({
+        imageUrl: "https://example.test/cover.png",
+        name: "Test Playlist",
+      });
       expect(view.params.setSavedPlaylistMessage).toHaveBeenCalledWith(
         "Deck replaced with 2 songs.",
       );

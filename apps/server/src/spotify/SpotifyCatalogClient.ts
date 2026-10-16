@@ -32,13 +32,18 @@ export class SpotifyCatalogClient {
     this.apiBaseUrl = options.apiBaseUrl ?? DEFAULT_SPOTIFY_API_BASE_URL;
   }
 
-  public async getPlaylistName(playlistId: string, accessToken: string): Promise<string> {
-    const data = await getSpotifyJson<{ name: string }>(
-      `${this.apiBaseUrl}/playlists/${playlistId}?fields=name`,
+  /** The name and cover a saved deck keeps. */
+  public async getPlaylistSummary(
+    playlistId: string,
+    accessToken: string,
+  ): Promise<{ imageUrl?: string; name: string }> {
+    const data = await getSpotifyJson<{ images?: { url?: string }[] | null; name: string }>(
+      `${this.apiBaseUrl}/playlists/${playlistId}?fields=name,images`,
       accessToken,
       "Failed to fetch playlist metadata",
     );
-    return data.name;
+    const imageUrl = data.images?.[0]?.url;
+    return { name: data.name, ...(imageUrl ? { imageUrl } : {}) };
   }
 
   public async getPlaylistSearchItem(

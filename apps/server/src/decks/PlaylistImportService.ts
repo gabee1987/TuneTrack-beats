@@ -16,6 +16,7 @@ export interface PlaylistImportSuccess {
   filteredCount: number;
   totalFetched: number;
   playlistName?: string;
+  playlistImageUrl?: string;
 }
 
 export type PlaylistImportOutcome =
@@ -72,10 +73,11 @@ export class PlaylistImportService {
     }
 
     try {
-      const [rawTracks, playlistName] = await Promise.all([
+      const [rawTracks, summary] = await Promise.all([
         this.catalog.getAllPlaylistTracks(playlistId, accessToken),
-        this.catalog.getPlaylistName(playlistId, accessToken).catch(() => undefined),
+        this.catalog.getPlaylistSummary(playlistId, accessToken).catch(() => undefined),
       ]);
+      const playlistName = summary?.name;
 
       const cards: GameTrackCard[] = [];
       let filteredCount = 0;
@@ -146,6 +148,7 @@ export class PlaylistImportService {
         filteredCount,
         totalFetched: rawTracks.length,
         ...(playlistName ? { playlistName } : {}),
+        ...(summary?.imageUrl ? { playlistImageUrl: summary.imageUrl } : {}),
       };
     } catch (err) {
       if (err instanceof SpotifyApiError) {

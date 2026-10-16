@@ -2,6 +2,14 @@ export { MotionFeatureProvider } from "./MotionFeatureProvider";
 export { MotionPresence } from "./MotionPresence";
 export { ArrivalListPresence, type ArrivalListItem } from "./ArrivalListPresence";
 export { MeasuredDisclosure } from "./MeasuredDisclosure";
+export {
+  CollapsingHeaderCompact,
+  CollapsingHeaderHero,
+  useCollapsingHeader,
+  type CollapsingHeaderState,
+} from "./CollapsingHeader";
+export { ListReorderSlot } from "./ListReorderSlot";
+export { SwipeRow, type SwipeAction } from "./SwipeRow";
 export { MotionReveal } from "./MotionReveal";
 export { MotionSwap } from "./MotionSwap";
 export { ReadyTransition } from "./ReadyTransition";

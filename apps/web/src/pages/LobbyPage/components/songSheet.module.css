@@ -86,15 +86,6 @@
   gap: var(--space-3);
 }
 
-.statusField {
-  display: grid;
-  gap: var(--space-1);
-  color: var(--color-text-secondary);
-  font-size: var(--type-label-size);
-  line-height: var(--type-label-leading);
-  font-weight: var(--type-label-weight);
-}
-
 .note {
   margin: 0;
   color: var(--color-text-secondary);

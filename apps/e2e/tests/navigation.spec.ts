@@ -79,7 +79,7 @@ test("a link imports without login, and the editors close one level at a time wi
   const roomDeck = music.getByRole("region", { name: "In this game" });
   await expect(roomDeck.getByText("10 songs", { exact: true })).toBeVisible();
   await roomDeck.getByRole("button", { name: "Edit songs" }).click();
-  await expect(host.page.getByRole("dialog", { name: "Edit playlist" })).toBeVisible();
+  await expect(host.page.getByRole("dialog", { name: "Song list" })).toBeVisible();
   const firstTrack = host.page.getByRole("button", { name: /^E2E Track 1\b/ });
   await firstTrack.click();
 
@@ -96,13 +96,13 @@ test("a link imports without login, and the editors close one level at a time wi
 
   await host.page.goBack();
   await expect(releaseYearField).toHaveCount(0);
-  await expect(host.page.getByRole("dialog", { name: "Edit playlist" })).toBeVisible();
+  await expect(host.page.getByRole("dialog", { name: "Song list" })).toBeVisible();
 
   await host.page
-    .getByRole("dialog", { name: "Edit playlist" })
+    .getByRole("dialog", { name: "Song list" })
     .getByRole("button", { name: "Back", exact: true })
     .click();
-  await expect(host.page.getByRole("dialog", { name: "Edit playlist" })).not.toBeVisible();
+  await expect(host.page.getByRole("dialog", { name: "Song list" })).not.toBeVisible();
   await expect(music).toBeVisible();
 
   // Login only changes playback; the Playback block drops its button once it lands.

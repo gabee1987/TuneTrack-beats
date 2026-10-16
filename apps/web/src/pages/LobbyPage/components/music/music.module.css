@@ -6,19 +6,6 @@
   gap: var(--space-4);
 }
 
-/*
- * An opened playlist or quick-pick review fills the sheet under its bar, edge to edge, so
- * its own list scrolls, its covers line up under Back and the long review stays virtualised.
- */
-.sheetBodyFilled {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  height: calc(100% + var(--space-4));
-  margin: 0 calc(var(--space-4) * -1) calc(var(--space-4) * -1);
-}
-
 .offline {
   display: flex;
   justify-content: center;

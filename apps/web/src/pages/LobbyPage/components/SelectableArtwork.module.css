@@ -22,18 +22,6 @@
   outline-offset: 3px;
 }
 
-.artworkStatic {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  flex-shrink: 0;
-  overflow: hidden;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--color-surface-elevated) 70%, transparent);
-  color: var(--color-text-secondary);
-}
-
 .artworkCard {
   position: relative;
   display: block;

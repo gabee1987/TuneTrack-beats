@@ -1,10 +1,5 @@
-import {
-  MIN_RELEASE_YEAR,
-  getTrackCurationFlags,
-  type PublicTrackInfo,
-  type TrackMetadataStatus,
-} from "@tunetrack/shared/client";
-import { type FormEvent, useEffect, useState } from "react";
+import { MIN_RELEASE_YEAR, type PublicTrackInfo } from "@tunetrack/shared/client";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useI18n } from "../../../features/i18n";
 import { PanelView } from "../../../features/overlay";
 import {
@@ -12,33 +7,40 @@ import {
   Chip,
   CoverArt,
   FloatingBar,
+  NumberStepper,
   PageHeader,
-  SegmentedControl,
+  SettingRow,
   TextField,
 } from "../../../features/ui/primitives";
+import { ToggleSwitch } from "../../../features/ui/ToggleSwitch";
 import { resolveArtworkUrl } from "../../../features/ui/resolveArtworkUrl";
-import type { PlaylistTrackUpdatePatch } from "../hooks/usePlaylistEditor";
+import { needsYearCheck, type PlaylistTrackUpdatePatch } from "../hooks/music/playlistEditorTarget";
+import type { SongReview } from "../hooks/music/useSongReview";
 import styles from "./songSheet.module.css";
 
 interface PlaylistTrackDetailsSheetProps {
   onClose: () => void;
   onSave: (trackId: string, patch: PlaylistTrackUpdatePatch) => void;
+  review?: SongReview | undefined;
   track: PublicTrackInfo | null;
 }
 
-const METADATA_STATUS_OPTIONS: TrackMetadataStatus[] = ["imported", "edited", "verified"];
+const MAX_RELEASE_YEAR = new Date().getFullYear() + 1;
 
+/** The Song editor: the host corrects a song's details and says when its year is right. */
 export function PlaylistTrackDetailsSheet({
   onClose,
   onSave,
+  review,
   track,
 }: PlaylistTrackDetailsSheetProps) {
   const { t } = useI18n();
+  const formRef = useRef<HTMLFormElement>(null);
   const [title, setTitle] = useState("");
   const [artist, setArtist] = useState("");
   const [albumTitle, setAlbumTitle] = useState("");
-  const [releaseYear, setReleaseYear] = useState("");
-  const [metadataStatus, setMetadataStatus] = useState<TrackMetadataStatus>("imported");
+  const [releaseYear, setReleaseYear] = useState(MIN_RELEASE_YEAR);
+  const [isYearChecked, setIsYearChecked] = useState(false);
 
   useEffect(() => {
     if (!track) return;
@@ -46,43 +48,48 @@ export function PlaylistTrackDetailsSheet({
     setTitle(track.title);
     setArtist(track.artist);
     setAlbumTitle(track.albumTitle);
-    setReleaseYear(String(track.releaseYear));
-    setMetadataStatus(track.metadataStatus);
+    setReleaseYear(track.releaseYear);
+    setIsYearChecked(track.metadataStatus === "verified");
   }, [track]);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!track) return;
-
-    const parsedReleaseYear = Number.parseInt(releaseYear, 10);
-    if (!Number.isInteger(parsedReleaseYear)) return;
+  // Every way out of a review saves what was typed, so stepping on never loses an edit.
+  function save(isChecked: boolean) {
+    if (!track || !formRef.current?.reportValidity()) return;
 
     const patch = buildTrackUpdatePatch(track, {
       albumTitle: albumTitle.trim(),
       artist: artist.trim(),
-      metadataStatus,
-      releaseYear: parsedReleaseYear,
+      isYearChecked: isChecked,
+      releaseYear,
       title: title.trim(),
     });
-
-    if (Object.keys(patch).length > 0) {
-      onSave(track.id, patch);
-    }
-    onClose();
+    if (Object.keys(patch).length > 0) onSave(track.id, patch);
+    if (review) review.onNext();
+    else onClose();
   }
 
-  const flags = track ? getTrackCurationFlags(track) : [];
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    save(isYearChecked);
+  }
+
+  const spotifyYear = track?.sourceReleaseYear;
 
   // A view over the whole Music Setup panel, never nested in the list that opened it: inside
   // that list it sat below the panel header stacking context (B1).
   return (
     <PanelView isOpen={track !== null} label={t("lobby.playlist.detailsTitle")} onDismiss={onClose}>
       {track ? (
-        <form className={styles.form} onSubmit={handleSubmit}>
+        <form className={styles.form} onSubmit={handleSubmit} ref={formRef}>
           <div className={styles.header}>
             <PageHeader
               backLabel={t("common.back")}
               eyebrow={t("lobby.playlist.detailsTitle")}
+              meta={
+                review
+                  ? t("music.song.position", { count: review.count, index: review.index })
+                  : undefined
+              }
               onBack={onClose}
               title={t("lobby.playlist.detailsHeading")}
             />
@@ -96,19 +103,14 @@ export function PlaylistTrackDetailsSheet({
                 <span className={styles.songArtist}>
                   {track.artist} · {track.albumTitle}
                 </span>
-                <span className={styles.chips}>
-                  <Chip>
-                    {t("lobby.playlist.sourceYearShort", {
-                      year: track.sourceReleaseYear ?? track.releaseYear,
-                    })}
-                  </Chip>
-                  {flags.includes("suspicious_album") ? (
+                {needsYearCheck(track) ? (
+                  <span className={styles.chips}>
                     <Chip className={styles.warning}>
                       <WarningIcon />
                       {t("lobby.playlist.statusCheck")}
                     </Chip>
-                  ) : null}
-                </span>
+                  </span>
+                ) : null}
               </div>
             </div>
 
@@ -134,39 +136,57 @@ export function PlaylistTrackDetailsSheet({
                 required
                 value={albumTitle}
               />
-              <TextField
-                inputMode="numeric"
-                label={t("lobby.playlist.fieldReleaseYear")}
-                max={new Date().getFullYear() + 1}
-                min={MIN_RELEASE_YEAR}
-                onChange={(event) => setReleaseYear(event.target.value)}
-                required
-                type="number"
-                value={releaseYear}
-              />
-              <div className={styles.statusField}>
-                <span aria-hidden="true">{t("lobby.playlist.fieldStatus")}</span>
-                <SegmentedControl<TrackMetadataStatus>
-                  aria-label={t("lobby.playlist.fieldStatus")}
-                  onChange={setMetadataStatus}
-                  options={METADATA_STATUS_OPTIONS.map((status) => ({
-                    label: getStatusLabel(t, status),
-                    value: status,
-                  }))}
-                  value={metadataStatus}
+              <SettingRow
+                description={
+                  spotifyYear !== undefined && spotifyYear !== releaseYear
+                    ? t("music.song.spotifyYear", { year: spotifyYear })
+                    : undefined
+                }
+                title={t("lobby.playlist.fieldReleaseYear")}
+              >
+                <NumberStepper
+                  isEditable
+                  label={t("lobby.playlist.fieldReleaseYear")}
+                  max={MAX_RELEASE_YEAR}
+                  min={MIN_RELEASE_YEAR}
+                  onChange={setReleaseYear}
+                  value={releaseYear}
                 />
-              </div>
+              </SettingRow>
+              <SettingRow
+                description={t("music.song.yearCheckedBody")}
+                title={t("lobby.playlist.statusVerified")}
+              >
+                <ToggleSwitch
+                  ariaLabel={t("lobby.playlist.statusVerified")}
+                  checked={isYearChecked}
+                  onChange={setIsYearChecked}
+                />
+              </SettingRow>
             </div>
           </div>
 
           <div className={styles.actions}>
             <FloatingBar className={styles.actionRow} edge="bottom">
-              <Button onClick={onClose} size="lg" type="button" variant="secondary">
-                {t("common.cancel")}
-              </Button>
-              <Button fullWidth size="lg" type="submit">
-                {t("lobby.playlist.saveTrack")}
-              </Button>
+              {review ? (
+                <>
+                  <Button size="lg" type="submit" variant="secondary">
+                    {t("music.song.next")}
+                  </Button>
+                  <Button fullWidth haptic onClick={() => save(true)} size="lg" type="button">
+                    {t("music.song.looksRight")}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button onClick={onClose} size="lg" type="button" variant="secondary">
+                    {t("common.cancel")}
+                  </Button>
+                  <Button fullWidth size="lg" type="submit">
+                    {t("lobby.playlist.saveTrack")}
+                  </Button>
+                </>
+              )}
             </FloatingBar>
           </div>
         </form>
@@ -178,11 +198,15 @@ export function PlaylistTrackDetailsSheet({
 interface EditableTrackFields {
   albumTitle: string;
   artist: string;
-  metadataStatus: TrackMetadataStatus;
+  isYearChecked: boolean;
   releaseYear: number;
   title: string;
 }
 
+/**
+ * Only what changed. Year checked on marks the song verified; off, a song that was verified or
+ * had a field changed becomes edited; otherwise its status stays (`22` §4.9).
+ */
 function buildTrackUpdatePatch(
   track: PublicTrackInfo,
   fields: EditableTrackFields,
@@ -193,30 +217,22 @@ function buildTrackUpdatePatch(
   if (fields.artist !== track.artist) patch.artist = fields.artist;
   if (fields.albumTitle !== track.albumTitle) patch.albumTitle = fields.albumTitle;
   if (fields.releaseYear !== track.releaseYear) patch.releaseYear = fields.releaseYear;
-  if (fields.metadataStatus !== track.metadataStatus) {
-    patch.metadataStatus = fields.metadataStatus;
-  }
 
-  if (
-    patch.metadataStatus === undefined &&
-    (patch.title !== undefined ||
-      patch.artist !== undefined ||
-      patch.albumTitle !== undefined ||
-      patch.releaseYear !== undefined)
-  ) {
-    patch.metadataStatus = "edited";
-  }
+  const hasFieldChange = Object.keys(patch).length > 0;
+  const status = getEditedStatus(track, fields.isYearChecked, hasFieldChange);
+  if (status !== track.metadataStatus) patch.metadataStatus = status;
 
   return patch;
 }
 
-function getStatusLabel(
-  t: (key: string, params?: Record<string, string | number>) => string,
-  status: TrackMetadataStatus,
-): string {
-  if (status === "verified") return t("lobby.playlist.statusVerified");
-  if (status === "edited") return t("lobby.playlist.statusEdited");
-  return t("lobby.playlist.statusImported");
+function getEditedStatus(
+  track: PublicTrackInfo,
+  isYearChecked: boolean,
+  hasFieldChange: boolean,
+): PublicTrackInfo["metadataStatus"] {
+  if (isYearChecked) return "verified";
+  if (hasFieldChange || track.metadataStatus === "verified") return "edited";
+  return track.metadataStatus;
 }
 
 function WarningIcon() {

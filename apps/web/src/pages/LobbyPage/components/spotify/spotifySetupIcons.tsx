@@ -14,46 +14,6 @@ export function SpotifyLogo() {
   );
 }
 
-export function PlusIcon() {
-  return (
-    <svg aria-hidden="true" fill="none" height={20} viewBox="0 0 24 24" width={20}>
-      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeLinecap="round" strokeWidth={2.6} />
-    </svg>
-  );
-}
-
-export function CheckIcon() {
-  return (
-    <svg aria-hidden="true" fill="none" height={18} viewBox="0 0 24 24" width={18}>
-      <path
-        d="m20 6-11 11-5-5"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2.8}
-      />
-    </svg>
-  );
-}
-
-export function TrashIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      height={20}
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      viewBox="0 0 24 24"
-      width={20}
-    >
-      <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-    </svg>
-  );
-}
-
 export function SearchIcon() {
   return (
     <svg aria-hidden="true" fill="none" height={18} viewBox="0 0 24 24" width={18}>
@@ -77,27 +37,6 @@ export function BackIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={2.6}
-      />
-    </svg>
-  );
-}
-
-export function ReplaceIcon() {
-  return (
-    <svg aria-hidden="true" fill="none" height={18} viewBox="0 0 24 24" width={18}>
-      <path
-        d="M4 7h11a4 4 0 0 1 0 8H8"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2.2}
-      />
-      <path
-        d="m8 11-4 4 4 4"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2.2}
       />
     </svg>
   );

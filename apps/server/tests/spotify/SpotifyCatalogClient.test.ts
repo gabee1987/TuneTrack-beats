@@ -77,10 +77,21 @@ describe("SpotifyCatalogClient", () => {
     });
   });
 
-  it("reads a playlist's name and metadata, rejecting malformed metadata", async () => {
-    stubFetch({ body: { name: "Test Playlist" } }, { body: spotifyPlaylist("p1") }, { body: null });
+  it("reads a playlist's name, cover and metadata, rejecting malformed metadata", async () => {
+    stubFetch(
+      { body: { images: [{ url: "https://images.example.test/p1.jpg" }], name: "Test Playlist" } },
+      { body: { images: null, name: "Test Playlist" } },
+      { body: spotifyPlaylist("p1") },
+      { body: null },
+    );
 
-    await expect(client().getPlaylistName("p1", TOKEN)).resolves.toBe("Test Playlist");
+    await expect(client().getPlaylistSummary("p1", TOKEN)).resolves.toEqual({
+      imageUrl: "https://images.example.test/p1.jpg",
+      name: "Test Playlist",
+    });
+    await expect(client().getPlaylistSummary("p1", TOKEN)).resolves.toEqual({
+      name: "Test Playlist",
+    });
     await expect(client().getPlaylistSearchItem("p1", TOKEN)).resolves.toMatchObject({ id: "p1" });
     await expect(client().getPlaylistSearchItem("p1", TOKEN)).rejects.toMatchObject({
       code: "api_error",

@@ -2,7 +2,7 @@ import {
   applyTrackEdit,
   getTrackCurationFlags,
   type PublicTrackInfo,
-  type TrackEditPatch,
+  type TrackMetadataStatus,
 } from "@tunetrack/shared/client";
 
 /** All songs, or only those whose imported year still needs a look. */
@@ -13,12 +13,21 @@ export type PlaylistEditorTarget =
   | { deck: "room"; filter: PlaylistEditorFilter }
   | { deck: "saved"; deckId: string; filter: PlaylistEditorFilter };
 
-/** One deck the editor can change, wherever its songs are kept. */
+/** What the song editor sends: only the fields it sets. */
+export interface PlaylistTrackUpdatePatch {
+  title?: string;
+  artist?: string;
+  albumTitle?: string;
+  releaseYear?: number;
+  metadataStatus?: TrackMetadataStatus;
+}
+
+/** One list the Playlist view can change, wherever its songs are kept. */
 export interface PlaylistEditorSource {
   isLoading: boolean;
   removeTracks: (trackIds: readonly string[]) => void;
   tracks: PublicTrackInfo[];
-  updateTrack: (trackId: string, patch: TrackEditPatch) => void;
+  updateTrack: (trackId: string, patch: PlaylistTrackUpdatePatch) => void;
 }
 
 export function needsYearCheck(track: PublicTrackInfo): boolean {

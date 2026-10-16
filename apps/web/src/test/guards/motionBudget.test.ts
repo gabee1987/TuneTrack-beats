@@ -22,7 +22,6 @@ const LONG_RUNNING_ALLOWLIST = [
   "pages/HomePage/mobile/AnimatedMenuBackground.module.css .orbViolet",
   "pages/LobbyPage/components/lobbyCard.module.css .pulse::before, .pulse::after",
   "pages/LobbyPage/components/music/musicFind.module.css .cardSpinner",
-  "pages/LobbyPage/components/playlistEditList.module.css .loadingSpinner",
 ] as const;
 
 const MAX_TRANSITION_MS = 500;

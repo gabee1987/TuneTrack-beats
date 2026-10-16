@@ -1,0 +1,171 @@
+/* The Playlist view (`22` §4.9): bar, then one scroller holding the cover, the toolbar and the list. */
+.header {
+  flex-shrink: 0;
+  padding: calc(var(--safe-area-top) + var(--space-2)) var(--space-4) var(--space-2);
+  background: var(--color-bg-app);
+}
+
+/* Folded in while the big cover shows; it fades in as the cover scrolls away. */
+.compactCover {
+  display: grid;
+  flex-shrink: 0;
+}
+
+.scroll {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: 112px;
+}
+
+.hero {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4) var(--space-4);
+  text-align: center;
+  transform-origin: 50% 0;
+}
+
+.source {
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-leading);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkYear {
+  border-color: color-mix(in srgb, var(--color-warning) 40%, transparent);
+  color: var(--color-warning);
+}
+
+/* Sticks under the bar once the cover has gone; beats the bar's own `position`. */
+.scroll > .toolbar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+}
+
+.filters {
+  display: flex;
+  min-width: 0;
+  gap: var(--space-2);
+}
+
+.filters > * {
+  padding-inline: var(--space-3);
+}
+
+.sort {
+  position: relative;
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: var(--size-touch-target);
+  height: var(--size-touch-target);
+  border-radius: var(--radius-circle);
+  background: var(--color-surface-interactive);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.sortActive {
+  background: var(--color-accent-brand);
+  color: var(--color-on-accent-brand);
+}
+
+.sort:focus-within {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Invisible but tappable: the native select opens the phone's own picker. */
+.sortSelect {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.list {
+  position: relative;
+}
+
+.rowSlot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 64px;
+}
+
+.rowSlot + .rowSlot {
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.row {
+  height: 100%;
+  padding-inline: var(--space-4);
+  border-radius: 0;
+}
+
+.rowSelected {
+  background: color-mix(in srgb, var(--color-accent-brand) 12%, transparent);
+}
+
+.rowTrailing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.yearChecked {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-circle);
+  background: color-mix(in srgb, var(--color-accent-brand) 18%, transparent);
+  color: var(--color-accent-brand);
+}
+
+.yearChecked svg {
+  width: 14px;
+  height: 14px;
+}
+
+.status {
+  margin: 0;
+  padding: var(--space-6) var(--space-4);
+  color: var(--color-text-secondary);
+  font-size: var(--type-label-size);
+  text-align: center;
+}
+
+/* The selection bar and the list's own action share one place at the bottom. */
+.dock {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 4;
+  display: grid;
+  pointer-events: none;
+}
+
+.dock > * {
+  grid-area: 1 / 1;
+}

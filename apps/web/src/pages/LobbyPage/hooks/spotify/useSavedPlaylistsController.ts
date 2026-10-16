@@ -14,10 +14,11 @@ import {
   updateSavedPlaylist,
 } from "../../../../services/savedPlaylists/savedPlaylists";
 import { getSocketClient } from "../../../../services/socket/socketClient";
+import type { DeckOrigin } from "./lobbySpotify.types";
 import { getCurrentPlaylistTracks } from "./spotifyQueueTrackIds";
 
 interface UseSavedPlaylistsControllerParams {
-  currentPlaylistNameRef: MutableRefObject<string | undefined>;
+  currentDeckOriginRef: MutableRefObject<DeckOrigin>;
   currentPlaylistSourceUrl: string;
   loadedSavedPlaylistId: string | null;
   roomId: string | undefined;
@@ -26,7 +27,7 @@ interface UseSavedPlaylistsControllerParams {
 }
 
 export function useSavedPlaylistsController({
-  currentPlaylistNameRef,
+  currentDeckOriginRef,
   currentPlaylistSourceUrl,
   loadedSavedPlaylistId,
   roomId,
@@ -62,7 +63,7 @@ export function useSavedPlaylistsController({
         setIsOverwritePromptActive(true);
       } else {
         const defaultName =
-          currentPlaylistNameRef.current ??
+          currentDeckOriginRef.current.name ??
           t("lobby.spotify.savedPlaylistDefaultName", { count: savedPlaylists.length + 1 });
         setSaveNameState(defaultName);
         setIsSavingWithName(true);
@@ -85,7 +86,7 @@ export function useSavedPlaylistsController({
   function switchToSaveAsNew() {
     setIsOverwritePromptActive(false);
     const defaultName =
-      currentPlaylistNameRef.current ??
+      currentDeckOriginRef.current.name ??
       t("lobby.spotify.savedPlaylistDefaultName", { count: savedPlaylists.length + 1 });
     setSaveNameState(defaultName);
     setIsSavingWithName(true);
@@ -120,6 +121,9 @@ export function useSavedPlaylistsController({
     const savedPlaylist = savePlaylist({
       name,
       tracks,
+      ...(currentDeckOriginRef.current.imageUrl
+        ? { imageUrl: currentDeckOriginRef.current.imageUrl }
+        : {}),
       ...(currentPlaylistSourceUrl ? { sourcePlaylistUrl: currentPlaylistSourceUrl } : {}),
     });
 
@@ -195,6 +199,7 @@ export function useSavedPlaylistsController({
     if (!playlist) return;
 
     const { name: playlistName, tracks: playlistTracks } = playlist;
+    currentDeckOriginRef.current = { imageUrl: playlist.imageUrl, name: playlistName };
 
     void getSocketClient().then((socket) => {
       function handleLoadConfirmed() {

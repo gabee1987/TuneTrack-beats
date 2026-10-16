@@ -27,7 +27,7 @@
 }
 
 .input {
-  width: 5ch;
+  width: calc(var(--stepper-digits) * 1ch + 2 * var(--space-2) + 2px);
   min-height: var(--input-min-height);
   padding: 0 var(--space-2);
   border: 1px solid var(--input-border);

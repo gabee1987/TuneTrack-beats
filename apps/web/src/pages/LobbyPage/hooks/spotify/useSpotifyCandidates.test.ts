@@ -11,6 +11,7 @@ import { I18nProvider } from "../../../../features/i18n";
 import { getSharedFakeSocket, resetSharedFakeSocket } from "../../../../test/fakeSocket";
 import { buildTrackCard, TEST_ROOM_ID } from "../../../../test/roomStateFixtures";
 import { useSpotifyCandidates } from "./useSpotifyCandidates";
+import type { DeckOrigin } from "./lobbySpotify.types";
 
 vi.mock("../../../../services/socket/socketClient", async () => {
   const { socketClientMockForSharedSocket } = await import("../../../../test/fakeSocket");
@@ -41,7 +42,7 @@ const TRACK_TWO = buildTrack({
 
 function renderCandidates({ roomId }: { roomId: string | undefined } = { roomId: TEST_ROOM_ID }) {
   const params = {
-    currentPlaylistNameRef: { current: undefined as string | undefined },
+    currentDeckOriginRef: { current: { imageUrl: undefined, name: undefined } as DeckOrigin },
     roomId,
     setGeneratedPlaylistMessage: vi.fn(),
     setSavedPlaylistMessage: vi.fn(),
@@ -345,7 +346,7 @@ describe("useSpotifyCandidates", () => {
       expect(view.result.current.candidateSessionId).toBeNull();
       expect(view.result.current.candidateSourceSummary).toBeNull();
       expect(view.result.current.candidateTracks).toEqual([]);
-      expect(view.params.currentPlaylistNameRef.current).toBe("Test Mix");
+      expect(view.params.currentDeckOriginRef.current.name).toBe("Test Mix");
       expect(view.params.setSavedPlaylistMessage).toHaveBeenCalledWith(message);
       expect(view.params.showGeneratedPlaylistMessage).toHaveBeenCalledWith(message);
       expect(socket.listenerCount(ServerToClientEvent.SpotifyCandidatesApplied)).toBe(0);

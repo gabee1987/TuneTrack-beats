@@ -4,7 +4,7 @@ import type { UseLobbySpotifyResult } from "../spotify/lobbySpotify.types";
 
 /**
  * Add, replace and remove for an album, artist or playlist opened from Find, with one short toast
- * for each. Plan `22` S8 replaces the view these serve with the Playlist view.
+ * for each; the Playlist view calls them.
  */
 export function useOpenedPlaylistActions(spotify: UseLobbySpotifyResult) {
   const { t } = useI18n();

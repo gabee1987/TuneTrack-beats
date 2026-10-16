@@ -70,11 +70,6 @@ const FRAMER_MOTION_ALLOWLIST = [
   "pages/GamePage/hooks/transitions/usePreviewCardTransition.ts",
   "pages/GamePage/mobile/GamePageMobile.tsx",
   "pages/LobbyPage/components/LobbyHostTtSettings.tsx",
-  "pages/LobbyPage/components/PlaylistTrackList.tsx",
-  "pages/LobbyPage/components/PlaylistTrackRow.tsx",
-  "pages/LobbyPage/components/spotify/SpotifyCandidateReviewPanel.tsx",
-  "pages/LobbyPage/components/spotify/SpotifyOpenedPlaylistPanel.tsx",
-  "pages/LobbyPage/components/spotify/SpotifyOpenedTrackRow.tsx",
   "pages/LobbyPage/components/spotify/SpotifyPlaylistSearchPanel.tsx",
   "pages/LobbyPage/components/spotify/SpotifySmartSearchResultRow.tsx",
 ].map((path) => `${WEB}/${path}`);
