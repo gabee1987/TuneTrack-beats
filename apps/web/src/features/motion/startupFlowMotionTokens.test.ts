@@ -36,7 +36,8 @@ describe("startup flow motion contracts (22 §10)", () => {
 
     expect(stepDone.initial).toMatchObject({ scale: 0.9 });
     expect(durationOf(stepDone.animate)).toBe(0.24);
-    expect(ready.initial).toMatchObject({ scale: 0.96 });
+    expect(ready.initial).toMatchObject({ scale: 1 });
+    expect(ready.animate).toMatchObject({ scale: [1, 1.04, 1] });
     expect(durationOf(ready.animate)).toBe(0.46);
   });
 

@@ -4,7 +4,7 @@ import {
   type PublicTrackInfo,
   type SpotifySmartSearchResult,
 } from "@tunetrack/shared/client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "../../features/ui/primitives";
 import { MusicDecksTab } from "../LobbyPage/components/music/MusicDecksTab";
 import { MusicPlaybackBlock } from "../LobbyPage/components/music/MusicPlaybackBlock";
@@ -15,6 +15,7 @@ import type {
   MusicPlaybackState,
   SavedDeckSummary,
 } from "../LobbyPage/hooks/music/musicSetupSelectors";
+import type { PlaylistEditorTarget } from "../LobbyPage/hooks/music/playlistEditorTarget";
 import type {
   LobbySpotifyAuthState,
   UseLobbySpotifyResult,
@@ -57,6 +58,18 @@ const SONGS_TO_CHECK: PublicTrackInfo[] = [
   },
 ];
 
+const EDITOR_DECK_ID = "TEST_DECK_EDITOR";
+
+/** A saved deck the gallery's song editor works on, long enough to scroll. */
+const EDITOR_TRACKS: PublicTrackInfo[] = Array.from({ length: 24 }, (_, index) => ({
+  albumTitle: index % 4 === 0 ? `Album ${index + 1} (Remastered)` : `Album ${index + 1}`,
+  artist: `Artist ${(index % 6) + 1}`,
+  id: `TEST_EDITOR_TRACK_${index + 1}`,
+  metadataStatus: index % 5 === 0 ? "verified" : "imported",
+  releaseYear: 1965 + ((index * 7) % 58),
+  title: `Song ${index + 1}`,
+}));
+
 const RESULTS: SpotifySmartSearchResult[] = [
   {
     artist: "Artist One",
@@ -80,6 +93,40 @@ const RESULTS: SpotifySmartSearchResult[] = [
 /** Music setup (`22` §4.8): the Playback states, Your decks, and the whole sheet over demo data. */
 export function MusicGallery() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [editor, setEditor] = useState<PlaylistEditorTarget | null>(null);
+  const [editorTracks, setEditorTracks] = useState(EDITOR_TRACKS);
+  const [isQuickPickShown, setIsQuickPickShown] = useState(false);
+  const spotify = useMemo(
+    () =>
+      ({
+        ...DEMO_SPOTIFY,
+        candidates: {
+          ...DEMO_SPOTIFY.candidates,
+          applyGeneratedCandidates: noop,
+          candidateTracks: isQuickPickShown ? EDITOR_TRACKS : [],
+          discardGeneratedCandidates: () => setIsQuickPickShown(false),
+          removeCandidateTrack: noop,
+          updateCandidateTrack: noop,
+        },
+        queue: { closeEditor: () => setEditor(null), editor, openEditor: setEditor },
+        savedPlaylists: {
+          ...DEMO_SPOTIFY.savedPlaylists,
+          savedPlaylists: [
+            {
+              createdAtEpochMs: 1,
+              id: EDITOR_DECK_ID,
+              name: "Road Trip",
+              source: "spotify",
+              tracks: editorTracks,
+              updatedAtEpochMs: 1,
+            },
+          ],
+          updateSavedDeckTracks: (_id: string, tracks: PublicTrackInfo[]) =>
+            setEditorTracks(tracks),
+        },
+      }) as UseLobbySpotifyResult,
+    [editor, editorTracks, isQuickPickShown],
+  );
 
   return (
     <section className={styles.section}>
@@ -129,9 +176,29 @@ export function MusicGallery() {
           <QuickPickArt key={presetId} presetId={presetId} />
         ))}
       </div>
-      <Button onClick={() => setIsSheetOpen(true)} variant="secondary">
-        Open the Music sheet
-      </Button>
+      <div className={styles.row}>
+        <Button onClick={() => setIsSheetOpen(true)} variant="secondary">
+          Open the Music sheet
+        </Button>
+        <Button
+          onClick={() => {
+            setIsSheetOpen(true);
+            setEditor({ deck: "saved", deckId: EDITOR_DECK_ID, filter: "all" });
+          }}
+          variant="secondary"
+        >
+          Open the song editor
+        </Button>
+        <Button
+          onClick={() => {
+            setIsSheetOpen(true);
+            setIsQuickPickShown(true);
+          }}
+          variant="secondary"
+        >
+          Open a quick-pick result
+        </Button>
+      </div>
       <MusicSheet
         currentSettings={DEMO_SETTINGS}
         isOpen={isSheetOpen}
@@ -139,7 +206,7 @@ export function MusicGallery() {
         onUsePracticeDeck={noop}
         practiceDeckStatus="idle"
         setup={DEMO_SETUP}
-        spotify={DEMO_SPOTIFY}
+        spotify={spotify}
       />
     </section>
   );

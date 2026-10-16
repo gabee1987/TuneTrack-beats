@@ -7,12 +7,21 @@ import {
   type PlaylistEditorSource,
 } from "./music/playlistEditorTarget";
 
-export type SortField = "title" | "artist" | "year";
-export type SortDir = "asc" | "desc";
+/** "original" keeps the deck's own order. */
+export type PlaylistSort = "original" | "title" | "artist" | "yearAsc" | "yearDesc";
+
+export const PLAYLIST_SORTS: readonly PlaylistSort[] = [
+  "original",
+  "title",
+  "artist",
+  "yearAsc",
+  "yearDesc",
+];
 
 export interface UsePlaylistEditorResult {
   /** Every song in the deck, whatever the filter shows. */
   allTracks: PublicTrackInfo[];
+  clearSelection: () => void;
   filter: PlaylistEditorFilter;
   isLoading: boolean;
   needsCheckCount: number;
@@ -20,9 +29,8 @@ export interface UsePlaylistEditorResult {
   removeTrack: (trackId: string) => void;
   selectedIds: ReadonlySet<string>;
   setFilter: (filter: PlaylistEditorFilter) => void;
-  sortDir: SortDir;
-  sortField: SortField | null;
-  toggleSort: (field: SortField) => void;
+  setSort: (sort: PlaylistSort) => void;
+  sort: PlaylistSort;
   toggleSelection: (trackId: string) => void;
   /** The songs on screen: filtered, then sorted. */
   tracks: PublicTrackInfo[];
@@ -47,8 +55,7 @@ export function usePlaylistEditor(
   isOpen: boolean,
   initialFilter: PlaylistEditorFilter,
 ): UsePlaylistEditorResult {
-  const [sortField, setSortField] = useState<SortField | null>(null);
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [sort, setSort] = useState<PlaylistSort>("original");
   const [filter, setFilter] = useState<PlaylistEditorFilter>(initialFilter);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [wasOpen, setWasOpen] = useState(isOpen);
@@ -58,39 +65,17 @@ export function usePlaylistEditor(
     if (isOpen) {
       setFilter(initialFilter);
       setSelectedIds(new Set());
-      setSortField(null);
+      setSort("original");
     }
   }
-
-  const toggleSort = useCallback((field: SortField) => {
-    setSortField((prev) => {
-      if (prev === field) {
-        setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-        return field;
-      }
-      setSortDir("asc");
-      return field;
-    });
-  }, []);
 
   const { removeTracks, tracks: allTracks, updateTrack } = source;
   const needsCheckCount = useMemo(() => allTracks.filter(needsYearCheck).length, [allTracks]);
 
   const tracks = useMemo(() => {
     const shown = filterTracks(allTracks, filter);
-    if (!sortField) return shown;
-    return shown.sort((a, b) => {
-      let cmp: number;
-      if (sortField === "year") {
-        cmp = a.releaseYear - b.releaseYear;
-      } else if (sortField === "artist") {
-        cmp = a.artist.localeCompare(b.artist);
-      } else {
-        cmp = a.title.localeCompare(b.title);
-      }
-      return sortDir === "asc" ? cmp : -cmp;
-    });
-  }, [allTracks, filter, sortField, sortDir]);
+    return sort === "original" ? shown : shown.sort((a, b) => compareTracks(a, b, sort));
+  }, [allTracks, filter, sort]);
 
   const removeTrack = useCallback((trackId: string) => removeTracks([trackId]), [removeTracks]);
 
@@ -103,6 +88,8 @@ export function usePlaylistEditor(
     });
   }, []);
 
+  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
   const removeSelected = useCallback(() => {
     if (selectedIds.size === 0) return;
     removeTracks([...selectedIds]);
@@ -111,6 +98,7 @@ export function usePlaylistEditor(
 
   return {
     allTracks,
+    clearSelection,
     filter,
     isLoading: source.isLoading,
     needsCheckCount,
@@ -118,11 +106,23 @@ export function usePlaylistEditor(
     removeTrack,
     selectedIds,
     setFilter,
-    sortDir,
-    sortField,
-    toggleSort,
+    setSort,
+    sort,
     toggleSelection,
     tracks,
     updateTrack,
   };
+}
+
+function compareTracks(a: PublicTrackInfo, b: PublicTrackInfo, sort: PlaylistSort): number {
+  switch (sort) {
+    case "artist":
+      return a.artist.localeCompare(b.artist);
+    case "yearAsc":
+      return a.releaseYear - b.releaseYear;
+    case "yearDesc":
+      return b.releaseYear - a.releaseYear;
+    default:
+      return a.title.localeCompare(b.title);
+  }
 }

@@ -72,12 +72,16 @@ function buildSavedDeck(name: string): SavedPlaylist {
 }
 
 interface SpotifyStubOptions {
+  candidatePhase?: "idle" | "generating";
+  candidateTracks?: unknown[];
   results?: SpotifySmartSearchResult[];
   savedDecks?: SavedPlaylist[];
   searchPhase?: "idle" | "searching" | "error";
 }
 
 function buildSpotifyStub({
+  candidatePhase = "idle",
+  candidateTracks = [],
   results = [],
   savedDecks = [],
   searchPhase = "idle",
@@ -92,8 +96,8 @@ function buildSpotifyStub({
     },
     candidates: {
       candidateError: null,
-      candidatePhase: "idle",
-      candidateTracks: [],
+      candidatePhase,
+      candidateTracks,
       discardGeneratedCandidates: vi.fn(),
       generateCandidatesFromPreset: vi.fn(),
     },
@@ -235,13 +239,28 @@ describe("MusicSheet without a Spotify login", () => {
     expect(spotify.playlistSearch.searchSpotifyPlaylists).toHaveBeenCalledTimes(1);
   });
 
-  it("generates a quick pick with the room's recommended size, without the loading screen", async () => {
+  it("generates a quick pick with the room's recommended size", async () => {
     const { spotify } = renderSheet();
 
     await userEvent.click(screen.getByRole("radio", { name: "Quick picks" }));
     await userEvent.click(await screen.findByRole("button", { name: /^80s Hits/ }));
 
     expect(spotify.candidates.generateCandidatesFromPreset).toHaveBeenCalledWith("80s_hits", 40);
+  });
+
+  it("covers the app with the loading screen while a quick pick is built", async () => {
+    renderSheet({ candidatePhase: "generating" });
+
+    await userEvent.click(screen.getByRole("radio", { name: "Quick picks" }));
+
+    expect(await screen.findByText("Building your music deck")).toBeInTheDocument();
+  });
+
+  it("gives the whole sheet to generated songs, without the playback block", () => {
+    renderSheet({ candidateTracks: [{ id: "TEST_TRACK_1" }] });
+
+    expect(screen.queryByRole("button", { name: "Connect Spotify" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "Quick picks" })).not.toBeInTheDocument();
   });
 });
 

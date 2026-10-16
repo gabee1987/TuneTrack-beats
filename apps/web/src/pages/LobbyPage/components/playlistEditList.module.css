@@ -1,74 +1,55 @@
-/* The filter and sort rows sit in the flow above the list, so nothing floats over a song. */
-.filterBar {
+/* One row under the title: the filter on the left, the sort on the right. */
+.toolbar {
   display: flex;
   flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
   gap: var(--space-2);
-  padding: 0 18px var(--space-2);
+  padding: var(--space-1) 18px var(--space-2);
 }
 
-.sortBar {
-  position: relative;
-  flex-shrink: 0;
-  margin: 0 18px var(--space-2);
+.filters {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 2px 2px;
-  background: transparent;
-  overflow-x: auto;
-  scrollbar-width: none;
+  min-width: 0;
+  gap: var(--space-2);
 }
 
-.sortBar::-webkit-scrollbar {
-  display: none;
+.filters > * {
+  padding-inline: var(--space-3);
 }
 
-.sortLabel {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--color-text-secondary);
+.sort {
+  position: relative;
+  display: grid;
   flex-shrink: 0;
-  margin-right: 2px;
-}
-
-.sortChip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  flex-shrink: 0;
-  min-height: 38px;
-  padding: 0 15px;
-  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 72%, transparent);
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--color-surface-elevated) 86%, black 14%);
+  place-items: center;
+  width: var(--size-touch-target);
+  height: var(--size-touch-target);
+  border-radius: var(--radius-circle);
+  background: var(--color-surface-interactive);
   color: var(--color-text-primary);
-  font-size: 13px;
-  font-weight: 800;
-  white-space: nowrap;
   cursor: pointer;
-  box-shadow: 0 6px 16px color-mix(in srgb, black 14%, transparent);
-  transition:
-    background 0.12s,
-    color 0.12s,
-    border-color 0.12s;
 }
 
-.sortChip:hover {
-  color: var(--color-text-primary);
+.sortActive {
+  background: var(--color-accent-brand);
+  color: var(--color-on-accent-brand);
 }
 
-.sortChipActive {
-  border-color: color-mix(in srgb, var(--color-border-spotify) 72%, transparent);
-  background: color-mix(in srgb, var(--color-border-spotify) 45%, #10131d 55%);
-  color: var(--color-text-primary);
+.sort:focus-within {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
 }
 
-.sortArrow {
-  font-size: 11px;
-  opacity: 0.7;
+/* Invisible but tappable: the native select opens the phone's own picker. */
+.sortSelect {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 16px;
 }
 
 .listScrollArea {
@@ -246,26 +227,15 @@
 .batchToolbar {
   position: absolute;
   right: 14px;
-  bottom: 14px;
+  bottom: calc(14px + var(--safe-area-bottom));
   left: 14px;
   z-index: 4;
   display: grid;
   pointer-events: none;
 }
 
-.batchDeleteBtn {
-  width: 100%;
-  min-height: 46px;
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--color-status-danger-surface) 46%, #dc2626 54%);
-  color: #fff;
-  outline: 1px solid color-mix(in srgb, var(--color-status-danger-border) 48%, #fff 52%);
-  box-shadow: var(--shadow-raised);
+.batchToolbar > * {
   pointer-events: auto;
-}
-
-.batchDeleteBtn:active {
-  opacity: 0.85;
 }
 
 @media (max-width: 520px) {
@@ -278,12 +248,8 @@
     height: 22px;
   }
 
-  .filterBar {
+  .toolbar {
     padding-inline: 14px;
-  }
-
-  .sortBar {
-    margin-inline: 14px;
   }
 
   .trackRow {

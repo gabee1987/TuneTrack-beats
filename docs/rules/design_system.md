@@ -98,6 +98,7 @@ matter most in review:
 | `--color-accent-brand`, `--color-accent-primary`                             | The single reserved accent        |
 | `--color-border-subtle`                                                      | Hairlines                         |
 | `--color-status-danger-{surface,text,border}` and siblings                   | State only                        |
+| `--button-danger-{bg,bg-hover,bg-active,fg}` (`--color-danger-solid*`)       | Danger `Button` fill only         |
 | `--shadow-{none,raised,overlay,dialog}`                                      | Elevation                         |
 
 ### The two permitted literal-colour cases

@@ -71,14 +71,18 @@
   background: var(--color-surface-interactive);
 }
 
+/* The primary button's shape and states in red: a solid fill, never a tinted outline. */
 .danger {
-  background: var(--color-status-danger-surface);
-  color: var(--color-status-danger-text);
-  outline: 1px solid var(--color-status-danger-border);
+  background: var(--button-danger-bg);
+  color: var(--button-danger-fg);
 }
 
 .danger:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-status-danger-surface) 70%, white 8%);
+  background: var(--button-danger-bg-hover);
+}
+
+.danger:active:not(:disabled) {
+  background: var(--button-danger-bg-active);
 }
 
 .tertiary {

@@ -279,11 +279,12 @@ decks when at least one saved deck exists, otherwise Find.
   opens in the editor) and `music.decks.checkSongs` (editor on Needs check); then
   `music.decks.editSongs` (editor on All), Save to Your decks and Remove all songs (owner,
   2026-10-16).
-- Grid (2 columns on phones) of saved decks: cover (stored `imageUrl`, styled fallback), name,
-  "{{count}} songs", `music.decks.toCheck` = "{{count}} to check" badge when > 0. Tap → Playlist
-  view. Two buttons on each tile: `music.decks.load` and `music.decks.edit` (the editor on the
-  saved deck, written back to this device without loading it; owner, 2026-10-16). The overflow
-  (48 px `IconButton` "More") → Rename / Delete (confirm).
+- One row per saved deck (one column on phones, more where the sheet is wide; owner, 2026-10-16):
+  a 96 px cover (stored `imageUrl`, styled fallback) beside the name, "{{count}} songs" with
+  `music.decks.toCheck` = "{{count}} to check" in the warning colour when > 0, and one action line:
+  `music.decks.load` (primary), `music.decks.edit` (the editor on the saved deck, written back to
+  this device without loading it) and the overflow (48 px `IconButton` "More") → Rename / Delete
+  (confirm).
 - Empty: `EmptyState` `music.decks.empty` = "No saved decks yet." with `music.decks.find` = "Find
   songs" switching to Find.
 
@@ -301,8 +302,9 @@ decks when at least one saved deck exists, otherwise Find.
 - **Quick picks** (own tab, see above): `music.quickPicks.title` = "Quick picks", grid of the sixteen preset cards (Japanese Music and Hungarian Music added 2026-10-16)
   (title, description, a styled decade/genre tile as cover). Under a `music.quickPicks.more` =
   "More options" disclosure: `music.quickPicks.max` = "Max songs" stepper defaulting to
-  `getRecommendedDeckSize(...)`, range 10–500. Tap → generation (inline progress on the card,
-  not the global loading overlay) → Playlist view in review mode (§4.9).
+  `getRecommendedDeckSize(...)`, range 10–500. Tap → generation under the app-wide loading screen
+  (`music.quickPicks.loadingTitle`; owner, 2026-10-16) → Playlist view in review mode (§4.9),
+  which takes the whole sheet: the Playback block is hidden while a list is open.
 - **Practice deck** card at the end of the Quick picks tab: `lobby.practiceDeck.title` = "Practice deck",
   `lobby.practiceDeck.description` = "Built-in songs with no audio, for trying the game.",
   action `lobby.practiceDeck.use`. With a deck present: confirm `music.replaceConfirm` = "Replace
@@ -325,6 +327,7 @@ the room deck. It replaces `SpotifyOpenedPlaylistPanel`, `SpotifyCandidateReview
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Header         | Collapsing cover: large `CoverArt` (mosaic for decks), title, source line (`music.view.source.spotify` = "Spotify playlist", `.saved` = "Saved deck", `.room` = "In this game", `.quickPick` = "Quick pick"), "{{count}} songs", to-check chip. On scroll the cover cross-fades into a 32 px cover in the sticky title bar (`createCollapsingHeaderMotion`, `transform`/`opacity` only, scroll-driven, reduced motion → instant swap). Back (48 px) and an overflow `IconButton` "More".                         |
 | Filter chips   | `music.filter.all` = "All ({{count}})", `music.filter.needsCheck` = "Needs check ({{count}})". Default Needs check when K > 0 and the list is the room deck or a saved deck. A `music.view.review` = "Review flagged" button beside the chips when K > 0.                                                                                                                                                                                                                                                        |
+| Sort           | Shipped early (2026-10-16): one 48 px sort icon at the end of the filter row over a native select (`music.sort.original` = "Playlist order", `.title` = "Title A–Z", `.artist` = "Artist A–Z", `.yearAsc` = "Oldest first", `.yearDesc` = "Newest first"); green while not in playlist order. The title and song count share one compact header row with Close.                                                                                                                                                  |
 | List           | Virtualised (`@tanstack/react-virtual`) `ListRow`s: cover, title, artist · year, a text badge `music.row.checkYear` = "Check year" when flagged, "Year checked" tick when verified. Trailing `ListRowAction`: Add / Added ✓ (search lists), or chevron (deck lists). Tap opens the Song editor. "Select" in the header enters selection mode with checkboxes and one `SelectionActionBar` ("{{count}} selected" + Add to deck / Remove from deck). Swipe-to-delete is removed (one way to remove, discoverable). |
 | Primary action | Bottom dock, one button: search/link/quick-pick list → `music.view.use` = "Use in game" (with a deck present a choice `Dialog`: `music.view.replace` = "Replace deck" / `music.view.add` = "Add to deck" / cancel); saved deck → "Use in game"; room deck → the dock reads `music.view.inGame` = "In this game ✓" (disabled, informative) and the overflow holds the actions.                                                                                                                                    |
 | Overflow       | `music.view.save` = "Save to Your decks" (name dialog; existing overwrite / save-as-new flow becomes two dialog buttons), `music.view.rename`, `music.view.removeAll` = "Remove all songs" (confirm; for the room deck this sets `deckSource` back to none), `music.view.delete` = "Delete saved deck" (confirm).                                                                                                                                                                                                |

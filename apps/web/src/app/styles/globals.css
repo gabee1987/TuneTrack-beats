@@ -190,19 +190,16 @@ textarea:focus-visible {
 }
 
 /*
- * Scrollbars never take room from the page (owner, 2026-10-16). Touch screens keep the system
- * overlay scrollbar, which floats over the content and fades on its own; styling it would turn it
- * into a fixed column. Mouse screens hide the bar, and `ScrollIndicator` draws a thumb over the
- * scrolling box that fades once scrolling stops.
+ * Scrollbars never take room from the page and look the same everywhere (owner, 2026-10-16):
+ * the system bar is hidden on every screen, and `ScrollIndicator` draws one thin green thumb
+ * over the box that scrolls, fading once scrolling stops.
  */
-@media (hover: hover) and (pointer: fine) {
-  * {
-    scrollbar-width: none;
-  }
+* {
+  scrollbar-width: none;
+}
 
-  ::-webkit-scrollbar {
-    display: none;
-  }
+::-webkit-scrollbar {
+  display: none;
 }
 
 /* Typography utility classes — compose type scale tokens without per-component font-size. */

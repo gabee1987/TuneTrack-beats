@@ -14,6 +14,7 @@ import { LobbyInviteCard } from "../LobbyPage/components/LobbyInviteCard";
 import { LobbyMusicCard, LobbyMusicSummary } from "../LobbyPage/components/LobbyMusicCard";
 import { LobbyPlayersStrip } from "../LobbyPage/components/LobbyPlayersStrip";
 import { LobbyRulesCard } from "../LobbyPage/components/LobbyRulesCard";
+import { LobbyExitButton } from "../LobbyPage/components/LobbyExitButton";
 import { LobbyExitDialog } from "../LobbyPage/components/LobbyExitDialog";
 import { LobbyStartDock, LobbyStartSummary } from "../LobbyPage/components/LobbyStartDock";
 import { LobbyTopBar } from "../LobbyPage/components/LobbyTopBar";
@@ -207,7 +208,7 @@ function StartDockGallery() {
 
   return (
     <section className={styles.section}>
-      <h2 className="typeTitleMd">Start dock</h2>
+      <h2 className="typeTitleMd">Start dock & Close room</h2>
       <div className={styles.row}>
         <Button onClick={() => setIsReady((ready) => !ready)} variant="secondary">
           {isReady ? "Block Start" : "Make Start ready"}
@@ -218,6 +219,8 @@ function StartDockGallery() {
         reason={isReady ? null : { kind: "noDeck" }}
         songCount={isReady ? 60 : null}
       />
+      <LobbyExitButton isHost onClick={noop} />
+      <LobbyExitButton isHost={false} onClick={noop} />
       {DOCK_STATES.map((state) => (
         <div className={styles.stack} key={state.label}>
           <p className="typeCaption">{state.label}</p>

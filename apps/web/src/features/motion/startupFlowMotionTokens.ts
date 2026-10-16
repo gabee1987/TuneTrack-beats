@@ -73,15 +73,18 @@ export function createTabSwapMotion(reduceMotion: boolean): MotionTargets {
   };
 }
 
-/** Start becoming enabled: one expressive settle, played once per change to ready. */
+/**
+ * Start becoming enabled: one expressive pop, played once per change to ready. It rests at full
+ * size in both states, so a blocked Start is as wide as the buttons around it (owner, 2026-10-16).
+ */
 export function createReadyMotion(reduceMotion: boolean): MotionTargets {
   if (reduceMotion) return STILL;
 
   return {
-    initial: { scale: 0.96 },
+    initial: { scale: 1 },
     animate: {
-      scale: 1,
-      transition: { duration: READY_SECONDS, ease: motionEasings.emphasized },
+      scale: [1, 1.04, 1],
+      transition: { duration: READY_SECONDS, ease: motionEasings.emphasized, times: [0, 0.4, 1] },
     },
     exit: {},
   };

@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { createStandardTransition, useReducedMotionPreference } from "../../../../features/motion";
 import { useI18n } from "../../../../features/i18n";
 import { useAppToast } from "../../../../features/toast";
-import { ActionButton } from "../../../../features/ui/ActionButton";
+import { Button } from "../../../../features/ui/primitives";
+import { MusicViewHeader } from "../music/MusicViewHeader";
 import { PlaylistTrackDetailsSheet } from "../PlaylistTrackDetailsSheet";
 import { PlaylistTrackList } from "../PlaylistTrackList";
 import type { LobbySpotifyState } from "./spotifySetupTypes";
@@ -12,9 +13,9 @@ import sharedStyles from "./spotifyShared.module.css";
 import panelsStyles from "./spotifyPanels.module.css";
 
 interface SpotifyCandidateReviewPanelProps {
-  backLabel?: string;
+  backLabel: string;
   currentQueueCount?: number;
-  onBack?: () => void;
+  onBack: () => void;
   spotifyState: LobbySpotifyState;
 }
 
@@ -117,14 +118,12 @@ export function SpotifyCandidateReviewPanel({
 
       {hasGeneratedTracks ? (
         <section className={panelsStyles.spotifyCandidateReview}>
-          <div className={panelsStyles.spotifyReviewHeader}>
-            <span>{t("lobby.spotify.review.readyCount", { count: candidateTracks.length })}</span>
-            {onBack && backLabel ? (
-              <button className={panelsStyles.spotifyReviewBackBtn} onClick={onBack} type="button">
-                {backLabel}
-              </button>
-            ) : null}
-          </div>
+          <MusicViewHeader
+            backLabel={backLabel}
+            onBack={onBack}
+            subtitle={t("lobby.spotify.review.readyCount", { count: candidateTracks.length })}
+            title={t("music.quickPicks.resultTitle")}
+          />
 
           <PlaylistTrackList
             onOpenTrack={(track) => setActiveCandidateTrackId(track.id)}
@@ -139,14 +138,9 @@ export function SpotifyCandidateReviewPanel({
               <span className={panelsStyles.spotifyBatchCount}>
                 {t("lobby.playlist.selected", { count: selectedCandidateTrackIds.size })}
               </span>
-              <ActionButton
-                className={panelsStyles.spotifyBatchDeleteBtn}
-                onClick={removeSelectedCandidateTracks}
-                type="button"
-                variant="danger"
-              >
+              <Button onClick={removeSelectedCandidateTracks} variant="danger">
                 {t("lobby.playlist.remove", { count: selectedCandidateTrackIds.size })}
-              </ActionButton>
+              </Button>
             </div>
           ) : null}
 
@@ -157,12 +151,11 @@ export function SpotifyCandidateReviewPanel({
             transition={createStandardTransition(reduceMotion)}
           >
             {!isApplyChoiceOpen ? (
-              <ActionButton
-                className={panelsStyles.spotifyFloatingActionBtn}
+              <Button
                 disabled={!canUseTracks || isApplying}
+                fullWidth
                 onClick={handleUseTracks}
-                type="button"
-                variant="primary"
+                size="lg"
               >
                 {isApplying
                   ? t("lobby.spotify.review.applying")
@@ -171,7 +164,7 @@ export function SpotifyCandidateReviewPanel({
                         count: selectedCandidateCount,
                       })
                     : t("lobby.spotify.review.useTracks")}
-              </ActionButton>
+              </Button>
             ) : (
               <div className={panelsStyles.spotifyApplyChoicePanel}>
                 <div className={panelsStyles.spotifyApplyChoiceCopy}>
@@ -188,30 +181,30 @@ export function SpotifyCandidateReviewPanel({
                   </span>
                 </div>
                 <div className={panelsStyles.spotifyApplyChoiceActions}>
-                  <ActionButton
+                  <Button
                     disabled={isApplying}
+                    fullWidth
                     onClick={() => handleApplyChoice("append")}
-                    type="button"
-                    variant="neutral"
+                    variant="secondary"
                   >
                     {t("lobby.spotify.quickPicks.appendToQueue")}
-                  </ActionButton>
-                  <ActionButton
+                  </Button>
+                  <Button
                     disabled={isApplying}
+                    fullWidth
                     onClick={() => handleApplyChoice("replace")}
-                    type="button"
                     variant="danger"
                   >
                     {t("lobby.spotify.quickPicks.replaceQueue")}
-                  </ActionButton>
-                  <ActionButton
+                  </Button>
+                  <Button
                     disabled={isApplying}
+                    fullWidth
                     onClick={() => setIsApplyChoiceOpen(false)}
-                    type="button"
-                    variant="neutral"
+                    variant="secondary"
                   >
                     {t("common.cancel")}
-                  </ActionButton>
+                  </Button>
                 </div>
               </div>
             )}

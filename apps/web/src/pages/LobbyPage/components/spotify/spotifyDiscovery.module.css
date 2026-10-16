@@ -148,20 +148,8 @@
   pointer-events: none;
 }
 
-.spotifySearchAddSelectedBtn {
-  width: 100%;
-  min-height: 46px;
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--color-background-spotify) 92%, #fff 8%);
-  color: var(--color-on-spotify);
-  box-shadow: var(--shadow-raised);
+.spotifySearchSelectedAction > * {
   pointer-events: auto;
-}
-
-.spotifySearchRemoveSelectedBtn {
-  background: color-mix(in srgb, var(--color-status-danger-surface) 46%, #dc2626 54%);
-  color: #fff;
-  outline: 1px solid color-mix(in srgb, var(--color-status-danger-border) 48%, #fff 52%);
 }
 
 @media (max-width: 440px) {

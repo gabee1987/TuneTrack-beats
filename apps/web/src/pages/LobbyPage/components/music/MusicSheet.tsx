@@ -134,11 +134,14 @@ export function MusicSheet({
             <ConnectionStatus />
           </div>
         ) : null}
-        <MusicPlaybackBlock
-          auth={spotify.auth}
-          disabled={isOffline}
-          state={getMusicPlaybackState(currentSettings, spotify.auth)}
-        />
+        {/* An opened list is about choosing songs; the whole sheet goes to the list. */}
+        {showsOpenedView ? null : (
+          <MusicPlaybackBlock
+            auth={spotify.auth}
+            disabled={isOffline}
+            state={getMusicPlaybackState(currentSettings, spotify.auth)}
+          />
+        )}
 
         {showsOpenedView ? (
           <MusicOpenedViews

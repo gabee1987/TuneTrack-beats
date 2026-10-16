@@ -12,6 +12,35 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Compact deck rows and editor, green scroll thumb everywhere, quick-pick loader back (2026-10-16)
+
+- **Saved decks are rows, not tiles:** cover beside name, size and "to check", then Load, Edit and
+  More on one line. Why: owner review; the tile stacked a chip and two buttons under the cover and
+  left empty space.
+- **The song editor's top is two rows:** title with song count and Close, then the filter chips
+  with one sort icon over a native select. The selection bar is the shared `SelectionActionBar`
+  (Remove, Done). Why: owner review; three rows and a transparent Remove button wasted room and
+  looked unlike every other button.
+- **One green scroll thumb on every screen, touch included.** Supersedes the "touch keeps the
+  system scrollbar" part of the entry below: the system bar is hidden everywhere and
+  `ScrollIndicator` draws a 4 px thumb in the primary-button green. Why: owner review; lists such
+  as the song editor showed no position on phones, and the system bar cannot be coloured.
+- **Quick picks show the app-wide loading screen again** while songs are picked, and an opened
+  list hides the Playback block so the songs get the whole sheet.
+- **Danger buttons are solid red** (`--button-danger-*`): the primary button's shape and states
+  with a red fill and white text, instead of a tinted outline. Why: owner review; they read as a
+  different kind of control.
+- **Start and Close room are one pair:** both large and full width, Close room inside the Start
+  card on desktop. A blocked Start rests at full size and pops once when it becomes ready, instead
+  of growing from 96 %.
+- **The song editor uses the shared controls** (`TextField`, `SegmentedControl`, pill `Button`s,
+  the song list's header) in place of its own boxy fields and buttons; its content is unchanged
+  until plan `22` S8.
+- **Opened lists share one header row** (`MusicViewHeader`): a 48 px round Back, the title with
+  its count, and the list's own 48 px actions. Used by the quick-pick result and the playlist
+  opened from Find, whose buttons also moved to the shared ones. Why: owner review; a small text
+  "Back to Find" pill above a count line wasted a row and matched nothing else.
+
 ### Decks edit without loading, a Needs check filter, a Close room button (2026-10-16)
 
 - **Every saved deck has Load and Edit.** Edit opens the song editor on the saved deck itself;

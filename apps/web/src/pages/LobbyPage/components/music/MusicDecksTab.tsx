@@ -82,17 +82,19 @@ export function MusicDecksTab({
               <span className={deckStyles.deckName}>{deck.name}</span>
               <span className={deckStyles.deckMeta}>
                 {t("music.decks.songs", { count: deck.songCount })}
+                {deck.toCheckCount > 0 ? (
+                  <span className={deckStyles.deckToCheck}>
+                    {t("music.decks.toCheck", { count: deck.toCheckCount })}
+                  </span>
+                ) : null}
               </span>
-              {deck.toCheckCount > 0 ? (
-                <Chip>{t("music.decks.toCheck", { count: deck.toCheckCount })}</Chip>
-              ) : null}
               <div className={deckStyles.deckTileActions}>
                 <Button
                   aria-label={t("music.decks.loadLabel", { name: deck.name })}
                   disabled={disabled}
                   onClick={() => onUseDeck(deck)}
                   size="md"
-                  variant="secondary"
+                  variant="primary"
                 >
                   {t("music.decks.load")}
                 </Button>
@@ -101,20 +103,19 @@ export function MusicDecksTab({
                   disabled={disabled}
                   onClick={() => onEditDeck(deck)}
                   size="md"
-                  variant="tertiary"
+                  variant="secondary"
                 >
                   {t("music.decks.edit")}
                 </Button>
+                <IconButton
+                  aria-label={t("music.decks.more", { name: deck.name })}
+                  disabled={disabled}
+                  onClick={() => onDeckOptions(deck)}
+                  variant="ghost"
+                >
+                  <MoreGlyph />
+                </IconButton>
               </div>
-              <IconButton
-                aria-label={t("music.decks.more", { name: deck.name })}
-                className={deckStyles.deckMore}
-                disabled={disabled}
-                onClick={() => onDeckOptions(deck)}
-                variant="ghost"
-              >
-                <MoreGlyph />
-              </IconButton>
             </li>
           ))}
         </ul>

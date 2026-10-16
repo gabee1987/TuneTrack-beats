@@ -1,11 +1,16 @@
+/* Centred on both axes explicitly, so no browser button default can push the content down. */
 .row {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr);
   align-items: center;
+  align-content: center;
   gap: var(--space-3);
   width: 100%;
   min-height: 72px;
+  margin: 0;
   padding: var(--space-3);
+  appearance: none;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
   background: var(--color-surface-elevated);
@@ -52,6 +57,7 @@
 
 .copy {
   display: grid;
+  align-content: center;
   gap: 2px;
   min-width: 0;
 }

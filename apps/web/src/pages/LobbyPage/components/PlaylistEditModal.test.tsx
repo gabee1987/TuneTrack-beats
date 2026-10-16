@@ -250,6 +250,38 @@ describe("PlaylistEditModal", () => {
     });
   });
 
+  it("sorts from one select and goes back to the deck's own order", async () => {
+    await renderOpenEditor([
+      buildTrack({ id: "track-1", releaseYear: 1999, title: "Test Track One" }),
+      buildTrack({ id: "track-2", releaseYear: 1975, title: "Test Track Two" }),
+    ]);
+    await screen.findByText("Test Track One");
+    const titles = () =>
+      screen.getAllByText(/^Test Track (One|Two)$/).map((title) => title.textContent);
+
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Sort" }), "Oldest first");
+    expect(titles()).toEqual(["Test Track Two", "Test Track One"]);
+
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Sort" }), "Playlist order");
+    expect(titles()).toEqual(["Test Track One", "Test Track Two"]);
+  });
+
+  it("removes the selected songs from the selection bar, and Done only clears it", async () => {
+    await renderOpenEditor([buildTrack(), buildTrack({ id: "track-2", title: "Test Track Two" })]);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Select Test Track One" }));
+    const bar = screen.getByRole("toolbar", { name: "1 selected" });
+    await userEvent.click(within(bar).getByRole("button", { name: "Done" }));
+    await waitFor(() => expect(screen.queryByRole("toolbar")).not.toBeInTheDocument());
+    expect(socket.emittedFor("remove_playlist_tracks")).toEqual([]);
+
+    await userEvent.click(screen.getByRole("button", { name: "Select Test Track Two" }));
+    await userEvent.click(screen.getByRole("button", { name: "Remove 1" }));
+    expect(socket.emittedFor("remove_playlist_tracks")).toEqual([
+      expect.objectContaining({ trackIds: ["track-2"] }),
+    ]);
+  });
+
   it("edits a saved deck on this device and never asks the server", async () => {
     const write = vi.fn();
     const source = createSavedDeckSource([buildTrack()], write);

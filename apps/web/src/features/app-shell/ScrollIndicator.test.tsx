@@ -1,7 +1,6 @@
 import { act, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { setMediaQuery } from "../../test/stubs/matchMedia";
-import { FINE_POINTER_QUERY, ScrollIndicator } from "./ScrollIndicator";
+import { ScrollIndicator } from "./ScrollIndicator";
 import { MIN_THUMB_PX, getScrollThumb } from "./scrollThumb";
 
 describe("getScrollThumb", () => {
@@ -45,8 +44,7 @@ describe("ScrollIndicator", () => {
     document.body.innerHTML = "";
   });
 
-  it("shows a thumb over the box that scrolls on a mouse screen, then fades it out", () => {
-    setMediaQuery(FINE_POINTER_QUERY, true);
+  it("shows a thumb over the box that scrolls, then fades it out", () => {
     const { container } = render(<ScrollIndicator />);
     const thumb = container.firstElementChild as HTMLElement;
     const scroller = buildScroller();
@@ -62,18 +60,5 @@ describe("ScrollIndicator", () => {
 
     act(() => vi.advanceTimersByTime(900));
     expect(thumb.dataset.visible).toBeUndefined();
-  });
-
-  it("leaves touch screens to the system scrollbar", () => {
-    setMediaQuery(FINE_POINTER_QUERY, false);
-    const { container } = render(<ScrollIndicator />);
-    const scroller = buildScroller();
-
-    act(() => {
-      scroller.dispatchEvent(new Event("scroll"));
-      vi.advanceTimersToNextFrame();
-    });
-
-    expect((container.firstElementChild as HTMLElement).dataset.visible).toBeUndefined();
   });
 });

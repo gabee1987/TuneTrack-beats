@@ -91,48 +91,55 @@
   gap: var(--space-1);
 }
 
+/* One row per saved deck: the cover beside its name, its size and its three actions. */
 .deckGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .deckTile {
-  position: relative;
   display: grid;
-  align-content: start;
-  justify-items: start;
-  gap: var(--space-1);
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  align-content: center;
+  column-gap: var(--space-3);
+  row-gap: 2px;
+  align-items: start;
   min-width: 0;
-  padding: var(--space-3);
+  padding: var(--space-2);
 }
 
-/* The tile is narrower than a 160 px cover on phones; the cover follows the tile. */
 .deckCover {
-  width: 100%;
-  max-width: 160px;
-  height: auto;
-  aspect-ratio: 1;
+  grid-row: 1 / -1;
+  align-self: center;
+  width: 96px;
+  height: 96px;
+}
+
+.deckToCheck {
+  color: var(--color-warning);
+  font-weight: var(--type-label-weight);
+}
+
+.deckToCheck::before {
+  content: " · ";
+  color: var(--color-text-secondary);
+  font-weight: 400;
 }
 
 .deckTileActions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  align-items: center;
   gap: var(--space-1);
-  width: 100%;
   margin-top: var(--space-1);
 }
 
-.deckTileActions > * {
+.deckTileActions > :not(:last-child) {
   min-width: 0;
   padding-inline: var(--space-2);
-}
-
-.deckMore {
-  position: absolute;
-  top: var(--space-1);
-  right: var(--space-1);
 }

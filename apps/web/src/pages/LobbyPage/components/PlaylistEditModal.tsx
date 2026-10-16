@@ -1,14 +1,14 @@
 import { useMemo, useState } from "react";
 import { useI18n } from "../../../features/i18n";
 import { PanelView } from "../../../features/overlay";
-import { ActionButton } from "../../../features/ui/ActionButton";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
-import { ChipButton } from "../../../features/ui/primitives";
+import { classNames } from "../../../features/ui/classNames";
+import { ChipButton, SelectionActionBar } from "../../../features/ui/primitives";
 import type {
   PlaylistEditorFilter,
   PlaylistEditorSource,
 } from "../hooks/music/playlistEditorTarget";
-import { usePlaylistEditor, type SortField } from "../hooks/usePlaylistEditor";
+import { PLAYLIST_SORTS, usePlaylistEditor, type PlaylistSort } from "../hooks/usePlaylistEditor";
 import { PlaylistTrackDetailsSheet } from "./PlaylistTrackDetailsSheet";
 import { PlaylistTrackList } from "./PlaylistTrackList";
 import chromeStyles from "./playlistEditChrome.module.css";
@@ -24,8 +24,6 @@ interface PlaylistEditModalProps {
   source: PlaylistEditorSource;
   title: string;
 }
-
-const SORT_FIELDS: SortField[] = ["title", "artist", "year"];
 
 export function PlaylistEditModal({
   initialFilter,
@@ -46,6 +44,7 @@ export function PlaylistEditModal({
 
   const {
     allTracks,
+    clearSelection,
     filter,
     isLoading,
     needsCheckCount,
@@ -53,9 +52,8 @@ export function PlaylistEditModal({
     removeTrack,
     selectedIds,
     setFilter,
-    sortDir,
-    sortField,
-    toggleSort,
+    setSort,
+    sort,
     toggleSelection,
     tracks,
     updateTrack,
@@ -84,28 +82,28 @@ export function PlaylistEditModal({
             </span>
           )}
         </div>
-        <div className={chromeStyles.headerActions}>
-          <CloseIconButton ariaLabel={t("lobby.playlist.close")} onClick={onClose} />
-        </div>
+        <CloseIconButton ariaLabel={t("lobby.playlist.close")} onClick={onClose} />
       </div>
 
-      <div className={listStyles.filterBar} role="group" aria-label={t("music.filter.label")}>
-        <ChipButton
-          aria-pressed={filter === "all"}
-          onClick={() => setFilter("all")}
-          selected={filter === "all"}
-        >
-          {t("music.filter.all", { count: allTracks.length })}
-        </ChipButton>
-        <ChipButton
-          aria-pressed={filter === "needsCheck"}
-          onClick={() => setFilter("needsCheck")}
-          selected={filter === "needsCheck"}
-        >
-          {t("music.filter.needsCheck", { count: needsCheckCount })}
-        </ChipButton>
+      <div className={listStyles.toolbar}>
+        <div aria-label={t("music.filter.label")} className={listStyles.filters} role="group">
+          <ChipButton
+            aria-pressed={filter === "all"}
+            onClick={() => setFilter("all")}
+            selected={filter === "all"}
+          >
+            {t("music.filter.all", { count: allTracks.length })}
+          </ChipButton>
+          <ChipButton
+            aria-pressed={filter === "needsCheck"}
+            onClick={() => setFilter("needsCheck")}
+            selected={filter === "needsCheck"}
+          >
+            {t("music.filter.needsCheck", { count: needsCheckCount })}
+          </ChipButton>
+        </div>
+        <PlaylistSortSelect onChange={setSort} value={sort} />
       </div>
-      <PlaylistSortBar activeField={sortField} direction={sortDir} onToggleSort={toggleSort} />
 
       {isLoading ? (
         <div className={listStyles.loadingState}>
@@ -128,18 +126,16 @@ export function PlaylistEditModal({
         />
       )}
 
-      {selectedIds.size > 0 && (
-        <div className={listStyles.batchToolbar}>
-          <ActionButton
-            className={listStyles.batchDeleteBtn}
-            onClick={removeSelected}
-            type="button"
-            variant="danger"
-          >
-            {t("lobby.playlist.remove", { count: selectedIds.size })}
-          </ActionButton>
-        </div>
-      )}
+      <div className={listStyles.batchToolbar}>
+        <SelectionActionBar
+          count={selectedIds.size}
+          destructiveAction={{
+            label: t("lobby.playlist.remove", { count: selectedIds.size }),
+            onClick: removeSelected,
+          }}
+          primaryAction={{ label: t("music.selection.done"), onClick: clearSelection }}
+        />
+      </div>
 
       <PlaylistTrackDetailsSheet
         onClose={() => setSelectedTrackId(null)}
@@ -150,40 +146,47 @@ export function PlaylistEditModal({
   );
 }
 
-interface PlaylistSortBarProps {
-  activeField: SortField | null;
-  direction: "asc" | "desc";
-  onToggleSort: (field: SortField) => void;
+interface PlaylistSortSelectProps {
+  onChange: (sort: PlaylistSort) => void;
+  value: PlaylistSort;
 }
 
-function PlaylistSortBar({ activeField, direction, onToggleSort }: PlaylistSortBarProps) {
+/**
+ * A sort icon over a native select: one tap target in the toolbar, and the phone's own picker
+ * for the choice. It turns green while the songs are not in the deck's own order.
+ */
+function PlaylistSortSelect({ onChange, value }: PlaylistSortSelectProps) {
   const { t } = useI18n();
 
   return (
-    <div className={listStyles.sortBar}>
-      <span className={listStyles.sortLabel}>{t("lobby.playlist.sort")}</span>
-      {SORT_FIELDS.map((field) => (
-        <button
-          key={field}
-          className={`${listStyles.sortChip} ${activeField === field ? listStyles.sortChipActive : ""}`}
-          onClick={() => onToggleSort(field)}
-          type="button"
-        >
-          {getSortLabel(t, field)}
-          {activeField === field && (
-            <span className={listStyles.sortArrow}>{direction === "asc" ? "↑" : "↓"}</span>
-          )}
-        </button>
-      ))}
-    </div>
+    <label
+      className={classNames(
+        listStyles.sort,
+        value === "original" ? undefined : listStyles.sortActive,
+      )}
+      title={t(`music.sort.${value}`)}
+    >
+      <svg aria-hidden="true" fill="none" height="20" viewBox="0 0 24 24" width="20">
+        <path
+          d="M7 5v14M7 19l-3-3M7 19l3-3M17 19V5M17 5l-3 3M17 5l3 3"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+      </svg>
+      <select
+        aria-label={t("music.sort.label")}
+        className={listStyles.sortSelect}
+        onChange={(event) => onChange(event.target.value as PlaylistSort)}
+        value={value}
+      >
+        {PLAYLIST_SORTS.map((sort) => (
+          <option key={sort} value={sort}>
+            {t(`music.sort.${sort}`)}
+          </option>
+        ))}
+      </select>
+    </label>
   );
-}
-
-function getSortLabel(
-  t: (key: string, params?: Record<string, string | number>) => string,
-  field: SortField,
-): string {
-  if (field === "artist") return t("lobby.playlist.sortArtist");
-  if (field === "year") return t("lobby.playlist.sortYear");
-  return t("lobby.playlist.sortTitle");
 }

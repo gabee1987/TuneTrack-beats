@@ -1,27 +1,22 @@
 import { useEffect, useRef } from "react";
-import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { getScrollThumb } from "./scrollThumb";
 import styles from "./ScrollIndicator.module.css";
-
-/** Mouse and trackpad screens; touch screens keep the system's own overlay scrollbar. */
-export const FINE_POINTER_QUERY = "(hover: hover) and (pointer: fine)";
 
 const HIDE_AFTER_MS = 900;
 const EDGE_INSET_PX = 3;
 
 /**
  * One thin thumb over whatever box is scrolling, shown while it scrolls and faded out after a
- * pause (owner, 2026-10-16). Desktop scrollbars take a column of their own and pushed every
- * page's content off centre, so `globals.css` hides them there and this draws the position
- * instead. It moves through a ref once per frame and never renders on scroll.
+ * pause (owner, 2026-10-16). System scrollbars took a column on desktop and could not be styled
+ * on phones, so `globals.css` hides them everywhere and this draws the position instead. It
+ * moves through a ref once per frame and never renders on scroll.
  */
 export function ScrollIndicator() {
-  const isFinePointer = useMediaQuery(FINE_POINTER_QUERY);
   const thumbRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const thumb = thumbRef.current;
-    if (!isFinePointer || !thumb) return;
+    if (!thumb) return;
 
     let frame = 0;
     let hideTimer = 0;
@@ -62,7 +57,7 @@ export function ScrollIndicator() {
       window.clearTimeout(hideTimer);
       delete thumb.dataset.visible;
     };
-  }, [isFinePointer]);
+  }, []);
 
   return <div aria-hidden="true" className={styles.thumb} ref={thumbRef} />;
 }

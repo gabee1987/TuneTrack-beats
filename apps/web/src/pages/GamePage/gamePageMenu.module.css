@@ -178,14 +178,13 @@
 }
 
 .menuKickPlayerButton {
-  color: var(--color-status-danger-text);
-  outline: 1px solid var(--color-status-danger-border);
-  background: var(--color-status-danger-surface);
+  color: var(--button-danger-fg);
+  background: var(--button-danger-bg);
   box-shadow: none;
 }
 
 .menuKickPlayerButton:hover {
-  background: color-mix(in srgb, var(--color-status-danger-surface) 72%, white 10%);
+  background: var(--button-danger-bg-hover);
 }
 
 .menuTokenActionContent {

@@ -7,12 +7,17 @@ import {
 import { type FormEvent, useEffect, useState } from "react";
 import { useI18n } from "../../../features/i18n";
 import { PanelView } from "../../../features/overlay";
-import { ActionButton } from "../../../features/ui/ActionButton";
 import { CloseIconButton } from "../../../features/ui/CloseIconButton";
-import { TextInput } from "../../../features/ui/TextInput";
+import {
+  Button,
+  Chip,
+  CoverArt,
+  SegmentedControl,
+  TextField,
+} from "../../../features/ui/primitives";
+import { resolveArtworkUrl } from "../../../features/ui/resolveArtworkUrl";
 import type { PlaylistTrackUpdatePatch } from "../hooks/usePlaylistEditor";
 import styles from "./playlistEditChrome.module.css";
-import { resolveArtworkUrl } from "../../../features/ui/resolveArtworkUrl";
 
 interface PlaylistTrackDetailsSheetProps {
   onClose: () => void;
@@ -78,122 +83,87 @@ export function PlaylistTrackDetailsSheet({
     >
       {track ? (
         <form className={styles.detailsForm} onSubmit={handleSubmit}>
-          <div className={styles.detailsHeader}>
-            <div>
-              <p className={styles.detailsEyebrow}>{t("lobby.playlist.detailsEyebrow")}</p>
-              <h3 className={styles.detailsTitle}>{t("lobby.playlist.detailsTitle")}</h3>
-            </div>
+          <div className={styles.header}>
+            <h3 className={styles.title}>{t("lobby.playlist.detailsTitle")}</h3>
             <CloseIconButton ariaLabel={t("lobby.playlist.detailsClose")} onClick={onClose} />
           </div>
 
           <div className={styles.detailsArtworkRow}>
-            <div className={styles.detailsArtwork}>
-              {track.artworkUrl ? (
-                <img alt="" className={styles.trackArtworkImg} src={resolveArtworkUrl(track)} />
-              ) : (
-                <MusicNoteIcon />
-              )}
-            </div>
+            <CoverArt label={track.title} size="md" src={resolveArtworkUrl(track)} />
             <div className={styles.detailsSummary}>
-              <div className={styles.detailsAlbumRow}>
-                <span className={styles.detailsAlbumTitle}>{track.albumTitle}</span>
-                <span
-                  className={styles.detailsSourceYear}
-                  title={t("lobby.playlist.sourceYearShort", {
+              <strong className={styles.detailsSongTitle}>{track.title}</strong>
+              <span className={styles.detailsArtist}>
+                {track.artist} · {track.albumTitle}
+              </span>
+              <span className={styles.detailsChips}>
+                <Chip>
+                  {t("lobby.playlist.sourceYearShort", {
                     year: track.sourceReleaseYear ?? track.releaseYear,
                   })}
-                >
-                  {track.sourceReleaseYear ?? track.releaseYear}
-                </span>
-              </div>
-              <strong>{track.title}</strong>
-              <span className={styles.detailsArtist}>{track.artist}</span>
-              {flags.includes("suspicious_album") ? (
-                <span className={styles.detailsWarning}>
-                  <WarningIcon />
-                  {t("lobby.playlist.statusCheck")}
-                </span>
-              ) : null}
+                </Chip>
+                {flags.includes("suspicious_album") ? (
+                  <Chip className={styles.detailsWarning}>
+                    <WarningIcon />
+                    {t("lobby.playlist.statusCheck")}
+                  </Chip>
+                ) : null}
+              </span>
             </div>
           </div>
 
           <div className={styles.detailsFields}>
-            <label className={styles.fieldLabel}>
-              <span>{t("lobby.playlist.fieldTitle")}</span>
-              <TextInput
-                className={styles.detailsTextInput}
-                maxLength={200}
-                onChange={(event) => setTitle(event.target.value)}
-                required
-                type="text"
-                value={title}
-              />
-            </label>
-            <label className={styles.fieldLabel}>
-              <span>{t("lobby.playlist.fieldArtist")}</span>
-              <TextInput
-                className={styles.detailsTextInput}
-                maxLength={200}
-                onChange={(event) => setArtist(event.target.value)}
-                required
-                type="text"
-                value={artist}
-              />
-            </label>
-            <label className={styles.fieldLabel}>
-              <span>{t("lobby.playlist.fieldAlbum")}</span>
-              <TextInput
-                className={styles.detailsTextInput}
-                maxLength={200}
-                onChange={(event) => setAlbumTitle(event.target.value)}
-                required
-                type="text"
-                value={albumTitle}
-              />
-            </label>
-            <label className={styles.fieldLabel}>
-              <span>{t("lobby.playlist.fieldReleaseYear")}</span>
-              <TextInput
-                className={styles.detailsTextInput}
-                max={new Date().getFullYear() + 1}
-                min={MIN_RELEASE_YEAR}
-                onChange={(event) => setReleaseYear(event.target.value)}
-                required
-                type="number"
-                value={releaseYear}
-              />
-            </label>
+            <TextField
+              label={t("lobby.playlist.fieldTitle")}
+              maxLength={200}
+              onChange={(event) => setTitle(event.target.value)}
+              required
+              value={title}
+            />
+            <TextField
+              label={t("lobby.playlist.fieldArtist")}
+              maxLength={200}
+              onChange={(event) => setArtist(event.target.value)}
+              required
+              value={artist}
+            />
+            <TextField
+              label={t("lobby.playlist.fieldAlbum")}
+              maxLength={200}
+              onChange={(event) => setAlbumTitle(event.target.value)}
+              required
+              value={albumTitle}
+            />
+            <TextField
+              inputMode="numeric"
+              label={t("lobby.playlist.fieldReleaseYear")}
+              max={new Date().getFullYear() + 1}
+              min={MIN_RELEASE_YEAR}
+              onChange={(event) => setReleaseYear(event.target.value)}
+              required
+              type="number"
+              value={releaseYear}
+            />
             <div className={styles.statusField}>
-              <span>{t("lobby.playlist.fieldStatus")}</span>
-              <div className={styles.statusSegmentedControl}>
-                {METADATA_STATUS_OPTIONS.map((status) => (
-                  <button
-                    key={status}
-                    className={`${styles.statusOption} ${
-                      metadataStatus === status ? styles.statusOptionActive : ""
-                    }`}
-                    onClick={() => setMetadataStatus(status)}
-                    type="button"
-                  >
-                    {getStatusLabel(t, status)}
-                  </button>
-                ))}
-              </div>
+              <span aria-hidden="true">{t("lobby.playlist.fieldStatus")}</span>
+              <SegmentedControl<TrackMetadataStatus>
+                aria-label={t("lobby.playlist.fieldStatus")}
+                onChange={setMetadataStatus}
+                options={METADATA_STATUS_OPTIONS.map((status) => ({
+                  label: getStatusLabel(t, status),
+                  value: status,
+                }))}
+                value={metadataStatus}
+              />
             </div>
           </div>
 
           <div className={styles.detailsActions}>
-            <ActionButton
-              className={styles.secondaryButton}
-              onClick={onClose}
-              type="button"
-              variant="neutral"
-            >
+            <Button onClick={onClose} size="lg" type="button" variant="secondary">
               {t("common.cancel")}
-            </ActionButton>
-            <ActionButton className={styles.primaryButton} type="submit">
+            </Button>
+            <Button fullWidth size="lg" type="submit">
               {t("lobby.playlist.saveTrack")}
-            </ActionButton>
+            </Button>
           </div>
         </form>
       ) : null}
@@ -243,16 +213,6 @@ function getStatusLabel(
   if (status === "verified") return t("lobby.playlist.statusVerified");
   if (status === "edited") return t("lobby.playlist.statusEdited");
   return t("lobby.playlist.statusImported");
-}
-
-function MusicNoteIcon() {
-  return (
-    <svg aria-hidden="true" fill="currentColor" height={34} viewBox="0 0 24 24" width={34}>
-      <path d="M9 18V5l12-2v13" />
-      <circle cx="6" cy="18" r="3" />
-      <circle cx="18" cy="16" r="3" />
-    </svg>
-  );
 }
 
 function WarningIcon() {

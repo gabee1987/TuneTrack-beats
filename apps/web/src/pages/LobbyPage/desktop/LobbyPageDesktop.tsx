@@ -101,8 +101,9 @@ export function LobbyPageDesktop({ model }: LobbyPageAssemblyProps) {
                   {t("lobby.guest.waiting", { host: setup.hostName ?? t("lobby.players.host") })}
                 </p>
               )}
+              {/* Inside the Start card, so it has Start's width and inset. */}
+              <LobbyExitButton isHost={isHost} onClick={() => setIsExitOpen(true)} />
             </section>
-            <LobbyExitButton isHost={isHost} onClick={() => setIsExitOpen(true)} />
           </aside>
         </div>
       )}

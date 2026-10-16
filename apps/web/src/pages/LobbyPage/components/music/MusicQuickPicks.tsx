@@ -2,8 +2,9 @@ import {
   SPOTIFY_QUICK_PICK_PRESETS,
   type SpotifyQuickPickPresetId,
 } from "@tunetrack/shared/client";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useI18n } from "../../../../features/i18n";
+import { useAppLoading } from "../../../../features/loading";
 import { MeasuredDisclosure } from "../../../../features/motion";
 import { Button, NumberStepper } from "../../../../features/ui/primitives";
 import {
@@ -23,9 +24,11 @@ interface MusicQuickPicksProps {
   recommendedSongCount: number;
 }
 
+const QUICK_PICK_LOADING_ID = "music-quick-pick";
+
 /**
- * Ten ready-made decks. Picking one shows its progress on the card itself, never the app-wide
- * loading screen, and the songs arrive for review (`22` §4.8, Quick picks).
+ * The ready-made decks. Picking one covers the app with the loading screen until the songs
+ * arrive for review (owner, 2026-10-16; `22` §4.8, Quick picks).
  */
 export function MusicQuickPicks({
   candidates,
@@ -39,6 +42,17 @@ export function MusicQuickPicks({
   const [pickedId, setPickedId] = useState<SpotifyQuickPickPresetId | null>(null);
   const songCount = chosenSongCount ?? clampQuickPickSongs(recommendedSongCount);
   const isGenerating = candidates.candidatePhase === "generating";
+  const { hideLoading, showLoading } = useAppLoading();
+
+  useEffect(() => {
+    if (!isGenerating) return;
+    showLoading({
+      id: QUICK_PICK_LOADING_ID,
+      message: t("music.quickPicks.loadingMessage"),
+      title: t("music.quickPicks.loadingTitle"),
+    });
+    return () => hideLoading(QUICK_PICK_LOADING_ID);
+  }, [hideLoading, isGenerating, showLoading, t]);
 
   function pick(presetId: SpotifyQuickPickPresetId) {
     setPickedId(presetId);
