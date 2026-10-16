@@ -190,37 +190,18 @@ textarea:focus-visible {
 }
 
 /*
- * Page scrollbars: a slim, fully rounded thumb in the app's colours (owner, 2026-10-15).
- * Chromium and Safari draw it from `::-webkit-scrollbar`; setting the standard properties there
- * too would replace it with the square system thumb, so they are for Firefox only.
+ * Scrollbars never take room from the page (owner, 2026-10-16). Touch screens keep the system
+ * overlay scrollbar, which floats over the content and fades on its own; styling it would turn it
+ * into a fixed column. Mouse screens hide the bar, and `ScrollIndicator` draws a thumb over the
+ * scrolling box that fades once scrolling stops.
  */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  border: 3px solid transparent;
-  border-radius: var(--radius-pill);
-  background: var(--color-border-subtle) padding-box;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-text-muted);
-}
-
-::-webkit-scrollbar-corner {
-  background: transparent;
-}
-
-@supports not selector(::-webkit-scrollbar) {
+@media (hover: hover) and (pointer: fine) {
   * {
-    scrollbar-color: var(--color-border-subtle) transparent;
-    scrollbar-width: thin;
+    scrollbar-width: none;
+  }
+
+  ::-webkit-scrollbar {
+    display: none;
   }
 }
 

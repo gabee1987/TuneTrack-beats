@@ -12,6 +12,18 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Scrollbars take no room; quick picks get their own tab (2026-10-16)
+
+- **No scrollbar column on any page.** Touch screens use the system overlay scrollbar, unstyled,
+  which floats and fades on its own; mouse screens hide the bar and `ScrollIndicator` draws one
+  thin thumb over the scrolling box that fades about a second after scrolling stops. Replaces the
+  rounded page scrollbar of 2026-10-15. Why: a styled scrollbar is always a fixed 10 px column, so
+  every page had more padding on the right than on the left (owner review).
+- **The Music sheet has three tabs**: Your decks, Find (search and links only) and Quick picks
+  (the ten presets and the practice deck). Tab changes swap at once and fade the new view in.
+  Why: owner review; Find carried too much, and fading the old tab out first emptied the place for
+  a moment and made the content below jump.
+
 ### Up to 10 starting songs, tokens capped at 5, side buttons on the ruler (2026-10-15)
 
 - **Songs to start with ranges 1–10** (`MAX_STARTING_TIMELINE_CARD_COUNT`). **Tokens stay at

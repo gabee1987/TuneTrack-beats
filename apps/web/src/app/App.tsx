@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
+import { ScrollIndicator } from "../features/app-shell/ScrollIndicator";
 import { I18nProvider } from "../features/i18n";
 import { AppLoadingProvider } from "../features/loading";
 import { MotionFeatureProvider } from "../features/motion";
@@ -22,6 +23,7 @@ export function App() {
         <AppLoadingProvider>
           <AppToastProvider>
             <RouterProvider fallbackElement={<AppRouteFallback />} router={router} />
+            <ScrollIndicator />
           </AppToastProvider>
         </AppLoadingProvider>
       </MotionFeatureProvider>
