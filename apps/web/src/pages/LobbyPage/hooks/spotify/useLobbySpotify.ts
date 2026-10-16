@@ -240,7 +240,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
       confirmOverwrite: savedPlaylists.confirmOverwrite,
       confirmRenamePlaylist: savedPlaylists.confirmRenamePlaylist,
       confirmSavePlaylist: savedPlaylists.confirmSavePlaylist,
-      deleteSelectedSavedPlaylist: savedPlaylists.deleteSelectedSavedPlaylist,
+      deleteSavedPlaylistById: savedPlaylists.deleteSavedPlaylistById,
       generatedPlaylistMessage,
       isOverwritePromptActive: savedPlaylists.isOverwritePromptActive,
       isSavingWithName: savedPlaylists.isSavingWithName,

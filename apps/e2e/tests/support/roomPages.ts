@@ -134,7 +134,7 @@ export async function editRules(host: Page, edit: () => Promise<void>): Promise<
  * moved under the pointer by then.
  */
 export async function openRulesSheet(host: Page): Promise<Locator> {
-  await host.getByRole("button", { name: /^Rules/ }).click();
+  await host.getByRole("button", { name: /^Rules\b/ }).click();
   const sheet = host.getByRole("dialog", { name: "Rules" });
   const viewportWidth = host.viewportSize()?.width ?? 0;
   await expect

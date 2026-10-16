@@ -9,6 +9,7 @@ import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
 import { useI18n } from "../../../../features/i18n";
 import { localizePlaylistImportError } from "../../../../features/i18n/localizedErrors";
+import { useAppToast } from "../../../../features/toast";
 import { getSocketClient } from "../../../../services/socket/socketClient";
 import {
   getCurrentPlaylistTracks,
@@ -37,6 +38,7 @@ export function useSpotifyPlaylistImport({
   setSmartSearchQueuedTrackIds,
 }: UseSpotifyPlaylistImportParams) {
   const { t } = useI18n();
+  const { showToast } = useAppToast();
   const [importPhase, setImportPhase] = useState<ImportPhase>("idle");
   const [importError, setImportError] = useState<string | null>(null);
   const [playlistUrl, setPlaylistUrl] = useState("");
@@ -120,12 +122,19 @@ export function useSpotifyPlaylistImport({
         setLoadedSavedPlaylistId(null);
         setPlaylistUrl("");
         setSmartSearchQueuedTrackIds(new Set());
+        showToast({
+          message: t("music.importSummary", {
+            added: payload.importedCount,
+            skipped: payload.filteredCount,
+          }),
+          type: "success",
+        });
       } else {
         setImportPhase("error");
         setImportError(localizePlaylistImportError(t, payload));
       }
     },
-    [currentPlaylistNameRef, setLoadedSavedPlaylistId, setSmartSearchQueuedTrackIds, t],
+    [currentPlaylistNameRef, setLoadedSavedPlaylistId, setSmartSearchQueuedTrackIds, showToast, t],
   );
 
   const resetImport = useCallback(() => {

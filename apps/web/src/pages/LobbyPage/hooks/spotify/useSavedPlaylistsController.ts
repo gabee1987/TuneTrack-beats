@@ -214,16 +214,14 @@ export function useSavedPlaylistsController({
     });
   }
 
-  function deleteSelectedSavedPlaylist() {
-    if (!selectedSavedPlaylistId) return;
-
-    if (loadedSavedPlaylistId === selectedSavedPlaylistId) {
+  function deleteSavedPlaylistById(playlistId: string) {
+    if (loadedSavedPlaylistId === playlistId) {
       setLoadedSavedPlaylistId(null);
     }
 
-    const nextPlaylists = deleteSavedPlaylist(selectedSavedPlaylistId);
+    const nextPlaylists = deleteSavedPlaylist(playlistId);
     setSavedPlaylists(nextPlaylists);
-    setSelectedSavedPlaylistIdState(nextPlaylists[0]?.id ?? "");
+    if (selectedSavedPlaylistId === playlistId) setSelectedSavedPlaylistIdState("");
     setSavedPlaylistMessage(t("lobby.spotify.savedPlaylistDeleted"));
   }
 
@@ -246,7 +244,7 @@ export function useSavedPlaylistsController({
     confirmOverwrite,
     confirmRenamePlaylist,
     confirmSavePlaylist,
-    deleteSelectedSavedPlaylist,
+    deleteSavedPlaylistById,
     isOverwritePromptActive,
     isSavingWithName,
     renameError,

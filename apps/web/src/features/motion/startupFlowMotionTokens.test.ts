@@ -5,6 +5,7 @@ import {
   createReadyMotion,
   createSelectionBarMotion,
   createStepDoneMotion,
+  createTabSwapMotion,
 } from "./startupFlowMotionTokens";
 
 type Resolvable = Record<string, unknown> | ((custom: number) => Record<string, unknown>);
@@ -39,6 +40,14 @@ describe("startup flow motion contracts (22 §10)", () => {
     expect(durationOf(ready.animate)).toBe(0.46);
   });
 
+  it("fades the new Music sheet tab in over 200 ms without fading the old one out first", () => {
+    const swap = createTabSwapMotion(false);
+
+    expect(swap.initial).toEqual({ opacity: 0 });
+    expect(durationOf(swap.animate)).toBe(0.2);
+    expect(swap.exit).toEqual({});
+  });
+
   it("collapses the header across the scroll distance", () => {
     expect(createCollapsingHeaderMotion(false, 200)).toEqual({
       input: [0, 200],
@@ -55,6 +64,7 @@ describe("startup flow motion contracts (22 §10)", () => {
       createStepDoneMotion(true),
       createReadyMotion(true),
       createSelectionBarMotion(true),
+      createTabSwapMotion(true),
     ]) {
       for (const target of [motion.initial, motion.animate, motion.exit]) {
         const values = resolve(target);
@@ -77,6 +87,7 @@ describe("startup flow motion contracts (22 §10)", () => {
       createStepDoneMotion(false),
       createReadyMotion(false),
       createSelectionBarMotion(false),
+      createTabSwapMotion(false),
     ];
 
     for (const motion of motions) {

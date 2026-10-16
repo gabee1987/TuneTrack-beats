@@ -5,7 +5,7 @@ import type { LobbySetupModel } from "../hooks/lobbySetupModel";
 import { useLobbySpotify } from "../hooks/spotify/useLobbySpotify";
 import { usePracticeDeckChoice } from "../hooks/spotify/usePracticeDeckChoice";
 import { LobbyMusicCard } from "./LobbyMusicCard";
-import { LobbyMusicSetup } from "./spotify/LobbyMusicSetup";
+import { MusicSheet } from "./music/MusicSheet";
 
 interface LobbyHostMusicProps {
   currentSettings: PublicRoomSettings;
@@ -34,11 +34,14 @@ export function LobbyHostMusic({ currentSettings, setup }: LobbyHostMusicProps) 
         tracksToCheckCount={setup.tracksToCheckCount}
       />
       <FirstRunHint anchor={hintAnchor} id="lobby-spotify" isEligible={!setup.isMusicDone} />
-      <LobbyMusicSetup
+      <MusicSheet
         currentSettings={currentSettings}
         isOpen={isSetupOpen}
         onClose={() => setIsSetupOpen(false)}
-        spotifyState={spotifyState}
+        onUsePracticeDeck={() => void practiceDeck.choosePracticeDeck()}
+        practiceDeckStatus={practiceDeck.status}
+        setup={setup}
+        spotify={spotifyState}
       />
     </>
   );

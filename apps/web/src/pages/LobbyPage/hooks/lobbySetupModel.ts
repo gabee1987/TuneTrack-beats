@@ -4,6 +4,7 @@ import {
   DEFAULT_STARTING_TT_TOKEN_COUNT,
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
   DEFAULT_TT_MODE_ENABLED,
+  getRecommendedDeckSize,
   getRequiredDeckSize,
   type PublicPlayerState,
   type PublicRoomSettings,
@@ -74,6 +75,8 @@ export interface LobbySetupModel {
   isInviteDone: boolean;
   music: LobbyMusicStatus;
   playersStrip: LobbyPlayersStrip;
+  /** Quick picks default to this many songs: the required size with room to spare. */
+  recommendedDeckSize: number;
   /** The room's stored code, or `null` until the room exists (never the route fallback). */
   roomCode: string | null;
   rules: LobbyRulesSummary;
@@ -111,6 +114,7 @@ export function selectLobbySetup(input: LobbySetupInput): LobbySetupModel {
     isMusicDone: hasDeck,
     music: selectMusicStatus(settings),
     playersStrip: selectPlayersStrip(players),
+    recommendedDeckSize: getRecommendedDeckSize(selectDeckSizeInput(players, settings)),
     roomCode: roomState?.roomId ?? null,
     rules: selectRulesSummary(settings),
     start: {
@@ -155,22 +159,30 @@ export function selectDeckMeter(
   players: readonly PublicPlayerState[],
   settings: PublicRoomSettings,
 ): LobbyDeckMeter {
-  // Before the room state arrives the host is the one player the deck has to serve.
-  const startingCounts =
-    players.length > 0
-      ? players.map((player) => player.startingTimelineCardCount)
-      : [settings.defaultStartingTimelineCardCount];
-  const required = getRequiredDeckSize({
-    startingTimelineCardCounts: startingCounts,
-    targetTimelineCardCount: settings.targetTimelineCardCount,
-  });
+  const input = selectDeckSizeInput(players, settings);
+  const required = getRequiredDeckSize(input);
 
   return {
     current: settings.importedTrackCount,
     isEnough: settings.importedTrackCount >= required,
-    playerCount: startingCounts.length,
+    playerCount: input.startingTimelineCardCounts.length,
     required,
     target: settings.targetTimelineCardCount,
+  };
+}
+
+function selectDeckSizeInput(
+  players: readonly PublicPlayerState[],
+  settings: PublicRoomSettings,
+): Parameters<typeof getRequiredDeckSize>[0] {
+  // Before the room state arrives the host is the one player the deck has to serve.
+  const startingTimelineCardCounts =
+    players.length > 0
+      ? players.map((player) => player.startingTimelineCardCount)
+      : [settings.defaultStartingTimelineCardCount];
+  return {
+    startingTimelineCardCounts,
+    targetTimelineCardCount: settings.targetTimelineCardCount,
   };
 }
 

@@ -59,39 +59,26 @@ test("browser back closes game settings without leaving the game", async ({ open
   await expectGamePage(host.page, roomId);
 });
 
-test("nested playlist editors close one level at a time without leaving the lobby", async ({
+test("a link imports without login, and the editors close one level at a time without leaving the lobby", async ({
   openPlayer,
 }) => {
   const host = await openPlayer("Playlist Host");
   const roomId = await hostRoom(host.page);
-  // Phones open Music setup from the Music card ("Music Choose songs").
-  await host.page
-    .getByRole("button", { name: /Choose songs/ })
-    .first()
-    .click();
+  await host.page.getByRole("button", { name: "Music Choose songs" }).click();
+  const music = host.page.getByRole("dialog", { name: "Music" });
+  await expect(music.getByRole("button", { name: "Connect Spotify" })).toBeVisible();
 
-  const popupPromise = host.page.waitForEvent("popup");
-  await host.page
-    .getByRole("button", { name: "Connect with Spotify", exact: true })
-    .first()
-    .click();
-  const popup = await popupPromise;
-  await expect.poll(() => popup.isClosed()).toBe(true);
-  // Music setup drops its Connect button once the login lands, on both layouts.
-  await expect(
-    host.page.getByRole("button", { name: "Connect with Spotify", exact: true }),
-  ).toHaveCount(0);
-
-  await host.page
-    .getByPlaceholder("Paste playlist link or search playlist name")
-    .first()
+  // Links, search and quick picks use the app's own Spotify access: no login first (`22` §4.8).
+  await music
+    .getByRole("searchbox", { name: "Search Spotify or paste a link" })
     .fill("spotify:playlist:TESTPLAYLIST1234567890");
-  await host.page.getByRole("button", { name: "Import", exact: true }).first().click();
-  await expect(host.page.getByText("10 songs in the deck", { exact: true }).first()).toBeVisible();
-  await host.page.getByRole("button", { name: "Edit playlist", exact: true }).first().click();
+  await music.getByRole("searchbox").press("Enter");
+  await expect(host.page.getByText("10 songs added · 0 unavailable skipped")).toBeVisible();
 
+  await music.getByRole("radio", { name: "Your decks" }).click();
+  await music.getByRole("button", { name: "In this game, 10 songs" }).click();
   await expect(host.page.getByRole("dialog", { name: "Edit playlist" })).toBeVisible();
-  const firstTrack = host.page.getByRole("button", { name: /^E2E Track 1/ }).first();
+  const firstTrack = host.page.getByRole("button", { name: /^E2E Track 1\b/ });
   await firstTrack.click();
 
   const releaseYearField = host.page.getByRole("spinbutton", {
@@ -111,10 +98,20 @@ test("nested playlist editors close one level at a time without leaving the lobb
 
   await host.page.getByRole("button", { name: "Close playlist editor", exact: true }).click();
   await expect(host.page.getByRole("dialog", { name: "Edit playlist" })).not.toBeVisible();
-  await expect(host.page.getByRole("dialog", { name: "Spotify music setup" })).toBeVisible();
+  await expect(music).toBeVisible();
 
-  await host.page.getByRole("button", { name: "Close music setup", exact: true }).click();
-  await expect(host.page.getByRole("dialog", { name: "Spotify music setup" })).not.toBeVisible();
+  // Login only changes playback; the Playback block drops its button once it lands.
+  const popupPromise = host.page.waitForEvent("popup");
+  await music.getByRole("button", { name: "Connect Spotify" }).click();
+  const popup = await popupPromise;
+  await expect.poll(() => popup.isClosed()).toBe(true);
+  await expect(music.getByText("Spotify Premium · full songs")).toBeVisible();
+
+  await music.getByRole("button", { name: "Close", exact: true }).click();
+  await expect(music).not.toBeVisible();
   await expect(host.page).toHaveURL(`/lobby/${roomId}`);
-  await expect(host.page.getByRole("button", { name: "Start game" })).toBeVisible();
+  await expect(
+    host.page.getByRole("button", { name: "Music 10 songs · Spotify Premium" }),
+  ).toBeVisible();
+  await expect(host.page.getByRole("button", { name: "Start game" })).toBeEnabled();
 });

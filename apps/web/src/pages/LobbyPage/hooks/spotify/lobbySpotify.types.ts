@@ -122,7 +122,7 @@ export interface LobbySpotifySavedPlaylistsState {
   confirmOverwrite: () => void;
   confirmRenamePlaylist: () => void;
   confirmSavePlaylist: () => void;
-  deleteSelectedSavedPlaylist: () => void;
+  deleteSavedPlaylistById: (playlistId: string) => void;
   generatedPlaylistMessage: string | null;
   isOverwritePromptActive: boolean;
   isSavingWithName: boolean;

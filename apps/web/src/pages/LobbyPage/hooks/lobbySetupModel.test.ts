@@ -206,6 +206,20 @@ describe("selectDeckMeter", () => {
 
     expect(meter.required).toBe(5 + 2 + 1);
   });
+
+  it("recommends half as many songs again as required, rounded up to ten, at least 40", () => {
+    const twoPlayers = selectLobbySetup(buildInput());
+    const eightPlayers = selectLobbySetup(
+      buildInput(practiceDeck, {
+        roomState: buildLobbyRoomState({ players: players(8) }),
+      }),
+    );
+
+    // Two players to the default 10: 9 + 9 + 1 = 19 required, 28.5 → 30, raised to 40.
+    expect(twoPlayers.recommendedDeckSize).toBe(40);
+    // Eight players: 8 × 9 + 1 = 73 required, 109.5 → 110.
+    expect(eightPlayers.recommendedDeckSize).toBe(110);
+  });
 });
 
 describe("selectRulesSummary", () => {

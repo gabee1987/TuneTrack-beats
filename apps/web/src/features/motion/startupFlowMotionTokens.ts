@@ -56,6 +56,23 @@ export function createStepDoneMotion(reduceMotion: boolean): MotionTargets {
   };
 }
 
+/**
+ * Your decks ↔ Find in the Music sheet: the new view replaces the old one at once and fades in,
+ * so the place is never empty and nothing below it moves (owner, 2026-10-16).
+ */
+export function createTabSwapMotion(reduceMotion: boolean): MotionTargets {
+  if (reduceMotion) return STILL;
+
+  return {
+    initial: { opacity: 0 },
+    animate: {
+      opacity: 1,
+      transition: { duration: EXIT_SECONDS, ease: motionEasings.standard },
+    },
+    exit: {},
+  };
+}
+
 /** Start becoming enabled: one expressive settle, played once per change to ready. */
 export function createReadyMotion(reduceMotion: boolean): MotionTargets {
   if (reduceMotion) return STILL;

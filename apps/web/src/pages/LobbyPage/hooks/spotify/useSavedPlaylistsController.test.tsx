@@ -513,33 +513,22 @@ describe("useSavedPlaylistsController — loading a saved playlist", () => {
 });
 
 describe("useSavedPlaylistsController — deleting", () => {
-  it("does nothing when no playlist is selected", () => {
-    const saved = seedSavedPlaylist("Test Playlist");
-    const { result, setSavedPlaylistMessage } = renderController();
-
-    act(() => result.current.deleteSelectedSavedPlaylist());
-
-    expect(listSavedPlaylists()).toEqual([saved]);
-    expect(setSavedPlaylistMessage).not.toHaveBeenCalled();
-  });
-
-  it("removes the selected playlist and selects the next remaining one", async () => {
+  it("removes the deck it is given, whichever deck the game uses", () => {
     const first = seedSavedPlaylist("Test Playlist");
     const second = seedSavedPlaylist("Test Playlist Two");
-    const { result, setLoadedSavedPlaylistId, setSavedPlaylistMessage } = renderController();
+    const { result, setLoadedSavedPlaylistId, setSavedPlaylistMessage } = renderController({
+      loadedSavedPlaylistId: first.id,
+    });
 
-    act(() => result.current.setSelectedSavedPlaylistId(second.id));
-    await flushSocket();
-    act(() => result.current.deleteSelectedSavedPlaylist());
+    act(() => result.current.deleteSavedPlaylistById(second.id));
 
     expect(listSavedPlaylists()).toEqual([first]);
     expect(result.current.savedPlaylists).toEqual([first]);
-    expect(result.current.selectedSavedPlaylistId).toBe(first.id);
     expect(setLoadedSavedPlaylistId).not.toHaveBeenCalled();
     expect(setSavedPlaylistMessage).toHaveBeenLastCalledWith("Saved playlist deleted.");
   });
 
-  it("clears the loaded playlist and the selection when the last loaded one is deleted", async () => {
+  it("forgets the loaded deck and its selection when that deck is deleted", async () => {
     const saved = seedSavedPlaylist("Test Playlist");
     const { result, setLoadedSavedPlaylistId } = renderController({
       loadedSavedPlaylistId: saved.id,
@@ -547,7 +536,7 @@ describe("useSavedPlaylistsController — deleting", () => {
 
     act(() => result.current.setSelectedSavedPlaylistId(saved.id));
     await flushSocket();
-    act(() => result.current.deleteSelectedSavedPlaylist());
+    act(() => result.current.deleteSavedPlaylistById(saved.id));
 
     expect(setLoadedSavedPlaylistId).toHaveBeenCalledWith(null);
     expect(listSavedPlaylists()).toEqual([]);

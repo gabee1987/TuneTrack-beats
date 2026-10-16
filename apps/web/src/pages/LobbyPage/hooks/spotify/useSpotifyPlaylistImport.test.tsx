@@ -1,4 +1,4 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, screen } from "@testing-library/react";
 import {
   ClientToServerEvent,
   ServerToClientEvent,
@@ -7,6 +7,7 @@ import {
 import { createElement, type MutableRefObject, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 import { I18nProvider } from "../../../../features/i18n";
+import { AppToastProvider } from "../../../../features/toast";
 import { getSharedFakeSocket, resetSharedFakeSocket } from "../../../../test/fakeSocket";
 import { renderWithProviders } from "../../../../test/renderWithProviders";
 import { buildTrackCard, TEST_ROOM_ID } from "../../../../test/roomStateFixtures";
@@ -45,7 +46,7 @@ function createParams({ roomId }: { roomId: string | undefined } = { roomId: TES
 type ImportParams = ReturnType<typeof createParams>;
 
 function I18nTestWrapper({ children }: { children: ReactNode }) {
-  return createElement(I18nProvider, null, children);
+  return createElement(I18nProvider, null, createElement(AppToastProvider, null, children));
 }
 
 function renderImport(params: ImportParams) {
@@ -163,11 +164,13 @@ describe("useSpotifyPlaylistImport — import", () => {
       result.current.handleImportResult({
         success: true,
         importedCount: 12,
-        filteredCount: 0,
-        totalFetched: 12,
+        filteredCount: 3,
+        totalFetched: 15,
         playlistName: "Test Playlist One",
       });
     });
+
+    expect(screen.getByText("12 songs added · 3 unavailable skipped")).toBeInTheDocument();
 
     expect(result.current.importPhase).toBe("idle");
     expect(result.current.importError).toBeNull();

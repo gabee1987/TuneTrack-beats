@@ -21,8 +21,8 @@ const LONG_RUNNING_ALLOWLIST = [
   "pages/GamePage/components/timelineCards.module.css .previewCardCorrection, .previewCardCorrectionSurface",
   "pages/HomePage/mobile/AnimatedMenuBackground.module.css .orbViolet",
   "pages/LobbyPage/components/lobbyCard.module.css .pulse::before, .pulse::after",
+  "pages/LobbyPage/components/music/musicFind.module.css .cardSpinner",
   "pages/LobbyPage/components/playlistEditList.module.css .loadingSpinner",
-  "pages/LobbyPage/components/spotify/spotifySetupShell.module.css .spotifySongsReadyDot",
 ] as const;
 
 const MAX_TRANSITION_MS = 500;

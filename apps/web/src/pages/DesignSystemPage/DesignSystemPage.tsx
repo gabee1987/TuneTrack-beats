@@ -6,6 +6,7 @@ import { CorePrimitivesGallery } from "./CorePrimitivesGallery";
 import { FeedbackGallery } from "./FeedbackGallery";
 import { GameHandoverGallery } from "./GameHandoverGallery";
 import { LobbyGallery } from "./LobbyGallery";
+import { MusicGallery } from "./MusicGallery";
 import { ProfileGallery } from "./ProfileGallery";
 import { RulesGallery } from "./RulesGallery";
 import { StartupFlowPrimitivesGallery } from "./StartupFlowPrimitivesGallery";
@@ -55,6 +56,7 @@ export function DesignSystemPage() {
       <h2 className={styles.groupTitle}>Lobby</h2>
       <LobbyGallery />
       <RulesGallery />
+      <MusicGallery />
       <GameHandoverGallery />
 
       <h2 className={styles.groupTitle}>Feedback & game</h2>

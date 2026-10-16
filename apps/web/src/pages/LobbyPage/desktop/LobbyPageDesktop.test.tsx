@@ -8,7 +8,7 @@ import { LobbyPageMobile } from "../mobile/LobbyPageMobile";
 import { LobbyPageDesktop } from "./LobbyPageDesktop";
 
 vi.mock("../hooks/spotify/useLobbySpotify", () => ({ useLobbySpotify: () => ({}) }));
-vi.mock("../components/spotify/LobbyMusicSetup", () => ({ LobbyMusicSetup: () => null }));
+vi.mock("../components/music/MusicSheet", () => ({ MusicSheet: () => null }));
 vi.mock("../../../services/socket/socketClient", () => ({ resetSocketClient: vi.fn() }));
 vi.mock("../../../services/haptics/triggerPressHaptic", () => ({ triggerPressHaptic: vi.fn() }));
 

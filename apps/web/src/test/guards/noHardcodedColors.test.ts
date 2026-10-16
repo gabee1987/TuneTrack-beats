@@ -25,7 +25,6 @@ const PENDING_MIGRATION = [
   "pages/LobbyPage/components/playlistEditList.module.css",
   "pages/LobbyPage/components/spotify/spotifyDiscovery.module.css",
   "pages/LobbyPage/components/spotify/spotifyPanels.module.css",
-  "pages/LobbyPage/components/spotify/spotifySetupImport.module.css",
 ] as const;
 
 const PENDING_RGB_MIGRATION = [
@@ -37,7 +36,6 @@ const PENDING_RGB_MIGRATION = [
   "pages/GamePage/components/gamePageActionPanelsDock.module.css",
   "pages/GamePage/components/timelineCards.module.css",
   "pages/GamePage/components/timelinePanelShell.module.css",
-  "pages/LobbyPage/components/spotify/spotifySetupShell.module.css",
 ] as const;
 
 const HEX_COLOR = /#[0-9a-fA-F]{3,8}\b/;

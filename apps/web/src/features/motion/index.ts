@@ -3,6 +3,7 @@ export { MotionPresence } from "./MotionPresence";
 export { ArrivalListPresence, type ArrivalListItem } from "./ArrivalListPresence";
 export { MeasuredDisclosure } from "./MeasuredDisclosure";
 export { MotionReveal } from "./MotionReveal";
+export { MotionSwap } from "./MotionSwap";
 export { ReadyTransition } from "./ReadyTransition";
 export { PageTransition } from "./PageTransition";
 export { prefersReducedMotion } from "./prefersReducedMotion";
@@ -18,6 +19,7 @@ export {
   createReadyMotion,
   createSelectionBarMotion,
   createStepDoneMotion,
+  createTabSwapMotion,
   type CollapsingHeaderMotion,
 } from "./startupFlowMotionTokens";
 export {

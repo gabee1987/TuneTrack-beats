@@ -1,0 +1,195 @@
+/* The Music sheet: Playback block, Your decks, Find (`22` §4.8). */
+.sheetBody,
+.tab {
+  display: grid;
+  align-content: start;
+  gap: var(--space-4);
+}
+
+.offline {
+  display: flex;
+  justify-content: center;
+}
+
+.sectionTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-leading);
+  font-weight: var(--type-label-weight);
+}
+
+.statusLine,
+.dialogBody,
+.errorLine {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
+}
+
+.errorLine {
+  color: var(--color-status-danger-text);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.dialogActions {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* Playback */
+.playback {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-elevated);
+}
+
+.playback > :last-child:not(.playbackCopy) {
+  grid-column: 1 / -1;
+}
+
+.playbackLogo {
+  display: grid;
+  place-items: center;
+  color: var(--color-border-spotify);
+}
+
+.playbackCopy {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.playbackText,
+.playbackNote,
+.playbackError {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
+}
+
+.playbackNote {
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+}
+
+.playbackError {
+  color: var(--color-status-danger-text);
+}
+
+/* Your decks */
+.roomDeck {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.roomDeckButton,
+.deckTileButton {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-elevated);
+  color: var(--color-text-primary);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color var(--motion-quick-duration) var(--motion-ease-standard);
+}
+
+.roomDeckButton {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3);
+}
+
+.roomDeckButton:disabled,
+.deckTileButton:disabled {
+  cursor: default;
+}
+
+.roomDeckButton:focus-visible,
+.deckTileButton:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.roomDeckCopy {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.roomDeckActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.deckName {
+  overflow: hidden;
+  color: var(--color-text-primary);
+  font-size: var(--type-body-lg-size);
+  line-height: var(--type-body-lg-leading);
+  font-weight: var(--type-label-weight);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.deckMeta {
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+  font-variant-numeric: tabular-nums;
+}
+
+.deckGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.deckTile {
+  position: relative;
+  min-width: 0;
+}
+
+.deckTileButton {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-1);
+  width: 100%;
+  height: 100%;
+  padding: var(--space-3);
+}
+
+.deckMore {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roomDeckButton,
+  .deckTileButton {
+    transition: none;
+  }
+}
