@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { PublicRoomSettings, SpotifySmartSearchResult } from "@tunetrack/shared/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -135,6 +135,7 @@ function buildSpotifyStub({
     savedPlaylists: {
       cancelRenamePlaylist: vi.fn(),
       cancelSavePlaylist: vi.fn(),
+      deleteSavedPlaylistById: vi.fn(),
       isOverwritePromptActive: false,
       isSavingWithName: false,
       loadedSavedPlaylistId: null,
@@ -527,5 +528,26 @@ describe("MusicSheet covers", () => {
     });
 
     expect(coverSources()).toEqual(expect.arrayContaining([DECK_SONG_COVER, PLAYLIST_COVER]));
+  });
+});
+
+describe("MusicSheet deck options", () => {
+  it("deletes a saved deck after the confirm and opens More again afterwards", async () => {
+    const { spotify } = renderSheet({
+      savedDecks: [buildSavedDeck("Road Trip"), buildSavedDeck("Party")],
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: "More for Road Trip" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Delete deck" }));
+    const confirm = await screen.findByRole("dialog", { name: "Delete “Road Trip”?" });
+    await userEvent.click(within(confirm).getByRole("button", { name: "Delete deck" }));
+
+    expect(spotify.savedPlaylists.deleteSavedPlaylistById).toHaveBeenCalledWith(
+      "TEST_DECK_Road Trip",
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: /Delete/ })).toBeNull());
+
+    await userEvent.click(screen.getByRole("button", { name: "More for Party" }));
+    expect(await screen.findByRole("dialog", { name: "Party" })).toBeInTheDocument();
   });
 });

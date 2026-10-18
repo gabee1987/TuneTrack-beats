@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { useLocation, useNavigate, type Location } from "react-router-dom";
 
 export const overlayHistoryStateKey = "tunetrackOverlayEntries";
@@ -21,6 +21,22 @@ function isInCurrentBrowserEntry(id: string): boolean {
       : null;
 
   return readOverlayHistoryIds(userState).includes(id);
+}
+
+/**
+ * Pops still on their way. The browser queues Back but applies a push at once, so a push made
+ * while a pop is pending lands first and the pop then takes the new entry instead: one overlay
+ * closing as another opens (Options → Delete) would strand both. Pushes wait for the pops.
+ */
+let pendingPopCount = 0;
+const pushesWaitingForPops = new Set<() => void>();
+
+function finishPop() {
+  pendingPopCount -= 1;
+  if (pendingPopCount > 0) return;
+  const waiting = [...pushesWaitingForPops];
+  pushesWaitingForPops.clear();
+  waiting.forEach((push) => push());
 }
 
 /**
@@ -55,6 +71,15 @@ export function useOverlayHistoryEntry(
   const onReleasedRef = useRef(onReleased);
   onReleasedRef.current = onReleased;
 
+  function pushWhenPopsLand() {
+    if (pendingPopCount > 0) pushesWaitingForPops.add(pushIfStillWanted);
+    else pushEntry();
+  }
+
+  function pushIfStillWanted() {
+    if (isOpenRef.current && !hasPushedRef.current && !isReleasingRef.current) pushEntry();
+  }
+
   function pushEntry() {
     const { hash, pathname, search, state } = locationRef.current;
     const currentState = typeof state === "object" && state !== null ? state : {};
@@ -71,33 +96,38 @@ export function useOverlayHistoryEntry(
     );
   }
 
-  useEffect(() => {
-    // A reopen while the previous entry is still popping waits for the pop (see below).
-    if (isOpen && !hasPushedRef.current && !isReleasingRef.current) {
-      pushEntry();
-      return;
-    }
-
+  // Closing starts its pop in the layout phase, which runs before any overlay's open in the
+  // same commit, so that open sees the pop pending and waits for it.
+  useLayoutEffect(() => {
     if (!isOpen && hasPushedRef.current) {
       hasPushedRef.current = false;
 
       if (isInLocationRef.current) {
         isReleasingRef.current = true;
+        pendingPopCount += 1;
         navigate(-1);
       } else {
         onReleasedRef.current?.();
       }
     }
-    // `pushEntry` reads the latest location through a ref; only opening and closing matter.
+  }, [isOpen, navigate]);
+
+  useEffect(() => {
+    // A reopen while the previous entry is still popping waits for the pop (see below).
+    if (isOpen && !hasPushedRef.current && !isReleasingRef.current) {
+      pushWhenPopsLand();
+    }
+    // The push reads the latest location through a ref; only opening matters.
   }, [id, isOpen, navigate]);
 
   useEffect(() => {
     if (isReleasingRef.current && !isInLocation) {
       isReleasingRef.current = false;
       onReleasedRef.current?.();
+      finishPop();
 
       if (isOpenRef.current) {
-        pushEntry();
+        pushWhenPopsLand();
       }
       return;
     }
@@ -124,6 +154,12 @@ export function useOverlayHistoryEntry(
   // only the browser entry tells whether this overlay still owns the current entry.
   useEffect(
     () => () => {
+      // A push still waiting from an earlier render must not land for an overlay that is gone.
+      isOpenRef.current = false;
+      // Gone before its pop landed: the pop still lands, and then the waiting pushes may go.
+      if (isReleasingRef.current) {
+        window.addEventListener("popstate", finishPop, { once: true });
+      }
       if (hasPushedRef.current && isInCurrentBrowserEntry(id)) {
         hasPushedRef.current = false;
         navigate(-1);

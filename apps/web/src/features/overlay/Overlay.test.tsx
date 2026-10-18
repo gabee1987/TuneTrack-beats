@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { beforeAll, describe, expect, it } from "vitest";
 import {
   HISTORY_ROUTE_PATH,
@@ -265,4 +266,58 @@ describe("Overlay (plan 14 §4)", () => {
       expect(screen.queryByRole("dialog", { name: "Outer sheet" })).not.toBeInTheDocument();
     });
   });
+});
+
+/** Options hands over to its confirm in one tap: one overlay closes as the next one opens. */
+function HandOver({ isConfirmFirst }: { isConfirmFirst: boolean }) {
+  const [open, setOpen] = useState<"none" | "options" | "confirm">("none");
+  const options = (
+    <Overlay isOpen={open === "options"} label="Options" onDismiss={() => setOpen("none")}>
+      <button onClick={() => setOpen("confirm")} type="button">
+        Delete
+      </button>
+    </Overlay>
+  );
+  const confirm = (
+    <Overlay isOpen={open === "confirm"} label="Confirm" onDismiss={() => setOpen("none")}>
+      <button onClick={() => setOpen("none")} type="button">
+        Confirm delete
+      </button>
+    </Overlay>
+  );
+
+  return (
+    <main>
+      <button onClick={() => setOpen("options")} type="button">
+        Open options
+      </button>
+      {isConfirmFirst ? confirm : options}
+      {isConfirmFirst ? options : confirm}
+    </main>
+  );
+}
+
+describe("Overlay hand-over", () => {
+  beforeAll(installRouterRequestStub);
+
+  // The browser queues Back but applies a push at once; the memory router applies both at once.
+  it.each([false, true])(
+    "opens the next overlay as one closes, and the first opens again (confirm first: %s)",
+    async (isConfirmFirst) => {
+      window.history.replaceState(null, "", HISTORY_ROUTE_PATH);
+      const router = createBrowserRouter([
+        { path: HISTORY_ROUTE_PATH, element: <HandOver isConfirmFirst={isConfirmFirst} /> },
+      ]);
+      render(<RouterProvider router={router} />);
+
+      await userEvent.click(screen.getByRole("button", { name: "Open options" }));
+      await userEvent.click(await screen.findByRole("button", { name: "Delete" }));
+      await userEvent.click(await screen.findByRole("button", { name: "Confirm delete" }));
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      await waitFor(() => expect(readOverlayHistoryIds(router.state.location.state)).toEqual([]));
+
+      await userEvent.click(screen.getByRole("button", { name: "Open options" }));
+      expect(await screen.findByRole("dialog", { name: "Options" })).toBeInTheDocument();
+    },
+  );
 });
