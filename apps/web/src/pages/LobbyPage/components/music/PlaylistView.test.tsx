@@ -345,6 +345,15 @@ describe("PlaylistView on the room deck", () => {
 
     await waitFor(() => expect(compactCover).toHaveStyle({ opacity: "1" }));
   });
+
+  it("shows the deck's song cover in its header", async () => {
+    const cover = "https://images.example.test/TEST_COVER_1.jpg";
+    await renderRoomDeck([buildTrack({ artworkUrl: cover })]);
+    await screen.findByText("Test Track One");
+
+    const header = screen.getByRole("dialog", { name: "Song list" }).querySelector("header");
+    expect(header?.querySelector(`img[src="${cover}"]`)).not.toBeNull();
+  });
 });
 
 describe("PlaylistView on other lists", () => {

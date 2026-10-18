@@ -12,6 +12,17 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Startup-flow clean-up and acceptance (2026-10-18)
+
+- **Music setup is its own chunk.** The lobby loads it behind the host's Music card, so guests
+  never download it and the lobby's shared chunk fell from 124 to 65 kB raw.
+- **The lobby fetches the room deck's songs once per deck**, not each time Music setup opens:
+  the Music card now shows their 2 × 2 cover mosaic (`22` §4.6), and setup opens on them at once.
+- **English copy avoids the code's words** ("TT", "track", "queue", "challenge"); a guard checks
+  it. The "Decades Challenge" quick pick is now "Across the Decades" ("Évtizedeken át").
+- **The Start summary sits 8 px closer to Start**, so a four-player lobby fits a 375 × 667 phone
+  without scrolling (`22` §13, `lobby-layout.spec.ts`).
+
 ### First-game hint tutorial (2026-10-18)
 
 - **A hint stays until the player acknowledges it; the 12 s auto-dismiss is gone** (decision 12,

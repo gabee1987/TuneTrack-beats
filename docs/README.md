@@ -45,7 +45,6 @@ review of 2026-10-06 and its phased roadmap.
 | `06-structure-and-test-plan.md`         | Phase 6: file-size, boundary and test gates, structure and test work items, CI and coverage, rollout order.            |
 | `10`–`19`                               | Work-breakdown documents folded from the 2026-09 programme, trimmed to open work.                                      |
 | `20-bug-register.md`                    | Active defects with next proof, plus the resolved ledger and tech-debt notes.                                          |
-| `21-music-setup-redesign.md`            | Superseded 2026-10-14 by `22`; kept for its problem statement until archived.                                          |
 | `22-game-startup-flow.md`               | Startup flow experience spec: Home, Name sheet, Join, guided lobby, Rules sheet, Music setup, Start, handover; S0–S12. |
 
 ## Operations (not on the coding path)

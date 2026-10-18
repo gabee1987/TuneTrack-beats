@@ -1,4 +1,4 @@
-import { FormEvent } from "react";
+import { useId, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { preloadLobbyRuntime } from "../../app/preloadRoutes";
 import { useI18n } from "../../features/i18n";
@@ -18,6 +18,9 @@ export function JoinRoomPage() {
   const { roomId } = useParams<{ roomId: string }>();
   const nameGate = useNameGate();
   const { room, status } = useJoinRoomPreview(roomId);
+  // While loading, the status region speaks for itself; a missing room names its banner.
+  const reasonId = useId();
+  const isRoomGone = status === "ready" && !room;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -61,7 +64,7 @@ export function JoinRoomPage() {
             </span>
           </div>
         ) : (
-          <StatusBanner>{t("joinRoom.notFound")}</StatusBanner>
+          <StatusBanner id={reasonId}>{t("joinRoom.notFound")}</StatusBanner>
         )}
 
         {nameGate.hasName ? (
@@ -73,7 +76,14 @@ export function JoinRoomPage() {
         ) : null}
 
         <form className={styles.form} onSubmit={handleSubmit}>
-          <Button disabled={!room} fullWidth haptic size="lg" type="submit">
+          <Button
+            aria-describedby={isRoomGone ? reasonId : undefined}
+            disabled={!room}
+            fullWidth
+            haptic
+            size="lg"
+            type="submit"
+          >
             {t("joinRoom.joinAction")}
           </Button>
         </form>

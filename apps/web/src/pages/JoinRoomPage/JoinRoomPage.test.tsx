@@ -75,6 +75,21 @@ describe("JoinRoomPage", () => {
     expect(screen.getByText("at /lobby/TEST_ROOM_1")).toBeInTheDocument();
   });
 
+  it("holds Join with the reason when the room is gone", async () => {
+    await renderInvite("TEST_ROOM_1");
+
+    act(() => {
+      getSharedFakeSocket().serverEmit(ServerToClientEvent.RoomPreview, {
+        requestedRoomId: "TEST_ROOM_1",
+        room: null,
+      });
+    });
+
+    const join = screen.getByRole("button", { name: "Join room" });
+    expect(join).toBeDisabled();
+    expect(join).toHaveAccessibleDescription("This room is not available anymore.");
+  });
+
   it("asks a nameless device for a name before joining", async () => {
     usePlayerProfileStore.setState({ displayName: "", hasCompletedSetup: false });
     await renderInvite("TEST_ROOM_1");

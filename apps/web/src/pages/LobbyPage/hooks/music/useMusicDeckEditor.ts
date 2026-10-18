@@ -6,20 +6,22 @@ import { useRoomDeckTracks } from "./useRoomDeckTracks";
 const SONGS_TO_LIST = 3;
 
 export interface MusicDeckEditor {
-  /** The covers and first flagged songs of the room deck, for its card. */
+  /** The covers and first flagged songs of the room deck, for its cards. */
   roomCovers: string[];
   /** The room deck's songs, for its Playlist view and a song opened from its card. */
   roomDeck: PlaylistEditorSource;
   roomSongsToCheck: PublicTrackInfo[];
 }
 
-/** The room deck's songs while the Music sheet is open; the practice deck has none to edit. */
+/**
+ * The room deck's songs, asked for once per deck rather than per opening: the Music card shows
+ * their covers, and Music setup opens on them at once. The practice deck has none to edit.
+ */
 export function useMusicDeckEditor(
   currentSettings: Pick<PublicRoomSettings, "deckSource" | "importedTrackCount">,
-  isSheetOpen: boolean,
 ): MusicDeckEditor {
   const roomTracks = useRoomDeckTracks(
-    isSheetOpen && currentSettings.deckSource === "spotify",
+    currentSettings.deckSource === "spotify",
     `${currentSettings.deckSource}:${currentSettings.importedTrackCount}`,
   );
 

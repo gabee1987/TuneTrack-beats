@@ -105,7 +105,7 @@ and desktop.
 
 ## B26 · A playlist track edit can be lost on a phone
 
-**Severity:** S2 · **Status:** Needs reproduction · **Plan:** `21-music-setup-redesign.md`
+**Severity:** S2 · **Status:** Needs reproduction · **Plan:** `22-game-startup-flow.md`
 
 In one of two iPhone 13 E2E runs, E14 saved the release year 1977 for a track and reopened it
 showing 1980 for 10 s. The editor re-reads the track whenever it changes, so the save was lost,

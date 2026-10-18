@@ -22,7 +22,7 @@ import {
   type MusicTab,
   type SavedDeckSummary,
 } from "../../hooks/music/musicSetupSelectors";
-import { useMusicDeckEditor } from "../../hooks/music/useMusicDeckEditor";
+import type { MusicDeckEditor } from "../../hooks/music/useMusicDeckEditor";
 import { useMusicFind } from "../../hooks/music/useMusicFind";
 import { usePlaylistView } from "../../hooks/music/usePlaylistView";
 import type { UseLobbySpotifyResult } from "../../hooks/spotify/lobbySpotify.types";
@@ -56,6 +56,8 @@ export type MusicSetupPanes = "one" | "two";
 
 interface MusicSheetProps {
   currentSettings: PublicRoomSettings;
+  /** The room deck's songs, kept by the lobby so its Music card can show their covers. */
+  deckEditor: MusicDeckEditor;
   isOpen: boolean;
   panes: MusicSetupPanes;
   onClose: () => void;
@@ -72,6 +74,7 @@ interface MusicSheetProps {
  */
 export function MusicSheet({
   currentSettings,
+  deckEditor,
   isOpen,
   panes,
   onClose,
@@ -90,7 +93,6 @@ export function MusicSheet({
   const [wasOpen, setWasOpen] = useState(isOpen);
   const [deckOptions, setDeckOptions] = useState<SavedDeckSummary | null>(null);
   const [confirmation, setConfirmation] = useState<DeckConfirmation | null>(null);
-  const deckEditor = useMusicDeckEditor(currentSettings, isOpen);
   const [roomSongId, setRoomSongId] = useState<string | null>(null);
   const [hasOpenedSong, setHasOpenedSong] = useState(false);
   const roomSong = deckEditor.roomDeck.tracks.find((track) => track.id === roomSongId) ?? null;

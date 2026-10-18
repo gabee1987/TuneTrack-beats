@@ -8,8 +8,16 @@ import type { ConnectionStatus } from "../../../../services/socket/connectionSta
 import { renderWithProviders } from "../../../../test/renderWithProviders";
 import { buildLobbyRoomState, buildRoomSettings } from "../../../../test/roomStateFixtures";
 import { selectLobbySetup } from "../../hooks/lobbySetupModel";
+import { useMusicDeckEditor } from "../../hooks/music/useMusicDeckEditor";
 import type { UseLobbySpotifyResult } from "../../hooks/spotify/lobbySpotify.types";
 import { MusicSheet, type MusicSetupPanes } from "./MusicSheet";
+
+type SheetProps = Omit<Parameters<typeof MusicSheet>[0], "deckEditor">;
+
+/** The lobby keeps the room deck's songs; here the sheet keeps them as the page would. */
+function SheetWithRoomDeck(props: SheetProps) {
+  return <MusicSheet {...props} deckEditor={useMusicDeckEditor(props.currentSettings)} />;
+}
 
 const connection = vi.hoisted(() => ({ status: "connected" as ConnectionStatus }));
 
@@ -175,7 +183,7 @@ function renderSheet({ panes = "one", settings = {}, ...spotifyOptions }: Render
   // The tabs fade in through `m`, as on the page, so the animation features are loaded.
   renderWithProviders(
     <MotionFeatureProvider>
-      <MusicSheet
+      <SheetWithRoomDeck
         currentSettings={currentSettings}
         isOpen
         panes={panes}
@@ -487,5 +495,37 @@ describe("MusicSheet playback and connection", () => {
     await userEvent.click(screen.getByRole("radio", { name: "Quick picks" }));
     expect(await screen.findByRole("button", { name: /^80s Hits/ })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Use the practice deck" })).toBeDisabled();
+  });
+});
+
+describe("MusicSheet covers", () => {
+  const SONG_COVER = "https://images.example.test/TEST_COVER_1.jpg";
+  const ALBUM_COVER = "https://images.example.test/TEST_COVER_2.jpg";
+  const DECK_SONG_COVER = "https://images.example.test/TEST_COVER_3.jpg";
+  const PLAYLIST_COVER = "https://images.example.test/TEST_COVER_4.jpg";
+
+  function coverSources() {
+    return [...sheet().querySelectorAll("img")].map((image) => image.getAttribute("src"));
+  }
+
+  it("shows each Find result's cover", () => {
+    renderSheet({
+      results: [
+        { ...SONG, imageUrl: SONG_COVER },
+        { ...ALBUM, imageUrl: ALBUM_COVER },
+      ],
+    });
+
+    expect(coverSources()).toEqual(expect.arrayContaining([SONG_COVER, ALBUM_COVER]));
+  });
+
+  it("shows a saved deck's Spotify cover, or else its songs' covers, in Your decks", () => {
+    const songsOnly = buildSavedDeck("Road Trip");
+    songsOnly.tracks = songsOnly.tracks.map((track) => ({ ...track, artworkUrl: DECK_SONG_COVER }));
+    renderSheet({
+      savedDecks: [songsOnly, { ...buildSavedDeck("Party"), imageUrl: PLAYLIST_COVER }],
+    });
+
+    expect(coverSources()).toEqual(expect.arrayContaining([DECK_SONG_COVER, PLAYLIST_COVER]));
   });
 });

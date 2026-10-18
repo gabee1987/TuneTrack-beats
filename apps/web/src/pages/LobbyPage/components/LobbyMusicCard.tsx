@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import { useI18n } from "../../../features/i18n";
-import { Button, ChipButton } from "../../../features/ui/primitives";
+import { Button, ChipButton, CoverArt } from "../../../features/ui/primitives";
 import type { PracticeDeckChoiceStatus } from "../hooks/spotify/usePracticeDeckChoice";
 import type {
   LobbyDeckMeter as LobbyDeckMeterModel,
@@ -13,6 +13,8 @@ import styles from "./LobbyMusicCard.module.css";
 type Translate = (key: string, params?: Record<string, string | number>) => string;
 
 interface LobbyMusicCardProps {
+  /** The room deck's song covers; a Spotify deck shows them in place of the note. */
+  coverUrls: readonly string[];
   deckMeter: LobbyDeckMeterModel | null;
   music: LobbyMusicStatus;
   /** Opens the song editor on the songs whose year needs a look. */
@@ -26,6 +28,7 @@ interface LobbyMusicCardProps {
 /** The host's music: the whole card opens Music setup (`22` §4.6). */
 export const LobbyMusicCard = forwardRef<HTMLElement, LobbyMusicCardProps>(function LobbyMusicCard(
   {
+    coverUrls,
     deckMeter,
     music,
     onCheckSongs,
@@ -42,7 +45,13 @@ export const LobbyMusicCard = forwardRef<HTMLElement, LobbyMusicCardProps>(funct
   return (
     <section aria-label={t("lobby.music.title")} className={styles.group} ref={ref}>
       <LobbyCardButton
-        icon={<MusicGlyph />}
+        icon={
+          isSpotifyDeck(music) && coverUrls.length > 0 ? (
+            <CoverArt label={t("lobby.music.title")} mosaic={coverUrls} size="sm" />
+          ) : (
+            <MusicGlyph />
+          )
+        }
         onClick={onOpen}
         status={hasDeck ? getMusicStatusText(music, t) : t("lobby.music.choose")}
         title={t("lobby.music.title")}
@@ -98,6 +107,10 @@ export function LobbyMusicSummary({ hostName, music }: LobbyMusicSummaryProps) {
       title={t("lobby.music.title")}
     />
   );
+}
+
+function isSpotifyDeck(music: LobbyMusicStatus): boolean {
+  return music.kind !== "none" && music.kind !== "practice";
 }
 
 export function getMusicStatusText(music: LobbyMusicStatus, t: Translate): string {

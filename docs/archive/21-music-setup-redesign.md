@@ -1,3 +1,10 @@
+> **Archived 2026-10-18.** Shipped through `22`: Your decks and Find, covers, one Playlist view
+> and Song editor, saved-deck write-back (`22` S7–S10). Not shipped: nothing; `22` specifies the
+> rest. Superseded by `../plans/2026-10-project-review/22-game-startup-flow.md`. Do not read or
+> follow this file.
+
+---
+
 # 21 — Music Setup and Playlist Redesign
 
 > **Status (2026-10-14):** **Superseded by `22-game-startup-flow.md`.** The owner answered §7 on

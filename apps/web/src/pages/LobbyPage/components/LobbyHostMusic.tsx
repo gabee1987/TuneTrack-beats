@@ -1,11 +1,18 @@
 import type { PublicRoomSettings } from "@tunetrack/shared/client";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { FirstRunHint } from "../../../features/hints/FirstRunHint";
 import type { LobbySetupModel } from "../hooks/lobbySetupModel";
+import { useMusicDeckEditor } from "../hooks/music/useMusicDeckEditor";
 import { useLobbySpotify } from "../hooks/spotify/useLobbySpotify";
 import { usePracticeDeckChoice } from "../hooks/spotify/usePracticeDeckChoice";
 import { LobbyMusicCard } from "./LobbyMusicCard";
-import { MusicSheet, type MusicSetupPanes } from "./music/MusicSheet";
+import type { MusicSetupPanes } from "./music/MusicSheet";
+
+// Its own chunk (`22` §13): guests never load it, and the lobby paints before it arrives.
+const MusicSheet = lazy(async () => {
+  const module = await import("./music/MusicSheet");
+  return { default: module.MusicSheet };
+});
 
 interface LobbyHostMusicProps {
   currentSettings: PublicRoomSettings;
@@ -20,12 +27,14 @@ interface LobbyHostMusicProps {
 export function LobbyHostMusic({ currentSettings, musicPanes, setup }: LobbyHostMusicProps) {
   const spotifyState = useLobbySpotify();
   const practiceDeck = usePracticeDeckChoice();
+  const deckEditor = useMusicDeckEditor(currentSettings);
   const [isSetupOpen, setIsSetupOpen] = useState(false);
   const [hintAnchor, setHintAnchor] = useState<HTMLElement | null>(null);
 
   return (
     <>
       <LobbyMusicCard
+        coverUrls={deckEditor.roomCovers}
         deckMeter={setup.deckMeter}
         music={setup.music}
         onCheckSongs={() => {
@@ -39,16 +48,19 @@ export function LobbyHostMusic({ currentSettings, musicPanes, setup }: LobbyHost
         tracksToCheckCount={setup.tracksToCheckCount}
       />
       <FirstRunHint anchor={hintAnchor} id="lobby-music" isEligible={!setup.isMusicDone} />
-      <MusicSheet
-        currentSettings={currentSettings}
-        isOpen={isSetupOpen}
-        panes={musicPanes}
-        onClose={() => setIsSetupOpen(false)}
-        onUsePracticeDeck={() => void practiceDeck.choosePracticeDeck()}
-        practiceDeckStatus={practiceDeck.status}
-        setup={setup}
-        spotify={spotifyState}
-      />
+      <Suspense fallback={null}>
+        <MusicSheet
+          currentSettings={currentSettings}
+          deckEditor={deckEditor}
+          isOpen={isSetupOpen}
+          panes={musicPanes}
+          onClose={() => setIsSetupOpen(false)}
+          onUsePracticeDeck={() => void practiceDeck.choosePracticeDeck()}
+          practiceDeckStatus={practiceDeck.status}
+          setup={setup}
+          spotify={spotifyState}
+        />
+      </Suspense>
     </>
   );
 }

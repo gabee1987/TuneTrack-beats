@@ -20,7 +20,6 @@ const PENDING_MIGRATION = [
   "pages/GamePage/components/timelineCards.module.css",
   "pages/GamePage/gamePageMenu.module.css",
   "pages/GamePage/gamePagePlayback.module.css",
-  "pages/LobbyPage/components/SelectableArtwork.module.css",
 ] as const;
 
 const PENDING_RGB_MIGRATION = [

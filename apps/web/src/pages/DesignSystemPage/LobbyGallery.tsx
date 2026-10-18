@@ -20,6 +20,7 @@ import { LobbyStartDock, LobbyStartSummary } from "../LobbyPage/components/Lobby
 import { LobbyTopBar } from "../LobbyPage/components/LobbyTopBar";
 import { RoomRenameDialog } from "../LobbyPage/components/RoomRenameDialog";
 import styles from "./DesignSystemPage.module.css";
+import { SAMPLE_COVERS } from "./sampleCovers";
 
 const PLAYERS: PublicPlayerState[] = ["Player One", "Player Two", "Player Three", "Player Four"]
   .concat(["Player Five", "Player Six"])
@@ -131,7 +132,11 @@ export function LobbyGallery() {
           music={{ kind: "spotifyUnconnected", songCount: 60 }}
           tracksToCheckCount={4}
         />
-        <MusicCard deckMeter={ENOUGH} music={{ kind: "spotifyPremium", songCount: 60 }} />
+        <MusicCard
+          coverUrls={SAMPLE_COVERS}
+          deckMeter={ENOUGH}
+          music={{ kind: "spotifyPremium", songCount: 60 }}
+        />
         <LobbyMusicSummary hostName="Player One" music={{ kind: "none" }} />
         <LobbyMusicSummary hostName="Player One" music={{ kind: "spotifyFree", songCount: 60 }} />
       </section>
@@ -168,11 +173,13 @@ function strip(players: PublicPlayerState[], onShowAll: () => void = noop) {
 }
 
 function MusicCard({
+  coverUrls = [],
   deckMeter = null,
   music,
   status = "idle",
   tracksToCheckCount = 0,
 }: {
+  coverUrls?: readonly string[];
   deckMeter?: LobbyDeckMeter | null;
   music: LobbySetupModel["music"];
   status?: "idle" | "pending" | "failed";
@@ -180,6 +187,7 @@ function MusicCard({
 }) {
   return (
     <LobbyMusicCard
+      coverUrls={coverUrls}
       deckMeter={deckMeter}
       music={music}
       onCheckSongs={noop}

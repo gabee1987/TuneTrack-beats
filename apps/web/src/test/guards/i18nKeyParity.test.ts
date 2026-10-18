@@ -50,6 +50,16 @@ describe("i18n key parity", () => {
     },
   );
 
+  // `22` §13: players read songs, Beat! and tokens; the code's words stay in the code.
+  it("keeps the code's words out of English copy", () => {
+    const codeWords = /\b(?:tracks?|queue[ds]?|challenges?)\b/i;
+    const offenders = Object.entries(resourceOf("en"))
+      .filter(([, value]) => /\bTT\b/.test(value) || codeWords.test(value))
+      .map(([key, value]) => `${key} = ${value}`);
+
+    expect(offenders, "Say song, Beat! or token instead").toEqual([]);
+  });
+
   it.each(languageIds)("%s has no empty translation values", (languageId) => {
     const empty = Object.entries(resourceOf(languageId))
       .filter(([, value]) => value.trim().length === 0)

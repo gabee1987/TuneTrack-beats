@@ -1,6 +1,4 @@
-import { PRACTICE_COVER_PATH_PREFIX } from "@tunetrack/shared/client";
 import { useState } from "react";
-import { resolveArtworkUrl } from "../../features/ui/resolveArtworkUrl";
 import {
   Button,
   Card,
@@ -19,15 +17,7 @@ import {
   TextField,
 } from "../../features/ui/primitives";
 import styles from "./DesignSystemPage.module.css";
-
-const SAMPLE_COVERS = ["Test Artist A", "Test Artist B", "Test Artist C", "Test Artist D"].map(
-  (artist) =>
-    resolveArtworkUrl({
-      artist,
-      artworkUrl: `${PRACTICE_COVER_PATH_PREFIX}sample`,
-      title: "Test Song",
-    }) ?? "",
-);
+import { SAMPLE_COVERS } from "./sampleCovers";
 
 /** The primitives added for the game startup flow (`22` §8), in every variant and state. */
 export function StartupFlowPrimitivesGallery() {

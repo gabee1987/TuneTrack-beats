@@ -14,6 +14,12 @@ test("a new device hosts with one tap and the Name sheet, then Home says who is 
   await page.getByRole("button", { name: "Continue", exact: true }).click();
 
   await expect(page).toHaveURL(/\/lobby\/[^/?#]+$/);
+  // The Invite card shows the room's own code, never the route's fallback.
+  const roomId = decodeURIComponent(new URL(page.url()).pathname.split("/").at(-1) ?? "");
+  expect(roomId).not.toBe("lobby");
+  await expect(
+    page.getByRole("main").getByLabel(`Room code ${roomId.split("").join(" ")}`),
+  ).toHaveText(roomId);
 
   await page.goto("/");
   await expect(page.getByText("Playing as Home Host", { exact: true })).toBeVisible();

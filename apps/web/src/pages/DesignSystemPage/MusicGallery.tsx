@@ -16,6 +16,7 @@ import type {
   SavedDeckSummary,
 } from "../LobbyPage/hooks/music/musicSetupSelectors";
 import type { PlaylistEditorTarget } from "../LobbyPage/hooks/music/playlistEditorTarget";
+import { useMusicDeckEditor } from "../LobbyPage/hooks/music/useMusicDeckEditor";
 import type {
   LobbySpotifyAuthState,
   UseLobbySpotifyResult,
@@ -102,6 +103,7 @@ export function MusicGallery() {
   const [editorTracks, setEditorTracks] = useState(EDITOR_TRACKS);
   const [isQuickPickShown, setIsQuickPickShown] = useState(false);
   const [isPlaylistShown, setIsPlaylistShown] = useState(false);
+  const deckEditor = useMusicDeckEditor(DEMO_SETTINGS);
   const spotify = useMemo(
     () =>
       ({
@@ -240,6 +242,7 @@ export function MusicGallery() {
       </div>
       <MusicSheet
         currentSettings={DEMO_SETTINGS}
+        deckEditor={deckEditor}
         isOpen={isSheetOpen}
         panes={panes}
         onClose={() => setIsSheetOpen(false)}
