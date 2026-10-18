@@ -46,6 +46,7 @@ review of 2026-10-06 and its phased roadmap.
 | `10`–`19`                               | Work-breakdown documents folded from the 2026-09 programme, trimmed to open work.                                      |
 | `20-bug-register.md`                    | Active defects with next proof, plus the resolved ledger and tech-debt notes.                                          |
 | `22-game-startup-flow.md`               | Startup flow experience spec: Home, Name sheet, Join, guided lobby, Rules sheet, Music setup, Start, handover; S0–S12. |
+| `23-game-end-celebration.md`            | Game end celebration spec: full-screen reveal, podium, leaderboard, game summary and what comes next. Not started.     |
 
 ## Operations (not on the coding path)
 
