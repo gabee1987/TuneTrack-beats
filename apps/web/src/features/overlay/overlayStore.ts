@@ -50,6 +50,13 @@ export function registerOverlay(registration: OverlayRegistration): () => void {
   };
 }
 
+/** Whether an open overlay lies over this element: it is outside the top panel. */
+export function isUnderOverlay(element: Element): boolean {
+  const top = getTopOverlayEntry(stack);
+  const panel = top ? registrations.get(top.id)?.getPanel() : null;
+  return top !== undefined && !(panel?.contains(element) ?? false);
+}
+
 /** A scrim tap closes one step: the top view inside this overlay, or the overlay itself. */
 export function dismissFromScrim(id: string): void {
   const top = getTopOverlayEntry(stack);

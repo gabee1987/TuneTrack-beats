@@ -2,25 +2,32 @@ import {
   isHintsEnabled,
   markHintSeen,
   readHintState,
+  resetHints,
+  setHintsEnabled,
   subscribeHintState,
   type HintId,
 } from "./hintState";
 import { selectNextHint } from "./hintScheduler";
 
+/**
+ * The first-game tutorial (`04` §7.1): every eligible hint in priority order, one at a time,
+ * each after a quiet period on arrival and after the previous one is acknowledged.
+ */
 const HINT_DELAY_MS = 1_500;
-const MAX_HINTS_PER_VISIT = 2;
 const candidateCounts = new Map<HintId, number>();
+/**
+ * Acknowledged on this screen. Storage records the same, but blocked storage records nothing,
+ * and a dismissed hint must not come straight back while its moment lasts.
+ */
+const acknowledgedIds = new Set<HintId>();
 const listeners = new Set<() => void>();
 let activeHintId: HintId | null = null;
 let pendingHintId: HintId | null = null;
 let pendingTimer: number | null = null;
 let unsubscribeHintState: (() => void) | null = null;
-let shownThisVisit = 0;
+let pauseCount = 0;
 
 export function registerHintCandidate(id: HintId): () => void {
-  if (candidateCounts.size === 0) {
-    shownThisVisit = 0;
-  }
   candidateCounts.set(id, (candidateCounts.get(id) ?? 0) + 1);
   ensureHintStateSubscription();
   reconcileHints();
@@ -32,13 +39,8 @@ export function registerHintCandidate(id: HintId): () => void {
     } else {
       candidateCounts.set(id, count - 1);
     }
-
-    if (activeHintId === id) {
-      activeHintId = null;
-      emitChange();
-    }
     if (candidateCounts.size === 0) {
-      shownThisVisit = 0;
+      acknowledgedIds.clear();
     }
     reconcileHints();
   };
@@ -53,13 +55,36 @@ export function getActiveHintId(): HintId | null {
   return activeHintId;
 }
 
-export function dismissActiveHint(id: HintId): void {
+/** The player dismissed the hint or used its control: only now does it count as seen. */
+export function acknowledgeHint(id: HintId): void {
   if (activeHintId !== id) {
     return;
   }
 
-  activeHintId = null;
-  emitChange();
+  acknowledgedIds.add(id);
+  setActiveHint(null);
+  markHintSeen(id);
+  reconcileHints();
+}
+
+/** No hint appears while this holds, for example during a drag. Returns the release. */
+export function pauseHints(): () => void {
+  pauseCount += 1;
+  reconcileHints();
+
+  return () => {
+    pauseCount -= 1;
+    reconcileHints();
+  };
+}
+
+/** "Show hints again": the tutorial restarts on the current screen, without a reload. */
+export function showHintsAgain(): void {
+  acknowledgedIds.clear();
+  clearPendingHint();
+  setActiveHint(null);
+  resetHints();
+  setHintsEnabled(true);
   reconcileHints();
 }
 
@@ -67,18 +92,17 @@ function ensureHintStateSubscription() {
   unsubscribeHintState ??= subscribeHintState(reconcileHints);
 }
 
-function reconcileHints() {
-  if (!isHintsEnabled()) {
-    clearPendingHint();
-    if (activeHintId !== null) {
-      activeHintId = null;
-      emitChange();
-    }
-    return;
-  }
+function selectCandidate(): HintId | null {
+  return selectNextHint({
+    candidateIds: [...candidateCounts.keys()].filter((id) => !acknowledgedIds.has(id)),
+    state: readHintState(),
+  });
+}
 
-  if (shownThisVisit >= MAX_HINTS_PER_VISIT) {
+function reconcileHints() {
+  if (!isHintsEnabled() || pauseCount > 0) {
     clearPendingHint();
+    setActiveHint(null);
     return;
   }
 
@@ -86,17 +110,11 @@ function reconcileHints() {
     if (candidateCounts.has(activeHintId)) {
       return;
     }
-    activeHintId = null;
-    emitChange();
+    // Its moment passed before it was acknowledged: it returns at the next one.
+    setActiveHint(null);
   }
 
-  const nextHintId = selectNextHint({
-    candidateIds: candidateCounts.keys(),
-    maxHintsPerVisit: MAX_HINTS_PER_VISIT,
-    shownThisVisit,
-    state: readHintState(),
-  });
-
+  const nextHintId = selectCandidate();
   if (!nextHintId) {
     clearPendingHint();
     return;
@@ -110,22 +128,21 @@ function reconcileHints() {
   pendingTimer = window.setTimeout(() => {
     pendingTimer = null;
     pendingHintId = null;
-    const selectedHintId = selectNextHint({
-      candidateIds: candidateCounts.keys(),
-      maxHintsPerVisit: MAX_HINTS_PER_VISIT,
-      shownThisVisit,
-      state: readHintState(),
-    });
-    if (selectedHintId !== nextHintId) {
+    if (selectCandidate() !== nextHintId) {
       reconcileHints();
       return;
     }
 
-    activeHintId = nextHintId;
-    shownThisVisit += 1;
-    markHintSeen(nextHintId);
-    emitChange();
+    setActiveHint(nextHintId);
   }, HINT_DELAY_MS);
+}
+
+function setActiveHint(id: HintId | null) {
+  if (activeHintId === id) {
+    return;
+  }
+  activeHintId = id;
+  listeners.forEach((listener) => listener());
 }
 
 function clearPendingHint() {
@@ -134,8 +151,4 @@ function clearPendingHint() {
   }
   pendingTimer = null;
   pendingHintId = null;
-}
-
-function emitChange() {
-  listeners.forEach((listener) => listener());
 }

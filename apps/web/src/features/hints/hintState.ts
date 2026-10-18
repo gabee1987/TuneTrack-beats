@@ -1,5 +1,7 @@
 export type HintId =
-  | "lobby-spotify"
+  | "lobby-share-code"
+  | "lobby-music"
+  | "music-needs-check"
   | "lobby-start"
   | "game-drag-preview"
   | "game-confirm"

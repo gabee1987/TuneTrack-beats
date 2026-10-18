@@ -16,21 +16,14 @@ describe("selectNextHint", () => {
     expect(
       selectNextHint({
         candidateIds: ["game-menu", "game-confirm", "game-drag-preview"],
-        maxHintsPerVisit: 2,
-        shownThisVisit: 0,
         state: buildState({ seenCounts: { "game-drag-preview": 1 } }),
       }),
     ).toBe("game-confirm");
   });
 
-  it("suppresses the queue when disabled or the visit cap is reached", () => {
-    const options = {
-      candidateIds: ["game-menu"] as const,
-      maxHintsPerVisit: 2,
-      shownThisVisit: 0,
-    };
-
-    expect(selectNextHint({ ...options, state: buildState({ enabled: false }) })).toBeNull();
-    expect(selectNextHint({ ...options, shownThisVisit: 2, state: buildState() })).toBeNull();
+  it("suppresses every hint while hints are switched off", () => {
+    expect(
+      selectNextHint({ candidateIds: ["game-menu"], state: buildState({ enabled: false }) }),
+    ).toBeNull();
   });
 });

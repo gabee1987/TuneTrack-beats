@@ -3,18 +3,11 @@ import type { HintId, HintState } from "./hintState";
 
 interface SelectNextHintOptions {
   candidateIds: Iterable<HintId>;
-  maxHintsPerVisit: number;
-  shownThisVisit: number;
   state: HintState;
 }
 
-export function selectNextHint({
-  candidateIds,
-  maxHintsPerVisit,
-  shownThisVisit,
-  state,
-}: SelectNextHintOptions): HintId | null {
-  if (!state.enabled || shownThisVisit >= maxHintsPerVisit) {
+export function selectNextHint({ candidateIds, state }: SelectNextHintOptions): HintId | null {
+  if (!state.enabled) {
     return null;
   }
 

@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { FirstRunHint } from "../../../features/hints/FirstRunHint";
 import { useI18n } from "../../../features/i18n";
 import { useAppToast } from "../../../features/toast";
 import { Skeleton } from "../../../features/ui/primitives";
@@ -26,6 +27,9 @@ export function LobbyInviteCard({
   const { t } = useI18n();
   const { canShare, copy, share } = useInviteSharing(roomCode);
   const isDisabled = !roomCode;
+  const [hintAnchor, setHintAnchor] = useState<HTMLElement | null>(null);
+  // Only the host renames the room, so the Edit action marks the host's card.
+  const isHost = onRename !== undefined;
 
   return (
     <section aria-label={t("lobby.invite.label")} className={styles.card}>
@@ -45,7 +49,7 @@ export function LobbyInviteCard({
         </span>
       )}
 
-      <div className={styles.actions}>
+      <div className={styles.actions} ref={setHintAnchor}>
         <RoundAction
           caption={t("lobby.invite.copyShort")}
           disabled={isDisabled}
@@ -73,6 +77,11 @@ export function LobbyInviteCard({
           />
         ) : null}
       </div>
+      <FirstRunHint
+        anchor={hintAnchor}
+        id="lobby-share-code"
+        isEligible={isHost && isWaitingForPlayers && !isDisabled}
+      />
 
       <div className={styles.players}>
         {players}

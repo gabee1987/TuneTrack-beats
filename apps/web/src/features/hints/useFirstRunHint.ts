@@ -1,37 +1,66 @@
-import { useCallback, useEffect, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { isUnderOverlay, subscribeOverlayStack } from "../overlay";
 import {
-  dismissActiveHint,
+  acknowledgeHint,
   getActiveHintId,
+  pauseHints,
   registerHintCandidate,
   subscribeActiveHint,
 } from "./hintCoordinator";
 import type { HintId } from "./hintState";
 
-const HINT_AUTO_DISMISS_MS = 12_000;
+/** At least half the anchor must be on screen before its hint may appear (`04` §7). */
+const ANCHOR_VISIBLE_RATIO = 0.5;
 
-export function useFirstRunHint(id: HintId, isEligible: boolean) {
+export function useFirstRunHint(id: HintId, anchor: HTMLElement | null, isEligible: boolean) {
   const activeHintId = useSyncExternalStore(subscribeActiveHint, getActiveHintId, () => null);
+  const isAnchorShown = useIsAnchorShown(anchor);
+  const isCandidate = isEligible && isAnchorShown;
   const isVisible = activeHintId === id;
 
   const dismiss = useCallback(() => {
-    dismissActiveHint(id);
+    acknowledgeHint(id);
   }, [id]);
 
   useEffect(() => {
-    if (!isEligible) {
+    if (!isCandidate) {
       return;
     }
     return registerHintCandidate(id);
-  }, [id, isEligible]);
+  }, [id, isCandidate]);
+
+  return { dismiss, isVisible };
+}
+
+/** On screen and not under an overlay: a hint never points at something the player cannot see. */
+function useIsAnchorShown(anchor: HTMLElement | null): boolean {
+  const [isInView, setIsInView] = useState(false);
+  const isCovered = useSyncExternalStore(
+    subscribeOverlayStack,
+    () => anchor !== null && isUnderOverlay(anchor),
+    () => false,
+  );
 
   useEffect(() => {
-    if (!isVisible) {
+    if (!anchor) {
       return;
     }
 
-    const timeoutId = window.setTimeout(dismiss, HINT_AUTO_DISMISS_MS);
-    return () => window.clearTimeout(timeoutId);
-  }, [dismiss, isVisible]);
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsInView((entry?.intersectionRatio ?? 0) >= ANCHOR_VISIBLE_RATIO),
+      { threshold: ANCHOR_VISIBLE_RATIO },
+    );
+    observer.observe(anchor);
+    return () => {
+      observer.disconnect();
+      setIsInView(false);
+    };
+  }, [anchor]);
 
-  return { dismiss, isVisible };
+  return isInView && !isCovered;
+}
+
+/** No hint appears while `isPaused` holds, for example during a drag (`04` §7.1). */
+export function usePauseHints(isPaused: boolean): void {
+  useEffect(() => (isPaused ? pauseHints() : undefined), [isPaused]);
 }

@@ -1,4 +1,4 @@
-import type { HintId } from "./hintState";
+import type { HintId, HintState } from "./hintState";
 
 export interface HintDefinition {
   bodyKey: string;
@@ -8,11 +8,23 @@ export interface HintDefinition {
 }
 
 export const hintRegistry: Record<HintId, HintDefinition> = {
-  "lobby-spotify": {
-    bodyKey: "hints.lobbySpotify.body",
-    id: "lobby-spotify",
+  "lobby-share-code": {
+    bodyKey: "hints.lobbyShareCode.body",
+    id: "lobby-share-code",
+    priority: 5,
+    titleKey: "hints.lobbyShareCode.title",
+  },
+  "lobby-music": {
+    bodyKey: "hints.lobbyMusic.body",
+    id: "lobby-music",
     priority: 10,
-    titleKey: "hints.lobbySpotify.title",
+    titleKey: "hints.lobbyMusic.title",
+  },
+  "music-needs-check": {
+    bodyKey: "hints.musicNeedsCheck.body",
+    id: "music-needs-check",
+    priority: 15,
+    titleKey: "hints.musicNeedsCheck.title",
   },
   "lobby-start": {
     bodyKey: "hints.lobbyStart.body",
@@ -69,3 +81,12 @@ export const hintRegistry: Record<HintId, HintDefinition> = {
     titleKey: "hints.gameMenu.title",
   },
 };
+
+const hintIds = Object.keys(hintRegistry) as HintId[];
+
+export const hintCount = hintIds.length;
+
+/** How many hints of the catalogue this device has acknowledged, for the app menu. */
+export function countSeenHints(state: HintState): number {
+  return hintIds.filter((id) => (state.seenCounts[id] ?? 0) > 0).length;
+}

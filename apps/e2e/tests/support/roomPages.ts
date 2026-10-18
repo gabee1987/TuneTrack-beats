@@ -8,6 +8,7 @@ import {
 } from "@playwright/test";
 
 const playerProfileStorageKey = "tunetrack.playerProfile.v1";
+const hintStateStorageKey = "tunetrack.hints.v1";
 
 export interface PlayerPage {
   context: BrowserContext;
@@ -20,10 +21,14 @@ export async function expectNoUnexpectedSpotifyRequests(request: APIRequestConte
   await expect(response.json()).resolves.toEqual({ unexpectedRequests: [] });
 }
 
-/** A fresh device; `null` means no saved name, as on a first visit. */
+/**
+ * A fresh device; `null` means no saved name, as on a first visit. Hints start switched off: a
+ * first-run hint stays until it is acknowledged, and only `hints.spec.ts` is about them.
+ */
 export async function createNamedPage(
   browser: Browser,
   displayName: string | null,
+  { hints = false }: { hints?: boolean } = {},
 ): Promise<PlayerPage> {
   const context = await browser.newContext();
   await context.addInitScript(() => {
@@ -69,12 +74,18 @@ export async function createNamedPage(
     });
   });
   await context.addInitScript(
-    ({ name, storageKey }) => {
+    ({ hints, hintsKey, name, storageKey }) => {
       if (window.location.protocol === "about:") {
         return;
       }
 
       localStorage.setItem("tunetrack.language", "en");
+      if (!hints && localStorage.getItem(hintsKey) === null) {
+        localStorage.setItem(
+          hintsKey,
+          JSON.stringify({ enabled: false, seenCounts: {}, version: 1 }),
+        );
+      }
       if (name !== null) {
         localStorage.setItem(
           storageKey,
@@ -82,7 +93,12 @@ export async function createNamedPage(
         );
       }
     },
-    { name: displayName, storageKey: playerProfileStorageKey },
+    {
+      hints,
+      hintsKey: hintStateStorageKey,
+      name: displayName,
+      storageKey: playerProfileStorageKey,
+    },
   );
 
   return { context, page: await context.newPage() };
@@ -138,12 +154,8 @@ export async function editRules(host: Page, edit: () => Promise<void>): Promise<
  */
 export async function openRulesSheet(host: Page): Promise<Locator> {
   const sheet = host.getByRole("dialog", { name: "Set how you play" });
-  // The "Add music" hint slides in under the Music card, over the Rules card, 1.5 s after the
-  // lobby opens; a tap it catches only dismisses it, so tap again.
-  await expect(async () => {
-    await host.getByRole("button", { name: /^Rules\b/ }).click();
-    await expect(sheet).toBeVisible({ timeout: 1_000 });
-  }).toPass();
+  await host.getByRole("button", { name: /^Rules\b/ }).click();
+  await expect(sheet).toBeVisible();
   const viewportWidth = host.viewportSize()?.width ?? 0;
   await expect
     .poll(async () => {

@@ -7,6 +7,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { usePauseHints } from "../../../features/hints/useFirstRunHint";
 import { MotionPresence, useReducedMotionPreference } from "../../../features/motion";
 import { usePageLayoutMode } from "../../../hooks/usePageLayoutMode";
 import type {
@@ -158,6 +159,7 @@ export function TimelinePanel({ model }: TimelinePanelProps) {
     timelineRowRef,
   });
   useTimelineEdgeAutoScroll(timelineRowRef, isDraggingPreviewCard);
+  usePauseHints(isDraggingPreviewCard);
   const hasTimelineOverflow = useTimelineOverflowState({
     itemCount: orderedItemIds.length,
     timelineRowRef,

@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { FirstRunHint } from "../../../../features/hints/FirstRunHint";
 import { useI18n } from "../../../../features/i18n";
 import { classNames } from "../../../../features/ui/classNames";
 import { ChipButton } from "../../../../features/ui/primitives";
@@ -12,6 +14,7 @@ import styles from "./playlistView.module.css";
 export function PlaylistViewToolbar({ editor }: { editor: UsePlaylistEditorResult }) {
   const { t } = useI18n();
   const { filter, setFilter } = editor;
+  const [hintAnchor, setHintAnchor] = useState<HTMLElement | null>(null);
 
   return (
     <>
@@ -23,14 +26,21 @@ export function PlaylistViewToolbar({ editor }: { editor: UsePlaylistEditorResul
         >
           {t("music.filter.all", { count: editor.allTracks.length })}
         </ChipButton>
-        <ChipButton
-          aria-pressed={filter === "needsCheck"}
-          onClick={() => setFilter("needsCheck")}
-          selected={filter === "needsCheck"}
-        >
-          {t("music.filter.needsCheck", { count: editor.needsCheckCount })}
-        </ChipButton>
+        <span className={styles.filterAnchor} ref={setHintAnchor}>
+          <ChipButton
+            aria-pressed={filter === "needsCheck"}
+            onClick={() => setFilter("needsCheck")}
+            selected={filter === "needsCheck"}
+          >
+            {t("music.filter.needsCheck", { count: editor.needsCheckCount })}
+          </ChipButton>
+        </span>
       </div>
+      <FirstRunHint
+        anchor={hintAnchor}
+        id="music-needs-check"
+        isEligible={editor.needsCheckCount > 0}
+      />
       <PlaylistSortSelect onChange={editor.setSort} value={editor.sort} />
     </>
   );

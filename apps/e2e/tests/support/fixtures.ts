@@ -16,6 +16,11 @@ export interface TwoPlayerRoom {
   roomId: string;
 }
 
+interface RoomOptions {
+  /** First-run hints on every device the test opens; off unless a spec is about them. */
+  hints: boolean;
+}
+
 interface RoomFixtures {
   /** A browser context with a saved name (`null`: a new device); closed after the test. */
   openPlayer: (displayName: string | null) => Promise<PlayerPage>;
@@ -24,7 +29,9 @@ interface RoomFixtures {
   spotifyRequestGuard: void;
 }
 
-export const test = base.extend<RoomFixtures>({
+export const test = base.extend<RoomFixtures & RoomOptions>({
+  hints: [false, { option: true }],
+
   spotifyRequestGuard: [
     async ({ request }, use) => {
       await use();
@@ -33,11 +40,11 @@ export const test = base.extend<RoomFixtures>({
     { auto: true },
   ],
 
-  openPlayer: async ({ browser }, use) => {
+  openPlayer: async ({ browser, hints }, use) => {
     const contexts: BrowserContext[] = [];
 
     await use(async (displayName) => {
-      const player = await createNamedPage(browser, displayName);
+      const player = await createNamedPage(browser, displayName, { hints });
       contexts.push(player.context);
       return player;
     });

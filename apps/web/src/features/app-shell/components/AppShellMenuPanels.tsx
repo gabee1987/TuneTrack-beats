@@ -1,5 +1,12 @@
-import { useState } from "react";
-import { isHintsEnabled, resetHints, setHintsEnabled } from "../../hints/hintState";
+import { useState, useSyncExternalStore } from "react";
+import { showHintsAgain } from "../../hints/hintCoordinator";
+import { countSeenHints, hintCount } from "../../hints/hintRegistry";
+import {
+  isHintsEnabled,
+  readHintState,
+  setHintsEnabled,
+  subscribeHintState,
+} from "../../hints/hintState";
 import type { ViewPreferences } from "../../preferences/uiPreferences";
 import type { AppShellMenuPreferencesState, AppShellMenuTab } from "../AppShellMenu.types";
 import { useI18n } from "../../i18n";
@@ -52,7 +59,7 @@ const developerFields: Array<{
 export function AppShellMenuPanels({ activeTab, preferencesState }: AppShellMenuPanelsProps) {
   const { availableLanguages, languageId, setLanguage, t } = useI18n();
   const [hasResetHints, setHasResetHints] = useState(false);
-  const [hintsEnabled, setHintsEnabledState] = useState(isHintsEnabled);
+  const hintsEnabled = useSyncExternalStore(subscribeHintState, () => isHintsEnabled());
 
   if (activeTab?.id === "language") {
     return (
@@ -104,11 +111,10 @@ export function AppShellMenuPanels({ activeTab, preferencesState }: AppShellMenu
           hintsEnabled={hintsEnabled}
           onEnabledChange={(enabled) => {
             setHintsEnabled(enabled);
-            setHintsEnabledState(enabled);
             setHasResetHints(false);
           }}
           onReset={() => {
-            resetHints();
+            showHintsAgain();
             setHasResetHints(true);
           }}
         />
@@ -219,6 +225,7 @@ function HintSettingsSection({
   onReset,
 }: HintSettingsSectionProps) {
   const { t } = useI18n();
+  const seenCount = useSyncExternalStore(subscribeHintState, () => countSeenHints(readHintState()));
 
   return (
     <section
@@ -237,9 +244,12 @@ function HintSettingsSection({
           onChange={onEnabledChange}
         />
       </div>
+      <p className={styles.sectionDescription}>
+        {t("appShell.menu.hintsProgress", { seen: seenCount, total: hintCount })}
+      </p>
       <div className={styles.hintSettingsActions}>
         <Button onClick={onReset} type="button" variant="secondary">
-          {t("appShell.menu.resetHints")}
+          {t("appShell.menu.showHintsAgain")}
         </Button>
       </div>
       {hasResetHints ? (

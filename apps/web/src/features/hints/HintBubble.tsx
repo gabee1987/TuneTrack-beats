@@ -45,8 +45,10 @@ export function HintBubble({ anchor, body, dismissLabel, onDismiss, title }: Hin
   }, [anchor]);
 
   useEffect(() => {
+    // Escape answers the hint first; an overlay under it closes on the next one.
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        event.stopPropagation();
         onDismiss();
       }
     };
@@ -62,13 +64,16 @@ export function HintBubble({ anchor, body, dismissLabel, onDismiss, title }: Hin
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown, true);
     document.addEventListener("pointerdown", handlePointerDown);
+    // A keyboard press on the anchor uses it too; a pointer press is already outside the bubble.
+    anchor.addEventListener("click", onDismiss);
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown, true);
       document.removeEventListener("pointerdown", handlePointerDown);
+      anchor.removeEventListener("click", onDismiss);
     };
-  }, [onDismiss, titleId]);
+  }, [anchor, onDismiss, titleId]);
 
   return (
     <LayerPortal>
@@ -76,7 +81,6 @@ export function HintBubble({ anchor, body, dismissLabel, onDismiss, title }: Hin
         animate={{ opacity: 1, x: "-50%", y: verticalPosition }}
         aria-describedby={bodyId}
         aria-labelledby={titleId}
-        aria-live="polite"
         className={styles.bubble}
         data-hint-bubble="true"
         data-placement={position.placement}
@@ -90,7 +94,7 @@ export function HintBubble({ anchor, body, dismissLabel, onDismiss, title }: Hin
           x: "-50%",
           y: getInitialY(position.placement, reduceMotion),
         }}
-        role="dialog"
+        role="status"
         style={{ left: position.left, top: position.top }}
         transition={{
           ...createStandardTransition(reduceMotion),

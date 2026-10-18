@@ -38,7 +38,7 @@ export function LobbyHostMusic({ currentSettings, musicPanes, setup }: LobbyHost
         ref={setHintAnchor}
         tracksToCheckCount={setup.tracksToCheckCount}
       />
-      <FirstRunHint anchor={hintAnchor} id="lobby-spotify" isEligible={!setup.isMusicDone} />
+      <FirstRunHint anchor={hintAnchor} id="lobby-music" isEligible={!setup.isMusicDone} />
       <MusicSheet
         currentSettings={currentSettings}
         isOpen={isSetupOpen}

@@ -1,7 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import { type HintId, isHintsEnabled, markHintSeen, readHintState } from "../../hints/hintState";
+import {
+  type HintId,
+  isHintsEnabled,
+  markHintSeen,
+  readHintState,
+  setHintsEnabled,
+} from "../../hints/hintState";
 import { I18nProvider } from "../../i18n";
 import { useAppShellMenuPreferencesState } from "../hooks/useAppShellMenuPreferencesState";
 import { AppShellMenuPanels } from "./AppShellMenuPanels";
@@ -40,15 +46,19 @@ describe("AppShellMenuPanels hints settings", () => {
     expect(hasSeenHint("game-drag-preview")).toBe(true);
   });
 
-  it("makes seen hints eligible again", async () => {
+  it("shows how many hints were seen, and Show hints again makes them eligible and on", async () => {
     const user = userEvent.setup();
     markHintSeen("game-drag-preview");
-    expect(hasSeenHint("game-drag-preview")).toBe(true);
+    setHintsEnabled(false);
 
     render(<MenuPanel />);
-    await user.click(screen.getByRole("button", { name: "Reset hints" }));
+    expect(screen.getByText("Hints: 1 of 12 seen")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Show hints again" }));
 
     expect(hasSeenHint("game-drag-preview")).toBe(false);
+    expect(isHintsEnabled()).toBe(true);
+    expect(screen.getByRole("switch", { name: "Show hints" })).toBeChecked();
+    expect(screen.getByText("Hints: 0 of 12 seen")).toBeVisible();
     expect(screen.getByText("Hints will appear again when they are relevant.")).toBeVisible();
   });
 
@@ -58,6 +68,6 @@ describe("AppShellMenuPanels hints settings", () => {
 
     rerender(<MenuPanel tabId="view" />);
     expect(screen.getByRole("heading", { name: "Help and hints" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "Reset hints" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Show hints again" })).toBeVisible();
   });
 });

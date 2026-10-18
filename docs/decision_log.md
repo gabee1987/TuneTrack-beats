@@ -12,6 +12,19 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### First-game hint tutorial (2026-10-18)
+
+- **A hint stays until the player acknowledges it; the 12 s auto-dismiss is gone** (decision 12,
+  `22` S11). Why: seen means acknowledged, so a hint that left on its own would have to come back
+  1.5 s later at the same place.
+- **"Show hints again" also switches hints on.** Why: a restart that shows nothing while the
+  switch is off would look broken.
+- **Escape answers a hint before the overlay beneath it.** Why: one key press should not both
+  dismiss the hint and close the sheet the player is working in.
+- **E2E devices start with hints off; `hints.spec.ts` turns them on.** Why: a hint that waits
+  for acknowledgement would sit over controls in every other scenario; the tutorial has its own
+  scenario.
+
 ### Desktop Music setup in two panes (2026-10-18)
 
 - **On desktop the Music sheet is 960 px wide with two panes** (decision 25, `22` S10): the

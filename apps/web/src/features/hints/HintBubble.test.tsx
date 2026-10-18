@@ -30,11 +30,11 @@ function renderBubble(anchor: HTMLElement, onDismiss = vi.fn()) {
 }
 
 describe("HintBubble", () => {
-  it("is a dialog named by its title and described by its body", () => {
+  it("is a polite status named by its title and described by its body", () => {
     renderBubble(createAnchor({ x: 100, y: 100 }));
 
     expect(
-      screen.getByRole("dialog", {
+      screen.getByRole("status", {
         name: "Choose your player name",
         description: "This is the name everyone in the room will see.",
       }),
@@ -57,7 +57,7 @@ describe("HintBubble", () => {
   it("opens below an anchor with room underneath, centred on it", () => {
     renderBubble(createAnchor({ x: 175, y: 100 }));
 
-    const bubble = screen.getByRole("dialog");
+    const bubble = screen.getByRole("status");
     expect(bubble).toHaveAttribute("data-placement", "below");
     expect(bubble).toHaveStyle({ left: "195px", top: "152px" });
   });
@@ -65,7 +65,7 @@ describe("HintBubble", () => {
   it("opens above an anchor near the bottom edge and stays inside the side gutter", () => {
     renderBubble(createAnchor({ x: 0, y: 780 }));
 
-    const bubble = screen.getByRole("dialog");
+    const bubble = screen.getByRole("status");
     expect(bubble).toHaveAttribute("data-placement", "above");
     expect(bubble).toHaveStyle({ left: "156px", top: "768px" });
   });

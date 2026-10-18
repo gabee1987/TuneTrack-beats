@@ -12,7 +12,7 @@ interface FirstRunHintProps {
 
 export function FirstRunHint({ anchor, id, isEligible }: FirstRunHintProps) {
   const { t } = useI18n();
-  const hint = useFirstRunHint(id, isEligible && anchor !== null);
+  const hint = useFirstRunHint(id, anchor, isEligible);
   const definition = hintRegistry[id];
 
   return hint.isVisible && anchor ? (
