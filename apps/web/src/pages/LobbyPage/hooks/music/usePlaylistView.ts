@@ -4,6 +4,7 @@ import { useI18n } from "../../../../features/i18n";
 import { useAppToast } from "../../../../features/toast";
 import type { UseLobbySpotifyResult } from "../spotify/lobbySpotify.types";
 import type { PlaylistEditorFilter, PlaylistEditorSource } from "./playlistEditorTarget";
+import { useOneOpenList } from "./useOneOpenList";
 import { useOpenedPlaylistActions } from "./useOpenedPlaylistActions";
 import { useSavedDeckWriteBack } from "./useSavedDeckWriteBack";
 
@@ -65,6 +66,7 @@ export function usePlaylistView(
   const { candidates, openedPlaylist, queue, savedPlaylists } = spotify;
   const { generatedPlaylistMessage } = savedPlaylists;
   const savedDeckSource = useSavedDeckWriteBack(savedPlaylists, roomDeck);
+  useOneOpenList(spotify);
 
   useEffect(() => {
     if (!generatedPlaylistMessage) return;

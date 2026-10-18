@@ -87,7 +87,7 @@ function PlaylistViewContent({ view }: { view: PlaylistViewModel }) {
               ? undefined
               : t("lobby.playlist.trackCount", { count: allTracks.length })
           }
-          onBack={() => { console.warn("DBG back", view.kind); view.onBack(); }}
+          onBack={view.onBack}
           title={isDeck ? t("music.editor.heading") : t("music.view.pickHeading")}
         />
       </div>

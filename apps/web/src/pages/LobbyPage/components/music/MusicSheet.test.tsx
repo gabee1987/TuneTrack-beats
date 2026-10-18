@@ -9,7 +9,7 @@ import { renderWithProviders } from "../../../../test/renderWithProviders";
 import { buildLobbyRoomState, buildRoomSettings } from "../../../../test/roomStateFixtures";
 import { selectLobbySetup } from "../../hooks/lobbySetupModel";
 import type { UseLobbySpotifyResult } from "../../hooks/spotify/lobbySpotify.types";
-import { MusicSheet } from "./MusicSheet";
+import { MusicSheet, type MusicSetupPanes } from "./MusicSheet";
 
 const connection = vi.hoisted(() => ({ status: "connected" as ConnectionStatus }));
 
@@ -157,10 +157,11 @@ function buildSpotifyStub({
 }
 
 interface RenderOptions extends SpotifyStubOptions {
+  panes?: MusicSetupPanes;
   settings?: Partial<PublicRoomSettings>;
 }
 
-function renderSheet({ settings = {}, ...spotifyOptions }: RenderOptions = {}) {
+function renderSheet({ panes = "one", settings = {}, ...spotifyOptions }: RenderOptions = {}) {
   const spotify = buildSpotifyStub(spotifyOptions);
   const currentSettings = buildRoomSettings(settings);
   const setup = selectLobbySetup({
@@ -177,6 +178,7 @@ function renderSheet({ settings = {}, ...spotifyOptions }: RenderOptions = {}) {
       <MusicSheet
         currentSettings={currentSettings}
         isOpen
+        panes={panes}
         onClose={vi.fn()}
         onUsePracticeDeck={onUsePracticeDeck}
         practiceDeckStatus="idle"
@@ -297,6 +299,37 @@ describe("MusicSheet Song list", () => {
 
     expect(spotify.savedPlaylists.setSelectedSavedPlaylistId).toHaveBeenCalledWith(deck.id);
     expect(spotify.queue.closeEditor).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("MusicSheet on desktop", () => {
+  const PICK_ONE = "Pick a deck or search to see songs here.";
+
+  it("keeps a pane for the songs beside the tabs, empty until a list opens", () => {
+    renderSheet({ panes: "two", savedDecks: [buildSavedDeck("Road Trip")] });
+
+    expect(screen.getByText(PICK_ONE)).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Song list" })).not.toBeInTheDocument();
+  });
+
+  it("opens a list in that pane, leaving the tabs and decks in reach", async () => {
+    const deck = buildSavedDeck("Road Trip");
+    renderSheet({
+      editor: { deck: "saved", deckId: deck.id, filter: "all" },
+      panes: "two",
+      savedDecks: [deck],
+    });
+
+    const pane = (await screen.findByRole("dialog", { name: "Song list" })).parentElement;
+    expect(pane).toContainElement(screen.getByText(PICK_ONE));
+    expect(pane).not.toContainElement(screen.getByRole("radio", { name: "Your decks" }));
+    expect(pane).not.toContainElement(screen.getByRole("button", { name: "Edit Road Trip" }));
+  });
+
+  it("shows no empty pane on phones", () => {
+    renderSheet();
+
+    expect(screen.queryByText(PICK_ONE)).not.toBeInTheDocument();
   });
 });
 

@@ -1,5 +1,13 @@
 import { m, useIsPresent } from "framer-motion";
-import { useContext, useId, useRef, type MutableRefObject, type ReactNode } from "react";
+import {
+  useContext,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type MutableRefObject,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import { useInRouterContext } from "react-router-dom";
 import {
@@ -60,6 +68,8 @@ function PanelViewContent({
 }: PanelViewContentProps) {
   const host = useContext(PanelViewHostContext);
   const viewRef = useRef<HTMLDivElement | null>(null);
+  // In one pane of a panel, the rest of the panel stays in reach of Tab and the wheel.
+  const isInPane = host.element !== host.panel;
 
   useOverlayRegistration({
     dismissible: true,
@@ -68,6 +78,7 @@ function PanelViewContent({
     kind: "view",
     onDismiss,
     panelRef: viewRef,
+    scope: isInPane ? host.panel : null,
   });
 
   const content = (
@@ -82,7 +93,34 @@ function PanelViewContent({
 
   // Rendered into the panel itself, so a view opened from deep inside the panel's scrolling
   // content still covers the whole panel.
-  return host ? createPortal(content, host) : content;
+  return host.element ? createPortal(content, host.element) : content;
+}
+
+interface PanelViewPaneProps {
+  /** The content whose `PanelView`s open in the pane instead of over the whole panel. */
+  children: ReactNode;
+  className?: string | undefined;
+  /** What the pane shows while no view is open in it. */
+  resting: ReactNode;
+}
+
+/**
+ * A pane beside an open panel's content (the desktop Music setup, `22` §4.12): deeper steps
+ * slide in over the pane alone, so the content beside it stays in reach.
+ */
+export function PanelViewPane({ children, className, resting }: PanelViewPaneProps) {
+  const { panel } = useContext(PanelViewHostContext);
+  const [element, setElement] = useState<HTMLDivElement | null>(null);
+  const host = useMemo(() => ({ element, panel }), [element, panel]);
+
+  return (
+    <>
+      <PanelViewHostContext.Provider value={host}>{children}</PanelViewHostContext.Provider>
+      <div className={className} ref={setElement}>
+        {resting}
+      </div>
+    </>
+  );
 }
 
 interface PanelViewFrameProps {

@@ -70,7 +70,11 @@ export function LobbyPageMobile({ model }: LobbyPageAssemblyProps) {
               roomCode={setup.roomCode}
             />
             {isHost ? (
-              <LobbyHostMusic currentSettings={hostSettings.currentSettings} setup={setup} />
+              <LobbyHostMusic
+                currentSettings={hostSettings.currentSettings}
+                musicPanes="one"
+                setup={setup}
+              />
             ) : (
               <LobbyMusicSummary hostName={setup.hostName} music={setup.music} />
             )}

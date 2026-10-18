@@ -9,6 +9,8 @@ interface OverlayRegistrationOptions {
   kind: OverlayStackKind;
   onDismiss: () => void;
   panelRef: RefObject<HTMLElement | null>;
+  /** Where Tab and scrolling stay while it is open, when that is more than the panel itself. */
+  scope?: HTMLElement | null | undefined;
 }
 
 /**
@@ -22,9 +24,12 @@ export function useOverlayRegistration({
   kind,
   onDismiss,
   panelRef,
+  scope,
 }: OverlayRegistrationOptions): void {
   const onDismissRef = useRef(onDismiss);
   onDismissRef.current = onDismiss;
+  const scopeRef = useRef(scope);
+  scopeRef.current = scope;
 
   useEffect(() => {
     if (!isShown) {
@@ -35,7 +40,7 @@ export function useOverlayRegistration({
     const unregister = registerOverlay({
       dismiss: () => onDismissRef.current(),
       dismissible,
-      getPanel: () => panelRef.current,
+      getPanel: () => scopeRef.current ?? panelRef.current,
       id,
       kind,
     });
@@ -54,5 +59,10 @@ export function useOverlayRegistration({
   }, [dismissible, id, isShown, kind, panelRef]);
 }
 
-/** The open overlay panel that `PanelView`s inside it render into. */
-export const PanelViewHostContext = createContext<HTMLElement | null>(null);
+/** Where a `PanelView` opens: over the whole open panel, or over one pane of it. */
+export interface PanelViewHost {
+  element: HTMLElement | null;
+  panel: HTMLElement | null;
+}
+
+export const PanelViewHostContext = createContext<PanelViewHost>({ element: null, panel: null });

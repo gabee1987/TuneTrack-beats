@@ -3,6 +3,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
@@ -120,6 +121,7 @@ function OverlayView({
     panelRef.current = node;
     setPanelElement(node);
   }, []);
+  const viewHost = useMemo(() => ({ element: panelElement, panel: panelElement }), [panelElement]);
   const layer = useSyncExternalStore(subscribeOverlayStack, () =>
     getOverlayLayer(getOverlayStack(), id),
   );
@@ -156,7 +158,7 @@ function OverlayView({
       transition={panelTransition ?? createStandardTransition(reduceMotion)}
       variants={panelMotion ?? createDialogCardMotion(reduceMotion)}
     >
-      <PanelViewHostContext.Provider value={panelElement}>{children}</PanelViewHostContext.Provider>
+      <PanelViewHostContext.Provider value={viewHost}>{children}</PanelViewHostContext.Provider>
     </m.div>
   );
 

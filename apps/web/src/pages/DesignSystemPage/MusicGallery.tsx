@@ -5,10 +5,10 @@ import {
   type SpotifySmartSearchResult,
 } from "@tunetrack/shared/client";
 import { useMemo, useState } from "react";
-import { Button } from "../../features/ui/primitives";
+import { Button, SegmentedControl } from "../../features/ui/primitives";
 import { MusicDecksTab } from "../LobbyPage/components/music/MusicDecksTab";
 import { MusicPlaybackBlock } from "../LobbyPage/components/music/MusicPlaybackBlock";
-import { MusicSheet } from "../LobbyPage/components/music/MusicSheet";
+import { MusicSheet, type MusicSetupPanes } from "../LobbyPage/components/music/MusicSheet";
 import { QuickPickArt } from "../LobbyPage/components/music/QuickPickArt";
 import { DEFAULT_RULES, selectLobbySetup } from "../LobbyPage/hooks/lobbySetupModel";
 import type {
@@ -97,6 +97,7 @@ const RESULTS: SpotifySmartSearchResult[] = [
  */
 export function MusicGallery() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [panes, setPanes] = useState<MusicSetupPanes>("one");
   const [editor, setEditor] = useState<PlaylistEditorTarget | null>(null);
   const [editorTracks, setEditorTracks] = useState(EDITOR_TRACKS);
   const [isQuickPickShown, setIsQuickPickShown] = useState(false);
@@ -196,6 +197,15 @@ export function MusicGallery() {
           <QuickPickArt key={presetId} presetId={presetId} />
         ))}
       </div>
+      <SegmentedControl<MusicSetupPanes>
+        aria-label="Music setup layout"
+        onChange={setPanes}
+        options={[
+          { label: "Phone", value: "one" },
+          { label: "Desktop · two panes", value: "two" },
+        ]}
+        value={panes}
+      />
       <div className={styles.row}>
         <Button onClick={() => setIsSheetOpen(true)} variant="secondary">
           Open the Music sheet
@@ -231,6 +241,7 @@ export function MusicGallery() {
       <MusicSheet
         currentSettings={DEMO_SETTINGS}
         isOpen={isSheetOpen}
+        panes={panes}
         onClose={() => setIsSheetOpen(false)}
         onUsePracticeDeck={noop}
         practiceDeckStatus="idle"

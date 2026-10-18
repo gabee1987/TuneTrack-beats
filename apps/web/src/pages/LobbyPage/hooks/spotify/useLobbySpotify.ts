@@ -263,9 +263,9 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
       updateSavedDeckTracks: savedPlaylists.updateSavedDeckTracks,
     },
     queue: {
-      closeEditor: () => { console.warn("DBG closeEditor"); setEditor(null); },
+      closeEditor: () => setEditor(null),
       editor,
-      openEditor: (target) => { console.warn("DBG openEditor", JSON.stringify(target)); setEditor(target); },
+      openEditor: setEditor,
     },
   };
 }

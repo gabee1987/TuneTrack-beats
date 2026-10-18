@@ -7,7 +7,12 @@ import {
   useReducedMotionPreference,
 } from "../../../../features/motion";
 import { ConnectionStatus } from "../../../../features/rooms/ConnectionStatus";
-import { SegmentedControl, SelectionActionBar, Sheet } from "../../../../features/ui/primitives";
+import {
+  EmptyState,
+  SegmentedControl,
+  SelectionActionBar,
+  Sheet,
+} from "../../../../features/ui/primitives";
 import { useConnectionStatus } from "../../../../services/socket/connectionState";
 import type { LobbySetupModel } from "../../hooks/lobbySetupModel";
 import {
@@ -46,9 +51,13 @@ const PlaylistTrackDetailsSheet = lazy(async () => {
   return { default: module.PlaylistTrackDetailsSheet };
 });
 
+/** One pane on phones; on desktop the open list sits in a second pane beside the tabs (`22` §4.12). */
+export type MusicSetupPanes = "one" | "two";
+
 interface MusicSheetProps {
   currentSettings: PublicRoomSettings;
   isOpen: boolean;
+  panes: MusicSetupPanes;
   onClose: () => void;
   onUsePracticeDeck: () => void;
   practiceDeckStatus: PracticeDeckChoiceStatus;
@@ -64,6 +73,7 @@ interface MusicSheetProps {
 export function MusicSheet({
   currentSettings,
   isOpen,
+  panes,
   onClose,
   onUsePracticeDeck,
   practiceDeckStatus,
@@ -132,6 +142,7 @@ export function MusicSheet({
 
   return (
     <Sheet
+      aside={panes === "two" ? <EmptyState title={t("music.view.pickOne")} /> : undefined}
       dock={
         tab === "find" ? (
           <SelectionActionBar

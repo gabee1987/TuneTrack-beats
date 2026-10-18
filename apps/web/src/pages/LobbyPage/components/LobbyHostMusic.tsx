@@ -5,10 +5,11 @@ import type { LobbySetupModel } from "../hooks/lobbySetupModel";
 import { useLobbySpotify } from "../hooks/spotify/useLobbySpotify";
 import { usePracticeDeckChoice } from "../hooks/spotify/usePracticeDeckChoice";
 import { LobbyMusicCard } from "./LobbyMusicCard";
-import { MusicSheet } from "./music/MusicSheet";
+import { MusicSheet, type MusicSetupPanes } from "./music/MusicSheet";
 
 interface LobbyHostMusicProps {
   currentSettings: PublicRoomSettings;
+  musicPanes: MusicSetupPanes;
   setup: LobbySetupModel;
 }
 
@@ -16,7 +17,7 @@ interface LobbyHostMusicProps {
  * Step 2 for the host: the Music card and the Music setup it opens. `useLobbySpotify` lives
  * here for the whole lobby, because import and login results arrive while setup is closed.
  */
-export function LobbyHostMusic({ currentSettings, setup }: LobbyHostMusicProps) {
+export function LobbyHostMusic({ currentSettings, musicPanes, setup }: LobbyHostMusicProps) {
   const spotifyState = useLobbySpotify();
   const practiceDeck = usePracticeDeckChoice();
   const [isSetupOpen, setIsSetupOpen] = useState(false);
@@ -41,6 +42,7 @@ export function LobbyHostMusic({ currentSettings, setup }: LobbyHostMusicProps) 
       <MusicSheet
         currentSettings={currentSettings}
         isOpen={isSetupOpen}
+        panes={musicPanes}
         onClose={() => setIsSetupOpen(false)}
         onUsePracticeDeck={() => void practiceDeck.choosePracticeDeck()}
         practiceDeckStatus={practiceDeck.status}

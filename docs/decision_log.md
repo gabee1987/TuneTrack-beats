@@ -12,6 +12,18 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Desktop Music setup in two panes (2026-10-18)
+
+- **On desktop the Music sheet is 960 px wide with two panes** (decision 25, `22` S10): the
+  Playback block and the tabs on the left, the open list on the right, and "Pick a deck or search
+  to see songs here." while nothing is open.
+- **The Song editor slides in over the right pane instead of opening as a centred `Dialog`.**
+  Why: it stays the one Song editor of the phones (one way per action) and leaves the tabs in
+  reach; a dialog would have needed a second layout of the same form.
+- **One list is open at a time:** opening a deck, a Find result or a quick pick closes the list
+  open before it. Why: beside the tabs a newer list could otherwise open hidden behind an older
+  one, and Back would have to step through both.
+
 ### Saved-deck write-back with Undo (2026-10-18)
 
 - **Every edit to a saved deck is kept at once** (decision 24, `22` S9): a song saved in the
