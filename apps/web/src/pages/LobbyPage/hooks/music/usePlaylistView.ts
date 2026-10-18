@@ -3,12 +3,9 @@ import { useEffect } from "react";
 import { useI18n } from "../../../../features/i18n";
 import { useAppToast } from "../../../../features/toast";
 import type { UseLobbySpotifyResult } from "../spotify/lobbySpotify.types";
-import {
-  createSavedDeckSource,
-  type PlaylistEditorFilter,
-  type PlaylistEditorSource,
-} from "./playlistEditorTarget";
+import type { PlaylistEditorFilter, PlaylistEditorSource } from "./playlistEditorTarget";
 import { useOpenedPlaylistActions } from "./useOpenedPlaylistActions";
+import { useSavedDeckWriteBack } from "./useSavedDeckWriteBack";
 
 /** Which list the Playlist view shows (`22` §4.9). */
 export type PlaylistViewKind = "quickPick" | "room" | "saved" | "spotify";
@@ -67,6 +64,7 @@ export function usePlaylistView(
   const openedActions = useOpenedPlaylistActions(spotify);
   const { candidates, openedPlaylist, queue, savedPlaylists } = spotify;
   const { generatedPlaylistMessage } = savedPlaylists;
+  const savedDeckSource = useSavedDeckWriteBack(savedPlaylists, roomDeck);
 
   useEffect(() => {
     if (!generatedPlaylistMessage) return;
@@ -97,9 +95,7 @@ export function usePlaylistView(
 
   if (editor?.deck === "saved") {
     const deck = savedPlaylists.savedPlaylists.find((saved) => saved.id === editor.deckId);
-    const source = createSavedDeckSource(deck?.tracks ?? [], (tracks) => {
-      if (deck) savedPlaylists.updateSavedDeckTracks(deck.id, tracks);
-    });
+    const source = savedDeckSource(deck);
     return {
       canUseAll: source.tracks.length > 0,
       coverUrl: deck?.imageUrl,

@@ -12,6 +12,19 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Saved-deck write-back with Undo (2026-10-18)
+
+- **Every edit to a saved deck is kept at once** (decision 24, `22` S9): a song saved in the
+  Song editor, or removed, is written to this device and a toast "Saved to {deck}" offers Undo
+  for at least 6 s. Undo puts the whole deck back as it was before that change. Toasts gained one
+  optional button for this.
+- **The game's deck follows** when it was loaded from that saved deck and still holds the song:
+  the edit, and its Undo, go to the server as `update_playlist_track`. Removals stay on the
+  saved deck; the game's deck has its own Remove.
+- **No storage version yet:** the cover was added as an optional field, so decks saved before it
+  load unchanged (test). A version and a migration come with the first change that is not
+  additive, rather than an unused number now.
+
 ### Swipe on song rows, the Spotify cover on saved decks (2026-10-16)
 
 - **Song rows swipe again** (owner: "cool and handy"; reverses `22` §4.9 "Swipe-to-delete is

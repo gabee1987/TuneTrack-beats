@@ -47,6 +47,21 @@ export function FeedbackGallery() {
           >
             Error toast
           </Button>
+          <Button
+            onClick={() =>
+              showToast({
+                action: {
+                  label: "Undo",
+                  onAction: () => showToast({ message: "Change undone.", type: "info" }),
+                },
+                message: "Saved to Test Deck",
+                type: "success",
+              })
+            }
+            variant="secondary"
+          >
+            Undo toast
+          </Button>
           <Button onClick={previewLoading} variant="secondary">
             Loading overlay (2 s)
           </Button>

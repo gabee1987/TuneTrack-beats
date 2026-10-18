@@ -17,6 +17,8 @@ interface AppToastContextValue {
 }
 
 const DEFAULT_TOAST_DURATION_MS = 3000;
+/** A toast with a button, such as Undo, stays long enough to reach it (`22` §11). */
+const ACTION_TOAST_MIN_DURATION_MS = 6000;
 const AppToastContext = createContext<AppToastContextValue | null>(null);
 
 export function AppToastProvider({ children }: { children: ReactNode }) {
@@ -34,18 +36,25 @@ export function AppToastProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const showToast = useCallback(
-    ({ durationMs = DEFAULT_TOAST_DURATION_MS, id, message, type }: ShowAppToastOptions) => {
+    ({
+      action,
+      durationMs = DEFAULT_TOAST_DURATION_MS,
+      id,
+      message,
+      type,
+    }: ShowAppToastOptions) => {
       const toastId = id ?? createToastId(idRef);
+      const shownMs = action ? Math.max(durationMs, ACTION_TOAST_MIN_DURATION_MS) : durationMs;
       const currentTimer = timersRef.current.get(toastId);
       if (currentTimer) window.clearTimeout(currentTimer);
 
       setToasts((current) => {
-        const nextToast: AppToast = { id: toastId, message, type };
+        const nextToast: AppToast = { action, id: toastId, message, type };
         if (!current.some((toast) => toast.id === toastId)) return [...current, nextToast];
         return current.map((toast) => (toast.id === toastId ? nextToast : toast));
       });
 
-      const timer = window.setTimeout(() => removeToast(toastId), durationMs);
+      const timer = window.setTimeout(() => removeToast(toastId), shownMs);
       timersRef.current.set(toastId, timer);
     },
     [removeToast],
@@ -63,7 +72,7 @@ export function AppToastProvider({ children }: { children: ReactNode }) {
   return (
     <AppToastContext.Provider value={contextValue}>
       {children}
-      <AppToastStack toasts={toasts} />
+      <AppToastStack onDismiss={removeToast} toasts={toasts} />
     </AppToastContext.Provider>
   );
 }

@@ -1,5 +1,4 @@
 import {
-  applyTrackEdit,
   getTrackCurationFlags,
   type PublicTrackInfo,
   type TrackMetadataStatus,
@@ -39,18 +38,4 @@ export function filterTracks(
   filter: PlaylistEditorFilter,
 ): PublicTrackInfo[] {
   return filter === "needsCheck" ? tracks.filter(needsYearCheck) : [...tracks];
-}
-
-/** A saved deck's songs, edited on this device: the change is written back at once. */
-export function createSavedDeckSource(
-  tracks: readonly PublicTrackInfo[],
-  write: (tracks: PublicTrackInfo[]) => void,
-): PlaylistEditorSource {
-  return {
-    isLoading: false,
-    removeTracks: (trackIds) => write(tracks.filter((track) => !trackIds.includes(track.id))),
-    tracks: [...tracks],
-    updateTrack: (trackId, patch) =>
-      write(tracks.map((track) => (track.id === trackId ? applyTrackEdit(track, patch) : track))),
-  };
 }

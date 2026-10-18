@@ -1,13 +1,15 @@
 import { m } from "framer-motion";
 import { MotionPresence, createToastSlideMotion, useReducedMotionPreference } from "../motion";
+import { Button } from "../ui/primitives";
 import type { AppToast } from "./AppToast.types";
 import styles from "./AppToastStack.module.css";
 
 interface AppToastStackProps {
+  onDismiss: (id: string) => void;
   toasts: AppToast[];
 }
 
-export function AppToastStack({ toasts }: AppToastStackProps) {
+export function AppToastStack({ onDismiss, toasts }: AppToastStackProps) {
   const reduceMotion = useReducedMotionPreference();
 
   return (
@@ -23,6 +25,18 @@ export function AppToastStack({ toasts }: AppToastStackProps) {
             variants={createToastSlideMotion(reduceMotion)}
           >
             <span className={styles.toastText}>{toast.message}</span>
+            {toast.action ? (
+              <Button
+                className={styles.toastAction}
+                onClick={() => {
+                  toast.action?.onAction();
+                  onDismiss(toast.id);
+                }}
+                variant="ghost"
+              >
+                {toast.action.label}
+              </Button>
+            ) : null}
           </m.div>
         ))}
       </MotionPresence>

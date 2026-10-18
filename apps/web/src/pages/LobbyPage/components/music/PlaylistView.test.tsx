@@ -11,10 +11,9 @@ import {
   installRouterRequestStub,
   renderOnHistoryRoute,
 } from "../../../../test/renderOnHistoryRoute";
-import {
-  createSavedDeckSource,
-  type PlaylistEditorFilter,
-  type PlaylistEditorSource,
+import type {
+  PlaylistEditorFilter,
+  PlaylistEditorSource,
 } from "../../hooks/music/playlistEditorTarget";
 import type { PlaylistViewModel } from "../../hooks/music/usePlaylistView";
 import { useRoomDeckTracks } from "../../hooks/music/useRoomDeckTracks";
@@ -351,11 +350,11 @@ describe("PlaylistView on the room deck", () => {
 describe("PlaylistView on other lists", () => {
   beforeAll(installRouterRequestStub);
 
-  it("edits a saved deck on this device, never asking the server, and offers to use it", async () => {
-    const write = vi.fn();
+  it("edits a saved deck through its own source and offers to use it", async () => {
+    const source = listSource([buildTrack()]);
     const onUse = vi.fn();
     renderList(
-      buildView(createSavedDeckSource([buildTrack()], write), {
+      buildView(source, {
         kind: "saved",
         listKey: "saved:TEST_DECK_1",
         name: "Test Deck",
@@ -377,10 +376,10 @@ describe("PlaylistView on other lists", () => {
       within(yearField.closest("form") as HTMLElement).getByRole("button", { name: /save/i }),
     );
 
-    expect(write).toHaveBeenCalledWith([
-      expect.objectContaining({ id: "track-1", metadataStatus: "edited", releaseYear: 1979 }),
-    ]);
-    expect(socket.emittedFor("update_playlist_track")).toEqual([]);
+    expect(source.updateTrack).toHaveBeenCalledWith(
+      "track-1",
+      expect.objectContaining({ releaseYear: 1979 }),
+    );
   });
 
   it("adds a found song in place and adds or removes a selection from two buttons", async () => {
