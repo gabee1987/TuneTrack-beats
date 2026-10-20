@@ -1,6 +1,6 @@
 {
   "name": "@tunetrack/game-engine",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
@@ -19,6 +19,6 @@
     "test:coverage": "vitest run --pool=threads --coverage"
   },
   "dependencies": {
-    "@tunetrack/shared": "0.1.0"
+    "@tunetrack/shared": "0.2.0"
   }
 }

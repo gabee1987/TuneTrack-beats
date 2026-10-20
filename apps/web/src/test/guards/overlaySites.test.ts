@@ -13,8 +13,10 @@ const PORTAL_USE = /\bcreatePortal\(/;
 /**
  * No overlay nests deeper than two `PanelView`s (`22` §13): Music setup opens a song list, and
  * a song opens from it or on its own. A new site is a third step unless it replaces one of these.
+ * What's new is the menu's only step.
  */
 const PANEL_VIEW_SITES = [
+  "features/app-shell/whats-new/WhatsNewView.tsx",
   "pages/LobbyPage/components/PlaylistTrackDetailsSheet.tsx",
   "pages/LobbyPage/components/music/MusicSongDetails.tsx",
   "pages/LobbyPage/components/music/PlaylistView.tsx",
@@ -35,7 +37,7 @@ describe("overlay sites", () => {
     ).toEqual([]);
   });
 
-  it("opens panel views only from the song list and the two song views", () => {
+  it("opens panel views only from the song list, the two song views and What's new", () => {
     const sites = listTypeScriptSources()
       .filter((file) => !file.path.startsWith(OVERLAY_OWNER) && !file.path.startsWith(GALLERY))
       .filter((file) => !file.path.includes(".test."))

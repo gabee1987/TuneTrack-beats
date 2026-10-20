@@ -10,6 +10,7 @@ import { MusicGallery } from "./MusicGallery";
 import { ProfileGallery } from "./ProfileGallery";
 import { RulesGallery } from "./RulesGallery";
 import { StartupFlowPrimitivesGallery } from "./StartupFlowPrimitivesGallery";
+import { WhatsNewGallery } from "./WhatsNewGallery";
 import styles from "./DesignSystemPage.module.css";
 
 type ThemeChoice = "dark" | "light";
@@ -64,6 +65,9 @@ export function DesignSystemPage() {
 
       <h2 className={styles.groupTitle}>Controls</h2>
       <ControlsGallery />
+
+      <h2 className={styles.groupTitle}>Menu</h2>
+      <WhatsNewGallery />
     </AppPageShell>
   );
 }

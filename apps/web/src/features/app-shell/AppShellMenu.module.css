@@ -76,6 +76,11 @@
   flex: 0 0 auto;
 }
 
+/* The version and the way to its release notes, under the menu title on every screen. */
+.whatsNewButton {
+  margin-top: var(--space-2);
+}
+
 .tabRow {
   position: relative;
   isolation: isolate;

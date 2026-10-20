@@ -1,6 +1,8 @@
-import { render } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { I18nProvider } from "../../i18n";
+import { appVersion, releaseNotes } from "../whats-new/releaseNotes";
 import { AppShellMenuDialog } from "./AppShellMenuDialog";
 import type { AppShellMenuTab } from "../AppShellMenu.types";
 
@@ -43,6 +45,23 @@ describe("AppShellMenuDialog", () => {
     expect(scrim.contains(sheet)).toBe(false);
     expect(sheet.contains(scrim)).toBe(false);
     expect(scrim.parentElement).toBe(sheet.parentElement);
+  });
+
+  it("shows the version and opens its release notes over the menu", async () => {
+    renderDialog();
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: `What's new · v${appVersion}` }),
+    );
+
+    const notes = await screen.findByRole("dialog", { name: "What's new" });
+    const latest = within(notes).getAllByRole("article")[0]!;
+    expect(within(latest).getByText("Latest")).toBeInTheDocument();
+    expect(within(latest).getByText(`v${appVersion}`)).toBeInTheDocument();
+    expect(latest.querySelector("time")).toHaveAttribute("datetime", releaseNotes[0]!.date);
+
+    await userEvent.click(within(notes).getByRole("button", { name: "Back" }));
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "What's new" })).toBeNull());
   });
 
   it("puts the menu in a layer of its own on the document body", () => {

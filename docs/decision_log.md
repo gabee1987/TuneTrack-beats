@@ -12,6 +12,18 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### App version and What's new (2026-10-20)
+
+- **Owner:** the app shows its version and what changed, reachable from the settings menu.
+- **One source for the version:** the newest entry in `features/app-shell/whats-new/releaseNotes.ts`
+  is the app's version; `releaseNotes.test.ts` keeps it equal to `apps/web/package.json`. All
+  workspaces move together (0.1.0 → 0.2.0 for the startup-flow release).
+- **Every release adds an entry** (version, date, sections) with its words in both catalogues,
+  written for players: what they can now do, not how it was built.
+- **Where:** a `What's new · v<version>` chip under the menu title on every screen opens the
+  notes as a view over the menu (the menu's only `PanelView`). The menu's "settings" tab is
+  labelled Theme, so the notes do not live in a tab.
+
 ### Full-width song cover that folds into the bar (2026-10-20)
 
 - **Owner:** the song views (Song editor, Find's song details) show the cover as wide as the

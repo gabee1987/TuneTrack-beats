@@ -8,7 +8,9 @@ import type {
   AppShellMenuPreferencesState,
   AppShellMenuTab,
 } from "../AppShellMenu.types";
-import { Button } from "../../ui/primitives";
+import { Button, ChipButton } from "../../ui/primitives";
+import { appVersion } from "../whats-new/releaseNotes";
+import { WhatsNewView } from "../whats-new/WhatsNewView";
 import { AppShellMenuPanels } from "./AppShellMenuPanels";
 import styles from "../AppShellMenu.module.css";
 
@@ -40,6 +42,7 @@ export function AppShellMenuSheet({
   const panelRef = useRef<HTMLElement | null>(null);
   const [showTopFade, setShowTopFade] = useState(false);
   const [showBottomFade, setShowBottomFade] = useState(false);
+  const [isWhatsNewOpen, setIsWhatsNewOpen] = useState(false);
   const resolvedFooterActions = footerActions ?? (footerAction ? [footerAction] : []);
   const updatePanelFadeState = useCallback(() => {
     const panelElement = panelRef.current;
@@ -98,6 +101,9 @@ export function AppShellMenuSheet({
         <div>
           {subtitle ? <p className={styles.menuSubtitle}>{subtitle}</p> : null}
           <h2 className={styles.menuTitle}>{title}</h2>
+          <ChipButton className={styles.whatsNewButton} onClick={() => setIsWhatsNewOpen(true)}>
+            {t("whatsNew.open", { version: appVersion })}
+          </ChipButton>
         </div>
         <button
           aria-label={t("appShell.menu.close")}
@@ -188,6 +194,8 @@ export function AppShellMenuSheet({
           )}
         </footer>
       ) : null}
+
+      <WhatsNewView isOpen={isWhatsNewOpen} onClose={() => setIsWhatsNewOpen(false)} />
     </>
   );
 }
