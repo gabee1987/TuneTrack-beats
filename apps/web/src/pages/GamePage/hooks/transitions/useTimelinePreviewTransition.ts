@@ -37,9 +37,7 @@ export function useTimelinePreviewTransition({
       showCorrectionPreview,
     }),
   );
-  const lastHandledTransitionKeyRef = useRef<number | null>(
-    transitionEvent?.eventKey ?? null,
-  );
+  const lastHandledTransitionKeyRef = useRef<number | null>(transitionEvent?.eventKey ?? null);
 
   useEffect(() => {
     setDisplayState(
@@ -50,12 +48,7 @@ export function useTimelinePreviewTransition({
         showCorrectionPreview,
       }),
     );
-  }, [
-    previewCard,
-    previewSlot,
-    showCorrectPlacementPreview,
-    showCorrectionPreview,
-  ]);
+  }, [previewCard, previewSlot, showCorrectPlacementPreview, showCorrectionPreview]);
 
   useEffect(() => {
     if (!transitionEvent) {

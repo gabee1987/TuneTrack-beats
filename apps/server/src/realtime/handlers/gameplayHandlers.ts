@@ -13,8 +13,10 @@ import {
 } from "@tunetrack/shared";
 import type { Server, Socket } from "socket.io";
 import { logger } from "../../app/logger.js";
-import type { RoomService } from "../../rooms/RoomService.js";
+import type { RoomServices } from "../../app/createRoomServices.js";
+import { broadcastRoomDirectory } from "../broadcastRoomDirectory.js";
 import { broadcastRoomState, createSocketHandler } from "../createSocketHandler.js";
+import { roomActionIdempotency } from "../roomActionIdempotency.js";
 import {
   awardTtErrorMessages,
   buyTimelineCardWithTtErrorMessages,
@@ -28,24 +30,20 @@ import {
   startGameErrorMessages,
 } from "../errorMessages.js";
 
-export function registerGameplayHandlers(
-  io: Server,
-  socket: Socket,
-  roomService: RoomService,
-): void {
-  registerStartGameHandler(io, socket, roomService);
-  registerPlaceCardHandler(io, socket, roomService);
-  registerConfirmRevealHandler(io, socket, roomService);
-  registerClaimChallengeHandler(io, socket, roomService);
-  registerPlaceChallengeHandler(io, socket, roomService);
-  registerResolveChallengeWindowHandler(io, socket, roomService);
-  registerAwardTtHandler(io, socket, roomService);
-  registerSkipTrackWithTtHandler(io, socket, roomService);
-  registerSkipTurnHandler(io, socket, roomService);
-  registerBuyTimelineCardWithTtHandler(io, socket, roomService);
+export function registerGameplayHandlers(io: Server, socket: Socket, services: RoomServices): void {
+  registerStartGameHandler(io, socket, services);
+  registerPlaceCardHandler(io, socket, services);
+  registerConfirmRevealHandler(io, socket, services);
+  registerClaimChallengeHandler(io, socket, services);
+  registerPlaceChallengeHandler(io, socket, services);
+  registerResolveChallengeWindowHandler(io, socket, services);
+  registerAwardTtHandler(io, socket, services);
+  registerSkipTrackWithTtHandler(io, socket, services);
+  registerSkipTurnHandler(io, socket, services);
+  registerBuyTimelineCardWithTtHandler(io, socket, services);
 }
 
-function registerStartGameHandler(io: Server, socket: Socket, roomService: RoomService): void {
+function registerStartGameHandler(io: Server, socket: Socket, services: RoomServices): void {
   createSocketHandler({
     socket,
     event: ClientToServerEvent.StartGame,
@@ -55,17 +53,19 @@ function registerStartGameHandler(io: Server, socket: Socket, roomService: RoomS
       message: "Room code is invalid.",
     },
     log: (data) => {
-      logger.info({ socketId: socket.id, roomId: data.roomId }, "start_game");
+      logger.debug({ socketId: socket.id, roomId: data.roomId }, "start_game");
     },
     handle: (data) => {
-      broadcastRoomState(io, roomService.startGame(data, socket.id));
+      broadcastRoomState(io, services.gameplay.startGame(socket.id, data));
+      broadcastRoomDirectory(io, services);
     },
+    idempotency: roomActionIdempotency(services, socket, ClientToServerEvent.StartGame),
     fallbackErrorCode: "START_GAME_FAILED",
     errorMessages: startGameErrorMessages,
   });
 }
 
-function registerPlaceCardHandler(io: Server, socket: Socket, roomService: RoomService): void {
+function registerPlaceCardHandler(io: Server, socket: Socket, services: RoomServices): void {
   createSocketHandler({
     socket,
     event: ClientToServerEvent.PlaceCard,
@@ -75,7 +75,7 @@ function registerPlaceCardHandler(io: Server, socket: Socket, roomService: RoomS
       message: "Selected timeline slot is invalid.",
     },
     log: (data) => {
-      logger.info(
+      logger.debug(
         {
           socketId: socket.id,
           roomId: data.roomId,
@@ -85,14 +85,15 @@ function registerPlaceCardHandler(io: Server, socket: Socket, roomService: RoomS
       );
     },
     handle: (data) => {
-      broadcastRoomState(io, roomService.placeCard(data, socket.id));
+      broadcastRoomState(io, services.gameplay.placeCard(socket.id, data));
     },
+    idempotency: roomActionIdempotency(services, socket, ClientToServerEvent.PlaceCard),
     fallbackErrorCode: "PLACE_CARD_FAILED",
     errorMessages: placeCardErrorMessages,
   });
 }
 
-function registerConfirmRevealHandler(io: Server, socket: Socket, roomService: RoomService): void {
+function registerConfirmRevealHandler(io: Server, socket: Socket, services: RoomServices): void {
   createSocketHandler({
     socket,
     event: ClientToServerEvent.ConfirmReveal,
@@ -102,17 +103,18 @@ function registerConfirmRevealHandler(io: Server, socket: Socket, roomService: R
       message: "Room code is invalid.",
     },
     log: (data) => {
-      logger.info({ socketId: socket.id, roomId: data.roomId }, "confirm_reveal");
+      logger.debug({ socketId: socket.id, roomId: data.roomId }, "confirm_reveal");
     },
     handle: (data) => {
-      broadcastRoomState(io, roomService.confirmReveal(data, socket.id));
+      broadcastRoomState(io, services.gameplay.confirmReveal(socket.id, data));
     },
+    idempotency: roomActionIdempotency(services, socket, ClientToServerEvent.ConfirmReveal),
     fallbackErrorCode: "CONFIRM_REVEAL_FAILED",
     errorMessages: confirmRevealErrorMessages,
   });
 }
 
-function registerClaimChallengeHandler(io: Server, socket: Socket, roomService: RoomService): void {
+function registerClaimChallengeHandler(io: Server, socket: Socket, services: RoomServices): void {
   createSocketHandler({
     socket,
     event: ClientToServerEvent.ClaimChallenge,
@@ -122,17 +124,18 @@ function registerClaimChallengeHandler(io: Server, socket: Socket, roomService: 
       message: "Room code is invalid.",
     },
     log: (data) => {
-      logger.info({ socketId: socket.id, roomId: data.roomId }, "claim_challenge");
+      logger.debug({ socketId: socket.id, roomId: data.roomId }, "claim_challenge");
     },
     handle: (data) => {
-      broadcastRoomState(io, roomService.claimChallenge(data, socket.id));
+      broadcastRoomState(io, services.gameplay.claimChallenge(socket.id, data));
     },
+    idempotency: roomActionIdempotency(services, socket, ClientToServerEvent.ClaimChallenge),
     fallbackErrorCode: "CLAIM_CHALLENGE_FAILED",
     errorMessages: claimChallengeErrorMessages,
   });
 }
 
-function registerPlaceChallengeHandler(io: Server, socket: Socket, roomService: RoomService): void {
+function registerPlaceChallengeHandler(io: Server, socket: Socket, services: RoomServices): void {
   createSocketHandler({
     socket,
     event: ClientToServerEvent.PlaceChallenge,
@@ -142,7 +145,7 @@ function registerPlaceChallengeHandler(io: Server, socket: Socket, roomService: 
       message: "Selected timeline slot is invalid.",
     },
     log: (data) => {
-      logger.info(
+      logger.debug(
         {
           socketId: socket.id,
           roomId: data.roomId,
@@ -152,8 +155,9 @@ function registerPlaceChallengeHandler(io: Server, socket: Socket, roomService: 
       );
     },
     handle: (data) => {
-      broadcastRoomState(io, roomService.placeChallenge(data, socket.id));
+      broadcastRoomState(io, services.gameplay.placeChallenge(socket.id, data));
     },
+    idempotency: roomActionIdempotency(services, socket, ClientToServerEvent.PlaceChallenge),
     fallbackErrorCode: "PLACE_CHALLENGE_FAILED",
     errorMessages: placeChallengeErrorMessages,
   });
@@ -162,7 +166,7 @@ function registerPlaceChallengeHandler(io: Server, socket: Socket, roomService: 
 function registerResolveChallengeWindowHandler(
   io: Server,
   socket: Socket,
-  roomService: RoomService,
+  services: RoomServices,
 ): void {
   createSocketHandler({
     socket,
@@ -173,14 +177,19 @@ function registerResolveChallengeWindowHandler(
       message: "Room code is invalid.",
     },
     handle: (data) => {
-      broadcastRoomState(io, roomService.resolveChallengeWindow(data, socket.id));
+      broadcastRoomState(io, services.gameplay.resolveChallengeWindow(socket.id, data));
     },
+    idempotency: roomActionIdempotency(
+      services,
+      socket,
+      ClientToServerEvent.ResolveChallengeWindow,
+    ),
     fallbackErrorCode: "RESOLVE_CHALLENGE_WINDOW_FAILED",
     errorMessages: resolveChallengeWindowErrorMessages,
   });
 }
 
-function registerAwardTtHandler(io: Server, socket: Socket, roomService: RoomService): void {
+function registerAwardTtHandler(io: Server, socket: Socket, services: RoomServices): void {
   createSocketHandler({
     socket,
     event: ClientToServerEvent.AwardTt,
@@ -190,7 +199,7 @@ function registerAwardTtHandler(io: Server, socket: Socket, roomService: RoomSer
       message: "TT award payload is invalid.",
     },
     log: (data) => {
-      logger.info(
+      logger.debug(
         {
           socketId: socket.id,
           roomId: data.roomId,
@@ -201,18 +210,15 @@ function registerAwardTtHandler(io: Server, socket: Socket, roomService: RoomSer
       );
     },
     handle: (data) => {
-      broadcastRoomState(io, roomService.awardTt(data, socket.id));
+      broadcastRoomState(io, services.lobby.awardTt(socket.id, data));
     },
+    idempotency: roomActionIdempotency(services, socket, ClientToServerEvent.AwardTt),
     fallbackErrorCode: "AWARD_TT_FAILED",
     errorMessages: awardTtErrorMessages,
   });
 }
 
-function registerSkipTrackWithTtHandler(
-  io: Server,
-  socket: Socket,
-  roomService: RoomService,
-): void {
+function registerSkipTrackWithTtHandler(io: Server, socket: Socket, services: RoomServices): void {
   createSocketHandler({
     socket,
     event: ClientToServerEvent.SkipTrackWithTt,
@@ -222,17 +228,18 @@ function registerSkipTrackWithTtHandler(
       message: "Skip request payload is invalid.",
     },
     log: (data) => {
-      logger.info({ socketId: socket.id, roomId: data.roomId }, "skip_track_with_tt");
+      logger.debug({ socketId: socket.id, roomId: data.roomId }, "skip_track_with_tt");
     },
     handle: (data) => {
-      broadcastRoomState(io, roomService.skipTrackWithTt(data, socket.id));
+      broadcastRoomState(io, services.gameplay.skipTrackWithTt(socket.id, data));
     },
+    idempotency: roomActionIdempotency(services, socket, ClientToServerEvent.SkipTrackWithTt),
     fallbackErrorCode: "SKIP_TRACK_WITH_TT_FAILED",
     errorMessages: skipTrackWithTtErrorMessages,
   });
 }
 
-function registerSkipTurnHandler(io: Server, socket: Socket, roomService: RoomService): void {
+function registerSkipTurnHandler(io: Server, socket: Socket, services: RoomServices): void {
   createSocketHandler({
     socket,
     event: ClientToServerEvent.SkipTurn,
@@ -242,11 +249,12 @@ function registerSkipTurnHandler(io: Server, socket: Socket, roomService: RoomSe
       message: "Skip turn request payload is invalid.",
     },
     log: (data) => {
-      logger.info({ socketId: socket.id, roomId: data.roomId }, "skip_turn");
+      logger.debug({ socketId: socket.id, roomId: data.roomId }, "skip_turn");
     },
     handle: (data) => {
-      broadcastRoomState(io, roomService.skipTurn(data, socket.id));
+      broadcastRoomState(io, services.gameplay.skipTurn(socket.id, data));
     },
+    idempotency: roomActionIdempotency(services, socket, ClientToServerEvent.SkipTurn),
     fallbackErrorCode: "SKIP_TURN_FAILED",
     errorMessages: skipTurnErrorMessages,
   });
@@ -255,7 +263,7 @@ function registerSkipTurnHandler(io: Server, socket: Socket, roomService: RoomSe
 function registerBuyTimelineCardWithTtHandler(
   io: Server,
   socket: Socket,
-  roomService: RoomService,
+  services: RoomServices,
 ): void {
   createSocketHandler({
     socket,
@@ -266,8 +274,9 @@ function registerBuyTimelineCardWithTtHandler(
       message: "Buy-card request payload is invalid.",
     },
     handle: (data) => {
-      broadcastRoomState(io, roomService.buyTimelineCardWithTt(data, socket.id));
+      broadcastRoomState(io, services.gameplay.buyTimelineCardWithTt(socket.id, data));
     },
+    idempotency: roomActionIdempotency(services, socket, ClientToServerEvent.BuyTimelineCardWithTt),
     fallbackErrorCode: "BUY_TIMELINE_CARD_WITH_TT_FAILED",
     errorMessages: buyTimelineCardWithTtErrorMessages,
   });

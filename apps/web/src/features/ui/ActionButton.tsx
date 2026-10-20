@@ -8,11 +8,7 @@ interface ActionButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ActionButtonVariant | undefined;
 }
 
-export function ActionButton({
-  className,
-  variant = "primary",
-  ...props
-}: ActionButtonProps) {
+export function ActionButton({ className, variant = "primary", ...props }: ActionButtonProps) {
   const variantClassName =
     variant === "danger"
       ? styles.buttonDanger

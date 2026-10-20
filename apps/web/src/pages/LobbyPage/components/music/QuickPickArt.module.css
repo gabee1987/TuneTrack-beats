@@ -1,0 +1,155 @@
+/* Quick-pick covers: the size of a CoverArt `md`; each preset sets its own two hues and accent. */
+.art {
+  --art-from: var(--color-art-violet);
+  --art-to: var(--color-art-blue);
+  --art-accent: var(--color-art-gold);
+
+  display: block;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: var(--radius-xs);
+  background: linear-gradient(145deg, var(--art-from) 0%, var(--art-to) 100%);
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.on {
+  fill: var(--color-on-art);
+}
+
+.accent {
+  fill: var(--art-accent);
+}
+
+.ink {
+  fill: var(--color-art-ink);
+}
+
+.base {
+  fill: var(--art-to);
+}
+
+.line {
+  fill: none;
+  stroke: var(--color-on-art);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.faint {
+  opacity: 0.45;
+}
+
+.groove {
+  stroke-width: 1;
+  opacity: 0.28;
+}
+
+.grid {
+  fill: none;
+  stroke: var(--art-to);
+  stroke-width: 1.2;
+  opacity: 0.55;
+}
+
+.sheen {
+  fill: none;
+  stroke: var(--art-from);
+  stroke-width: 4;
+  opacity: 0.4;
+}
+
+.art[data-art="80s_hits"] {
+  --art-from: var(--color-art-pink);
+  --art-to: var(--color-art-violet);
+}
+
+.art[data-art="90s_rock"] {
+  --art-from: var(--color-art-red);
+  --art-to: var(--color-art-ink);
+}
+
+.art[data-art="2000s_pop"] {
+  --art-from: var(--color-art-cyan);
+  --art-to: var(--color-art-pink);
+  --art-accent: var(--color-on-art);
+}
+
+.art[data-art="metal_classics"] {
+  --art-from: var(--color-art-ink);
+  --art-to: var(--color-art-red);
+  --art-accent: var(--color-art-red);
+}
+
+.art[data-art="iconic_songs"] {
+  --art-from: var(--color-art-gold);
+  --art-to: var(--color-art-orange);
+  --art-accent: var(--color-art-red);
+}
+
+.art[data-art="disco_best"] {
+  --art-from: var(--color-art-violet);
+  --art-to: var(--color-art-pink);
+}
+
+.art[data-art="party_mix"] {
+  --art-from: var(--color-art-orange);
+  --art-to: var(--color-art-pink);
+}
+
+.art[data-art="movie_night"] {
+  --art-from: var(--color-art-ink);
+  --art-to: var(--color-art-blue);
+  --art-accent: var(--color-art-red);
+}
+
+.art[data-art="decades_challenge"] {
+  --art-from: var(--color-art-blue);
+  --art-to: var(--color-art-cyan);
+}
+
+.art[data-art="rock_pop_timeline"] {
+  --art-from: var(--color-art-red);
+  --art-to: var(--color-art-violet);
+}
+
+.art[data-art="dance_timeline"] {
+  --art-from: var(--color-art-cyan);
+  --art-to: var(--color-art-blue);
+  --art-accent: var(--color-art-pink);
+}
+
+.art[data-art="female_icons"] {
+  --art-from: var(--color-art-pink);
+  --art-to: var(--color-art-red);
+}
+
+.art[data-art="alternative_indie"] {
+  --art-from: var(--color-art-green);
+  --art-to: var(--color-art-ink);
+  --art-accent: var(--color-art-orange);
+}
+
+.art[data-art="global_party"] {
+  --art-from: var(--color-art-green);
+  --art-to: var(--color-art-cyan);
+}
+
+.art[data-art="japanese_music"] {
+  --art-from: var(--color-art-pink);
+  --art-to: var(--color-art-violet);
+  --art-accent: var(--color-art-red);
+}
+
+.art[data-art="hungarian_music"] {
+  --art-from: var(--color-art-green);
+  --art-to: var(--color-art-ink);
+  --art-accent: var(--color-art-red);
+}

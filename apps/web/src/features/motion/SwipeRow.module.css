@@ -1,0 +1,39 @@
+.swipe {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Each zone grows from its own edge as the row moves away from it. */
+.zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.right {
+  left: 0;
+  background: var(--button-primary-bg);
+  color: var(--button-primary-fg);
+}
+
+.left {
+  right: 0;
+  background: var(--button-danger-bg);
+  color: var(--button-danger-fg);
+}
+
+.mark {
+  display: grid;
+}
+
+/* Opaque, so a zone shows only where the row has moved away; the list keeps vertical pans. */
+.row {
+  position: relative;
+  height: 100%;
+  background: var(--color-bg-app);
+  touch-action: pan-y;
+}

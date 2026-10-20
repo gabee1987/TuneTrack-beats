@@ -1,0 +1,25 @@
+/* A floating thumb: it takes no space, never takes a pointer, and fades once scrolling stops. */
+.thumb {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--z-toast);
+  width: 4px;
+  margin-left: -4px;
+  border-radius: var(--radius-pill);
+  background: var(--button-primary-bg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-standard-duration) var(--motion-ease-standard);
+}
+
+.thumb[data-visible] {
+  opacity: 0.85;
+  transition-duration: var(--motion-quick-duration);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thumb {
+    transition: none;
+  }
+}

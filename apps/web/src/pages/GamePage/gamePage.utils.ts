@@ -1,5 +1,3 @@
-import { defaultAnimateLayoutChanges } from "@dnd-kit/sortable";
-import type { PublicRoomState } from "@tunetrack/shared";
 import type { CSSProperties } from "react";
 import type {
   HiddenCardMode,
@@ -8,30 +6,7 @@ import type {
 } from "../../features/preferences/uiPreferences";
 import { themeRegistry } from "../../features/theme/themeRegistry";
 
-export function animateTimelineLayoutChanges(
-  args: Parameters<typeof defaultAnimateLayoutChanges>[0],
-) {
-  return defaultAnimateLayoutChanges(args);
-}
-
-export function formatPhaseLabel(status: PublicRoomState["status"]): string {
-  switch (status) {
-    case "turn":
-      return "Play";
-    case "challenge":
-      return "Challenge";
-    case "reveal":
-      return "Reveal";
-    case "finished":
-      return "Finished";
-    case "lobby":
-      return "Lobby";
-    default:
-      return "Game";
-  }
-}
-
-export function getCardGradient(
+function getCardGradient(
   theme: ThemeId,
   seed: string,
   variant: "default" | "preview" | "overlay" = "default",
@@ -113,11 +88,7 @@ export function getPreviewCardSurfaceStyle(options: {
       };
     }
 
-    const hiddenSurface = getCardGradient(
-      theme,
-      seed,
-      isOverlay ? "overlay" : "preview",
-    );
+    const hiddenSurface = getCardGradient(theme, seed, isOverlay ? "overlay" : "preview");
     return {
       ["--card-gradient" as string]: hiddenSurface,
       ...(isOverlay ? {} : { backgroundImage: hiddenSurface }),
@@ -138,11 +109,7 @@ export function getPreviewCardSurfaceStyle(options: {
     };
   }
 
-  const gradient = getCardGradient(
-    theme,
-    seed,
-    isOverlay ? "overlay" : "preview",
-  );
+  const gradient = getCardGradient(theme, seed, isOverlay ? "overlay" : "preview");
   return {
     ["--card-gradient" as string]: gradient,
     ...(isOverlay ? {} : { backgroundImage: gradient }),

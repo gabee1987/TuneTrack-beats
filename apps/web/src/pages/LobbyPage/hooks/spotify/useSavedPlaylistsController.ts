@@ -1,4 +1,8 @@
-import { ServerToClientEvent, ClientToServerEvent, type PublicTrackInfo } from "@tunetrack/shared";
+import {
+  ServerToClientEvent,
+  ClientToServerEvent,
+  type PublicTrackInfo,
+} from "@tunetrack/shared/client";
 import { useCallback, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
 import { useI18n } from "../../../../features/i18n";
@@ -10,10 +14,11 @@ import {
   updateSavedPlaylist,
 } from "../../../../services/savedPlaylists/savedPlaylists";
 import { getSocketClient } from "../../../../services/socket/socketClient";
+import type { DeckOrigin } from "./lobbySpotify.types";
 import { getCurrentPlaylistTracks } from "./spotifyQueueTrackIds";
 
 interface UseSavedPlaylistsControllerParams {
-  currentPlaylistNameRef: MutableRefObject<string | undefined>;
+  currentDeckOriginRef: MutableRefObject<DeckOrigin>;
   currentPlaylistSourceUrl: string;
   loadedSavedPlaylistId: string | null;
   roomId: string | undefined;
@@ -22,7 +27,7 @@ interface UseSavedPlaylistsControllerParams {
 }
 
 export function useSavedPlaylistsController({
-  currentPlaylistNameRef,
+  currentDeckOriginRef,
   currentPlaylistSourceUrl,
   loadedSavedPlaylistId,
   roomId,
@@ -58,7 +63,7 @@ export function useSavedPlaylistsController({
         setIsOverwritePromptActive(true);
       } else {
         const defaultName =
-          currentPlaylistNameRef.current ??
+          currentDeckOriginRef.current.name ??
           t("lobby.spotify.savedPlaylistDefaultName", { count: savedPlaylists.length + 1 });
         setSaveNameState(defaultName);
         setIsSavingWithName(true);
@@ -81,7 +86,7 @@ export function useSavedPlaylistsController({
   function switchToSaveAsNew() {
     setIsOverwritePromptActive(false);
     const defaultName =
-      currentPlaylistNameRef.current ??
+      currentDeckOriginRef.current.name ??
       t("lobby.spotify.savedPlaylistDefaultName", { count: savedPlaylists.length + 1 });
     setSaveNameState(defaultName);
     setIsSavingWithName(true);
@@ -116,6 +121,9 @@ export function useSavedPlaylistsController({
     const savedPlaylist = savePlaylist({
       name,
       tracks,
+      ...(currentDeckOriginRef.current.imageUrl
+        ? { imageUrl: currentDeckOriginRef.current.imageUrl }
+        : {}),
       ...(currentPlaylistSourceUrl ? { sourcePlaylistUrl: currentPlaylistSourceUrl } : {}),
     });
 
@@ -191,6 +199,7 @@ export function useSavedPlaylistsController({
     if (!playlist) return;
 
     const { name: playlistName, tracks: playlistTracks } = playlist;
+    currentDeckOriginRef.current = { imageUrl: playlist.imageUrl, name: playlistName };
 
     void getSocketClient().then((socket) => {
       function handleLoadConfirmed() {
@@ -210,16 +219,19 @@ export function useSavedPlaylistsController({
     });
   }
 
-  function deleteSelectedSavedPlaylist() {
-    if (!selectedSavedPlaylistId) return;
+  /** An edit made in the song editor on a saved deck, written back to this device at once. */
+  function updateSavedDeckTracks(playlistId: string, tracks: PublicTrackInfo[]) {
+    setSavedPlaylists(updateSavedPlaylist(playlistId, tracks));
+  }
 
-    if (loadedSavedPlaylistId === selectedSavedPlaylistId) {
+  function deleteSavedPlaylistById(playlistId: string) {
+    if (loadedSavedPlaylistId === playlistId) {
       setLoadedSavedPlaylistId(null);
     }
 
-    const nextPlaylists = deleteSavedPlaylist(selectedSavedPlaylistId);
+    const nextPlaylists = deleteSavedPlaylist(playlistId);
     setSavedPlaylists(nextPlaylists);
-    setSelectedSavedPlaylistIdState(nextPlaylists[0]?.id ?? "");
+    if (selectedSavedPlaylistId === playlistId) setSelectedSavedPlaylistIdState("");
     setSavedPlaylistMessage(t("lobby.spotify.savedPlaylistDeleted"));
   }
 
@@ -242,7 +254,7 @@ export function useSavedPlaylistsController({
     confirmOverwrite,
     confirmRenamePlaylist,
     confirmSavePlaylist,
-    deleteSelectedSavedPlaylist,
+    deleteSavedPlaylistById,
     isOverwritePromptActive,
     isSavingWithName,
     renameError,
@@ -259,5 +271,6 @@ export function useSavedPlaylistsController({
     setSelectedSavedPlaylistId: handleSelectSavedPlaylist,
     startRenamePlaylist,
     switchToSaveAsNew,
+    updateSavedDeckTracks,
   };
 }

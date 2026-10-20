@@ -1,0 +1,36 @@
+.bar {
+  position: relative;
+  z-index: 2;
+}
+
+/* Controls lift off the fade like the other floating actions. */
+.bar :is(button, label) {
+  box-shadow: var(--shadow-raised);
+}
+
+.top {
+  flex-shrink: 0;
+  background: var(--color-bg-app);
+}
+
+.top::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  height: var(--space-5);
+  background: linear-gradient(to bottom, var(--color-bg-app), transparent);
+  pointer-events: none;
+}
+
+/* The list stays tappable around the buttons. */
+.bottom {
+  padding: var(--space-6) var(--space-4) calc(var(--space-3) + var(--safe-area-bottom));
+  background: linear-gradient(to bottom, transparent, var(--color-bg-app) 55%);
+  pointer-events: none;
+}
+
+.bottom > * {
+  pointer-events: auto;
+}

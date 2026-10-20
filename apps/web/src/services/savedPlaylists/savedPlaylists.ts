@@ -1,4 +1,4 @@
-import type { PublicTrackInfo, TrackMetadataStatus } from "@tunetrack/shared";
+import type { PublicTrackInfo, TrackMetadataStatus } from "@tunetrack/shared/client";
 
 const STORAGE_KEY = "tunetrack.savedPlaylists.v1";
 const MAX_SAVED_PLAYLISTS = 20;
@@ -21,6 +21,8 @@ export interface SavedPlaylist {
   name: string;
   source: "spotify";
   sourcePlaylistUrl?: string;
+  /** The Spotify playlist's cover; without one the deck shows its songs' covers. */
+  imageUrl?: string;
   createdAtEpochMs: number;
   updatedAtEpochMs: number;
   tracks: SavedPlaylistTrack[];
@@ -37,6 +39,7 @@ export interface StorageLike {
 }
 
 export interface SavePlaylistInput {
+  imageUrl?: string;
   name: string;
   sourcePlaylistUrl?: string;
   tracks: PublicTrackInfo[];
@@ -47,7 +50,9 @@ function getDefaultStorage(): StorageLike | null {
   return window.localStorage;
 }
 
-export function listSavedPlaylists(storage: StorageLike | null = getDefaultStorage()): SavedPlaylist[] {
+export function listSavedPlaylists(
+  storage: StorageLike | null = getDefaultStorage(),
+): SavedPlaylist[] {
   if (!storage) return [];
   return readStore(storage).playlists;
 }
@@ -64,6 +69,7 @@ export function savePlaylist(
     name: input.name.trim() || "Saved playlist",
     source: "spotify",
     ...(input.sourcePlaylistUrl ? { sourcePlaylistUrl: input.sourcePlaylistUrl } : {}),
+    ...(input.imageUrl ? { imageUrl: input.imageUrl } : {}),
     createdAtEpochMs: now,
     updatedAtEpochMs: now,
     tracks: input.tracks.map(toSavedPlaylistTrack),
@@ -181,6 +187,7 @@ function isSavedPlaylist(value: unknown): value is SavedPlaylist {
     playlist.source === "spotify" &&
     typeof playlist.createdAtEpochMs === "number" &&
     typeof playlist.updatedAtEpochMs === "number" &&
+    (playlist.imageUrl === undefined || typeof playlist.imageUrl === "string") &&
     Array.isArray(playlist.tracks) &&
     playlist.tracks.every(isSavedPlaylistTrack)
   );

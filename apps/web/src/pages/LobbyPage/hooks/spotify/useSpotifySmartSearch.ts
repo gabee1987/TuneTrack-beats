@@ -5,7 +5,7 @@ import {
   type SpotifySmartSearchResult,
   type SpotifySmartSearchResultPayload,
   type SpotifySmartSearchTypeFilter,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useCallback, useState } from "react";
 import { useI18n } from "../../../../features/i18n";
 import { getSocketClient } from "../../../../services/socket/socketClient";

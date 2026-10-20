@@ -1,40 +1,36 @@
-import type { PublicRoomState } from "@tunetrack/shared";
+import type { PublicRoomState } from "@tunetrack/shared/client";
 import { useI18n } from "../../../features/i18n";
-import type { GamePagePlayerNameResolver } from "../GamePage.types";
-import styles from "./gamePageActionPanelsStyles";
+import styles from "./gamePageActionPanelsChallenge.module.css";
 
 interface FinishedStatePanelProps {
   currentPlayerId: string | null;
-  getPlayerName: GamePagePlayerNameResolver;
-  roomState: PublicRoomState;
   showHelperLabels: boolean;
+  status: PublicRoomState["status"];
+  winnerPlayerId: string | null;
+  winnerPlayerName: string;
 }
 
 export function FinishedStatePanel({
   currentPlayerId,
-  getPlayerName,
-  roomState,
   showHelperLabels,
+  status,
+  winnerPlayerId,
+  winnerPlayerName,
 }: FinishedStatePanelProps) {
   const { t } = useI18n();
 
-  if (roomState.status !== "finished") {
+  if (status !== "finished") {
     return null;
   }
 
-  const didCurrentPlayerWin =
-    Boolean(currentPlayerId) && roomState.winnerPlayerId === currentPlayerId;
+  const didCurrentPlayerWin = Boolean(currentPlayerId) && winnerPlayerId === currentPlayerId;
   const titleText = didCurrentPlayerWin
     ? t("game.finished.youWon")
-    : t("game.finished.playerWon", {
-        playerName: getPlayerName(roomState.winnerPlayerId),
-      });
+    : t("game.finished.playerWon", { playerName: winnerPlayerName });
 
   return (
     <section className={styles.revealPanel}>
-      {showHelperLabels ? (
-        <p className={styles.sectionLabel}>{t("game.finished.label")}</p>
-      ) : null}
+      {showHelperLabels ? <p className={styles.sectionLabel}>{t("game.finished.label")}</p> : null}
       <h2 className={styles.cardTitle}>{titleText}</h2>
     </section>
   );

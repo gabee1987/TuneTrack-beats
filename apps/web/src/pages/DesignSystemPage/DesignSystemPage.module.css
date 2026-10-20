@@ -1,5 +1,19 @@
+/* The route wrapper clips, so the page scrolls itself, like the lobby. */
 .page {
-  overflow: auto;
+  height: var(--app-height);
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+/* No frame around the gallery; `.page` scoping outranks the shell's own panel border. */
+.page .panel {
+  max-width: 720px;
+  padding: calc(var(--safe-area-top) + var(--space-5))
+    calc(var(--safe-area-right) + var(--space-screen-gutter))
+    calc(var(--safe-area-bottom) + var(--space-8))
+    calc(var(--safe-area-left) + var(--space-screen-gutter));
+  border: 0;
+  box-shadow: none;
 }
 
 .header {
@@ -22,6 +36,18 @@
   text-transform: uppercase;
 }
 
+.groupTitle {
+  margin: var(--space-8) 0 var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-divider);
+  color: var(--color-text-secondary);
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-leading);
+  font-weight: var(--type-label-weight);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .section {
   display: grid;
   gap: var(--space-3);
@@ -33,6 +59,11 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
+}
+
+.stack {
+  display: grid;
+  gap: var(--space-3);
 }
 
 .cardTitle {
@@ -47,4 +78,13 @@
   flex: 1;
   display: grid;
   gap: var(--space-2);
+}
+
+.tokenIcon {
+  width: 32px;
+  height: 32px;
+}
+
+.fillCoverDemo {
+  width: min(100%, 280px);
 }

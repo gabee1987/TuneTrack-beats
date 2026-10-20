@@ -1,0 +1,323 @@
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { useState } from "react";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { beforeAll, describe, expect, it } from "vitest";
+import {
+  HISTORY_ROUTE_PATH,
+  installRouterRequestStub,
+  renderOnHistoryRoute,
+} from "../../test/renderOnHistoryRoute";
+import { Overlay } from "./Overlay";
+import { readOverlayHistoryIds } from "./overlayHistory";
+
+function NestedOverlays({ isInnerDismissible = true }: { isInnerDismissible?: boolean }) {
+  const [isOuterOpen, setIsOuterOpen] = useState(false);
+  const [isInnerOpen, setIsInnerOpen] = useState(false);
+
+  return (
+    <main>
+      <p>Room screen</p>
+      <button onClick={() => setIsOuterOpen(true)} type="button">
+        Open outer
+      </button>
+      <Overlay
+        isOpen={isOuterOpen}
+        kind="sheet"
+        label="Outer sheet"
+        onDismiss={() => setIsOuterOpen(false)}
+        scrimClassName="outer-scrim"
+      >
+        <button onClick={() => setIsInnerOpen(true)} type="button">
+          Open inner
+        </button>
+        <Overlay
+          dismissible={isInnerDismissible}
+          isOpen={isInnerOpen}
+          label="Inner dialog"
+          onDismiss={() => setIsInnerOpen(false)}
+          scrimClassName="inner-scrim"
+        >
+          <button onClick={() => setIsInnerOpen(false)} type="button">
+            Done
+          </button>
+        </Overlay>
+      </Overlay>
+    </main>
+  );
+}
+
+function renderInRouter(isInnerDismissible = true) {
+  return renderOnHistoryRoute(<NestedOverlays isInnerDismissible={isInnerDismissible} />);
+}
+
+async function openBoth() {
+  await userEvent.click(screen.getByRole("button", { name: "Open outer" }));
+  await userEvent.click(await screen.findByRole("button", { name: "Open inner" }));
+  await screen.findByRole("dialog", { name: "Inner dialog" });
+}
+
+function expectOnlyOuterOpen() {
+  return waitFor(() => {
+    expect(screen.queryByRole("dialog", { name: "Inner dialog" })).not.toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Outer sheet" })).toBeInTheDocument();
+  });
+}
+
+describe("Overlay (plan 14 §4)", () => {
+  beforeAll(installRouterRequestStub);
+
+  it("closes only the topmost overlay on Escape", async () => {
+    renderInRouter();
+    await openBoth();
+
+    await userEvent.keyboard("{Escape}");
+
+    await expectOnlyOuterOpen();
+  });
+
+  it("closes only the topmost overlay on a scrim tap", async () => {
+    renderInRouter();
+    await openBoth();
+
+    fireEvent.click(document.querySelector(".inner-scrim") as Element);
+
+    await expectOnlyOuterOpen();
+  });
+
+  it("closes only the topmost overlay on Back and stays on the page", async () => {
+    const router = renderInRouter();
+    await openBoth();
+
+    await act(async () => {
+      await router.navigate(-1);
+    });
+
+    await expectOnlyOuterOpen();
+    expect(router.state.location.pathname).toBe(HISTORY_ROUTE_PATH);
+
+    await act(async () => {
+      await router.navigate(-1);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Outer sheet" })).not.toBeInTheDocument();
+    });
+    expect(router.state.location.pathname).toBe(HISTORY_ROUTE_PATH);
+    expect(screen.getByText("Room screen")).toBeInTheDocument();
+  });
+
+  it("shows only once its history entry exists, so an immediate Back cannot leave the page", async () => {
+    const router = renderInRouter();
+
+    await userEvent.click(screen.getByRole("button", { name: "Open outer" }));
+    await screen.findByRole("dialog", { name: "Outer sheet" });
+
+    expect(readOverlayHistoryIds(router.state.location.state)).toHaveLength(1);
+  });
+
+  it("reopened before its old entry has popped, still closes on the next Back", async () => {
+    const router = renderInRouter();
+    await userEvent.click(screen.getByRole("button", { name: "Open outer" }));
+    await screen.findByRole("dialog", { name: "Outer sheet" });
+
+    act(() => {
+      fireEvent.keyDown(document, { key: "Escape" });
+      fireEvent.click(screen.getByRole("button", { name: "Open outer" }));
+    });
+    await screen.findByRole("dialog", { name: "Outer sheet" });
+    await waitFor(() => {
+      expect(readOverlayHistoryIds(router.state.location.state)).toHaveLength(1);
+    });
+
+    await act(async () => {
+      await router.navigate(-1);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Outer sheet" })).not.toBeInTheDocument();
+    });
+    expect(router.state.location.pathname).toBe(HISTORY_ROUTE_PATH);
+    expect(readOverlayHistoryIds(router.state.location.state)).toEqual([]);
+  });
+
+  it("pops its history entry when closed by a button, so Back then closes the next layer", async () => {
+    const router = renderInRouter();
+    await openBoth();
+
+    await userEvent.click(screen.getByRole("button", { name: "Done" }));
+    await expectOnlyOuterOpen();
+
+    await act(async () => {
+      await router.navigate(-1);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Outer sheet" })).not.toBeInTheDocument();
+    });
+    expect(router.state.location.pathname).toBe(HISTORY_ROUTE_PATH);
+  });
+
+  it("ignores Escape and scrim taps on a non-dismissible overlay, and leaves the one below", async () => {
+    renderInRouter(false);
+    await openBoth();
+
+    await userEvent.keyboard("{Escape}");
+    fireEvent.click(document.querySelector(".inner-scrim") as Element);
+
+    expect(screen.getByRole("dialog", { name: "Inner dialog" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Outer sheet" })).toBeInTheDocument();
+  });
+
+  it("stops taking taps the moment it starts closing, so a stalled exit cannot block the page", async () => {
+    renderInRouter();
+    await userEvent.click(screen.getByRole("button", { name: "Open outer" }));
+    await screen.findByRole("dialog", { name: "Outer sheet" });
+    const scrim = document.querySelector(".outer-scrim") as HTMLElement;
+
+    expect(scrim.style.pointerEvents).toBe("");
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    await waitFor(() => expect(scrim.style.pointerEvents).toBe("none"));
+  });
+
+  it("stacks a nested overlay above its parent", async () => {
+    renderInRouter();
+    await openBoth();
+
+    expect((document.querySelector(".outer-scrim") as HTMLElement).style.zIndex).toBe(
+      "var(--z-sheet)",
+    );
+    expect((document.querySelector(".inner-scrim") as HTMLElement).style.zIndex).toBe(
+      "var(--z-dialog-nested)",
+    );
+  });
+
+  it("moves focus into the panel and returns it to the trigger on close", async () => {
+    renderInRouter();
+    const trigger = screen.getByRole("button", { name: "Open outer" });
+
+    await userEvent.click(trigger);
+    const panel = await screen.findByRole("dialog", { name: "Outer sheet" });
+    expect(panel).toHaveFocus();
+
+    await userEvent.keyboard("{Escape}");
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Outer sheet" })).not.toBeInTheDocument();
+    });
+    expect(trigger).toHaveFocus();
+  });
+
+  it("keeps Tab inside the topmost panel", async () => {
+    renderInRouter();
+    await openBoth();
+
+    await userEvent.tab();
+    expect(screen.getByRole("button", { name: "Done" })).toHaveFocus();
+    await userEvent.tab();
+    expect(screen.getByRole("button", { name: "Done" })).toHaveFocus();
+  });
+
+  it("holds the page still by refusing scroll gestures outside the top panel", async () => {
+    renderInRouter();
+    await openBoth();
+    const innerPanel = screen.getByRole("dialog", { name: "Inner dialog" });
+
+    const onScrim = new Event("touchmove", { bubbles: true, cancelable: true });
+    (document.querySelector(".inner-scrim") as Element).dispatchEvent(onScrim);
+    const onOuterSheet = new Event("wheel", { bubbles: true, cancelable: true });
+    screen.getByRole("dialog", { name: "Outer sheet" }).dispatchEvent(onOuterSheet);
+    const inPanel = new Event("touchmove", { bubbles: true, cancelable: true });
+    within(innerPanel).getByRole("button", { name: "Done" }).dispatchEvent(inPanel);
+
+    expect(onScrim.defaultPrevented).toBe(true);
+    expect(onOuterSheet.defaultPrevented).toBe(true);
+    expect(inPanel.defaultPrevented).toBe(false);
+  });
+
+  it("never changes the root overflow, so Android Chrome keeps its viewport size", async () => {
+    renderInRouter();
+    await openBoth();
+
+    expect(document.documentElement.style.overflow).toBe("");
+    expect(document.body.style.overflow).toBe("");
+
+    await userEvent.keyboard("{Escape}");
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Outer sheet" })).not.toBeInTheDocument();
+    });
+
+    const afterClose = new Event("touchmove", { bubbles: true, cancelable: true });
+    document.body.dispatchEvent(afterClose);
+    expect(afterClose.defaultPrevented).toBe(false);
+  });
+
+  it("works without a router: no history entry, Escape still closes", async () => {
+    render(<NestedOverlays />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Open outer" }));
+    await screen.findByRole("dialog", { name: "Outer sheet" });
+    await userEvent.keyboard("{Escape}");
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Outer sheet" })).not.toBeInTheDocument();
+    });
+  });
+});
+
+/** Options hands over to its confirm in one tap: one overlay closes as the next one opens. */
+function HandOver({ isConfirmFirst }: { isConfirmFirst: boolean }) {
+  const [open, setOpen] = useState<"none" | "options" | "confirm">("none");
+  const options = (
+    <Overlay isOpen={open === "options"} label="Options" onDismiss={() => setOpen("none")}>
+      <button onClick={() => setOpen("confirm")} type="button">
+        Delete
+      </button>
+    </Overlay>
+  );
+  const confirm = (
+    <Overlay isOpen={open === "confirm"} label="Confirm" onDismiss={() => setOpen("none")}>
+      <button onClick={() => setOpen("none")} type="button">
+        Confirm delete
+      </button>
+    </Overlay>
+  );
+
+  return (
+    <main>
+      <button onClick={() => setOpen("options")} type="button">
+        Open options
+      </button>
+      {isConfirmFirst ? confirm : options}
+      {isConfirmFirst ? options : confirm}
+    </main>
+  );
+}
+
+describe("Overlay hand-over", () => {
+  beforeAll(installRouterRequestStub);
+
+  // The browser queues Back but applies a push at once; the memory router applies both at once.
+  it.each([false, true])(
+    "opens the next overlay as one closes, and the first opens again (confirm first: %s)",
+    async (isConfirmFirst) => {
+      window.history.replaceState(null, "", HISTORY_ROUTE_PATH);
+      const router = createBrowserRouter([
+        { path: HISTORY_ROUTE_PATH, element: <HandOver isConfirmFirst={isConfirmFirst} /> },
+      ]);
+      render(<RouterProvider router={router} />);
+
+      await userEvent.click(screen.getByRole("button", { name: "Open options" }));
+      await userEvent.click(await screen.findByRole("button", { name: "Delete" }));
+      await userEvent.click(await screen.findByRole("button", { name: "Confirm delete" }));
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      await waitFor(() => expect(readOverlayHistoryIds(router.state.location.state)).toEqual([]));
+
+      await userEvent.click(screen.getByRole("button", { name: "Open options" }));
+      expect(await screen.findByRole("dialog", { name: "Options" })).toBeInTheDocument();
+    },
+  );
+});

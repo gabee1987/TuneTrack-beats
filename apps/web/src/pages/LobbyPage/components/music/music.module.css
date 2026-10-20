@@ -1,0 +1,90 @@
+/* The Music sheet: Playback block, Your decks, Find (`22` §4.8). */
+.sheetBody,
+.tab {
+  display: grid;
+  align-content: start;
+  gap: var(--space-4);
+}
+
+.offline {
+  display: flex;
+  justify-content: center;
+}
+
+.sectionTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-leading);
+  font-weight: var(--type-label-weight);
+}
+
+.statusLine,
+.dialogBody,
+.errorLine {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
+}
+
+.errorLine {
+  color: var(--color-status-danger-text);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.dialogActions {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* Playback */
+.playback {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-elevated);
+}
+
+.playback > :last-child:not(.playbackCopy) {
+  grid-column: 1 / -1;
+}
+
+.playbackLogo {
+  display: grid;
+  place-items: center;
+  color: var(--color-border-spotify);
+}
+
+.playbackCopy {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.playbackText,
+.playbackNote,
+.playbackError {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
+}
+
+.playbackNote {
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+}
+
+.playbackError {
+  color: var(--color-status-danger-text);
+}

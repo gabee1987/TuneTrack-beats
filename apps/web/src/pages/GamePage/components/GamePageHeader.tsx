@@ -1,13 +1,14 @@
-import { memo } from "react";
-import { AppShellMenu } from "../../../features/app-shell/AppShellMenu";
+import { memo, useState } from "react";
+import { FirstRunHint } from "../../../features/hints/FirstRunHint";
 import { useI18n } from "../../../features/i18n";
 import { CardCountAmount } from "../../../features/ui/CardCountAmount";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
-import { Chip, IconButton } from "../../../features/ui/primitives";
 import { usePageLayoutMode } from "../../../hooks/usePageLayoutMode";
 import type { GamePageHeaderModel } from "../GamePage.types";
+import { GamePageHeaderActions } from "./GamePageHeaderActions";
+import { GamePageStatusChips } from "./GamePageStatusChips";
 import { HeaderLeadersStrip } from "./HeaderLeadersStrip";
-import styles from "../gamePageStyles";
+import styles from "../gamePageChrome.module.css";
 
 interface GamePageHeaderProps {
   model: GamePageHeaderModel;
@@ -16,28 +17,39 @@ interface GamePageHeaderProps {
 function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
   const { t } = useI18n();
   const layoutMode = usePageLayoutMode();
+  const [menuHintAnchor, setMenuHintAnchor] = useState<HTMLElement | null>(null);
+  const [tokenHintAnchor, setTokenHintAnchor] = useState<HTMLElement | null>(null);
   const {
+    closeRoomActionStatus,
     currentPlayerId,
     handleCloseRoom,
     handleSkipTurn,
+    hostId,
+    isCloseRoomPending,
+    isSkipTurnPending,
     leadingPlayers,
     menuTabs,
-    roomState,
+    playbackNotice,
+    roomId,
     showMiniStandings,
     showPhaseChip,
     showRoomCodeChip,
     showTimelineHints,
     showTurnNumberChip,
     statusBadgeText,
+    status,
     statusDetailText,
+    ttModeEnabled,
+    turnNumber,
     updateViewPreferences,
     visibleTimelineCardCount,
     visibleTimelinePlayerId,
     visibleTimelineTtCount,
     visibleTimelineTitle,
+    skipTurnActionStatus,
   } = model;
-  const showStatusTokenCount = roomState.settings.ttModeEnabled;
-  const isHost = roomState.hostId === visibleTimelinePlayerId;
+  const showStatusTokenCount = ttModeEnabled;
+  const isHost = hostId === visibleTimelinePlayerId;
   const isCurrentPlayerLeading = leadingPlayers[0]?.id === visibleTimelinePlayerId;
   const visibleTimelineCardCountLabel = t("game.header.cardCount", {
     count: visibleTimelineCardCount,
@@ -54,24 +66,20 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
       className={`${styles.header}${layoutMode === "mobile" ? ` ${styles.headerMobile}` : ""}`}
     >
       <div className={styles.headerMain}>
-        <div className={styles.headerChipRow}>
-          {showRoomCodeChip ? (
-            <Chip>{t("game.header.roomChip", { roomId: roomState.roomId })}</Chip>
-          ) : null}
-          {showPhaseChip ? <Chip>{t(`game.phase.${roomState.status}`)}</Chip> : null}
-          {showTurnNumberChip ? (
-            <Chip className={styles.headerChipTurn}>
-              {t("game.header.turnChip", {
-                turnNumber: roomState.turn?.turnNumber ?? "-",
-              })}
-            </Chip>
-          ) : null}
-        </div>
+        <GamePageStatusChips
+          playbackNotice={playbackNotice}
+          roomId={roomId}
+          showPhaseChip={showPhaseChip}
+          showRoomCodeChip={showRoomCodeChip}
+          showTurnNumberChip={showTurnNumberChip}
+          status={status}
+          turnNumber={turnNumber}
+        />
         <HeaderLeadersStrip
           getCardCountLabel={getCardCountLabel}
           leadingPlayers={leadingPlayers}
-          roomState={roomState}
           show={showMiniStandings}
+          ttModeEnabled={ttModeEnabled}
         />
       </div>
       <div className={styles.headerAside}>
@@ -102,89 +110,41 @@ function GamePageHeaderComponent({ model }: GamePageHeaderProps) {
                   <span aria-hidden="true" className={styles.statusBadgeCounterSeparator}>
                     ·
                   </span>
-                  <TokenCountAmount amount={visibleTimelineTtCount} />
+                  <span ref={setTokenHintAnchor}>
+                    <TokenCountAmount amount={visibleTimelineTtCount} />
+                  </span>
                 </>
               ) : null}
             </span>
           </div>
-          <IconButton
-            aria-label={
-              showMiniStandings
-                ? t("game.header.hideLeaderboard")
-                : t("game.header.showLeaderboard")
-            }
-            onClick={() =>
-              updateViewPreferences({
-                showMiniStandings: !showMiniStandings,
-              })
-            }
-            title={
-              showMiniStandings
-                ? t("game.header.hideLeaderboard")
-                : t("game.header.showLeaderboard")
-            }
-          >
-            <svg aria-hidden="true" className={styles.headerIcon} fill="none" viewBox="0 0 24 24">
-              <path
-                d="M5 20H9V11H5V20Z"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-              />
-              <path
-                d="M10 20H14V4H10V20Z"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-              />
-              <path
-                d="M15 20H19V8H15V20Z"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-              />
-              <path
-                d="M4 20H20"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-              />
-            </svg>
-          </IconButton>
-          <AppShellMenu
-            subtitle={t("gameMenu.lobbyNameSubtitle")}
-            tabs={menuTabs}
-            title={roomState.roomId}
-            {...(roomState.hostId === currentPlayerId
-              ? {
-                  footerActions: [
-                    ...(roomState.status === "turn"
-                      ? [
-                          {
-                            label: t("game.controls.skipTurn"),
-                            onClick: handleSkipTurn,
-                            tone: "neutral" as const,
-                          },
-                        ]
-                      : []),
-                    {
-                      label: t("game.header.closeRoom"),
-                      onClick: handleCloseRoom,
-                      tone: "danger" as const,
-                    },
-                  ],
-                }
-              : {})}
+          <GamePageHeaderActions
+            closeRoomActionStatus={closeRoomActionStatus}
+            handleCloseRoom={handleCloseRoom}
+            handleSkipTurn={handleSkipTurn}
+            isCloseRoomPending={isCloseRoomPending}
+            isHost={hostId === currentPlayerId}
+            isSkipTurnPending={isSkipTurnPending}
+            menuTabs={menuTabs}
+            menuTriggerRef={setMenuHintAnchor}
+            roomId={roomId}
+            showMiniStandings={showMiniStandings}
+            skipTurnActionStatus={skipTurnActionStatus}
+            status={status}
+            updateViewPreferences={updateViewPreferences}
           />
         </div>
         {showTimelineHints && statusDetailText ? (
           <p className={styles.statusCaption}>{statusDetailText}</p>
         ) : null}
       </div>
+      <FirstRunHint
+        anchor={tokenHintAnchor}
+        id="game-tokens"
+        isEligible={
+          ttModeEnabled && visibleTimelinePlayerId === currentPlayerId && visibleTimelineTtCount > 0
+        }
+      />
+      <FirstRunHint anchor={menuHintAnchor} id="game-menu" isEligible />
     </header>
   );
 }
@@ -194,19 +154,28 @@ function areHeaderModelsEqual(
   nextModel: GamePageHeaderModel,
 ): boolean {
   return (
+    previousModel.closeRoomActionStatus === nextModel.closeRoomActionStatus &&
     previousModel.currentPlayerId === nextModel.currentPlayerId &&
     previousModel.handleCloseRoom === nextModel.handleCloseRoom &&
     previousModel.handleSkipTurn === nextModel.handleSkipTurn &&
+    previousModel.hostId === nextModel.hostId &&
+    previousModel.isCloseRoomPending === nextModel.isCloseRoomPending &&
+    previousModel.isSkipTurnPending === nextModel.isSkipTurnPending &&
     previousModel.leadingPlayers === nextModel.leadingPlayers &&
     previousModel.menuTabs === nextModel.menuTabs &&
-    previousModel.roomState === nextModel.roomState &&
+    previousModel.playbackNotice === nextModel.playbackNotice &&
+    previousModel.roomId === nextModel.roomId &&
     previousModel.showMiniStandings === nextModel.showMiniStandings &&
     previousModel.showPhaseChip === nextModel.showPhaseChip &&
     previousModel.showRoomCodeChip === nextModel.showRoomCodeChip &&
     previousModel.showTimelineHints === nextModel.showTimelineHints &&
     previousModel.showTurnNumberChip === nextModel.showTurnNumberChip &&
+    previousModel.status === nextModel.status &&
     previousModel.statusBadgeText === nextModel.statusBadgeText &&
     previousModel.statusDetailText === nextModel.statusDetailText &&
+    previousModel.skipTurnActionStatus === nextModel.skipTurnActionStatus &&
+    previousModel.ttModeEnabled === nextModel.ttModeEnabled &&
+    previousModel.turnNumber === nextModel.turnNumber &&
     previousModel.updateViewPreferences === nextModel.updateViewPreferences &&
     previousModel.visibleTimelineCardCount === nextModel.visibleTimelineCardCount &&
     previousModel.visibleTimelinePlayerId === nextModel.visibleTimelinePlayerId &&

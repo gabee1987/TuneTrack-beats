@@ -1,4 +1,4 @@
-import type { PublicRoomState } from "@tunetrack/shared";
+import type { PublicRoomState } from "@tunetrack/shared/client";
 import type { GamePageCard, GamePagePlayerNameResolver } from "../GamePage.types";
 import { useI18n } from "../../../features/i18n";
 import {

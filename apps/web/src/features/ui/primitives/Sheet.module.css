@@ -1,0 +1,102 @@
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-sheet);
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--color-overlay-strong);
+}
+
+/* Full screen on phones; wider screens keep the page visible beside the sheet. */
+.sheet {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  padding-top: var(--safe-area-top);
+  padding-right: var(--safe-area-right);
+  padding-left: var(--safe-area-left);
+  background: var(--color-bg-app);
+  color: var(--color-text-primary);
+  outline: none;
+}
+
+.main {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+}
+
+/* The page's top bar; the body fades out under it instead of meeting a line. */
+.header {
+  position: relative;
+  z-index: 2;
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-bg-app);
+}
+
+.header::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  height: var(--space-4);
+  background: linear-gradient(to bottom, var(--color-bg-app), transparent);
+  pointer-events: none;
+}
+
+.body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-2) var(--space-4) var(--space-4);
+}
+
+/* Room under the last rows for the floating dock. */
+.body:has(+ .dock) {
+  padding-bottom: 112px;
+}
+
+.dock {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* The second pane: what the body opens shows here, beside it. */
+.pane {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  overflow: hidden;
+  padding: var(--space-6);
+  border-left: 1px solid var(--color-border-subtle);
+}
+
+@media (min-width: 721px) {
+  .sheet {
+    width: min(100%, 560px);
+    border-left: 1px solid var(--color-border-subtle);
+    box-shadow: var(--shadow-overlay);
+  }
+
+  /* The body keeps a phone's width; the pane takes the old sheet's 560 px at full size. */
+  .twoPane {
+    width: min(100%, 960px);
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+}

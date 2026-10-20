@@ -30,15 +30,11 @@ export function usePreviewCardTransition({
   const reduceMotion = useReducedMotionPreference();
   const animationControls = useAnimationControls();
   const [displayCard, setDisplayCard] = useState<GamePageCard | null>(previewCard);
-  const [displayShowRevealedContent, setDisplayShowRevealedContent] =
-    useState(showRevealedContent);
+  const [displayShowRevealedContent, setDisplayShowRevealedContent] = useState(showRevealedContent);
   const [isTransitionActive, setIsTransitionActive] = useState(false);
-  const lastHandledTransitionKeyRef = useRef<number | null>(
-    transitionEvent?.eventKey ?? null,
-  );
+  const lastHandledTransitionKeyRef = useRef<number | null>(transitionEvent?.eventKey ?? null);
   const hasPendingTransitionEvent =
-    transitionEvent !== null &&
-    transitionEvent.eventKey !== lastHandledTransitionKeyRef.current;
+    transitionEvent !== null && transitionEvent.eventKey !== lastHandledTransitionKeyRef.current;
 
   useEffect(() => {
     if (isTransitionActive || hasPendingTransitionEvent) {
@@ -76,9 +72,7 @@ export function usePreviewCardTransition({
     const nextShowRevealedContent = showRevealedContent;
 
     const runTransition = async () => {
-      await animationControls.start(
-        createPreviewCardReplaceExitMotion(reduceMotion),
-      );
+      await animationControls.start(createPreviewCardReplaceExitMotion(reduceMotion));
 
       if (isCancelled) {
         return;
@@ -86,17 +80,13 @@ export function usePreviewCardTransition({
 
       setDisplayCard(nextCard);
       setDisplayShowRevealedContent(nextShowRevealedContent);
-      animationControls.set(
-        createPreviewCardReplaceEnterInitial(reduceMotion),
-      );
+      animationControls.set(createPreviewCardReplaceEnterInitial(reduceMotion));
 
       if (isCancelled) {
         return;
       }
 
-      await animationControls.start(
-        createPreviewCardReplaceEnterMotion(reduceMotion),
-      );
+      await animationControls.start(createPreviewCardReplaceEnterMotion(reduceMotion));
 
       if (isCancelled) {
         return;
@@ -110,13 +100,7 @@ export function usePreviewCardTransition({
     return () => {
       isCancelled = true;
     };
-  }, [
-    animationControls,
-    previewCard,
-    reduceMotion,
-    showRevealedContent,
-    transitionEvent,
-  ]);
+  }, [animationControls, previewCard, reduceMotion, showRevealedContent, transitionEvent]);
 
   return {
     animationControls,

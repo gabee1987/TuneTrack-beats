@@ -1,0 +1,65 @@
+/* The lobby's top bar, shared: Back's glyph sits on the container's gutter. */
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  margin-left: calc(var(--space-2) * -1);
+}
+
+/* The leading slot holds a small cover (40 px) that folds in; the heading sits over its place
+   until it arrives and slides aside with it (`CollapsingHeaderBar`). Without one, it stays. */
+.heading {
+  flex: 1;
+  min-width: 0;
+  translate: calc((var(--fold-reveal, 1) - 1) * (40px + var(--space-2))) 0;
+}
+
+.eyebrow {
+  margin: 0;
+  overflow: hidden;
+  color: var(--color-accent-brand);
+  font-size: var(--type-micro-size);
+  line-height: var(--type-micro-leading);
+  font-weight: var(--type-micro-weight);
+  letter-spacing: 0.14em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.titleRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-primary);
+  font-size: var(--type-title-md-size);
+  line-height: var(--type-title-md-leading);
+  font-weight: var(--type-title-md-weight);
+  letter-spacing: var(--type-title-md-tracking);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.trailing {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-2);
+}

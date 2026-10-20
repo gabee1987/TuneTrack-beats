@@ -7,9 +7,6 @@ interface SelectInputProps extends SelectHTMLAttributes<HTMLSelectElement> {
 
 export function SelectInput({ className, ...props }: SelectInputProps) {
   return (
-    <select
-      {...props}
-      className={`${styles.selectInput}${className ? ` ${className}` : ""}`}
-    />
+    <select {...props} className={`${styles.selectInput}${className ? ` ${className}` : ""}`} />
   );
 }

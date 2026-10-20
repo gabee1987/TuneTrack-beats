@@ -1,5 +1,7 @@
+import { DomainError } from "@tunetrack/shared";
 import type { GameState, GameTrackCard } from "@tunetrack/game-engine";
-import type { PublicRoomState, PublicRoomSummary, RoomId } from "@tunetrack/shared";
+import type { ActionAck, PublicRoomState, PublicRoomSummary, RoomId } from "@tunetrack/shared";
+import { mapRoomStateToSummary } from "./roomStateMappers.js";
 
 export interface SocketRoomMembership {
   playerId: string;
@@ -10,6 +12,13 @@ export interface SocketRoomMembership {
 export interface SessionRoomMembership {
   playerId: string;
   roomId: RoomId;
+}
+
+/** Who asked, where and for which event; acks are replayed only within this scope. */
+export interface ActionAckScope {
+  socketId: string;
+  roomId: RoomId;
+  event: string;
 }
 
 export interface RoomRecord {
@@ -30,6 +39,9 @@ export interface KickPlayerResult {
 }
 
 export class RoomStore {
+  private static readonly MAX_PROCESSED_ACTION_COUNT = 32;
+
+  private readonly processedActionAcksByRoomId = new Map<RoomId, Map<string, ActionAck>>();
   private readonly roomsById = new Map<RoomId, RoomRecord>();
   private readonly roomRedirectsById = new Map<RoomId, RoomId>();
   private readonly socketMemberships = new Map<string, SocketRoomMembership>();
@@ -43,6 +55,20 @@ export class RoomStore {
     return this.roomsById.has(roomId);
   }
 
+  /**
+   * The stored code a typed code refers to: codes keep the case they were created with but
+   * match in any case, so a guest typing `test_room_1` reaches `TEST_ROOM_1` (`04` §6.2).
+   */
+  public findRoomId(typedRoomId: RoomId): RoomId | undefined {
+    if (this.roomsById.has(typedRoomId)) return typedRoomId;
+
+    const typedKey = typedRoomId.toLowerCase();
+    for (const roomId of this.roomsById.keys()) {
+      if (roomId.toLowerCase() === typedKey) return roomId;
+    }
+    return undefined;
+  }
+
   public getRoom(roomId: RoomId): RoomRecord | undefined {
     return this.roomsById.get(roomId);
   }
@@ -53,6 +79,52 @@ export class RoomStore {
 
   public deleteRoom(roomId: RoomId): void {
     this.roomsById.delete(roomId);
+    this.processedActionAcksByRoomId.delete(roomId);
+  }
+
+  public getProcessedActionAck(
+    roomId: RoomId,
+    sessionId: string,
+    event: string,
+    requestId: string,
+  ): ActionAck | undefined {
+    const ackKey = buildProcessedActionKey(sessionId, event, requestId);
+    const roomAcks = this.processedActionAcksByRoomId.get(roomId);
+    const ack = roomAcks?.get(ackKey);
+    if (!roomAcks || !ack) {
+      return undefined;
+    }
+
+    roomAcks.delete(ackKey);
+    roomAcks.set(ackKey, ack);
+    return ack;
+  }
+
+  public retargetProcessedActionAcks(previousRoomId: RoomId, nextRoomId: RoomId): void {
+    const roomAcks = this.processedActionAcksByRoomId.get(previousRoomId);
+    if (!roomAcks) return;
+    this.processedActionAcksByRoomId.delete(previousRoomId);
+    this.processedActionAcksByRoomId.set(nextRoomId, roomAcks);
+  }
+
+  public rememberProcessedActionAck(
+    roomId: RoomId,
+    sessionId: string,
+    event: string,
+    ack: ActionAck,
+  ): void {
+    const ackKey = buildProcessedActionKey(sessionId, event, ack.requestId);
+    const roomAcks = this.processedActionAcksByRoomId.get(roomId) ?? new Map();
+    roomAcks.delete(ackKey);
+    roomAcks.set(ackKey, ack);
+    this.processedActionAcksByRoomId.set(roomId, roomAcks);
+
+    if (roomAcks.size > RoomStore.MAX_PROCESSED_ACTION_COUNT) {
+      const oldestAckKey = roomAcks.keys().next().value;
+      if (oldestAckKey) {
+        roomAcks.delete(oldestAckKey);
+      }
+    }
   }
 
   public listLobbySummaries(): PublicRoomSummary[] {
@@ -61,8 +133,9 @@ export class RoomStore {
       .filter((roomSummary) => roomSummary.status === "lobby");
   }
 
-  public getLobbySummary(roomId: RoomId): PublicRoomSummary | null {
-    const roomRecord = this.roomsById.get(roomId);
+  public getLobbySummary(typedRoomId: RoomId): PublicRoomSummary | null {
+    const roomId = this.findRoomId(typedRoomId);
+    const roomRecord = roomId === undefined ? undefined : this.roomsById.get(roomId);
     if (!roomRecord || roomRecord.roomState.status !== "lobby") {
       return null;
     }
@@ -123,15 +196,20 @@ export class RoomStore {
 
   public requireMembership(socketId: string): SocketRoomMembership {
     const membership = this.socketMemberships.get(socketId);
-    if (!membership) throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
+    if (!membership) throw new DomainError("ROOM_MEMBERSHIP_NOT_FOUND");
     return membership;
   }
 
   public getRoomRecordForMember(socketId: string, roomId: RoomId): RoomRecord {
     const membership = this.requireMembership(socketId);
     const roomRecord = this.roomsById.get(roomId);
-    if (membership.roomId !== roomId || !roomRecord) throw new Error("ROOM_MEMBERSHIP_NOT_FOUND");
+    if (membership.roomId !== roomId || !roomRecord)
+      throw new DomainError("ROOM_MEMBERSHIP_NOT_FOUND");
     return roomRecord;
+  }
+
+  public getRoomStateForMember(socketId: string, roomId: RoomId): PublicRoomState {
+    return this.getRoomRecordForMember(socketId, roomId).roomState;
   }
 
   public findSessionIdForPlayer(roomId: string, playerId: string): string | undefined {
@@ -219,13 +297,8 @@ export class RoomStore {
   }
 }
 
-function mapRoomStateToSummary(roomState: PublicRoomState): PublicRoomSummary {
-  const hostPlayer = roomState.players.find((player) => player.id === roomState.hostId);
-
-  return {
-    hostName: hostPlayer?.displayName ?? "Host",
-    playerCount: roomState.players.length,
-    roomId: roomState.roomId,
-    status: roomState.status,
-  };
+// Scoped to the caller's session so a member who learns another member's request id cannot
+// obtain that member's acknowledgement.
+function buildProcessedActionKey(sessionId: string, event: string, requestId: string): string {
+  return `${sessionId}:${event}:${requestId}`;
 }

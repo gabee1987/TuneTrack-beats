@@ -1,0 +1,17 @@
+.group {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.toCheck {
+  justify-self: start;
+  min-height: 48px;
+  color: var(--color-warning);
+}
+
+.failed {
+  margin: 0;
+  color: var(--color-status-danger-text);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+}

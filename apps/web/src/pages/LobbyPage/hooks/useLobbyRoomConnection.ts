@@ -6,21 +6,15 @@ import {
   type ServerErrorPayload,
   ServerToClientEvent,
   type StateUpdatePayload,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useEffect, useRef, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useI18n } from "../../../features/i18n";
 import { localizeServerError } from "../../../features/i18n/localizedErrors";
-import {
-  rememberPlayerDisplayName,
-  resetPlayerSession,
-} from "../../../services/session/playerSession";
+import type { ClosedRoomReason } from "../../../features/ui/RoomResetModal";
 import { rememberRoomEventToast } from "../../../services/session/roomEventToast";
-import {
-
-  getSocketClient,
-  resetSocketClient,
-} from "../../../services/socket/socketClient";
+import { hasServerRestarted } from "../../../services/socket/connectionState";
+import { getSocketClient, resetSocketClient } from "../../../services/socket/socketClient";
 
 interface UseLobbyRoomConnectionOptions {
   displayName: string;
@@ -31,8 +25,8 @@ interface UseLobbyRoomConnectionOptions {
 }
 
 interface UseLobbyRoomConnectionResult {
+  closedRoomReason: ClosedRoomReason;
   hasClosedRoomReset: boolean;
-  connectionStatus: string;
   currentPlayerId: string | null;
   errorCode: string | null;
   errorMessage: string | null;
@@ -41,6 +35,7 @@ interface UseLobbyRoomConnectionResult {
 }
 
 interface LobbyRoomStateUpdateDecisionOptions {
+  isCreatingRoom: boolean;
   joinedRoomId: string | null;
   nextRoomId: string;
   nextStatus: PublicRoomState["status"];
@@ -48,6 +43,7 @@ interface LobbyRoomStateUpdateDecisionOptions {
 }
 
 export function getLobbyRoomStateUpdateDecision({
+  isCreatingRoom,
   joinedRoomId,
   nextRoomId,
   nextStatus,
@@ -57,14 +53,24 @@ export function getLobbyRoomStateUpdateDecision({
   shouldNavigateToRoom: boolean;
 } {
   const isStateForRequestedRoom = nextRoomId === requestedRoomId;
+  // Codes match in any case on the server; the URL then takes the code as it was created.
+  const isRequestedRoomInOtherCase =
+    !isStateForRequestedRoom && nextRoomId.toLowerCase() === requestedRoomId?.toLowerCase();
+  const isStateForJoinedRoom = requestedRoomId === undefined && nextRoomId === joinedRoomId;
+  const isInitialGeneratedRoom =
+    isCreatingRoom && requestedRoomId === undefined && joinedRoomId === null;
   const isRenameFromJoinedRoom =
-    nextStatus === "lobby" &&
-    joinedRoomId === requestedRoomId &&
-    !isStateForRequestedRoom;
+    nextStatus === "lobby" && joinedRoomId === requestedRoomId && !isStateForRequestedRoom;
 
   return {
-    accept: isStateForRequestedRoom || isRenameFromJoinedRoom,
-    shouldNavigateToRoom: isRenameFromJoinedRoom,
+    accept:
+      isStateForRequestedRoom ||
+      isRequestedRoomInOtherCase ||
+      isStateForJoinedRoom ||
+      isInitialGeneratedRoom ||
+      isRenameFromJoinedRoom,
+    shouldNavigateToRoom:
+      isRequestedRoomInOtherCase || isInitialGeneratedRoom || isRenameFromJoinedRoom,
   };
 }
 
@@ -76,20 +82,28 @@ export function useLobbyRoomConnection({
   roomId,
 }: UseLobbyRoomConnectionOptions): UseLobbyRoomConnectionResult {
   const { t } = useI18n();
-  const [connectionStatus, setConnectionStatus] = useState("Connecting");
+  const translateRef = useRef(t);
+  translateRef.current = t;
+  const displayNameRef = useRef(displayName);
+  displayNameRef.current = displayName;
+  // useNavigate returns a new function on every location change, including this hook's own
+  // create-to-lobby redirect; as an effect dependency it would re-run the join.
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
   const currentPlayerIdRef = useRef<string | null>(null);
+  const hasAttemptedCreateRef = useRef(false);
   const hasNavigatedToGameRef = useRef(false);
   const joinedRoomIdRef = useRef<string | null>(null);
   const [roomState, setRoomState] = useState<PublicRoomState | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hasClosedRoomReset, setHasClosedRoomReset] = useState(false);
+  const [closedRoomReason, setClosedRoomReason] = useState<ClosedRoomReason>("closed");
 
   function handleClosedRoomReset() {
     setHasClosedRoomReset(false);
     resetSocketClient();
-    resetPlayerSession();
     setRoomState(null);
     setCurrentPlayerId(null);
     currentPlayerIdRef.current = null;
@@ -99,31 +113,40 @@ export function useLobbyRoomConnection({
   useEffect(() => {
     let isDisposed = false;
     let cleanupSocketListeners: (() => void) | null = null;
+    hasAttemptedCreateRef.current = false;
 
-    if (!roomId || !displayName) {
-      navigate("/");
+    if (!displayName || (intent === "join" && !roomId)) {
+      navigateRef.current("/");
       return;
     }
 
-    rememberPlayerDisplayName(displayName);
-
     function handleConnect(socketClient: Awaited<ReturnType<typeof getSocketClient>>) {
-      setConnectionStatus("Connected");
       setErrorCode(null);
       setErrorMessage(null);
-      socketClient.emit(intent === "create" ? ClientToServerEvent.CreateRoom : ClientToServerEvent.JoinRoom, {
-        displayName,
-        roomId,
+      const shouldCreateRoom =
+        intent === "create" && (!hasAttemptedCreateRef.current || roomId === undefined);
+      if (intent === "create") {
+        hasAttemptedCreateRef.current = true;
+      }
+      if (shouldCreateRoom) {
+        socketClient.emit(ClientToServerEvent.CreateRoom, {
+          displayName: displayNameRef.current,
+          ...(roomId ? { roomId } : {}),
+          sessionId: playerSessionId,
+        });
+        return;
+      }
+
+      socketClient.emit(ClientToServerEvent.JoinRoom, {
+        displayName: displayNameRef.current,
+        roomId: roomId!,
         sessionId: playerSessionId,
       });
     }
 
-    function handleDisconnect() {
-      setConnectionStatus("Disconnected");
-    }
-
     function handleStateUpdate(payload: StateUpdatePayload) {
       const updateDecision = getLobbyRoomStateUpdateDecision({
+        isCreatingRoom: intent === "create",
         joinedRoomId: joinedRoomIdRef.current,
         nextRoomId: payload.roomState.roomId,
         nextStatus: payload.roomState.status,
@@ -138,18 +161,16 @@ export function useLobbyRoomConnection({
       setRoomState(payload.roomState);
 
       if (updateDecision.shouldNavigateToRoom) {
-        navigate(
-          `/lobby/${encodeURIComponent(payload.roomState.roomId)}?playerName=${encodeURIComponent(
-            displayName,
-          )}`,
-          { replace: true },
-        );
+        navigateRef.current(`/lobby/${encodeURIComponent(payload.roomState.roomId)}`, {
+          replace: true,
+          state: null,
+        });
         return;
       }
 
       if (payload.roomState.status !== "lobby" && !hasNavigatedToGameRef.current) {
         hasNavigatedToGameRef.current = true;
-        navigate(`/game/${encodeURIComponent(payload.roomState.roomId)}`, {
+        navigateRef.current(`/game/${encodeURIComponent(payload.roomState.roomId)}`, {
           state: {
             currentPlayerId: currentPlayerIdRef.current,
             roomState: payload.roomState,
@@ -165,14 +186,18 @@ export function useLobbyRoomConnection({
 
     function handleError(payload: ServerErrorPayload) {
       if (isClosedRoomError(payload.code)) {
+        setClosedRoomReason(hasServerRestarted() ? "server_restarted" : "closed");
         setHasClosedRoomReset(true);
         setErrorCode(null);
         setErrorMessage(null);
         return;
       }
 
+      // The Start action already explains this one in a toast beside the button.
+      if (payload.code === "DECK_REQUIRED") return;
+
       setErrorCode(payload.code);
-      setErrorMessage(localizeServerError(t, payload));
+      setErrorMessage(localizeServerError(translateRef.current, payload));
     }
 
     function handleRoomClosed(payload: RoomClosedPayload) {
@@ -184,7 +209,7 @@ export function useLobbyRoomConnection({
       }
 
       resetSocketClient();
-      navigate("/", {
+      navigateRef.current("/", {
         state:
           payload.reason === "kicked"
             ? {
@@ -205,7 +230,6 @@ export function useLobbyRoomConnection({
       const connectListener = () => handleConnect(socketClient);
 
       socketClient.on("connect", connectListener);
-      socketClient.on("disconnect", handleDisconnect);
       socketClient.on(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
       socketClient.on(ServerToClientEvent.RoomClosed, handleRoomClosed);
       socketClient.on(ServerToClientEvent.StateUpdate, handleStateUpdate);
@@ -213,7 +237,6 @@ export function useLobbyRoomConnection({
 
       cleanupSocketListeners = () => {
         socketClient.off("connect", connectListener);
-        socketClient.off("disconnect", handleDisconnect);
         socketClient.off(ServerToClientEvent.PlayerIdentity, handlePlayerIdentity);
         socketClient.off(ServerToClientEvent.RoomClosed, handleRoomClosed);
         socketClient.off(ServerToClientEvent.StateUpdate, handleStateUpdate);
@@ -231,11 +254,11 @@ export function useLobbyRoomConnection({
       isDisposed = true;
       cleanupSocketListeners?.();
     };
-  }, [displayName, intent, navigate, playerSessionId, roomId, t]);
+  }, [intent, playerSessionId, roomId]);
 
   return {
+    closedRoomReason,
     hasClosedRoomReset,
-    connectionStatus,
     currentPlayerId,
     errorCode,
     errorMessage,

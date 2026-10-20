@@ -1,0 +1,247 @@
+/*
+ * One-shot sequence (all transform/opacity): the timeline rises in, the mystery card drops
+ * into the gap, flips to its year and gets the tick. Delays stage it; each step is ≤ 460 ms.
+ */
+.demo {
+  --demo-card-width: 58px;
+  --demo-card-height: 78px;
+  --demo-gap: var(--space-2);
+  display: grid;
+  place-items: center;
+  width: 100%;
+  padding-top: var(--space-5);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.timeline {
+  position: relative;
+  width: calc(var(--demo-card-width) * 4 + var(--demo-gap) * 3);
+  height: var(--demo-card-height);
+}
+
+.track {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--space-4) * -1);
+  right: calc(var(--space-4) * -1);
+  height: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--color-border-subtle);
+  transform-origin: left center;
+  animation: trackDraw var(--motion-expressive-duration) var(--motion-ease-emphasized) both;
+  animation-delay: 120ms;
+}
+
+.slot1,
+.slot2,
+.slot3,
+.slot4 {
+  position: absolute;
+  top: 0;
+  width: var(--demo-card-width);
+  height: var(--demo-card-height);
+}
+
+.slot1 {
+  left: 0;
+}
+
+.slot2 {
+  left: calc(var(--demo-card-width) + var(--demo-gap));
+}
+
+.slot3 {
+  left: calc((var(--demo-card-width) + var(--demo-gap)) * 2);
+}
+
+.slot4 {
+  left: calc((var(--demo-card-width) + var(--demo-gap)) * 3);
+}
+
+.card,
+.face {
+  display: grid;
+  align-content: space-between;
+  padding: var(--space-2);
+  border-radius: var(--radius-xs);
+  color: var(--color-on-cover-fallback);
+  box-shadow: var(--shadow-raised);
+}
+
+.card {
+  animation: cardRise var(--motion-screen-duration) var(--motion-ease-emphasized) both;
+}
+
+.slot1.card {
+  animation-delay: 200ms;
+}
+
+.slot3.card {
+  animation-delay: 260ms;
+}
+
+.slot4.card {
+  animation-delay: 320ms;
+}
+
+.tone1 {
+  background: var(--color-cover-fallback-1);
+}
+
+.tone2 {
+  background: var(--color-cover-fallback-2);
+}
+
+.tone3 {
+  background: var(--color-cover-fallback-3);
+}
+
+.tone4 {
+  background: var(--color-cover-fallback-4);
+}
+
+.note {
+  font-size: var(--type-caption-size);
+  line-height: 1;
+  opacity: 0.8;
+}
+
+.year {
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-leading);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.gap {
+  border: 2px dashed var(--color-border-subtle);
+  border-radius: var(--radius-xs);
+  animation:
+    cardRise var(--motion-screen-duration) var(--motion-ease-emphasized) both,
+    gapClose var(--motion-standard-duration) var(--motion-ease-standard) forwards;
+  animation-delay: 260ms, 1100ms;
+}
+
+.mystery {
+  perspective: 400px;
+  animation: mysteryDrop var(--motion-expressive-duration) var(--motion-ease-emphasized) both;
+  animation-delay: 700ms;
+}
+
+.mysteryInner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  animation: mysteryFlip var(--motion-expressive-duration) var(--motion-ease-standard) both;
+  animation-delay: 1200ms;
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+}
+
+.front {
+  place-items: center;
+  align-content: center;
+  border: 2px solid var(--color-accent-brand);
+  background: var(--color-surface-elevated-solid);
+  color: var(--color-accent-brand);
+  font-size: var(--type-title-lg-size);
+  font-weight: 800;
+}
+
+.back {
+  outline: 2px solid var(--color-accent-brand);
+  outline-offset: 2px;
+  transform: rotateY(180deg);
+}
+
+.tick {
+  position: absolute;
+  top: calc(var(--space-2) * -1);
+  right: calc(var(--space-2) * -1);
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-circle);
+  background: var(--color-accent-brand);
+  color: var(--color-on-accent-brand);
+  font-size: var(--type-caption-size);
+  font-weight: 900;
+  animation: tickPop var(--motion-screen-duration) var(--motion-ease-emphasized) both;
+  animation-delay: 1620ms;
+}
+
+@keyframes trackDraw {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+}
+
+@keyframes cardRise {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.92);
+  }
+}
+
+@keyframes gapClose {
+  to {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+@keyframes mysteryDrop {
+  0% {
+    opacity: 0;
+    transform: translateY(-64px) rotate(-10deg);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translateY(4px) rotate(2deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes mysteryFlip {
+  to {
+    transform: rotateY(180deg);
+  }
+}
+
+@keyframes tickPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+
+  70% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* The global rule shortens every step; dropping the delays too shows the finished timeline at once. */
+@media (prefers-reduced-motion: reduce) {
+  .demo * {
+    animation-delay: 0ms !important;
+  }
+}

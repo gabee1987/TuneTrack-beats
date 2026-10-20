@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { PublicRoomState } from "@tunetrack/shared";
+import type { PublicRoomState } from "@tunetrack/shared/client";
 import { useI18n } from "../../../features/i18n";
 import type { GamePageCard, GamePagePlayerNameResolver } from "../GamePage.types";
 import { useGamePageActiveTimelinePreviewState } from "./useGamePageActiveTimelinePreviewState";

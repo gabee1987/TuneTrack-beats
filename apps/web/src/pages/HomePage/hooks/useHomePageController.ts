@@ -2,6 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useI18n } from "../../../features/i18n";
 import { preloadLobbyRuntime } from "../../../app/preloadRoutes";
+import { useNameGate } from "../../../features/profile/useNameGate";
+import { buildRoomNavigationTarget } from "../../../features/rooms/roomNavigation";
+import { useConnectionStatus } from "../../../services/socket/connectionState";
 import {
   ROOM_EVENT_TOAST_EVENT,
   consumeRoomEventToast,
@@ -14,12 +17,13 @@ export function useHomePageController(): HomePageController {
   const location = useLocation();
   const navigate = useNavigate();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isHosting, setIsHosting] = useState(false);
+  const nameGate = useNameGate();
+  const isOffline = useConnectionStatus() === "offline";
 
   const showRoomEventToast = useCallback(
     (roomEventToast: { reason: "kicked"; roomName: string }) => {
-      setToastMessage(
-        t("home.toast.kickedFromRoom", { roomName: roomEventToast.roomName }),
-      );
+      setToastMessage(t("home.toast.kickedFromRoom", { roomName: roomEventToast.roomName }));
 
       return window.setTimeout(() => {
         setToastMessage(null);
@@ -65,21 +69,37 @@ export function useHomePageController(): HomePageController {
     };
   }, [showRoomEventToast]);
 
-  function handleStart() {
-    preloadLobbyRuntime();
-    navigate("/play");
+  // Hosting creates the room on the way: the lobby route sends `create` and replaces its URL
+  // with the server's code (`22` §3).
+  function handleHost() {
+    nameGate.requireName(() => {
+      const target = buildRoomNavigationTarget({ intent: "create" });
+      if (!target) return;
+      setIsHosting(true);
+      preloadLobbyRuntime();
+      navigate(target.path, { state: target.state });
+    });
+  }
+
+  function handleJoin() {
+    nameGate.requireName(() => navigate("/join"));
   }
 
   return {
-    handleStart,
+    handleHost,
+    handleJoin,
+    hostDisabledReason: isOffline ? t("room.connection.offline") : null,
+    identity: nameGate.hasName
+      ? { displayName: nameGate.displayName, onChange: nameGate.openNameSheet }
+      : null,
+    isHosting,
+    nameSheetProps: nameGate.nameSheetProps,
     preloadLobby: preloadLobbyRuntime,
     toastMessage,
   };
 }
 
-function readRoomEventToast(
-  state: unknown,
-): { reason: "kicked"; roomName: string } | null {
+function readRoomEventToast(state: unknown): { reason: "kicked"; roomName: string } | null {
   if (
     !state ||
     typeof state !== "object" ||

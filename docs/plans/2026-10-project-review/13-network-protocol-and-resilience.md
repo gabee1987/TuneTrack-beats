@@ -1,0 +1,198 @@
+# 13 — Network Protocol and Client Resilience
+
+> **Status (2026-10-07):** Phase 1 partially shipped (first-connect/reconnect split, idempotent `create_room`), Phases 2, 3 and 4 shipped (durable session id and never-throwing storage; connection effects independent of `t`; acknowledged, idempotent actions). Phase 5 shipped (socket client policy and connection-state model). Phase 6 partly shipped as `05` A10 (compression above 4 kB, one-track edit reply). Open: the `GAME_ALREADY_STARTED` recovery dialog and `instanceId` (Phase 1), narrow events and `revision` (Phase 6).
+> **Folded from** `docs/plans/2026-09-stability-performance/05-network-protocol-and-resilience.md` on 2026-10-06; the original is archived under `docs/archive/2026-09-stability-performance/`.
+>
+> **Binding budgets, order and corrections (2026-10-07):** `05-performance-and-robustness-plan.md` §2 (budgets), §8 (rollout order), §9 (corrections to this document). Where they differ, `05` wins.
+
+> Review findings owned here: F-02, F-17, F-20, F-21 (Phase 5 of the review programme sets the budgets, this document holds the work breakdown) and B-16 (Phase 6). F-01 (`crypto.randomUUID` unguarded in `emitAction`) is on the hotfix track in `00-index.md` §4. Bug register: B8 (`20-bug-register.md`).
+> Owning layers: `apps/web/src/services/socket`, the two room-connection hooks,
+> `apps/server/src/realtime`, `packages/shared/src/events`.
+> Depends on `12-backend-stability-and-sessions.md` (server ownership must be correct first).
+
+The product complaint is "network inconsistencies — it has to be rock solid". The audit
+found four independent causes, in rough order of impact:
+
+1. A host reconnect issued the wrong join command and hard-failed — **shipped**, Phase 1.
+2. Nothing told the client whether an action succeeded — **shipped**, Phase 4.
+3. Changing language rebuilt the connection and re-joined — **shipped**, Phase 3.
+4. The socket client had no reconnect policy and no connection state — **shipped**, Phase 5.
+
+## 1. Phase 1 — Make joining idempotent and reconnect-safe · **S1** · partially shipped
+
+### Shipped
+
+- Client: the `create` intent is honoured once (`hasAttemptedCreateRef` in
+  `apps/web/src/pages/LobbyPage/hooks/useLobbyRoomConnection.ts`); every later `"connect"`
+  re-joins instead of re-creating.
+- Server: `RoomLobbyService.createRoom` treats a repeat `create_room` from the owning
+  session as a rejoin via `restorePlayerSession` and throws `ROOM_ALREADY_EXISTS` only for
+  a different session (commit `b022d14`).
+- Proof: E2E E8 ("a host reconnects inside the recovery window and remains host",
+  `apps/e2e/tests/room-entry.spec.ts`) — no `ROOM_ALREADY_EXISTS`, no recovery UI, host-only
+  reveal authority retained.
+- Not separately verified on 2026-10-06: the `socket.recovered === true` short-circuit and
+  stripping `intent` from the URL after the first create. Treat both as open until a test
+  proves them.
+
+### 1.3 Give `GAME_ALREADY_STARTED` a recovery path — open
+
+Today `useGameRoomConnection.isClosedRoomError` recognises only `ROOM_NOT_FOUND` and
+`ROOM_MEMBERSHIP_NOT_FOUND`, so `GAME_ALREADY_STARTED` becomes an ordinary toast on a page
+with no room state. The lobby model flags the code, but no recovery dialog variant exists.
+
+- Add `GAME_ALREADY_STARTED` to the set that triggers the recovery modal, and change that
+  modal's copy from "the room was reset" to a variant that says the game is in progress and
+  the seat is gone. Two distinct reasons need two distinct messages — see
+  `15-design-system-consolidation.md` §5 on the recovery-dialog contract.
+- Keep the session id intact when recovering from this (see Phase 2).
+
+### 1.4 Server restart is a distinguishable case — partially shipped
+
+**Partially shipped 2026-10-07** (`05` A8, B2): a client that received `ServerShuttingDown`
+explains a later `ROOM_NOT_FOUND` with a "server restarted" dialog. The `instanceId` below is
+still open; it covers a crash, where no notice is sent.
+
+After a server restart, all rooms and memberships are gone, so a rejoin returns
+`ROOM_NOT_FOUND`. That currently shows the same modal as a host closing the room, which is
+misleading. Add a lightweight server-instance identifier:
+
+- The server generates a random `instanceId` at boot and includes it in the handshake
+  (Socket.IO `io.on("connection")` can emit it, or it can ride on the
+  `PlayerIdentity` payload).
+- The client remembers the last seen `instanceId` in `sessionStorage`. If it changes, the
+  client knows the server restarted and can say so plainly rather than blaming the room.
+
+This is a small addition to `packages/shared/src/events/serverEvents.ts` and pays for
+itself the first time a deployment happens mid-session.
+
+### Acceptance
+
+- [x] E2E: host creates a room, socket drops beyond the recovery window, reconnects, and
+      is still host of the same room with no error emitted (E8).
+- [ ] Server integration test for the same scenario (still absent; see
+      `19-testing-strategy.md`).
+- [ ] Integration test: two different sessions racing `create_room` on the same room id —
+      first wins, second receives `ROOM_ALREADY_EXISTS`.
+- [ ] Integration test: same session emitting `create_room` twice — second is treated as a
+      rejoin and returns the same `playerId` (code shipped in `b022d14`; a dedicated test was
+      not verified).
+- [ ] Integration test: joining a running game with an unknown session receives
+      `GAME_ALREADY_STARTED` and the client shows the in-progress recovery dialog.
+- [ ] Manual: reload a `/lobby/:id?intent=create` URL and confirm no error.
+
+## 2. Phase 2 — Stabilise the client session identity · **S1** · shipped 2026-10-07
+
+Shipped as `05` B1: one never-throwing `deviceStorage` helper, the profile as sole owner of
+`tunetrack.playerDisplayName`, and room close no longer deletes `tunetrack.playerSessionId`.
+Deviations and proof are recorded in `05` B1.
+
+## 3. Phase 3 — Remove `t` from the connection effects · **S2** · shipped
+
+Both room-connection hooks hold `t` in a `translateRef` and no longer list it in the
+connection effect's dependency array; a language change no longer tears down listeners or
+re-emits a join (B8 ledger: "Language changes no longer rebuild the room connection").
+Deviation: the plan's dependency audit kept `navigate` as "stable", but review finding
+F-21 shows `useGameRoomConnection`'s effect still depends on it and re-runs `JoinRoom` on
+any pathname change — keep `navigate` in a ref as well (owned by review Phase 5). A
+component test counting emits across a language change was not verified; add it under
+`19-testing-strategy.md` if absent.
+
+## 4. Phase 4 — Acknowledged, idempotent client actions · **S2** · shipped
+
+Landed as planned: `ActionAck` in `packages/shared/src/events/actionAck.ts`,
+`emitAction` in `apps/web/src/services/socket/emitAction.ts` (pending / rejected / timeout /
+offline results, bounded retry), optional `requestId` on every mutating payload, and a
+per-room `requestId` LRU in `apps/server/src/rooms/RoomStore.ts` that replays the earlier
+ack instead of re-applying. Proof: `createSocketHandler.test.ts` (ack on success, schema
+failure, thrown error, absent ack) plus per-action replay and component tests; the
+settings, profile and rename actions also went through the acknowledged path rather than
+staying fire-and-forget. Known defect: F-01 — `emitAction` calls `crypto.randomUUID()`
+unguarded, which throws on plain-HTTP LAN play; the fix (reuse the `sessionId.ts` fallback)
+is on the hotfix track in `00-index.md` §4.
+
+## 5. Phase 5 — Honest connection state in the UI · **S2** · shipped 2026-10-07
+
+**Shipped 2026-10-07** as `05` B2: the socket client has an explicit retry policy, one
+`useSyncExternalStore` connection-state store drives the Play and Lobby chip and the game
+banner, offline gameplay actions are refused with a localised toast (no offline queue), and both
+room hooks hold `navigate` in a ref. `auth: { sessionId }` is deferred until the server reads it
+(plan 12 §2). Proof: `services/socket/connectionState.test.ts`,
+`pages/GamePage/hooks/useGameRoomConnection.test.ts`, E2E `connection-status.spec.ts`.
+
+## 6. Phase 6 — Shrink the broadcast payload · **S2** · partly shipped (`05` A10)
+
+**Review finding:** B-16. Sequenced last because it is the riskiest change and because
+`11-runtime-and-motion-performance.md` §7 (client-side slice diffing) is its natural
+counterpart.
+
+### 6.1 What is being sent today
+
+`registerSocketHandlers` emits the full `PublicRoomState` to the whole room on every
+mutation. The object includes every player, every player's full timeline, `settings`,
+`turn`, `challengeState`, `revealState`, up to 30 `history` entries and
+`currentTrackCard`. A TT-token award re-sends all of it — roughly 60–70 kB per event at six
+players with thirty cards each (B-16). Every playlist-editor edit additionally re-emits the
+whole imported deck (up to about 300 kB) to the host.
+
+### 6.2 Recommended approach: field-scoped updates, not a generic delta protocol
+
+A generic JSON-patch delta protocol was considered earlier and never started. It is not
+the right first step: it is complex, it makes ordering load-bearing, and it interacts badly
+with Socket.IO recovery replay.
+
+Instead, add a small number of **narrow, named** events for the high-frequency mutations
+that touch one field, and keep `state_update` as the full-state fallback:
+
+| New event                   | Payload                                                             | Replaces a full broadcast for    |
+| --------------------------- | ------------------------------------------------------------------- | -------------------------------- |
+| `player_connection_changed` | `{ roomId, playerId, connectionStatus, reconnectExpiresAtEpochMs }` | connect / disconnect / reconnect |
+| `player_tokens_changed`     | `{ roomId, playerId, ttTokenCount }`                                | award / remove / spend TT        |
+| `room_settings_changed`     | `{ roomId, settings }`                                              | every host settings toggle       |
+| `turn_changed`              | `{ roomId, turn, currentTrackCard }`                                | turn advance                     |
+
+Rules:
+
+- `state_update` remains the authority and is still sent on join, on reconnect, on phase
+  changes (`turn` to `challenge` to `reveal` to `finished`), and whenever a narrow event
+  would be ambiguous. When in doubt, send the full state — correctness first.
+- Every narrow event carries a monotonically increasing `revision` from the room record.
+  The client applies a narrow event only if `revision === localRevision + 1`; otherwise it
+  requests a full `state_update`. This is what makes the scheme safe under recovery replay
+  and out-of-order delivery, and it is far simpler to reason about than a patch protocol.
+- Add `revision: number` to `PublicRoomState`, incremented in `RoomStore.setRoom`. No
+  revision counter exists today.
+
+### 6.3 Also trim what is in the full state
+
+- `history` is already capped at 30. Consider moving it behind an explicit
+  `get_game_history` request, since it is only rendered in the game menu's History tab
+  (`gameMenu/HistoryTabContent.tsx`). That removes the largest field from the common path.
+- Shipped 2026-10-07 (`05` A10): a track edit is answered with `playlist_track_updated`
+  (the edited track); removals keep the full list. Per-message compression above 4 kB cuts the
+  largest state from 117 kB to 13 kB on the wire (`network-baseline.md`).
+- Data-minimisation check: confirm no field in `PublicRoomState` reveals information a
+  player should not have. `currentTrackCard.releaseYear` is already omitted during
+  `turn`/`challenge` — add a test that locks this in, because a regression here would leak
+  the answer to the game.
+
+### Acceptance
+
+- [ ] A TT-token award transmits under 300 bytes instead of the full room state.
+- [ ] `revision` gap handling covered by a test: a client that misses event `n` requests and
+      receives a full state.
+- [ ] A test asserts `currentTrackCard.releaseYear` and `sourceReleaseYear` are absent from
+      the payload during `turn` and `challenge` for every player.
+- [ ] Measured bytes-per-turn recorded in
+      `docs/plans/2026-10-project-review/network-baseline.md` before and after (no baseline
+      file has been created yet).
+
+## 7. Risk register
+
+| Risk                                                                  | Mitigation                                                                                                                                                                                   |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Idempotent `create_room` masks a genuine collision                    | Only the owning session is treated as a rejoin; a different session still gets `ROOM_ALREADY_EXISTS`. The racing-sessions test (Phase 1 acceptance) is still to be written.                  |
+| `connectionStateRecovery` replays packets the client is not ready for | Full `state_update` is last-write-wins, so replay is safe today; the `revision` guard in Phase 6 keeps it safe after narrow events land.                                                     |
+| Acks change error surfacing and hide errors a page currently shows    | The legacy `Error` event is still emitted alongside acks; remove it only when every action is acknowledged and the connection banner exists.                                                 |
+| Narrow events drift out of sync with full state                       | `revision` guard plus a rule that any ambiguity sends full state. Add a test that applies a random interleaving of narrow and full updates and asserts the client state equals the server's. |
+| `reconnectionAttempts: Infinity` masks a dead server                  | The `server_restarting` state and the `instanceId` check give the user an honest message; the banner shows elapsed offline time.                                                             |

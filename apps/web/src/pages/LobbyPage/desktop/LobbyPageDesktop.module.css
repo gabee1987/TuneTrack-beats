@@ -1,4 +1,4 @@
-.screenShell {
+.screen {
   min-height: var(--app-height);
   max-height: var(--app-height);
   overflow-y: auto;
@@ -8,43 +8,42 @@
   background: var(--gradient-app-background);
 }
 
-.panelShell {
-  width: min(100%, 1320px);
-  min-height: calc(var(--app-height) - var(--safe-area-top) - var(--safe-area-bottom) - 52px);
-  margin: 0 auto;
-  padding: clamp(var(--space-5), 2vw, var(--space-6));
+.screen .panel {
+  display: grid;
+  align-content: start;
+  gap: var(--space-4);
+  width: min(100%, 1080px);
+  padding: 0;
   border: 0;
-  border-radius: var(--radius-xl);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-none);
-  outline: 1px solid var(--color-border-subtle);
+  background: transparent;
+  box-shadow: none;
 }
 
-.layoutGrid {
+.layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.18fr) minmax(340px, 0.82fr);
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
   gap: var(--space-5);
   align-items: start;
-  margin-top: var(--space-5);
 }
 
-.primaryColumn,
-.secondaryColumn {
+.primary,
+.aside {
   display: grid;
   gap: var(--space-4);
   align-content: start;
   min-width: 0;
 }
 
-.secondaryColumn {
+/* The players and Start stay in view while the cards scroll. */
+.aside {
   position: sticky;
-  top: calc(var(--safe-area-top) + var(--space-4));
-  max-height: calc(var(--app-height) - var(--safe-area-top) - var(--safe-area-bottom) - var(--space-8));
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding-bottom: var(--space-4);
+  top: 0;
 }
 
-.waitingCard {
-  border-radius: var(--radius-lg);
+.noticeTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--type-title-md-size);
+  line-height: var(--type-title-md-leading);
+  font-weight: var(--type-title-md-weight);
 }

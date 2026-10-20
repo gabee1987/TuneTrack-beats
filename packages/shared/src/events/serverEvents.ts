@@ -1,3 +1,4 @@
+import type { ServerErrorCode } from "../errors/serverErrors.js";
 import type { PlayerId } from "../game/player.js";
 import type { PublicRoomState } from "../game/roomState.js";
 import type { ImportPlaylistResultPayload } from "../spotify/playlistImport.js";
@@ -16,9 +17,11 @@ export const ServerToClientEvent = {
   PlayerIdentity: "player_identity",
   PlaylistImportResult: "playlist_import_result",
   PlaylistTracks: "playlist_tracks",
+  PlaylistTrackUpdated: "playlist_track_updated",
   RoomList: "room_list",
   RoomPreview: "room_preview",
   RoomClosed: "room_closed",
+  ServerShuttingDown: "server_shutting_down",
   SpotifyAuthResult: "spotify_auth_result",
   SpotifyCandidatesApplied: "spotify_candidates_applied",
   SpotifyCandidatesGenerated: "spotify_candidates_generated",
@@ -44,13 +47,13 @@ export interface StateUpdatePayload {
 }
 
 export interface ServerErrorPayload {
-  code: string;
+  code: ServerErrorCode;
   message: string;
 }
 
 export interface RoomClosedPayload {
   roomId: string;
-  reason?: "closed" | "kicked";
+  reason?: "kicked";
   roomName?: string;
   message: string;
 }
@@ -87,7 +90,6 @@ export type SpotifyPlaybackResultPayload =
       requestId: string;
       code:
         | "device_not_found"
-        | "not_host"
         | "not_playback_owner"
         | "stale_playback_generation"
         | "spotify_api_error"
@@ -97,7 +99,10 @@ export type SpotifyPlaybackResultPayload =
     };
 
 export type { ImportPlaylistResultPayload, SpotifyAuthResultPayload };
-export type { PlaylistTracksPayload } from "../spotify/playlistTracks.js";
+export type {
+  PlaylistTrackUpdatedPayload,
+  PlaylistTracksPayload,
+} from "../spotify/playlistTracks.js";
 export type {
   SpotifyCandidatesAppliedPayload,
   SpotifyCandidatesGeneratedPayload,

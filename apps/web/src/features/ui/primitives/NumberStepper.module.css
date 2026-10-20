@@ -1,0 +1,49 @@
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.stepButton {
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.value {
+  min-width: 3ch;
+  color: var(--color-text-primary);
+  font-size: var(--type-title-md-size);
+  line-height: var(--type-title-md-leading);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.value:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+.input {
+  width: calc(var(--stepper-digits) * 1ch + 2 * var(--space-2) + 2px);
+  min-height: var(--input-min-height);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  background: var(--input-bg);
+  font-family: inherit;
+  appearance: textfield;
+}
+
+.input::-webkit-inner-spin-button,
+.input::-webkit-outer-spin-button {
+  margin: 0;
+  appearance: none;
+}
+
+.input:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}

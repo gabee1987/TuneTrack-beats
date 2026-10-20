@@ -1,4 +1,4 @@
-import type { PublicRoomState } from "@tunetrack/shared";
+import type { PublicRoomState } from "@tunetrack/shared/client";
 import type {
   ChallengeMarkerTone,
   GamePageCard,
@@ -8,6 +8,9 @@ import type {
 import { useI18n } from "../../../features/i18n";
 import { useGamePageStatusState } from "./useGamePageStatusState";
 import { useGamePageTimelineState } from "./useGamePageTimelineState";
+
+// One shared instance, so the timeline items memo is not defeated by a fresh array.
+const NO_DISABLED_TIMELINE_SLOTS: number[] = [];
 
 interface UseGamePageDisplayStateOptions {
   activePlayerId: string | null | undefined;
@@ -155,7 +158,7 @@ export function useGamePageDisplayState({
     challengeSuccessMessage: revealOutcomeMessage ?? statusState.challengeSuccessMessage,
     challengeSuccessTone: revealOutcomeTone,
     shouldAnimateCelebrationCardToMine,
-    disabledTimelineSlots: [],
+    disabledTimelineSlots: NO_DISABLED_TIMELINE_SLOTS,
     revealPreviewTransitionKey: timelineState.revealPreviewTransitionKey,
     showCorrectPlacementPreview: timelineState.showCorrectPlacementPreview,
     showCorrectionPreview: timelineState.showCorrectionPreview,

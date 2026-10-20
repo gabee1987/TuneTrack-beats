@@ -1,4 +1,4 @@
-import type { PublicRoomState, TimelineCardPublic } from "@tunetrack/shared";
+import type { PublicRoomState, TimelineCardPublic } from "@tunetrack/shared/client";
 import { useMemo } from "react";
 
 export interface GameHistoryEntry {

@@ -37,7 +37,6 @@ function createRoomState(
     ],
     timelines: {},
     currentTrackCard: null,
-    targetTimelineCardCount: 10,
     settings: {
       challengeWindowDurationSeconds: 10,
       defaultStartingTimelineCardCount: 1,
@@ -47,6 +46,8 @@ function createRoomState(
       ttModeEnabled: true,
       playlistImported: true,
       importedTrackCount: 20,
+      tracksToCheckCount: 0,
+      deckSource: "spotify",
       spotifyAuthStatus: "connected",
       spotifyAccountType: "premium",
       spotifyPlaybackOwnerPlayerId: "host-1",

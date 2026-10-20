@@ -10,13 +10,7 @@ export interface EmptyStateProps {
   title: ReactNode;
 }
 
-export function EmptyState({
-  action,
-  className,
-  description,
-  icon,
-  title,
-}: EmptyStateProps) {
+export function EmptyState({ action, className, description, icon, title }: EmptyStateProps) {
   return (
     <div className={classNames(styles.root, className)}>
       {icon ? <div className={styles.icon}>{icon}</div> : null}

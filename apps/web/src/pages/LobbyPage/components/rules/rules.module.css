@@ -1,0 +1,76 @@
+/* The Rules sheet's sections (`22` §4.7): a micro heading, then rows split by hairlines. */
+.section {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.sectionTitle {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-micro-size);
+  line-height: var(--type-micro-leading);
+  font-weight: var(--type-micro-weight);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.rows {
+  display: grid;
+  gap: var(--space-4);
+  padding-block: var(--space-2);
+}
+
+.segmented {
+  width: 100%;
+}
+
+.playerList {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.player + .player {
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+/* The pressed highlight reaches past the text, which stays aligned with the headings. */
+.playerRow {
+  width: calc(100% + var(--space-4));
+  margin-inline: calc(var(--space-2) * -1);
+  padding-inline: var(--space-2);
+}
+
+.playerPanel {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-1) 0 var(--space-3);
+}
+
+.chevron {
+  color: var(--color-text-secondary);
+  transition: transform var(--motion-standard-duration) var(--motion-ease-standard);
+}
+
+.chevron[data-open] {
+  transform: rotate(180deg);
+}
+
+.rowStatus,
+.dialogBody {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-leading);
+}
+
+.rowStatus {
+  padding-bottom: var(--space-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}

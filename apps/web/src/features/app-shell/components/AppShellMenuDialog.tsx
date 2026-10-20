@@ -1,12 +1,9 @@
-import { motion } from "framer-motion";
-import { useMemo } from "react";
-import { createPortal } from "react-dom";
 import {
-  MotionPresence,
-  createFadeMotion,
-  createStandardTransition,
+  createSideSheetMotion,
+  createSideSheetScrimMotion,
   useReducedMotionPreference,
 } from "../../motion";
+import { Overlay } from "../../overlay";
 import type { AppShellMenuProps } from "../AppShellMenu.types";
 import { useAppShellMenuPreferencesState } from "../hooks/useAppShellMenuPreferencesState";
 import { AppShellMenuSheet } from "./AppShellMenuSheet";
@@ -14,7 +11,8 @@ import styles from "../AppShellMenu.module.css";
 
 interface AppShellMenuDialogProps extends AppShellMenuProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose: (afterClose?: () => void) => void;
+  onClosed?: () => void;
 }
 
 export function AppShellMenuDialog({
@@ -22,55 +20,42 @@ export function AppShellMenuDialog({
   footerActions,
   isOpen,
   onClose,
+  onClosed,
   subtitle,
   tabs,
   title,
 }: AppShellMenuDialogProps) {
   const reduceMotion = useReducedMotionPreference();
   const preferencesState = useAppShellMenuPreferencesState();
-  const availableTabs = useMemo(() => tabs, [tabs]);
-  const activeTabId = availableTabs.some(
-    (tab) => tab.id === preferencesState.lastOpenedMenuTab,
-  )
+  const activeTabId = tabs.some((tab) => tab.id === preferencesState.lastOpenedMenuTab)
     ? preferencesState.lastOpenedMenuTab
-    : availableTabs[0]?.id;
-  const activeTab = availableTabs.find((tab) => tab.id === activeTabId) ?? null;
-  const menuLayer = typeof document !== "undefined" ? document.body : null;
-  const isMobileSheet =
-    typeof window !== "undefined" &&
-    window.matchMedia("(max-width: 720px)").matches;
+    : tabs[0]?.id;
+  const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? null;
 
-  if (!menuLayer) {
-    return null;
-  }
-
-  return createPortal(
-    <MotionPresence>
-      {isOpen ? (
-        <motion.div
-          animate="animate"
-          className={styles.menuOverlay}
-          exit="exit"
-          initial="initial"
-          onClick={onClose}
-          transition={createStandardTransition(reduceMotion)}
-          variants={createFadeMotion(reduceMotion)}
-        >
-          <AppShellMenuSheet
-            activeTab={activeTab}
-            activeTabId={activeTabId}
-            isMobileSheet={isMobileSheet}
-            onClose={onClose}
-            preferencesState={preferencesState}
-            subtitle={subtitle}
-            tabs={availableTabs}
-            title={title}
-            {...(footerAction ? { footerAction } : {})}
-            {...(footerActions ? { footerActions } : {})}
-          />
-        </motion.div>
-      ) : null}
-    </MotionPresence>,
-    menuLayer,
+  return (
+    <Overlay
+      isOpen={isOpen}
+      kind="sheet"
+      label={title}
+      layerClassName={styles.menuLayer}
+      onDismiss={() => onClose()}
+      panelClassName={styles.menuSheet}
+      panelMotion={createSideSheetMotion(reduceMotion)}
+      scrimClassName={styles.menuScrim}
+      scrimMotion={createSideSheetScrimMotion(reduceMotion)}
+      {...(onClosed ? { onClosed } : {})}
+    >
+      <AppShellMenuSheet
+        activeTab={activeTab}
+        activeTabId={activeTabId}
+        onClose={onClose}
+        preferencesState={preferencesState}
+        subtitle={subtitle}
+        tabs={tabs}
+        title={title}
+        {...(footerAction ? { footerAction } : {})}
+        {...(footerActions ? { footerActions } : {})}
+      />
+    </Overlay>
   );
 }

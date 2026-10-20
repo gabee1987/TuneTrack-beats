@@ -3,18 +3,28 @@ import type { Server } from "socket.io";
 import { ServerToClientEvent } from "@tunetrack/shared";
 import { logAuditEvent } from "../app/auditLogger.js";
 import { logger } from "../app/logger.js";
-import type { RoomService } from "../rooms/RoomService.js";
+import type { RoomServices } from "../app/createRoomServices.js";
 import type { SpotifyAuthService } from "../spotify/SpotifyAuthService.js";
+import { createCallbackRateLimit } from "./callbackRateLimit.js";
 
 export function registerSpotifyRoutes(
   app: Express,
   io: Server,
   spotifyAuthService: SpotifyAuthService,
-  roomService: RoomService,
+  services: RoomServices,
 ): void {
-  app.get("/api/spotify/callback", (req: Request, res: Response) => {
-    void handleSpotifyCallback(req, res, io, spotifyAuthService, roomService);
-  });
+  app.get(
+    "/api/spotify/callback",
+    createCallbackRateLimit(),
+    async (req: Request, res: Response) => {
+      try {
+        await handleSpotifyCallback(req, res, io, spotifyAuthService, services);
+      } catch (err) {
+        logger.error({ err }, "Spotify OAuth callback route failed");
+        if (!res.headersSent) res.status(500).type("text/plain").send("Spotify login failed.");
+      }
+    },
+  );
 }
 
 async function handleSpotifyCallback(
@@ -22,7 +32,7 @@ async function handleSpotifyCallback(
   res: Response,
   io: Server,
   spotifyAuthService: SpotifyAuthService,
-  roomService: RoomService,
+  services: RoomServices,
 ): Promise<void> {
   const code = typeof req.query["code"] === "string" ? req.query["code"] : undefined;
   const state = typeof req.query["state"] === "string" ? req.query["state"] : undefined;
@@ -40,7 +50,13 @@ async function handleSpotifyCallback(
     },
   });
 
-  const { authResult, roomId, socketId } = await spotifyAuthService.handleCallback(code, state, error);
+  const { authResult, roomId, socketId } = await spotifyAuthService.handleCallback(
+    code,
+    state,
+    error,
+    (callbackRoomId, callbackSocketId) =>
+      services.spotify.isRoomHostSocket(callbackRoomId, callbackSocketId),
+  );
   logAuditEvent({
     auditKind: "spotify_auth",
     action: "oauth_callback_completed",
@@ -58,7 +74,12 @@ async function handleSpotifyCallback(
 
   if (authResult.success && roomId && socketId) {
     try {
-      const roomState = roomService.updateSpotifyAuthStatus(roomId, socketId, true, authResult.accountType);
+      const roomState = services.spotify.updateSpotifyAuthStatus(
+        roomId,
+        socketId,
+        true,
+        authResult.accountType,
+      );
       io.to(roomId).emit(ServerToClientEvent.StateUpdate, { roomState });
     } catch {
       logger.warn({ roomId }, "Could not update Spotify auth status in room state");
@@ -66,15 +87,20 @@ async function handleSpotifyCallback(
   }
 
   res.setHeader("Content-Type", "text/html");
-  res.send(buildClosePopupHtml());
+  res.send(buildClosePopupHtml(authResult.success));
 }
 
-function buildClosePopupHtml(): string {
+const POPUP_MESSAGE_SUCCEEDED = "Spotify connected. You can close this window.";
+const POPUP_MESSAGE_FAILED = "Spotify login failed. Close this window and try again in TuneTrack.";
+
+function buildClosePopupHtml(isLoginSucceeded: boolean): string {
+  const message = isLoginSucceeded ? POPUP_MESSAGE_SUCCEEDED : POPUP_MESSAGE_FAILED;
+
   return `<!DOCTYPE html>
 <html>
   <head><title>Spotify Login</title></head>
   <body>
-    <p>You can close this window.</p>
+    <p>${message}</p>
     <script>window.close();</script>
   </body>
 </html>`;

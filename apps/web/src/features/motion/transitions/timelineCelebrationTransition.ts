@@ -13,44 +13,6 @@ export const timelineCelebrationTransitionContract = {
   correctPlacementShellContentDurationSeconds: 0.22,
 } as const;
 
-export function createTimelineCelebrationVariants(
-  reduceMotion: boolean,
-): Record<"initial" | "animate" | "exit", TargetAndTransition> {
-  if (reduceMotion) {
-    return {
-      initial: { opacity: 0, rotate: 0, scale: 0.95, y: 12 },
-      animate: {
-        opacity: [0, 1, 1, 0],
-        rotate: 0,
-        scale: [0.95, 1, 1, 0.96],
-        y: [12, 0, -4, -12],
-      },
-      exit: { opacity: 0, rotate: 0, scale: 0.96, y: -14 },
-    };
-  }
-
-  return {
-    initial: { opacity: 0, rotate: -12, scale: 0.55, y: 40 },
-    animate: {
-      opacity: [0, 1, 1, 0],
-      rotate: [-12, 8, -4, 10],
-      scale: [0.55, 1.28, 1.08, 0.92],
-      y: [40, -16, -4, -36],
-    },
-    exit: { opacity: 0, rotate: 10, scale: 0.88, y: -40 },
-  };
-}
-
-export function createTimelineCelebrationTransition(
-  reduceMotion: boolean,
-): Transition {
-  return {
-    duration: reduceMotion ? motionDurations.quick : 1.9,
-    ease: "easeInOut",
-    times: [0, 0.2, 0.7, 1],
-  };
-}
-
 export function createTimelineFlyAnimationVariants(
   reduceMotion: boolean,
   deltaX: number,
@@ -69,9 +31,7 @@ export function createTimelineFlyAnimationVariants(
   };
 }
 
-export function createTimelineFlyAnimationTransition(
-  reduceMotion: boolean,
-): Transition {
+export function createTimelineFlyAnimationTransition(reduceMotion: boolean): Transition {
   return {
     duration: reduceMotion ? motionDurations.quick : motionDurations.expressive,
     ease: motionEasings.emphasized,
@@ -111,9 +71,7 @@ export function createCorrectPlacementCardVariants(
   };
 }
 
-export function createCorrectPlacementCardTransition(
-  reduceMotion: boolean,
-): Transition {
+export function createCorrectPlacementCardTransition(reduceMotion: boolean): Transition {
   if (reduceMotion) {
     return {
       duration: motionDurations.quick,
@@ -161,9 +119,7 @@ export function createCorrectPlacementFillVariants(
   };
 }
 
-export function createCorrectPlacementFillTransition(
-  reduceMotion: boolean,
-): Transition {
+export function createCorrectPlacementFillTransition(reduceMotion: boolean): Transition {
   if (reduceMotion) {
     return {
       duration: motionDurations.quick,
@@ -202,9 +158,7 @@ export function createCorrectPlacementContentVariants(
   };
 }
 
-export function createCorrectPlacementContentTransition(
-  reduceMotion: boolean,
-): Transition {
+export function createCorrectPlacementContentTransition(reduceMotion: boolean): Transition {
   if (reduceMotion) {
     return {
       duration: motionDurations.quick,
@@ -242,9 +196,7 @@ export function createCorrectPlacementShellContentVariants(
   };
 }
 
-export function createCorrectPlacementShellContentTransition(
-  reduceMotion: boolean,
-): Transition {
+export function createCorrectPlacementShellContentTransition(reduceMotion: boolean): Transition {
   if (reduceMotion) {
     return {
       duration: motionDurations.quick,
@@ -253,8 +205,7 @@ export function createCorrectPlacementShellContentTransition(
   }
 
   return {
-    duration:
-      timelineCelebrationTransitionContract.correctPlacementShellContentDurationSeconds,
+    duration: timelineCelebrationTransitionContract.correctPlacementShellContentDurationSeconds,
     ease: [0.2, 0.82, 0.24, 1],
     times: [0, 0.34, 0.74, 1],
     delay: 0,

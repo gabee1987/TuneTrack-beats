@@ -1,10 +1,13 @@
-import { type PublicRoomState } from "@tunetrack/shared";
+import { type PublicRoomState } from "@tunetrack/shared/client";
 import type { Translate } from "../../../features/i18n";
-import { useHostPlaybackContext } from "../hooks/HostPlaybackProvider";
-import styles from "../gamePageStyles";
+import { useHostPlaybackControls, useHostPlaybackProgress } from "../hooks/HostPlaybackProvider";
+import { useInterpolatedPlaybackPosition } from "../hooks/useInterpolatedPlaybackPosition";
+import styles from "../gamePagePlayback.module.css";
+import { resolveArtworkUrl } from "../../../features/ui/resolveArtworkUrl";
 
 interface PlaybackTabContentProps {
-  roomState: PublicRoomState;
+  currentTrackCard: PublicRoomState["currentTrackCard"];
+  status: PublicRoomState["status"];
   t: Translate;
 }
 
@@ -15,9 +18,11 @@ function formatMs(ms: number): string {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
-export function PlaybackTabContent({ roomState, t }: PlaybackTabContentProps) {
-  const { isReady, isPlaying, position, duration, pause, resume, seek } = useHostPlaybackContext();
-  const { currentTrackCard, status } = roomState;
+export function PlaybackTabContent({ currentTrackCard, status, t }: PlaybackTabContentProps) {
+  const { isReady, needsUserGesture, pause, restart, resume, seek } = useHostPlaybackControls();
+  const progress = useHostPlaybackProgress();
+  const { duration, isPlaying } = progress;
+  const position = useInterpolatedPlaybackPosition(progress);
   const showTrackDetails = status === "reveal" || status === "finished";
   const hasTrack = currentTrackCard !== null;
 
@@ -30,7 +35,11 @@ export function PlaybackTabContent({ roomState, t }: PlaybackTabContentProps) {
           ) : null}
           {showTrackDetails && currentTrackCard.artworkUrl ? (
             <div className={styles.playbackArtworkWrapper}>
-              <img alt="" className={styles.playbackArtworkImg} src={currentTrackCard.artworkUrl} />
+              <img
+                alt=""
+                className={styles.playbackArtworkImg}
+                src={resolveArtworkUrl(currentTrackCard)}
+              />
             </div>
           ) : (
             <div className={styles.playbackMusicIconBox}>
@@ -80,17 +89,36 @@ export function PlaybackTabContent({ roomState, t }: PlaybackTabContentProps) {
           </div>
         ) : null}
 
+        {hasTrack && !isReady ? (
+          <p className={styles.playbackHiddenNote}>{t("gameMenu.playbackNotReady")}</p>
+        ) : null}
+        {hasTrack && isReady && needsUserGesture ? (
+          <p className={styles.playbackHiddenNote}>{t("gameMenu.playbackNeedsGesture")}</p>
+        ) : null}
+
         <div className={styles.playbackActions}>
           {hasTrack ? (
-            <button
-              aria-label={isPlaying ? t("gameMenu.pause") : t("gameMenu.play")}
-              className={styles.playbackCircleBtn}
-              disabled={!isReady}
-              onClick={isPlaying ? pause : resume}
-              type="button"
-            >
-              {isPlaying ? <PlaybackPauseIcon /> : <PlaybackPlayIcon />}
-            </button>
+            <>
+              <button
+                aria-label={isPlaying ? t("gameMenu.pause") : t("gameMenu.play")}
+                className={styles.playbackCircleBtn}
+                disabled={!isReady}
+                onClick={isPlaying ? pause : resume}
+                type="button"
+              >
+                {isPlaying ? <PlaybackPauseIcon /> : <PlaybackPlayIcon />}
+              </button>
+              <button
+                aria-label={t("gameMenu.restart")}
+                className={`${styles.playbackCircleBtn} ${styles.playbackCircleBtnSecondary}`}
+                disabled={!isReady}
+                onClick={restart}
+                title={t("gameMenu.restart")}
+                type="button"
+              >
+                <PlaybackRestartIcon />
+              </button>
+            </>
           ) : null}
         </div>
       </div>
@@ -110,6 +138,14 @@ function PlaybackPauseIcon() {
   return (
     <svg aria-hidden="true" fill="currentColor" height={20} viewBox="0 0 24 24" width={32}>
       <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+    </svg>
+  );
+}
+
+function PlaybackRestartIcon() {
+  return (
+    <svg aria-hidden="true" fill="currentColor" height={20} viewBox="0 0 24 24" width={32}>
+      <path d="M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" />
     </svg>
   );
 }

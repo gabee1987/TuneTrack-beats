@@ -1,5 +1,5 @@
-import { createPortal } from "react-dom";
-import { motion } from "framer-motion";
+import { LayerPortal } from "../../../features/overlay";
+import { m } from "framer-motion";
 import { memo, useRef, useState } from "react";
 import {
   MotionPresence,
@@ -15,7 +15,7 @@ import { ChallengeActionPanel } from "./ChallengeActionPanel";
 import { FinishedStatePanel } from "./FinishedStatePanel";
 import { RevealActionDock } from "./RevealActionDock";
 import { TurnActionDock } from "./TurnActionDock";
-import styles from "./gamePageActionPanelsStyles";
+import styles from "./gamePageActionPanelsDock.module.css";
 
 interface GamePageActionPanelsProps {
   model: GamePageActionPanelsModel;
@@ -33,6 +33,7 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
   const animationKeyRef = useRef(0);
   const [tokenSpendFlyouts, setTokenSpendFlyouts] = useState<TokenSpendFlyoutState[]>([]);
   const {
+    buyTimelineCardActionStatus,
     canClaimChallenge,
     canConfirmBeatPlacement,
     canConfirmReveal,
@@ -42,8 +43,11 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     canUseSkipTrack,
     challengeActionBody,
     challengeActionTitle,
+    challengeDeadlineEpochMs,
+    challengePhase,
+    claimChallengeActionStatus,
+    confirmRevealActionStatus,
     currentPlayerTtCount,
-    getPlayerName,
     handleBuyTimelineCardWithTt,
     handleClaimChallenge,
     handleConfirmReveal,
@@ -52,8 +56,26 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
     handleResolveChallengeWindow,
     handleSkipTrackWithTt,
     isCurrentPlayerTurn,
-    roomState,
+    isClaimChallengePending,
+    isConfirmRevealPending,
+    isBuyTimelineCardPending,
+    isPlaceCardPending,
+    isPlaceChallengePending,
+    isResolveChallengeWindowPending,
+    isSkipTrackPending,
+    isSkipTurnPending,
+    placeCardActionStatus,
+    placeChallengeActionStatus,
+    resolveChallengeWindowActionStatus,
+    skipTrackActionStatus,
+    skipTurnActionStatus,
     showHelperLabels,
+    skipCandidateName,
+    status,
+    ttModeEnabled,
+    turnSkipDeadlineEpochMs,
+    winnerPlayerId,
+    winnerPlayerName,
   } = model;
 
   function handleTokenSpendAnimationStart(payload: {
@@ -81,41 +103,38 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
 
   return (
     <>
-      {typeof document !== "undefined"
-        ? createPortal(
-            <MotionPresence mode="sync">
-              {tokenSpendFlyouts.map((flyout) => (
-                <span
-                  aria-hidden="true"
-                  className={styles.tokenSpendFlyoutAnchor}
-                  key={flyout.key}
-                  style={{ left: flyout.originX, top: flyout.originY - 28 }}
+      <LayerPortal>
+        <MotionPresence mode="sync">
+          {tokenSpendFlyouts.map((flyout) => (
+            <span
+              aria-hidden="true"
+              className={styles.tokenSpendFlyoutAnchor}
+              key={flyout.key}
+              style={{ left: flyout.originX, top: flyout.originY - 28 }}
+            >
+              <m.span
+                animate="animate"
+                className={styles.tokenSpendFlyout}
+                initial="initial"
+                onAnimationComplete={() => clearTokenSpendFlyout(flyout.key)}
+                transition={createTokenSpendFlyoutTransition(reduceMotion)}
+                variants={createTokenSpendFlyoutVariants(reduceMotion)}
+              >
+                <m.span
+                  animate="animate"
+                  className={styles.tokenSpendFlyoutContent}
+                  initial="initial"
+                  transition={createMenuTokenAdjustFlyoutPopTransition(reduceMotion)}
+                  variants={createMenuTokenAdjustFlyoutPopVariants(reduceMotion)}
                 >
-                  <motion.span
-                    animate="animate"
-                    className={styles.tokenSpendFlyout}
-                    initial="initial"
-                    onAnimationComplete={() => clearTokenSpendFlyout(flyout.key)}
-                    transition={createTokenSpendFlyoutTransition(reduceMotion)}
-                    variants={createTokenSpendFlyoutVariants(reduceMotion)}
-                  >
-                    <motion.span
-                      animate="animate"
-                      className={styles.tokenSpendFlyoutContent}
-                      initial="initial"
-                      transition={createMenuTokenAdjustFlyoutPopTransition(reduceMotion)}
-                      variants={createMenuTokenAdjustFlyoutPopVariants(reduceMotion)}
-                    >
-                      <span className={styles.tokenSpendFlyoutAmount}>{flyout.amount}</span>
-                      <TtTokenIcon className={styles.tokenSpendIcon} />
-                    </motion.span>
-                  </motion.span>
-                </span>
-              ))}
-            </MotionPresence>,
-            document.body,
-          )
-        : null}
+                  <span className={styles.tokenSpendFlyoutAmount}>{flyout.amount}</span>
+                  <TtTokenIcon className={styles.tokenSpendIcon} />
+                </m.span>
+              </m.span>
+            </span>
+          ))}
+        </MotionPresence>
+      </LayerPortal>
 
       <ChallengeActionPanel
         canClaimChallenge={canClaimChallenge}
@@ -123,29 +142,41 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
         canResolveChallengeWindow={canResolveChallengeWindow}
         challengeActionBody={challengeActionBody}
         challengeActionTitle={challengeActionTitle}
+        challengeDeadlineEpochMs={challengeDeadlineEpochMs}
+        challengePhase={challengePhase}
+        claimChallengeActionStatus={claimChallengeActionStatus}
         currentPlayerTtCount={currentPlayerTtCount}
         handleClaimChallenge={handleClaimChallenge}
         handlePlaceChallenge={handlePlaceChallenge}
         handleResolveChallengeWindow={handleResolveChallengeWindow}
         isCurrentPlayerTurn={isCurrentPlayerTurn}
+        isClaimChallengePending={isClaimChallengePending}
+        isPlaceChallengePending={isPlaceChallengePending}
+        isResolveChallengeWindowPending={isResolveChallengeWindowPending}
         onTokenSpendAnimationStart={handleTokenSpendAnimationStart}
-        roomState={roomState}
+        placeChallengeActionStatus={placeChallengeActionStatus}
+        resolveChallengeWindowActionStatus={resolveChallengeWindowActionStatus}
+        ttModeEnabled={ttModeEnabled}
       />
 
       <FinishedStatePanel
         currentPlayerId={model.currentPlayerId}
-        getPlayerName={getPlayerName}
-        roomState={roomState}
         showHelperLabels={showHelperLabels}
+        status={status}
+        winnerPlayerId={winnerPlayerId}
+        winnerPlayerName={winnerPlayerName}
       />
 
       <RevealActionDock
         canConfirmReveal={canConfirmReveal}
+        confirmRevealActionStatus={confirmRevealActionStatus}
         handleConfirmReveal={handleConfirmReveal}
-        roomState={roomState}
+        isConfirmRevealPending={isConfirmRevealPending}
+        status={status}
       />
 
       <TurnActionDock
+        buyTimelineCardActionStatus={buyTimelineCardActionStatus}
         canConfirmTurnPlacement={canConfirmTurnPlacement}
         canSkipOfflinePlayer={model.canSkipOfflinePlayer}
         canUseBuyCard={canUseBuyCard}
@@ -154,8 +185,17 @@ function GamePageActionPanelsComponent({ model }: GamePageActionPanelsProps) {
         handlePlaceCard={handlePlaceCard}
         handleSkipOfflinePlayer={model.handleSkipTurn}
         handleSkipTrackWithTt={handleSkipTrackWithTt}
+        isBuyTimelineCardPending={isBuyTimelineCardPending}
+        isPlaceCardPending={isPlaceCardPending}
+        isSkipTrackPending={isSkipTrackPending}
+        isSkipTurnPending={isSkipTurnPending}
+        placeCardActionStatus={placeCardActionStatus}
         onTokenSpendAnimationStart={handleTokenSpendAnimationStart}
-        roomState={roomState}
+        skipCandidateName={skipCandidateName}
+        skipTrackActionStatus={skipTrackActionStatus}
+        skipTurnActionStatus={skipTurnActionStatus}
+        status={status}
+        turnSkipDeadlineEpochMs={turnSkipDeadlineEpochMs}
       />
     </>
   );
@@ -174,10 +214,14 @@ function areActionPanelModelsEqual(
     previousModel.canSkipOfflinePlayer === nextModel.canSkipOfflinePlayer &&
     previousModel.canUseBuyCard === nextModel.canUseBuyCard &&
     previousModel.canUseSkipTrack === nextModel.canUseSkipTrack &&
+    previousModel.buyTimelineCardActionStatus === nextModel.buyTimelineCardActionStatus &&
     previousModel.challengeActionBody === nextModel.challengeActionBody &&
     previousModel.challengeActionTitle === nextModel.challengeActionTitle &&
+    previousModel.challengeDeadlineEpochMs === nextModel.challengeDeadlineEpochMs &&
+    previousModel.challengePhase === nextModel.challengePhase &&
+    previousModel.claimChallengeActionStatus === nextModel.claimChallengeActionStatus &&
+    previousModel.confirmRevealActionStatus === nextModel.confirmRevealActionStatus &&
     previousModel.currentPlayerTtCount === nextModel.currentPlayerTtCount &&
-    previousModel.getPlayerName === nextModel.getPlayerName &&
     previousModel.handleBuyTimelineCardWithTt === nextModel.handleBuyTimelineCardWithTt &&
     previousModel.handleClaimChallenge === nextModel.handleClaimChallenge &&
     previousModel.handleConfirmReveal === nextModel.handleConfirmReveal &&
@@ -187,8 +231,27 @@ function areActionPanelModelsEqual(
     previousModel.handleSkipTrackWithTt === nextModel.handleSkipTrackWithTt &&
     previousModel.handleSkipTurn === nextModel.handleSkipTurn &&
     previousModel.isCurrentPlayerTurn === nextModel.isCurrentPlayerTurn &&
-    previousModel.roomState === nextModel.roomState &&
-    previousModel.showHelperLabels === nextModel.showHelperLabels
+    previousModel.isClaimChallengePending === nextModel.isClaimChallengePending &&
+    previousModel.isConfirmRevealPending === nextModel.isConfirmRevealPending &&
+    previousModel.isBuyTimelineCardPending === nextModel.isBuyTimelineCardPending &&
+    previousModel.isPlaceCardPending === nextModel.isPlaceCardPending &&
+    previousModel.isPlaceChallengePending === nextModel.isPlaceChallengePending &&
+    previousModel.isResolveChallengeWindowPending === nextModel.isResolveChallengeWindowPending &&
+    previousModel.isSkipTrackPending === nextModel.isSkipTrackPending &&
+    previousModel.isSkipTurnPending === nextModel.isSkipTurnPending &&
+    previousModel.placeCardActionStatus === nextModel.placeCardActionStatus &&
+    previousModel.placeChallengeActionStatus === nextModel.placeChallengeActionStatus &&
+    previousModel.resolveChallengeWindowActionStatus ===
+      nextModel.resolveChallengeWindowActionStatus &&
+    previousModel.skipTrackActionStatus === nextModel.skipTrackActionStatus &&
+    previousModel.skipTurnActionStatus === nextModel.skipTurnActionStatus &&
+    previousModel.showHelperLabels === nextModel.showHelperLabels &&
+    previousModel.skipCandidateName === nextModel.skipCandidateName &&
+    previousModel.status === nextModel.status &&
+    previousModel.ttModeEnabled === nextModel.ttModeEnabled &&
+    previousModel.turnSkipDeadlineEpochMs === nextModel.turnSkipDeadlineEpochMs &&
+    previousModel.winnerPlayerId === nextModel.winnerPlayerId &&
+    previousModel.winnerPlayerName === nextModel.winnerPlayerName
   );
 }
 

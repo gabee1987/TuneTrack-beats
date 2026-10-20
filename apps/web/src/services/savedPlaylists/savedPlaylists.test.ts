@@ -3,6 +3,7 @@ import {
   deleteSavedPlaylist,
   listSavedPlaylists,
   savePlaylist,
+  updateSavedPlaylist,
   type StorageLike,
 } from "./savedPlaylists";
 
@@ -83,6 +84,63 @@ describe("savedPlaylists", () => {
     const remaining = deleteSavedPlaylist(first?.id ?? "", storage);
 
     expect(remaining).toEqual([expect.objectContaining({ id: second?.id })]);
+  });
+
+  it("reads a deck saved before covers existed without losing anything", () => {
+    const storage = new MemoryStorage();
+    const savedBeforeCovers = {
+      id: "TEST_DECK_1",
+      name: "Test Deck",
+      source: "spotify",
+      sourcePlaylistUrl: "https://open.spotify.com/playlist/TESTPLAYLIST1234567890",
+      createdAtEpochMs: 1,
+      updatedAtEpochMs: 2,
+      tracks: [{ ...createTrack("track-1"), sourceReleaseYear: 2011, metadataStatus: "verified" }],
+    };
+    storage.setItem(
+      "tunetrack.savedPlaylists.v1",
+      JSON.stringify({ playlists: [savedBeforeCovers] }),
+    );
+
+    expect(listSavedPlaylists(storage)).toEqual([savedBeforeCovers]);
+  });
+
+  it("keeps the cover and the deck's other details when its songs are written back", () => {
+    const storage = new MemoryStorage();
+    const deck = savePlaylist(
+      {
+        imageUrl: "https://example.com/cover.jpg",
+        name: "Covered",
+        tracks: [createTrack("track-1")],
+      },
+      storage,
+    );
+
+    const [written] = updateSavedPlaylist(
+      deck?.id ?? "",
+      [{ ...createTrack("track-1"), releaseYear: 1979, metadataStatus: "verified" }],
+      storage,
+    );
+
+    expect(written).toEqual(
+      expect.objectContaining({
+        imageUrl: "https://example.com/cover.jpg",
+        name: "Covered",
+        tracks: [expect.objectContaining({ metadataStatus: "verified", releaseYear: 1979 })],
+      }),
+    );
+  });
+
+  it("keeps the 20 newest decks", () => {
+    const storage = new MemoryStorage();
+    for (let index = 1; index <= 21; index++) {
+      savePlaylist({ name: `Deck ${index}`, tracks: [createTrack("track-1")] }, storage);
+    }
+
+    const decks = listSavedPlaylists(storage);
+    expect(decks).toHaveLength(20);
+    expect(decks[0]?.name).toBe("Deck 21");
+    expect(decks.some((deck) => deck.name === "Deck 1")).toBe(false);
   });
 });
 

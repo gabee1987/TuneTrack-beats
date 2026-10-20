@@ -9,9 +9,22 @@ import {
   type PublicChallengeState,
   type PublicRevealState,
   type PublicRoomState,
+  type PublicRoomSummary,
   type TimelineCardPublic,
   type TrackCardPublic,
+  DomainError,
 } from "@tunetrack/shared";
+
+export function mapRoomStateToSummary(roomState: PublicRoomState): PublicRoomSummary {
+  const hostPlayer = roomState.players.find((player) => player.id === roomState.hostId);
+
+  return {
+    hostName: hostPlayer?.displayName ?? "Host",
+    playerCount: roomState.players.length,
+    roomId: roomState.roomId,
+    status: roomState.status,
+  };
+}
 
 /** Public `state_update` history is capped so payloads stay bounded as games lengthen. */
 export const PUBLIC_HISTORY_MAX_ENTRIES = 30;
@@ -139,7 +152,7 @@ function mapTimelineCardToPublicTimelineCard(
   trackCardsById: Map<string, GameTrackCard>,
 ): TimelineCardPublic {
   const trackCard = trackCardsById.get(timelineCard.id);
-  if (!trackCard) throw new Error("TRACK_CARD_NOT_FOUND");
+  if (!trackCard) throw new DomainError("TRACK_CARD_NOT_FOUND");
 
   return {
     ...mapTrackCardToPublicTrackCard(trackCard, true),

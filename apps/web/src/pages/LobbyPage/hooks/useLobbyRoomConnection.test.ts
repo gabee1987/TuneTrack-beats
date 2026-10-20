@@ -1,10 +1,45 @@
-import { describe, expect, it } from "vitest";
-import { getLobbyRoomStateUpdateDecision } from "./useLobbyRoomConnection";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { ClientToServerEvent, ServerToClientEvent } from "@tunetrack/shared/client";
+import { createElement, type ReactNode } from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { I18nProvider, useI18n } from "../../../features/i18n";
+import { getSharedFakeSocket, resetSharedFakeSocket } from "../../../test/fakeSocket";
+import { buildLobbyRoomState, TEST_HOST_ID } from "../../../test/roomStateFixtures";
+import { getLobbyRoomStateUpdateDecision, useLobbyRoomConnection } from "./useLobbyRoomConnection";
+
+vi.mock("../../../services/socket/socketClient", async () => {
+  const { socketClientMockForSharedSocket } = await import("../../../test/fakeSocket");
+  return socketClientMockForSharedSocket();
+});
+
+beforeEach(() => {
+  resetSharedFakeSocket();
+});
+
+function I18nTestWrapper({ children }: { children: ReactNode }) {
+  return createElement(I18nProvider, null, children);
+}
 
 describe("getLobbyRoomStateUpdateDecision", () => {
+  it("accepts a generated room and navigates to its authoritative code", () => {
+    expect(
+      getLobbyRoomStateUpdateDecision({
+        isCreatingRoom: true,
+        joinedRoomId: null,
+        nextRoomId: "beat-wave-42",
+        nextStatus: "lobby",
+        requestedRoomId: undefined,
+      }),
+    ).toEqual({
+      accept: true,
+      shouldNavigateToRoom: true,
+    });
+  });
+
   it("accepts state updates for the requested room", () => {
     expect(
       getLobbyRoomStateUpdateDecision({
+        isCreatingRoom: false,
         joinedRoomId: "party-room",
         nextRoomId: "party-room-1",
         nextStatus: "lobby",
@@ -16,9 +51,25 @@ describe("getLobbyRoomStateUpdateDecision", () => {
     });
   });
 
+  it("accepts the room joined by a code typed in another case and moves to the stored code", () => {
+    expect(
+      getLobbyRoomStateUpdateDecision({
+        isCreatingRoom: false,
+        joinedRoomId: null,
+        nextRoomId: "TEST_ROOM_1",
+        nextStatus: "lobby",
+        requestedRoomId: "test_room_1",
+      }),
+    ).toEqual({
+      accept: true,
+      shouldNavigateToRoom: true,
+    });
+  });
+
   it("navigates when an established lobby room is renamed by the host", () => {
     expect(
       getLobbyRoomStateUpdateDecision({
+        isCreatingRoom: false,
         joinedRoomId: "party-room",
         nextRoomId: "party-room-1",
         nextStatus: "lobby",
@@ -33,6 +84,7 @@ describe("getLobbyRoomStateUpdateDecision", () => {
   it("ignores stale updates from a previous room after the player requested a new room", () => {
     expect(
       getLobbyRoomStateUpdateDecision({
+        isCreatingRoom: false,
         joinedRoomId: "party-room",
         nextRoomId: "party-room",
         nextStatus: "lobby",
@@ -41,6 +93,234 @@ describe("getLobbyRoomStateUpdateDecision", () => {
     ).toEqual({
       accept: false,
       shouldNavigateToRoom: false,
+    });
+  });
+});
+
+describe("useLobbyRoomConnection", () => {
+  it("creates without a room id and follows the server-generated code", async () => {
+    const socket = getSharedFakeSocket();
+    const navigate = vi.fn();
+
+    renderHook(
+      () =>
+        useLobbyRoomConnection({
+          displayName: "Player One",
+          intent: "create",
+          navigate,
+          playerSessionId: "TEST_SESSION_1",
+          roomId: undefined,
+        }),
+      { wrapper: I18nTestWrapper },
+    );
+
+    await waitFor(() => {
+      expect(socket.emittedFor(ClientToServerEvent.CreateRoom)).toEqual([
+        {
+          displayName: "Player One",
+          sessionId: "TEST_SESSION_1",
+        },
+      ]);
+    });
+
+    act(() => {
+      socket.serverEmit(ServerToClientEvent.StateUpdate, {
+        roomState: buildLobbyRoomState({ roomId: "beat-wave-42" }),
+      });
+    });
+
+    expect(navigate).toHaveBeenCalledWith("/lobby/beat-wave-42", {
+      replace: true,
+      state: null,
+    });
+  });
+
+  it("retries generated creation after reconnecting before navigation", async () => {
+    const socket = getSharedFakeSocket();
+    const navigate = vi.fn();
+
+    renderHook(
+      () =>
+        useLobbyRoomConnection({
+          displayName: "Player One",
+          intent: "create",
+          navigate,
+          playerSessionId: "TEST_SESSION_1",
+          roomId: undefined,
+        }),
+      { wrapper: I18nTestWrapper },
+    );
+
+    await waitFor(() => {
+      expect(socket.emittedFor(ClientToServerEvent.CreateRoom)).toHaveLength(1);
+    });
+
+    act(() => socket.simulateReconnect());
+
+    expect(socket.emittedFor(ClientToServerEvent.CreateRoom)).toHaveLength(2);
+    expect(socket.emittedFor(ClientToServerEvent.JoinRoom)).toHaveLength(0);
+  });
+
+  it("creates once and joins when the same hook instance reconnects", async () => {
+    const socket = getSharedFakeSocket();
+    const navigate = vi.fn();
+
+    renderHook(
+      () =>
+        useLobbyRoomConnection({
+          displayName: "Player One",
+          intent: "create",
+          navigate,
+          playerSessionId: "TEST_SESSION_1",
+          roomId: "TEST_ROOM_1",
+        }),
+      { wrapper: I18nTestWrapper },
+    );
+
+    await waitFor(() => {
+      expect(socket.emittedFor(ClientToServerEvent.CreateRoom)).toHaveLength(1);
+    });
+
+    act(() => {
+      socket.simulateReconnect();
+    });
+
+    expect(socket.emittedFor(ClientToServerEvent.CreateRoom)).toHaveLength(1);
+    expect(socket.emittedFor(ClientToServerEvent.JoinRoom)).toEqual([
+      {
+        displayName: "Player One",
+        roomId: "TEST_ROOM_1",
+        sessionId: "TEST_SESSION_1",
+      },
+    ]);
+  });
+
+  it("keeps its socket handshake and listeners unchanged when the language changes", async () => {
+    const socket = getSharedFakeSocket();
+    const navigate = vi.fn();
+    const onSpy = vi.spyOn(socket, "on");
+    const offSpy = vi.spyOn(socket, "off");
+
+    const view = renderHook(
+      () => {
+        const { setLanguage } = useI18n();
+        const connection = useLobbyRoomConnection({
+          displayName: "Player One",
+          intent: "join",
+          navigate,
+          playerSessionId: "TEST_SESSION_1",
+          roomId: "TEST_ROOM_1",
+        });
+        return { connection, setLanguage };
+      },
+      { wrapper: I18nTestWrapper },
+    );
+
+    await waitFor(() => {
+      expect(socket.emittedFor(ClientToServerEvent.JoinRoom)).toHaveLength(1);
+    });
+    socket.clearEmitted();
+    const listenerRegistrationCount = onSpy.mock.calls.length;
+
+    await act(async () => {
+      view.result.current.setLanguage("hu");
+      await Promise.resolve();
+    });
+
+    expect(socket.emitted).toHaveLength(0);
+    expect(onSpy).toHaveBeenCalledTimes(listenerRegistrationCount);
+    expect(offSpy).not.toHaveBeenCalled();
+
+    act(() => {
+      socket.serverEmit(ServerToClientEvent.Error, {
+        code: "ONLY_HOST_CAN_START_GAME",
+        message: "Only the host can start the game.",
+      });
+    });
+
+    expect(view.result.current.connection.errorMessage).toBe(
+      "Csak a host indíthatja el a játékot.",
+    );
+  });
+
+  it("keeps the connection mounted when the saved player name changes", async () => {
+    const socket = getSharedFakeSocket();
+    const navigate = vi.fn();
+    const onSpy = vi.spyOn(socket, "on");
+    const offSpy = vi.spyOn(socket, "off");
+    const view = renderHook(
+      ({ displayName }) =>
+        useLobbyRoomConnection({
+          displayName,
+          intent: "join",
+          navigate,
+          playerSessionId: "TEST_SESSION_1",
+          roomId: "TEST_ROOM_1",
+        }),
+      { initialProps: { displayName: "Old Name" }, wrapper: I18nTestWrapper },
+    );
+
+    await waitFor(() => {
+      expect(socket.emittedFor(ClientToServerEvent.JoinRoom)).toHaveLength(1);
+    });
+    socket.clearEmitted();
+    const listenerRegistrationCount = onSpy.mock.calls.length;
+
+    view.rerender({ displayName: "Updated Host" });
+
+    expect(socket.emitted).toHaveLength(0);
+    expect(onSpy).toHaveBeenCalledTimes(listenerRegistrationCount);
+    expect(offSpy).not.toHaveBeenCalled();
+
+    act(() => socket.simulateReconnect());
+
+    expect(socket.emittedFor(ClientToServerEvent.JoinRoom)).toEqual([
+      {
+        displayName: "Updated Host",
+        roomId: "TEST_ROOM_1",
+        sessionId: "TEST_SESSION_1",
+      },
+    ]);
+  });
+
+  it("uses the authoritative player name when a room rename changes the route", async () => {
+    const socket = getSharedFakeSocket();
+    const navigate = vi.fn();
+
+    renderHook(
+      () =>
+        useLobbyRoomConnection({
+          displayName: "Old Name",
+          intent: "join",
+          navigate,
+          playerSessionId: "TEST_SESSION_1",
+          roomId: "TEST_ROOM_1",
+        }),
+      { wrapper: I18nTestWrapper },
+    );
+
+    await waitFor(() => {
+      expect(socket.listenerCount(ServerToClientEvent.StateUpdate)).toBe(1);
+    });
+
+    act(() => {
+      socket.serverEmit(ServerToClientEvent.PlayerIdentity, { playerId: TEST_HOST_ID });
+      socket.serverEmit(ServerToClientEvent.StateUpdate, {
+        roomState: buildLobbyRoomState(),
+      });
+      socket.serverEmit(ServerToClientEvent.StateUpdate, {
+        roomState: buildLobbyRoomState({
+          roomId: "renamed-room",
+          players: buildLobbyRoomState().players.map((player) =>
+            player.id === TEST_HOST_ID ? { ...player, displayName: "Updated Host" } : player,
+          ),
+        }),
+      });
+    });
+
+    expect(navigate).toHaveBeenCalledWith("/lobby/renamed-room", {
+      replace: true,
+      state: null,
     });
   });
 });

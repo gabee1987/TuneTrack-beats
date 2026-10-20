@@ -1,22 +1,16 @@
-import { LayoutGroup, motion } from "framer-motion";
+import { LayoutGroup, m } from "framer-motion";
 import { memo } from "react";
 import { useI18n } from "../../../features/i18n";
-import {
-  createLayoutTransition,
-  useReducedMotionPreference,
-} from "../../../features/motion";
+import { createLayoutTransition, useReducedMotionPreference } from "../../../features/motion";
 import type { TimelinePanelHeaderModel } from "../GamePage.types";
-import styles from "./timelineStyles";
+import styles from "./timelinePanelShell.module.css";
 
 interface TimelinePanelHeaderProps {
   model: TimelinePanelHeaderModel;
   onMineButtonRef: (node: HTMLButtonElement | null) => void;
 }
 
-function TimelinePanelHeaderComponent({
-  model,
-  onMineButtonRef,
-}: TimelinePanelHeaderProps) {
+function TimelinePanelHeaderComponent({ model, onMineButtonRef }: TimelinePanelHeaderProps) {
   const { t } = useI18n();
   const reduceMotion = useReducedMotionPreference();
   const layoutTransition = createLayoutTransition(reduceMotion);
@@ -52,7 +46,7 @@ function TimelinePanelHeaderComponent({
               type="button"
             >
               {timelineView === "active" ? (
-                <motion.span
+                <m.span
                   className={styles.timelineViewCompactActivePill}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -60,7 +54,7 @@ function TimelinePanelHeaderComponent({
                   transition={layoutTransition}
                 >
                   <span className={styles.timelineViewCompactActiveGlow} />
-                </motion.span>
+                </m.span>
               ) : null}
               <span className={styles.timelineViewCompactButtonLabel}>
                 {t("game.timeline.active")}
@@ -75,7 +69,7 @@ function TimelinePanelHeaderComponent({
               type="button"
             >
               {timelineView === "mine" ? (
-                <motion.span
+                <m.span
                   className={styles.timelineViewCompactActivePill}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -83,7 +77,7 @@ function TimelinePanelHeaderComponent({
                   transition={layoutTransition}
                 >
                   <span className={styles.timelineViewCompactActiveGlow} />
-                </motion.span>
+                </m.span>
               ) : null}
               <span className={styles.timelineViewCompactButtonLabel}>
                 {t("game.timeline.mine")}

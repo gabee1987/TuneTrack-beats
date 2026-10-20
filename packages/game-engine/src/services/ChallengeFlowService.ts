@@ -1,38 +1,48 @@
+import { CHALLENGE_TT_COST } from "@tunetrack/shared/constants";
+import { GameRuleError } from "../domain/GameRuleError.js";
 import type { GameState } from "../domain/GameState.js";
 import type { RevealState } from "../domain/RevealState.js";
+import { isChallengeWindowExpired } from "../rules/challengeRules.js";
 import { evaluateTimelinePlacement } from "../rules/placementRules.js";
+import { beginTurnOfNextPlayer, type ShuffleCards } from "./deckFlow.js";
 import {
-  drawNextCard,
   findFirstValidSlotIndex,
-  findNextActivePlayerId,
   insertTimelineCard,
   updatePlayerTokenCount,
 } from "./gameFlowHelpers.js";
 
 export class ChallengeFlowService {
-  public claimChallenge(gameState: GameState, challengerPlayerId: string): GameState {
+  public constructor(private readonly shuffleCards: ShuffleCards) {}
+
+  public claimChallenge(
+    gameState: GameState,
+    challengerPlayerId: string,
+    nowEpochMs: number,
+  ): GameState {
     if (gameState.phase !== "challenge" || !gameState.challengeState || !gameState.turn) {
-      throw new Error("GAME_NOT_IN_CHALLENGE_PHASE");
+      throw new GameRuleError("GAME_NOT_IN_CHALLENGE_PHASE");
+    }
+
+    if (isChallengeWindowExpired(gameState, nowEpochMs)) {
+      throw new GameRuleError("CHALLENGE_WINDOW_EXPIRED");
     }
 
     if (gameState.turn.activePlayerId === challengerPlayerId) {
-      throw new Error("ACTIVE_PLAYER_CANNOT_CHALLENGE");
+      throw new GameRuleError("ACTIVE_PLAYER_CANNOT_CHALLENGE");
     }
 
     if (gameState.challengeState.challengerPlayerId) {
-      throw new Error("CHALLENGE_ALREADY_CLAIMED");
+      throw new GameRuleError("CHALLENGE_ALREADY_CLAIMED");
     }
 
-    const challenger = gameState.players.find(
-      (player) => player.id === challengerPlayerId,
-    );
+    const challenger = gameState.players.find((player) => player.id === challengerPlayerId);
 
     if (!challenger) {
-      throw new Error("PLAYER_NOT_FOUND");
+      throw new GameRuleError("PLAYER_NOT_FOUND");
     }
 
-    if (challenger.ttTokenCount < 1) {
-      throw new Error("INSUFFICIENT_TT");
+    if (challenger.ttTokenCount < CHALLENGE_TT_COST) {
+      throw new GameRuleError("INSUFFICIENT_TT");
     }
 
     return {
@@ -51,32 +61,30 @@ export class ChallengeFlowService {
     selectedSlotIndex: number,
   ): GameState {
     if (gameState.phase !== "challenge" || !gameState.challengeState || !gameState.turn) {
-      throw new Error("GAME_NOT_IN_CHALLENGE_PHASE");
+      throw new GameRuleError("GAME_NOT_IN_CHALLENGE_PHASE");
     }
 
     if (gameState.challengeState.challengerPlayerId !== challengerPlayerId) {
-      throw new Error("ONLY_CHALLENGE_OWNER_CAN_PLACE");
+      throw new GameRuleError("ONLY_CHALLENGE_OWNER_CAN_PLACE");
     }
 
     const originalPlayerId = gameState.challengeState.originalPlayerId;
     const originalTimeline = gameState.timelines[originalPlayerId];
 
     if (!originalTimeline) {
-      throw new Error("PLAYER_TIMELINE_NOT_FOUND");
+      throw new GameRuleError("PLAYER_TIMELINE_NOT_FOUND");
     }
 
     if (!Number.isInteger(selectedSlotIndex) || selectedSlotIndex < 0) {
-      throw new Error("INVALID_SLOT_INDEX");
+      throw new GameRuleError("INVALID_SLOT_INDEX");
     }
 
     if (selectedSlotIndex > originalTimeline.length) {
-      throw new Error("INVALID_SLOT_INDEX");
+      throw new GameRuleError("INVALID_SLOT_INDEX");
     }
 
-    if (
-      selectedSlotIndex === gameState.challengeState.originalSelectedSlotIndex
-    ) {
-      throw new Error("CHALLENGE_SLOT_MUST_DIFFER");
+    if (selectedSlotIndex === gameState.challengeState.originalSelectedSlotIndex) {
+      throw new GameRuleError("CHALLENGE_SLOT_MUST_DIFFER");
     }
 
     const challengerPlacement = evaluateTimelinePlacement(
@@ -86,7 +94,7 @@ export class ChallengeFlowService {
     );
     const challengeWasSuccessful =
       !gameState.challengeState.originalWasCorrect && challengerPlacement.isCorrect;
-    const challengerTtChange = -1;
+    const challengerTtChange = -CHALLENGE_TT_COST;
     const nextPlayers = updatePlayerTokenCount(
       gameState.players,
       challengerPlayerId,
@@ -95,23 +103,19 @@ export class ChallengeFlowService {
     const challengerTimeline = gameState.timelines[challengerPlayerId];
 
     if (!challengerTimeline) {
-      throw new Error("PLAYER_TIMELINE_NOT_FOUND");
+      throw new GameRuleError("PLAYER_TIMELINE_NOT_FOUND");
     }
 
     const challengerAwardSlotIndex = challengeWasSuccessful
-      ? findFirstValidSlotIndex(
-          challengerTimeline,
-          gameState.challengeState.placedCard.releaseYear,
-        )
+      ? findFirstValidSlotIndex(challengerTimeline, gameState.challengeState.placedCard.releaseYear)
       : null;
-    const nextOriginalTimeline =
-      gameState.challengeState.originalWasCorrect
-        ? insertTimelineCard(
-            originalTimeline,
-            gameState.challengeState.originalSelectedSlotIndex,
-            gameState.challengeState.placedCard,
-          )
-        : [...originalTimeline];
+    const nextOriginalTimeline = gameState.challengeState.originalWasCorrect
+      ? insertTimelineCard(
+          originalTimeline,
+          gameState.challengeState.originalSelectedSlotIndex,
+          gameState.challengeState.placedCard,
+        )
+      : [...originalTimeline];
     const nextChallengerTimeline =
       challengeWasSuccessful && challengerAwardSlotIndex !== null
         ? insertTimelineCard(
@@ -157,8 +161,7 @@ export class ChallengeFlowService {
       revealState,
       history: [...gameState.history, revealState],
       winnerPlayerId:
-        challengeWasSuccessful &&
-        nextChallengerTimeline.length >= gameState.targetTimelineCardCount
+        challengeWasSuccessful && nextChallengerTimeline.length >= gameState.targetTimelineCardCount
           ? challengerPlayerId
           : gameState.challengeState.originalWasCorrect &&
               nextOriginalTimeline.length >= gameState.targetTimelineCardCount
@@ -169,18 +172,18 @@ export class ChallengeFlowService {
 
   public resolveChallengeWindow(gameState: GameState): GameState {
     if (gameState.phase !== "challenge" || !gameState.challengeState) {
-      throw new Error("GAME_NOT_IN_CHALLENGE_PHASE");
+      throw new GameRuleError("GAME_NOT_IN_CHALLENGE_PHASE");
     }
 
     if (gameState.challengeState.challengerPlayerId) {
-      throw new Error("CHALLENGE_ALREADY_CLAIMED");
+      throw new GameRuleError("CHALLENGE_ALREADY_CLAIMED");
     }
 
     const originalPlayerId = gameState.challengeState.originalPlayerId;
     const originalTimeline = gameState.timelines[originalPlayerId];
 
     if (!originalTimeline) {
-      throw new Error("PLAYER_TIMELINE_NOT_FOUND");
+      throw new GameRuleError("PLAYER_TIMELINE_NOT_FOUND");
     }
 
     const nextTimeline = gameState.challengeState.originalWasCorrect
@@ -205,9 +208,7 @@ export class ChallengeFlowService {
       challengerSelectedSlotIndex: null,
       challengeWasSuccessful: null,
       challengerTtChange: 0,
-      awardedPlayerId: gameState.challengeState.originalWasCorrect
-        ? originalPlayerId
-        : null,
+      awardedPlayerId: gameState.challengeState.originalWasCorrect ? originalPlayerId : null,
       awardedSlotIndex: gameState.challengeState.originalWasCorrect
         ? gameState.challengeState.originalSelectedSlotIndex
         : null,
@@ -234,25 +235,9 @@ export class ChallengeFlowService {
       gameState.challengeState?.phase !== "claimed" ||
       !gameState.turn
     ) {
-      throw new Error("GAME_NOT_IN_CLAIMED_CHALLENGE_PHASE");
+      throw new GameRuleError("GAME_NOT_IN_CLAIMED_CHALLENGE_PHASE");
     }
 
-    const nextActivePlayerId = findNextActivePlayerId(
-      gameState.players,
-      gameState.turn.activePlayerId,
-    );
-
-    return {
-      ...gameState,
-      phase: "turn",
-      turn: {
-        activePlayerId: nextActivePlayerId,
-        turnNumber: gameState.turn.turnNumber + 1,
-        hasUsedSkipTrackWithTt: false,
-      },
-      challengeState: null,
-      revealState: null,
-      currentTrackCard: drawNextCard(gameState.deck),
-    };
+    return beginTurnOfNextPlayer(gameState, this.shuffleCards);
   }
 }

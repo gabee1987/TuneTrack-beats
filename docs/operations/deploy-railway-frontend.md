@@ -1,0 +1,473 @@
+# Deploying TuneTrack — Railway (backend) + Render (frontend)
+
+## Why this combination?
+
+| Service                | Hosts                       | Cost / free-tier behaviour                                                                                                                        |
+| ---------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Railway**            | Node.js + Socket.IO backend | No idle spin-down. New accounts get a 30-day $5 trial; after that Free includes $1/month of usage, while Hobby is $5/month with $5 included usage |
+| **Render Static Site** | React SPA (frontend)        | Static sites are free to deploy, served over CDN, and do not have web-service cold starts                                                         |
+
+Render's free web service spins down after 15 minutes of inactivity. For a party game
+where players connect at the start of a session, a cold start causes failed socket
+connections and a confusing experience. Railway is a better fit for the Socket.IO
+backend because it does not use Render Free Web Service idle spin-down behaviour.
+
+Railway's always-on backend can exceed the post-trial Free plan's $1/month credit even
+when idle. For broader testing, treat Railway Hobby as the practical baseline: it costs
+$5/month and includes $5 of usage before extra usage charges.
+
+---
+
+## Before every production deploy to `main` — required settings
+
+> **Crucial.** The server starts without these, but it misbehaves in production. Check every
+> item before merging to `main`, and again whenever the Railway service is recreated.
+
+- [ ] **Railway → Variables: `TRUST_PROXY_HOPS = 1`.** Railway's edge proxy sits in front of
+      the server. Without this setting the server sees the proxy's address for every request,
+      so all players share one Spotify-login limit (10 per minute) and a busy party gets
+      "Too many requests". Use `1` only while the service has the generated
+      `*.up.railway.app` domain, no Cloudflare in front and CDN caching off; a further proxy
+      in front needs one more hop.
+- [ ] **Railway → Variables: `CLIENT_ORIGIN`** is the exact Render URL, no trailing slash.
+- [ ] **Render → Environment: `VITE_SERVER_URL`** is the Railway URL; after a change, run
+      **Manual Deploy** so the bundle is rebuilt.
+- [ ] After the deploy, run check [E6](#e6--per-address-limit-sees-the-real-client).
+
+---
+
+## Overview of what you will set up
+
+```
+Browser (phone / laptop)
+        │
+        │  HTTPS
+        ▼
+┌───────────────────────────┐
+│  Render Static Site       │  ← React SPA, served as static files, free forever
+│  tunetrack-web.onrender.com│
+└───────────────────────────┘
+        │
+        │  Socket.IO (WSS) + REST API calls
+        │  via VITE_SERVER_URL
+        ▼
+┌───────────────────────────┐
+│  Railway Web Service      │  ← Node.js + Express + Socket.IO, always on
+│  YOUR-RAILWAY-DOMAIN.up.railway.app │
+└───────────────────────────┘
+        │
+        │  OAuth callback
+        ▼
+┌───────────────────────────┐
+│  Spotify API              │
+└───────────────────────────┘
+```
+
+---
+
+## Prerequisites
+
+Before starting, make sure you have:
+
+- [ ] Your TuneTrack code pushed to a **GitHub repository** (public or private)
+- [ ] A **Spotify Developer app** — if you do not have one yet, see [Appendix A](#appendix-a--creating-a-spotify-developer-app) at the bottom of this guide
+- [ ] A free **Railway account** — sign up at [railway.app](https://railway.app) (use "Login with GitHub" for the easiest setup)
+- [ ] A free **Render account** — sign up at [render.com](https://render.com) (use "Login with GitHub" for the easiest setup)
+
+---
+
+## Code changes already in place
+
+These two files were modified before this guide was written. You do not need to do anything — they are already committed.
+
+| File                                                         | Change                                | Why                                                                                                                      |
+| ------------------------------------------------------------ | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| [apps/server/package.json](../apps/server/package.json)      | Added `"start": "node dist/index.js"` | Both Railway and Render need an explicit start command to launch the compiled server                                     |
+| [apps/web/public/\_redirects](../apps/web/public/_redirects) | `/* /index.html 200`                  | Without this, refreshing any URL like `/room/ABC` on Render returns a 404 because there is no physical file at that path |
+
+---
+
+## Part A — Deploy the backend on Railway
+
+### A1 — Create a new Railway project
+
+1. Go to [railway.app](https://railway.app) and log in
+2. Click **New Project** (top right button)
+3. Select **Deploy from GitHub repo**
+4. If prompted, click **Configure GitHub App** and grant Railway access to your repositories. You can grant access to all repos or just the TuneTrack one — either works.
+5. Search for and select your TuneTrack repository from the list
+6. Railway will create a project and begin an initial deploy attempt. **Do not worry if it fails** — you have not set the build/start commands yet.
+
+### A2 — Configure the build and start commands
+
+After the project is created you will see a canvas with a service card in it.
+
+1. Click on the service card (it will be named after your repo)
+2. This opens the service detail panel. Click the **Settings** tab at the top
+3. Scroll down to the **Build** section and set:
+   - **Build Command:** `npm install && npm run build`
+4. Scroll down to the **Deploy** section and set:
+   - **Start Command:** `node apps/server/dist/index.js`
+5. Scroll up to the **Networking** section:
+   - Click **Generate Domain** — Railway will assign you a public HTTPS URL like `YOUR-RAILWAY-DOMAIN.up.railway.app`
+   - Copy this URL. You will need it for env vars and Spotify.
+
+> **Why `npm install && npm run build`?**
+> This repo is an npm workspace monorepo. Running `npm install` at the root installs
+> all workspace packages. `npm run build` then compiles the `game-engine`, `shared`,
+> and `server` packages in the correct order.
+
+### A3 — Set environment variables
+
+1. Click the **Variables** tab on your service
+2. Add each variable below one at a time using the **+ New Variable** button:
+
+| Key                     | Value                                              | Notes                                                                                                       |
+| ----------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`              | `production`                                       | Enables production logging behaviour                                                                        |
+| `PORT`                  | `3001`                                             | Railway injects a `PORT` env var automatically, but setting it explicitly makes it visible in the dashboard |
+| `CLIENT_ORIGIN`         | `https://placeholder.example`                      | Temporary valid URL. You will replace this after the frontend is deployed                                   |
+| `SPOTIFY_CLIENT_ID`     | _(your client ID)_                                 | Copy from the Spotify developer dashboard                                                                   |
+| `SPOTIFY_CLIENT_SECRET` | _(your client secret)_                             | Copy from the Spotify developer dashboard                                                                   |
+| `SPOTIFY_REDIRECT_URI`  | `https://YOUR-RAILWAY-DOMAIN/api/spotify/callback` | Replace with the domain you generated in A2                                                                 |
+| `TRUST_PROXY_HOPS`      | `1`                                                | **Required on Railway.** Without it every player shares one rate limit (see the checklist at the top)       |
+
+Room lifecycle variables are optional. When omitted, the server uses these production
+defaults:
+
+| Key                               | Default   | Purpose                                                  |
+| --------------------------------- | --------- | -------------------------------------------------------- |
+| `MAX_ACTIVE_ROOMS`                | `5`       | Maximum rooms held by one server process                 |
+| `RECONNECT_GRACE_MS`              | `30000`   | Lobby reconnect window before removal                    |
+| `HOST_TRANSFER_GRACE_MS`          | `30000`   | Delay before an offline in-game host transfers           |
+| `TURN_SKIP_GRACE_MS`              | `60000`   | Safety delay before an offline active turn advances      |
+| `ALL_PLAYERS_OFFLINE_ROOM_TTL_MS` | `3600000` | Continuous all-offline time before the whole room closes |
+
+Example with a real domain:
+
+```
+SPOTIFY_REDIRECT_URI = https://YOUR-RAILWAY-DOMAIN.up.railway.app/api/spotify/callback
+```
+
+3. After adding all variables, click **Deploy** (or Railway may redeploy automatically)
+
+### A4 — Confirm the backend is running
+
+1. Click the **Deployments** tab — you should see a deployment in progress or completed
+2. Once the status shows a green **Active** badge, click on the deployment to see the build log
+3. Scroll to the bottom of the log. You should see output similar to:
+   ```
+   Server listening on port 3001
+   clientOrigin: "https://placeholder.example"
+   ```
+4. Open `https://YOUR-RAILWAY-DOMAIN/health` in your browser — it should return a JSON health response confirming the server is up
+
+> **If the build fails:** click the failed deployment and read the log from the top.
+> The most common causes are a missing or invalid env variable (the Zod env validator
+> will tell you exactly which one) or a TypeScript error. Do not set `CLIENT_ORIGIN`
+> to an empty string; use a temporary valid URL until your Render URL exists. Fix the
+> issue, push to `main`, and Railway will redeploy automatically.
+
+---
+
+## Part B — Deploy the frontend on Render
+
+### B1 — Create a new Static Site
+
+1. Go to [render.com](https://render.com) and log in
+2. Click **New +** (top right) → **Static Site**
+3. Connect your GitHub account if prompted, then select your TuneTrack repository
+4. Fill in the settings on the next screen:
+
+| Field                 | Value                                            |
+| --------------------- | ------------------------------------------------ |
+| **Name**              | `tunetrack-web` _(or any name you like)_         |
+| **Branch**            | `main`                                           |
+| **Root Directory**    | _(leave blank)_                                  |
+| **Build Command**     | `npm install && npm -w @tunetrack/web run build` |
+| **Publish Directory** | `apps/web/dist`                                  |
+
+> **Why `npm -w @tunetrack/web run build`?**
+> This runs the build script only for the `@tunetrack/web` workspace package. The web
+> package's prebuild step compiles the shared workspace package first, so the static
+> bundle has its local dependencies available without also building the server. The
+> `-w` flag targets the workspace by its package name from `apps/web/package.json`.
+
+### B2 — Add the environment variable
+
+Scroll down on the same page to find the **Environment Variables** section.
+
+Add one variable:
+
+| Key               | Value                         |
+| ----------------- | ----------------------------- |
+| `VITE_SERVER_URL` | `https://YOUR-RAILWAY-DOMAIN` |
+
+Example:
+
+```
+VITE_SERVER_URL = https://YOUR-RAILWAY-DOMAIN.up.railway.app
+```
+
+> **Important:** `VITE_SERVER_URL` is prefixed with `VITE_` which means Vite bakes it
+> into the JavaScript bundle at build time. It is **not** a runtime environment variable
+> — it is compiled into the static files. If you change this value later, you must
+> trigger a new build on Render for the change to take effect.
+
+### B3 — Create the site and copy its URL
+
+1. Click **Create Static Site**
+2. Render will build and deploy the site. This usually takes 2–4 minutes.
+3. Once the status shows **Live**, copy your Render URL from the top of the page,
+   e.g. `https://tunetrack-web.onrender.com`
+
+---
+
+## Part C — Wire the two services together
+
+At this point both services are running but the backend is rejecting requests from the
+frontend because `CLIENT_ORIGIN` is not set. Fix that now.
+
+### C1 — Set CLIENT_ORIGIN on Railway
+
+1. Go back to Railway → your project → your service → **Variables** tab
+2. Find `CLIENT_ORIGIN` and set its value to your Render frontend URL:
+
+```
+CLIENT_ORIGIN = https://tunetrack-web.onrender.com
+```
+
+3. Railway will automatically trigger a redeploy. Wait for it to complete (you can
+   watch progress in the **Deployments** tab).
+
+### C2 — Double-check SPOTIFY_REDIRECT_URI
+
+While you are in the Railway Variables tab, confirm that `SPOTIFY_REDIRECT_URI` uses
+your Railway domain (not localhost):
+
+```
+SPOTIFY_REDIRECT_URI = https://YOUR-RAILWAY-DOMAIN.up.railway.app/api/spotify/callback
+```
+
+---
+
+## Part D — Update the Spotify developer dashboard
+
+Spotify will reject OAuth redirects to any URI that is not explicitly whitelisted in
+your app settings. You need to add the production Railway callback URL.
+
+1. Go to [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard)
+2. Click on your TuneTrack app
+3. Click **Edit Settings**
+4. Find the **Redirect URIs** field
+5. Click **Add** and enter: `https://YOUR-RAILWAY-DOMAIN/api/spotify/callback`
+6. Click **Save** at the bottom of the dialog
+
+> Keep `http://127.0.0.1:3001/api/spotify/callback` in the list too — removing it
+> will break your local development setup.
+
+---
+
+## Part E — End-to-end verification
+
+Work through this checklist in order. If a step fails, the troubleshooting section
+below explains what to check.
+
+### E1 — Backend health check
+
+Open in your browser:
+
+```
+https://YOUR-RAILWAY-DOMAIN/health
+```
+
+https://YOUR-RAILWAY-DOMAIN.up.railway.app/health
+
+You should get a JSON response like `{ "status": "ok" }`. If you get a "This site
+can't be reached" or a Railway error page, the server is not running — check the
+deployment log in Railway.
+
+### E2 — Frontend loads
+
+Open `https://tunetrack-web.onrender.com` in a browser.
+
+The app should load and show the home/join screen. Open browser **DevTools → Console**
+and confirm there are no errors about a failed connection.
+
+### E3 — Socket.IO connects
+
+1. In DevTools, go to the **Network** tab
+2. Filter by **WS** (WebSocket)
+3. Refresh the page
+4. You should see a WebSocket handshake request to `wss://YOUR-RAILWAY-DOMAIN/socket.io/...`
+   with status `101 Switching Protocols`
+
+If you see the request going to `wss://tunetrack-web.onrender.com` instead, the
+`VITE_SERVER_URL` env var was not set correctly at build time — see Troubleshooting.
+
+### E4 — Create and join a room
+
+1. On one device/browser, create a room
+2. On a second device or incognito window, join using the room code
+3. Confirm that actions on one device appear in real-time on the other
+
+### E5 — Spotify login
+
+1. In the lobby, click the Spotify connect button
+2. You should be redirected to Spotify's login page
+3. After logging in, Spotify redirects back to `https://YOUR-RAILWAY-DOMAIN/api/spotify/callback`
+4. You should be redirected back to the app in an authenticated state
+
+### E6 — Per-address limit sees the real client
+
+Confirms `TRUST_PROXY_HOPS = 1`.
+
+1. On a phone using mobile data, open `https://YOUR-RAILWAY-DOMAIN/api/spotify/callback`
+   11 times in a row. The 11th answer is "Too many requests".
+2. Within the same minute, open the same URL from a computer on another network. It must
+   **not** say "Too many requests".
+
+If the computer is also refused, every player shares one limit: set `TRUST_PROXY_HOPS = 1`
+in Railway → Variables and repeat the check.
+
+---
+
+## Troubleshooting
+
+### "Cannot connect to server" on page load
+
+The socket is connecting to the wrong URL. Open DevTools → Network → WS and check
+the WebSocket URL.
+
+- If it says `wss://tunetrack-web.onrender.com`: `VITE_SERVER_URL` was either not
+  set or was set after the build. Go to Render → your Static Site → **Environment**,
+  confirm the variable is there, then click **Manual Deploy → Deploy latest commit**
+  to force a rebuild.
+- If it says `wss://localhost:3001`: same issue — `VITE_SERVER_URL` is missing from
+  the Render build environment.
+
+### CORS error in browser console
+
+You will see something like:
+
+```
+Access to XMLHttpRequest at 'https://railway-domain/socket.io/...' from origin
+'https://tunetrack-web.onrender.com' has been blocked by CORS policy
+```
+
+Fix: go to Railway → Variables → confirm `CLIENT_ORIGIN` is set to exactly
+`https://tunetrack-web.onrender.com` (no trailing slash). Save and wait for
+redeploy.
+
+### Railway build fails with "missing environment variable"
+
+Your server validates env vars with Zod at startup. The log will say something like:
+
+```
+Error: SPOTIFY_CLIENT_ID: Required
+```
+
+Go to Railway → Variables, add the missing variable, and redeploy.
+
+### Railway build fails with TypeScript errors
+
+Check the build log for the specific error. The most common cause is a type error
+introduced locally that was not caught before pushing. Fix the error, push to `main`,
+and Railway will auto-redeploy.
+
+### Spotify OAuth returns "INVALID_CLIENT: Invalid redirect URI"
+
+The redirect URI in your `SPOTIFY_REDIRECT_URI` env var does not match any URI
+registered in the Spotify developer dashboard.
+
+- Confirm the value of `SPOTIFY_REDIRECT_URI` in Railway Variables
+- Confirm the same URL appears verbatim in your Spotify app's **Redirect URIs** list
+- Both must match character-for-character including the `https://` and path
+
+### Render build fails
+
+Click the failed deploy in Render → **Logs**. Most common causes:
+
+- `npm install` fails: package-lock.json is out of date — run `npm install` locally,
+  commit the updated lockfile, and push
+- TypeScript compile error: same as Railway — fix and push
+
+---
+
+## Redeploying after code changes
+
+Both services watch your `main` branch and redeploy automatically when you push.
+
+| What changed                            | Action needed                                                                                |
+| --------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Server code only                        | Push to `main` — Railway redeploys automatically                                             |
+| Frontend code only                      | Push to `main` — Render rebuilds and redeploys automatically                                 |
+| `VITE_SERVER_URL` or any Render env var | Push is not enough — trigger **Manual Deploy** in Render to force a rebuild with the new var |
+| Railway env vars                        | Save in Variables tab — Railway redeploys automatically                                      |
+| New deck files (if served from server)  | Push to `main` — Railway redeploys automatically                                             |
+
+---
+
+## Environment variable quick-reference
+
+### Railway (backend) — set in the Variables tab
+
+| Variable                          | Example value                                                     | Notes                                                 |
+| --------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------- |
+| `NODE_ENV`                        | `production`                                                      | Required — affects logging and CORS behaviour         |
+| `PORT`                            | `3001`                                                            | Railway also injects this automatically               |
+| `CLIENT_ORIGIN`                   | `https://tunetrack-web.onrender.com`                              | CORS allowed origin — must match frontend URL exactly |
+| `SPOTIFY_CLIENT_ID`               | `abc123def456`                                                    | From Spotify developer dashboard                      |
+| `SPOTIFY_CLIENT_SECRET`           | `xyz789...`                                                       | From Spotify developer dashboard — keep private       |
+| `SPOTIFY_REDIRECT_URI`            | `https://YOUR-RAILWAY-DOMAIN.up.railway.app/api/spotify/callback` | Must be registered in Spotify dashboard               |
+| `MAX_ACTIVE_ROOMS`                | `5`                                                               | Optional; defaults to 5                               |
+| `TRUST_PROXY_HOPS`                | `1`                                                               | **Required** — Railway's edge proxy is the one hop    |
+| `RECONNECT_GRACE_MS`              | `30000`                                                           | Optional lobby reconnect window                       |
+| `HOST_TRANSFER_GRACE_MS`          | `30000`                                                           | Optional in-game host-transfer delay                  |
+| `TURN_SKIP_GRACE_MS`              | `60000`                                                           | Optional offline-turn safety delay                    |
+| `ALL_PLAYERS_OFFLINE_ROOM_TTL_MS` | `3600000`                                                         | Optional all-offline room expiry                      |
+
+### Render Static Site (frontend) — baked in at build time
+
+| Variable          | Example value                                | Notes                                                          |
+| ----------------- | -------------------------------------------- | -------------------------------------------------------------- |
+| `VITE_SERVER_URL` | `https://YOUR-RAILWAY-DOMAIN.up.railway.app` | Compiled into the JS bundle — changing it requires a new build |
+
+---
+
+## Cost estimate
+
+Railway charges based on resource usage. New accounts currently receive a 30-day trial
+with a one-time $5 credit. After that, the Free plan includes $1/month of usage; the
+Hobby plan is $5/month and includes $5/month of usage.
+
+| Resource       | Current public rate | Notes                           |
+| -------------- | ------------------- | ------------------------------- |
+| RAM            | $10 / GB / month    | Billed by usage                 |
+| CPU            | $20 / vCPU / month  | Billed by usage                 |
+| Network egress | $0.05 / GB          | Usually tiny for family testing |
+
+An idle Node.js + Socket.IO server uses very little CPU and stays well under
+512 MB RAM, but always-on memory still has a monthly cost. Railway shows your current
+usage in **Account → Billing**. Set a spend limit before inviting testers.
+
+---
+
+## Appendix A — Creating a Spotify Developer app
+
+If you do not yet have a Spotify app:
+
+1. Go to [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard)
+2. Log in with your Spotify account
+3. Click **Create App**
+4. Fill in:
+   - **App name:** TuneTrack (or anything)
+   - **App description:** Party game
+   - **Redirect URIs:** Add both of these, one at a time:
+     - `http://127.0.0.1:3001/api/spotify/callback` ← for local development
+     - `https://YOUR-RAILWAY-DOMAIN/api/spotify/callback` ← for production (use your actual Railway domain)
+   - **APIs used:** check **Web Playback SDK** and **Web API**
+5. Click **Save**
+6. On the app page, click **Settings** to find your **Client ID** and **Client Secret**
+
+Copy both values — you will need them as env vars on Railway.

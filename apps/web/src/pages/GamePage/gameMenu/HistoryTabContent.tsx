@@ -1,6 +1,7 @@
 import type { Translate } from "../../../features/i18n";
 import type { GameHistoryEntry } from "../hooks/useGameHistory";
-import styles from "../gamePageStyles";
+import styles from "../gamePagePlayback.module.css";
+import { resolveArtworkUrl } from "../../../features/ui/resolveArtworkUrl";
 
 interface HistoryTabContentProps {
   entries: GameHistoryEntry[];
@@ -19,7 +20,11 @@ export function HistoryTabContent({ entries, t }: HistoryTabContentProps) {
           <li key={`${entry.card.id}-${index}`} className={styles.historyItem}>
             <div className={styles.historyItemArtwork}>
               {entry.card.artworkUrl ? (
-                <img alt="" className={styles.historyItemArtworkImg} src={entry.card.artworkUrl} />
+                <img
+                  alt=""
+                  className={styles.historyItemArtworkImg}
+                  src={resolveArtworkUrl(entry.card)}
+                />
               ) : (
                 <HistoryMusicNoteIcon />
               )}

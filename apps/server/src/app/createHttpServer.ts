@@ -7,6 +7,7 @@ import { registerHealthRoutes } from "../http/healthRoutes.js";
 
 export function createHttpServer() {
   const app = express();
+  app.set("trust proxy", env.TRUST_PROXY_HOPS);
 
   app.use(
     cors({

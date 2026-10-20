@@ -1,8 +1,5 @@
-import { motion } from "framer-motion";
-import {
-  createStandardTransition,
-  useReducedMotionPreference,
-} from "../../../features/motion";
+import { m } from "framer-motion";
+import { createStandardTransition, useReducedMotionPreference } from "../../../features/motion";
 import { GamePageActionPanels } from "../components/GamePageActionPanels";
 import { GamePageHeader } from "../components/GamePageHeader";
 import { TimelinePanel } from "../components/TimelinePanel";
@@ -17,13 +14,13 @@ export function GamePageMobile({ model }: GamePageAssemblyProps) {
       <section className={styles.panel}>
         <GamePageHeader model={model.header} />
 
-        <motion.div
+        <m.div
           className={styles.timelineLayout}
-          layout
+          layout="position"
           transition={createStandardTransition(reduceMotion)}
         >
           <TimelinePanel model={model.timeline} />
-        </motion.div>
+        </m.div>
 
         <GamePageActionPanels model={model.actions} />
       </section>

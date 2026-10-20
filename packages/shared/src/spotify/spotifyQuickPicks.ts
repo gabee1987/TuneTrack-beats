@@ -159,6 +159,31 @@ export const SPOTIFY_QUICK_PICK_PRESETS = [
     ],
     yearRanges: [{ startYear: 1980, endYear: SPOTIFY_QUICK_PICK_CURRENT_YEAR }],
   },
+  {
+    id: "japanese_music",
+    // The generator stops after about four queries' playlists, so the named artists go first.
+    name: "Japanese Music",
+    searchQueries: [
+      "babymetal band-maid lovebites",
+      "atarashii gakko ado j-pop",
+      "hanabie broken by the scream",
+      "japanese rock metal hits",
+      "j-rock anime hits",
+    ],
+    yearRanges: [{ startYear: 1990, endYear: SPOTIFY_QUICK_PICK_CURRENT_YEAR }],
+  },
+  {
+    id: "hungarian_music",
+    name: "Hungarian Music",
+    searchQueries: [
+      "magyar slágerek",
+      "magyar rock klasszikusok",
+      "magyar pop hits",
+      "retró magyar slágerek",
+      "új magyar zenék",
+    ],
+    yearRanges: [{ startYear: 1960, endYear: SPOTIFY_QUICK_PICK_CURRENT_YEAR }],
+  },
 ] as const;
 
 export const SPOTIFY_QUICK_PICK_PRESET_IDS = [
@@ -176,6 +201,8 @@ export const SPOTIFY_QUICK_PICK_PRESET_IDS = [
   "female_icons",
   "alternative_indie",
   "global_party",
+  "japanese_music",
+  "hungarian_music",
 ] as const;
 
 export type SpotifyQuickPickPresetId = (typeof SPOTIFY_QUICK_PICK_PRESET_IDS)[number];

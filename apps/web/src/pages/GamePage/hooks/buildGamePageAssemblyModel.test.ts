@@ -15,11 +15,15 @@ describe("buildGamePageAssemblyModel", () => {
       canToggleTimelineView: true,
       canUseBuyCard: true,
       canUseSkipTrack: false,
+      buyTimelineCardActionStatus: "retrying",
       challengeActionBody: "Place the challenge card",
       challengeActionTitle: "Beat move",
       challengeMarkerTone: "success",
+      claimChallengeActionStatus: "retrying",
+      closeRoomActionStatus: "failed",
       currentPlayerId: "player-1",
       currentPlayerTtCount: 2,
+      confirmRevealActionStatus: "pending",
       disabledTimelineSlots: [1, 3],
       getPlayerName: (playerId: string | null | undefined) =>
         playerId === "player-1" ? "You" : "Other",
@@ -34,6 +38,20 @@ describe("buildGamePageAssemblyModel", () => {
       hiddenCardMode: "artwork",
       revealedCardMode: "artwork",
       isHost: true,
+      isBuyTimelineCardPending: true,
+      isConfirmRevealPending: true,
+      isClaimChallengePending: true,
+      isCloseRoomPending: false,
+      isPlaceCardPending: true,
+      placeCardActionStatus: "retrying",
+      placeChallengeActionStatus: "failed",
+      resolveChallengeWindowActionStatus: "retrying",
+      skipTrackActionStatus: "pending",
+      skipTurnActionStatus: "retrying",
+      isPlaceChallengePending: false,
+      isResolveChallengeWindowPending: true,
+      isSkipTrackPending: true,
+      isSkipTurnPending: true,
       isViewingOwnTimeline: false,
       leadingPlayers: [],
       menuTabs: [],
@@ -49,12 +67,15 @@ describe("buildGamePageAssemblyModel", () => {
         tone: "success",
       },
       roomState: {
-        players: [],
+        challengeState: null,
+        hostId: "player-1",
+        players: [{ id: "player-2", displayName: "Player Two" }],
         roomId: "ABCD",
         settings: { ttModeEnabled: true },
-        status: "playing",
+        status: "turn",
         timelines: {},
-        turn: { turnNumber: 4 },
+        turn: { activePlayerId: "player-2", turnNumber: 4, turnSkipDeadlineEpochMs: 12345 },
+        winnerPlayerId: null,
       },
       selectedSlotIndex: 2,
       setSelectedSlotIndex: () => undefined,
@@ -90,8 +111,16 @@ describe("buildGamePageAssemblyModel", () => {
 
     const model = buildGamePageAssemblyModel(controller);
 
-    expect(model.header.roomState.roomId).toBe("ABCD");
+    expect(model.header).toMatchObject({
+      hostId: "player-1",
+      roomId: "ABCD",
+      status: "turn",
+      ttModeEnabled: true,
+      turnNumber: 4,
+    });
     expect(model.header.statusBadgeText).toBe("Your turn");
+    expect(model.header.closeRoomActionStatus).toBe("failed");
+    expect(model.header.isCloseRoomPending).toBe(false);
     expect(model.header.visibleTimelineTtCount).toBe(3);
     expect(model.timeline.interaction.selectable).toBe(true);
     expect(model.timeline.render.showDevCardInfo).toBe(true);
@@ -102,6 +131,32 @@ describe("buildGamePageAssemblyModel", () => {
     });
     expect(model.timeline.interaction.disabledSlotIndexes).toEqual([1, 3]);
     expect(model.actions.challengeActionTitle).toBe("Beat move");
-    expect(model.actions.roomState).toBe(controller.roomState);
+    expect(model.actions.buyTimelineCardActionStatus).toBe("retrying");
+    expect(model.actions.confirmRevealActionStatus).toBe("pending");
+    expect(model.actions.claimChallengeActionStatus).toBe("retrying");
+    expect(model.actions.isClaimChallengePending).toBe(true);
+    expect(model.actions.isBuyTimelineCardPending).toBe(true);
+    expect(model.actions.isConfirmRevealPending).toBe(true);
+    expect(model.actions.isPlaceCardPending).toBe(true);
+    expect(model.actions.placeCardActionStatus).toBe("retrying");
+    expect(model.actions.placeChallengeActionStatus).toBe("failed");
+    expect(model.actions.isPlaceChallengePending).toBe(false);
+    expect(model.actions.skipTrackActionStatus).toBe("pending");
+    expect(model.actions.isSkipTrackPending).toBe(true);
+    expect(model.actions.isSkipTurnPending).toBe(true);
+    expect(model.actions.skipTurnActionStatus).toBe("retrying");
+    expect(model.header.isSkipTurnPending).toBe(true);
+    expect(model.header.skipTurnActionStatus).toBe("retrying");
+    expect(model.actions).toMatchObject({
+      challengeDeadlineEpochMs: null,
+      challengePhase: null,
+      skipCandidateName: "Player Two",
+      status: "turn",
+      ttModeEnabled: true,
+      turnSkipDeadlineEpochMs: 12345,
+      winnerPlayerId: null,
+    });
+    expect(model).not.toHaveProperty("header.roomState");
+    expect(model).not.toHaveProperty("actions.roomState");
   });
 });

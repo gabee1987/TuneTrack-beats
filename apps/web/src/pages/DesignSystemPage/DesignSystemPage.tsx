@@ -1,39 +1,36 @@
-import { useState } from "react";
 import { AppPageShell } from "../../features/mobile-shell/AppPageShell";
 import { useUiPreferencesStore } from "../../features/preferences/uiPreferences";
-import {
-  Avatar,
-  Button,
-  Card,
-  Chip,
-  ChipButton,
-  Dialog,
-  EmptyState,
-  IconButton,
-  ListRow,
-  ListRowButton,
-  SegmentedControl,
-  Skeleton,
-} from "../../features/ui/primitives";
-import { Badge } from "../../features/ui/Badge";
+import { SegmentedControl } from "../../features/ui/primitives";
+import { ControlsGallery } from "./ControlsGallery";
+import { CorePrimitivesGallery } from "./CorePrimitivesGallery";
+import { FeedbackGallery } from "./FeedbackGallery";
+import { GameHandoverGallery } from "./GameHandoverGallery";
+import { LobbyGallery } from "./LobbyGallery";
+import { MusicGallery } from "./MusicGallery";
+import { ProfileGallery } from "./ProfileGallery";
+import { RulesGallery } from "./RulesGallery";
+import { StartupFlowPrimitivesGallery } from "./StartupFlowPrimitivesGallery";
+import { WhatsNewGallery } from "./WhatsNewGallery";
 import styles from "./DesignSystemPage.module.css";
 
 type ThemeChoice = "dark" | "light";
 
+/**
+ * Development-only gallery of every shared UI element in every variant and state, kept so
+ * any of them can be inspected and adjusted in one place (owner request 2026-10-14). A new or
+ * changed shared component is added here in the same change.
+ */
 export function DesignSystemPage() {
   const theme = useUiPreferencesStore((state) => state.theme);
   const setTheme = useUiPreferencesStore((state) => state.setTheme);
-  const [selectedChip, setSelectedChip] = useState("rock");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
-    <AppPageShell screenClassName={styles.page}>
+    <AppPageShell panelClassName={styles.panel} screenClassName={styles.page}>
       <header className={styles.header}>
         <p className={styles.eyebrow}>DEV ONLY</p>
         <h1 className={`typeTitleLg ${styles.heading}`}>Design system</h1>
         <p className="typeBody">
-          Token-driven primitives for the Spotify-inspired UI overhaul. Not linked from
-          production navigation.
+          Every shared UI element in every variant and state. Not linked from production navigation.
         </p>
       </header>
 
@@ -50,125 +47,27 @@ export function DesignSystemPage() {
         />
       </section>
 
-      <section className={styles.section}>
-        <h2 className="typeTitleMd">Buttons</h2>
-        <div className={styles.row}>
-          <Button haptic>Primary</Button>
-          <Button variant="secondary">Secondary</Button>
-          <Button variant="ghost">Ghost</Button>
-          <Button variant="danger">Danger</Button>
-        </div>
-        <Button fullWidth size="lg" haptic>
-          Full width large
-        </Button>
-        <div className={styles.row}>
-          <IconButton aria-label="Close sample">
-            <CloseGlyph />
-          </IconButton>
-          <IconButton aria-label="Ghost icon" variant="ghost">
-            <CloseGlyph />
-          </IconButton>
-        </div>
-      </section>
+      <h2 className={styles.groupTitle}>Primitives</h2>
+      <CorePrimitivesGallery />
+      <StartupFlowPrimitivesGallery />
 
-      <section className={styles.section}>
-        <h2 className="typeTitleMd">Chips & badges</h2>
-        <div className={styles.row}>
-          <Chip>Neutral</Chip>
-          <ChipButton
-            onClick={() => setSelectedChip("rock")}
-            selected={selectedChip === "rock"}
-          >
-            Rock
-          </ChipButton>
-          <ChipButton
-            onClick={() => setSelectedChip("pop")}
-            selected={selectedChip === "pop"}
-          >
-            Pop
-          </ChipButton>
-          <Badge variant="connected">Connected</Badge>
-          <Badge variant="strong">Strong</Badge>
-        </div>
-      </section>
+      <h2 className={styles.groupTitle}>Profile</h2>
+      <ProfileGallery />
 
-      <section className={styles.section}>
-        <h2 className="typeTitleMd">Card & list</h2>
-        <Card>
-          <p className={styles.cardTitle}>Flat card</p>
-          <p className="typeCaption">Uses surface + border tokens, no heavy glass.</p>
-        </Card>
-        <Card elevated>
-          <ListRow
-            leading={<Avatar initials="TT" />}
-            subtitle="Host · 3 cards"
-            title="TuneTrack Player"
-            trailing={<Badge size="sm">You</Badge>}
-          />
-          <ListRowButton
-            leading={<Avatar initials="AK" size="sm" />}
-            onClick={() => undefined}
-            subtitle="Waiting"
-            title="Alex"
-          />
-        </Card>
-      </section>
+      <h2 className={styles.groupTitle}>Lobby</h2>
+      <LobbyGallery />
+      <RulesGallery />
+      <MusicGallery />
+      <GameHandoverGallery />
 
-      <section className={styles.section}>
-        <h2 className="typeTitleMd">Skeleton & empty</h2>
-        <div className={styles.row}>
-          <Skeleton height={48} variant="circle" width={48} />
-          <div className={styles.skeletonStack}>
-            <Skeleton height={14} variant="text" width="70%" />
-            <Skeleton height={14} variant="text" width="45%" />
-          </div>
-        </div>
-        <EmptyState
-          action={<Button size="md">Browse rooms</Button>}
-          description="When a list has no items, use EmptyState with one clear action."
-          title="No open rooms"
-        />
-      </section>
+      <h2 className={styles.groupTitle}>Feedback & game</h2>
+      <FeedbackGallery />
 
-      <section className={styles.section}>
-        <h2 className="typeTitleMd">Dialog</h2>
-        <Button onClick={() => setIsDialogOpen(true)} variant="secondary">
-          Open dialog
-        </Button>
-        <Dialog
-          actions={
-            <>
-              <Button onClick={() => setIsDialogOpen(false)} variant="ghost">
-                Cancel
-              </Button>
-              <Button haptic onClick={() => setIsDialogOpen(false)}>
-                Confirm
-              </Button>
-            </>
-          }
-          isOpen={isDialogOpen}
-          onClose={() => setIsDialogOpen(false)}
-          title="Confirm action"
-        >
-          <p className="typeBody">
-            Dialogs are for blocking confirmations. Prefer bottom sheets for contextual
-            content on mobile.
-          </p>
-        </Dialog>
-      </section>
+      <h2 className={styles.groupTitle}>Controls</h2>
+      <ControlsGallery />
+
+      <h2 className={styles.groupTitle}>Menu</h2>
+      <WhatsNewGallery />
     </AppPageShell>
-  );
-}
-
-function CloseGlyph() {
-  return (
-    <svg aria-hidden="true" fill="none" height="18" viewBox="0 0 24 24" width="18">
-      <path
-        d="M6 6L18 18M18 6L6 18"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="2"
-      />
-    </svg>
   );
 }

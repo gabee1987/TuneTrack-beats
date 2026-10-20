@@ -5,7 +5,7 @@ import {
   type PlaylistTracksPayload,
   type SpotifyPlaylistDetailPayload,
   type SpotifySmartSearchResult,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useCallback, useState } from "react";
 import type { MutableRefObject } from "react";
 import { useI18n } from "../../../../features/i18n";
@@ -14,14 +14,11 @@ import {
   getQueuedTrackIdsFromPlaylistTracks,
   getQueuedSpotifyTrackIdsFromPlaylistTracks,
 } from "./spotifyQueueTrackIds";
-import type {
-  CandidateTrackUpdatePatch,
-  OpenedPlaylistPhase,
-  OpenedSpotifyPlaylist,
-} from "./lobbySpotify.types";
+import type { PlaylistTrackUpdatePatch } from "../music/playlistEditorTarget";
+import type { DeckOrigin, OpenedPlaylistPhase, OpenedSpotifyPlaylist } from "./lobbySpotify.types";
 
 interface UseSpotifyOpenedPlaylistParams {
-  currentPlaylistNameRef: MutableRefObject<string | undefined>;
+  currentDeckOriginRef: MutableRefObject<DeckOrigin>;
   roomId: string | undefined;
   setQueuedTrackIds: (trackIds: Set<string>) => void;
   setSavedPlaylistMessage: (message: string | null) => void;
@@ -29,7 +26,7 @@ interface UseSpotifyOpenedPlaylistParams {
 }
 
 export function useSpotifyOpenedPlaylist({
-  currentPlaylistNameRef,
+  currentDeckOriginRef,
   roomId,
   setQueuedTrackIds,
   setSavedPlaylistMessage,
@@ -93,7 +90,7 @@ export function useSpotifyOpenedPlaylist({
     );
   }
 
-  function updateOpenedPlaylistTrack(trackId: string, patch: CandidateTrackUpdatePatch) {
+  function updateOpenedPlaylistTrack(trackId: string, patch: PlaylistTrackUpdatePatch) {
     setOpenedPlaylist((playlist) =>
       playlist
         ? {
@@ -156,7 +153,7 @@ export function useSpotifyOpenedPlaylist({
         setQueuedTrackIds(getQueuedTrackIdsFromPlaylistTracks(payload.tracks));
         setSmartSearchQueuedTrackIds(getQueuedSpotifyTrackIdsFromPlaylistTracks(payload.tracks));
         setOpenedPlaylistPhase("ready");
-        currentPlaylistNameRef.current = playlist.title;
+        currentDeckOriginRef.current = { imageUrl: playlist.imageUrl, name: playlist.title };
         setSavedPlaylistMessage(
           t(
             mode === "append"

@@ -11,12 +11,7 @@ interface BadgeProps {
   variant?: BadgeVariant | undefined;
 }
 
-export function Badge({
-  children,
-  className,
-  size = "sm",
-  variant = "neutral",
-}: BadgeProps) {
+export function Badge({ children, className, size = "sm", variant = "neutral" }: BadgeProps) {
   return (
     <span
       className={`${styles.badge} ${styles[size]} ${styles[variant]}${

@@ -27,6 +27,44 @@
   opacity: 0.48;
 }
 
+/* The cover and text of a row that opens details; it spans the first two columns. */
+.open {
+  grid-column: 1 / 3;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--list-row-gap);
+  min-width: 0;
+  min-height: var(--size-touch-target);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Only the text opens; the cover beside it is its own control. */
+.openCopy {
+  grid-column: 2;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.open:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.open:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.row:has(.open:hover:not(:disabled)) {
+  background: var(--color-surface-interactive);
+}
+
 .leading,
 .trailing {
   display: grid;

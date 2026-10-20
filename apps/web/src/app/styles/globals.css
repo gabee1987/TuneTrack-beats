@@ -75,6 +75,9 @@
   --type-micro-weight: 600;
   --type-micro-tracking: 0.02em;
 
+  /* Room codes: every character the same width, so a code reads out cleanly. */
+  --font-family-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
   /* Motion — durations and easings (mirror features/motion tokens) */
   --motion-quick-duration: 160ms;
   --motion-standard-duration: 240ms;
@@ -87,13 +90,18 @@
 
   /* Z-index layers */
   --z-base: 0;
+  --z-raised: 10;
   --z-sticky: 100;
   --z-nav: 200;
   --z-overlay: 300;
   --z-sheet: 400;
+  --z-sheet-nested: 450;
   --z-dialog: 500;
-  --z-toast: 600;
-  --z-celebration: 700;
+  --z-dialog-nested: 550;
+  --z-hint: 600;
+  --z-toast: 700;
+  --z-celebration: 800;
+  --z-blocking: 900;
 
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-right: env(safe-area-inset-right, 0px);
@@ -179,6 +187,19 @@ textarea:focus-visible {
   :root {
     --app-height: 100dvh;
   }
+}
+
+/*
+ * Scrollbars never take room from the page and look the same everywhere (owner, 2026-10-16):
+ * the system bar is hidden on every screen, and `ScrollIndicator` draws one thin green thumb
+ * over the box that scrolls, fading once scrolling stops.
+ */
+* {
+  scrollbar-width: none;
+}
+
+::-webkit-scrollbar {
+  display: none;
 }
 
 /* Typography utility classes — compose type scale tokens without per-component font-size. */

@@ -50,6 +50,10 @@ const darkThemeCssVariables = {
   "color-focus-ring": "rgba(255, 171, 120, 0.95)",
   "color-status-connected-surface": "rgba(82, 227, 173, 0.36)",
   "color-status-connected-text": "#00a359",
+  "color-danger-solid": "#dc2626",
+  "color-danger-solid-hover": "#e23b3b",
+  "color-danger-solid-active": "#b91c1c",
+  "color-on-danger-solid": "#ffffff",
   "color-status-danger-surface": "rgba(239, 68, 68, 0.12)",
   "color-status-danger-text": "#fecaca",
   "color-status-danger-border": "rgba(248, 113, 113, 0.55)",
@@ -71,18 +75,36 @@ const darkThemeCssVariables = {
   "gradient-hidden-card-preview-artwork":
     "radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.18), transparent 30%), radial-gradient(circle at 80% 0%, rgba(124, 108, 255, 0.42), transparent 34%), linear-gradient(135deg, rgba(124, 108, 255, 0.85) 0%, rgba(255, 79, 154, 0.72) 100%)",
   // Neutral hidden-card gradient for the flat design system (Phase 1+ adoption).
-  "gradient-card-hidden":
-    "linear-gradient(145deg, #2a2a2a 0%, #181818 55%, #121212 100%)",
+  "gradient-card-hidden": "linear-gradient(145deg, #2a2a2a 0%, #181818 55%, #121212 100%)",
   "gradient-card-artwork-scrim":
     "linear-gradient(180deg, rgba(10, 10, 10, 0.18) 0%, rgba(10, 10, 10, 0.34) 42%, rgba(10, 10, 10, 0.82) 100%)",
+  // Cover fallbacks: a playlist or song without artwork takes one of these by a hash of its name.
+  "color-cover-fallback-1": "#3d4fb8",
+  "color-cover-fallback-2": "#8a3f9e",
+  "color-cover-fallback-3": "#1f7a6d",
+  "color-cover-fallback-4": "#a8502c",
+  "color-on-cover-fallback": "#ffffff",
+  // Quick-pick artwork: printed covers, so both themes keep the same colours.
+  "color-art-pink": "#ff4f9a",
+  "color-art-violet": "#6a3df0",
+  "color-art-blue": "#2f5bea",
+  "color-art-cyan": "#19b8d6",
+  "color-art-green": "#1f9d58",
+  "color-art-gold": "#ffc23d",
+  "color-art-orange": "#ff7a2f",
+  "color-art-red": "#d7263d",
+  "color-art-ink": "#15132b",
+  "color-on-art": "#ffffff",
 
   // Game UI
   "color-mask-solid": "#000000",
   "color-game-error-text": "var(--color-status-danger-text)",
-  "color-game-card-current-outline": "color-mix(in srgb, var(--color-accent-brand) 72%, transparent)",
+  "color-game-card-current-outline":
+    "color-mix(in srgb, var(--color-accent-brand) 72%, transparent)",
   "color-game-card-challenge-outline": "color-mix(in srgb, var(--color-warning) 78%, transparent)",
   "color-game-card-failure-outline": "color-mix(in srgb, var(--color-danger) 78%, transparent)",
-  "color-game-card-correct-outline": "color-mix(in srgb, var(--color-accent-brand) 88%, transparent)",
+  "color-game-card-correct-outline":
+    "color-mix(in srgb, var(--color-accent-brand) 88%, transparent)",
   "color-game-card-draggable-outline": "var(--color-accent-brand)",
   "color-game-card-correction-outline": "color-mix(in srgb, var(--color-danger) 82%, transparent)",
   "color-game-preview-scrim": "rgba(18, 18, 18, 0.42)",

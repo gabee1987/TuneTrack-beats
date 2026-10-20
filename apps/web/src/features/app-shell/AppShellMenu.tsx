@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useRef, useState } from "react";
 import { useI18n } from "../i18n";
 import type { AppShellMenuProps } from "./AppShellMenu.types";
 import styles from "./AppShellMenu.module.css";
@@ -16,13 +16,32 @@ export function AppShellMenu({
   title,
   subtitle,
   tabs,
+  triggerRef,
 }: AppShellMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
   const { t } = useI18n();
+  const [isOpen, setIsOpen] = useState(false);
+  const pendingActionRef = useRef<(() => void) | null>(null);
+
+  function closeMenu(afterClose?: () => void) {
+    if (!isOpen) {
+      afterClose?.();
+      return;
+    }
+
+    pendingActionRef.current = afterClose ?? null;
+    setIsOpen(false);
+  }
+
+  function runPendingAction() {
+    const pendingAction = pendingActionRef.current;
+    pendingActionRef.current = null;
+    pendingAction?.();
+  }
 
   return (
     <>
       <button
+        ref={triggerRef}
         aria-label={t("appShell.menu.open")}
         className={styles.menuTrigger}
         onFocus={() => {
@@ -49,7 +68,8 @@ export function AppShellMenu({
       <Suspense fallback={null}>
         <AppShellMenuDialog
           isOpen={isOpen}
-          onClose={() => setIsOpen(false)}
+          onClose={closeMenu}
+          onClosed={runPendingAction}
           subtitle={subtitle}
           tabs={tabs}
           title={title}

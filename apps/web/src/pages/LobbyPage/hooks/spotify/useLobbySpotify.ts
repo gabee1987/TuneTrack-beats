@@ -1,8 +1,8 @@
-import { ServerToClientEvent, type PlaylistTracksPayload } from "@tunetrack/shared";
+import { ServerToClientEvent, type PlaylistTracksPayload } from "@tunetrack/shared/client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getSocketClient } from "../../../../services/socket/socketClient";
-import type { UseLobbySpotifyResult } from "./lobbySpotify.types";
+import type { DeckOrigin, UseLobbySpotifyResult } from "./lobbySpotify.types";
 import {
   getQueuedTrackIdsFromPlaylistTracks,
   getQueuedSpotifyTrackIdsFromPlaylistTracks,
@@ -14,6 +14,7 @@ import { useSpotifyOpenedPlaylist } from "./useSpotifyOpenedPlaylist";
 import { useSpotifyPlaylistImport } from "./useSpotifyPlaylistImport";
 import { useSpotifyPlaylistSearch } from "./useSpotifyPlaylistSearch";
 import { useSpotifySmartSearch } from "./useSpotifySmartSearch";
+import type { PlaylistEditorTarget } from "../music/playlistEditorTarget";
 
 export function useLobbySpotify(): UseLobbySpotifyResult {
   const { roomId } = useParams<{ roomId: string }>();
@@ -25,9 +26,9 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
   const [savedPlaylistMessage, setSavedPlaylistMessage] = useState<string | null>(null);
   const [generatedPlaylistMessage, setGeneratedPlaylistMessage] = useState<string | null>(null);
   const [loadedSavedPlaylistId, setLoadedSavedPlaylistId] = useState<string | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editor, setEditor] = useState<PlaylistEditorTarget | null>(null);
 
-  const currentPlaylistNameRef = useRef<string | undefined>(undefined);
+  const currentDeckOriginRef = useRef<DeckOrigin>({ imageUrl: undefined, name: undefined });
   const generatedPlaylistMessageTimerRef = useRef<number | null>(null);
 
   const showGeneratedPlaylistMessage = useCallback((message: string) => {
@@ -45,7 +46,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
   const auth = useSpotifyAuth(roomId);
 
   const openedPlaylist = useSpotifyOpenedPlaylist({
-    currentPlaylistNameRef,
+    currentDeckOriginRef,
     roomId,
     setQueuedTrackIds,
     setSavedPlaylistMessage,
@@ -53,7 +54,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
   });
 
   const candidates = useSpotifyCandidates({
-    currentPlaylistNameRef,
+    currentDeckOriginRef,
     roomId,
     setGeneratedPlaylistMessage,
     setSavedPlaylistMessage,
@@ -69,7 +70,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
 
   const playlistImport = useSpotifyPlaylistImport({
     clearPlaylistSearch: playlistSearch.clearPlaylistSearch,
-    currentPlaylistNameRef,
+    currentDeckOriginRef,
     roomId,
     setLoadedSavedPlaylistId,
     setQueuedTrackIds,
@@ -87,7 +88,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
   });
 
   const savedPlaylists = useSavedPlaylistsController({
-    currentPlaylistNameRef,
+    currentDeckOriginRef,
     currentPlaylistSourceUrl: playlistImport.currentPlaylistSourceUrl,
     loadedSavedPlaylistId,
     roomId,
@@ -106,7 +107,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
     openedPlaylist.resetOpenedPlaylist();
     candidates.resetCandidates();
     setGeneratedPlaylistMessage(null);
-    setIsEditModalOpen(false);
+    setEditor(null);
     savedPlaylists.resetSavedPlaylists();
     setLoadedSavedPlaylistId(null);
   }, [
@@ -232,7 +233,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
       selectedSpotifyPlaylistIds: candidates.selectedSpotifyPlaylistIds,
       toggleSpotifyPlaylistSelection: candidates.toggleSpotifyPlaylistSelection,
       updateCandidateTrack: candidates.updateCandidateTrack,
-      useGeneratedCandidates: candidates.useGeneratedCandidates,
+      applyGeneratedCandidates: candidates.applyGeneratedCandidates,
     },
     savedPlaylists: {
       cancelRenamePlaylist: savedPlaylists.cancelRenamePlaylist,
@@ -240,7 +241,7 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
       confirmOverwrite: savedPlaylists.confirmOverwrite,
       confirmRenamePlaylist: savedPlaylists.confirmRenamePlaylist,
       confirmSavePlaylist: savedPlaylists.confirmSavePlaylist,
-      deleteSelectedSavedPlaylist: savedPlaylists.deleteSelectedSavedPlaylist,
+      deleteSavedPlaylistById: savedPlaylists.deleteSavedPlaylistById,
       generatedPlaylistMessage,
       isOverwritePromptActive: savedPlaylists.isOverwritePromptActive,
       isSavingWithName: savedPlaylists.isSavingWithName,
@@ -259,11 +260,12 @@ export function useLobbySpotify(): UseLobbySpotifyResult {
       setSelectedSavedPlaylistId: savedPlaylists.setSelectedSavedPlaylistId,
       startRenamePlaylist: savedPlaylists.startRenamePlaylist,
       switchToSaveAsNew: savedPlaylists.switchToSaveAsNew,
+      updateSavedDeckTracks: savedPlaylists.updateSavedDeckTracks,
     },
     queue: {
-      closeEditModal: () => setIsEditModalOpen(false),
-      isEditModalOpen,
-      openEditModal: () => setIsEditModalOpen(true),
+      closeEditor: () => setEditor(null),
+      editor,
+      openEditor: setEditor,
     },
   };
 }

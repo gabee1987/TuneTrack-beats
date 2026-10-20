@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { PublicRoomSettings, PublicRoomState } from "@tunetrack/shared";
+import type { PublicRoomSettings, PublicRoomState } from "@tunetrack/shared/client";
 import type { LobbyPageController } from "../LobbyPage.types";
 import { buildLobbyAssemblyModel } from "./buildLobbyAssemblyModel";
+import { selectLobbySetup } from "./lobbySetupModel";
 
 const settings: PublicRoomSettings = {
   targetTimelineCardCount: 10,
@@ -12,15 +13,15 @@ const settings: PublicRoomSettings = {
   challengeWindowDurationSeconds: 10,
   playlistImported: false,
   importedTrackCount: 0,
+  tracksToCheckCount: 0,
+  deckSource: "none",
   spotifyAuthStatus: "none",
   spotifyAccountType: null,
   spotifyPlaybackOwnerPlayerId: null,
   spotifyPlaybackGeneration: 0,
 };
 
-function createController(
-  overrides: Partial<LobbyPageController> = {},
-): LobbyPageController {
+function createController(overrides: Partial<LobbyPageController> = {}): LobbyPageController {
   const roomState: PublicRoomState = {
     roomId: "ROOM1",
     status: "lobby",
@@ -39,7 +40,6 @@ function createController(
     ],
     timelines: {},
     currentTrackCard: null,
-    targetTimelineCardCount: 10,
     settings,
     turn: null,
     challengeState: null,
@@ -49,7 +49,8 @@ function createController(
   };
 
   return {
-    connectionStatus: "connected",
+    closeRoomActionStatus: "failed",
+    closedRoomReason: "closed",
     currentPlayerId: "host-1",
     currentSettings: settings,
     displayName: "Host",
@@ -61,34 +62,65 @@ function createController(
     handlePlayerKick: () => undefined,
     handlePlayerStartingCardCountChange: () => undefined,
     handlePlayerStartingTtTokenCountChange: () => undefined,
-    handlePlayerProfileChange: () => undefined,
-    handleRoomRename: () => undefined,
+    handlePlayerProfileChange: async () => true,
+    handleRoomRename: async () => true,
     handleRoomSettingsChange: () => undefined,
     handleStartGame: () => undefined,
     isHost: true,
+    isCloseRoomPending: false,
+    isKickPlayerPending: false,
+    isIdentityActionPending: false,
+    isPlayerSettingsPending: false,
+    isRoomSettingsPending: false,
+    isStartGamePending: true,
+    kickPlayerActionState: null,
+    identityActionState: null,
+    playerSettingsActionState: null,
+    roomSettingsActionStatus: "idle",
     preloadGame: () => undefined,
     roomId: "ROOM1",
     roomState,
+    startGameActionStatus: "retrying",
     toggleTtMode: () => undefined,
     ...overrides,
   };
 }
 
+function build(controller: LobbyPageController) {
+  const setup = selectLobbySetup({
+    connectionStatus: "connected",
+    currentPlayerId: controller.currentPlayerId,
+    roomState: controller.roomState,
+    settings: controller.currentSettings,
+    startGameActionStatus: controller.startGameActionStatus,
+  });
+  return buildLobbyAssemblyModel(controller, setup);
+}
+
 describe("buildLobbyAssemblyModel", () => {
   it("groups shared lobby facts for mobile and desktop assemblies", () => {
-    const model = buildLobbyAssemblyModel(createController());
+    const model = build(createController());
 
     expect(model.room.resolvedRoomId).toBe("ROOM1");
     expect(model.room.players).toHaveLength(1);
     expect(model.room.isHost).toBe(true);
     expect(model.hostSettings.currentSettings).toBe(settings);
+    expect(model.hostSettings.isStartGamePending).toBe(true);
+    expect(model.hostSettings.startGameActionStatus).toBe("retrying");
     expect(model.players.roomSettings).toBe(settings);
     expect(model.roomActions.isHost).toBe(true);
+    expect(model.roomActions.closeRoomActionStatus).toBe("failed");
+    expect(model.roomActions.isCloseRoomPending).toBe(false);
+    expect(model.roomActions.isStartGamePending).toBe(true);
+    expect(model.identity.startGameActionStatus).toBe("retrying");
+    expect(model.identity.identityActionState).toBeNull();
+    expect(model.identity.isIdentityActionPending).toBe(false);
     expect(model.identity.resolvedRoomId).toBe("ROOM1");
+    expect(model.setup.roomCode).toBe("ROOM1");
   });
 
   it("marks started-join errors for both assemblies", () => {
-    const model = buildLobbyAssemblyModel(
+    const model = build(
       createController({ errorCode: "GAME_ALREADY_STARTED", errorMessage: "started" }),
     );
 
@@ -98,9 +130,7 @@ describe("buildLobbyAssemblyModel", () => {
   });
 
   it("falls back to route room id when room state is missing", () => {
-    const model = buildLobbyAssemblyModel(
-      createController({ roomState: null, roomId: "fallback-room" }),
-    );
+    const model = build(createController({ roomState: null, roomId: "fallback-room" }));
 
     expect(model.room.resolvedRoomId).toBe("fallback-room");
     expect(model.room.players).toEqual([]);

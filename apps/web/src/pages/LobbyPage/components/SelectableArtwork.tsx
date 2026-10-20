@@ -39,10 +39,6 @@ export function SelectableArtworkImage({ src }: { src: string }) {
   return <img alt="" className={styles.artworkImage} src={src} />;
 }
 
-export function StaticArtwork({ children }: { children: ReactNode }) {
-  return <span className={styles.artworkStatic}>{children}</span>;
-}
-
 function ArtworkCheckIcon() {
   return (
     <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">

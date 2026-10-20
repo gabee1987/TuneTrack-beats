@@ -1,11 +1,15 @@
-import { type PublicRoomState } from "@tunetrack/shared";
+import { type PublicRoomState } from "@tunetrack/shared/client";
 import type {
+  AwardTtActionState,
   ChallengeMarkerTone,
   GamePageCard,
+  GamePageLeader,
   GamePagePlayerNameResolver,
   GamePageViewPreferenceUpdater,
+  KickPlayerActionState,
   TimelineCelebrationTone,
   TimelineView,
+  TransferHostActionState,
 } from "../GamePage.types";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import type { ThemeId } from "../../../features/preferences/uiPreferences";
@@ -33,11 +37,17 @@ interface UseGamePageDerivedStateOptions {
   showTurnNumberChip: boolean;
   updateViewPreferences: GamePageViewPreferenceUpdater;
   handlers: {
-    handleAwardTt: (playerId: string) => void;
-    handleRemoveTt: (playerId: string) => void;
+    awardTtActionState: AwardTtActionState | null;
+    handleAwardTt: (playerId: string) => boolean;
+    handleRemoveTt: (playerId: string) => boolean;
     handleCloseRoom: () => void;
     handleKickPlayer: (playerId: string) => void;
     handleTransferHost: (playerId: string) => void;
+    isAwardTtPending: boolean;
+    isKickPlayerPending: boolean;
+    isTransferHostPending: boolean;
+    kickPlayerActionState: KickPlayerActionState | null;
+    transferHostActionState: TransferHostActionState | null;
   };
 }
 
@@ -48,7 +58,7 @@ interface GamePageDerivedPlayerState {
   getPlayerName: GamePagePlayerNameResolver;
   isChallengeOwner: boolean;
   isCurrentPlayerTurn: boolean;
-  leadingPlayers: PublicRoomState["players"];
+  leadingPlayers: GamePageLeader[];
 }
 
 interface GamePageDerivedInteractionState {
@@ -159,15 +169,12 @@ export function useGamePageDerivedState({
     handlers,
     roomState,
   });
-  const {
-    canChangeTimelineView,
-    canToggleTimelineView,
-    isViewingOwnTimeline,
-  } = useGamePageTimelineViewMode({
-    canSelectChallengeSlot: capabilityState.canSelectChallengeSlot,
-    showOwnTimeline,
-    timelineView,
-  });
+  const { canChangeTimelineView, canToggleTimelineView, isViewingOwnTimeline } =
+    useGamePageTimelineViewMode({
+      canSelectChallengeSlot: capabilityState.canSelectChallengeSlot,
+      showOwnTimeline,
+      timelineView,
+    });
   const displayState = useGamePageDisplayState({
     activePlayerId: activePlayer?.id,
     activePlayerTtCount: activePlayer?.ttTokenCount ?? 0,

@@ -1,37 +1,37 @@
 import { useEffect, useState } from "react";
 
 interface UseTimelineOverflowStateOptions {
-  dependencyKey: unknown;
+  itemCount: number;
   timelineRowRef: React.RefObject<HTMLDivElement | null>;
 }
 
+function hasOverflow(rowElement: HTMLElement): boolean {
+  const isGridLayout = getComputedStyle(rowElement).display === "grid";
+
+  return isGridLayout
+    ? rowElement.scrollHeight - rowElement.clientHeight > 4
+    : rowElement.scrollWidth - rowElement.clientWidth > 4;
+}
+
+/**
+ * One `ResizeObserver` for the panel's lifetime. A reorder cannot change the overflow, so
+ * only a change in the item count re-measures (05 C3).
+ */
 export function useTimelineOverflowState({
-  dependencyKey,
+  itemCount,
   timelineRowRef,
 }: UseTimelineOverflowStateOptions) {
   const [hasTimelineOverflow, setHasTimelineOverflow] = useState(false);
 
   useEffect(() => {
-    if (!timelineRowRef.current) {
+    const rowElement = timelineRowRef.current;
+
+    if (!rowElement) {
       return;
     }
 
-    const rowElement = timelineRowRef.current;
-
-    function updateOverflowState() {
-      const isGridLayout = getComputedStyle(rowElement).display === "grid";
-
-      setHasTimelineOverflow(
-        isGridLayout
-          ? rowElement.scrollHeight - rowElement.clientHeight > 4
-          : rowElement.scrollWidth - rowElement.clientWidth > 4,
-      );
-    }
-
-    updateOverflowState();
-
     const resizeObserver = new ResizeObserver(() => {
-      updateOverflowState();
+      setHasTimelineOverflow(hasOverflow(rowElement));
     });
 
     resizeObserver.observe(rowElement);
@@ -39,7 +39,15 @@ export function useTimelineOverflowState({
     return () => {
       resizeObserver.disconnect();
     };
-  }, [dependencyKey, timelineRowRef]);
+  }, [timelineRowRef]);
+
+  useEffect(() => {
+    const rowElement = timelineRowRef.current;
+
+    if (rowElement) {
+      setHasTimelineOverflow(hasOverflow(rowElement));
+    }
+  }, [itemCount, timelineRowRef]);
 
   return hasTimelineOverflow;
 }

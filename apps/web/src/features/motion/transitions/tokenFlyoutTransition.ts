@@ -1,9 +1,7 @@
 import type { TargetAndTransition, Transition } from "framer-motion";
 import { motionDurations, motionEasings } from "../coreMotionTokens";
 
-function createTokenSpendFlyoutInitial(
-  reduceMotion: boolean,
-): TargetAndTransition {
+function createTokenSpendFlyoutInitial(reduceMotion: boolean): TargetAndTransition {
   if (reduceMotion) {
     return {
       opacity: 0,
@@ -23,9 +21,7 @@ function createTokenSpendFlyoutInitial(
   };
 }
 
-function createTokenSpendFlyoutMotion(
-  reduceMotion: boolean,
-): TargetAndTransition {
+function createTokenSpendFlyoutMotion(reduceMotion: boolean): TargetAndTransition {
   if (reduceMotion) {
     return {
       opacity: [0, 1, 0],
@@ -54,9 +50,7 @@ export function createTokenSpendFlyoutVariants(
   };
 }
 
-export function createTokenSpendFlyoutTransition(
-  reduceMotion: boolean,
-): Transition {
+export function createTokenSpendFlyoutTransition(reduceMotion: boolean): Transition {
   if (reduceMotion) {
     return {
       duration: motionDurations.quick,
@@ -99,9 +93,7 @@ export function createMenuTokenAdjustFlyoutVariants(
   };
 }
 
-export function createMenuTokenAdjustFlyoutTransition(
-  reduceMotion: boolean,
-): Transition {
+export function createMenuTokenAdjustFlyoutTransition(reduceMotion: boolean): Transition {
   if (reduceMotion) {
     return {
       duration: motionDurations.quick,
@@ -154,9 +146,7 @@ export function createMenuTokenAdjustFlyoutPopVariants(
   };
 }
 
-export function createMenuTokenAdjustFlyoutPopTransition(
-  reduceMotion: boolean,
-): Transition {
+export function createMenuTokenAdjustFlyoutPopTransition(reduceMotion: boolean): Transition {
   if (reduceMotion) {
     return {
       duration: motionDurations.quick,
@@ -190,3 +180,10 @@ export function createMenuTokenAdjustFlyoutPopTransition(
     },
   };
 }
+
+/**
+ * Pass as `onUpdate` to keep opacity off the browser's accelerated animations. When one of those
+ * finishes, Framer Motion cancels it a frame before it writes the final value, so a flyout that
+ * ends at a different opacity than it started flashed its start opacity for one frame.
+ */
+export function keepFlyoutOpacityOnMainThread(): void {}

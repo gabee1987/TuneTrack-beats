@@ -11,12 +11,7 @@ export interface SkeletonProps {
   width?: number | string | undefined;
 }
 
-export function Skeleton({
-  className,
-  height,
-  variant = "rect",
-  width,
-}: SkeletonProps) {
+export function Skeleton({ className, height, variant = "rect", width }: SkeletonProps) {
   const style: CSSProperties = {
     width: width ?? (variant === "text" ? "100%" : undefined),
     height: height ?? (variant === "circle" ? width : undefined),

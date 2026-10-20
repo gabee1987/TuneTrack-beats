@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  MOBILE_LAYOUT_COMPACT_WIDTH,
-  resolvePageLayoutMode,
-} from "./pageLayoutMode";
+import { MOBILE_LAYOUT_COMPACT_WIDTH, resolvePageLayoutMode } from "./pageLayoutMode";
 
 describe("pageLayoutMode", () => {
   it("uses mobile layout for compact widths even without coarse pointer", () => {

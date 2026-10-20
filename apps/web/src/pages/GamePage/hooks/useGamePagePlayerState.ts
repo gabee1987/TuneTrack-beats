@@ -1,4 +1,4 @@
-import { type PublicRoomState } from "@tunetrack/shared";
+import { type PublicRoomState } from "@tunetrack/shared/client";
 import { useCallback, useMemo } from "react";
 import { useI18n } from "../../../features/i18n";
 import type { GamePagePlayerNameResolver } from "../GamePage.types";
@@ -25,15 +25,9 @@ export function useGamePagePlayerState({
 }: UseGamePagePlayerStateOptions): UseGamePagePlayerStateResult {
   const { t } = useI18n();
   const activeTimelineOwnerId =
-    roomState?.status === "finished"
-      ? roomState.winnerPlayerId
-      : roomState?.turn?.activePlayerId;
-  const activePlayer = roomState?.players.find(
-    (player) => player.id === activeTimelineOwnerId,
-  );
-  const currentPlayer = roomState?.players.find(
-    (player) => player.id === currentPlayerId,
-  );
+    roomState?.status === "finished" ? roomState.winnerPlayerId : roomState?.turn?.activePlayerId;
+  const activePlayer = roomState?.players.find((player) => player.id === activeTimelineOwnerId);
+  const currentPlayer = roomState?.players.find((player) => player.id === currentPlayerId);
   const challengeOwner = roomState?.players.find(
     (player) => player.id === roomState.challengeState?.challengerPlayerId,
   );
@@ -95,7 +89,6 @@ export function useGamePagePlayerState({
     currentPlayerTimeline,
     getPlayerName,
     getPossessivePlayerName,
-    showOwnTimeline:
-      Boolean(currentPlayerId) && currentPlayerId !== activePlayer?.id,
+    showOwnTimeline: Boolean(currentPlayerId) && currentPlayerId !== activePlayer?.id,
   };
 }

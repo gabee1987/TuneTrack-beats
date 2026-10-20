@@ -1,0 +1,153 @@
+import { ClientToServerEvent } from "@tunetrack/shared/client";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { emitAction } from "./emitAction";
+
+const socket = vi.hoisted(() => ({
+  connected: true,
+  timeout: vi.fn(),
+  emitWithAck: vi.fn(),
+}));
+
+const getSocketClient = vi.hoisted(() => vi.fn());
+
+vi.mock("./socketClient", () => ({ getSocketClient }));
+
+beforeEach(() => {
+  socket.connected = true;
+  socket.timeout.mockReturnValue(socket);
+  socket.emitWithAck.mockReset();
+  getSocketClient.mockResolvedValue(socket);
+});
+
+describe("emitAction", () => {
+  it("returns ok after the server accepts the action", async () => {
+    socket.emitWithAck.mockResolvedValue({
+      ok: true,
+      requestId: "00000000-0000-4000-8000-000000000001",
+    });
+
+    await expect(
+      emitAction(ClientToServerEvent.StartGame, { roomId: "TEST_ROOM_1" }),
+    ).resolves.toEqual({ status: "ok" });
+    expect(socket.timeout).toHaveBeenCalledWith(8_000);
+    expect(socket.emitWithAck).toHaveBeenCalledWith(
+      ClientToServerEvent.StartGame,
+      expect.objectContaining({
+        roomId: "TEST_ROOM_1",
+        requestId: expect.any(String),
+      }),
+    );
+  });
+
+  it("returns the server rejection code", async () => {
+    socket.emitWithAck.mockResolvedValue({
+      ok: false,
+      requestId: "00000000-0000-4000-8000-000000000002",
+      code: "ONLY_HOST_CAN_START_GAME",
+    });
+
+    await expect(
+      emitAction(ClientToServerEvent.StartGame, { roomId: "TEST_ROOM_1" }),
+    ).resolves.toEqual({
+      status: "rejected",
+      code: "ONLY_HOST_CAN_START_GAME",
+    });
+  });
+
+  it("returns timeout when the acknowledgement does not arrive", async () => {
+    socket.emitWithAck.mockRejectedValue(new Error("operation has timed out"));
+
+    await expect(
+      emitAction(ClientToServerEvent.StartGame, { roomId: "TEST_ROOM_1" }),
+    ).resolves.toEqual({ status: "timeout" });
+  });
+
+  it("retries one timeout with the same request id when enabled", async () => {
+    const onTimeoutRetry = vi.fn();
+    socket.emitWithAck
+      .mockRejectedValueOnce(new Error("operation has timed out"))
+      .mockResolvedValueOnce({
+        ok: true,
+        requestId: "00000000-0000-4000-8000-000000000003",
+      });
+
+    await expect(
+      emitAction(
+        ClientToServerEvent.PlaceCard,
+        { roomId: "TEST_ROOM_1", selectedSlotIndex: 1 },
+        { onTimeoutRetry, retryOnTimeout: true },
+      ),
+    ).resolves.toEqual({ status: "ok" });
+
+    expect(onTimeoutRetry).toHaveBeenCalledTimes(1);
+    expect(socket.emitWithAck).toHaveBeenCalledTimes(2);
+    expect(socket.emitWithAck.mock.calls[1]).toEqual(socket.emitWithAck.mock.calls[0]);
+  });
+
+  it("stops after one timeout retry", async () => {
+    const onTimeoutRetry = vi.fn();
+    socket.emitWithAck.mockRejectedValue(new Error("operation has timed out"));
+
+    await expect(
+      emitAction(
+        ClientToServerEvent.PlaceCard,
+        { roomId: "TEST_ROOM_1", selectedSlotIndex: 1 },
+        { onTimeoutRetry, retryOnTimeout: true },
+      ),
+    ).resolves.toEqual({ status: "timeout" });
+    expect(onTimeoutRetry).toHaveBeenCalledTimes(1);
+    expect(socket.emitWithAck).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not buffer the retry when the socket disconnects after the first timeout", async () => {
+    const onTimeoutRetry = vi.fn();
+    socket.emitWithAck.mockImplementationOnce(() => {
+      socket.connected = false;
+      return Promise.reject(new Error("operation has timed out"));
+    });
+
+    await expect(
+      emitAction(
+        ClientToServerEvent.PlaceCard,
+        { roomId: "TEST_ROOM_1", selectedSlotIndex: 1 },
+        { onTimeoutRetry, retryOnTimeout: true },
+      ),
+    ).resolves.toEqual({ status: "offline" });
+    expect(onTimeoutRetry).not.toHaveBeenCalled();
+    expect(socket.emitWithAck).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns offline without emitting or buffering the action", async () => {
+    socket.connected = false;
+
+    await expect(
+      emitAction(ClientToServerEvent.StartGame, { roomId: "TEST_ROOM_1" }),
+    ).resolves.toEqual({ status: "offline" });
+    expect(socket.timeout).not.toHaveBeenCalled();
+    expect(socket.emitWithAck).not.toHaveBeenCalled();
+  });
+
+  it("creates a UUID request id where crypto.randomUUID is unavailable (plain-http LAN page)", async () => {
+    const realCrypto = globalThis.crypto;
+    vi.stubGlobal("crypto", {
+      getRandomValues: (array: Uint8Array) => realCrypto.getRandomValues(array),
+    });
+    socket.emitWithAck.mockResolvedValue({ ok: true, requestId: "unused" });
+
+    try {
+      await expect(
+        emitAction(ClientToServerEvent.StartGame, { roomId: "TEST_ROOM_1" }),
+      ).resolves.toEqual({ status: "ok" });
+      expect(socket.emitWithAck).toHaveBeenCalledWith(
+        ClientToServerEvent.StartGame,
+        expect.objectContaining({
+          requestId: expect.stringMatching(
+            /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+          ),
+        }),
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});

@@ -1,4 +1,4 @@
-import { CHALLENGE_TT_COST, type PublicRoomState } from "@tunetrack/shared";
+import { CHALLENGE_TT_COST, type PublicRoomState } from "@tunetrack/shared/client";
 
 interface UseGamePageActionAvailabilityOptions {
   currentPlayerId: string | null;
@@ -13,11 +13,9 @@ export function useGamePageActionAvailability({
 }: UseGamePageActionAvailabilityOptions) {
   const isHost = roomState?.hostId === currentPlayerId;
   const isCurrentPlayerTurn =
-    Boolean(currentPlayerId) &&
-    roomState?.turn?.activePlayerId === currentPlayerId;
+    Boolean(currentPlayerId) && roomState?.turn?.activePlayerId === currentPlayerId;
   const isChallengeOwner =
-    Boolean(currentPlayerId) &&
-    roomState?.challengeState?.challengerPlayerId === currentPlayerId;
+    Boolean(currentPlayerId) && roomState?.challengeState?.challengerPlayerId === currentPlayerId;
   const canSelectChallengeSlot =
     roomState?.status === "challenge" &&
     roomState.challengeState?.phase === "claimed" &&
@@ -51,12 +49,10 @@ export function useGamePageActionAvailability({
       : null;
   const canSkipOfflinePlayer =
     isHost &&
-    (
-      (roomState?.status === "turn" && activePlayer?.connectionStatus === "disconnected") ||
+    ((roomState?.status === "turn" && activePlayer?.connectionStatus === "disconnected") ||
       (roomState?.status === "challenge" &&
         roomState.challengeState?.phase === "claimed" &&
-        challengerPlayer?.connectionStatus === "disconnected")
-    );
+        challengerPlayer?.connectionStatus === "disconnected"));
 
   return {
     canClaimChallenge,

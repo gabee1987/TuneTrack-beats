@@ -1,15 +1,7 @@
-export type LobbyConnectionBadgeVariant = "connected" | "mutedSurface";
-
 export interface LobbyHeaderMenuTabSpec {
   id: "dev" | "language" | "players" | "settings" | "view";
   labelKey: string;
   messageKey?: string;
-}
-
-export function getLobbyConnectionBadgeVariant(
-  connectionStatus: string,
-): LobbyConnectionBadgeVariant {
-  return connectionStatus === "Connected" ? "connected" : "mutedSurface";
 }
 
 export function getLobbyHeaderMenuTabSpecs(isHost: boolean): LobbyHeaderMenuTabSpec[] {

@@ -6,8 +6,9 @@ import type {
   SpotifyQuickPickPresetId,
   SpotifySmartSearchResult,
   SpotifySmartSearchTypeFilter,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import type { SavedPlaylist } from "../../../../services/savedPlaylists/savedPlaylists";
+import type { PlaylistEditorTarget, PlaylistTrackUpdatePatch } from "../music/playlistEditorTarget";
 
 export type AuthPhase = "idle" | "connecting" | "error";
 export type ImportPhase = "idle" | "importing" | "error";
@@ -17,6 +18,12 @@ export type SmartSearchLoadMorePhase = "idle" | "loading";
 export type OpenedPlaylistPhase = "idle" | "loading" | "ready" | "applying" | "error";
 export type CandidatePhase = "idle" | "generating" | "ready" | "applying" | "error";
 
+/** Where the room's deck came from: the name and cover a save offers. */
+export interface DeckOrigin {
+  imageUrl: string | undefined;
+  name: string | undefined;
+}
+
 export interface OpenedSpotifyPlaylist {
   id: string;
   title: string;
@@ -25,14 +32,6 @@ export interface OpenedSpotifyPlaylist {
   totalFetched: number;
   filteredCount: number;
   tracks: PublicTrackInfo[];
-}
-
-export interface CandidateTrackUpdatePatch {
-  title?: string;
-  artist?: string;
-  albumTitle?: string;
-  releaseYear?: number;
-  metadataStatus?: PublicTrackInfo["metadataStatus"];
 }
 
 export interface LobbySpotifyAuthState {
@@ -97,7 +96,7 @@ export interface LobbySpotifyOpenedPlaylistState {
   queuedTrackIds: ReadonlySet<string>;
   removeOpenedPlaylistTrack: (trackId: string) => void;
   removeOpenedPlaylistTracksFromQueue: (trackIds: ReadonlySet<string>) => void;
-  updateOpenedPlaylistTrack: (trackId: string, patch: CandidateTrackUpdatePatch) => void;
+  updateOpenedPlaylistTrack: (trackId: string, patch: PlaylistTrackUpdatePatch) => void;
 }
 
 export interface LobbySpotifyCandidatesState {
@@ -112,11 +111,8 @@ export interface LobbySpotifyCandidatesState {
   removeCandidateTrack: (trackId: string) => void;
   selectedSpotifyPlaylistIds: Set<string>;
   toggleSpotifyPlaylistSelection: (playlistId: string) => void;
-  updateCandidateTrack: (trackId: string, patch: CandidateTrackUpdatePatch) => void;
-  useGeneratedCandidates: (
-    mode?: PlaylistQueueUpdateMode,
-    trackIds?: string[],
-  ) => void;
+  updateCandidateTrack: (trackId: string, patch: PlaylistTrackUpdatePatch) => void;
+  applyGeneratedCandidates: (mode?: PlaylistQueueUpdateMode, trackIds?: string[]) => void;
 }
 
 export interface LobbySpotifySavedPlaylistsState {
@@ -125,7 +121,7 @@ export interface LobbySpotifySavedPlaylistsState {
   confirmOverwrite: () => void;
   confirmRenamePlaylist: () => void;
   confirmSavePlaylist: () => void;
-  deleteSelectedSavedPlaylist: () => void;
+  deleteSavedPlaylistById: (playlistId: string) => void;
   generatedPlaylistMessage: string | null;
   isOverwritePromptActive: boolean;
   isSavingWithName: boolean;
@@ -144,12 +140,14 @@ export interface LobbySpotifySavedPlaylistsState {
   setSelectedSavedPlaylistId: (playlistId: string) => void;
   startRenamePlaylist: (playlistId: string) => void;
   switchToSaveAsNew: () => void;
+  updateSavedDeckTracks: (playlistId: string, tracks: PublicTrackInfo[]) => void;
 }
 
 export interface LobbySpotifyQueueState {
-  closeEditModal: () => void;
-  isEditModalOpen: boolean;
-  openEditModal: () => void;
+  closeEditor: () => void;
+  /** The deck the song editor is open on, or `null` while it is closed. */
+  editor: PlaylistEditorTarget | null;
+  openEditor: (target: PlaylistEditorTarget) => void;
 }
 
 export interface UseLobbySpotifyResult {

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 import type {
   MenuTabId,
   RevealedCardMode,
@@ -15,6 +15,7 @@ export interface AppShellMenuTab {
 }
 
 export interface AppShellMenuFooterAction {
+  disabled?: boolean;
   label: string;
   onClick: () => void;
   tone?: "danger" | "neutral";
@@ -26,6 +27,7 @@ export interface AppShellMenuProps {
   title: string;
   subtitle: string;
   tabs: AppShellMenuTab[];
+  triggerRef?: Ref<HTMLButtonElement>;
 }
 
 export interface AppShellMenuPreferencesState {

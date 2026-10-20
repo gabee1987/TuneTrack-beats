@@ -1,18 +1,26 @@
 import { useState, type ReactNode } from "react";
-import { MotionDialogPortal } from "../motion";
 import { useI18n } from "../i18n";
 import { CloseIconButton } from "./CloseIconButton";
+import { Overlay } from "../overlay";
 import styles from "./SettingField.module.css";
 
 interface SettingFieldProps {
   children: ReactNode;
   className?: string | undefined;
+  description?: ReactNode | undefined;
   info?: ReactNode;
   label: string;
   value?: ReactNode;
 }
 
-export function SettingField({ children, className, info, label, value }: SettingFieldProps) {
+export function SettingField({
+  children,
+  className,
+  description,
+  info,
+  label,
+  value,
+}: SettingFieldProps) {
   return (
     <div className={`${styles.field}${className ? ` ${className}` : ""}`}>
       <div className={styles.labelRow}>
@@ -24,6 +32,7 @@ export function SettingField({ children, className, info, label, value }: Settin
           <strong className={styles.value}>{value}</strong>
         ) : null}
       </div>
+      {description ? <p className={styles.description}>{description}</p> : null}
       {children}
     </div>
   );
@@ -38,12 +47,7 @@ function InfoGlyph() {
   return (
     <svg aria-hidden="true" className={styles.infoGlyph} fill="none" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-      <path
-        d="M12 10.5V16.5"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="2"
-      />
+      <path d="M12 10.5V16.5" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
       <circle cx="12" cy="7.5" fill="currentColor" r="1.25" />
     </svg>
   );
@@ -67,12 +71,12 @@ export function SettingInfoButton({ info, label }: SettingInfoButtonProps) {
       >
         <InfoGlyph />
       </button>
-      <MotionDialogPortal
-        cardClassName={styles.infoCard}
+      <Overlay
+        panelClassName={styles.infoCard}
         isOpen={isOpen}
         label={label}
-        onClose={() => setIsOpen(false)}
-        overlayClassName={styles.infoOverlay}
+        onDismiss={() => setIsOpen(false)}
+        scrimClassName={styles.infoOverlay}
       >
         <CloseIconButton
           ariaLabel={t("lobby.info.close")}
@@ -89,7 +93,7 @@ export function SettingInfoButton({ info, label }: SettingInfoButtonProps) {
           <span className={styles.infoTitle}>{label}</span>
           <span className={styles.infoBody}>{info}</span>
         </div>
-      </MotionDialogPortal>
+      </Overlay>
     </span>
   );
 }

@@ -11,3 +11,5 @@ export const TOAST_DURATIONS_MS: Record<GamePageToastType, number> = {
   error: 6000,
   success: 3000,
 };
+
+export const HANDOVER_TOAST_DURATION_MS = 4000;

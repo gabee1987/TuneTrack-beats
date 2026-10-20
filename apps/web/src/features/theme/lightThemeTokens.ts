@@ -50,6 +50,10 @@ export const lightThemeDefinition: ThemeDefinition = {
     "color-focus-ring": "rgba(29, 185, 84, 0.55)",
     "color-status-connected-surface": "rgba(29, 185, 84, 0.16)",
     "color-status-connected-text": "#0a6b46",
+    "color-danger-solid": "#dc2626",
+    "color-danger-solid-hover": "#e23b3b",
+    "color-danger-solid-active": "#b91c1c",
+    "color-on-danger-solid": "#ffffff",
     "color-status-danger-surface": "rgba(220, 38, 38, 0.1)",
     "color-status-danger-text": "#b91c1c",
     "color-status-danger-border": "rgba(220, 38, 38, 0.34)",
@@ -70,20 +74,39 @@ export const lightThemeDefinition: ThemeDefinition = {
       "radial-gradient(circle at top left, rgba(91, 140, 255, 0.09), transparent 26%), radial-gradient(circle at bottom right, rgba(29, 185, 84, 0.08), transparent 24%), transparent",
     "gradient-hidden-card-preview-artwork":
       "radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.42), transparent 30%), radial-gradient(circle at 80% 0%, rgba(91, 140, 255, 0.28), transparent 34%), linear-gradient(135deg, rgba(91, 140, 255, 0.55) 0%, rgba(29, 185, 84, 0.42) 100%)",
-    "gradient-card-hidden":
-      "linear-gradient(145deg, #e7eef5 0%, #f2f6f9 55%, #ffffff 100%)",
+    "gradient-card-hidden": "linear-gradient(145deg, #e7eef5 0%, #f2f6f9 55%, #ffffff 100%)",
     "gradient-card-artwork-scrim":
       "linear-gradient(180deg, rgba(20, 28, 40, 0.12) 0%, rgba(20, 28, 40, 0.28) 42%, rgba(20, 28, 40, 0.78) 100%)",
+    "color-cover-fallback-1": "#4b5fd0",
+    "color-cover-fallback-2": "#9a4cb0",
+    "color-cover-fallback-3": "#23806f",
+    "color-cover-fallback-4": "#b35a33",
+    "color-on-cover-fallback": "#ffffff",
+    // Quick-pick artwork: printed covers, so both themes keep the same colours.
+    "color-art-pink": "#ff4f9a",
+    "color-art-violet": "#6a3df0",
+    "color-art-blue": "#2f5bea",
+    "color-art-cyan": "#19b8d6",
+    "color-art-green": "#1f9d58",
+    "color-art-gold": "#ffc23d",
+    "color-art-orange": "#ff7a2f",
+    "color-art-red": "#d7263d",
+    "color-art-ink": "#15132b",
+    "color-on-art": "#ffffff",
 
     // Game UI
     "color-mask-solid": "#e8eef4",
     "color-game-error-text": "var(--color-status-danger-text)",
-    "color-game-card-current-outline": "color-mix(in srgb, var(--color-accent-brand) 72%, transparent)",
-    "color-game-card-challenge-outline": "color-mix(in srgb, var(--color-warning) 78%, transparent)",
+    "color-game-card-current-outline":
+      "color-mix(in srgb, var(--color-accent-brand) 72%, transparent)",
+    "color-game-card-challenge-outline":
+      "color-mix(in srgb, var(--color-warning) 78%, transparent)",
     "color-game-card-failure-outline": "color-mix(in srgb, var(--color-danger) 78%, transparent)",
-    "color-game-card-correct-outline": "color-mix(in srgb, var(--color-accent-brand) 88%, transparent)",
+    "color-game-card-correct-outline":
+      "color-mix(in srgb, var(--color-accent-brand) 88%, transparent)",
     "color-game-card-draggable-outline": "var(--color-accent-brand)",
-    "color-game-card-correction-outline": "color-mix(in srgb, var(--color-danger) 82%, transparent)",
+    "color-game-card-correction-outline":
+      "color-mix(in srgb, var(--color-danger) 82%, transparent)",
     "color-game-preview-scrim": "rgba(232, 238, 244, 0.52)",
     "gradient-game-preview-correction-surface":
       "linear-gradient(135deg, color-mix(in srgb, var(--color-danger) 18%, transparent) 0%, color-mix(in srgb, var(--color-warning) 12%, transparent) 100%)",

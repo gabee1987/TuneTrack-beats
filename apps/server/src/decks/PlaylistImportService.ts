@@ -1,13 +1,13 @@
 import type { GameTrackCard } from "@tunetrack/game-engine";
-import type { ImportPlaylistResultPayload } from "@tunetrack/shared";
+import { MIN_PLAYLIST_TRACK_COUNT, type ImportPlaylistResultPayload } from "@tunetrack/shared";
 import { logAuditEvent } from "../app/auditLogger.js";
 import { logger } from "../app/logger.js";
-import { SpotifyApiClient, SpotifyApiError } from "../spotify/SpotifyApiClient.js";
-import { SpotifyTokenStore } from "../spotify/SpotifyTokenStore.js";
+import { SpotifyApiError } from "../spotify/spotifyApiTypes.js";
+import type { SpotifyCatalogClient } from "../spotify/SpotifyCatalogClient.js";
+import type { SpotifyClientCredentials } from "../spotify/SpotifyClientCredentials.js";
 import { mapSpotifyTrackToGameCard } from "../spotify/SpotifyTrackMapper.js";
 import { extractSpotifyPlaylistId } from "../spotify/spotifyUrlParser.js";
-
-const MIN_IMPORTABLE_TRACK_COUNT = 10;
+import { dedupeTracks } from "./trackDedupe.js";
 
 export interface PlaylistImportSuccess {
   success: true;
@@ -16,6 +16,7 @@ export interface PlaylistImportSuccess {
   filteredCount: number;
   totalFetched: number;
   playlistName?: string;
+  playlistImageUrl?: string;
 }
 
 export type PlaylistImportOutcome =
@@ -24,8 +25,8 @@ export type PlaylistImportOutcome =
 
 export class PlaylistImportService {
   public constructor(
-    private readonly apiClient: SpotifyApiClient,
-    private readonly tokenStore: SpotifyTokenStore,
+    private readonly catalog: SpotifyCatalogClient,
+    private readonly clientCredentials: SpotifyClientCredentials,
   ) {}
 
   public async importFromUrl(playlistUrl: string): Promise<PlaylistImportOutcome> {
@@ -50,7 +51,7 @@ export class PlaylistImportService {
 
     let accessToken: string;
     try {
-      accessToken = await this.getOrRefreshClientCredentialsToken();
+      accessToken = await this.clientCredentials.getAccessToken();
     } catch {
       logAuditEvent({
         auditKind: "spotify_import",
@@ -72,10 +73,11 @@ export class PlaylistImportService {
     }
 
     try {
-      const [rawTracks, playlistName] = await Promise.all([
-        this.apiClient.getAllPlaylistTracks(playlistId, accessToken),
-        this.apiClient.getPlaylistName(playlistId, accessToken).catch(() => undefined),
+      const [rawTracks, summary] = await Promise.all([
+        this.catalog.getAllPlaylistTracks(playlistId, accessToken),
+        this.catalog.getPlaylistSummary(playlistId, accessToken).catch(() => undefined),
       ]);
+      const playlistName = summary?.name;
 
       const cards: GameTrackCard[] = [];
       let filteredCount = 0;
@@ -89,10 +91,10 @@ export class PlaylistImportService {
         }
       }
 
-      const { dedupedCards, duplicateCount } = dedupeImportedCards(cards);
+      const { tracks: dedupedCards, duplicateCount } = dedupeTracks(cards);
       const usableCount = dedupedCards.length;
 
-      if (usableCount < MIN_IMPORTABLE_TRACK_COUNT) {
+      if (usableCount < MIN_PLAYLIST_TRACK_COUNT) {
         logAuditEvent({
           auditKind: "spotify_import",
           action: "playlist_import_rejected",
@@ -111,7 +113,7 @@ export class PlaylistImportService {
           payload: {
             success: false,
             code: "too_few_tracks",
-            message: `The playlist only has ${usableCount} usable track${usableCount === 1 ? "" : "s"}. At least ${MIN_IMPORTABLE_TRACK_COUNT} are needed.`,
+            message: `The playlist only has ${usableCount} usable track${usableCount === 1 ? "" : "s"}. At least ${MIN_PLAYLIST_TRACK_COUNT} are needed.`,
           },
         };
       }
@@ -146,6 +148,7 @@ export class PlaylistImportService {
         filteredCount,
         totalFetched: rawTracks.length,
         ...(playlistName ? { playlistName } : {}),
+        ...(summary?.imageUrl ? { playlistImageUrl: summary.imageUrl } : {}),
       };
     } catch (err) {
       if (err instanceof SpotifyApiError) {
@@ -214,40 +217,4 @@ export class PlaylistImportService {
       };
     }
   }
-
-  private async getOrRefreshClientCredentialsToken(): Promise<string> {
-    if (!this.tokenStore.isClientCredentialsExpired()) {
-      const record = this.tokenStore.getClientCredentials();
-      if (record) return record.token;
-    }
-
-    const tokenResponse = await this.apiClient.getClientCredentialsToken();
-    this.tokenStore.setClientCredentials(tokenResponse.access_token, tokenResponse.expires_in);
-    return tokenResponse.access_token;
-  }
-}
-
-function dedupeImportedCards(cards: GameTrackCard[]): {
-  dedupedCards: GameTrackCard[];
-  duplicateCount: number;
-} {
-  const seen = new Set<string>();
-  const dedupedCards: GameTrackCard[] = [];
-
-  for (const card of cards) {
-    const key =
-      card.spotifyTrackUri ?? `${normalizeCardKey(card.title)}:${normalizeCardKey(card.artist)}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    dedupedCards.push(card);
-  }
-
-  return {
-    dedupedCards,
-    duplicateCount: cards.length - dedupedCards.length,
-  };
-}
-
-function normalizeCardKey(value: string): string {
-  return value.trim().toLocaleLowerCase().replace(/\s+/g, " ");
 }

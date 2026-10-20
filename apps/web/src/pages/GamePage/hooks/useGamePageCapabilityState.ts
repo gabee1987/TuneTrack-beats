@@ -3,10 +3,16 @@ import {
   CHALLENGE_TT_COST,
   SKIP_TRACK_TT_COST,
   type PublicRoomState,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useMemo } from "react";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import { useI18n } from "../../../features/i18n";
+import type {
+  AwardTtActionState,
+  GamePageLeader,
+  KickPlayerActionState,
+  TransferHostActionState,
+} from "../GamePage.types";
 import { createGameMenuTabs } from "../gamePageMenuTabs";
 import { useGameHistory } from "./useGameHistory";
 
@@ -14,11 +20,17 @@ interface UseGamePageCapabilityStateOptions {
   currentPlayerId: string | null;
   currentPlayerTtCount: number;
   handlers: {
-    handleAwardTt: (playerId: string) => void;
-    handleRemoveTt: (playerId: string) => void;
+    awardTtActionState: AwardTtActionState | null;
+    handleAwardTt: (playerId: string) => boolean;
+    handleRemoveTt: (playerId: string) => boolean;
     handleCloseRoom: () => void;
     handleKickPlayer: (playerId: string) => void;
     handleTransferHost: (playerId: string) => void;
+    isAwardTtPending: boolean;
+    isKickPlayerPending: boolean;
+    isTransferHostPending: boolean;
+    kickPlayerActionState: KickPlayerActionState | null;
+    transferHostActionState: TransferHostActionState | null;
   };
   roomState: PublicRoomState | null;
 }
@@ -36,7 +48,7 @@ interface UseGamePageCapabilityStateResult {
   canUseSkipTrack: boolean;
   isChallengeOwner: boolean;
   isCurrentPlayerTurn: boolean;
-  leadingPlayers: PublicRoomState["players"];
+  leadingPlayers: GamePageLeader[];
   menuTabs: AppShellMenuTab[];
 }
 
@@ -91,46 +103,69 @@ export function useGamePageCapabilityState({
 
   // Stable identity while roomState is unchanged so GamePageHeader's memo can skip
   // re-renders during local-only interactions (slot selection, drag, menu open).
-  const leadingPlayers = useMemo<PublicRoomState["players"]>(
+  const leadingPlayers = useMemo<GamePageLeader[]>(
     () =>
       roomState?.players
-        .slice()
-        .sort((leftPlayer, rightPlayer) => {
-          const rightScore = roomState.timelines[rightPlayer.id]?.length ?? 0;
-          const leftScore = roomState.timelines[leftPlayer.id]?.length ?? 0;
-
-          return rightScore - leftScore;
-        })
+        .map((player) => ({
+          cardCount: roomState.timelines[player.id]?.length ?? 0,
+          displayName: player.displayName,
+          id: player.id,
+          ttTokenCount: player.ttTokenCount,
+        }))
+        .sort((leftPlayer, rightPlayer) => rightPlayer.cardCount - leftPlayer.cardCount)
         .slice(0, 3) ?? [],
     [roomState],
   );
 
   const historyEntries = useGameHistory(roomState);
 
-  const { handleAwardTt, handleKickPlayer, handleRemoveTt, handleTransferHost } = handlers;
+  const {
+    awardTtActionState,
+    handleAwardTt,
+    handleKickPlayer,
+    handleRemoveTt,
+    handleTransferHost,
+    isAwardTtPending,
+    isKickPlayerPending,
+    isTransferHostPending,
+    kickPlayerActionState,
+    transferHostActionState,
+  } = handlers;
   const menuTabs = useMemo<AppShellMenuTab[]>(
     () =>
       roomState
         ? createGameMenuTabs({
             currentPlayerId,
             historyEntries,
+            awardTtActionState,
+            isAwardTtPending,
+            isKickPlayerPending,
+            isTransferHostPending,
+            kickPlayerActionState,
             onAwardTt: handleAwardTt,
             onKickPlayer: handleKickPlayer,
             onRemoveTt: handleRemoveTt,
             onTransferHost: handleTransferHost,
             roomState,
             t,
+            transferHostActionState,
           })
         : [],
     [
       currentPlayerId,
       historyEntries,
+      awardTtActionState,
       handleAwardTt,
       handleKickPlayer,
       handleRemoveTt,
       handleTransferHost,
+      isAwardTtPending,
+      isKickPlayerPending,
+      isTransferHostPending,
+      kickPlayerActionState,
       roomState,
       t,
+      transferHostActionState,
     ],
   );
 

@@ -1,8 +1,6 @@
-import type {
-  UseGamePageControllerResult,
-  TimelineView,
-} from "../GamePage.types";
-import type { PublicRoomState } from "@tunetrack/shared";
+import type { ClosedRoomReason } from "../../../features/ui/RoomResetModal";
+import type { GamePageLeader, UseGamePageControllerResult, TimelineView } from "../GamePage.types";
+import type { PublicRoomState } from "@tunetrack/shared/client";
 import type { AppShellMenuTab } from "../../../features/app-shell/AppShellMenu";
 import type {
   HiddenCardMode,
@@ -13,6 +11,8 @@ import type {
 interface BuildGamePageControllerResultOptions {
   actionState: Pick<
     UseGamePageControllerResult,
+    | "buyTimelineCardActionStatus"
+    | "closeRoomActionStatus"
     | "handleBuyTimelineCardWithTt"
     | "handleClaimChallenge"
     | "handleCloseRoom"
@@ -22,6 +22,22 @@ interface BuildGamePageControllerResultOptions {
     | "handleResolveChallengeWindow"
     | "handleSkipTrackWithTt"
     | "handleSkipTurn"
+    | "isBuyTimelineCardPending"
+    | "isClaimChallengePending"
+    | "isCloseRoomPending"
+    | "isConfirmRevealPending"
+    | "isPlaceCardPending"
+    | "isPlaceChallengePending"
+    | "isResolveChallengeWindowPending"
+    | "isSkipTrackPending"
+    | "isSkipTurnPending"
+    | "claimChallengeActionStatus"
+    | "confirmRevealActionStatus"
+    | "placeCardActionStatus"
+    | "placeChallengeActionStatus"
+    | "resolveChallengeWindowActionStatus"
+    | "skipTrackActionStatus"
+    | "skipTurnActionStatus"
   >;
   capabilityState: Pick<
     UseGamePageControllerResult,
@@ -52,6 +68,7 @@ interface BuildGamePageControllerResultOptions {
     | "statusBadgeText"
     | "statusDetailText"
   >;
+  closedRoomReason: ClosedRoomReason;
   errorKey: number;
   errorMessage: string | null;
   handleClosedRoomReset: () => void;
@@ -62,7 +79,7 @@ interface BuildGamePageControllerResultOptions {
     getPlayerName: UseGamePageControllerResult["getPlayerName"];
     isHost: boolean;
     isViewingOwnTimeline: boolean;
-    leadingPlayers: PublicRoomState["players"];
+    leadingPlayers: GamePageLeader[];
     menuTabs: AppShellMenuTab[];
     roomState: PublicRoomState | null;
   };
@@ -103,6 +120,7 @@ interface BuildGamePageControllerResultOptions {
 export function buildGamePageControllerResult({
   actionState,
   capabilityState,
+  closedRoomReason,
   displayState,
   errorKey,
   errorMessage,
@@ -113,6 +131,7 @@ export function buildGamePageControllerResult({
   timelineState,
 }: BuildGamePageControllerResultOptions): UseGamePageControllerResult {
   return {
+    closedRoomReason,
     errorKey,
     errorMessage,
     handleClosedRoomReset,

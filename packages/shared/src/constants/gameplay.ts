@@ -7,8 +7,10 @@ export const MIN_TARGET_TIMELINE_CARD_COUNT = 3;
 export const MAX_TARGET_TIMELINE_CARD_COUNT = 30;
 export const DEFAULT_STARTING_TIMELINE_CARD_COUNT = 1;
 export const MIN_STARTING_TIMELINE_CARD_COUNT = 1;
-export const MAX_STARTING_TIMELINE_CARD_COUNT = 5;
-export const DEFAULT_STARTING_TT_TOKEN_COUNT = 0;
+export const MAX_STARTING_TIMELINE_CARD_COUNT = 10;
+/** Token mode is on in a new room (decided 2026-10-15). */
+export const DEFAULT_TT_MODE_ENABLED = true;
+export const DEFAULT_STARTING_TT_TOKEN_COUNT = 1;
 export const MIN_STARTING_TT_TOKEN_COUNT = 0;
 export const MAX_STARTING_TT_TOKEN_COUNT = 5;
 export const SKIP_TRACK_TT_COST = 1;
@@ -17,3 +19,9 @@ export const BUY_TIMELINE_CARD_TT_COST = 3;
 export const DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS = 10;
 export const MIN_CHALLENGE_WINDOW_DURATION_SECONDS = 3;
 export const MAX_CHALLENGE_WINDOW_DURATION_SECONDS = 30;
+export const MAX_TT_TOKEN_COUNT = 5;
+export const MIN_RELEASE_YEAR = 1900;
+/** A playlist, generated or imported, needs at least this many usable tracks for a deck. */
+export const MIN_PLAYLIST_TRACK_COUNT = 10;
+/** Marks a practice-deck card whose cover the web app draws itself; no file is served at this path. */
+export const PRACTICE_COVER_PATH_PREFIX = "/practice-covers/";

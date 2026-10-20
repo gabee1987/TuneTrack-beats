@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { MotionDialogPortal } from "../../motion";
 import { classNames } from "../classNames";
 import { IconButton } from "./IconButton";
+import { Overlay } from "../../overlay";
 import styles from "./Dialog.module.css";
 
 export interface DialogProps {
@@ -10,6 +10,8 @@ export interface DialogProps {
   closeLabel?: string | undefined;
   isOpen: boolean;
   onClose: () => void;
+  /** Runs once the dialog has fully closed, including its history entry. */
+  onClosed?: (() => void) | undefined;
   title: string;
 }
 
@@ -19,15 +21,17 @@ export function Dialog({
   closeLabel = "Close",
   isOpen,
   onClose,
+  onClosed,
   title,
 }: DialogProps) {
   return (
-    <MotionDialogPortal
-      cardClassName={styles.card}
+    <Overlay
+      panelClassName={styles.card}
       isOpen={isOpen}
       label={title}
-      onClose={onClose}
-      overlayClassName={styles.overlay}
+      onDismiss={onClose}
+      scrimClassName={styles.overlay}
+      {...(onClosed ? { onClosed } : {})}
     >
       <div className={styles.header}>
         <h2 className={styles.title}>{title}</h2>
@@ -44,6 +48,6 @@ export function Dialog({
       </div>
       <div className={styles.body}>{children}</div>
       {actions ? <div className={classNames(styles.actions)}>{actions}</div> : null}
-    </MotionDialogPortal>
+    </Overlay>
   );
 }

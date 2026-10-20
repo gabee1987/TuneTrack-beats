@@ -5,7 +5,18 @@ import { VitePWA } from "vite-plugin-pwa";
 import { darkThemeDefinition } from "./src/features/theme/darkThemeTokens";
 
 const defaultThemeColor = darkThemeDefinition.cssVariables["color-bg-app"] as string;
-
+const backendProxyTarget = process.env.TUNETRACK_BACKEND_PROXY_TARGET ?? "http://localhost:3001";
+const backendProxy = {
+  "/api": {
+    target: backendProxyTarget,
+    changeOrigin: true,
+  },
+  "/socket.io": {
+    target: backendProxyTarget,
+    ws: true,
+    changeOrigin: true,
+  },
+};
 export default defineConfig({
   plugins: [
     react(),
@@ -13,6 +24,27 @@ export default defineConfig({
     VitePWA({
       injectRegister: "auto",
       registerType: "autoUpdate",
+      workbox: {
+        cleanupOutdatedCaches: true,
+        navigateFallback: "/index.html",
+        // The Spotify OAuth callback and the socket transport are navigations or requests the
+        // server must answer; the cached app shell must never stand in for them (F-25).
+        navigateFallbackDenylist: [/^\/api\//, /^\/socket\.io\//],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => /^\/(api|socket\.io)\//.test(url.pathname),
+            handler: "NetworkOnly",
+          },
+          {
+            urlPattern: ({ request, sameOrigin }) => sameOrigin && request.destination === "image",
+            handler: "CacheFirst",
+            options: {
+              cacheName: "tunetrack-images",
+              expiration: { maxEntries: 32 },
+            },
+          },
+        ],
+      },
       devOptions: {
         // Self-signed HTTPS (basicSsl) breaks SW registration in Chrome; keep PWA for prod builds.
         enabled: false,
@@ -54,17 +86,21 @@ export default defineConfig({
     }),
   ],
   build: {
+    target: "es2020",
     rollupOptions: {
       output: {
         // Split third-party libs into stable, independently cacheable chunks so an
-        // app-code change no longer invalidates React/framer-motion for PWA updates.
+        // app-code change no longer invalidates React for PWA updates.
         // Libs used only by lazy routes (dnd-kit, tanstack, socket.io) stay deferred.
         manualChunks(id) {
           if (!id.includes("node_modules")) {
             return undefined;
           }
-          if (id.includes("framer-motion")) {
-            return "vendor-motion";
+          // framer-motion is placed by import site (05 D1): the `m`, presence and LazyMotion
+          // core goes with the entry, the feature bundles with the lazy chunks that load them.
+          // A manual chunk would pull every module the framer barrel re-exports back in.
+          if (/[\\/](framer-motion|motion-dom|motion-utils)[\\/]/.test(id)) {
+            return undefined;
           }
           if (id.includes("@dnd-kit")) {
             return "vendor-dnd";
@@ -75,8 +111,8 @@ export default defineConfig({
           if (id.includes("socket.io") || id.includes("engine.io")) {
             return "vendor-socket";
           }
-          if (id.includes("zod")) {
-            return "vendor-zod";
+          if (id.includes("zustand")) {
+            return "vendor-zustand";
           }
           if (id.includes("react-router") || id.includes("@remix-run")) {
             return "vendor-router";
@@ -84,7 +120,11 @@ export default defineConfig({
           if (id.includes("react-dom")) {
             return "vendor-react-dom";
           }
-          if (id.includes("/react/") || id.includes("react/jsx-runtime") || id.includes("scheduler")) {
+          if (
+            id.includes("/react/") ||
+            id.includes("react/jsx-runtime") ||
+            id.includes("scheduler")
+          ) {
             return "vendor-react";
           }
           return "vendor";
@@ -97,17 +137,10 @@ export default defineConfig({
     // (npm often swallows CLI `--host` before Vite sees it.)
     host: true,
     port: 5173,
-    proxy: {
-      // Forward socket.io traffic to the HTTP server so HTTPS pages avoid mixed-content
-      "/api": {
-        target: "http://localhost:3001",
-        changeOrigin: true,
-      },
-      "/socket.io": {
-        target: "http://localhost:3001",
-        ws: true,
-        changeOrigin: true,
-      },
-    },
+    // Forward backend traffic so HTTPS pages avoid mixed-content requests.
+    proxy: backendProxy,
+  },
+  preview: {
+    proxy: backendProxy,
   },
 });

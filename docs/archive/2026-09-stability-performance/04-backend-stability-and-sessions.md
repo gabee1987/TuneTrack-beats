@@ -1,0 +1,352 @@
+> **Archived 2026-10-06.** Original, untrimmed version. The live document is
+> `../../plans/2026-10-project-review/12-backend-stability-and-sessions.md` (open phases in full, shipped phases as short notes).
+> Do not read or follow this file.
+
+---
+
+# 04 — Backend Stability and Session Ownership
+
+> Addresses findings **F-12, F-16 – F-20**.
+> Owning layers: `apps/server/src/rooms`, `apps/server/src/app`.
+> `packages/game-engine` stays pure; nothing in this document adds transport, timers or
+> logging to it.
+
+This is the highest-priority wave in the programme. Reconnect behavior depends on the
+server making transport loss, host transfer, turn recovery and explicit removal separate
+policies.
+
+## 1. Phase 1 — Retain in-game identities without stalling play · **S1**
+
+**Finding:** F-12, superseded in part by owner decision 2026-09-30.
+
+### 1.1 Owner decision
+
+An in-game socket disconnect is temporary absence, not leaving the room:
+
+- no timer automatically kicks or evicts the disconnected player;
+- the player's identity, timeline, tokens and turn position stay reserved while the room
+  exists;
+- `reconnectExpiresAtEpochMs` is `null` in-game because there is no reconnect deadline;
+- reconnecting with the same session restores the same player, even much later;
+- only the host's explicit kick or room closure removes the player from the running game;
+- if the offline player owns the active turn, every remaining client sees the offline
+  state and the host can skip that turn immediately;
+- the existing 60-second turn auto-skip remains as a safety fallback;
+- host transfer is separate and still occurs after 30 seconds when the host is offline.
+
+The lobby's 30-second reconnect-and-removal behavior is unchanged. `CLAUDE.md`'s "Last
+player leaves" rule means an explicit leave, kick or close, not a temporary transport
+disconnect. If every player remains offline continuously for one hour, the server closes
+the abandoned room as a unit. Any reconnect cancels that cleanup. This is room lifecycle
+cleanup, not automatic player eviction.
+
+### 1.2 Current implementation
+
+| Period or action | Purpose | Policy |
+| --- | --- | --- |
+| **Turn skip** | Keep play moving past an offline active player | Host may skip immediately; 60 s safety timer remains |
+| **Host transfer** | Move authority away from an offline host | 30 s, scheduled (owner decision 2026-09-29) |
+| **Lobby removal** | Remove a player who abandons the lobby | 30 s, scheduled |
+| **In-game removal** | Remove a player from a running game | Host action only; never scheduled |
+| **In-game reconnect** | Restore an offline player | No expiry while the room exists |
+| **All-offline room expiry** | Reclaim a completely abandoned room | 1 h by default; cancelled by any reconnect |
+
+`RoomConnectionService` therefore marks an in-game player disconnected and schedules only
+the relevant host-transfer and turn-recovery timers. It publishes no false reconnect
+deadline. The existing host-only kick remains the explicit removal path.
+
+### 1.3 Verification
+
+- Server fake-timer coverage disconnects a guest, manually skips their turn, advances 24
+  simulated hours, and proves the same session restores the same retained player identity.
+- Chromium E2E E10 uses host, guest and observer clients. Both remaining clients see the
+  guest's offline turn; only the host receives `Skip Turn`; after the host skips, the next
+  connected player receives the turn and the guest remains visible as offline.
+- Server fake-timer coverage proves all-offline cleanup occurs at exactly one hour, a
+  reconnect cancels it, and a later all-offline transition starts a fresh timeout.
+- Chromium E2E E11 uses a two-second override, takes every client offline, and proves a
+  reconnect after expiry receives the room-unavailable recovery state.
+- Lobby disconnect tests remain unchanged and green.
+
+### Acceptance
+
+- [x] In-game room state publishes no reconnect expiry.
+- [x] In-game disconnect never automatically removes the player.
+- [x] All remaining clients see the active player's offline state.
+- [x] Only the host can manually skip the offline turn.
+- [x] A later reconnect restores the retained identity and game state.
+- [x] A room whose players remain offline for one configurable hour is closed atomically,
+      without silently kicking individual players.
+
+## 2. Phase 2 — Configure Socket.IO for mobile networks · **S2**
+
+**Finding:** F-16.
+
+> **Implementation state (2026-09-29):** Chromium E2E E7 and E8 now prove that the existing
+> session-id rejoin path restores either a guest or host inside a short in-game network
+> interruption. The guest can complete the following turn, while the host retains host-only
+> reveal authority. Socket.IO `connectionStateRecovery`, heartbeat tuning, rate limiting,
+> and their server integration coverage remain open.
+
+`apps/server/src/app/createSocketServer.ts` currently sets only `cors` and
+`maxHttpBufferSize`.
+
+### 2.1 Connection state recovery
+
+Socket.IO 4.6+ `connectionStateRecovery` transparently restores the session id, rooms and
+missed packets across a short disconnection. For a game played on phones in a living room
+this is the single highest-value server setting available.
+
+    connectionStateRecovery: {
+      maxDisconnectionDuration: 120_000,
+      skipMiddlewares: false,
+    }
+
+Consequences that must be handled deliberately:
+
+- On a recovered connection, `socket.recovered === true` and the socket **keeps its
+  previous id**. `RoomStore.socketMemberships` is keyed by socket id, so a recovered
+  socket's membership is still valid and no rejoin is needed. This is precisely the
+  behaviour we want, but the client must not blindly re-emit a join — see Doc 05 section 3.
+- `skipMiddlewares: false` keeps the audit middleware
+  (`registerSocketAuditMiddleware`) running on recovery, which is what we want for
+  traceability.
+- Missed packets are replayed. Because every mutation currently broadcasts full room state
+  (F-11), replay is safe — the last packet wins. Once Doc 05 section 4 introduces deltas,
+  replay ordering becomes load-bearing; note this dependency in that document.
+
+### 2.2 Heartbeat tuning
+
+Defaults are `pingInterval: 25 000`, `pingTimeout: 20 000`. A backgrounded mobile browser
+can be throttled hard enough to miss a ping, producing a spurious disconnect and, today,
+the F-13 rejoin failure. Set:
+
+    pingInterval: 20_000,
+    pingTimeout: 25_000,
+
+A `pingTimeout` longer than `pingInterval` gives the client a full extra interval to
+respond before the server gives up, which is the right trade for this workload. Document
+the reasoning inline as a non-obvious "why" comment.
+
+### 2.3 Transport policy
+
+Leave the default upgrade path (polling then WebSocket) — it is the most compatible.
+Do **not** force `transports: ["websocket"]`; some domestic networks and captive portals
+break it, and this app has to work at a family gathering.
+
+### 2.4 Per-socket rate limiting
+
+There is currently no limit on how fast a client can emit. A buggy or hostile client can
+drive unbounded `list_rooms`, `refresh_spotify_token` or `place_card` traffic, each of
+which triggers work and, for the Spotify ones, outbound third-party calls.
+
+Add a small token-bucket guard in the realtime layer — this is a transport concern and
+belongs in `apps/server/src/realtime/`, not in `rooms/`:
+
+- New `apps/server/src/realtime/rateLimit.ts`: per-socket, per-event token bucket with a
+  default of 20 events per 10 s and tighter buckets for the expensive events:
+
+  | Event class | Limit |
+  | --- | --- |
+  | Gameplay mutations (`place_card`, `confirm_reveal`, ...) | 10 / 5 s |
+  | Discovery / search (`search_spotify_*`, `generate_spotify_candidates`) | 5 / 10 s |
+  | `refresh_spotify_token` | 3 / 60 s |
+  | `list_rooms`, `get_room_preview` | 10 / 10 s |
+  | Everything else | 20 / 10 s |
+
+- Wire it inside `createSocketHandler` so every registered handler is covered by
+  construction and no handler can forget it.
+- On breach: emit the existing `Error` event with a new code `RATE_LIMITED`, log at `warn`,
+  and record an audit event. Do not disconnect — a legitimate client with a stuck button
+  should recover, not be ejected.
+- Add `RATE_LIMITED` to `apps/server/src/realtime/errorMessages.ts` and to
+  `apps/web/src/features/i18n/localizedErrors.ts` with a user-facing message in both
+  catalogues.
+
+This is a defence-in-depth control, in line with ISO/IEC 27001 Annex A.8 expectations for
+availability of an internet-facing service, and it is cheap.
+
+### Acceptance
+
+- [ ] New test `apps/server/tests/app/createSocketServer.test.ts` asserts the configured
+      options (recovery window, ping values, buffer size, CORS validator wiring).
+- [ ] New test `apps/server/tests/realtime/rateLimit.test.ts` covers: under-limit passes,
+      over-limit emits `RATE_LIMITED`, bucket refills, buckets are per-socket and
+      per-event-class, and no socket is disconnected.
+- [ ] An integration test drops and restores a client socket inside the recovery window
+      and asserts the player is still a room member with no rejoin emitted.
+- [ ] Manual check: put a phone in flight mode for 10 s during a game, restore it, and
+      confirm play continues with no error toast.
+
+## 3. Phase 3 — Graceful shutdown and timer ownership · **S3**
+
+**Finding:** F-19.
+
+### 3.1 Shutdown
+
+`apps/server/src/index.ts` has no signal handling. Add an explicit shutdown sequence, kept
+in its own module (`apps/server/src/app/shutdown.ts`) so `index.ts` stays a wiring file:
+
+1. Stop accepting new HTTP connections (`httpServer.close()`).
+2. Emit a new `ServerToClientEvent.ServerShuttingDown` to all connected sockets so clients
+   can show an honest message instead of a silent disconnect, and so the client can decide
+   not to treat it as a network fault (Doc 05 section 3).
+3. `io.close()` with a short drain window (2 s).
+4. Clear every timer via a new `RoomTimerCoordinator.clearAll()`.
+5. Flush the Axiom sink (`apps/server/src/app/axiomLogSink.ts`) and await it with a
+   bounded timeout.
+6. Log `server_stopped` as an audit event, mirroring the existing `server_started`.
+7. `process.exit(0)`, or exit non-zero if any step timed out.
+
+Register for `SIGTERM` and `SIGINT`, and make the handler idempotent so a second signal
+does not restart the sequence.
+
+Also add handlers for `unhandledRejection` and `uncaughtException` that log at `fatal`
+with the audit sink before exiting. Today an unhandled rejection in a Spotify call path
+would kill the process with no record of why.
+
+### 3.2 Timer references
+
+`DisconnectTimerManager.schedule` and `ChallengeTimerManager.schedule` both call
+`handle.unref()`. That is convenient for tests but means a pending challenge window or
+reconnect grace period cannot keep the process alive and vanishes without a trace on
+shutdown.
+
+- Remove `unref()` from production behaviour and make it an explicit constructor option
+  (`{ keepProcessAlive: false }`) that the test setup passes. This keeps tests fast while
+  making production behaviour correct.
+- Add `clearAll()` to both managers and to `RoomTimerCoordinator`, used by the shutdown
+  sequence and by test teardown.
+
+### 3.3 Room capacity and grace periods from configuration
+
+**Finding:** F-20.
+
+> **Implementation state (2026-09-30):** `MAX_ACTIVE_ROOMS`, `RECONNECT_GRACE_MS`,
+> `HOST_TRANSFER_GRACE_MS`, `TURN_SKIP_GRACE_MS` and
+> `ALL_PLAYERS_OFFLINE_ROOM_TTL_MS` are validated in `env` and injected through
+> `RoomRegistry`. Production defaults remain 5 rooms, 30 seconds, 30 seconds, 60 seconds
+> and one hour respectively. E2E overrides only the long waits it exercises.
+
+- Move `MAX_ACTIVE_ROOM_COUNT` out of `RoomLobbyService` into `env` as
+  `MAX_ACTIVE_ROOMS` (Zod: positive int, default 5) and pass it down through the
+  `RoomRegistry` constructor, alongside the grace periods which are already parameters but
+  never wired to configuration.
+- Add `RECONNECT_GRACE_MS`, `HOST_TRANSFER_GRACE_MS`, `TURN_SKIP_GRACE_MS` and
+  `ALL_PLAYERS_OFFLINE_ROOM_TTL_MS` to `env` with the current values as defaults, so a
+  deployment can tune them without a code change. There is deliberately no individual
+  in-game reconnect-expiry variable.
+- Keep validation in `apps/server/src/app/env.ts`; it is already the single validated
+  boundary and its error formatting is good.
+
+### Acceptance
+
+- [ ] `SIGTERM` during an active game logs `server_stopped`, notifies clients, clears all
+      timers and exits 0 within 5 s. Verified by a test that spawns the server module with
+      a stubbed `process`.
+- [ ] `RoomTimerCoordinator.clearAll()` leaves zero pending timers (assert with fake timers).
+- [ ] An unhandled rejection is logged at `fatal` with an audit record before exit.
+- [ ] All new env vars have defaults, so an existing `.env` continues to boot unchanged.
+- [ ] `docs/axiom_logging_setup.md` updated with the new `server_stopped` audit action.
+
+## 4. Phase 4 — Collapse the double delegation layer · **S3**
+
+**Finding:** F-17. This is a maintainability change with no behavioural intent. Schedule it
+**after** phases 1-3, and treat any behaviour change as a defect.
+
+### 4.1 Current shape
+
+    realtime/handlers/*  →  RoomService (696 lines)  →  RoomRegistry (285 lines)  →  RoomLobbyService
+                                                                                  →  RoomGameplayService
+                                                                                  →  RoomConnectionService
+                                                                                  →  RoomStore / RoomTimerCoordinator
+
+`RoomRegistry` is almost entirely one-line pass-throughs. `RoomService` wraps them again,
+adding logging plus all Spotify orchestration. Every new event costs two mechanical edits
+in files that are already at or near the size limits in `CLAUDE.md`.
+
+### 4.2 Target shape
+
+    realtime/handlers/lobbyHandlers      →  RoomLobbyService
+    realtime/handlers/gameplayHandlers   →  RoomGameplayService
+    realtime/handlers/playlistHandlers   →  PlaylistService        (new: extracted from RoomService)
+    realtime/handlers/spotifyHandlers    →  SpotifyOrchestrator    (new: extracted from RoomService)
+    (connection lifecycle)               →  RoomConnectionService
+
+with a thin `RoomServices` container object created in `app/` wiring and handed to the
+handler registrars, replacing both façades.
+
+### 4.3 Migration, one handler group at a time
+
+1. Extract Spotify orchestration from `RoomService` into
+   `apps/server/src/spotify/SpotifyOrchestrator.ts`. This is the largest single block
+   (`buildSpotifyAuthUrl`, `searchSpotifyPlaylists`, `searchSpotifyMusic`,
+   `openSpotifyPlaylist`, `generateSpotifyCandidates`, `useSpotifyCandidates`,
+   `refreshSpotifyToken`, `playSpotifyTrack`, `registerSpotifyPlaybackDevice`,
+   `unregisterSpotifyPlaybackDevice`, `updateSpotifyAuthStatus`) and moving it takes
+   `RoomService` well under its limit on its own. It needs the room state accessor and the
+   playback-owner guard, which it should receive as narrow injected functions rather than
+   the whole registry.
+2. Extract playlist orchestration (`importPlaylist`, `loadCuratedPlaylist`,
+   `getPlaylistTracks`, `removePlaylistTracks`, `updatePlaylistTrack`) into
+   `apps/server/src/decks/PlaylistOrchestrator.ts`.
+3. Point `playlistHandlers` and `spotifyHandlers` at the new services.
+4. Point `lobbyHandlers` and `gameplayHandlers` at `RoomLobbyService` /
+   `RoomGameplayService` directly, moving the logging that lived in `RoomService` into the
+   handlers (logging is a transport-edge concern, which is where `CLAUDE.md` puts it).
+5. Delete `RoomRegistry` and `RoomService`, keeping `RoomLobbyService.requireHost` /
+   `requireSpotifyPlaybackOwner` — move those two guards onto `RoomStore` or a small
+   `roomAuthorization.ts`, since they are authorisation predicates, not lifecycle.
+
+Each step keeps `apps/server/tests/roomFlow.test.ts` and the other integration suites
+green without modification, because they exercise the socket surface rather than the
+internal classes. That is the safety net that makes this refactor tractable.
+
+### Acceptance
+
+- [ ] No file in `apps/server/src` exceeds 400 lines.
+- [ ] No class exists whose methods are more than 80 % single-line delegations.
+- [ ] Every existing server test passes with **zero** modifications.
+- [ ] `CLAUDE.md`'s backend layer-ownership table still describes the code accurately;
+      update the table if the new services change it.
+
+## 5. Phase 5 — Index the membership maps · **S3**
+
+**Finding:** F-18. Lowest priority; do it only if the "scale to online play" goal becomes
+concrete, or opportunistically while doing Phase 4.
+
+`RoomStore` scans all memberships in eight methods. Add two secondary indexes maintained
+alongside the primary maps:
+
+- `socketIdsBySessionId: Map<string, Set<string>>`
+- `sessionIdsByRoomId: Map<RoomId, Set<string>>`
+- `socketIdsByRoomAndPlayer: Map<`${RoomId}:${PlayerId}`, Set<string>>`
+
+Every mutation path must update all indexes, which is exactly the kind of invariant that
+needs a test. `apps/server/tests/rooms/RoomStore.test.ts` already exists; extend it with a
+property-style test that performs a randomised sequence of add/remove/retarget/clear
+operations and asserts after each step that every index agrees with a brute-force scan of
+the primary maps. That test makes the optimisation safe.
+
+### Acceptance
+
+- [ ] No method in `RoomStore` iterates a whole membership map.
+- [ ] The index-consistency test passes over at least 500 randomised operation sequences.
+- [ ] No behavioural change (all existing tests unmodified).
+
+## 6. Cross-cutting rules for this document
+
+- The game engine stays pure. Every change here is orchestration, store or transport.
+- Every timer callback re-checks state before mutating, and every timer has an owner with
+  an explicit clear path.
+- Server authority is preserved: no client input is trusted for correctness, membership or
+  permission at any point.
+- Logging stays at the levels `CLAUDE.md` allows: startup, shutdown, socket
+  connect/disconnect, unexpected errors, notable room lifecycle events. Explicit player
+  removal and shutdown qualify as notable lifecycle events; the rate limiter logs at
+  `warn` only on breach.
+- Audit events go through the existing `logAuditEvent` sink so the Axiom pipeline
+  documented in `docs/axiom_logging_setup.md` keeps working. Note that audit records carry
+  `roomId`, `socketId` and `displayName`-free metadata today; keep it that way —
+  do not start writing player display names into audit payloads, as that would broaden the
+  personal data leaving the service.

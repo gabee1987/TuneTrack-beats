@@ -1,13 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { PublicRoomState } from "@tunetrack/shared";
+import type { PublicRoomState } from "@tunetrack/shared/client";
 import {
   getGamePageActiveTimelinePreviewState,
   getGamePageRevealTimelineState,
 } from "./gamePageTimelineSelectors";
 
-function createRoomState(
-  overrides: Partial<PublicRoomState> = {},
-): PublicRoomState {
+function createRoomState(overrides: Partial<PublicRoomState> = {}): PublicRoomState {
   return {
     roomId: "ROOM1",
     status: "turn",
@@ -45,7 +43,6 @@ function createRoomState(
       releaseYear: 2000,
       title: "Song",
     },
-    targetTimelineCardCount: 10,
     settings: {
       challengeWindowDurationSeconds: 10,
       defaultStartingTimelineCardCount: 1,
@@ -55,6 +52,8 @@ function createRoomState(
       ttModeEnabled: false,
       playlistImported: false,
       importedTrackCount: 0,
+      tracksToCheckCount: 0,
+      deckSource: "none",
       spotifyAuthStatus: "none",
       spotifyAccountType: null,
       spotifyPlaybackOwnerPlayerId: null,

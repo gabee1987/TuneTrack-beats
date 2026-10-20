@@ -1,13 +1,8 @@
 import { useCallback, useMemo, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
-import {
-  getOrCreatePlayerSessionId,
-  getRememberedPlayerDisplayName,
-} from "../../../services/session/playerSession";
-import type {
-  GameRouteState,
-  UseGamePageControllerResult,
-} from "../GamePage.types";
+import { usePlayerProfileStore } from "../../../features/profile/playerProfile";
+import { getOrCreatePlayerSessionId } from "../../../services/session/playerSession";
+import type { GameRouteState, UseGamePageControllerResult } from "../GamePage.types";
 import { buildGamePageControllerResult } from "./buildGamePageControllerResult";
 import { useGamePageTransitionEvents } from "./transitions/useGamePageTransitionEvents";
 import { useGamePageActionAvailability } from "./useGamePageActionAvailability";
@@ -29,22 +24,19 @@ export function useGamePageController({
   routeState,
 }: UseGamePageControllerOptions): UseGamePageControllerResult {
   const playerSessionId = useMemo(() => getOrCreatePlayerSessionId(), []);
-  const rememberedDisplayName = useMemo(
-    () => getRememberedPlayerDisplayName(),
-    [],
-  );
+  const rememberedDisplayName = useMemo(() => usePlayerProfileStore.getState().displayName, []);
   const preferencesState = useGamePagePreferencesState();
-  const [pendingSkippedTrackId, setPendingSkippedTrackId] = useState<string | null>(
-    null,
-  );
+  const [pendingSkippedTrackId, setPendingSkippedTrackId] = useState<string | null>(null);
 
   const {
+    closedRoomReason,
     currentPlayerId,
     errorKey,
     errorMessage,
     handleClosedRoomReset,
     hasClosedRoomReset,
     roomState,
+    showOfflineActionRefusal,
   } = useGameRoomConnection({
     navigate,
     roomId,
@@ -86,6 +78,7 @@ export function useGamePageController({
     isCurrentPlayerTurn: actionAvailability.isCurrentPlayerTurn,
     roomState,
     selectedSlotIndex,
+    onActionOffline: showOfflineActionRefusal,
     onSkipTrackWithTtIntent: handleSkipTrackWithTtIntent,
     setLocallyPlacedCard,
   });
@@ -93,11 +86,17 @@ export function useGamePageController({
   const derivedState = useGamePageDerivedState({
     currentPlayerId,
     handlers: {
+      awardTtActionState: actions.awardTtActionState,
       handleAwardTt: actions.handleAwardTt,
       handleRemoveTt: actions.handleRemoveTt,
       handleCloseRoom: actions.handleCloseRoom,
       handleKickPlayer: actions.handleKickPlayer,
       handleTransferHost: actions.handleTransferHost,
+      isAwardTtPending: actions.isAwardTtPending,
+      isKickPlayerPending: actions.isKickPlayerPending,
+      isTransferHostPending: actions.isTransferHostPending,
+      kickPlayerActionState: actions.kickPlayerActionState,
+      transferHostActionState: actions.transferHostActionState,
     },
     locallyPlacedCard,
     roomState,
@@ -134,14 +133,15 @@ export function useGamePageController({
     roomStatus: roomState?.status ?? null,
     showCorrectPlacementPreview: derivedState.showCorrectPlacementPreview,
     showCorrectionPreview: derivedState.showCorrectionPreview,
-    shouldAnimateCelebrationCardToMine:
-      derivedState.shouldAnimateCelebrationCardToMine,
+    shouldAnimateCelebrationCardToMine: derivedState.shouldAnimateCelebrationCardToMine,
     onSkipTrackTransitionDetected: () => {
       setPendingSkippedTrackId(null);
     },
   });
 
   const actionState = {
+    buyTimelineCardActionStatus: actions.buyTimelineCardActionStatus,
+    closeRoomActionStatus: actions.closeRoomActionStatus,
     handleBuyTimelineCardWithTt: actions.handleBuyTimelineCardWithTt,
     handleClaimChallenge: actions.handleClaimChallenge,
     handleCloseRoom: actions.handleCloseRoom,
@@ -151,6 +151,22 @@ export function useGamePageController({
     handleResolveChallengeWindow: actions.handleResolveChallengeWindow,
     handleSkipTrackWithTt: actions.handleSkipTrackWithTt,
     handleSkipTurn: actions.handleSkipTurn,
+    isBuyTimelineCardPending: actions.isBuyTimelineCardPending,
+    isClaimChallengePending: actions.isClaimChallengePending,
+    isCloseRoomPending: actions.isCloseRoomPending,
+    isConfirmRevealPending: actions.isConfirmRevealPending,
+    isPlaceCardPending: actions.isPlaceCardPending,
+    isPlaceChallengePending: actions.isPlaceChallengePending,
+    isResolveChallengeWindowPending: actions.isResolveChallengeWindowPending,
+    isSkipTrackPending: actions.isSkipTrackPending,
+    isSkipTurnPending: actions.isSkipTurnPending,
+    claimChallengeActionStatus: actions.claimChallengeActionStatus,
+    confirmRevealActionStatus: actions.confirmRevealActionStatus,
+    placeCardActionStatus: actions.placeCardActionStatus,
+    placeChallengeActionStatus: actions.placeChallengeActionStatus,
+    resolveChallengeWindowActionStatus: actions.resolveChallengeWindowActionStatus,
+    skipTrackActionStatus: actions.skipTrackActionStatus,
+    skipTurnActionStatus: actions.skipTurnActionStatus,
   };
 
   const capabilityState = {
@@ -230,6 +246,7 @@ export function useGamePageController({
   return buildGamePageControllerResult({
     actionState,
     capabilityState,
+    closedRoomReason,
     displayState,
     errorKey,
     errorMessage,

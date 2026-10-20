@@ -6,19 +6,17 @@ import {
   type RoomClosedPayload,
   type ServerErrorPayload,
   type StateUpdatePayload,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useEffect, useRef, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useI18n } from "../../../features/i18n";
 import { localizeServerError } from "../../../features/i18n/localizedErrors";
-import { resetPlayerSession } from "../../../services/session/playerSession";
+import type { ClosedRoomReason } from "../../../features/ui/RoomResetModal";
 import { rememberRoomEventToast } from "../../../services/session/roomEventToast";
-import {
-
-  getSocketClient,
-  resetSocketClient,
-} from "../../../services/socket/socketClient";
+import { hasServerRestarted } from "../../../services/socket/connectionState";
+import { getSocketClient, resetSocketClient } from "../../../services/socket/socketClient";
 import type { GameRouteState } from "../GamePage.types";
+import { reuseUnchangedReferences } from "../reuseUnchangedReferences";
 
 interface UseGameRoomConnectionOptions {
   navigate: NavigateFunction;
@@ -36,21 +34,35 @@ export function useGameRoomConnection({
   rememberedDisplayName,
 }: UseGameRoomConnectionOptions) {
   const { t } = useI18n();
+  const translateRef = useRef(t);
+  translateRef.current = t;
+  // useNavigate returns a new function on every location change; as an effect dependency it
+  // would re-run the join for the same room.
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(
     routeState.currentPlayerId ?? null,
   );
-  const [roomState, setRoomState] = useState<PublicRoomState | null>(
-    routeState.roomState ?? null,
-  );
+  const [roomState, setRoomState] = useState<PublicRoomState | null>(routeState.roomState ?? null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorKey, setErrorKey] = useState(0);
   const errorKeyRef = useRef(0);
   const [hasClosedRoomReset, setHasClosedRoomReset] = useState(false);
+  const [closedRoomReason, setClosedRoomReason] = useState<ClosedRoomReason>("closed");
+
+  function showErrorToast(message: string) {
+    errorKeyRef.current += 1;
+    setErrorKey(errorKeyRef.current);
+    setErrorMessage(message);
+  }
+
+  function showOfflineActionRefusal() {
+    showErrorToast(translateRef.current("room.connection.actionRefusedOffline"));
+  }
 
   function handleClosedRoomReset() {
     setHasClosedRoomReset(false);
     resetSocketClient();
-    resetPlayerSession();
     setRoomState(null);
     setCurrentPlayerId(null);
     navigate("/", { replace: true, state: null });
@@ -61,7 +73,7 @@ export function useGameRoomConnection({
     let cleanupSocketListeners: (() => void) | null = null;
 
     if (!roomId || !rememberedDisplayName) {
-      navigate("/");
+      navigateRef.current("/");
       return;
     }
 
@@ -74,7 +86,9 @@ export function useGameRoomConnection({
     }
 
     function handleStateUpdate(payload: StateUpdatePayload) {
-      setRoomState(payload.roomState);
+      setRoomState((previousRoomState) =>
+        reuseUnchangedReferences(previousRoomState, payload.roomState),
+      );
       setErrorMessage(null);
     }
 
@@ -84,6 +98,7 @@ export function useGameRoomConnection({
 
     function handleError(payload: ServerErrorPayload) {
       if (isClosedRoomError(payload.code)) {
+        setClosedRoomReason(hasServerRestarted() ? "server_restarted" : "closed");
         setHasClosedRoomReset(true);
         setErrorMessage(null);
         return;
@@ -95,9 +110,7 @@ export function useGameRoomConnection({
         return;
       }
 
-      errorKeyRef.current += 1;
-      setErrorKey(errorKeyRef.current);
-      setErrorMessage(localizeServerError(t, payload));
+      showErrorToast(localizeServerError(translateRef.current, payload));
     }
 
     function handleRoomClosed(payload: RoomClosedPayload) {
@@ -109,7 +122,7 @@ export function useGameRoomConnection({
       }
 
       resetSocketClient();
-      navigate("/", {
+      navigateRef.current("/", {
         state:
           payload.reason === "kicked"
             ? {
@@ -154,9 +167,10 @@ export function useGameRoomConnection({
       isDisposed = true;
       cleanupSocketListeners?.();
     };
-  }, [navigate, playerSessionId, rememberedDisplayName, roomId, t]);
+  }, [playerSessionId, rememberedDisplayName, roomId]);
 
   return {
+    closedRoomReason,
     currentPlayerId,
     errorKey,
     errorMessage,
@@ -164,6 +178,7 @@ export function useGameRoomConnection({
     hasClosedRoomReset,
     roomState,
     setErrorMessage,
+    showOfflineActionRefusal,
   };
 }
 

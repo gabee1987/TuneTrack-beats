@@ -1,52 +1,90 @@
 import { createHttpServer } from "./app/createHttpServer.js";
+import { createRoomServices, roomDurationsFromEnv } from "./app/createRoomServices.js";
 import { createSocketServer } from "./app/createSocketServer.js";
 import { logAuditEvent } from "./app/auditLogger.js";
+import { drainAxiomLogEvents } from "./app/axiomLogSink.js";
 import { env } from "./app/env.js";
 import { logger } from "./app/logger.js";
+import { registerProcessFatalHandlers } from "./app/processFatalHandlers.js";
+import { registerGracefulShutdown } from "./app/shutdown.js";
 import { DeckService } from "./decks/DeckService.js";
 import { PlaylistImportService } from "./decks/PlaylistImportService.js";
 import { registerSpotifyRoutes } from "./http/spotifyRoutes.js";
 import { registerSocketHandlers } from "./realtime/registerSocketHandlers.js";
-import { RoomRegistry } from "./rooms/RoomRegistry.js";
-import { RoomService } from "./rooms/RoomService.js";
-import { SpotifyApiClient } from "./spotify/SpotifyApiClient.js";
+import { SpotifyAccountsClient } from "./spotify/SpotifyAccountsClient.js";
 import { SpotifyAuthService } from "./spotify/SpotifyAuthService.js";
-import { SpotifyDiscoveryService } from "./spotify/SpotifyDiscoveryService.js";
+import { SpotifyCandidateGenerator } from "./spotify/SpotifyCandidateGenerator.js";
+import { SpotifyCatalogClient } from "./spotify/SpotifyCatalogClient.js";
+import { SpotifyClientCredentials } from "./spotify/SpotifyClientCredentials.js";
 import { SpotifyMusicSearchService } from "./spotify/SpotifyMusicSearchService.js";
-import { SpotifyTokenStore } from "./spotify/SpotifyTokenStore.js";
+import { SpotifyPlaybackController } from "./spotify/SpotifyPlaybackController.js";
 import { SpotifyPlaybackSessionStore } from "./spotify/SpotifyPlaybackSessionStore.js";
+import { SpotifyPlayerClient } from "./spotify/SpotifyPlayerClient.js";
+import { SpotifyPlaylistSearch } from "./spotify/SpotifyPlaylistSearch.js";
+import { SpotifyTokenStore } from "./spotify/SpotifyTokenStore.js";
 import {
   getConfiguredSpotifyRedirectUris,
   listSuggestedLanSpotifyRedirectUris,
 } from "./spotify/spotifyRedirectUri.js";
 
+registerProcessFatalHandlers(process, logger, (code) => process.exit(code));
+
 const { app, httpServer } = createHttpServer();
 const io = createSocketServer(httpServer);
 
+const spotifyClientOptions = {
+  ...(env.SPOTIFY_ACCOUNTS_BASE_URL ? { accountsBaseUrl: env.SPOTIFY_ACCOUNTS_BASE_URL } : {}),
+  ...(env.SPOTIFY_API_BASE_URL ? { apiBaseUrl: env.SPOTIFY_API_BASE_URL } : {}),
+};
 const spotifyTokenStore = new SpotifyTokenStore();
-const spotifyApiClient = new SpotifyApiClient();
-const spotifyAuthService = new SpotifyAuthService(spotifyApiClient, spotifyTokenStore);
-const spotifyPlaybackSessions = new SpotifyPlaybackSessionStore();
-const playlistImportService = new PlaylistImportService(spotifyApiClient, spotifyTokenStore);
-const spotifyDiscoveryService = new SpotifyDiscoveryService(spotifyApiClient, spotifyTokenStore);
-const spotifyMusicSearchService = new SpotifyMusicSearchService(
-  spotifyApiClient,
-  spotifyTokenStore,
+const spotifyAccounts = new SpotifyAccountsClient(spotifyClientOptions);
+const spotifyCatalog = new SpotifyCatalogClient(spotifyClientOptions);
+const spotifyClientCredentials = new SpotifyClientCredentials(spotifyAccounts, spotifyTokenStore);
+const spotifyAuthService = new SpotifyAuthService(spotifyAccounts, spotifyTokenStore);
+const spotifyPlaylistSearch = new SpotifyPlaylistSearch(spotifyCatalog, spotifyClientCredentials);
+const playlistImportService = new PlaylistImportService(spotifyCatalog, spotifyClientCredentials);
+const testDeckRandomValue = env.TEST_DECK_RANDOM_VALUE;
+const deckService = new DeckService(
+  env.TEST_DECKS_DIRECTORY,
+  testDeckRandomValue === undefined ? undefined : () => testDeckRandomValue,
 );
-const deckService = new DeckService();
-const roomRegistry = new RoomRegistry();
-const roomService = new RoomService(
-  roomRegistry,
+const roomServices = createRoomServices({
+  durations: roomDurationsFromEnv(),
   deckService,
-  spotifyAuthService,
   playlistImportService,
-  spotifyDiscoveryService,
-  spotifyMusicSearchService,
-  spotifyPlaybackSessions,
-);
+  spotify: {
+    auth: spotifyAuthService,
+    candidates: new SpotifyCandidateGenerator(
+      spotifyCatalog,
+      spotifyClientCredentials,
+      spotifyPlaylistSearch,
+    ),
+    musicSearch: new SpotifyMusicSearchService(spotifyCatalog, spotifyClientCredentials),
+    playback: new SpotifyPlaybackController(
+      spotifyAuthService,
+      new SpotifyPlayerClient(spotifyClientOptions),
+    ),
+    playbackSessions: new SpotifyPlaybackSessionStore(),
+    playlistSearch: spotifyPlaylistSearch,
+  },
+});
 
-registerSpotifyRoutes(app, io, spotifyAuthService, roomService);
-registerSocketHandlers(io, roomService);
+registerSpotifyRoutes(app, io, spotifyAuthService, roomServices);
+registerSocketHandlers(io, roomServices);
+registerGracefulShutdown(process, {
+  socketServer: io,
+  clearRoomTimers: () => roomServices.timers.clearAll(),
+  recordServerStopped: (signal) =>
+    logAuditEvent({
+      auditKind: "server",
+      action: "server_stopped",
+      outcome: "succeeded",
+      meta: { signal },
+    }),
+  flushAuditLog: drainAxiomLogEvents,
+  log: logger,
+  exit: (code) => process.exit(code),
+});
 
 httpServer.listen(env.PORT, () => {
   const axiomConfigured = Boolean(env.AXIOM_TOKEN && env.AXIOM_DATASET);

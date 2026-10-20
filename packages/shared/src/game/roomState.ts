@@ -61,7 +61,6 @@ export interface PublicRoomState {
   players: PublicPlayerState[];
   timelines: Record<string, TimelineCardPublic[]>;
   currentTrackCard: TrackCardPublic | null;
-  targetTimelineCardCount: number;
   settings: PublicRoomSettings;
   turn: PublicTurnState | null;
   challengeState: PublicChallengeState | null;

@@ -11,6 +11,10 @@ export const componentTokenCssVariables = {
   "button-primary-bg-hover": "var(--color-accent-brand-hover)",
   "button-primary-bg-active": "var(--color-accent-brand-active)",
   "button-primary-fg": "var(--color-on-accent-brand)",
+  "button-danger-bg": "var(--color-danger-solid)",
+  "button-danger-bg-hover": "var(--color-danger-solid-hover)",
+  "button-danger-bg-active": "var(--color-danger-solid-active)",
+  "button-danger-fg": "var(--color-on-danger-solid)",
   "button-radius": "var(--radius-pill)",
   "button-min-height": "var(--size-touch-target)",
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { PublicRoomState } from "@tunetrack/shared";
+import type { PublicRoomState } from "@tunetrack/shared/client";
 import type { TimelineView } from "../GamePage.types";
 
 interface UseGamePageLocalUiStateOptions {
@@ -54,11 +54,7 @@ export function useGamePageLocalUiState({
     }
 
     setSelectedSlotIndex(0);
-  }, [
-    roomState?.status,
-    roomState?.turn?.activePlayerId,
-    roomState?.turn?.turnNumber,
-  ]);
+  }, [roomState?.status, roomState?.turn?.activePlayerId, roomState?.turn?.turnNumber]);
 
   return {
     locallyPlacedCard,

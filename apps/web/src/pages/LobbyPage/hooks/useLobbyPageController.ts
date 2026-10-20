@@ -3,14 +3,13 @@ import {
   DEFAULT_STARTING_TIMELINE_CARD_COUNT,
   DEFAULT_STARTING_TT_TOKEN_COUNT,
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
+  DEFAULT_TT_MODE_ENABLED,
   type PublicRoomSettings,
-} from "@tunetrack/shared";
-import { useEffect, useMemo } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import {
-  getOrCreatePlayerSessionId,
-  getRememberedPlayerDisplayName,
-} from "../../../services/session/playerSession";
+} from "@tunetrack/shared/client";
+import { useEffect, useMemo, useRef } from "react";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { usePlayerProfileStore } from "../../../features/profile/playerProfile";
+import { getOrCreatePlayerSessionId } from "../../../services/session/playerSession";
 import { preloadGameRuntime } from "../../../app/preloadRoutes";
 import type { LobbyPageController } from "../LobbyPage.types";
 import { useLobbyRoomActions } from "./useLobbyRoomActions";
@@ -22,9 +21,11 @@ const fallbackRoomSettings: PublicRoomSettings = {
   revealConfirmMode: "host_only",
   startingTtTokenCount: DEFAULT_STARTING_TT_TOKEN_COUNT,
   targetTimelineCardCount: DEFAULT_TARGET_TIMELINE_CARD_COUNT,
-  ttModeEnabled: false,
+  ttModeEnabled: DEFAULT_TT_MODE_ENABLED,
   playlistImported: false,
   importedTrackCount: 0,
+  tracksToCheckCount: 0,
+  deckSource: "none",
   spotifyAuthStatus: "none",
   spotifyAccountType: null,
   spotifyPlaybackOwnerPlayerId: null,
@@ -33,38 +34,55 @@ const fallbackRoomSettings: PublicRoomSettings = {
 
 export function useLobbyPageController(): LobbyPageController {
   const navigate = useNavigate();
+  const location = useLocation();
   const { roomId } = useParams<{ roomId: string }>();
   const [searchParams] = useSearchParams();
-  const displayName = useMemo(
-    () => searchParams.get("playerName")?.trim() ?? getRememberedPlayerDisplayName(),
-    [searchParams],
-  );
-  const intent = searchParams.get("intent") === "create" ? "create" : "join";
+  const storedDisplayName = usePlayerProfileStore((state) => state.displayName);
+  const setDisplayName = usePlayerProfileStore((state) => state.setDisplayName);
+  const queryDisplayName = searchParams.get("playerName")?.trim() ?? "";
+  const displayName = storedDisplayName || queryDisplayName;
+  const routeState = (location.state ?? {}) as { intent?: "create" };
+  const intentRef = useRef<"create" | "join">(routeState.intent === "create" ? "create" : "join");
+  const intent = intentRef.current;
   const playerSessionId = useMemo(() => getOrCreatePlayerSessionId(), []);
   const {
-    connectionStatus,
+    closedRoomReason,
     currentPlayerId,
     errorCode,
     errorMessage,
     handleClosedRoomReset,
     hasClosedRoomReset,
     roomState,
-  } =
-    useLobbyRoomConnection({
-      displayName,
-      intent,
-      navigate,
-      playerSessionId,
-      roomId,
-    });
+  } = useLobbyRoomConnection({
+    displayName,
+    intent,
+    navigate,
+    playerSessionId,
+    roomId,
+  });
 
   const isHost = roomState?.hostId === currentPlayerId;
   const currentSettings = roomState?.settings ?? fallbackRoomSettings;
   const actions = useLobbyRoomActions({
+    currentPlayerId,
     currentSettings,
     isHost,
     roomState,
   });
+
+  useEffect(() => {
+    if (!storedDisplayName && queryDisplayName) {
+      setDisplayName(queryDisplayName);
+    }
+  }, [queryDisplayName, setDisplayName, storedDisplayName]);
+
+  async function handlePlayerProfileChange(nextDisplayName: string) {
+    const didUpdateProfile = await actions.handlePlayerProfileChange(nextDisplayName);
+    if (didUpdateProfile) {
+      setDisplayName(nextDisplayName);
+    }
+    return didUpdateProfile;
+  }
 
   useEffect(() => {
     if (roomState?.status === "lobby") {
@@ -73,7 +91,8 @@ export function useLobbyPageController(): LobbyPageController {
   }, [roomState?.roomId, roomState?.status]);
 
   return {
-    connectionStatus,
+    closeRoomActionStatus: actions.closeRoomActionStatus,
+    closedRoomReason,
     currentPlayerId,
     currentSettings,
     displayName,
@@ -82,17 +101,28 @@ export function useLobbyPageController(): LobbyPageController {
     handleClosedRoomReset,
     handleCloseRoom: actions.handleCloseRoom,
     hasClosedRoomReset,
+    identityActionState: actions.identityActionState,
     handlePlayerKick: actions.handlePlayerKick,
     handlePlayerStartingCardCountChange: actions.handlePlayerStartingCardCountChange,
     handlePlayerStartingTtTokenCountChange: actions.handlePlayerStartingTtTokenCountChange,
-    handlePlayerProfileChange: actions.handlePlayerProfileChange,
+    handlePlayerProfileChange,
     handleRoomRename: actions.handleRoomRename,
     handleRoomSettingsChange: actions.handleRoomSettingsChange,
     handleStartGame: actions.handleStartGame,
     isHost,
+    isCloseRoomPending: actions.isCloseRoomPending,
+    isKickPlayerPending: actions.isKickPlayerPending,
+    isIdentityActionPending: actions.isIdentityActionPending,
+    isPlayerSettingsPending: actions.isPlayerSettingsPending,
+    isRoomSettingsPending: actions.isRoomSettingsPending,
+    isStartGamePending: actions.isStartGamePending,
+    kickPlayerActionState: actions.kickPlayerActionState,
+    playerSettingsActionState: actions.playerSettingsActionState,
+    roomSettingsActionStatus: actions.roomSettingsActionStatus,
     preloadGame: preloadGameRuntime,
     roomId,
     roomState,
+    startGameActionStatus: actions.startGameActionStatus,
     toggleTtMode: actions.toggleTtMode,
   };
 }

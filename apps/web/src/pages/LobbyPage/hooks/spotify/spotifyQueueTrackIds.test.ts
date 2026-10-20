@@ -1,4 +1,4 @@
-import type { PublicTrackInfo, SpotifySmartSearchResult } from "@tunetrack/shared";
+import type { PublicTrackInfo, SpotifySmartSearchResult } from "@tunetrack/shared/client";
 import { describe, expect, it } from "vitest";
 import {
   appendUniqueSmartSearchResults,
@@ -60,9 +60,9 @@ describe("getSpotifyTrackIdFromQueuedTrack", () => {
   });
 
   it("supports legacy smart-search prefixed ids", () => {
-    expect(
-      getSpotifyTrackIdFromQueuedTrack(buildTrack({ id: "spotify-search-abc123" })),
-    ).toBe("abc123");
+    expect(getSpotifyTrackIdFromQueuedTrack(buildTrack({ id: "spotify-search-abc123" }))).toBe(
+      "abc123",
+    );
   });
 
   it("falls back to the track id", () => {

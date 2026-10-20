@@ -1,30 +1,4 @@
 import type { Transition } from "framer-motion";
-import { createModalSheetMotionTargets } from "./modalMotionTokens";
-
-export function createAppShellMenuSheetOffset(
-  reduceMotion: boolean,
-  isMobileSheet: boolean,
-): { x: number; y: number } {
-  void isMobileSheet;
-
-  if (reduceMotion) {
-    return { x: 0, y: 0 };
-  }
-
-  return { x: 56, y: 0 };
-}
-
-export function createAppShellMenuSheetMotionTargets(
-  reduceMotion: boolean,
-  isMobileSheet: boolean,
-): {
-  animate: { opacity: number; x: number; y: number };
-  exit: { opacity: number; x: number; y: number };
-  initial: { opacity: number; x: number; y: number };
-} {
-  void isMobileSheet;
-  return createModalSheetMotionTargets(reduceMotion);
-}
 
 export function createMenuTabActivationTransition(reduceMotion: boolean): Transition {
   return reduceMotion
@@ -36,3 +10,11 @@ export function createMenuTabActivationTransition(reduceMotion: boolean): Transi
         mass: 1,
       };
 }
+
+/**
+ * Pass as `onUpdate` to keep a fade on the main thread. framer-motion 11 cancels a finished
+ * WAAPI opacity animation one frame before it writes the final value, so for one painted
+ * frame the element is back at its start opacity: the menu scrim and sheet both went to 0
+ * and the game page blinked through the open menu. Any `onUpdate` disables WAAPI.
+ */
+export function keepFadeOnMainThread(): void {}

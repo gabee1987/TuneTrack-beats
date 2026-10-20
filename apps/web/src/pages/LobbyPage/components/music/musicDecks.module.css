@@ -1,0 +1,144 @@
+/* Your decks: the deck in this game, then the saved decks (`22` §4.8). */
+.roomDeck,
+.deckTile {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-elevated);
+  color: var(--color-text-primary);
+}
+
+.roomDeck {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.roomDeckHead {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.roomDeckCopy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.deckName {
+  margin: 0;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--color-text-primary);
+  font-size: var(--type-body-lg-size);
+  line-height: var(--type-body-lg-leading);
+  font-weight: var(--type-label-weight);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deckMeta {
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+  font-variant-numeric: tabular-nums;
+}
+
+.checkBlock {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.checkLine {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
+}
+
+.checkList {
+  display: grid;
+  margin: 0 calc(var(--space-2) * -1);
+  padding: 0;
+  list-style: none;
+}
+
+.allChecked {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
+}
+
+.allChecked svg {
+  flex-shrink: 0;
+  color: var(--color-accent-brand);
+}
+
+.roomDeckActions {
+  display: grid;
+  gap: var(--space-1);
+}
+
+/* Two frameless buttons the size of Edit songs, one under the other. */
+.roomDeckSecondary {
+  display: grid;
+  gap: var(--space-1);
+}
+
+/* One row per saved deck: the cover beside its name, its size and its three actions. */
+.deckGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.deckTile {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  align-content: center;
+  column-gap: var(--space-3);
+  row-gap: 2px;
+  align-items: start;
+  min-width: 0;
+  padding: var(--space-2);
+}
+
+.deckCover {
+  grid-row: 1 / -1;
+  align-self: center;
+  width: 96px;
+  height: 96px;
+}
+
+.deckToCheck {
+  color: var(--color-warning);
+  font-weight: var(--type-label-weight);
+}
+
+.deckToCheck::before {
+  content: " · ";
+  color: var(--color-text-secondary);
+  font-weight: 400;
+}
+
+.deckTileActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.deckTileActions > :not(:last-child) {
+  min-width: 0;
+  padding-inline: var(--space-2);
+}

@@ -4,22 +4,23 @@ import {
   type ImportPlaylistResultPayload,
   type PlaylistTracksPayload,
   type SpotifyPlaylistSearchItem,
-} from "@tunetrack/shared";
+} from "@tunetrack/shared/client";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
 import { useI18n } from "../../../../features/i18n";
 import { localizePlaylistImportError } from "../../../../features/i18n/localizedErrors";
+import { useAppToast } from "../../../../features/toast";
 import { getSocketClient } from "../../../../services/socket/socketClient";
 import {
   getCurrentPlaylistTracks,
   getQueuedTrackIdsFromPlaylistTracks,
   getQueuedSpotifyTrackIdsFromPlaylistTracks,
 } from "./spotifyQueueTrackIds";
-import type { ImportPhase } from "./lobbySpotify.types";
+import type { DeckOrigin, ImportPhase } from "./lobbySpotify.types";
 
 interface UseSpotifyPlaylistImportParams {
   clearPlaylistSearch: () => void;
-  currentPlaylistNameRef: MutableRefObject<string | undefined>;
+  currentDeckOriginRef: MutableRefObject<DeckOrigin>;
   roomId: string | undefined;
   setLoadedSavedPlaylistId: (playlistId: string | null) => void;
   setQueuedTrackIds: (trackIds: Set<string>) => void;
@@ -29,7 +30,7 @@ interface UseSpotifyPlaylistImportParams {
 
 export function useSpotifyPlaylistImport({
   clearPlaylistSearch,
-  currentPlaylistNameRef,
+  currentDeckOriginRef,
   roomId,
   setLoadedSavedPlaylistId,
   setQueuedTrackIds,
@@ -37,6 +38,7 @@ export function useSpotifyPlaylistImport({
   setSmartSearchQueuedTrackIds,
 }: UseSpotifyPlaylistImportParams) {
   const { t } = useI18n();
+  const { showToast } = useAppToast();
   const [importPhase, setImportPhase] = useState<ImportPhase>("idle");
   const [importError, setImportError] = useState<string | null>(null);
   const [playlistUrl, setPlaylistUrl] = useState("");
@@ -97,7 +99,7 @@ export function useSpotifyPlaylistImport({
           setSmartSearchQueuedTrackIds(getQueuedSpotifyTrackIdsFromPlaylistTracks(payload.tracks));
           setLoadedSavedPlaylistId(null);
           setCurrentPlaylistSourceUrl("");
-          currentPlaylistNameRef.current = undefined;
+          currentDeckOriginRef.current = { imageUrl: undefined, name: undefined };
           setSavedPlaylistMessage(t("lobby.spotify.clearPlaylistDone"));
         }
 
@@ -116,16 +118,26 @@ export function useSpotifyPlaylistImport({
         setImportPhase("idle");
         setImportError(null);
         setCurrentPlaylistSourceUrl(pendingImportPlaylistUrlRef.current);
-        currentPlaylistNameRef.current = payload.playlistName;
+        currentDeckOriginRef.current = {
+          imageUrl: payload.playlistImageUrl,
+          name: payload.playlistName,
+        };
         setLoadedSavedPlaylistId(null);
         setPlaylistUrl("");
         setSmartSearchQueuedTrackIds(new Set());
+        showToast({
+          message: t("music.importSummary", {
+            added: payload.importedCount,
+            skipped: payload.filteredCount,
+          }),
+          type: "success",
+        });
       } else {
         setImportPhase("error");
         setImportError(localizePlaylistImportError(t, payload));
       }
     },
-    [currentPlaylistNameRef, setLoadedSavedPlaylistId, setSmartSearchQueuedTrackIds, t],
+    [currentDeckOriginRef, setLoadedSavedPlaylistId, setSmartSearchQueuedTrackIds, showToast, t],
   );
 
   const resetImport = useCallback(() => {

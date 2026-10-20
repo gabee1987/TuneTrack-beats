@@ -3,7 +3,11 @@ import {
   DEFAULT_STARTING_TIMELINE_CARD_COUNT,
   DEFAULT_STARTING_TT_TOKEN_COUNT,
   DEFAULT_TARGET_TIMELINE_CARD_COUNT,
+  DEFAULT_TT_MODE_ENABLED,
   MAX_STARTING_TT_TOKEN_COUNT,
+  PLAYER_NAME_MAX_LENGTH,
+  countTracksToCheck,
+  type DeckSource,
   type PublicPlayerState,
   type PublicRoomSettings,
   type PublicRoomState,
@@ -26,7 +30,7 @@ export function buildInitialRoomState(
     connectionStatus: "connected",
     disconnectedAtEpochMs: null,
     reconnectExpiresAtEpochMs: null,
-    ttTokenCount: 0,
+    ttTokenCount: DEFAULT_STARTING_TT_TOKEN_COUNT,
     startingTimelineCardCount: DEFAULT_STARTING_TIMELINE_CARD_COUNT,
   };
 
@@ -35,10 +39,12 @@ export function buildInitialRoomState(
     defaultStartingTimelineCardCount: DEFAULT_STARTING_TIMELINE_CARD_COUNT,
     startingTtTokenCount: DEFAULT_STARTING_TT_TOKEN_COUNT,
     revealConfirmMode: "host_only",
-    ttModeEnabled: false,
+    ttModeEnabled: DEFAULT_TT_MODE_ENABLED,
     challengeWindowDurationSeconds: DEFAULT_CHALLENGE_WINDOW_DURATION_SECONDS,
     playlistImported: false,
     importedTrackCount: 0,
+    tracksToCheckCount: 0,
+    deckSource: "none",
     spotifyAuthStatus: "none",
     spotifyAccountType: null,
     spotifyPlaybackOwnerPlayerId: null,
@@ -52,7 +58,6 @@ export function buildInitialRoomState(
     players: [player],
     timelines: { [playerId]: [] },
     currentTrackCard: null,
-    targetTimelineCardCount: DEFAULT_TARGET_TIMELINE_CARD_COUNT,
     settings,
     turn: null,
     challengeState: null,
@@ -69,7 +74,7 @@ export function buildPlayerJoinedRoomState(
 ): PublicRoomState {
   const player: PublicPlayerState = {
     id: playerId,
-    displayName,
+    displayName: buildUniqueDisplayName(roomState.players, displayName),
     isHost: false,
     connectionStatus: "connected",
     disconnectedAtEpochMs: null,
@@ -83,6 +88,35 @@ export function buildPlayerJoinedRoomState(
     players: [...roomState.players, player],
     timelines: { ...roomState.timelines, [playerId]: [] },
   };
+}
+
+/**
+ * A name another player in the room already uses (trimmed, any case) gets the lowest free
+ * numeric suffix, "Player One 2", for this room only (decision 11): joining stays one tap, and
+ * the leaderboard never shows two identical names.
+ */
+export function buildUniqueDisplayName(
+  players: readonly PublicPlayerState[],
+  displayName: string,
+  ownPlayerId?: string,
+): string {
+  const takenNames = new Set(
+    players
+      .filter((player) => player.id !== ownPlayerId)
+      .map((player) => normaliseDisplayName(player.displayName)),
+  );
+  const name = displayName.trim();
+  if (!takenNames.has(normaliseDisplayName(name))) return name;
+
+  for (let suffix = 2; ; suffix += 1) {
+    const suffixText = ` ${suffix}`;
+    const candidate = `${name.slice(0, PLAYER_NAME_MAX_LENGTH - suffixText.length).trimEnd()}${suffixText}`;
+    if (!takenNames.has(normaliseDisplayName(candidate))) return candidate;
+  }
+}
+
+function normaliseDisplayName(displayName: string): string {
+  return displayName.trim().toLocaleLowerCase();
 }
 
 export function buildUpdatedSettingsRoomState(
@@ -99,7 +133,6 @@ export function buildUpdatedSettingsRoomState(
 
   return {
     ...roomState,
-    targetTimelineCardCount: payload.targetTimelineCardCount,
     players:
       didDefaultStartingCardCountChange || shouldResetStartingTtTokenCount
         ? roomState.players.map((player) => ({
@@ -150,7 +183,12 @@ export function buildUpdatedProfileRoomState(
   return {
     ...roomState,
     players: roomState.players.map((player) =>
-      player.id === playerId ? { ...player, displayName } : player,
+      player.id === playerId
+        ? {
+            ...player,
+            displayName: buildUniqueDisplayName(roomState.players, displayName, playerId),
+          }
+        : player,
     ),
   };
 }
@@ -189,6 +227,7 @@ export function buildAwardedTtLobbyRoomState(
 export function buildImportedDeckRoomState(
   roomState: PublicRoomState,
   deck: GameTrackCard[],
+  deckSource: Exclude<DeckSource, "none">,
 ): PublicRoomState {
   return {
     ...roomState,
@@ -196,6 +235,8 @@ export function buildImportedDeckRoomState(
       ...roomState.settings,
       playlistImported: true,
       importedTrackCount: deck.length,
+      tracksToCheckCount: countTracksToCheck(deck),
+      deckSource: deck.length > 0 ? deckSource : "none",
     },
   };
 }
@@ -226,7 +267,9 @@ export function buildRemovedTracksRoomState(
     settings: {
       ...roomState.settings,
       importedTrackCount: nextDeck.length,
+      tracksToCheckCount: countTracksToCheck(nextDeck),
       playlistImported: nextDeck.length > 0,
+      deckSource: nextDeck.length > 0 ? roomState.settings.deckSource : "none",
     },
   };
 }

@@ -1,46 +1,44 @@
+import { AppShellMenu } from "../../../features/app-shell/AppShellMenu";
+import { useI18n } from "../../../features/i18n";
 import { AppPageShell } from "../../../features/mobile-shell/AppPageShell";
-import { Button } from "../../../features/ui/primitives";
 import { StatusBanner } from "../../../features/ui/StatusBanner";
 import type { HomePageAssemblyProps } from "../HomePage.types";
-import { HomePageHero } from "../components/HomePageHero";
-import { HomePageTopBar } from "../components/HomePageTopBar";
+import { HomeActions } from "../components/HomeActions";
+import { HomeTimelineDemo } from "../components/HomeTimelineDemo";
+import { getHomePageMenuTabSpecs } from "../homePageMenuConfig";
 import styles from "./HomePageDesktop.module.css";
 
 export function HomePageDesktop({ controller }: HomePageAssemblyProps) {
+  const { t } = useI18n();
+  const menuTabs = getHomePageMenuTabSpecs();
+
   return (
     <AppPageShell panelClassName={styles.panelShell} screenClassName={styles.screenShell}>
-      <HomePageTopBar />
+      <div className={styles.topBar}>
+        <AppShellMenu
+          subtitle={t("home.menuSubtitle")}
+          tabs={menuTabs.map((tab) => ({
+            id: tab.id,
+            label: t(tab.labelKey),
+            content: tab.messageKey ? (
+              <p className={styles.menuPlaceholder}>{t(tab.messageKey)}</p>
+            ) : null,
+          }))}
+          title={t("home.menuTitle")}
+        />
+      </div>
 
       {controller.toastMessage ? (
         <StatusBanner className={styles.toast}>{controller.toastMessage}</StatusBanner>
       ) : null}
 
-      <div className={styles.contentGrid}>
-        <section className={styles.heroColumn}>
-          <HomePageHero />
-        </section>
-
-        <aside className={styles.formColumn}>
-          <section className={styles.startPanel}>
-            <h2 className={styles.startTitle}>Play TuneTrack</h2>
-            <p className={styles.startCopy}>
-              Create a room as host or join an open room on the next screen.
-            </p>
-            <Button
-              className={styles.startButton}
-              fullWidth
-              haptic
-              onClick={controller.handleStart}
-              onFocus={controller.preloadLobby}
-              onMouseEnter={controller.preloadLobby}
-              onTouchStart={controller.preloadLobby}
-              size="lg"
-              type="button"
-            >
-              Start
-            </Button>
-          </section>
-        </aside>
+      <div className={styles.column}>
+        <header className={styles.hero}>
+          <img alt={t("app.name")} className={styles.brandLogo} src="/logo.png" />
+          <p className={styles.tagline}>{t("home.tagline")}</p>
+          <HomeTimelineDemo />
+        </header>
+        <HomeActions controller={controller} />
       </div>
     </AppPageShell>
   );

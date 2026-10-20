@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import {
   MotionPresence,
   createStandardTransition,
@@ -7,9 +7,9 @@ import {
 import { CardCountAmount } from "../../../features/ui/CardCountAmount";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
 import type { GamePageHeaderModel } from "../GamePage.types";
-import styles from "../gamePageStyles";
+import styles from "../gamePageChrome.module.css";
 
-type HeaderLeadersStripProps = Pick<GamePageHeaderModel, "leadingPlayers" | "roomState"> & {
+type HeaderLeadersStripProps = Pick<GamePageHeaderModel, "leadingPlayers" | "ttModeEnabled"> & {
   show: boolean;
   getCardCountLabel: (count: number) => string;
 };
@@ -17,8 +17,8 @@ type HeaderLeadersStripProps = Pick<GamePageHeaderModel, "leadingPlayers" | "roo
 export function HeaderLeadersStrip({
   getCardCountLabel,
   leadingPlayers,
-  roomState,
   show,
+  ttModeEnabled,
 }: HeaderLeadersStripProps) {
   const reduceMotion = useReducedMotionPreference();
   const transition = createStandardTransition(reduceMotion);
@@ -26,7 +26,7 @@ export function HeaderLeadersStrip({
   return (
     <MotionPresence initial={false} mode="popLayout">
       {show ? (
-        <motion.div
+        <m.div
           animate={{ opacity: 1 }}
           className={styles.headerLeadersDisclosure}
           exit={{ opacity: 0 }}
@@ -35,31 +35,27 @@ export function HeaderLeadersStrip({
           transition={transition}
         >
           <div className={styles.headerLeadersStrip}>
-            {leadingPlayers.map((player, index) => {
-              const cardCount = roomState.timelines[player.id]?.length ?? 0;
-
-              return (
-                <article className={styles.headerLeaderChip} key={player.id}>
-                  <span className={styles.headerLeaderRank}>#{index + 1}</span>
-                  <strong className={styles.headerLeaderName}>{player.displayName}</strong>
-                  <span className={styles.headerLeaderMeta}>
-                    <CardCountAmount
-                      amount={cardCount}
-                      ariaLabel={getCardCountLabel(cardCount)}
-                      className={styles.headerLeaderCardCount}
-                    />
-                    {roomState.settings.ttModeEnabled ? (
-                      <>
-                        <span aria-hidden="true">·</span>
-                        <TokenCountAmount amount={player.ttTokenCount} />
-                      </>
-                    ) : null}
-                  </span>
-                </article>
-              );
-            })}
+            {leadingPlayers.map((player, index) => (
+              <article className={styles.headerLeaderChip} key={player.id}>
+                <span className={styles.headerLeaderRank}>#{index + 1}</span>
+                <strong className={styles.headerLeaderName}>{player.displayName}</strong>
+                <span className={styles.headerLeaderMeta}>
+                  <CardCountAmount
+                    amount={player.cardCount}
+                    ariaLabel={getCardCountLabel(player.cardCount)}
+                    className={styles.headerLeaderCardCount}
+                  />
+                  {ttModeEnabled ? (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <TokenCountAmount amount={player.ttTokenCount} />
+                    </>
+                  ) : null}
+                </span>
+              </article>
+            ))}
           </div>
-        </motion.div>
+        </m.div>
       ) : null}
     </MotionPresence>
   );

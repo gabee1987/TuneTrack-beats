@@ -3,12 +3,17 @@ import { useLocation, useNavigationType, useOutlet } from "react-router-dom";
 import { MotionPresence, PageTransition } from "../features/motion";
 import type { ScreenTransitionDirection } from "../features/motion";
 
+/** Home → Join → Lobby → Game: moving right slides forward, moving left slides back (`22` §3). */
 function getRouteOrder(pathname: string) {
   if (pathname.startsWith("/game/")) {
+    return 3;
+  }
+
+  if (pathname === "/lobby" || pathname.startsWith("/lobby/")) {
     return 2;
   }
 
-  if (pathname.startsWith("/lobby/")) {
+  if (pathname === "/join" || pathname.startsWith("/join/")) {
     return 1;
   }
 
@@ -48,10 +53,7 @@ export function AppRoutes() {
       }}
     >
       <MotionPresence mode="sync">
-        <PageTransition
-          direction={direction}
-          key={location.key}
-        >
+        <PageTransition direction={direction} key={location.pathname}>
           {outlet}
         </PageTransition>
       </MotionPresence>

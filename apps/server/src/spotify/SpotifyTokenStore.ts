@@ -36,10 +36,12 @@ export class SpotifyTokenStore {
     return this.hostTokensByRoomId.get(roomId) ?? null;
   }
 
+  /** Spotify may rotate the refresh token on a refresh; the old one then stops working (B-19). */
   public updateHostAccessToken(
     roomId: RoomId,
     accessToken: string,
     expiresInSeconds: number,
+    rotatedRefreshToken?: string,
   ): void {
     const existing = this.hostTokensByRoomId.get(roomId);
     if (!existing) return;
@@ -47,12 +49,20 @@ export class SpotifyTokenStore {
     this.hostTokensByRoomId.set(roomId, {
       ...existing,
       accessToken,
+      refreshToken: rotatedRefreshToken ?? existing.refreshToken,
       expiresAtMs: Date.now() + expiresInSeconds * 1000,
     });
   }
 
   public clearHostTokens(roomId: RoomId): void {
     this.hostTokensByRoomId.delete(roomId);
+  }
+
+  public retargetRoom(previousRoomId: RoomId, nextRoomId: RoomId): void {
+    const record = this.hostTokensByRoomId.get(previousRoomId);
+    if (!record) return;
+    this.hostTokensByRoomId.delete(previousRoomId);
+    this.hostTokensByRoomId.set(nextRoomId, record);
   }
 
   public isHostTokenExpired(roomId: RoomId): boolean {

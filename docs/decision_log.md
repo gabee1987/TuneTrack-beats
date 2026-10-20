@@ -1,308 +1,534 @@
 # TuneTrack — Decision Log
 
-This file records concrete implementation decisions and open questions so they
-do not stay hidden in code.
+Concrete implementation decisions and open questions, so they do not stay hidden in code.
+Append dated entries; do not rewrite history. Exception recorded below: on 2026-10-06 the log
+was consolidated once (duplicates of `CLAUDE.md` game rules removed, one wrong entry
+corrected, five GamePage entries merged, dates added from git history).
+
+Game rules themselves live in [`CLAUDE.md`](../CLAUDE.md) → Game Rules and are not repeated
+here; this log records _why_ and _when_ they were decided.
 
 ---
 
 ## Decided
 
-### Equal release-year placement
-
-If a candidate track has the same release year as one or more adjacent timeline
-cards, every slot inside that same-year block counts as a correct placement.
-
-Example:
-
-- Timeline years: `1988, 1990, 1990, 1990, 1994`
-- Candidate year: `1990`
-- Valid slot indexes: `1, 2, 3, 4`
-
-### Target timeline size
-
-The number of cards needed to win is configurable per room instead of being
-hardcoded to 10.
-
-Current limits:
-
-- Minimum: `3`
-- Default: `10`
-- Maximum: `30`
-
-Only the host can change this setting in the lobby.
-
-### Host disconnect behavior
-
-If the host disconnects during the current lobby skeleton, host role is assigned
-to the first remaining player in the room.
-
-If the last player leaves, the in-memory room is removed.
-
-### MVP room storage
-
-Rooms are stored in memory only for the current foundation iteration.
-
-### Starting cards per player
-
-Each player starts with 1 revealed timeline card by default, but the host can
-override `startingTimelineCardCount` individually per player in the lobby.
-
-The room also stores `defaultStartingTimelineCardCount`, which is used for
-newly joined players.
-
-### Reveal confirmation rule
-
-Reveal confirmation is configurable by room:
-
-- `host_only`
-- `host_or_active_player`
-
-Current default is `host_only`.
-
-### Wrong placement penalty
-
-If a player places a card into a wrong slot, the card is discarded and the
-player gains no card from that turn.
-
-### Temporary timeline interaction model
-
-Iteration 02 uses a slot-click timeline with a separate placement confirmation
-button. Drag-and-drop and challenge/veto interactions are intentionally left
-for later iterations.
-
-All clients can see the active player's timeline during a turn, but only the
-active player can interact with slot selection and placement confirmation.
-
-### MVP test deck format
-
-Local JSON test decks live in
-`apps/server/src/decks/test-decks/`.
-
-The server loads every `.json` file from that folder and expects each card to
-contain:
-
-- `id`
-- `releaseYear`
-- `title`
-- `artist`
-- `albumTitle`
-- `genre` (optional)
-
-Duplicate `id` values are deduplicated by keeping the latest loaded card with
-that ID.
-
----
-
-### Reconnect/session identity strategy
-
-The browser now stores a stable per-tab player session in `sessionStorage`.
-
-Current behavior:
-
-- refreshing the same tab keeps the same player identity
-- lobby and in-progress games can be rejoined during a short reconnect grace
-  period
-- different browser tabs get different player sessions, so multi-tab local
-  testing still works
-
-Current server rule:
-
-- disconnected players stay reserved for a short grace period before they are
-  removed from the room
-- if they reconnect in time with the same session, they regain the same player
-  identity and host role if applicable
-
-### Beat challenge reward rule
-
-If a `Beat!` challenge succeeds:
-
-- the challenged card is stolen into the challenger's own timeline
-- the challenger does not need to guess a second time on their own timeline
-
-If a `Beat!` challenge fails:
-
-- the challenger loses `1 TT`
-- TT can never go below `0`
-
-### Beat timing rule
-
-The challenge timer only gates the initial `Beat!` claim.
-
-Current behavior:
-
-- if nobody claims before the deadline, the server auto-resolves the original
-  placement
-- if a player claims `Beat!` in time, the timer stops immediately
-- after claim, there is currently no extra timer for the challenger's slot
-  placement
-
-### MVP TT awarding
-
-For MVP testing, the host can manually award TT during a game.
-
-Reason:
-
-- this supports party-style manual judging for song/artist callouts before
-  automated token earning exists
-- TT's can be eraned by guessing the current cards artist and song name correctly
-- TT is awarded by the host manually to the players
-
-### TT spending actions in MVP
-
-When TT mode is enabled, players can spend TT during their own turn:
-
-- spend `1 TT` to skip the current track and draw the next one
-- a player can only skip once per turn
-- spend `3 TT` to claim the current song immediately, place it into the
-  correct slot on their own timeline automatically, and continue to manual
-  reveal
-- a TT-buy turn does not open a Beat window
-
-Current enforcement:
-
-- both actions are server-authoritative
-- both actions require the acting player to be the active player
-- both actions are blocked when TT mode is disabled
-
-### Backend-driven preview-card transition architecture
-
-Frontend animation for preview-card replacement now follows an explicit
-backend-driven transition pattern instead of component-local timer guessing.
-
-Current rule:
-
-- the controller emits a typed UI transition event when a server-confirmed skip
-  replaces the current preview card
-- a dedicated coordinator hook owns temporary displayed card state during the
-  animation
-- the component renders coordinator output instead of immediately rendering the
-  new incoming server data
-- preview-card replacement motion is defined in a dedicated motion transition
-  module with an explicit contract
-
-Reason:
-
-- this keeps animation behavior stable even when realtime/backend data changes
-  arrive asynchronously
-- this is the intended pattern for future server-driven UI transitions,
-  including later Spotify-backed card data updates
-
-### GamePage transition-event layer and celebration coordinator
-
-GamePage now has a dedicated transition-event detection layer and a dedicated
-timeline celebration coordinator.
-
-Current rule:
-
-- `useGamePageTransitionEvents` detects meaningful backend-confirmed UI changes
-  and emits typed transition events
-- `useGamePageController` passes those events through the page/controller model
-  instead of forwarding loose celebration fields and local timer assumptions
-- `useTimelinePanelCelebrationState` owns temporary celebration visibility and
-  fly-animation cleanup using a named motion contract
-- celebration motion variants and cleanup timing live in a dedicated motion
-  transition module instead of a generic motion bucket file
-
-Reason:
-
-- this reduces controller coupling
-- this makes backend-driven animation behavior easier to trace and reuse
-- this creates a cleaner teaching example for future Spotify-backed,
-  server-driven UI transitions
-
-### Pure transition detectors and reveal-preview coordinator
-
-GamePage transition detection now prefers pure detector helpers plus thin hook
-orchestration, and reveal-preview state now follows the same event/coordinator
-pattern as other backend-driven transitions.
-
-Current rule:
-
-- backend-driven event semantics such as skip replacement, celebration, and
-  reveal preview detection should live in pure helpers when possible
-- the React hook layer should manage deduplication and event-key sequencing, but
-  not hide the underlying decision logic in opaque effects
-- reveal preview state should pass through a dedicated coordinator so the panel
-  consumes one displayed preview model instead of several synchronized raw props
-
-Reason:
-
-- this makes the transition rules directly unit-testable
-- this improves confidence when backend data flow becomes more complex
-- this keeps the codebase teachable by making animation/event semantics explicit
-
-### Motion layer split by transition responsibility
-
-The shared frontend motion layer now avoids a catch-all gameplay motion token
-file for reusable transitions.
-
-Current rule:
-
-- reusable motion exports are grouped by named transition responsibility
-- examples now include preview replacement, timeline celebration, action
-  surfaces, and token flyouts
-- `features/motion/index.ts` remains the stable shared API surface
-
-Reason:
-
-- this makes motion ownership easier to find
-- this prevents unrelated animation concerns from drifting into one large file
-- this keeps the motion layer aligned with the same explicit-boundary rules used
-  elsewhere in the frontend architecture
-
-### Coordinator test strategy without a DOM-heavy runner
-
-GamePage coordinator coverage now favors pure state helpers when the current
-test runtime does not provide the right DOM environment for hook-level animation
-tests by default.
-
-Current rule:
-
-- extract coordinator decision logic into pure helpers when practical
-- test transition snapshots, display-state derivation, and fly-animation
-  eligibility directly in unit tests
-- treat higher-level hook/component animation tests as a later enhancement, not
-  a reason to hide logic inside untestable effects
-
-Reason:
-
-- this keeps test coverage growing without introducing avoidable test-runtime
-  complexity into the repo
-- this preserves the architectural goal that backend-driven UI sequencing should
-  be explicit and verifiable
-
-## Still Open
-
-### Room code generation rules
-
-Current implementation lets the player type any valid room code and creates the
-room if it does not exist.
-
-Still to decide:
-
-- Should host-created rooms generate a short random code automatically?
-- Should room codes be uppercase-only for easier party sharing?
-
-### Duplicate player names
-
-Current implementation allows duplicate display names.
-
-Still to decide:
-
-- Should duplicate names be blocked within one room?
-- Or should we keep allowing them and rely on internal player IDs only?
-
-### Challenge timing authority
-
-Still to decide:
-
-- What is the exact server-authoritative timing model for the challenge window?
-- Should late client challenge clicks be rejected based on server timestamps only?
-
-Recommendation:
-
-- Yes, resolve challenge timing with server-side timestamps only.
-
----
+### App version and What's new (2026-10-20)
+
+- **Owner:** the app shows its version and what changed, reachable from the settings menu.
+- **One source for the version:** the newest entry in `features/app-shell/whats-new/releaseNotes.ts`
+  is the app's version; `releaseNotes.test.ts` keeps it equal to `apps/web/package.json`. All
+  workspaces move together (0.1.0 → 0.2.0 for the startup-flow release).
+- **Every release adds an entry** (version, date, sections) with its words in both catalogues,
+  written for players: what they can now do, not how it was built.
+- **Where:** a `What's new · v<version>` chip under the menu title on every screen opens the
+  notes as a view over the menu (the menu's only `PanelView`). The menu's "settings" tab is
+  labelled Theme, so the notes do not live in a tab.
+
+### Full-width song cover that folds into the bar (2026-10-20)
+
+- **Owner:** the song views (Song editor, Find's song details) show the cover as wide as the
+  screen, and as the details scroll it folds into the top bar as a small cover, "like Spotify".
+- **One fold for every cover:** the cover stays pinned while the content slides up over it; it
+  shrinks to 60 % and rises as it fades, and the small cover rises and grows into the bar
+  (`createCollapsingHeaderMotion`, scroll-driven, `transform`/`opacity` only; reduced motion
+  swaps at once). The Playlist view uses the same fold, so its cover now folds the same way.
+- **The bar's heading makes room (owner):** at rest the eyebrow and title sit beside Back; in
+  the first half of the fold they slide right by the small cover's width, and the cover grows
+  into the freed place (`CollapsingHeaderBar` sets `--fold-reveal`; PageHeader `translate`s).
+- **The details are at least a view tall**, so they always scroll up under the bar and the fold
+  completes; filler information was not added, since a song carries only title, artist, album
+  and year and the project takes no metadata-enrichment API.
+
+### Startup-flow acceptance: E2E scope per project, held actions (2026-10-20)
+
+- **Connection-lifecycle E2E runs on the desktop engines only.** The `mobile` project runs the
+  same WebKit engine as `webkit`, and four `resilience.spec.ts` scenarios test server timers,
+  not layout; they skip on `mobile`. The offline guest's on-screen skip still runs there.
+  `deck-delete.spec.ts` runs on chromium only (a History API fault, the same in every engine,
+  also guarded by `Overlay.test.tsx`). Mobile went from 273 s to 227 s against its 240 s budget.
+- **A held action names its reason.** Music setup passes its tabs the id of the offline line
+  (`heldReasonId`) instead of a bare `disabled`; primary actions point at it. `TextField` keeps a
+  caller's `aria-describedby` before its own message. "Use in game" says why it waits.
+- **The fake Spotify server answers `/api/search`**, so search and quick picks have E2E cover.
+
+### Startup-flow clean-up and acceptance (2026-10-18)
+
+- **Music setup is its own chunk.** The lobby loads it behind the host's Music card, so guests
+  never download it and the lobby's shared chunk fell from 124 to 65 kB raw.
+- **The lobby fetches the room deck's songs once per deck**, not each time Music setup opens:
+  the Music card now shows their 2 × 2 cover mosaic (`22` §4.6), and setup opens on them at once.
+- **English copy avoids the code's words** ("TT", "track", "queue", "challenge"); a guard checks
+  it. The "Decades Challenge" quick pick is now "Across the Decades" ("Évtizedeken át").
+- **The Start summary sits 8 px closer to Start**, so a four-player lobby fits a 375 × 667 phone
+  without scrolling (`22` §13, `lobby-layout.spec.ts`).
+
+### First-game hint tutorial (2026-10-18)
+
+- **A hint stays until the player acknowledges it; the 12 s auto-dismiss is gone** (decision 12,
+  `22` S11). Why: seen means acknowledged, so a hint that left on its own would have to come back
+  1.5 s later at the same place.
+- **"Show hints again" also switches hints on.** Why: a restart that shows nothing while the
+  switch is off would look broken.
+- **Escape answers a hint before the overlay beneath it.** Why: one key press should not both
+  dismiss the hint and close the sheet the player is working in.
+- **E2E devices start with hints off; `hints.spec.ts` turns them on.** Why: a hint that waits
+  for acknowledgement would sit over controls in every other scenario; the tutorial has its own
+  scenario.
+
+### Desktop Music setup in two panes (2026-10-18)
+
+- **On desktop the Music sheet is 960 px wide with two panes** (decision 25, `22` S10): the
+  Playback block and the tabs on the left, the open list on the right, and "Pick a deck or search
+  to see songs here." while nothing is open.
+- **The Song editor slides in over the right pane instead of opening as a centred `Dialog`.**
+  Why: it stays the one Song editor of the phones (one way per action) and leaves the tabs in
+  reach; a dialog would have needed a second layout of the same form.
+- **One list is open at a time:** opening a deck, a Find result or a quick pick closes the list
+  open before it. Why: beside the tabs a newer list could otherwise open hidden behind an older
+  one, and Back would have to step through both.
+
+### Saved-deck write-back with Undo (2026-10-18)
+
+- **Every edit to a saved deck is kept at once** (decision 24, `22` S9): a song saved in the
+  Song editor, or removed, is written to this device and a toast "Saved to {deck}" offers Undo
+  for at least 6 s. Undo puts the whole deck back as it was before that change. Toasts gained one
+  optional button for this.
+- **The game's deck follows** when it was loaded from that saved deck and still holds the song:
+  the edit, and its Undo, go to the server as `update_playlist_track`. Removals stay on the
+  saved deck; the game's deck has its own Remove.
+- **No storage version yet:** the cover was added as an optional field, so decks saved before it
+  load unchanged (test). A version and a migration come with the first change that is not
+  additive, rather than an unused number now.
+
+### Swipe on song rows, the Spotify cover on saved decks (2026-10-16)
+
+- **Song rows swipe again** (owner: "cool and handy"; reverses `22` §4.9 "Swipe-to-delete is
+  removed"): left deletes a song from a deck or a quick pick; on a found song (Find and opened
+  albums, artists and playlists) right adds it to the game, as Spotify adds to the queue, and
+  left takes it out again. Selection and the trailing Add stay; the swipe is the quick way.
+- **A saved deck keeps its Spotify playlist's cover** (`22` S9, early): the import reads the
+  playlist's name and cover together, a playlist opened from Find brings its own, and Your decks
+  and the Playlist view show it in place of the song mosaic. Older saved decks keep the mosaic.
+
+### One Playlist view, the Song editor's year controls, Review flagged (2026-10-16)
+
+- **Every list of songs opens in one Playlist view** (`22` §4.9): the deck in this game, a saved
+  deck, an album, artist or playlist from Find, and a quick pick. Bar (`PageHeader` with the
+  list's name as eyebrow), a big cover that folds into the bar as the list scrolls, the filter and
+  sort row, one virtualised list, one bottom action. It replaces the playlist editor, the opened
+  playlist panel and the quick-pick review. Why: plan `22` S8; three lists did the same job.
+- **"Use in game" is the list's one action;** with a deck in the game it asks Add to deck or
+  Replace deck in one dialog. The room deck reads "In this game ✓". The opened playlist's Add all
+  and Replace icons are gone (one way). A saved deck uses the Load path, so both ask the same.
+- **No overflow menu in the Playlist view (deviation from `22` §4.9):** Save to Your decks and
+  Remove all stay in the In this game card and Rename / Delete on the saved deck's More, where
+  the owner just sized them. A second copy in a menu would be two ways to do one thing.
+- **The Song editor's year is a ±1 stepper you can type into,** with "Spotify album year" under it
+  once it differs, and a Year checked switch replaces Imported / Edited / Verified: on → verified;
+  off → edited when a field changed or the song was verified, otherwise unchanged.
+- **Review flagged runs through the songs to check** in the list's order: "Looks right" checks
+  the year and moves on, "Next" moves on; both save what was typed, so no edit is lost. The entry
+  is a "Review N to check" button under the cover (the filter row has no room for it on phones).
+
+### One page header, floating bars, one selection button, Start in the page (2026-10-16)
+
+- **Every page, sheet and view has the lobby's top bar** (`PageHeader`): Back on the left, a green
+  eyebrow saying where the player is, and a title saying what they do there, with optional extra
+  information beside it. It replaces the sheets' close button and the Rules sheet's Done (Back is
+  the one way out; changes still apply as made), the editors' Close and the opened lists' second
+  header: an opened album, playlist or quick pick takes over the Music sheet's bar. Why: owner
+  review; four header designs did the same job.
+- **A bar under the header, or over a list's end, has no frame** (`FloatingBar`): its controls
+  float with a shadow on a fade into what scrolls beneath. Why: owner review.
+- **One selection button:** `SelectionActionBar` is one floating button that names the count and
+  the action ("Remove 3"), or two side by side when a selection both adds and removes. Find
+  selects by tapping a cover like every other list; its Select mode is gone. Why: owner review;
+  three bar designs and two ways to select.
+- **Find's song details reuse the song editor's layout,** read-only with a larger cover, and a
+  song tapped in "In this game" opens only the song editor; Check and Edit songs open the list.
+- **Frameless (tertiary) buttons have the main button's size,** and the lobby's Start is part of
+  the page above Close room, not a sticky dock.
+
+### Compact deck rows and editor, green scroll thumb everywhere, quick-pick loader back (2026-10-16)
+
+- **Saved decks are rows, not tiles:** cover beside name, size and "to check", then Load, Edit and
+  More on one line. Why: owner review; the tile stacked a chip and two buttons under the cover and
+  left empty space.
+- **The song editor's top is two rows:** title with song count and Close, then the filter chips
+  with one sort icon over a native select. The selection bar is the shared `SelectionActionBar`
+  (Remove, Done). Why: owner review; three rows and a transparent Remove button wasted room and
+  looked unlike every other button.
+- **One green scroll thumb on every screen, touch included.** Supersedes the "touch keeps the
+  system scrollbar" part of the entry below: the system bar is hidden everywhere and
+  `ScrollIndicator` draws a 4 px thumb in the primary-button green. Why: owner review; lists such
+  as the song editor showed no position on phones, and the system bar cannot be coloured.
+- **Quick picks show the app-wide loading screen again** while songs are picked, and an opened
+  list hides the Playback block so the songs get the whole sheet.
+- **Danger buttons are solid red** (`--button-danger-*`): the primary button's shape and states
+  with a red fill and white text, instead of a tinted outline. Why: owner review; they read as a
+  different kind of control.
+- **Start and Close room are one pair:** both large and full width, Close room inside the Start
+  card on desktop. A blocked Start rests at full size and pops once when it becomes ready, instead
+  of growing from 96 %.
+- **The song editor uses the shared controls** (`TextField`, `SegmentedControl`, pill `Button`s,
+  the song list's header) in place of its own boxy fields and buttons; its content is unchanged
+  until plan `22` S8.
+- **Opened lists share one header row** (`MusicViewHeader`): a 48 px round Back, the title with
+  its count, and the list's own 48 px actions. Used by the quick-pick result and the playlist
+  opened from Find, whose buttons also moved to the shared ones. Why: owner review; a small text
+  "Back to Find" pill above a count line wasted a row and matched nothing else.
+
+### Decks edit without loading, a Needs check filter, a Close room button (2026-10-16)
+
+- **Every saved deck has Load and Edit.** Edit opens the song editor on the saved deck itself;
+  changes are written back to this device at once and the room is not touched. A saved deck that
+  is also in the game is not updated there (write-back to the room stays with plan `22` S9).
+- **The song editor filters All / Needs check.** The "to check" chip on the Music card and
+  "Check {{count}} songs" on the In this game card open it on Needs check; Edit opens All.
+- **The In this game card says what the deck needs**: song count, the first three songs whose
+  year needs a look (each opens in the editor), "Check" and "Edit songs". It no longer shows a
+  blank cover with initials.
+- **Find opens a song's details** (album, Spotify year, a note on re-release years) with Add or
+  Remove; the row's Add button stays separate.
+- **Close room (host) / Leave room (guest) is a visible button** at the end of the lobby, beside
+  Back, which is now labelled "Back". Why: owner review; Back alone was not discoverable.
+- **Two more quick picks:** Japanese Music and Hungarian Music (16 in all).
+- Saved-deck and room-deck edits share one rule (`applyTrackEdit` in `packages/shared`): any
+  metadata change marks a song `edited` unless the host set the status.
+
+### Scrollbars take no room; quick picks get their own tab (2026-10-16)
+
+- **No scrollbar column on any page.** Touch screens use the system overlay scrollbar, unstyled,
+  which floats and fades on its own; mouse screens hide the bar and `ScrollIndicator` draws one
+  thin thumb over the scrolling box that fades about a second after scrolling stops. Replaces the
+  rounded page scrollbar of 2026-10-15. Why: a styled scrollbar is always a fixed 10 px column, so
+  every page had more padding on the right than on the left (owner review).
+- **The Music sheet has three tabs**: Your decks, Find (search and links only) and Quick picks
+  (the ten presets and the practice deck). Tab changes swap at once and fade the new view in.
+  Why: owner review; Find carried too much, and fading the old tab out first emptied the place for
+  a moment and made the content below jump.
+
+### Up to 10 starting songs, tokens capped at 5, side buttons on the ruler (2026-10-15)
+
+- **Songs to start with ranges 1–10** (`MAX_STARTING_TIMELINE_CARD_COUNT`). **Tokens stay at
+  most 5**, both to start with and held in a game: a player can never have more than 5. **The
+  ruler keeps its line design** with a quiet − and + at its two ends inside the same track. Why:
+  owner review on a phone; 7 and 10 starting songs were wanted, and the ruler only needed the
+  buttons and a tactile feel.
+
+### Tokens on by default, one-word room codes, a ruler you can feel (2026-10-15)
+
+- **Token mode is on in a new room** (`DEFAULT_TT_MODE_ENABLED`), and every player starts with
+  **1 token** (`DEFAULT_STARTING_TT_TOKEN_COUNT`); Reset to defaults restores both. **Room codes are
+  one music word and two digits** (`tango42`): no hyphen, no z or y (they swap places on
+  Hungarian keyboards), no w, q or x, no doubled letters, digits 2–9 only. **The ruler slider has
+  a − and a + button**, a haptic detent for each value it passes (Android; iOS Safari has no
+  Vibration API), numbered ticks and a value that pops when it changes. **The selected option of
+  a segmented control is an accent-filled pill.** Why: owner review of `22` S4 on a phone: codes
+  were hard to say and type, the ruler did not feel like discrete steps, and the chosen option of
+  Who taps Next and the Beat! window was hard to see.
+
+### Lobby review: no step badges, slim Start dock, Back closes or leaves (2026-10-15)
+
+- **No step badges on the lobby cards**; each card states its own status. **The Start dock holds
+  only the button**, with no bar background; the readiness and reason lines sit at the end of the
+  page. **Back** in the lobby header confirms Close room (host) or Leave (guest); Close room left the
+  Rules sheet. **A sheet whose changes apply at once shows Done only** (no second close button) and
+  says that changes apply right away; the Rules sheet offers **Reset to defaults**. Page scrollbars
+  get a rounded thumb. Why: owner review of `22` S3 on a phone (screen space, unclear marks, two
+  ways to close, no way home).
+
+### The dev gallery may show page-local pieces (2026-10-15)
+
+- **`/dev/ui` may import another page's `components/` and `hooks/`**, never a page root or a
+  mobile/desktop assembly (`eslint.config.js`). Why: the owner wants every UI element on the
+  gallery (2026-10-14), including lobby-local pieces such as the step badge and deck meter, and the
+  route is built only in development, so nothing extra ships.
+
+### Number settings, switches and skeletons (2026-10-14)
+
+- **Phones keep the ruler slider for number settings; the stepper is for desktop.** The existing
+  `RangeField` gets better touch handling in `22` S4 instead of being replaced; `NumberStepper`
+  serves the desktop assembly and the song editor's year. The green `ToggleSwitch` stays as it
+  is, and `SegmentedControl` slides its highlight between options. Why: the owner likes the
+  slider and the switches on phones; the stepper fits a mouse better. Recorded as decision 26.
+- **Skeletons mirror the content they replace** (`22` §2 principle 9): same layout, shapes and
+  line heights, so nothing jumps when data arrives.
+
+### Practice deck: 105 songs with generated covers (2026-10-14)
+
+- **The practice deck grows to 105 songs (owner-requested artists included), and every card gets
+  a cover the web app draws from the card itself** (gradient, disc and the lead artist's
+  initials, never the year). The server marks practice cards with
+  `PRACTICE_COVER_PATH_PREFIX`; no image file is stored or fetched. Why: real album art is
+  copyrighted and would need a third-party fetch with compliance review; generated covers cost
+  no bundle or repository size. E2E deals from a frozen 40-card fixture
+  (`TEST_DECKS_DIRECTORY`, test-only), so growing the shipped deck never changes E2E.
+
+### Startup flow: full restructure (2026-10-14)
+
+- **The startup flow (Home, name, join, lobby, rules, Music setup, Start) is redesigned as a
+  whole; decision 5 ("streamline, do not restructure") is superseded.** Screens and routes may
+  change: Host is one tap from Home, the name is asked in a sheet, Join replaces Play, the lobby
+  is one guided screen with one Start dock, Music setup is Your decks + Find with one Playlist
+  view. Why: the owner found the flow hard to use and asked for an easy, straightforward,
+  engaging and beautiful startup (2026-10-14); the streamlining in `04` kept three Start
+  buttons' worth of structure. Owner: `22-game-startup-flow.md` (decision 22).
+
+### Music setup shape, saved-deck edits, desktop layout (2026-10-14)
+
+- **Your decks + Find, one Playlist view with an edit mode, quick picks inside Find** (`21` §7
+  Q1, Q3 → decision 23). **Saved-deck edits are written back at once with Undo** (Q2 → decision
+  24). **Desktop Music setup is two panes** (Q4 → decision 25). Why: fewest screens, no lost
+  curation work, and the desktop width is used.
+
+### No sheet on a sheet: Music Setup steps are panel views (2026-10-08)
+
+- **The playlist editor and the song editor open as `PanelView`s inside the Music Setup panel,
+  sliding in over its content, instead of as further sheets with their own scrims.** Back,
+  Escape and a scrim tap close one step. Why: stacked sheets kept flickering the sheet
+  underneath into view (owner report and decision). Small confirmation dialogs may still open
+  over a sheet.
+
+### One opaque slide for every side sheet (2026-10-08)
+
+- **Settings, Music Setup, the playlist editor and the song editor share `createSideSheetMotion`:
+  the panel stays opaque and travels its full width (320 ms emphasised decelerate in, 240 ms
+  emphasised accelerate out); only the scrim fades, on the same timing.** Why: the panels faded
+  while sliding, so the screen underneath showed through on every open (frame capture), and
+  each sheet moved differently (owner report). Replaces the settings menu's 64 px slide-and-fade.
+
+### Overlays guard scrolling instead of locking the root (2026-10-08)
+
+- **An open overlay refuses touch and wheel gestures that start outside its panel; it never
+  sets `overflow: hidden` on `html` or `body`.** Why: on Android Chrome an unscrollable root
+  brings the address bar back, so the viewport resized under every opening overlay; the page
+  re-laid out (flicker, glitching motion) and taps landed offset until the next scroll (owner
+  report). Exiting overlays also stop taking input at once, so a stalled exit cannot block the
+  page (`05` E2, §9).
+
+### Back on the room-closed dialog resets (2026-10-08)
+
+- **Browser and Android Back on `RoomResetModal` run its action: reset and go Home.** Why:
+  leaving the page by Back skipped the socket reset and could land on the dead room's lobby;
+  Escape and the scrim still do nothing. The button pops the dialog's history entry before
+  the reset, so Home replaces the room entry as before (`05` E2, §9).
+
+### Overlay host: declarative overlays on one stack (2026-10-08)
+
+- **Callers render `Overlay` where they are; `features/overlay` keeps one stack.** Why: the
+  plan's `open(render)` host outside the router would lose router and page context, which the
+  playlist and track editors, Music Setup, settings and the kick confirm read. The stack still
+  owns the layer, Escape, focus, scroll lock and one same-path history entry per overlay
+  (`00-index.md` decision 21, `05` E2a).
+
+### Broadcast size: compress, keep the full state (2026-10-07)
+
+- **Socket.IO per-message compression above 4 kB; `state_update` stays a full state with
+  history.** Why: the largest state is 117 kB raw and history is only 22.6 kB of it, so the
+  planned history request would still leave 94 kB; deflate brings the same message to 13 kB
+  with no protocol change (`00-index.md` decision 20, `network-baseline.md`).
+- **`user-read-email` stays in the Spotify scopes.** Why: the Web Playback SDK requires it,
+  although the app never reads the email.
+
+### Animation feel over the motion budget (2026-10-07)
+
+- **The animations shortened or removed in `05` C7 are restored**: the TT settings and
+  game-menu height slides, the playlist row slide after a removal, the Lobby status-dot pulse
+  and Premium sheen, the looping wrong-placement pulse, the challenge border and the
+  correct-placement, celebration and token-flyout timings. Kept from C7: the 280 ms reorder.
+  Why: the owner found every one of them worse and saw no performance problem with the
+  originals. The 500 ms ceiling now applies to plain state transitions; longer motion is an
+  allowlisted owner choice (`00-index.md` decision 19). The placement popup was redesigned
+  (badge, drawn mark, rings, confetti or shards, word-by-word message).
+
+### Largest-CSS gate (2026-10-07)
+
+- **The largest stylesheet may be up to 42 kB** (was 20 kB, `05` §2.1). Why: Vite emits one
+  stylesheet per JS chunk, so after the barrels were dissolved the remaining size is styles that
+  load together on the Game and Lobby routes; splitting them adds requests without saving bytes.
+  Host-only editors load lazily instead (`05` D4; `00-index.md` decision 18).
+
+### Deck-exhaustion discards (2026-10-07)
+
+- **Every card that leaves play without reaching a timeline is discarded**, not only wrong
+  placements and TT skips: cards of host-skipped or auto-skipped turns, cancelled challenges and
+  a removed active player return too. Why: fewer cards are lost for good, so a small deck lasts
+  longer and the finish-on-empty rule triggers as late as possible. A TT skip draws before it
+  discards so a paid skip never returns the same card. Engine rule shipped (`05` A3); the lobby
+  indicator is still pending (`04` WP 2).
+
+### Phase 5 and 6 owner decisions (2026-10-07)
+
+Answers to `05-performance-and-robustness-plan.md` §11 and `06-structure-and-test-plan.md` §10:
+
+- **Deck and discard pile both empty: most cards wins**, ties go to whoever reached that count
+  first. A shared win was declined because it changes the single-winner contract. Implementation
+  pending (`05` A3).
+- **The home-screen ambient background stays** as the only decorative motion, limited to the
+  home screen, `transform`/`opacity`, and paused when the tab is hidden or reduced motion is on.
+- **Dev dependencies approved:** `@vitest/coverage-v8`, `eslint-plugin-react-hooks`; layer
+  boundaries use ESLint's built-in `no-restricted-imports` instead of a plugin.
+- **No CI for now.** The local `verify` script is the gate; the GitHub Actions workflow (`06` T4)
+  stays specified and parked, and would need a compliance review before it is enabled.
+
+### Host-flow owner decisions (2026-10-07)
+
+Answers to the open questions of `docs/plans/2026-10-project-review/04-host-flow-ux-spec.md` §13:
+
+- **Duplicate player names are allowed and suffixed.** A second "Player One" in the same room is
+  stored and shown as "Player One 2" for that room only; identity stays by player id and session.
+  Rejecting the join was declined because it adds a dead end to joining. Resolves the open entry
+  of 2026-04-04. Shipped 2026-10-14 (`22` S1), with room codes matched in any case.
+- **First-run hints are a first-game tutorial.** The two-per-visit cap is removed; every relevant
+  hint appears at the moment its control matters, one at a time, and counts as seen only when
+  acknowledged. "Show hints again" restarts the tutorial immediately. Implementation pending
+  (WP 8).
+- **The bundled deck is called "Practice deck (no audio, 40 songs)".**
+
+### Documentation reset and owner decisions (2026-10-06)
+
+Phase 2 of the review programme (`docs/plans/2026-10-project-review/00-index.md`) rewrote
+`CLAUDE.md`, merged `AGENT.md` into it and deleted that file, trimmed both engineering-rules
+files to layer-specific rules, folded the trimmed 2026-09 remediation documents into the
+review folder as documents 10–20 and archived the originals, archived both architecture
+documents and the GamePage refactor list, and consolidated this log. Product decisions taken
+the same day:
+
+- **Host may skip any turn, any time**, regardless of the active player's connection state.
+  The 60 s safety auto-skip stays as a fallback. (Previous wording limited the manual skip to
+  offline players; the code never did.)
+- **Deck exhaustion → reshuffle.** Discarded cards (wrong placements and TT skips) are
+  reshuffled into a new deck; cards on timelines stay out. The lobby shows how many cards the
+  deck needs for the player count and win target and warns when the deck is smaller.
+  Implementation pending (finding B-06).
+- **No silent practice deck.** Start is blocked until a deck exists; the practice deck is an
+  explicit host choice. Implementation pending (finding U-01).
+- **Touch target 48 × 48 px** everywhere (matches `--size-touch-target`); the 44 px figure
+  is retired.
+- **File-size hard limit 700 lines** = must split; type-specific soft limits remain guidance.
+- **Host creation flow is streamlined, not restructured:** existing screens and navigation
+  stay; no one-tap-host redesign, no wizard.
+- **Spotify login stays per room** pending compliance review; the UI must say so.
+- **PII in logs and audit stays as is** for the trusted-party deployment; revisit before any
+  public deployment.
+- **Keep `react-router-dom`.** A hand-rolled router was rejected: the saving does not justify
+  the risk; bundle work targets lazy loading and `LazyMotion` instead.
+- **No offline action queue.** Actions issued while disconnected are rejected with visible
+  feedback; acknowledged actions with bounded retry are the recovery mechanism.
+- **Overlay history uses same-path router-state entries**, not raw `pushState` (decided by
+  the shipped Settings and Music Setup implementations, E13/E14).
+
+### Music setup and nested playlist editors use one history record per depth (2026-10-02)
+
+Music Setup, the playlist editor and the nested track editor each push one same-path
+router-state entry. Save, cancel, close, browser Back and Android Back remove only the top
+entry, so the stack unwinds one level at a time. Closing the playlist editor removes its
+portal rather than leaving hidden interactive DOM.
+
+### Settings back-button history (2026-10-01)
+
+Opening `AppShellMenu` pushes a same-path React Router state entry; Back removes it and closes
+Settings without leaving the page. Route transitions are keyed by pathname, so a same-path
+entry never remounts the page or rebuilds its socket connection.
+
+### In-game disconnect retention and manual recovery (2026-09-30)
+
+An in-game socket disconnect is temporary absence, not a leave or a kick. The player's
+identity, timeline, tokens and turn position stay reserved while the room exists; only a
+host kick or room closure removes them. All clients see that the active player is offline and
+the host can skip the turn. Host transfer remains a separate 30 s rule. Whole-room reclaim is
+governed by the next entry and must never be implemented by evicting players one by one.
+
+### All-players-offline room expiry (2026-09-30)
+
+If every player in an in-progress room stays offline continuously for one hour the server
+closes the whole room: memberships, redirects, timers, Spotify tokens and playback session
+together. Any reconnect cancels the cleanup; a later all-offline period starts a fresh hour.
+`ALL_PLAYERS_OFFLINE_ROOM_TTL_MS` (default `3600000`), `RECONNECT_GRACE_MS`,
+`HOST_TRANSFER_GRACE_MS` and `TURN_SKIP_GRACE_MS` are validated environment settings.
+
+### Room-directory visibility on trusted networks (2026-09-28)
+
+The room directory exposes each lobby's room code, host display name, player count and
+status to connected players who are not in a room, and only to them. Keep
+`PublicRoomSummary` to those four fields. Appropriate for the trusted LAN/party deployment;
+reassess authentication and public discovery before any unrestricted internet deployment.
+
+### Navigation: push vs. replace (2026-09-08, corrected 2026-10-06)
+
+A navigation caused by state that no longer exists uses `replace`; a navigation the user
+chose uses `push`. Applied: lobby → game on start replaces; room-closed redirects replace;
+join-room submit replaces when it opens the lobby. Rationale: a `push` entry pointing at a
+closed room or a dead lobby produced the unresponsive-home defect (B10) and dead back
+navigation.
+
+**Correction:** the original entry claimed the page-transition route order had been extended
+to `/ → 0, /join → 1, /play → 1, /lobby → 2, /game → 3`. That change was reverted with the
+other unverified hardening (B17) and `AppRoutes.tsx` still uses `/game → 2, /lobby → 1, else
+0`. The extension remains open work in `14-navigation-and-overlays.md` §3.3.
+
+### Documentation reorganisation (2026-09-08)
+
+`docs/` held 26 files with no index. Restructured into `rules/`, `operations/`, `plans/` and
+`archive/` with `docs/README.md` as the index; 15 plans archived with headers stating what
+shipped, what did not and what superseded them; `deploy-render.md` and
+`frontend_rework_sequence_plan.md` deleted (in git history); the token contract extracted into
+`rules/design_system.md`; the metadata product rules folded into `CLAUDE.md`.
+
+### Backend-driven UI transition pattern (2026-04-24)
+
+Frontend animation that reacts to confirmed server state follows one pattern instead of
+component-local timer guessing:
+
+- the controller, or a dedicated transition-event hook built on **pure detector helpers**,
+  emits a typed transition event (for example `skip_track_replace`, celebration, reveal
+  preview);
+- a dedicated coordinator hook (`usePreviewCardTransition`,
+  `useTimelinePanelCelebrationState`, the reveal-preview coordinator) owns the displayed data
+  and the animation phase and decides when the new server data becomes visible;
+- components render the coordinator output as one displayed model, not several raw props;
+- motion variants and cleanup timing live in `features/motion`, grouped by transition
+  responsibility (preview replacement, celebration, action surfaces, token flyouts), with
+  `features/motion/index.ts` as the stable API.
+
+Rationale: realtime data arrives asynchronously; the pattern keeps animation stable,
+unit-testable and traceable. The 2026-04 note that hook-level tests had to wait for a DOM
+runtime is superseded: jsdom and React Testing Library are wired and component tests exist.
+
+### Beat challenge and TT rules (2026-04-07)
+
+The reward, penalty, timing and spending rules are stated in `CLAUDE.md` → Game Rules.
+Rationale recorded here: a successful challenge steals the card so the challenger does not
+guess twice; TT never goes below zero; only the claim is timed so the challenger's placement
+is not rushed; manual host awarding of TT supports party-style judging of artist and title
+callouts before automated earning exists; a TT-buy turn opens no challenge window because
+the placement is server-computed.
+
+### Session identity (2026-04-04, amended 2026-09-30)
+
+The browser stores a stable per-tab player session in `sessionStorage`, so refreshing the
+same tab keeps the player identity while different tabs stay distinct for local multi-tab
+testing. Lobby players may rejoin during the reconnect grace; in-game players stay reserved
+(see the 2026-09-30 entries). The host keeps the role during the 30 s transfer grace.
+
+### MVP room storage and test deck format (2026-04-04)
+
+Rooms are stored in memory only. Local JSON test decks live in
+`apps/server/src/decks/test-decks/`; the server loads every `.json` file there and expects
+`id`, `releaseYear`, `title`, `artist`, `albumTitle` and optional `genre` per card. Duplicate
+`id`s keep the latest loaded card.
+
+### Configurable game rules (2026-04-04)
+
+Win target (3–30, default 10), per-player starting cards with a room default, reveal
+confirmation mode (`host_only` default) and the same-year placement rule were made
+configurable or explicit at this point; definitions are in `CLAUDE.md`. Rationale: a 10-card
+race is too long for a short party round, and same-year ambiguity had to be a rule rather
+than a bug report.
+
+## Still open
+
+Nothing open. (Duplicate player names, open since 2026-04-04, was decided on 2026-10-07.)
 
 # End of Decision Log

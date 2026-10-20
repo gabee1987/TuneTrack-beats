@@ -18,8 +18,7 @@ export async function loadLazyRoute<TModule>(
     window.sessionStorage.removeItem(CHUNK_RELOAD_STORAGE_KEY);
     return routeModule;
   } catch (error) {
-    const hasAlreadyReloaded =
-      window.sessionStorage.getItem(CHUNK_RELOAD_STORAGE_KEY) === "true";
+    const hasAlreadyReloaded = window.sessionStorage.getItem(CHUNK_RELOAD_STORAGE_KEY) === "true";
 
     if (!hasAlreadyReloaded && isDynamicImportError(error)) {
       window.sessionStorage.setItem(CHUNK_RELOAD_STORAGE_KEY, "true");

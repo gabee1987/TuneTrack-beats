@@ -9,11 +9,17 @@ import type {
 } from "../../../features/preferences/uiPreferences";
 import type { ChallengeMarkerTone, GamePageCard } from "../GamePage.types";
 import type { PreviewCardTransitionEvent } from "../gamePageTransitionEvents";
-import { TIMELINE_REORDER_DURATION_MS, TIMELINE_REORDER_EASING } from "../gamePage.constants";
-import { animateTimelineLayoutChanges, getTimelineCardSurfaceStyle } from "../gamePage.utils";
+import { getTimelineCardSurfaceStyle } from "../gamePage.utils";
 import { CorrectPlacementCelebration } from "./CorrectPlacementCelebration";
 import { PreviewCard } from "./PreviewCard";
-import styles from "./timelineStyles";
+import cardsStyles from "./timelineCards.module.css";
+import shellStyles from "./timelinePanelShell.module.css";
+import { resolveArtworkUrl } from "../../../features/ui/resolveArtworkUrl";
+
+// Reorders glide through `glideTimelineReorder`; a dnd-kit layout animation would fight it.
+function neverAnimateLayoutChanges() {
+  return false;
+}
 
 interface TimelineSortableItemProps {
   card: GamePageCard;
@@ -21,6 +27,7 @@ interface TimelineSortableItemProps {
   hiddenCardMode: HiddenCardMode;
   revealedCardMode: RevealedCardMode;
   id: string;
+  hintAnchorRef?: (node: HTMLElement | null) => void;
   isChallengeSlot: boolean;
   isDraggingPreviewCard: boolean;
   isOriginalSlot: boolean;
@@ -46,6 +53,7 @@ function TimelineSortableItemComponent({
   hiddenCardMode,
   revealedCardMode,
   id,
+  hintAnchorRef,
   isChallengeSlot,
   isDraggingPreviewCard,
   isOriginalSlot,
@@ -66,52 +74,54 @@ function TimelineSortableItemComponent({
 }: TimelineSortableItemProps) {
   const shouldCelebrateCorrectPlacement =
     !isPreview && isOriginalSlot && showCorrectPlacementPreview;
-  const { attributes, isDragging, listeners, setNodeRef, transform, transition } =
-    useSortable({
-      id,
-      animateLayoutChanges: animateTimelineLayoutChanges,
-      disabled: isPreview ? isPreviewDisabled : false,
-      transition: {
-        duration: TIMELINE_REORDER_DURATION_MS,
-        easing: TIMELINE_REORDER_EASING,
-      },
-    });
+  const { attributes, isDragging, listeners, setNodeRef, transform, transition } = useSortable({
+    id,
+    animateLayoutChanges: neverAnimateLayoutChanges,
+    disabled: isPreview ? isPreviewDisabled : false,
+    transition: null,
+  });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     ...(!isPreview
-      ? getTimelineCardSurfaceStyle(theme, id, card.artworkUrl, revealedCardMode)
+      ? getTimelineCardSurfaceStyle(theme, id, resolveArtworkUrl(card), revealedCardMode)
       : {}),
   } as CSSProperties;
 
-  const hasArtwork =
-    revealedCardMode === "artwork" && Boolean(card.artworkUrl) && !isPreview;
-  const timelineCardClassName = `${styles.timelineCard} ${
-    hasArtwork ? styles.timelineCardArtwork : ""
+  const hasArtwork = revealedCardMode === "artwork" && Boolean(card.artworkUrl) && !isPreview;
+  const timelineCardClassName = `${cardsStyles.timelineCard} ${
+    hasArtwork ? cardsStyles.timelineCardArtwork : ""
   } ${
     isOriginalSlot && (isPreview || shouldCelebrateCorrectPlacement)
-      ? styles.timelineCardCurrentPick
+      ? cardsStyles.timelineCardCurrentPick
       : ""
-  } ${
-    shouldCelebrateCorrectPlacement ? styles.timelineCardResolvedCorrect : ""
-  } ${
+  } ${shouldCelebrateCorrectPlacement ? cardsStyles.timelineCardResolvedCorrect : ""} ${
     isChallengeSlot
       ? challengeMarkerTone === "failure"
-        ? styles.timelineCardChallengeFailure
-        : styles.timelineCardChallenge
+        ? cardsStyles.timelineCardChallengeFailure
+        : cardsStyles.timelineCardChallenge
       : ""
   }`;
 
   return (
     <div
-      ref={setNodeRef}
-      className={`${styles.timelineItem} ${
-        isPreview ? styles.timelineItemPreview : ""
-      } ${isDragging && isPreview ? styles.timelineItemPreviewDragging : ""} ${
-        isDraggingPreviewCard && isPreview ? styles.timelineItemPreviewGhost : ""
+      ref={(node) => {
+        setNodeRef(node);
+        hintAnchorRef?.(node);
+      }}
+      className={`${shellStyles.timelineItem} ${
+        isPreview ? shellStyles.timelineItemPreview : ""
+      } ${isDragging && isPreview ? shellStyles.timelineItemPreviewDragging : ""} ${
+        isDraggingPreviewCard && isPreview ? shellStyles.timelineItemPreviewGhost : ""
       }`}
+      data-timeline-item-id={id}
+      data-timeline-slot="true"
       style={style}
-      onClick={(!isPreview || showCorrectionPreview) && onCardInfoRequest ? () => onCardInfoRequest(card) : undefined}
+      onClick={
+        (!isPreview || showCorrectionPreview) && onCardInfoRequest
+          ? () => onCardInfoRequest(card)
+          : undefined
+      }
     >
       {isPreview ? (
         <PreviewCard
@@ -136,40 +146,35 @@ function TimelineSortableItemComponent({
           transitionEvent={previewCardTransitionEvent}
           ref={previewCardRef}
         />
+      ) : shouldCelebrateCorrectPlacement && shouldAnimateCorrectPlacement ? (
+        <CorrectPlacementCelebration
+          key={`resolved-correct-placement-${id}`}
+          className={`${timelineCardClassName} ${cardsStyles.timelineCardCurrentPick}`}
+        >
+          <p className={cardsStyles.timelineArtist}>{card.artist}</p>
+          <div className={cardsStyles.timelineCardCenter}>
+            <strong className={cardsStyles.yearText}>
+              {"revealedYear" in card ? card.revealedYear : ""}
+            </strong>
+          </div>
+          <div className={cardsStyles.timelineCardBottom}>
+            <h3 className={cardsStyles.timelineTitle}>{card.title}</h3>
+          </div>
+        </CorrectPlacementCelebration>
       ) : (
-        shouldCelebrateCorrectPlacement && shouldAnimateCorrectPlacement ? (
-          <CorrectPlacementCelebration
-            key={`resolved-correct-placement-${id}`}
-            className={`${timelineCardClassName} ${styles.timelineCardCurrentPick}`}
-          >
-            <p className={styles.timelineArtist}>{card.artist}</p>
-            <div className={styles.timelineCardCenter}>
-              <strong className={styles.yearText}>
+        <article data-timeline-card="true" className={timelineCardClassName}>
+          <>
+            <p className={cardsStyles.timelineArtist}>{card.artist}</p>
+            <div className={cardsStyles.timelineCardCenter}>
+              <strong className={cardsStyles.yearText}>
                 {"revealedYear" in card ? card.revealedYear : ""}
               </strong>
             </div>
-            <div className={styles.timelineCardBottom}>
-              <h3 className={styles.timelineTitle}>{card.title}</h3>
+            <div className={cardsStyles.timelineCardBottom}>
+              <h3 className={cardsStyles.timelineTitle}>{card.title}</h3>
             </div>
-          </CorrectPlacementCelebration>
-        ) : (
-          <article
-            data-timeline-card="true"
-            className={timelineCardClassName}
-          >
-            <>
-              <p className={styles.timelineArtist}>{card.artist}</p>
-              <div className={styles.timelineCardCenter}>
-                <strong className={styles.yearText}>
-                  {"revealedYear" in card ? card.revealedYear : ""}
-                </strong>
-              </div>
-              <div className={styles.timelineCardBottom}>
-                <h3 className={styles.timelineTitle}>{card.title}</h3>
-              </div>
-            </>
-          </article>
-        )
+          </>
+        </article>
       )}
     </div>
   );

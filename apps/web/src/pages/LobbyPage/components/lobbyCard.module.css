@@ -1,0 +1,70 @@
+/* Shared lobby pieces: the card surface, a status line and its waiting pulse. */
+.card {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-elevated);
+}
+
+.statusLine {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
+}
+
+/* Two dots that breathe while the room waits; a status indicator (decision 19), static when reduced. */
+.pulse {
+  display: inline-flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.pulse::before,
+.pulse::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-circle);
+  background: var(--color-accent-brand);
+  animation: pulseDot 1.6s var(--motion-ease-standard) infinite;
+}
+
+.pulse::after {
+  animation-delay: 0.4s;
+}
+
+@keyframes pulseDot {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse::before,
+  .pulse::after {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

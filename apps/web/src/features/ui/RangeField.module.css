@@ -1,0 +1,175 @@
+/* The line ruler, with a quiet − and + at its two ends inside the same track. */
+.rulerRow {
+  display: grid;
+  grid-template-columns: var(--size-touch-target) minmax(0, 1fr) var(--size-touch-target);
+  align-items: stretch;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-surface-interactive);
+  transition: border-color var(--motion-quick-duration) var(--motion-ease-standard);
+}
+
+.rulerRow:active {
+  border-color: color-mix(in srgb, var(--color-accent-brand) 40%, var(--color-border-subtle));
+}
+
+.stepButton {
+  display: grid;
+  place-items: center;
+  min-height: var(--size-touch-target);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+  user-select: none;
+  transition:
+    background-color var(--motion-quick-duration) var(--motion-ease-standard),
+    color var(--motion-quick-duration) var(--motion-ease-standard),
+    opacity var(--motion-quick-duration) var(--motion-ease-standard);
+}
+
+.stepButton:active:not(:disabled) {
+  background: color-mix(in srgb, var(--color-text-primary) 6%, transparent);
+  color: var(--color-text-primary);
+  opacity: 1;
+}
+
+.stepButton:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -2px;
+  opacity: 1;
+}
+
+.stepButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.2;
+}
+
+.snapRange {
+  --snap-range-height: var(--size-touch-target);
+  --snap-range-tick-width: 14px;
+  --snap-range-tick-tall: 16px;
+  position: relative;
+  min-width: 0;
+  outline: 0;
+  touch-action: pan-x;
+}
+
+.snapRange:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--color-focus-ring);
+}
+
+.snapRangeCenterLine {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  width: 2px;
+  height: var(--snap-range-tick-tall);
+  border-radius: var(--radius-pill);
+  transform: translate(-50%, -50%);
+  background: var(--color-accent-brand);
+  pointer-events: none;
+}
+
+.snapRangeScroller {
+  display: flex;
+  align-items: center;
+  height: var(--snap-range-height);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 calc(50% - var(--snap-range-tick-width) / 2);
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-mask-solid) 18%,
+    var(--color-mask-solid) 82%,
+    transparent
+  );
+}
+
+.snapRangeScroller::-webkit-scrollbar {
+  display: none;
+}
+
+.snapRangeTick {
+  flex: 0 0 var(--snap-range-tick-width);
+  width: var(--snap-range-tick-width);
+  height: 100%;
+  border: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  scroll-snap-align: center;
+  cursor: pointer;
+}
+
+.snapRangeTick:disabled {
+  cursor: not-allowed;
+}
+
+/* Lines are drawn at the tall height and scaled down, so a fast drag re-lays out nothing. */
+.snapRangeTickLine {
+  width: 1px;
+  height: var(--snap-range-tick-tall);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-text-secondary) 46%, transparent);
+  transform: scaleY(0.5);
+  transition:
+    transform var(--motion-quick-duration) var(--motion-ease-standard),
+    background-color var(--motion-quick-duration) var(--motion-ease-standard);
+}
+
+.snapRangeTickMajor .snapRangeTickLine {
+  background: color-mix(in srgb, var(--color-text-secondary) 62%, transparent);
+  transform: scaleY(0.69);
+}
+
+.snapRangeTickSelected .snapRangeTickLine {
+  width: 2px;
+  background: var(--color-accent-brand);
+  transform: none;
+}
+
+.compactSnapRange {
+  --snap-range-tick-tall: 14px;
+}
+
+/* The number in the label row settles into place each time the value changes. */
+.valuePop {
+  display: inline-block;
+  animation: rangeValuePop var(--motion-standard-duration) var(--motion-ease-emphasized);
+}
+
+@keyframes rangeValuePop {
+  from {
+    transform: scale(1.1);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rulerRow,
+  .stepButton,
+  .snapRangeTickLine {
+    transition: none;
+  }
+
+  .valuePop {
+    animation: none;
+  }
+}

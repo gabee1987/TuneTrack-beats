@@ -10,6 +10,8 @@ export interface ImportPlaylistSuccessPayload {
   filteredCount: number;
   totalFetched: number;
   playlistName?: string;
+  /** The playlist's own cover on Spotify, kept when the deck is saved. */
+  playlistImageUrl?: string;
 }
 
 export interface ImportPlaylistErrorPayload {

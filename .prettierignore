@@ -1,0 +1,8 @@
+docs/archive/
+**/dist/
+**/coverage/
+**/node_modules/
+apps/e2e/test-results/
+apps/e2e/playwright-report/
+apps/e2e/blob-report/
+package-lock.json

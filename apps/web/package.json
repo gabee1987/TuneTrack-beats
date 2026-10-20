@@ -1,6 +1,6 @@
 {
   "name": "@tunetrack/web",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,17 +8,20 @@
     "prebuild": "npm run build -w @tunetrack/shared",
     "build": "tsc -p tsconfig.json && vite build",
     "preview": "vite preview",
+    "measure:bundle": "node scripts/measure-bundle.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint src --ext .ts,.tsx",
-    "test": "vitest run --config vitest.config.js --pool=threads --passWithNoTests",
-    "verify": "npm run typecheck && npm run lint && npm run test"
+    "lint": "eslint src vite.config.ts vitest.config.ts vitest.setup.ts --ext .ts,.tsx --max-warnings 17",
+    "test": "vitest run --config vitest.config.ts --pool=threads --passWithNoTests",
+    "test:coverage": "vitest run --config vitest.config.ts --pool=threads --passWithNoTests --coverage",
+    "verify": "npm run typecheck && npm run lint && npm run test",
+    "test:watch": "vitest --config vitest.config.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@tanstack/react-virtual": "^3.13.24",
-    "@tunetrack/shared": "0.1.0",
+    "@tunetrack/shared": "0.2.0",
     "framer-motion": "^11.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -27,6 +30,7 @@
     "zustand": "^4.5.4"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.4.8",
     "@testing-library/react": "^16.0.0",
     "@testing-library/user-event": "^14.5.2",
@@ -35,6 +39,7 @@
     "@types/spotify-web-playback-sdk": "^0.1.19",
     "@vitejs/plugin-basic-ssl": "^1.2.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "jsdom": "^25.0.1",
     "vite": "^5.4.0",
     "vite-plugin-pwa": "^0.20.0"
   }

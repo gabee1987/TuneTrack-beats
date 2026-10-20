@@ -1,0 +1,36 @@
+.meter {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.track {
+  height: 4px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-soft);
+}
+
+/* Grows with `transform`, never `width` (`CLAUDE.md` → Animation). */
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-success);
+  transform-origin: left center;
+  transition: transform var(--motion-standard-duration) var(--motion-ease-standard);
+}
+
+.short {
+  background: var(--color-warning);
+}
+
+.text {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+}
+
+.shortText {
+  color: var(--color-warning);
+}

@@ -1,50 +1,18 @@
-import { CHALLENGE_TT_COST, type PublicRoomState } from "@tunetrack/shared";
-import { motion } from "framer-motion";
-import { useRef } from "react";
-import { createPortal } from "react-dom";
-import {
-  MotionPresence,
-  createChallengePanelMotion,
-  createStandardTransition,
-  useReducedMotionPreference,
-} from "../../../features/motion";
-import { useI18n } from "../../../features/i18n";
-import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
-import { useChallengeCountdownLabel } from "../hooks/useChallengeCountdownLabel";
-import styles from "./gamePageActionPanelsStyles";
-import {
-  ActionDock,
-  PrimaryActionButton,
-  SecondaryActionButton,
-  useMobileControlPortalTarget,
-} from "./ActionDock";
-
-function parseCountdownSeconds(challengeCountdownLabel: string | null): number | null {
-  if (!challengeCountdownLabel) {
-    return null;
-  }
-
-  const match = challengeCountdownLabel.match(/(\d+)\s*s\b/i);
-  if (!match || !match[1]) {
-    return null;
-  }
-
-  const parsedSeconds = Number.parseInt(match[1], 10);
-  return Number.isFinite(parsedSeconds) ? parsedSeconds : null;
-}
-
-function getCountdownStageClassName(
-  countdownSeconds: number | null,
-): "challengeCalloutStageYellow" | "challengeCalloutStageOrange" | "challengeCalloutStageRed" {
-  switch (true) {
-    case countdownSeconds !== null && countdownSeconds <= 3:
-      return "challengeCalloutStageRed";
-    case countdownSeconds !== null && countdownSeconds <= 7:
-      return "challengeCalloutStageOrange";
-    default:
-      return "challengeCalloutStageYellow";
-  }
-}
+import { useState } from "react";
+import { FirstRunHint } from "../../../features/hints/FirstRunHint";
+import { useIsPagePresent } from "../../../features/motion";
+import { LayerPortal } from "../../../features/overlay";
+import { useMobileControlPortalTarget } from "../../../features/viewport/useMobileControlPortalTarget";
+import type {
+  ClaimChallengeActionStatus,
+  GamePageChallengePhase,
+  PlaceChallengeActionStatus,
+  ResolveChallengeWindowActionStatus,
+} from "../GamePage.types";
+import { ChallengeActionDock, hasChallengeActions } from "./challengeActions/ChallengeActionDock";
+import { ChallengeCallout } from "./challengeActions/ChallengeCallout";
+import styles from "./gamePageActionPanelsChallenge.module.css";
+import type { TokenSpendAnimationStart } from "./tokenSpendOrigin";
 
 interface ChallengeActionPanelProps {
   canClaimChallenge: boolean;
@@ -52,17 +20,22 @@ interface ChallengeActionPanelProps {
   canResolveChallengeWindow: boolean;
   challengeActionBody: string | null;
   challengeActionTitle: string | null;
+  challengeDeadlineEpochMs: number | null;
+  /** Null outside the challenge phase. */
+  challengePhase: GamePageChallengePhase | null;
+  claimChallengeActionStatus: ClaimChallengeActionStatus;
   currentPlayerTtCount: number;
   handleClaimChallenge: () => void;
   handlePlaceChallenge: () => void;
   handleResolveChallengeWindow: () => void;
+  isClaimChallengePending: boolean;
   isCurrentPlayerTurn: boolean;
-  onTokenSpendAnimationStart?: (payload: {
-    amount: number;
-    originX: number;
-    originY: number;
-  }) => void;
-  roomState: PublicRoomState;
+  isPlaceChallengePending: boolean;
+  isResolveChallengeWindowPending: boolean;
+  onTokenSpendAnimationStart?: TokenSpendAnimationStart;
+  placeChallengeActionStatus: PlaceChallengeActionStatus;
+  resolveChallengeWindowActionStatus: ResolveChallengeWindowActionStatus;
+  ttModeEnabled: boolean;
 }
 
 export function ChallengeActionPanel({
@@ -71,166 +44,73 @@ export function ChallengeActionPanel({
   canResolveChallengeWindow,
   challengeActionBody,
   challengeActionTitle,
+  challengeDeadlineEpochMs,
+  challengePhase,
   currentPlayerTtCount,
-  handleClaimChallenge,
-  handlePlaceChallenge,
-  handleResolveChallengeWindow,
   isCurrentPlayerTurn,
-  onTokenSpendAnimationStart,
-  roomState,
+  ttModeEnabled,
+  ...dockProps
 }: ChallengeActionPanelProps) {
-  const { t } = useI18n();
-  const reduceMotion = useReducedMotionPreference();
   const portalTarget = useMobileControlPortalTarget();
-  const beatCostBadgeRef = useRef<HTMLSpanElement | null>(null);
+  const isPresent = useIsPagePresent();
+  const [challengeHintAnchor, setChallengeHintAnchor] = useState<HTMLElement | null>(null);
+  const availability = {
+    canClaimChallenge,
+    canConfirmBeatPlacement,
+    canResolveChallengeWindow,
+    isOpenChallengeWindow: challengePhase === "open",
+  };
 
-  const challengeState = roomState.status === "challenge" ? roomState.challengeState : null;
-  const isOpenChallengeWindow = challengeState?.phase === "open";
-  const challengeDeadlineEpochMs = challengeState?.challengeDeadlineEpochMs ?? null;
-  const challengeCountdownLabel = useChallengeCountdownLabel(
-    challengeDeadlineEpochMs,
-    isOpenChallengeWindow,
-  );
-  const isManualChallengeWindow = isOpenChallengeWindow && !challengeDeadlineEpochMs;
-  const isActivePlayerChallengeView = isOpenChallengeWindow && isCurrentPlayerTurn;
-
-  const challengeStatusText = challengeCountdownLabel
-    ? challengeCountdownLabel
-    : challengeState?.phase === "claimed"
-      ? t("game.challenge.beatWasClaimed")
-      : isActivePlayerChallengeView
-        ? canResolveChallengeWindow
-          ? t("game.challenge.youCloseBeatWindow")
-          : t("game.challenge.hostClosesBeatWindow")
-        : t("game.challenge.hostClosesBeatWindow");
-  const hasTimedChallengeWindow = isOpenChallengeWindow && Boolean(challengeDeadlineEpochMs);
-  const countdownSeconds = parseCountdownSeconds(challengeCountdownLabel);
-  const countdownStageClassName = styles[getCountdownStageClassName(countdownSeconds)];
-  const panelClassName = `${styles.challengeCallout} ${countdownStageClassName}`;
-  const titleText =
-    challengeState?.phase === "open"
-      ? isActivePlayerChallengeView
-        ? t("game.challenge.beatWindowOpen")
-        : t("game.challenge.callBeat")
-      : challengeActionTitle;
-  const bodyText =
-    challengeState?.phase === "open"
-      ? isActivePlayerChallengeView
-        ? canResolveChallengeWindow
-          ? isManualChallengeWindow
-            ? t("game.challenge.yourDropManualCanClose")
-            : t("game.challenge.yourDropTimed")
-          : isManualChallengeWindow
-            ? t("game.challenge.yourDropManualOthers")
-            : t("game.challenge.yourDropTimed")
-        : isManualChallengeWindow
-          ? t("game.challenge.badDropManual")
-          : t("game.challenge.badDropTimed")
-      : challengeActionBody;
-  function resolveSpendOrigin(
-    fallbackButton: HTMLButtonElement,
-    badgeElement: HTMLSpanElement | null,
-  ) {
-    const sourceElement = badgeElement ?? fallbackButton;
-    const sourceBounds = sourceElement.getBoundingClientRect();
-    return {
-      originX: sourceBounds.left + sourceBounds.width / 2,
-      originY: sourceBounds.top + sourceBounds.height / 2,
-    };
+  // Portaled into `document.body`, this outlives the page's exit transform exactly as the
+  // action dock does — see the note in `ActionDock`.
+  if (portalTarget && !isPresent) {
+    return null;
   }
 
-  const nestedDockClassName = portalTarget ? "" : styles.floatingActionDockInChallengeStack;
-
-  const actionDock = isOpenChallengeWindow ? (
-    canClaimChallenge || canResolveChallengeWindow ? (
-      <ActionDock className={nestedDockClassName}>
-        {canClaimChallenge ? (
-          <PrimaryActionButton
-            onClick={(event) => {
-              const origin = resolveSpendOrigin(
-                event.currentTarget,
-                beatCostBadgeRef.current,
-              );
-              onTokenSpendAnimationStart?.({
-                amount: -CHALLENGE_TT_COST,
-                ...origin,
-              });
-              handleClaimChallenge();
-            }}
-            ttCost={CHALLENGE_TT_COST}
-            ttCostBadgeRef={beatCostBadgeRef}
-          >
-            {t("game.controls.beat")}
-          </PrimaryActionButton>
-        ) : null}
-        {canResolveChallengeWindow ? (
-          <SecondaryActionButton onClick={handleResolveChallengeWindow}>
-            {t("game.controls.resolve")}
-          </SecondaryActionButton>
-        ) : null}
-      </ActionDock>
-    ) : null
-  ) : canConfirmBeatPlacement ? (
-    <ActionDock className={nestedDockClassName}>
-      <PrimaryActionButton onClick={handlePlaceChallenge}>
-        {t("game.controls.confirmBeat")}
-      </PrimaryActionButton>
-    </ActionDock>
-  ) : null;
-
   const challengeCallout = (
-      <MotionPresence>
-        {challengeState ? (
-          <motion.section
-            animate="animate"
-            aria-live="polite"
-            className={panelClassName}
-            exit="exit"
-            initial="initial"
-            key="challenge-callout"
-            transition={createStandardTransition(reduceMotion)}
-            variants={createChallengePanelMotion(reduceMotion)}
-          >
-            {hasTimedChallengeWindow && !reduceMotion ? (
-              <span
-                aria-hidden="true"
-                className={styles.challengePulseBorder}
-                key={`challenge-pulse-${countdownSeconds ?? "tick"}`}
-              />
-            ) : null}
-            <div className={styles.challengeCalloutInner}>
-              <h3 className={styles.challengeTitle}>{titleText}</h3>
-              {bodyText ? <p className={styles.challengeText}>{bodyText}</p> : null}
-              <div className={styles.challengeMetaRow}>
-                <div className={styles.challengeCountdownBadge}>
-                  <span className={styles.challengeCountdownDot} aria-hidden="true" />
-                  <span>{challengeStatusText}</span>
-                </div>
-
-                {roomState.settings.ttModeEnabled ? (
-                  <span className={styles.challengeTokenChip}>
-                    {t("game.challenge.yourTokens")}{" "}
-                    <TokenCountAmount amount={currentPlayerTtCount} />
-                  </span>
-                ) : null}
-              </div>
-            </div>
-          </motion.section>
-        ) : null}
-      </MotionPresence>
+    <ChallengeCallout
+      canResolveChallengeWindow={canResolveChallengeWindow}
+      challengeActionBody={challengeActionBody}
+      challengeActionTitle={challengeActionTitle}
+      challengeDeadlineEpochMs={challengeDeadlineEpochMs}
+      challengePhase={challengePhase}
+      currentPlayerTtCount={currentPlayerTtCount}
+      isCurrentPlayerTurn={isCurrentPlayerTurn}
+      ttModeEnabled={ttModeEnabled}
+    />
+  );
+  const actionDock = (
+    <ChallengeActionDock
+      {...dockProps}
+      {...availability}
+      claimButtonRef={setChallengeHintAnchor}
+      className={portalTarget ? "" : styles.floatingActionDockInChallengeStack}
+    />
+  );
+  const challengeHint = (
+    <FirstRunHint anchor={challengeHintAnchor} id="game-challenge" isEligible={canClaimChallenge} />
   );
 
-  return portalTarget ? (
-    <>
-      {createPortal(challengeCallout, portalTarget)}
-      {challengeState ? actionDock : null}
-    </>
-  ) : actionDock ? (
+  if (portalTarget) {
+    return (
+      <>
+        <LayerPortal>{challengeCallout}</LayerPortal>
+        {challengePhase ? actionDock : null}
+        {challengeHint}
+      </>
+    );
+  }
+
+  return hasChallengeActions(availability) ? (
     <div className={styles.challengeActionStack}>
       {challengeCallout}
       {actionDock}
+      {challengeHint}
     </div>
   ) : (
-    challengeCallout
+    <>
+      {challengeCallout}
+      {challengeHint}
+    </>
   );
 }

@@ -1,18 +1,16 @@
-import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  createAppShellMenuSheetMotionTargets,
-  createMenuTabActivationTransition,
-  createStandardTransition,
-  useReducedMotionPreference,
-} from "../../motion";
+import { AnimatePresence, LayoutGroup, m } from "framer-motion";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createMenuTabActivationTransition, useReducedMotionPreference } from "../../motion";
 import { useI18n } from "../../i18n";
+import { subscribeViewportResize } from "../../viewport/viewportStore";
 import type {
   AppShellMenuFooterAction,
   AppShellMenuPreferencesState,
   AppShellMenuTab,
 } from "../AppShellMenu.types";
-import { Button } from "../../ui/primitives";
+import { Button, ChipButton } from "../../ui/primitives";
+import { appVersion } from "../whats-new/releaseNotes";
+import { WhatsNewView } from "../whats-new/WhatsNewView";
 import { AppShellMenuPanels } from "./AppShellMenuPanels";
 import styles from "../AppShellMenu.module.css";
 
@@ -21,8 +19,7 @@ interface AppShellMenuSheetProps {
   activeTabId: AppShellMenuTab["id"] | undefined;
   footerAction?: AppShellMenuFooterAction;
   footerActions?: AppShellMenuFooterAction[];
-  isMobileSheet: boolean;
-  onClose: () => void;
+  onClose: (afterClose?: () => void) => void;
   preferencesState: AppShellMenuPreferencesState;
   subtitle: string;
   tabs: AppShellMenuTab[];
@@ -34,7 +31,6 @@ export function AppShellMenuSheet({
   activeTabId,
   footerAction,
   footerActions,
-  isMobileSheet,
   onClose,
   preferencesState,
   subtitle,
@@ -46,8 +42,8 @@ export function AppShellMenuSheet({
   const panelRef = useRef<HTMLElement | null>(null);
   const [showTopFade, setShowTopFade] = useState(false);
   const [showBottomFade, setShowBottomFade] = useState(false);
+  const [isWhatsNewOpen, setIsWhatsNewOpen] = useState(false);
   const resolvedFooterActions = footerActions ?? (footerAction ? [footerAction] : []);
-  const menuSheetMotionTargets = createAppShellMenuSheetMotionTargets(reduceMotion, isMobileSheet);
   const updatePanelFadeState = useCallback(() => {
     const panelElement = panelRef.current;
     if (!panelElement) {
@@ -63,9 +59,13 @@ export function AppShellMenuSheet({
     setShowBottomFade(hasOverflow && !atBottom);
   }, []);
 
-  useEffect(() => {
+  // Layout effect, not effect: computed after paint the edge fades appear a frame late,
+  // which reads as a flicker every time the panel opens.
+  useLayoutEffect(() => {
     updatePanelFadeState();
+  }, [activeTabId, updatePanelFadeState]);
 
+  useEffect(() => {
     const panelElement = panelRef.current;
     if (!panelElement) {
       return;
@@ -79,38 +79,36 @@ export function AppShellMenuSheet({
     panelElement.addEventListener("scroll", updatePanelFadeState, {
       passive: true,
     });
-    window.addEventListener("resize", updatePanelFadeState);
+    const unsubscribeResize = subscribeViewportResize(updatePanelFadeState);
 
     return () => {
       resizeObserver.disconnect();
       panelElement.removeEventListener("scroll", updatePanelFadeState);
-      window.removeEventListener("resize", updatePanelFadeState);
+      unsubscribeResize();
     };
   }, [activeTabId, updatePanelFadeState]);
 
-  const handleFooterActionClick = useCallback((action: AppShellMenuFooterAction) => {
-    onClose();
-    action.onClick();
-  }, [onClose]);
+  const handleFooterActionClick = useCallback(
+    (action: AppShellMenuFooterAction) => {
+      onClose(action.onClick);
+    },
+    [onClose],
+  );
 
   return (
-    <motion.aside
-      animate={menuSheetMotionTargets.animate}
-      className={styles.menuSheet}
-      exit={menuSheetMotionTargets.exit}
-      initial={menuSheetMotionTargets.initial}
-      onClick={(event) => event.stopPropagation()}
-      transition={createStandardTransition(reduceMotion)}
-    >
+    <>
       <header className={styles.menuHeader}>
         <div>
           {subtitle ? <p className={styles.menuSubtitle}>{subtitle}</p> : null}
           <h2 className={styles.menuTitle}>{title}</h2>
+          <ChipButton className={styles.whatsNewButton} onClick={() => setIsWhatsNewOpen(true)}>
+            {t("whatsNew.open", { version: appVersion })}
+          </ChipButton>
         </div>
         <button
           aria-label={t("appShell.menu.close")}
           className={`${styles.menuTrigger} ${styles.menuCloseButton}`}
-          onClick={onClose}
+          onClick={() => onClose()}
           title={t("appShell.menu.close")}
           type="button"
         >
@@ -139,7 +137,7 @@ export function AppShellMenuSheet({
             >
               <AnimatePresence>
                 {tab.id === activeTabId ? (
-                  <motion.span
+                  <m.span
                     animate={{ opacity: 1 }}
                     className={styles.tabButtonActiveBackground}
                     exit={{ opacity: 0 }}
@@ -148,7 +146,7 @@ export function AppShellMenuSheet({
                     transition={createMenuTabActivationTransition(reduceMotion)}
                   >
                     <span className={styles.tabButtonActiveGlow} />
-                  </motion.span>
+                  </m.span>
                 ) : null}
               </AnimatePresence>
               <span className={styles.tabButtonLabel}>{tab.label}</span>
@@ -172,6 +170,7 @@ export function AppShellMenuSheet({
           {resolvedFooterActions.map((action, index) =>
             action.tone === "danger" ? (
               <Button
+                disabled={action.disabled}
                 fullWidth
                 key={`${action.label}-${index}`}
                 onClick={() => handleFooterActionClick(action)}
@@ -182,6 +181,7 @@ export function AppShellMenuSheet({
               </Button>
             ) : (
               <Button
+                disabled={action.disabled}
                 fullWidth
                 key={`${action.label}-${index}`}
                 onClick={() => handleFooterActionClick(action)}
@@ -194,6 +194,8 @@ export function AppShellMenuSheet({
           )}
         </footer>
       ) : null}
-    </motion.aside>
+
+      <WhatsNewView isOpen={isWhatsNewOpen} onClose={() => setIsWhatsNewOpen(false)} />
+    </>
   );
 }

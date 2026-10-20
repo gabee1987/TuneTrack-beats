@@ -1,32 +1,76 @@
-import type { GameTrackCard } from "@tunetrack/game-engine";
-import { describe, expect, it } from "vitest";
-import { RoomRegistry } from "../src/rooms/RoomRegistry.js";
+import { describe, expect, it, vi } from "vitest";
+import { createTestRoomCore } from "./support/roomCore.js";
+import { fourDecadeDeck } from "./support/decks.js";
 
 describe("host transfer", () => {
-  it("does not automatically transfer lobby host while they are reconnecting", async () => {
-    const roomRegistry = new RoomRegistry(undefined, 1_000, 10);
+  it("waits 30 seconds before transferring an in-game host by default", () => {
+    vi.useFakeTimers();
+
+    try {
+      const roomCore = createTestRoomCore();
+      const hostJoin = roomCore.lobby.createRoom(
+        "default-transfer-grace-room",
+        "Host Player",
+        "host-socket",
+        "host-session",
+      );
+      const guestJoin = roomCore.lobby.addPlayerToRoom(
+        "default-transfer-grace-room",
+        "Guest Player",
+        "guest-socket",
+        "guest-session",
+      );
+      roomCore.gameplay.startGame(
+        "host-socket",
+        { roomId: "default-transfer-grace-room" },
+        fourDecadeDeck("host-transfer-track"),
+      );
+
+      roomCore.connection.removePlayerBySocketId("host-socket");
+      vi.advanceTimersByTime(29_999);
+
+      expect(
+        roomCore.store.getRoomStateForMember("guest-socket", "default-transfer-grace-room").hostId,
+      ).toBe(hostJoin.playerId);
+
+      vi.advanceTimersByTime(1);
+
+      expect(
+        roomCore.store.getRoomStateForMember("guest-socket", "default-transfer-grace-room").hostId,
+      ).toBe(guestJoin.playerId);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("does not automatically transfer lobby host while they are reconnecting", () => {
+    vi.useFakeTimers();
+    const roomCore = createTestRoomCore({
+      reconnectGracePeriodMs: 1_000,
+      hostTransferGracePeriodMs: 10,
+    });
     const changedRoomStates: string[] = [];
-    const hostJoin = roomRegistry.createRoom(
+    const hostJoin = roomCore.lobby.createRoom(
       "lobby-host-room",
       "Host Player",
       "host-socket",
       "host-session",
     );
-    const guestJoin = roomRegistry.addPlayerToRoom(
+    const guestJoin = roomCore.lobby.addPlayerToRoom(
       "lobby-host-room",
       "Guest Player",
       "guest-socket",
       "guest-session",
     );
-    roomRegistry.setRoomStateChangedListener((roomState) => {
+    roomCore.events.on("roomStateChanged", (roomState) => {
       changedRoomStates.push(roomState.hostId);
     });
 
-    const roomAfterDisconnect = roomRegistry.removePlayerBySocketId("host-socket");
+    const roomAfterDisconnect = roomCore.connection.removePlayerBySocketId("host-socket");
 
-    await new Promise((resolve) => setTimeout(resolve, 25));
+    vi.advanceTimersByTime(25);
 
-    const roomAfterGuestReconnect = roomRegistry.addPlayerToRoom(
+    const roomAfterGuestReconnect = roomCore.lobby.addPlayerToRoom(
       "lobby-host-room",
       "Guest Player",
       "refreshed-guest-socket",
@@ -37,30 +81,31 @@ describe("host transfer", () => {
     expect(roomAfterGuestReconnect.roomState.hostId).toBe(hostJoin.playerId);
     expect(roomAfterGuestReconnect.playerId).toBe(guestJoin.playerId);
     expect(changedRoomStates).not.toContain(guestJoin.playerId);
+    vi.useRealTimers();
   });
 
   it("keeps an active-game host player reserved during the transfer grace period", () => {
-    const roomRegistry = new RoomRegistry();
-    const hostJoin = roomRegistry.createRoom(
+    const roomCore = createTestRoomCore();
+    const hostJoin = roomCore.lobby.createRoom(
       "active-transfer-room",
       "Host Player",
       "host-socket",
       "host-session",
     );
-    const guestJoin = roomRegistry.addPlayerToRoom(
+    const guestJoin = roomCore.lobby.addPlayerToRoom(
       "active-transfer-room",
       "Guest Player",
       "guest-socket",
       "guest-session",
     );
 
-    roomRegistry.startGame(
+    roomCore.gameplay.startGame(
       "host-socket",
       { roomId: "active-transfer-room" },
-      getHostTransferDeck(),
+      fourDecadeDeck("host-transfer-track"),
     );
 
-    const roomAfterDisconnect = roomRegistry.removePlayerBySocketId("host-socket");
+    const roomAfterDisconnect = roomCore.connection.removePlayerBySocketId("host-socket");
 
     expect(roomAfterDisconnect?.hostId).toBe(hostJoin.playerId);
     expect(roomAfterDisconnect?.players).toHaveLength(2);
@@ -79,24 +124,28 @@ describe("host transfer", () => {
   });
 
   it("restores a disconnected host as the same host player during the transfer grace period", () => {
-    const roomRegistry = new RoomRegistry();
-    const hostJoin = roomRegistry.createRoom(
+    const roomCore = createTestRoomCore();
+    const hostJoin = roomCore.lobby.createRoom(
       "former-host-room",
       "Host Player",
       "host-socket",
       "host-session",
     );
-    roomRegistry.addPlayerToRoom(
+    roomCore.lobby.addPlayerToRoom(
       "former-host-room",
       "Guest Player",
       "guest-socket",
       "guest-session",
     );
 
-    roomRegistry.startGame("host-socket", { roomId: "former-host-room" }, getHostTransferDeck());
+    roomCore.gameplay.startGame(
+      "host-socket",
+      { roomId: "former-host-room" },
+      fourDecadeDeck("host-transfer-track"),
+    );
 
-    roomRegistry.removePlayerBySocketId("host-socket");
-    const restoredHostJoin = roomRegistry.addPlayerToRoom(
+    roomCore.connection.removePlayerBySocketId("host-socket");
+    const restoredHostJoin = roomCore.lobby.addPlayerToRoom(
       "former-host-room",
       "Host Player",
       "refreshed-host-socket",
@@ -116,26 +165,26 @@ describe("host transfer", () => {
   });
 
   it("passes the turn to the next connected player when the active player disconnects", () => {
-    const roomRegistry = new RoomRegistry();
-    const hostJoin = roomRegistry.createRoom(
+    const roomCore = createTestRoomCore();
+    const hostJoin = roomCore.lobby.createRoom(
       "active-turn-room",
       "Host Player",
       "host-socket",
       "host-session",
     );
-    roomRegistry.addPlayerToRoom(
+    roomCore.lobby.addPlayerToRoom(
       "active-turn-room",
       "Guest Player",
       "guest-socket",
       "guest-session",
     );
-    const startedRoom = roomRegistry.startGame(
+    const startedRoom = roomCore.gameplay.startGame(
       "host-socket",
       { roomId: "active-turn-room" },
-      getHostTransferDeck(),
+      fourDecadeDeck("host-transfer-track"),
     );
 
-    const roomAfterDisconnect = roomRegistry.removePlayerBySocketId("host-socket");
+    const roomAfterDisconnect = roomCore.connection.removePlayerBySocketId("host-socket");
 
     expect(startedRoom.turn?.activePlayerId).toBe(hostJoin.playerId);
     expect(roomAfterDisconnect?.turn).toEqual(
@@ -151,16 +200,20 @@ describe("host transfer", () => {
   });
 
   it("does not pass the turn when no connected replacement player exists", () => {
-    const roomRegistry = new RoomRegistry();
-    const hostJoin = roomRegistry.createRoom(
+    const roomCore = createTestRoomCore();
+    const hostJoin = roomCore.lobby.createRoom(
       "solo-turn-room",
       "Host Player",
       "host-socket",
       "host-session",
     );
-    roomRegistry.startGame("host-socket", { roomId: "solo-turn-room" }, getHostTransferDeck());
+    roomCore.gameplay.startGame(
+      "host-socket",
+      { roomId: "solo-turn-room" },
+      fourDecadeDeck("host-transfer-track"),
+    );
 
-    const roomAfterDisconnect = roomRegistry.removePlayerBySocketId("host-socket");
+    const roomAfterDisconnect = roomCore.connection.removePlayerBySocketId("host-socket");
 
     expect(roomAfterDisconnect?.hostId).toBe(hostJoin.playerId);
     expect(roomAfterDisconnect?.turn?.activePlayerId).toBe(hostJoin.playerId);
@@ -174,24 +227,24 @@ describe("host transfer", () => {
   });
 
   it("rejects manual host transfer to a disconnected player", () => {
-    const roomRegistry = new RoomRegistry(undefined, 10_000);
-    roomRegistry.createRoom(
+    const roomCore = createTestRoomCore({ reconnectGracePeriodMs: 10_000 });
+    roomCore.lobby.createRoom(
       "disconnected-target-room",
       "Host Player",
       "host-socket",
       "host-session",
     );
-    const guestJoin = roomRegistry.addPlayerToRoom(
+    const guestJoin = roomCore.lobby.addPlayerToRoom(
       "disconnected-target-room",
       "Guest Player",
       "guest-socket",
       "guest-session",
     );
 
-    roomRegistry.removePlayerBySocketId("guest-socket");
+    roomCore.connection.removePlayerBySocketId("guest-socket");
 
     expect(() =>
-      roomRegistry.transferHost("host-socket", {
+      roomCore.connection.transferHost("host-socket", {
         roomId: "disconnected-target-room",
         playerId: guestJoin.playerId,
       }),
@@ -199,14 +252,14 @@ describe("host transfer", () => {
   });
 
   it("rejects manual host transfer by a non-host", () => {
-    const roomRegistry = new RoomRegistry();
-    const hostJoin = roomRegistry.createRoom(
+    const roomCore = createTestRoomCore();
+    const hostJoin = roomCore.lobby.createRoom(
       "non-host-transfer-room",
       "Host Player",
       "host-socket",
       "host-session",
     );
-    roomRegistry.addPlayerToRoom(
+    roomCore.lobby.addPlayerToRoom(
       "non-host-transfer-room",
       "Guest Player",
       "guest-socket",
@@ -214,43 +267,10 @@ describe("host transfer", () => {
     );
 
     expect(() =>
-      roomRegistry.transferHost("guest-socket", {
+      roomCore.connection.transferHost("guest-socket", {
         roomId: "non-host-transfer-room",
         playerId: hostJoin.playerId,
       }),
     ).toThrow("ONLY_HOST_CAN_TRANSFER_HOST");
   });
 });
-
-function getHostTransferDeck(): GameTrackCard[] {
-  return [
-    {
-      id: "host-transfer-track-1",
-      title: "Track 1",
-      artist: "Artist 1",
-      albumTitle: "Album 1",
-      releaseYear: 1980,
-    },
-    {
-      id: "host-transfer-track-2",
-      title: "Track 2",
-      artist: "Artist 2",
-      albumTitle: "Album 2",
-      releaseYear: 1990,
-    },
-    {
-      id: "host-transfer-track-3",
-      title: "Track 3",
-      artist: "Artist 3",
-      albumTitle: "Album 3",
-      releaseYear: 2000,
-    },
-    {
-      id: "host-transfer-track-4",
-      title: "Track 4",
-      artist: "Artist 4",
-      albumTitle: "Album 4",
-      releaseYear: 2010,
-    },
-  ];
-}

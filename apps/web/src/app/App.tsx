@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
+import { ScrollIndicator } from "../features/app-shell/ScrollIndicator";
 import { I18nProvider } from "../features/i18n";
 import { AppLoadingProvider } from "../features/loading";
+import { MotionFeatureProvider } from "../features/motion";
 import { useUiPreferencesStore } from "../features/preferences/uiPreferences";
 import { applyTheme } from "../features/theme/themeRegistry";
 import { AppToastProvider } from "../features/toast";
@@ -17,11 +19,14 @@ export function App() {
 
   return (
     <I18nProvider>
-      <AppLoadingProvider>
-        <AppToastProvider>
-          <RouterProvider fallbackElement={<AppRouteFallback />} router={router} />
-        </AppToastProvider>
-      </AppLoadingProvider>
+      <MotionFeatureProvider>
+        <AppLoadingProvider>
+          <AppToastProvider>
+            <RouterProvider fallbackElement={<AppRouteFallback />} router={router} />
+            <ScrollIndicator />
+          </AppToastProvider>
+        </AppLoadingProvider>
+      </MotionFeatureProvider>
     </I18nProvider>
   );
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { mapSpotifyTrackToGameCard } from "../../src/spotify/SpotifyTrackMapper.js";
-import type { SpotifyApiTrack } from "../../src/spotify/SpotifyApiClient.js";
+import type { SpotifyApiTrack } from "../../src/spotify/spotifyApiTypes.js";
 
 function buildTrack(overrides: Partial<SpotifyApiTrack> = {}): SpotifyApiTrack {
   return {

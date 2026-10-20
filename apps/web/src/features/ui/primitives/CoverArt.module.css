@@ -1,0 +1,89 @@
+.cover {
+  display: inline-grid;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: var(--radius-xs);
+  background: var(--color-surface-interactive);
+}
+
+.sm {
+  width: 40px;
+  height: 40px;
+}
+
+.md {
+  width: 56px;
+  height: 56px;
+}
+
+.lg {
+  width: 160px;
+  height: 160px;
+  border-radius: var(--radius-sm);
+}
+
+.hero {
+  width: 200px;
+  height: 200px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-overlay);
+}
+
+.fill {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-overlay);
+}
+
+.mosaic {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--color-on-cover-fallback);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.sm .fallback {
+  font-size: var(--type-label-size);
+}
+
+.md .fallback {
+  font-size: var(--type-body-lg-size);
+}
+
+.lg .fallback,
+.hero .fallback,
+.fill .fallback {
+  font-size: var(--type-display-size);
+}
+
+.fallback1 {
+  background: var(--color-cover-fallback-1);
+}
+
+.fallback2 {
+  background: var(--color-cover-fallback-2);
+}
+
+.fallback3 {
+  background: var(--color-cover-fallback-3);
+}
+
+.fallback4 {
+  background: var(--color-cover-fallback-4);
+}

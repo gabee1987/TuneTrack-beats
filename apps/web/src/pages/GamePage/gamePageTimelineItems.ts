@@ -1,4 +1,4 @@
-import type { TimelineCardPublic } from "@tunetrack/shared";
+import type { TimelineCardPublic } from "@tunetrack/shared/client";
 import type { GamePageCard } from "./GamePage.types";
 
 export const TIMELINE_PREVIEW_ITEM_ID = "timeline-preview-card";

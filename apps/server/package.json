@@ -1,20 +1,21 @@
 {
   "name": "@tunetrack/server",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "prebuild": "npm run build -w @tunetrack/shared && npm run build -w @tunetrack/game-engine",
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint src tests --ext .ts",
-    "test": "vitest run --config vitest.config.ts --passWithNoTests"
+    "build": "tsc -p tsconfig.json && node -e \"require('node:fs').cpSync('src/decks/test-decks', 'dist/decks/test-decks', { recursive: true })\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
+    "lint": "eslint src tests vitest.config.ts vitest.setup.ts --ext .ts",
+    "test": "vitest run --config vitest.config.ts --passWithNoTests",
+    "test:coverage": "vitest run --config vitest.config.ts --passWithNoTests --coverage"
   },
   "dependencies": {
-    "@tunetrack/game-engine": "0.1.0",
-    "@tunetrack/shared": "0.1.0",
+    "@tunetrack/game-engine": "0.2.0",
+    "@tunetrack/shared": "0.2.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",

@@ -7,9 +7,7 @@ import {
 
 describe("gamePageTransitionEvents", () => {
   it("builds an explicit skip-track preview transition event", () => {
-    expect(
-      createSkipTrackPreviewCardTransitionEvent(3, "track-old", "track-new"),
-    ).toEqual({
+    expect(createSkipTrackPreviewCardTransitionEvent(3, "track-old", "track-new")).toEqual({
       eventKey: 3,
       nextCardId: "track-new",
       previousCardId: "track-old",

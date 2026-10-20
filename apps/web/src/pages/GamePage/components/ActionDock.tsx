@@ -1,86 +1,77 @@
-import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import { m, useIsPresent } from "framer-motion";
+import { LayerPortal } from "../../../features/overlay";
 import {
   createActionDockMotion,
   createStandardTransition,
   useReducedMotionPreference,
 } from "../../../features/motion";
 import { TokenCountAmount } from "../../../features/ui/TokenCountAmount";
-import styles from "./gamePageActionPanelsStyles";
-
-const MOBILE_CONTROL_MEDIA_QUERY = "(max-width: 720px), (hover: none) and (pointer: coarse)";
-
-export function useMobileControlPortalTarget(): HTMLElement | null {
-  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    function updatePortalTarget() {
-      const shouldPortal =
-        typeof window !== "undefined" &&
-        window.matchMedia(MOBILE_CONTROL_MEDIA_QUERY).matches;
-
-      setPortalTarget(shouldPortal ? document.body : null);
-    }
-
-    updatePortalTarget();
-
-    const mediaQuery = window.matchMedia(MOBILE_CONTROL_MEDIA_QUERY);
-    mediaQuery.addEventListener("change", updatePortalTarget);
-    window.addEventListener("orientationchange", updatePortalTarget);
-    window.addEventListener("resize", updatePortalTarget);
-
-    return () => {
-      mediaQuery.removeEventListener("change", updatePortalTarget);
-      window.removeEventListener("orientationchange", updatePortalTarget);
-      window.removeEventListener("resize", updatePortalTarget);
-    };
-  }, []);
-
-  return portalTarget;
-}
+import { useMobileControlPortalTarget } from "../../../features/viewport/useMobileControlPortalTarget";
+import styles from "./gamePageActionPanelsDock.module.css";
 
 interface ActionDockProps {
   children: React.ReactNode;
   className?: string | undefined;
+  containerRef?: React.Ref<HTMLDivElement>;
 }
 
-export function ActionDock({ children, className }: ActionDockProps) {
+export function ActionDock({ children, className, containerRef }: ActionDockProps) {
   const reduceMotion = useReducedMotionPreference();
   const portalTarget = useMobileControlPortalTarget();
+  const isPresent = useIsPresent();
+
+  /**
+   * On mobile the dock is portaled to `document.body`, so the page's exit transform never
+   * carries it away. Its exit animation only fades it to `opacity: 0`, which still receives
+   * taps — leaving an invisible dock pinned over whatever screen comes next, right where
+   * the home screen's primary action sits (defect B10).
+   *
+   * An inline dock travels with the page and is harmless, so only the portaled one goes.
+   */
+  if (portalTarget && !isPresent) {
+    return null;
+  }
+
   const dock = (
-    <motion.div
+    <m.div
+      ref={containerRef}
       animate="animate"
       className={`${styles.floatingActionDock}${className ? ` ${className}` : ""}`}
+      data-action-dock="true"
       exit="exit"
       initial="initial"
-      layout
       transition={createStandardTransition(reduceMotion)}
       variants={createActionDockMotion(reduceMotion)}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 
-  return portalTarget ? createPortal(dock, portalTarget) : dock;
+  return portalTarget ? <LayerPortal>{dock}</LayerPortal> : dock;
 }
 
 interface ActionButtonProps {
+  buttonRef?: React.Ref<HTMLButtonElement>;
   children: React.ReactNode;
+  disabled?: boolean;
   onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
   ttCost?: number;
   ttCostBadgeRef?: React.Ref<HTMLSpanElement>;
 }
 
 export function PrimaryActionButton({
+  buttonRef,
   children,
+  disabled,
   onClick,
   ttCost,
   ttCostBadgeRef,
 }: ActionButtonProps) {
   return (
     <button
+      ref={buttonRef}
       className={styles.floatingPrimaryButton}
+      disabled={disabled}
       onClick={onClick}
       type="button"
     >
@@ -95,14 +86,18 @@ export function PrimaryActionButton({
 }
 
 export function SecondaryActionButton({
+  buttonRef,
   children,
+  disabled,
   onClick,
   ttCost,
   ttCostBadgeRef,
 }: ActionButtonProps) {
   return (
     <button
+      ref={buttonRef}
       className={styles.floatingSecondaryButton}
+      disabled={disabled}
       onClick={onClick}
       type="button"
     >

@@ -1,0 +1,126 @@
+/* A song's own view over the Music sheet: to edit in a deck, or to look at from Find. */
+.header {
+  flex-shrink: 0;
+  padding: calc(var(--safe-area-top) + var(--space-2)) var(--space-4) 0;
+}
+
+/* The panel is the flex column; the form only groups the fields for submit. */
+.form {
+  display: contents;
+}
+
+.body {
+  display: grid;
+  flex: 1;
+  align-content: start;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-3) var(--space-4) 112px;
+  container-type: size;
+}
+
+/* The cover leads, as wide as the view, with the title and artist under it. It stays pinned
+   and folds into the bar while the details slide up over it, as in a music app (owner,
+   2026-10-20). */
+.artworkHero {
+  position: sticky;
+  top: 0;
+  z-index: 0;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  text-align: center;
+  transform-origin: 50% 0;
+}
+
+/* The details cover the pinned cover as they scroll; spacing is padding, so no gap shows it. */
+.body > :not(.artworkHero) {
+  position: relative;
+  z-index: 1;
+  padding-top: var(--space-4);
+  background: var(--color-bg-app);
+}
+
+/* Folded in while the big cover shows; it rises into the bar as the cover scrolls away. */
+.compactCover {
+  display: grid;
+  flex-shrink: 0;
+}
+
+.summary {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.artworkHero .summary {
+  justify-items: center;
+  width: 100%;
+}
+
+.songTitle,
+.songArtist {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.songTitle {
+  font-size: var(--type-body-lg-size);
+  line-height: var(--type-body-lg-leading);
+  font-weight: 700;
+}
+
+.songArtist {
+  color: var(--color-text-secondary);
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-leading);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.artworkHero .chips {
+  justify-content: center;
+}
+
+.warning {
+  color: var(--color-warning);
+}
+
+/* At least a view tall, so the details always scroll up under the bar and the cover folds all
+   the way, however short they are. */
+.fields {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  min-height: 100cqh;
+}
+
+.note {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+}
+
+/* Over the end of the view, on the shared fade. */
+.actions {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.actionRow {
+  display: flex;
+  gap: var(--space-2);
+}

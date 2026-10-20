@@ -7,18 +7,10 @@ interface AppPageShellProps {
   screenClassName?: string | undefined;
 }
 
-export function AppPageShell({
-  children,
-  panelClassName,
-  screenClassName,
-}: AppPageShellProps) {
+export function AppPageShell({ children, panelClassName, screenClassName }: AppPageShellProps) {
   return (
-    <main
-      className={`${styles.screen}${screenClassName ? ` ${screenClassName}` : ""}`}
-    >
-      <section
-        className={`${styles.panel}${panelClassName ? ` ${panelClassName}` : ""}`}
-      >
+    <main className={`${styles.screen}${screenClassName ? ` ${screenClassName}` : ""}`}>
+      <section className={`${styles.panel}${panelClassName ? ` ${panelClassName}` : ""}`}>
         {children}
       </section>
     </main>
