@@ -19,7 +19,8 @@ import findStyles from "./musicFind.module.css";
 
 interface MusicQuickPicksProps {
   candidates: LobbySpotifyCandidatesState;
-  disabled: boolean;
+  /** The id of the line that says why every action is held (offline), or `null`. */
+  heldReasonId: string | null;
   /** Enough for this room with room to spare (`getRecommendedDeckSize`). */
   recommendedSongCount: number;
 }
@@ -32,10 +33,11 @@ const QUICK_PICK_LOADING_ID = "music-quick-pick";
  */
 export function MusicQuickPicks({
   candidates,
-  disabled,
+  heldReasonId,
   recommendedSongCount,
 }: MusicQuickPicksProps) {
   const { t } = useI18n();
+  const disabled = heldReasonId !== null;
   const optionsId = useId();
   const [areOptionsOpen, setAreOptionsOpen] = useState(false);
   const [chosenSongCount, setChosenSongCount] = useState<number | null>(null);
@@ -70,6 +72,7 @@ export function MusicQuickPicks({
             <li key={preset.id}>
               <button
                 aria-busy={isPicked || undefined}
+                aria-describedby={heldReasonId ?? undefined}
                 className={findStyles.quickPickCard}
                 disabled={disabled || isGenerating}
                 onClick={() => pick(preset.id)}

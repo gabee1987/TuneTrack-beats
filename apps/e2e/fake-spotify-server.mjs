@@ -73,6 +73,36 @@ const server = createServer((request, response) => {
     return;
   }
 
+  // Songs come from the first playlist; every playlist search, a quick pick's too, finds it.
+  if (requestUrl.pathname === "/api/search") {
+    const type = requestUrl.searchParams.get("type");
+    const isFirstPage = (requestUrl.searchParams.get("offset") ?? "0") === "0";
+    const searchPlaylistId = "TESTPLAYLIST1234567890";
+    const searchPlaylist = playlists.get(searchPlaylistId);
+    if (type === "track") {
+      const items = isFirstPage ? searchPlaylist.tracks.slice(0, 3).map((item) => item.track) : [];
+      sendJson(response, { tracks: { items, next: null, total: items.length } });
+      return;
+    }
+    if (type === "playlist") {
+      const items = isFirstPage
+        ? [
+            {
+              id: searchPlaylistId,
+              name: searchPlaylist.name,
+              owner: { display_name: "E2E Owner" },
+              images: [],
+              tracks: { total: searchPlaylist.tracks.length },
+            },
+          ]
+        : [];
+      sendJson(response, { playlists: { items } });
+      return;
+    }
+    sendJson(response, { [`${type}s`]: { items: [] } });
+    return;
+  }
+
   const playlistMatch = /^\/api\/playlists\/([^/]+)(\/tracks)?$/.exec(requestUrl.pathname);
   const playlist = playlistMatch ? playlists.get(playlistMatch[1]) : undefined;
   if (playlist && playlistMatch?.[2]) {

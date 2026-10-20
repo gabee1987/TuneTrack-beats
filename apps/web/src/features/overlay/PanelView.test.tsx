@@ -72,6 +72,15 @@ describe("PanelView", () => {
     expect(screen.getByRole("dialog", { name: "Playlist editor" })).toHaveFocus();
   });
 
+  it("returns focus to what opened it once it closes", async () => {
+    await openView();
+
+    await userEvent.keyboard("{Escape}");
+    await expectOnlyViewClosed();
+
+    expect(screen.getByRole("button", { name: "Edit playlist" })).toHaveFocus();
+  });
+
   it("closes one step on Escape", async () => {
     await openView();
 

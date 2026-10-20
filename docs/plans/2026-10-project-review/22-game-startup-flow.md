@@ -1,6 +1,6 @@
 # 22 — Game Startup Flow: Experience Specification
 
-> **Status (2026-10-18):** Specified; S0–S2 shipped 2026-10-14, S3–S5 shipped 2026-10-15, S6–S8 shipped 2026-10-16, S9–S11 shipped 2026-10-18; S12 in progress (§15, §13). Requested by the owner on
+> **Status (2026-10-18):** Specified; S0–S2 shipped 2026-10-14, S3–S5 shipped 2026-10-15, S6–S8 shipped 2026-10-16, S9–S11 shipped 2026-10-18, S12 shipped 2026-10-20: the plan is complete (§13 all ticked). Requested by the owner on
 > 2026-10-14 ("easy to use, straightforward, engaging, nice and beautiful"); decisions 22–25 in
 > `00-index.md` §5. This document **owns the whole startup flow** — Home, name, join, lobby (host
 > and guest), rules, Music setup, playlist and song editing, Start and handover — and
@@ -541,12 +541,11 @@ package lists its deletions in its report.
       selector); Start stays enabled with a short deck. (2026-10-18, `lobbySetupModel.test.ts`,
       `deckSize.test.ts`; `LobbyPageMobile.test.tsx` "warns about a short deck on the meter and at
       Start")
-- [ ] Music setup works end to end without Spotify login: link, search, quick picks, saved deck,
+- [x] Music setup works end to end without Spotify login: link, search, quick picks, saved deck,
       practice deck (component tests with `spotifyAuthStatus: "none"`; E2E with the fake server).
-      Components proven (`MusicSheet.test.tsx` "MusicSheet without a Spotify login"); E2E covers
-      the link (`navigation.spec.ts`), a saved deck (`curation.spec.ts`) and the practice deck
-      (`host-lobby.spec.ts`). Open: search and quick picks in E2E need search and recommendation
-      routes in `fake-spotify-server.mjs`.
+      (2026-10-20, `MusicSheet.test.tsx` "MusicSheet without a Spotify login"; E2E link
+      `navigation.spec.ts`, search and quick pick `music-find.spec.ts` over the fake server's
+      `/api/search`, saved deck `curation.spec.ts`, practice deck `host-lobby.spec.ts`)
 - [x] One Playlist view and one Song editor render every list (guard test: no second track-row
       or details component under `pages/LobbyPage`). (2026-10-18, `oneSongList.test.ts`.) The
       swipe stays by owner decision (decision log 2026-10-16), so "swipe-to-delete is gone" no
@@ -558,20 +557,23 @@ package lists its deletions in its report.
       (2026-10-18, `MusicSheet.test.tsx` "MusicSheet covers", `PlaylistView.test.tsx` "shows the
       deck's song cover in its header", `LobbyMusicCard.test.tsx`; the Music card's mosaic landed
       in S12.)
-- [ ] Every disabled primary action in Home, Join, Lobby and Music setup has a reason linked by
-      `aria-describedby` (component tests per reason). Proven for Host (`HomePage.test.tsx`),
-      Join (`JoinPage.test.tsx`), Join room when the room is gone (`JoinRoomPage.test.tsx`) and
-      Start (`LobbyPageMobile.test.tsx`, `LobbyPageDesktop.test.tsx`). Open: Music setup holds
-      every action offline behind one connection line that no control names, and "Use in game"
-      below 10 quick-pick songs has no reason line.
-- [ ] Every screen renders its five states (component tests with `roomStateFixtures`). Open
-      (2026-10-18 audit): Join room has no offline test; the lobby has no error or offline test
-      on either assembly and no loading test on desktop; Music setup has no inline search or
-      import error test.
-- [ ] Every overlay closes with Back and Escape and restores focus; no overlay nests deeper than
-      two `PanelView`s. Proven for the primitives (`Overlay.test.tsx`, `PanelView.test.tsx`,
-      `Sheet.test.tsx`; E2E `navigation.spec.ts`). Open: `PanelView` focus return, a `Dialog`
-      test, and a guard on nesting depth.
+- [x] Every disabled primary action in Home, Join, Lobby and Music setup has a reason linked by
+      `aria-describedby` (component tests per reason). (2026-10-20: Host `HomePage.test.tsx`;
+      Join `JoinPage.test.tsx`; Join room gone or offline `JoinRoomPage.test.tsx`; Start
+      `LobbyPageMobile.test.tsx`, `LobbyPageDesktop.test.tsx`; Music setup offline, every primary
+      action named by the connection line, `MusicSheet.test.tsx` "holds … while offline"; Use in
+      game `PlaylistView.test.tsx`.) A dialog's submit that waits for its own field (Name sheet,
+      Change code) is answered by that field.
+- [x] Every screen renders its five states (component tests with `roomStateFixtures`).
+      (2026-10-20: Home `HomePage.test.tsx`; Join `JoinPage.test.tsx`; Join room, offline added,
+      `JoinRoomPage.test.tsx`; lobby loading, error and offline on both assemblies
+      `LobbyPageMobile.test.tsx`, `LobbyPageDesktop.test.tsx`; Music setup search and import
+      errors `MusicSheet.test.tsx`.)
+- [x] Every overlay closes with Back and Escape and restores focus; no overlay nests deeper than
+      two `PanelView`s. (2026-10-20: `Overlay.test.tsx` incl. the hand-over (B30),
+      `PanelView.test.tsx` "returns focus to what opened it", `Dialog.test.tsx`, `Sheet.test.tsx`;
+      guard `overlaySites.test.ts` "opens panel views only from the song list and the two song
+      views"; E2E `navigation.spec.ts`, `deck-delete.spec.ts`.)
 - [x] Guest lobby shows guest copy, read-only music and rules, and the handover toast (`LobbyPageMobile.test.tsx` guest cases, `useGamePageToasts.test.tsx`; E2E `host-lobby.spec.ts`, `guest-handover.spec.ts`).
 - [x] No "TT", "track", "queue" or "challenge" in user-facing `en` values (parity guard check).
       (2026-10-18, `i18nKeyParity.test.ts` "keeps the code's words out of English copy".)
@@ -620,7 +622,7 @@ gate (`19` §9); merge scenarios where a shared fixture serves several assertion
 | S9  | **Shipped 2026-10-18.** Saved decks: cover (`imageUrl`), write-back with Undo, the game's deck follows a song edit; no schema version (§4.9).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | S8         | `savedPlaylists` unit tests (migration, write-back, undo, 20-deck cap); E2E `curation.spec.ts` row 2                                                                                                                                                             | `write-tests`, `e2e-scenario`                          |
 | S10 | **Shipped 2026-10-18.** Two-pane Music setup on desktop: tabs left, the open list right (`music.view.pickOne` while empty); the Song editor and song details open over the right pane; opening a list closes the one before (`MusicSheet.test.tsx` "on desktop", `PanelView.test.tsx`, `useOneOpenList.test.ts`; E2E chromium and webkit run it).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | S8         | desktop component tests; E2E chromium `music-setup.spec.ts`                                                                                                                                                                                                      | `add-ui-component`                                     |
 | S11 | **Shipped 2026-10-18.** §9 catalogue (`lobby-share-code`, `lobby-music`, `music-needs-check`; `lobby-spotify` gone) and the `04` §7.1 tutorial: no per-visit cap, seen only when acknowledged (no auto-dismiss), 1.5 s after arrival and after each dismissal, paused during a drag, suppressed until the anchor is half on screen and while an overlay lies over it; dismissed by using the anchor; `role="status"`; Escape answers the hint before an overlay; the app menu shows "Hints: n of 12 seen" and Show hints again (also switches hints on). E2E devices start with hints off; `hints.spec.ts` opts in.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | S3, S8     | `FirstRunHint.test.tsx` (tutorial, fake timers), `LobbyInviteCard.test.tsx`, `PlaylistViewToolbar.test.tsx`, `AppShellMenuPanels.test.tsx`; E2E `hints.spec.ts`                                                                                                  | `add-hint`                                             |
-| S12 | **In progress 2026-10-18.** Done: five superseded `lobby.*` keys and three unused `Card` classes deleted; `MusicSheet` is its own lazy chunk; the Music card shows the deck's cover mosaic (the room deck's songs are fetched once per deck by the lobby); `SelectableArtwork.module.css` on tokens; English-copy guard; Join room names its not-found reason; `lobby-layout.spec.ts`; §13 run (twelve boxes ticked). Open: the `mobile` E2E budget (not measurable on a loaded machine), the §13 boxes still unticked, `device-checklist` results.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | S1–S11     | `verify` green; `npm run e2e` green; §13 boxes ticked with proofs                                                                                                                                                                                                | `verify`, `design-token-migration`, `device-checklist` |
+| S12 | **Shipped 2026-10-20.** Superseded keys and `Card` classes deleted; `MusicSheet` its own lazy chunk; the Music card's cover mosaic; tokens in `SelectableArtwork.module.css`; English-copy guard; a four-player lobby fits 375 × 667; overlay hand-over fixed (B30); held actions name their reason (Join room, Music setup offline, Use in game); Join room offline state; five-state, Dialog, PanelView focus and nesting-depth tests; search and quick-pick E2E over the fake server; doc 21 archived. `npm run e2e`: 100 passed (chromium 122.7 s, webkit 232.0 s, mobile 227.3 s); all twenty §13 boxes ticked.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | S1–S11     | `verify` green; `npm run e2e` green within budget; §13 ticked                                                                                                                                                                                                    | `verify`, `design-token-migration`, `device-checklist` |
 
 S0 and S1 can run in parallel; S2 can start after S0; S7 after S3. Every package ends with
 `verify` and `plan-status`; every package that changes a user-visible flow adds or updates its E2E

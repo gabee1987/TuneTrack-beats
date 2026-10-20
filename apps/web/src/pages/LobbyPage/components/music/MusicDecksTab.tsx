@@ -26,7 +26,8 @@ export interface RoomDeckSummary {
 }
 
 interface MusicDecksTabProps {
-  disabled: boolean;
+  /** The id of the line that says why every action is held (offline), or `null`. */
+  heldReasonId: string | null;
   onDeckOptions: (deck: SavedDeckSummary) => void;
   onEditDeck: (deck: SavedDeckSummary) => void;
   onEditRoomDeck: (filter: PlaylistEditorFilter) => void;
@@ -44,7 +45,7 @@ interface MusicDecksTabProps {
 
 /** The deck in this game first, then the decks saved on this device (`22` §4.8, Your decks). */
 export function MusicDecksTab({
-  disabled,
+  heldReasonId,
   onDeckOptions,
   onEditDeck,
   onEditRoomDeck,
@@ -58,13 +59,14 @@ export function MusicDecksTab({
   statusMessage,
 }: MusicDecksTabProps) {
   const { t } = useI18n();
+  const disabled = heldReasonId !== null;
 
   return (
     <div className={styles.tab}>
       {roomDeck ? (
         <RoomDeckCard
           deck={roomDeck}
-          disabled={disabled}
+          heldReasonId={heldReasonId}
           onEdit={onEditRoomDeck}
           onOpenSong={onOpenSong}
           onRemove={onRemoveRoomDeck}
@@ -95,6 +97,7 @@ export function MusicDecksTab({
               <div className={deckStyles.deckTileActions}>
                 <Button
                   aria-label={t("music.decks.loadLabel", { name: deck.name })}
+                  aria-describedby={heldReasonId ?? undefined}
                   disabled={disabled}
                   onClick={() => onUseDeck(deck)}
                   size="md"
@@ -145,7 +148,7 @@ export function MusicDecksTab({
 
 interface RoomDeckCardProps {
   deck: RoomDeckSummary;
-  disabled: boolean;
+  heldReasonId: string | null;
   onEdit: (filter: PlaylistEditorFilter) => void;
   onOpenSong: (trackId: string) => void;
   onRemove: () => void;
@@ -153,8 +156,16 @@ interface RoomDeckCardProps {
 }
 
 /** What the game will play: how many songs, which years to check, and the way into the editor. */
-function RoomDeckCard({ deck, disabled, onEdit, onOpenSong, onRemove, onSave }: RoomDeckCardProps) {
+function RoomDeckCard({
+  deck,
+  heldReasonId,
+  onEdit,
+  onOpenSong,
+  onRemove,
+  onSave,
+}: RoomDeckCardProps) {
   const { t } = useI18n();
+  const disabled = heldReasonId !== null;
 
   return (
     <section aria-labelledby="music-room-deck-title" className={deckStyles.roomDeck}>
@@ -171,14 +182,25 @@ function RoomDeckCard({ deck, disabled, onEdit, onOpenSong, onRemove, onSave }: 
       </div>
 
       {deck.isEditable ? (
-        <RoomDeckCheck deck={deck} disabled={disabled} onEdit={onEdit} onOpenSong={onOpenSong} />
+        <RoomDeckCheck
+          deck={deck}
+          heldReasonId={heldReasonId}
+          onEdit={onEdit}
+          onOpenSong={onOpenSong}
+        />
       ) : (
         <p className={styles.statusLine}>{t("music.decks.practiceNote")}</p>
       )}
 
       {deck.isEditable ? (
         <div className={deckStyles.roomDeckActions}>
-          <Button disabled={disabled} fullWidth onClick={() => onEdit("all")} variant="secondary">
+          <Button
+            aria-describedby={heldReasonId ?? undefined}
+            disabled={disabled}
+            fullWidth
+            onClick={() => onEdit("all")}
+            variant="secondary"
+          >
             {t("music.decks.editSongs")}
           </Button>
           <div className={deckStyles.roomDeckSecondary}>
@@ -197,16 +219,17 @@ function RoomDeckCard({ deck, disabled, onEdit, onOpenSong, onRemove, onSave }: 
 
 function RoomDeckCheck({
   deck,
-  disabled,
+  heldReasonId,
   onEdit,
   onOpenSong,
 }: {
   deck: RoomDeckSummary;
-  disabled: boolean;
+  heldReasonId: string | null;
   onEdit: (filter: PlaylistEditorFilter) => void;
   onOpenSong: (trackId: string) => void;
 }) {
   const { t } = useI18n();
+  const disabled = heldReasonId !== null;
 
   if (deck.toCheckCount === 0) {
     return (
@@ -238,7 +261,13 @@ function RoomDeckCheck({
           ))}
         </ul>
       ) : null}
-      <Button disabled={disabled} fullWidth onClick={() => onEdit("needsCheck")} variant="primary">
+      <Button
+        aria-describedby={heldReasonId ?? undefined}
+        disabled={disabled}
+        fullWidth
+        onClick={() => onEdit("needsCheck")}
+        variant="primary"
+      >
         {t("music.decks.checkSongs", { count: deck.toCheckCount })}
       </Button>
     </div>

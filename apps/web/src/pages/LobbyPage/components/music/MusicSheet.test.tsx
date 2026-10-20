@@ -83,8 +83,10 @@ interface SpotifyStubOptions {
   candidatePhase?: "idle" | "generating";
   candidateTracks?: unknown[];
   editor?: UseLobbySpotifyResult["queue"]["editor"];
+  importError?: string | null;
   results?: SpotifySmartSearchResult[];
   savedDecks?: SavedPlaylist[];
+  searchError?: string | null;
   searchPhase?: "idle" | "searching" | "error";
 }
 
@@ -92,8 +94,10 @@ function buildSpotifyStub({
   candidatePhase = "idle",
   candidateTracks = [],
   editor = null,
+  importError = null,
   results = [],
   savedDecks = [],
+  searchError = null,
   searchPhase = "idle",
 }: SpotifyStubOptions = {}) {
   return {
@@ -114,8 +118,8 @@ function buildSpotifyStub({
     },
     import: {
       clearCurrentPlaylist: vi.fn(),
-      importError: null,
-      importPhase: "idle",
+      importError,
+      importPhase: importError ? "error" : "idle",
       importPlaylist: vi.fn(),
       setPlaylistUrl: vi.fn(),
     },
@@ -154,7 +158,7 @@ function buildSpotifyStub({
       searchSpotifyMusicByType: vi.fn(),
       setSmartSearchQuery: vi.fn(),
       setSmartSearchType: vi.fn(),
-      smartSearchError: null,
+      smartSearchError: searchError,
       smartSearchHasMore: false,
       smartSearchHasSearched: results.length > 0,
       smartSearchLoadMorePhase: "idle",
@@ -374,6 +378,20 @@ describe("MusicSheet Find results", () => {
     });
   });
 
+  it("says inline why a search failed", () => {
+    renderSheet({ searchError: "Search failed. Try again.", searchPhase: "error" });
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Search failed. Try again.");
+  });
+
+  it("says under the field why a pasted link did not import", () => {
+    renderSheet({ importError: "This playlist could not be imported." });
+
+    expect(screen.getByRole("searchbox")).toHaveAccessibleDescription(
+      "This playlist could not be imported.",
+    );
+  });
+
   it("selects a song from its cover and adds it from the one counted button", async () => {
     const { spotify } = renderSheet({ results: [SONG] });
 
@@ -487,15 +505,34 @@ describe("MusicSheet playback and connection", () => {
     expect(screen.queryByRole("button", { name: "Connect Spotify" })).not.toBeInTheDocument();
   });
 
-  it("holds every action while offline", async () => {
+  it("holds every action while offline, and each one says why", async () => {
     connection.status = "reconnecting";
     renderSheet();
 
-    expect(screen.getByRole("button", { name: "Connect Spotify" })).toBeDisabled();
-    expect(screen.getByRole("searchbox")).toBeDisabled();
+    function expectHeld(control: HTMLElement) {
+      expect(control).toBeDisabled();
+      expect(control).toHaveAccessibleDescription("Reconnecting…");
+    }
+
+    expectHeld(screen.getByRole("button", { name: "Connect Spotify" }));
+    expectHeld(screen.getByRole("searchbox"));
     await userEvent.click(screen.getByRole("radio", { name: "Quick picks" }));
-    expect(await screen.findByRole("button", { name: /^80s Hits/ })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Use the practice deck" })).toBeDisabled();
+    expectHeld(await screen.findByRole("button", { name: /^80s Hits/ }));
+    expectHeld(screen.getByRole("button", { name: "Use the practice deck" }));
+  });
+
+  it("holds Your decks while offline, and says why", () => {
+    connection.status = "offline";
+    renderSheet({
+      savedDecks: [buildSavedDeck("Road Trip")],
+      settings: { deckSource: "spotify", importedTrackCount: 30 },
+    });
+
+    for (const name of ["Load Road Trip into the game", "Edit songs"]) {
+      const control = screen.getByRole("button", { name });
+      expect(control).toBeDisabled();
+      expect(control).toHaveAccessibleDescription("You are offline");
+    }
   });
 });
 

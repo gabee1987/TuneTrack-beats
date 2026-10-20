@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useI18n } from "../../../../features/i18n";
 import {
   CollapsingHeaderCompact,
@@ -190,6 +190,7 @@ function PlaylistViewDock({
   view: PlaylistViewModel;
 }) {
   const { t } = useI18n();
+  const useReasonId = useId();
   const selectedIds = new Set(
     editor.allTracks.filter((track) => editor.selectedIds.has(track.id)).map((track) => track.id),
   );
@@ -203,16 +204,24 @@ function PlaylistViewDock({
       {selectedIds.size === 0 ? (
         <FloatingBar edge="bottom">
           {view.onUse ? (
-            <Button
-              disabled={!view.canUseAll}
-              fullWidth
-              haptic
-              isLoading={view.isBusy}
-              onClick={() => view.onUse?.()}
-              size="lg"
-            >
-              {t("music.view.use")}
-            </Button>
+            <>
+              <Button
+                aria-describedby={view.useHeldReason ? useReasonId : undefined}
+                disabled={view.useHeldReason !== null}
+                fullWidth
+                haptic
+                isLoading={view.isBusy}
+                onClick={() => view.onUse?.()}
+                size="lg"
+              >
+                {t("music.view.use")}
+              </Button>
+              {view.useHeldReason ? (
+                <p className={styles.useReason} id={useReasonId}>
+                  {view.useHeldReason}
+                </p>
+              ) : null}
+            </>
           ) : (
             <Button disabled fullWidth size="lg" variant="secondary">
               {t("music.view.inGame")}

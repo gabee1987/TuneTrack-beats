@@ -3,7 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { ClientToServerEvent, ServerToClientEvent } from "@tunetrack/shared/client";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Socket } from "socket.io-client";
 import { usePlayerProfileStore } from "../../features/profile/playerProfile";
+import { trackSocketConnection } from "../../services/socket/connectionState";
 import { getSharedFakeSocket, resetSharedFakeSocket } from "../../test/fakeSocket";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { JoinRoomPage } from "./JoinRoomPage";
@@ -88,6 +90,19 @@ describe("JoinRoomPage", () => {
     const join = screen.getByRole("button", { name: "Join room" });
     expect(join).toBeDisabled();
     expect(join).toHaveAccessibleDescription("This room is not available anymore.");
+  });
+
+  it("says the server is out of reach while offline and holds Join with the reason", async () => {
+    const untrack = trackSocketConnection(getSharedFakeSocket() as unknown as Socket);
+    await renderInvite("TEST_ROOM_1");
+    answerPreview("TEST_ROOM_1");
+
+    act(() => getSharedFakeSocket().simulateDisconnect());
+
+    const join = screen.getByRole("button", { name: "Join room" });
+    expect(join).toBeDisabled();
+    expect(join).toHaveAccessibleDescription("Can't reach the game server. Retrying…");
+    untrack();
   });
 
   it("asks a nameless device for a name before joining", async () => {

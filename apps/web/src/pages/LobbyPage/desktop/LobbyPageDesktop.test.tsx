@@ -29,6 +29,33 @@ describe("LobbyPageDesktop host", () => {
     expect(screen.getByRole("button", { name: "Music Choose songs" })).toBeInTheDocument();
   });
 
+  it("shows the code skeleton and a creating reason while the room is made", () => {
+    renderLobby({ roomState: null });
+
+    expect(screen.getByRole("status", { name: "Creating your room…" })).toBeInTheDocument();
+    expect(screen.queryByText("lobby")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start game" })).toHaveAccessibleDescription(
+      "Creating your room…",
+    );
+  });
+
+  it("shows a refused room action above the cards", () => {
+    renderLobby({
+      errorMessage: "The room could not be renamed. Try again.",
+      settings: practiceDeck,
+    });
+
+    expect(screen.getByText("The room could not be renamed. Try again.")).toBeInTheDocument();
+  });
+
+  it("holds the one Start while offline and says why", () => {
+    renderLobby({ connectionStatus: "offline", settings: practiceDeck });
+
+    const start = screen.getByRole("button", { name: "Start game" });
+    expect(start).toBeDisabled();
+    expect(start).toHaveAccessibleDescription("You are offline");
+  });
+
   it("starts once the room has a deck", async () => {
     const controller = renderLobby({ settings: practiceDeck });
 

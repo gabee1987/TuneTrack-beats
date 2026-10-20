@@ -155,13 +155,13 @@ export function MusicGallery() {
             ...AUTH,
             authError: state === "error" ? "Spotify login did not finish." : null,
           }}
-          disabled={false}
+          heldReasonId={null}
           key={state}
           state={state}
         />
       ))}
       <MusicDecksTab
-        disabled={false}
+        heldReasonId={null}
         onDeckOptions={noop}
         onEditDeck={noop}
         onEditRoomDeck={noop}
@@ -181,7 +181,7 @@ export function MusicGallery() {
         statusMessage={null}
       />
       <MusicDecksTab
-        disabled={false}
+        heldReasonId={null}
         onDeckOptions={noop}
         onEditDeck={noop}
         onEditRoomDeck={noop}

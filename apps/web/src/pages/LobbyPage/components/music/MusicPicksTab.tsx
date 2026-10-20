@@ -9,7 +9,8 @@ import findStyles from "./musicFind.module.css";
 
 interface MusicPicksTabProps {
   candidates: LobbySpotifyCandidatesState;
-  disabled: boolean;
+  /** The id of the line that says why every action is held (offline), or `null`. */
+  heldReasonId: string | null;
   onUsePracticeDeck: () => void;
   practiceDeckStatus: PracticeDeckChoiceStatus;
   recommendedSongCount: number;
@@ -21,7 +22,7 @@ interface MusicPicksTabProps {
  */
 export function MusicPicksTab({
   candidates,
-  disabled,
+  heldReasonId,
   onUsePracticeDeck,
   practiceDeckStatus,
   recommendedSongCount,
@@ -33,7 +34,7 @@ export function MusicPicksTab({
     <div className={styles.tab}>
       <MusicQuickPicks
         candidates={candidates}
-        disabled={disabled}
+        heldReasonId={heldReasonId}
         recommendedSongCount={recommendedSongCount}
       />
 
@@ -43,7 +44,8 @@ export function MusicPicksTab({
         </h3>
         <p className={styles.statusLine}>{t("lobby.practiceDeck.description")}</p>
         <Button
-          disabled={disabled}
+          aria-describedby={heldReasonId ?? undefined}
+          disabled={heldReasonId !== null}
           isLoading={practiceDeckStatus === "pending"}
           onClick={onUsePracticeDeck}
           variant="secondary"

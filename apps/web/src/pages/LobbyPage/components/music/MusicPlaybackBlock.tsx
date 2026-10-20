@@ -7,7 +7,8 @@ import styles from "./music.module.css";
 
 interface MusicPlaybackBlockProps {
   auth: LobbySpotifyAuthState;
-  disabled: boolean;
+  /** The id of the line that says why every action is held (offline), or `null`. */
+  heldReasonId: string | null;
   state: MusicPlaybackState;
 }
 
@@ -15,8 +16,9 @@ interface MusicPlaybackBlockProps {
  * Where the songs will sound. Login is a playback matter only: nothing below this block waits for
  * it, and the per-room login note (decision 10) lives here and nowhere else (`22` §4.8).
  */
-export function MusicPlaybackBlock({ auth, disabled, state }: MusicPlaybackBlockProps) {
+export function MusicPlaybackBlock({ auth, heldReasonId, state }: MusicPlaybackBlockProps) {
   const { t } = useI18n();
+  const disabled = heldReasonId !== null;
 
   return (
     <section aria-label={t("music.playback.label")} className={styles.playback}>
@@ -56,7 +58,12 @@ export function MusicPlaybackBlock({ auth, disabled, state }: MusicPlaybackBlock
     switch (state) {
       case "none":
         return (
-          <Button disabled={disabled} onClick={auth.connectSpotify} variant="spotify">
+          <Button
+            aria-describedby={heldReasonId ?? undefined}
+            disabled={disabled}
+            onClick={auth.connectSpotify}
+            variant="spotify"
+          >
             {t("music.playback.connect")}
           </Button>
         );
@@ -68,7 +75,12 @@ export function MusicPlaybackBlock({ auth, disabled, state }: MusicPlaybackBlock
         );
       case "error":
         return (
-          <Button disabled={disabled} onClick={auth.connectSpotify} variant="spotify">
+          <Button
+            aria-describedby={heldReasonId ?? undefined}
+            disabled={disabled}
+            onClick={auth.connectSpotify}
+            variant="spotify"
+          >
             {t("music.playback.retry")}
           </Button>
         );

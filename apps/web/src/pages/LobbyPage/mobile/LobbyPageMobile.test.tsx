@@ -71,6 +71,24 @@ describe("LobbyPageMobile host", () => {
     );
   });
 
+  it("shows a refused room action above the cards", () => {
+    renderLobby({
+      errorMessage: "The room could not be renamed. Try again.",
+      settings: practiceDeck,
+    });
+
+    expect(screen.getByText("The room could not be renamed. Try again.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start game" })).toBeEnabled();
+  });
+
+  it("holds Start while offline and says why", () => {
+    renderLobby({ connectionStatus: "offline", settings: practiceDeck });
+
+    const start = screen.getByRole("button", { name: "Start game" });
+    expect(start).toBeDisabled();
+    expect(start).toHaveAccessibleDescription("You are offline");
+  });
+
   it("waits for friends while alone and calls a solo start a practice round", () => {
     renderLobby({
       roomState: buildLobbyRoomState({ players: [buildPlayer()] }),

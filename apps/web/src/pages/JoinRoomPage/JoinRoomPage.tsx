@@ -6,9 +6,11 @@ import { AppPageShell } from "../../features/mobile-shell/AppPageShell";
 import { IdentityChip } from "../../features/profile/IdentityChip";
 import { NameSheet } from "../../features/profile/NameSheet";
 import { useNameGate } from "../../features/profile/useNameGate";
+import { getConnectionProblemLabelKey } from "../../features/rooms/connectionStatusLabel";
 import { buildInviteJoinPath } from "../../features/rooms/roomNavigation";
 import { StatusBanner } from "../../features/ui/StatusBanner";
 import { Button, Skeleton } from "../../features/ui/primitives";
+import { useConnectionStatus } from "../../services/socket/connectionState";
 import { useJoinRoomPreview } from "./hooks/useJoinRoomPreview";
 import styles from "./JoinRoomPage.module.css";
 
@@ -18,9 +20,11 @@ export function JoinRoomPage() {
   const { roomId } = useParams<{ roomId: string }>();
   const nameGate = useNameGate();
   const { room, status } = useJoinRoomPreview(roomId);
-  // While loading, the status region speaks for itself; a missing room names its banner.
+  const isOffline = getConnectionProblemLabelKey(useConnectionStatus()) !== null;
+  // While loading, the status region speaks for itself; offline or a missing room names its banner.
   const reasonId = useId();
-  const isRoomGone = status === "ready" && !room;
+  const isRoomGone = !isOffline && status === "ready" && !room;
+  const isJoinHeld = isOffline || isRoomGone;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -42,7 +46,9 @@ export function JoinRoomPage() {
         <p className={styles.eyebrow}>{t("joinRoom.eyebrow")}</p>
         <h1 className={styles.title}>{room?.roomId ?? roomId}</h1>
 
-        {status === "loading" ? (
+        {isOffline ? (
+          <StatusBanner id={reasonId}>{t("join.offline")}</StatusBanner>
+        ) : status === "loading" ? (
           <div
             className={styles.roomFacts}
             aria-busy="true"
@@ -77,8 +83,8 @@ export function JoinRoomPage() {
 
         <form className={styles.form} onSubmit={handleSubmit}>
           <Button
-            aria-describedby={isRoomGone ? reasonId : undefined}
-            disabled={!room}
+            aria-describedby={isJoinHeld ? reasonId : undefined}
+            disabled={!room || isOffline}
             fullWidth
             haptic
             size="lg"

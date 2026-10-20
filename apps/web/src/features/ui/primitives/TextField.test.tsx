@@ -45,6 +45,19 @@ describe("TextField", () => {
     expect(screen.queryByText("Ask the host for the code.")).not.toBeInTheDocument();
   });
 
+  it("keeps a caller's description before its own message", () => {
+    renderWithProviders(
+      <>
+        <p id="TEST_REASON">You are offline</p>
+        <TextField aria-describedby="TEST_REASON" helper="Paste a link" label="Search" />
+      </>,
+    );
+
+    expect(screen.getByRole("textbox", { name: "Search" })).toHaveAccessibleDescription(
+      "You are offline Paste a link",
+    );
+  });
+
   it("renders a trailing control beside the box", () => {
     renderWithProviders(
       <TextField

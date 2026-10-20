@@ -23,6 +23,7 @@ Status meanings:
 | B4  | S1       | Open; device confirmation required | iPhone drag-versus-scroll test                                         |
 | B3  | S2       | Open                               | Design-system consolidation acceptance criteria                        |
 | B11 | S3       | Partially fixed                    | One shared destructive icon-button treatment                           |
+| B31 | S3       | Open                               | A count of one reads "1 song" in `en` and `hu`                         |
 
 ## B8 · Network recovery needs final hardening
 
@@ -111,6 +112,20 @@ In one of two iPhone 13 E2E runs, E14 saved the release year 1977 for a track an
 showing 1980 for 10 s. The editor re-reads the track whenever it changes, so the save was lost,
 not merely shown late. Chromium and desktop WebKit never showed it. Next: repeat E14 on the
 `mobile` project with traces, and check the save acknowledgement and the playlist update order.
+
+## B31 · Counts of one read "1 songs"
+
+**Severity:** S3 · **Status:** Open · **Plan:** `22-game-startup-flow.md` (copy)
+
+**Remaining problem:** the i18n catalogues have no plural forms, so every `{{count}} songs` key
+(`music.decks.songs` and the lobby's song counts) reads "1 songs" for a single song (seen in E2E
+`music-find.spec.ts`, 2026-10-20).
+
+**Required outcome:** plural-aware keys (for example `Intl.PluralRules` with `_one`/`_other`
+keys in `features/i18n`), applied to every count in `en` and `hu`; the parity guard checks both
+forms.
+
+**Verification:** i18n unit test for one and many; `music-find.spec.ts` asserts "1 song".
 
 ## Resolved ledger
 

@@ -3,7 +3,9 @@ import { hostRoom } from "./support/roomPages";
 
 test("a saved deck is deleted after the confirm, and More still opens afterwards", async ({
   openPlayer,
-}) => {
+}, testInfo) => {
+  // The fault was in the History API, the same in every engine; `Overlay.test.tsx` guards it too.
+  test.skip(testInfo.project.name !== "chromium", "history hand-over, engine independent");
   const host = await openPlayer("Deck Host");
   await hostRoom(host.page);
   await host.page.getByRole("button", { name: "Music Choose songs" }).click();

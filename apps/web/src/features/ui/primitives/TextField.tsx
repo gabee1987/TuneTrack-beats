@@ -16,6 +16,7 @@ export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElemen
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextField(
   {
     appearance = "text",
+    "aria-describedby": describedBy,
     className,
     error,
     helper,
@@ -32,6 +33,8 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
   const messageId = `${inputId}-message`;
   const hasError = Boolean(error);
   const message = hasError ? error : helper;
+  // A caller's own description (a reason the field is held) comes before the field's message.
+  const descriptionIds = [describedBy, message ? messageId : null].filter(Boolean).join(" ");
 
   return (
     <div className={classNames(styles.field, className)}>
@@ -41,7 +44,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
       <div className={classNames(styles.control, hasError ? styles.invalid : undefined)}>
         <input
           {...inputProps}
-          aria-describedby={message ? messageId : undefined}
+          aria-describedby={descriptionIds || undefined}
           aria-invalid={hasError || undefined}
           className={classNames(styles.input, appearance === "code" ? styles.code : undefined)}
           id={inputId}

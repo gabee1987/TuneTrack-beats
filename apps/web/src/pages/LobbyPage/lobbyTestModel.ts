@@ -1,6 +1,7 @@
 import type { PublicRoomSettings, PublicRoomState } from "@tunetrack/shared/client";
 import { vi } from "vitest";
 import { TEST_HOST_ID, buildLobbyRoomState, buildRoomSettings } from "../../test/roomStateFixtures";
+import type { ConnectionStatus } from "../../services/socket/connectionState";
 import type { LobbyPageController } from "./LobbyPage.types";
 import { buildLobbyAssemblyModel } from "./hooks/buildLobbyAssemblyModel";
 import { selectLobbySetup } from "./hooks/lobbySetupModel";
@@ -11,7 +12,10 @@ export const practiceDeck: Partial<PublicRoomSettings> = {
 };
 
 export interface LobbyTestModelOptions {
+  connectionStatus?: ConnectionStatus;
   currentPlayerId?: string;
+  /** A room action the server refused, shown above the cards. */
+  errorMessage?: string | null;
   /** `null`: the room is still being created. */
   roomState?: PublicRoomState | null;
   settings?: Partial<PublicRoomSettings>;
@@ -19,7 +23,9 @@ export interface LobbyTestModelOptions {
 
 /** The lobby model both assemblies render, over a controller whose handlers are spies. */
 export function buildLobbyTestModel({
+  connectionStatus = "connected",
   currentPlayerId = TEST_HOST_ID,
+  errorMessage = null,
   roomState,
   settings = {},
 }: LobbyTestModelOptions = {}) {
@@ -37,7 +43,7 @@ export function buildLobbyTestModel({
     currentSettings,
     displayName: "Player One",
     errorCode: null,
-    errorMessage: null,
+    errorMessage,
     handlePlayerProfileChange: vi.fn(async () => true),
     handleRoomRename: vi.fn(async () => true),
     handleStartGame: vi.fn(),
@@ -51,7 +57,7 @@ export function buildLobbyTestModel({
     toggleTtMode: vi.fn(),
   } as unknown as LobbyPageController;
   const setup = selectLobbySetup({
-    connectionStatus: "connected",
+    connectionStatus,
     currentPlayerId,
     roomState: resolvedRoomState,
     settings: currentSettings,

@@ -17,15 +17,16 @@ const FIND_KINDS: ReadonlyArray<{ kind: FindKind; labelKey: string }> = [
 ];
 
 interface MusicFindTabProps {
-  disabled: boolean;
+  /** The id of the line that says why every action is held (offline), or `null`. */
+  heldReasonId: string | null;
   find: MusicFindState;
   spotify: UseLobbySpotifyResult;
 }
 
 /** Search Spotify or paste a link (`22` §4.8, Find); ready-made decks have their own tab. */
-export function MusicFindTab({ disabled, find, spotify }: MusicFindTabProps) {
+export function MusicFindTab({ find, heldReasonId, spotify }: MusicFindTabProps) {
   const { t } = useI18n();
-  const isBusy = disabled || find.isImporting;
+  const isBusy = heldReasonId !== null || find.isImporting;
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -36,6 +37,7 @@ export function MusicFindTab({ disabled, find, spotify }: MusicFindTabProps) {
     <div className={styles.tab}>
       <form className={findStyles.findForm} onSubmit={submit} role="search">
         <TextField
+          aria-describedby={heldReasonId ?? undefined}
           disabled={isBusy}
           error={find.importError}
           helper={find.isImporting ? t("music.find.importing") : undefined}

@@ -11,9 +11,18 @@ import {
 } from "./support/roomPages";
 import { expectRoomClosedOnServer } from "./support/roomProbe";
 
+/**
+ * The connection lifecycle runs on the server's timers, not on the layout, and the `mobile`
+ * project runs the same WebKit engine as `webkit`; these scenarios run on the desktop engines.
+ * The offline guest's skip uses the host's on-screen control, so it runs on every project.
+ */
+const LIFECYCLE_ONLY = "connection lifecycle only; covered by chromium and webkit";
+
 test("a guest reconnects inside the recovery window and continues playing", async ({
+  isMobile,
   openRoom,
 }) => {
+  test.skip(isMobile, LIFECYCLE_ONLY);
   const { guest, host, roomId } = await openRoom({
     guest: "Recovery Guest",
     host: "Recovery Host",
@@ -47,7 +56,11 @@ test("a guest reconnects inside the recovery window and continues playing", asyn
   await expect(guest.page.getByText("Correct placement.", { exact: true }).first()).toBeVisible();
 });
 
-test("a host reconnects inside the recovery window and remains host", async ({ openRoom }) => {
+test("a host reconnects inside the recovery window and remains host", async ({
+  isMobile,
+  openRoom,
+}) => {
+  test.skip(isMobile, LIFECYCLE_ONLY);
   const { guest, host, roomId } = await openRoom({
     guest: "Host Recovery Guest",
     host: "Host Recovery Host",
@@ -85,8 +98,10 @@ test("a host reconnects inside the recovery window and remains host", async ({ o
 });
 
 test("a permanent host disconnect transfers host controls after the grace period", async ({
+  isMobile,
   openRoom,
 }) => {
+  test.skip(isMobile, LIFECYCLE_ONLY);
   const { guest, host, roomId } = await openRoom({
     guest: "Transfer Guest",
     host: "Transfer Host",
@@ -166,7 +181,8 @@ test("an offline guest stays in the game while the host manually skips their tur
   ).toBeVisible();
 });
 
-test("an in-game room closes after every player stays offline", async ({ openRoom }) => {
+test("an in-game room closes after every player stays offline", async ({ isMobile, openRoom }) => {
+  test.skip(isMobile, LIFECYCLE_ONLY);
   const { guest, host, roomId } = await openRoom({ guest: "Expiry Guest", host: "Expiry Host" });
   await startGame(host.page, roomId, guest.page);
 

@@ -12,6 +12,18 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Startup-flow acceptance: E2E scope per project, held actions (2026-10-20)
+
+- **Connection-lifecycle E2E runs on the desktop engines only.** The `mobile` project runs the
+  same WebKit engine as `webkit`, and four `resilience.spec.ts` scenarios test server timers,
+  not layout; they skip on `mobile`. The offline guest's on-screen skip still runs there.
+  `deck-delete.spec.ts` runs on chromium only (a History API fault, the same in every engine,
+  also guarded by `Overlay.test.tsx`). Mobile went from 273 s to 227 s against its 240 s budget.
+- **A held action names its reason.** Music setup passes its tabs the id of the offline line
+  (`heldReasonId`) instead of a bare `disabled`; primary actions point at it. `TextField` keeps a
+  caller's `aria-describedby` before its own message. "Use in game" says why it waits.
+- **The fake Spotify server answers `/api/search`**, so search and quick picks have E2E cover.
+
 ### Startup-flow clean-up and acceptance (2026-10-18)
 
 - **Music setup is its own chunk.** The lobby loads it behind the host's Music card, so guests

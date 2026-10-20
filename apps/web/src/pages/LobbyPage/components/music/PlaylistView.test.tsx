@@ -49,7 +49,7 @@ function buildView(
   overrides: Partial<PlaylistViewModel> = {},
 ): PlaylistViewModel {
   return {
-    canUseAll: true,
+    useHeldReason: null,
     error: null,
     initialFilter: "all",
     isBusy: false,
@@ -438,7 +438,7 @@ describe("PlaylistView on other lists", () => {
     ]);
     renderList(
       buildView(source, {
-        canUseAll: false,
+        useHeldReason: "A game needs at least 10 songs.",
         kind: "quickPick",
         listKey: "quickPick:TEST_SESSION_1",
         name: "Your quick pick",
@@ -447,7 +447,9 @@ describe("PlaylistView on other lists", () => {
       }),
     );
 
-    expect(screen.getByRole("button", { name: "Use in game" })).toBeDisabled();
+    const useAll = screen.getByRole("button", { name: "Use in game" });
+    expect(useAll).toBeDisabled();
+    expect(useAll).toHaveAccessibleDescription("A game needs at least 10 songs.");
     await userEvent.click(screen.getByRole("button", { name: "Select Test Track Two" }));
     const bar = screen.getByRole("toolbar", { name: "1 selected" });
     await userEvent.click(within(bar).getByRole("button", { name: "Use 1 selected" }));

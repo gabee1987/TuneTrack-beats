@@ -173,3 +173,12 @@
 .dock > * {
   grid-area: 1 / 1;
 }
+
+/* Why Use in game waits, under the button on the fade. */
+.useReason {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+  text-align: center;
+}

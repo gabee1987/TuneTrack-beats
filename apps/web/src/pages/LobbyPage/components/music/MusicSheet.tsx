@@ -1,5 +1,5 @@
 import type { PublicRoomSettings } from "@tunetrack/shared/client";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useId, useState } from "react";
 import { useI18n } from "../../../../features/i18n";
 import {
   MotionSwap,
@@ -86,6 +86,9 @@ export function MusicSheet({
   const { t } = useI18n();
   const reduceMotion = useReducedMotionPreference();
   const isOffline = useConnectionStatus() !== "connected";
+  // Offline, every action waits; the connection line says why (`22` §13).
+  const offlineReasonId = useId();
+  const heldReasonId = isOffline ? offlineReasonId : null;
   const find = useMusicFind(spotify);
   const { savedPlaylists } = spotify;
   const savedDecks = savedPlaylists.savedPlaylists.map(summarizeSavedDeck);
@@ -168,13 +171,13 @@ export function MusicSheet({
     >
       <div className={styles.sheetBody}>
         {isOffline ? (
-          <div className={styles.offline}>
+          <div className={styles.offline} id={offlineReasonId}>
             <ConnectionStatus />
           </div>
         ) : null}
         <MusicPlaybackBlock
           auth={spotify.auth}
-          disabled={isOffline}
+          heldReasonId={heldReasonId}
           state={getMusicPlaybackState(currentSettings, spotify.auth)}
         />
 
@@ -191,7 +194,7 @@ export function MusicSheet({
         <MotionSwap motion={createTabSwapMotion(reduceMotion)} swapKey={tab}>
           {tab === "decks" ? (
             <MusicDecksTab
-              disabled={isOffline}
+              heldReasonId={heldReasonId}
               onDeckOptions={setDeckOptions}
               onEditDeck={(deck) =>
                 spotify.queue.openEditor({ deck: "saved", deckId: deck.id, filter: "all" })
@@ -218,12 +221,12 @@ export function MusicSheet({
             />
           ) : null}
           {tab === "find" ? (
-            <MusicFindTab disabled={isOffline} find={find} spotify={spotify} />
+            <MusicFindTab find={find} heldReasonId={heldReasonId} spotify={spotify} />
           ) : null}
           {tab === "picks" ? (
             <MusicPicksTab
               candidates={spotify.candidates}
-              disabled={isOffline}
+              heldReasonId={heldReasonId}
               onUsePracticeDeck={askForPracticeDeck}
               practiceDeckStatus={practiceDeckStatus}
               recommendedSongCount={setup.recommendedDeckSize}

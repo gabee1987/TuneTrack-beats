@@ -26,8 +26,8 @@ export interface PlaylistUse {
 }
 
 export interface PlaylistViewModel {
-  /** Whether the whole list can go into the game (a quick pick needs enough songs). */
-  canUseAll: boolean;
+  /** Why the whole list cannot go into the game yet (empty, or a quick pick too short). */
+  useHeldReason: string | null;
   coverUrl?: string | undefined;
   error: string | null;
   initialFilter: PlaylistEditorFilter;
@@ -80,7 +80,7 @@ export function usePlaylistView(
   const { editor } = queue;
   if (editor?.deck === "room") {
     return {
-      canUseAll: false,
+      useHeldReason: null,
       error: null,
       initialFilter: editor.filter,
       isBusy: false,
@@ -99,7 +99,7 @@ export function usePlaylistView(
     const deck = savedPlaylists.savedPlaylists.find((saved) => saved.id === editor.deckId);
     const source = savedDeckSource(deck);
     return {
-      canUseAll: source.tracks.length > 0,
+      useHeldReason: getUseHeldReason(source.tracks.length, 1, t),
       coverUrl: deck?.imageUrl,
       error: null,
       initialFilter: editor.filter,
@@ -122,7 +122,7 @@ export function usePlaylistView(
     const queued = openedPlaylist.queuedTrackIds;
     const queuedFromSearch = spotify.smartSearch.smartSearchQueuedTrackIds;
     return {
-      canUseAll: tracks.length > 0,
+      useHeldReason: getUseHeldReason(tracks.length, 1, t),
       coverUrl: playlist?.imageUrl,
       error:
         phase === "error"
@@ -157,7 +157,7 @@ export function usePlaylistView(
   if (candidates.candidateTracks.length > 0) {
     const tracks = candidates.candidateTracks;
     return {
-      canUseAll: tracks.length >= MIN_PLAYLIST_TRACK_COUNT,
+      useHeldReason: getUseHeldReason(tracks.length, MIN_PLAYLIST_TRACK_COUNT, t),
       error: candidates.candidatePhase === "error" ? candidates.candidateError : null,
       initialFilter: "all",
       isBusy: candidates.candidatePhase === "applying",
@@ -191,4 +191,16 @@ function getSpotifySourceLabel(
 ): string {
   if (playlist.filteredCount === 0) return playlist.subtitle;
   return `${playlist.subtitle} · ${t("lobby.spotify.builder.filteredTracks", { count: playlist.filteredCount })}`;
+}
+
+function getUseHeldReason(
+  songCount: number,
+  minimumSongCount: number,
+  t: (key: string, params?: Record<string, string | number>) => string,
+): string | null {
+  if (songCount === 0) return t("music.view.noSongs");
+  if (songCount < minimumSongCount) {
+    return t("music.view.tooFewSongs", { count: minimumSongCount });
+  }
+  return null;
 }
