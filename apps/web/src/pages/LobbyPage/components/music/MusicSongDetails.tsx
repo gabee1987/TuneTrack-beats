@@ -1,5 +1,10 @@
 import type { SpotifySmartSearchResult } from "@tunetrack/shared/client";
 import { useI18n } from "../../../../features/i18n";
+import {
+  CollapsingHeaderBar,
+  CollapsingHeaderCompact,
+  CollapsingHeaderHero,
+} from "../../../../features/motion";
 import { PanelView } from "../../../../features/overlay";
 import {
   Button,
@@ -9,6 +14,7 @@ import {
   PageHeader,
   TextField,
 } from "../../../../features/ui/primitives";
+import { useSongCoverFold } from "../../hooks/music/useSongCoverFold";
 import styles from "../songSheet.module.css";
 
 interface MusicSongDetailsProps {
@@ -20,8 +26,8 @@ interface MusicSongDetailsProps {
 }
 
 /**
- * A song from Find, laid out like the song editor but read-only with a larger cover: nothing
- * changes here until the song is in a deck. Add / Remove is the same as its row.
+ * A song from Find, laid out like the song editor but read-only: nothing changes here until the
+ * song is in a deck. Add / Remove is the same as its row.
  */
 export function MusicSongDetails({
   disabled,
@@ -31,23 +37,29 @@ export function MusicSongDetails({
   song,
 }: MusicSongDetailsProps) {
   const { t } = useI18n();
+  const fold = useSongCoverFold(song?.id ?? null);
 
   return (
     <PanelView isOpen={song !== null} label={t("lobby.playlist.detailsTitle")} onDismiss={onClose}>
       {song ? (
         <>
-          <div className={styles.header}>
+          <CollapsingHeaderBar className={styles.header} collapse={fold.collapse}>
             <PageHeader
               backLabel={t("common.back")}
               eyebrow={t("lobby.playlist.detailsTitle")}
               onBack={onClose}
+              leading={
+                <CollapsingHeaderCompact className={styles.compactCover} collapse={fold.collapse}>
+                  <CoverArt label={song.title} size="sm" src={song.imageUrl} />
+                </CollapsingHeaderCompact>
+              }
               title={t("music.songDetails.heading")}
             />
-          </div>
+          </CollapsingHeaderBar>
 
-          <div className={styles.body}>
-            <div className={styles.artworkHero}>
-              <CoverArt label={song.title} size="hero" src={song.imageUrl} />
+          <div className={styles.body} ref={fold.scrollRef}>
+            <CollapsingHeaderHero className={styles.artworkHero} collapse={fold.collapse}>
+              <CoverArt label={song.title} size="fill" src={song.imageUrl} />
               <div className={styles.summary}>
                 <strong className={styles.songTitle}>{song.title}</strong>
                 <span className={styles.songArtist}>{song.artist ?? song.subtitle}</span>
@@ -57,7 +69,7 @@ export function MusicSongDetails({
                   </span>
                 ) : null}
               </div>
-            </div>
+            </CollapsingHeaderHero>
 
             <div className={styles.fields}>
               <TextField label={t("lobby.playlist.fieldTitle")} readOnly value={song.title} />
@@ -78,8 +90,8 @@ export function MusicSongDetails({
                 readOnly
                 value={song.releaseYear ? String(song.releaseYear) : "—"}
               />
+              <p className={styles.note}>{t("music.songDetails.yearNote")}</p>
             </div>
-            <p className={styles.note}>{t("music.songDetails.yearNote")}</p>
           </div>
 
           <div className={styles.actions}>

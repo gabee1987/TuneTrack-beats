@@ -1,6 +1,7 @@
 import { useId, useMemo, useState } from "react";
 import { useI18n } from "../../../../features/i18n";
 import {
+  CollapsingHeaderBar,
   CollapsingHeaderCompact,
   CollapsingHeaderHero,
   useCollapsingHeader,
@@ -73,7 +74,7 @@ function PlaylistViewContent({ view }: { view: PlaylistViewModel }) {
 
   return (
     <>
-      <div className={styles.header}>
+      <CollapsingHeaderBar className={styles.header} collapse={collapse}>
         <PageHeader
           backLabel={t("common.back")}
           eyebrow={view.name}
@@ -90,7 +91,7 @@ function PlaylistViewContent({ view }: { view: PlaylistViewModel }) {
           onBack={view.onBack}
           title={isDeck ? t("music.editor.heading") : t("music.view.pickHeading")}
         />
-      </div>
+      </CollapsingHeaderBar>
 
       <div className={styles.scroll} ref={setScrollElement}>
         <CollapsingHeaderHero className={styles.hero} collapse={collapse}>

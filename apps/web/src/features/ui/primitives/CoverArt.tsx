@@ -3,7 +3,8 @@ import { classNames } from "../classNames";
 import { hashText } from "../hashText";
 import styles from "./CoverArt.module.css";
 
-export type CoverArtSize = "hero" | "lg" | "md" | "sm";
+/** `fill`: square, as wide as its container (a song's own view). */
+export type CoverArtSize = "fill" | "hero" | "lg" | "md" | "sm";
 
 const FALLBACK_STYLES = [
   styles.fallback1,

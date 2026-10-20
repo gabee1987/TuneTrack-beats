@@ -97,11 +97,16 @@ export interface CollapsingHeaderMotion {
   heroScale: [number, number];
   heroY: [number, number];
   compactTitleOpacity: [number, number];
+  compactScale: [number, number];
+  compactY: [number, number];
+  /** Scroll offsets over which the bar's heading slides aside for the compact cover, 0 to 1. */
+  headingInput: [number, number];
 }
 
 /**
- * The Playlist view header: the cover and title shrink and fade as the list scrolls up while
- * the compact title fades in. Scroll-driven, so it follows the finger instead of playing on a
+ * A folding cover (the Playlist view, the song views): the big cover shrinks, rises and fades as
+ * the content scrolls up while the small one in the bar rises and grows into place, like a
+ * music app's header. Scroll-driven, so it follows the finger instead of playing on a
  * timer; under reduced motion the two headers swap at once halfway through the distance.
  */
 export function createCollapsingHeaderMotion(
@@ -116,15 +121,22 @@ export function createCollapsingHeaderMotion(
       heroScale: [1, 1],
       heroY: [0, 0],
       compactTitleOpacity: [0, 1],
+      compactScale: [1, 1],
+      compactY: [0, 0],
+      headingInput: [midpoint, midpoint + 1],
     };
   }
 
   return {
     input: [0, collapseDistance],
     heroOpacity: [1, 0],
-    heroScale: [1, 0.86],
-    heroY: [0, -collapseDistance / 2],
+    heroScale: [1, 0.6],
+    heroY: [0, -collapseDistance / 3],
     compactTitleOpacity: [0, 1],
+    compactScale: [0.6, 1],
+    compactY: [12, 0],
+    // The heading makes room in the first half, so the cover grows into a free place.
+    headingInput: [0, collapseDistance / 2],
   };
 }
 

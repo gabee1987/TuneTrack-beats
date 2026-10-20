@@ -346,6 +346,27 @@ describe("PlaylistView on the room deck", () => {
     await waitFor(() => expect(compactCover).toHaveStyle({ opacity: "1" }));
   });
 
+  it("folds the song's cover into the Song editor's bar, sliding its heading aside, as the details scroll", async () => {
+    await renderRoomDeck([buildTrack()]);
+    await userEvent.click(await screen.findByRole("button", { name: /^Test Track One/ }));
+    const editor = await screen.findByRole("dialog", { name: "Song details" });
+    const compactCover = editor.querySelector("header")?.querySelector("span[style]");
+    const bar = editor.querySelector("header")?.parentElement as HTMLElement;
+    const reveal = () => Number(bar.style.getPropertyValue("--fold-reveal"));
+    const scroller = editor.querySelector("form > div:nth-of-type(2)") as HTMLElement;
+    expect(compactCover).toHaveStyle({ opacity: "0" });
+    expect(reveal()).toBe(0);
+
+    await act(async () => {
+      scroller.scrollTop = 400;
+      fireEvent.scroll(scroller);
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    });
+
+    await waitFor(() => expect(compactCover).toHaveStyle({ opacity: "1" }));
+    expect(reveal()).toBe(1);
+  });
+
   it("shows the deck's song cover in its header", async () => {
     const cover = "https://images.example.test/TEST_COVER_1.jpg";
     await renderRoomDeck([buildTrack({ artworkUrl: cover })]);

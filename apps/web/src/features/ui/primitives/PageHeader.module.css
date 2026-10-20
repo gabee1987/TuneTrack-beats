@@ -7,9 +7,12 @@
   margin-left: calc(var(--space-2) * -1);
 }
 
+/* The leading slot holds a small cover (40 px) that folds in; the heading sits over its place
+   until it arrives and slides aside with it (`CollapsingHeaderBar`). Without one, it stays. */
 .heading {
   flex: 1;
   min-width: 0;
+  translate: calc((var(--fold-reveal, 1) - 1) * (40px + var(--space-2))) 0;
 }
 
 .eyebrow {

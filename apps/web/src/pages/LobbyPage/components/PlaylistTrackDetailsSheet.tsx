@@ -1,6 +1,11 @@
 import { MIN_RELEASE_YEAR, type PublicTrackInfo } from "@tunetrack/shared/client";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useI18n } from "../../../features/i18n";
+import {
+  CollapsingHeaderBar,
+  CollapsingHeaderCompact,
+  CollapsingHeaderHero,
+} from "../../../features/motion";
 import { PanelView } from "../../../features/overlay";
 import {
   Button,
@@ -16,6 +21,7 @@ import { ToggleSwitch } from "../../../features/ui/ToggleSwitch";
 import { resolveArtworkUrl } from "../../../features/ui/resolveArtworkUrl";
 import { needsYearCheck, type PlaylistTrackUpdatePatch } from "../hooks/music/playlistEditorTarget";
 import type { SongReview } from "../hooks/music/useSongReview";
+import { useSongCoverFold } from "../hooks/music/useSongCoverFold";
 import styles from "./songSheet.module.css";
 
 interface PlaylistTrackDetailsSheetProps {
@@ -41,6 +47,7 @@ export function PlaylistTrackDetailsSheet({
   const [albumTitle, setAlbumTitle] = useState("");
   const [releaseYear, setReleaseYear] = useState(MIN_RELEASE_YEAR);
   const [isYearChecked, setIsYearChecked] = useState(false);
+  const fold = useSongCoverFold(track?.id ?? null);
 
   useEffect(() => {
     if (!track) return;
@@ -81,10 +88,15 @@ export function PlaylistTrackDetailsSheet({
     <PanelView isOpen={track !== null} label={t("lobby.playlist.detailsTitle")} onDismiss={onClose}>
       {track ? (
         <form className={styles.form} onSubmit={handleSubmit} ref={formRef}>
-          <div className={styles.header}>
+          <CollapsingHeaderBar className={styles.header} collapse={fold.collapse}>
             <PageHeader
               backLabel={t("common.back")}
               eyebrow={t("lobby.playlist.detailsTitle")}
+              leading={
+                <CollapsingHeaderCompact className={styles.compactCover} collapse={fold.collapse}>
+                  <CoverArt label={track.title} size="sm" src={resolveArtworkUrl(track)} />
+                </CollapsingHeaderCompact>
+              }
               meta={
                 review
                   ? t("music.song.position", { count: review.count, index: review.index })
@@ -93,11 +105,11 @@ export function PlaylistTrackDetailsSheet({
               onBack={onClose}
               title={t("lobby.playlist.detailsHeading")}
             />
-          </div>
+          </CollapsingHeaderBar>
 
-          <div className={styles.body}>
-            <div className={styles.artworkRow}>
-              <CoverArt label={track.title} size="md" src={resolveArtworkUrl(track)} />
+          <div className={styles.body} ref={fold.scrollRef}>
+            <CollapsingHeaderHero className={styles.artworkHero} collapse={fold.collapse}>
+              <CoverArt label={track.title} size="fill" src={resolveArtworkUrl(track)} />
               <div className={styles.summary}>
                 <strong className={styles.songTitle}>{track.title}</strong>
                 <span className={styles.songArtist}>
@@ -112,7 +124,7 @@ export function PlaylistTrackDetailsSheet({
                   </span>
                 ) : null}
               </div>
-            </div>
+            </CollapsingHeaderHero>
 
             <div className={styles.fields}>
               <TextField

@@ -3,6 +3,7 @@ export { MotionPresence } from "./MotionPresence";
 export { ArrivalListPresence, type ArrivalListItem } from "./ArrivalListPresence";
 export { MeasuredDisclosure } from "./MeasuredDisclosure";
 export {
+  CollapsingHeaderBar,
   CollapsingHeaderCompact,
   CollapsingHeaderHero,
   useCollapsingHeader,

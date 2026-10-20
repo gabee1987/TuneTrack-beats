@@ -13,26 +13,39 @@
   display: grid;
   flex: 1;
   align-content: start;
-  gap: var(--space-4);
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: var(--space-3) var(--space-4) 112px;
+  container-type: size;
 }
 
-.artworkRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-/* Find's view has nothing to change, so the cover leads. */
+/* The cover leads, as wide as the view, with the title and artist under it. It stays pinned
+   and folds into the bar while the details slide up over it, as in a music app (owner,
+   2026-10-20). */
 .artworkHero {
+  position: sticky;
+  top: 0;
+  z-index: 0;
   display: grid;
   justify-items: center;
   gap: var(--space-3);
   text-align: center;
+  transform-origin: 50% 0;
+}
+
+/* The details cover the pinned cover as they scroll; spacing is padding, so no gap shows it. */
+.body > :not(.artworkHero) {
+  position: relative;
+  z-index: 1;
+  padding-top: var(--space-4);
+  background: var(--color-bg-app);
+}
+
+/* Folded in while the big cover shows; it rises into the bar as the cover scrolls away. */
+.compactCover {
+  display: grid;
+  flex-shrink: 0;
 }
 
 .summary {
@@ -81,9 +94,13 @@
   color: var(--color-warning);
 }
 
+/* At least a view tall, so the details always scroll up under the bar and the cover folds all
+   the way, however short they are. */
 .fields {
   display: grid;
+  align-content: start;
   gap: var(--space-3);
+  min-height: 100cqh;
 }
 
 .note {

@@ -157,6 +157,10 @@ export function StartupFlowPrimitivesGallery() {
           <CoverArt label="Test Playlist" size="lg" mosaic={SAMPLE_COVERS} />
           <CoverArt label="Test Playlist" size="hero" src={SAMPLE_COVERS[2]} />
         </div>
+        {/* `fill` takes its container's width: a song's own view on a phone. */}
+        <div className={styles.fillCoverDemo}>
+          <CoverArt label="Test Song" size="fill" src={SAMPLE_COVERS[3]} />
+        </div>
         <div className={styles.row}>
           {["Party Mix", "Road Trip", "Rock Classics", "Eighties Hits"].map((label) => (
             <CoverArt key={label} label={label} size="md" />

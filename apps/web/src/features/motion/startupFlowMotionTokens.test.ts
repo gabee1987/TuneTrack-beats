@@ -53,9 +53,12 @@ describe("startup flow motion contracts (22 §10)", () => {
     expect(createCollapsingHeaderMotion(false, 200)).toEqual({
       input: [0, 200],
       heroOpacity: [1, 0],
-      heroScale: [1, 0.86],
-      heroY: [0, -100],
+      heroScale: [1, 0.6],
+      heroY: [0, -200 / 3],
       compactTitleOpacity: [0, 1],
+      compactScale: [0.6, 1],
+      compactY: [12, 0],
+      headingInput: [0, 100],
     });
   });
 
@@ -76,6 +79,7 @@ describe("startup flow motion contracts (22 §10)", () => {
 
     expect(createCollapsingHeaderMotion(true, 200)).toMatchObject({
       input: [100, 101],
+      headingInput: [100, 101],
       heroScale: [1, 1],
       heroY: [0, 0],
     });

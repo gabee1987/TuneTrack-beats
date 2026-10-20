@@ -20,7 +20,11 @@
   padding-bottom: 112px;
 }
 
+/* Pinned while it folds into the bar; the songs slide up over it, as in a music app. */
 .hero {
+  position: sticky;
+  top: 0;
+  z-index: 0;
   display: grid;
   justify-items: center;
   gap: var(--space-2);
@@ -43,6 +47,16 @@
 .checkYear {
   border-color: color-mix(in srgb, var(--color-warning) 40%, transparent);
   color: var(--color-warning);
+}
+
+/* Everything after the cover covers it as it scrolls; the toolbar keeps its own sticky place. */
+.scroll > :not(.hero) {
+  z-index: 1;
+  background: var(--color-bg-app);
+}
+
+.scroll > :not(.hero, .toolbar) {
+  position: relative;
 }
 
 /* Sticks under the bar once the cover has gone; beats the bar's own `position`. */

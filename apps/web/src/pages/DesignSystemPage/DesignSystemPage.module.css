@@ -84,3 +84,7 @@
   width: 32px;
   height: 32px;
 }
+
+.fillCoverDemo {
+  width: min(100%, 280px);
+}

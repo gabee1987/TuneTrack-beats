@@ -29,6 +29,13 @@
   box-shadow: var(--shadow-overlay);
 }
 
+.fill {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-overlay);
+}
+
 .mosaic {
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(2, 1fr);
@@ -60,7 +67,8 @@
 }
 
 .lg .fallback,
-.hero .fallback {
+.hero .fallback,
+.fill .fallback {
   font-size: var(--type-display-size);
 }
 

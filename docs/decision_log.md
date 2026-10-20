@@ -12,6 +12,21 @@ here; this log records _why_ and _when_ they were decided.
 
 ## Decided
 
+### Full-width song cover that folds into the bar (2026-10-20)
+
+- **Owner:** the song views (Song editor, Find's song details) show the cover as wide as the
+  screen, and as the details scroll it folds into the top bar as a small cover, "like Spotify".
+- **One fold for every cover:** the cover stays pinned while the content slides up over it; it
+  shrinks to 60 % and rises as it fades, and the small cover rises and grows into the bar
+  (`createCollapsingHeaderMotion`, scroll-driven, `transform`/`opacity` only; reduced motion
+  swaps at once). The Playlist view uses the same fold, so its cover now folds the same way.
+- **The bar's heading makes room (owner):** at rest the eyebrow and title sit beside Back; in
+  the first half of the fold they slide right by the small cover's width, and the cover grows
+  into the freed place (`CollapsingHeaderBar` sets `--fold-reveal`; PageHeader `translate`s).
+- **The details are at least a view tall**, so they always scroll up under the bar and the fold
+  completes; filler information was not added, since a song carries only title, artist, album
+  and year and the project takes no metadata-enrichment API.
+
 ### Startup-flow acceptance: E2E scope per project, held actions (2026-10-20)
 
 - **Connection-lifecycle E2E runs on the desktop engines only.** The `mobile` project runs the
