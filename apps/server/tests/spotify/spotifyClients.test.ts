@@ -37,6 +37,37 @@ describe("Spotify Web API clients", () => {
     expect(fetchMock.mock.calls[1]?.[0]).toBe("http://127.0.0.1:3102/api/me");
   });
 
+  it.each([
+    ["invalid_client", "Invalid client secret", "invalid_client"],
+    ["invalid_grant", "Invalid redirect URI", "invalid_grant"],
+    ["server_error", "Something went wrong", "api_error"],
+  ])(
+    "keeps Spotify's %s reason on a rejected token request",
+    async (upstreamError, description, expectedCode) => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue(
+          new Response(JSON.stringify({ error: upstreamError, error_description: description }), {
+            status: 400,
+          }),
+        ),
+      );
+      const client = new SpotifyAccountsClient({
+        accountsBaseUrl: "http://127.0.0.1:3102/accounts",
+        apiBaseUrl: "http://127.0.0.1:3102/api",
+      });
+
+      await expect(
+        client.exchangeCodeForTokens("TEST_CODE", "https://127.0.0.1:5173/api/spotify/callback"),
+      ).rejects.toMatchObject({
+        code: expectedCode,
+        statusCode: 400,
+        upstreamError,
+        upstreamErrorDescription: description,
+      });
+    },
+  );
+
   describe("getAllPlaylistTracks", () => {
     it("stops after the page cap even when Spotify reports more pages", async () => {
       const fetchMock = vi.fn(

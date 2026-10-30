@@ -183,6 +183,34 @@ describe("SpotifyAuthService login callback", () => {
       message: "Could not complete Spotify login. Please try again.",
     });
   });
+
+  it("logs Spotify's reason for a rejected exchange without passing it to the client", async () => {
+    const errorLog = vi.spyOn(logger, "error").mockImplementation(() => undefined);
+    const { complete } = buildLogin({
+      exchangeCodeForTokens: vi.fn(async () => {
+        throw new SpotifyApiError("invalid_client", "Failed to exchange", 400, {
+          upstreamError: "invalid_client",
+          upstreamErrorDescription: "Invalid client secret",
+        });
+      }),
+    });
+
+    const { authResult } = await complete("TEST_CODE");
+
+    expect(errorLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 400,
+        spotifyError: "invalid_client",
+        spotifyErrorDescription: "Invalid client secret",
+      }),
+      "Spotify OAuth callback failed",
+    );
+    expect(authResult).toEqual({
+      success: false,
+      code: "exchange_failed",
+      message: "Could not complete Spotify login. Please try again.",
+    });
+  });
 });
 
 describe("SpotifyAuthService host token lifecycle", () => {

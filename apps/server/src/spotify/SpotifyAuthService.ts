@@ -152,17 +152,23 @@ export class SpotifyAuthService {
         },
       };
     } catch (err) {
-      logger.error({ err }, "Spotify OAuth callback failed");
+      // Spotify's reason (invalid_client, invalid redirect URI, expired code) is what an
+      // operator needs to fix the deployment; the client only ever learns that login failed.
+      const spotifyError = err instanceof SpotifyApiError ? err : null;
+      const failureDetail = {
+        status: spotifyError?.statusCode,
+        spotifyError: spotifyError?.upstreamError,
+        spotifyErrorDescription: spotifyError?.upstreamErrorDescription,
+      };
+      logger.error({ err, ...failureDetail }, "Spotify OAuth callback failed");
       logAuditEvent({
         auditKind: "spotify_auth",
         action: "token_exchange_failed",
         outcome: "failed",
         roomId: state.roomId,
         socketId,
-        code: err instanceof SpotifyApiError ? err.code : "unknown",
-        meta: {
-          status: err instanceof SpotifyApiError ? err.statusCode : undefined,
-        },
+        code: spotifyError?.code ?? "unknown",
+        meta: failureDetail,
       });
 
       return {
