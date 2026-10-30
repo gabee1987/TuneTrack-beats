@@ -110,19 +110,32 @@ export interface SpotifyClientOptions {
 export const DEFAULT_SPOTIFY_ACCOUNTS_BASE_URL = "https://accounts.spotify.com";
 export const DEFAULT_SPOTIFY_API_BASE_URL = "https://api.spotify.com/v1";
 
+/** Spotify's own `error` and `error_description` from a rejected token request, for logs only. */
+export interface SpotifyUpstreamError {
+  upstreamError?: string | undefined;
+  upstreamErrorDescription?: string | undefined;
+}
+
 export class SpotifyApiError extends Error {
+  public readonly upstreamError: string | undefined;
+  public readonly upstreamErrorDescription: string | undefined;
+
   public constructor(
     public readonly code:
       | "not_found"
       | "forbidden"
       | "unauthorized"
       | "invalid_grant"
+      | "invalid_client"
       | "api_error",
     message: string,
     public readonly statusCode?: number,
+    upstream: SpotifyUpstreamError = {},
   ) {
     super(message);
     this.name = "SpotifyApiError";
+    this.upstreamError = upstream.upstreamError;
+    this.upstreamErrorDescription = upstream.upstreamErrorDescription;
   }
 }
 

@@ -5,6 +5,7 @@ import {
   SpotifyApiError,
   type SpotifyClientOptions,
   type SpotifyTokenResponse,
+  type SpotifyUpstreamError,
   type SpotifyUserProfile,
 } from "./spotifyApiTypes.js";
 import { getSpotifyJson } from "./spotifyRequest.js";
@@ -83,11 +84,12 @@ export class SpotifyAccountsClient {
     });
 
     if (!response.ok) {
-      const tokenError = await parseSpotifyTokenError(response);
+      const upstream = await parseSpotifyTokenError(response);
       throw new SpotifyApiError(
-        tokenError === "invalid_grant" ? "invalid_grant" : "api_error",
+        tokenErrorCode(upstream.upstreamError),
         failureMessage,
         response.status,
+        upstream,
       );
     }
 
@@ -95,11 +97,28 @@ export class SpotifyAccountsClient {
   }
 }
 
-async function parseSpotifyTokenError(response: Response): Promise<string | null> {
+function tokenErrorCode(
+  upstreamError: string | undefined,
+): "invalid_grant" | "invalid_client" | "api_error" {
+  switch (upstreamError) {
+    case "invalid_grant":
+      return "invalid_grant";
+    case "invalid_client":
+      return "invalid_client";
+    default:
+      return "api_error";
+  }
+}
+
+async function parseSpotifyTokenError(response: Response): Promise<SpotifyUpstreamError> {
   try {
-    const body = (await response.json()) as { error?: unknown };
-    return typeof body.error === "string" ? body.error : null;
+    const body = (await response.json()) as { error?: unknown; error_description?: unknown };
+    return {
+      upstreamError: typeof body.error === "string" ? body.error : undefined,
+      upstreamErrorDescription:
+        typeof body.error_description === "string" ? body.error_description : undefined,
+    };
   } catch {
-    return null;
+    return {};
   }
 }
